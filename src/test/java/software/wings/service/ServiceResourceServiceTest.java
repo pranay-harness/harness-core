@@ -163,7 +163,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     verify(wingsPersistence).saveAndGet(Service.class, service);
-    verify(appService).addService(savedService);
     verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
     verify(spyServiceResourceService, times(3)).addCommand(eq(APP_ID), eq(SERVICE_ID), graphArgumentCaptor.capture());
     verify(notificationService).sendNotificationAsync(any(Notification.class));

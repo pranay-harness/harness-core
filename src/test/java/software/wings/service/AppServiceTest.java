@@ -16,7 +16,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
@@ -208,26 +207,6 @@ public class AppServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> appService.delete("NON_EXISTENT_APP_ID"))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_ARGUMENT.name());
-  }
-
-  @Test
-  public void shouldAddService() {
-    appService.addService(aService().withAppId(APP_ID).build());
-
-    verify(query).field(ID_KEY);
-    verify(end).equal(APP_ID);
-    verify(updateOperations).add("services", aService().withAppId(APP_ID).build());
-    verify(wingsPersistence).update(query, updateOperations);
-  }
-
-  @Test
-  public void shouldDeleteService() {
-    appService.deleteService(aService().withAppId(APP_ID).build());
-
-    verify(query).field(ID_KEY);
-    verify(end).equal(APP_ID);
-    verify(updateOperations).removeAll("services", aService().withAppId(APP_ID).build());
-    verify(wingsPersistence).update(query, updateOperations);
   }
 
   /**

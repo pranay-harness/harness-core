@@ -161,7 +161,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     environmentService.save(environment);
     verify(wingsPersistence).saveAndGet(Environment.class, environment);
-    verify(appService).addEnvironment(savedEnvironment);
     verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
     verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));

@@ -18,11 +18,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
 import software.wings.beans.EventType;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.NotificationMessageResolver;
@@ -192,27 +190,6 @@ public class AppServiceImpl implements AppService {
                                    .withShortDescription("Application " + application.getName() + " created")
                                    .withTitle("Application " + application.getName() + " created")
                                    .build());
-  }
-
-  @Override
-  public void addEnvironment(Environment env) {
-    UpdateOperations<Application> updateOperations =
-        wingsPersistence.createUpdateOperations(Application.class).add("environments", env);
-    Query<Application> updateQuery =
-        wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(env.getAppId());
-    wingsPersistence.update(updateQuery, updateOperations);
-  }
-
-  @Override
-  public void addService(Service service) {
-    wingsPersistence.update(wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(service.getAppId()),
-        wingsPersistence.createUpdateOperations(Application.class).add("services", service));
-  }
-
-  @Override
-  public void deleteService(Service service) {
-    wingsPersistence.update(wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(service.getAppId()),
-        wingsPersistence.createUpdateOperations(Application.class).removeAll("services", service));
   }
 
   @Override

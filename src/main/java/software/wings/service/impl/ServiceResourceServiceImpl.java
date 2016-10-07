@@ -100,7 +100,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
     savedService = addDefaultCommands(savedService);
-    appService.addService(savedService);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     notificationService.sendNotificationAsync(
         anInformationNotification()
@@ -211,7 +210,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                        .withShortDescription("Service " + service.getName() + " created")
                                        .withTitle("Service " + service.getName() + " created")
                                        .build());
-        appService.deleteService(service);
         serviceTemplateService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
       });

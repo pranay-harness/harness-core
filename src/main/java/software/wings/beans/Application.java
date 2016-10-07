@@ -8,7 +8,6 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
@@ -26,8 +25,8 @@ public class Application extends Base {
   @NotEmpty private String name;
   private String description;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Service> services = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments = new ArrayList<>();
+  @Transient private List<Service> services = new ArrayList<>();
+  @Transient private List<Environment> environments = new ArrayList<>();
 
   @Transient private Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;

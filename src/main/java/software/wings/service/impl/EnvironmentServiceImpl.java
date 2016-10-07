@@ -140,7 +140,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment save(Environment environment) {
     environment = wingsPersistence.saveAndGet(Environment.class, environment);
-    appService.addEnvironment(environment);
     tagService.createDefaultRootTagForEnvironment(environment);
     serviceTemplateService.createDefaultTemplatesByEnv(environment);
     workflowService.createWorkflow(Orchestration.class, getDefaultCanaryDeploymentObject(environment));
