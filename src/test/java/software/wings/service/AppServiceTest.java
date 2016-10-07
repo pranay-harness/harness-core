@@ -173,7 +173,7 @@ public class AppServiceTest extends WingsBaseTest {
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
     when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
-    Application application = appService.get(APP_ID);
+    Application application = appService.get(APP_ID, SetupStatus.COMPLETE, true);
     verify(wingsPersistence).get(Application.class, APP_ID);
     assertThat(application.getNotifications())
         .hasSize(1)
