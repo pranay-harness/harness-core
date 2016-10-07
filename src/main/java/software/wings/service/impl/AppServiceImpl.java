@@ -92,7 +92,7 @@ public class AppServiceImpl implements AppService {
                                    .withShortDescription("Application " + application.getName() + " created")
                                    .withTitle("Application " + application.getName() + " created")
                                    .build());
-    return get(application.getUuid());
+    return get(application.getUuid(), INCOMPLETE, true);
   }
 
   /* (non-Javadoc)
@@ -101,8 +101,10 @@ public class AppServiceImpl implements AppService {
   @Override
   public PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
-    if (overview) {
-      response.getResponse().parallelStream().forEach(application -> {
+    response.getResponse().parallelStream().forEach(application -> {
+      application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
+      application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
+      if (overview) {
         application.setRecentExecutions(
             workflowExecutionService
                 .listExecutions(
@@ -114,8 +116,8 @@ public class AppServiceImpl implements AppService {
                     false)
                 .getResponse());
         application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
-      });
-    }
+      }
+    });
     return response;
   }
 
@@ -138,7 +140,6 @@ public class AppServiceImpl implements AppService {
     if (application == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
     }
-    application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
     return application;
   }
 
@@ -193,8 +194,14 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application get(String appId, SetupStatus status) {
+  public Application get(String appId, SetupStatus status, boolean overview) {
     Application application = get(appId);
+    application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
+    application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
+
+    if (overview) {
+      application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
+    }
     if (status == INCOMPLETE) {
       application.setSetup(setupService.getApplicationSetupStatus(application));
     }

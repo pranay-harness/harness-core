@@ -49,10 +49,10 @@ public class AppResourceTest {
    */
   @Test
   public void testFindByName() {
-    when(appService.get(TEST_UUID, COMPLETE)).thenReturn(testApp);
+    when(appService.get(TEST_UUID, COMPLETE, true)).thenReturn(testApp);
     RestResponse<Application> actual =
         resources.client().target("/apps/" + TEST_UUID).request().get(new GenericType<RestResponse<Application>>() {});
     assertThat(actual.getResource()).isEqualTo(testApp);
-    verify(appService).get(TEST_UUID, COMPLETE);
+    verify(appService).get(TEST_UUID, COMPLETE, true);
   }
 }

@@ -12,7 +12,6 @@ import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
 import static software.wings.common.NotificationMessageResolver.ADD_INFRA_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -20,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.InfrastructureMappingRule.Rule;
@@ -36,6 +36,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
@@ -66,6 +67,7 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   @Inject private AppService appService;
   @Inject private SettingsService settingsService;
   @Inject private NotificationService notificationService;
+  @Inject private EnvironmentService environmentService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -279,11 +281,8 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   }
 
   public void addApplicationHost(String appId, String envId, String tagId, Host host) {
-    Application application = appService.get(appId);
-    notNullCheck("Application", application);
-
-    application.getEnvironments()
-        .stream()
+    List<Environment> environments = environmentService.getEnvByApp(appId);
+    environments.stream()
         .filter(environment -> envId == null || envId.equals(environment.getUuid()))
         .forEach(environment -> {
           ApplicationHost appHost = anApplicationHost()

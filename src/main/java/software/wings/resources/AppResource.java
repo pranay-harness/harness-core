@@ -108,7 +108,7 @@ public class AppResource {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
     }
-    return new RestResponse<>(appService.get(appId, status));
+    return new RestResponse<>(appService.get(appId, status, true));
   }
 
   /**

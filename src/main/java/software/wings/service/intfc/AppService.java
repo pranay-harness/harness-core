@@ -39,6 +39,16 @@ public interface AppService {
   Application get(String uuid);
 
   /**
+   * Get application.
+   *
+   * @param appId    the app id
+   * @param status   the status
+   * @param overview the overview
+   * @return the application
+   */
+  Application get(String appId, SetupStatus status, boolean overview);
+
+  /**
    * Update.
    *
    * @param app the app
@@ -52,13 +62,4 @@ public interface AppService {
    * @param appId the app id
    */
   void delete(@NotEmpty String appId);
-
-  /**
-   * Get application.
-   *
-   * @param appId  the app id
-   * @param status the status
-   * @return the application
-   */
-  Application get(String appId, SetupStatus status);
 }

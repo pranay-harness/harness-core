@@ -188,7 +188,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     when(setupService.getApplicationSetupStatus(anApplication().withUuid(APP_ID).build()))
         .thenReturn(Setup.Builder.aSetup().build());
-    Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE);
+    Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE, false);
 
     verify(wingsPersistence).get(Application.class, APP_ID);
     verify(setupService).getApplicationSetupStatus(anApplication().withUuid(APP_ID).build());
