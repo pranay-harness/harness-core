@@ -164,10 +164,8 @@ public class HostServiceImpl implements HostService {
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
     Infrastructure infrastructure = infraService.get(infraId);
-    Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
 
-    List<ApplicationHost> applicationHosts =
-        saveApplicationHosts(envId, baseHost, hostNames, infrastructure, configTag);
+    List<ApplicationHost> applicationHosts = saveApplicationHosts(envId, baseHost, hostNames, infrastructure);
 
     serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, applicationHosts));
 
@@ -183,57 +181,68 @@ public class HostServiceImpl implements HostService {
     return aResponseMessage().build();
   }
 
-  private Host getOrCreateInfraHost(Infrastructure infrastructure, String hostName, Host baseHost) {
+  private Host getOrCreateInfraHost(Host baseHost) {
     Host host = wingsPersistence.createQuery(Host.class)
                     .field("hostName")
-                    .equal(hostName)
+                    .equal(baseHost.getHostName())
                     .field("infraId")
-                    .equal(infrastructure.getUuid())
+                    .equal(baseHost.getInfraId())
                     .get();
     if (host == null) {
-      host = aHost()
-                 .withHostName(hostName)
-                 .withAppId(infrastructure.getAppId())
-                 .withInfraId(infrastructure.getUuid())
-                 .withHostConnAttr(baseHost.getHostConnAttr())
-                 .build();
       SettingAttribute bastionConnAttr =
           validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
       if (bastionConnAttr != null) {
-        host.setBastionConnAttr(bastionConnAttr);
+        baseHost.setBastionConnAttr(bastionConnAttr);
       }
-      host = wingsPersistence.saveAndGet(Host.class, host);
+      host = wingsPersistence.saveAndGet(Host.class, baseHost);
     }
     return host;
   }
 
-  public List<ApplicationHost> saveApplicationHosts(
-      String envId, Host baseHost, Set<String> hostNames, Infrastructure infrastructure, Tag configTag) {
+  private List<ApplicationHost> saveApplicationHosts(
+      String envId, Host baseHost, Set<String> hostNames, Infrastructure infrastructure) {
     List<ApplicationHost> applicationHosts = new ArrayList<>();
+    Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
 
     hostNames.forEach(hostName -> {
-      Host host = getOrCreateInfraHost(infrastructure, hostName, baseHost);
-      ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
-                                            .field("hostName")
-                                            .equal(hostName)
-                                            .field("appId")
-                                            .equal(baseHost.getAppId())
-                                            .get();
-      if (applicationHost == null) {
-        applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class,
-            anApplicationHost()
-                .withAppId(baseHost.getAppId())
-                .withEnvId(envId)
-                .withConfigTag(configTag)
-                .withInfraId(host.getInfraId())
-                .withHostName(host.getHostName())
-                .withHost(host)
-                .build());
-      }
-      //      infraService.applyApplicableMappingRules(infrastructure, host); //TODO: move
+      Host host = aHost()
+                      .withHostName(hostName)
+                      .withAppId(infrastructure.getAppId())
+                      .withInfraId(infrastructure.getUuid())
+                      .withHostConnAttr(baseHost.getHostConnAttr())
+                      .build();
+      host = getOrCreateInfraHost(host);
+      ApplicationHost applicationHost = saveApplicationHost(anApplicationHost()
+                                                                .withAppId(baseHost.getAppId())
+                                                                .withEnvId(envId)
+                                                                .withConfigTag(configTag)
+                                                                .withInfraId(host.getInfraId())
+                                                                .withHostName(host.getHostName())
+                                                                .withHost(host)
+                                                                .build());
       applicationHosts.add(applicationHost);
     });
     return applicationHosts;
+  }
+
+  private ApplicationHost saveApplicationHost(ApplicationHost appHost) {
+    ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
+                                          .field("hostName")
+                                          .equal(appHost.getHostName())
+                                          .field("appId")
+                                          .equal(appHost.getAppId())
+                                          .get();
+    if (applicationHost == null) {
+      applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class, appHost);
+    }
+    return applicationHost;
+  }
+
+  @Override
+  public ApplicationHost saveApplicationHost(ApplicationHost appHost, String tagId) {
+    Tag tag = validateAndFetchTag(appHost.getAppId(), appHost.getUuid(), aTag().withUuid(tagId).build());
+    appHost.setConfigTag(tag);
+    return saveApplicationHost(appHost);
   }
 
   @Override
@@ -264,40 +273,6 @@ public class HostServiceImpl implements HostService {
         -> applicationHostUsage.setAppName(applicationsById.get(applicationHostUsage.getAppId()).getName()));
 
     return hostUsageList;
-  }
-
-  @Override
-  public void addApplicationHost(String appId, String envId, String tagId, Host host) {
-    Application application = appService.get(appId);
-    notNullCheck("Application", application);
-
-    application.getEnvironments()
-        .stream()
-        .filter(environment -> envId == null || envId.equals(environment.getUuid()))
-        .forEach(environment -> {
-          Tag tag = validateAndFetchTag(environment.getAppId(), environment.getUuid(), aTag().withUuid(tagId).build());
-
-          ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
-                                                .field("hostName")
-                                                .equal(host.getHostName())
-                                                .field("appId")
-                                                .equal(environment.getAppId())
-                                                .field("envId")
-                                                .equal(environment.getUuid())
-                                                .get();
-          if (applicationHost == null) {
-            wingsPersistence.saveAndGet(ApplicationHost.class,
-                anApplicationHost()
-                    .withAppId(environment.getAppId())
-                    .withEnvId(environment.getUuid())
-                    .withConfigTag(tag)
-                    .withInfraId(host.getInfraId())
-                    .withHostName(host.getHostName())
-                    .withHost(host)
-                    .build());
-          }
-          // TODO: add Notification/History
-        });
   }
 
   @Override

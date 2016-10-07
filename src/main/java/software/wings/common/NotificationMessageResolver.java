@@ -22,6 +22,11 @@ public class NotificationMessageResolver {
   /**
    * The constant ADD_HOST_NOTIFICATION.
    */
+  public static final String ADD_INFRA_HOST_NOTIFICATION = "${COUNT} new hosts added in ${INFRA_NAME} Infrastructure.";
+
+  /**
+   * The constant ADD_HOST_NOTIFICATION.
+   */
   public static final String ADD_HOST_NOTIFICATION = "${COUNT} new hosts added in ${ENV_NAME} environment.";
   /**
    * The constant HOST_DELETE_NOTIFICATION.

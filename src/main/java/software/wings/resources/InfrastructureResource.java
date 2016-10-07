@@ -18,11 +18,13 @@ import software.wings.service.intfc.InfrastructureService;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * The Class InfrastructureResource.
@@ -43,8 +45,9 @@ public class InfrastructureResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Infrastructure>> list(@BeanParam PageRequest<Infrastructure> pageRequest) {
-    return new RestResponse<>(infrastructureService.list(pageRequest, true));
+  public RestResponse<PageResponse<Infrastructure>> list(@BeanParam PageRequest<Infrastructure> pageRequest,
+      @QueryParam("overview") @DefaultValue("false") boolean overview) {
+    return new RestResponse<>(infrastructureService.list(pageRequest, overview));
   }
 
   /**

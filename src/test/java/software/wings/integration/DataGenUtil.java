@@ -42,6 +42,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -716,10 +717,21 @@ private void createGlobalSettings() {
       Entity.entity(aSettingAttribute()
                         .withName("AppDynamics")
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                                       .withControllerUrl("https://na595.saas.appdynamics.com/controller")
+                                       .withControllerUrl("https://na774.saas.appdynamics.com/controller")
                                        .withUsername("testuser")
-                                       .withAccountname("na595")
+                                       .withAccountname("na774")
                                        .withPassword("testuser123")
+                                       .build())
+                        .build(),
+          APPLICATION_JSON),
+      new GenericType<RestResponse<SettingAttribute>>() {});
+
+  getRequestWithAuthHeader(target).post(
+      Entity.entity(aSettingAttribute()
+                        .withName("AWS_CREDENTIALS")
+                        .withValue(anAwsInfrastructureProviderConfig()
+                                       .withSecretKey("AKIAI6IK4KYQQQEEWEVA")
+                                       .withSecretKey("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")
                                        .build())
                         .build(),
           APPLICATION_JSON),

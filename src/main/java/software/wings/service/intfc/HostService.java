@@ -168,14 +168,13 @@ public interface HostService {
   List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String uuid);
 
   /**
-   * Add application host.
+   * Save application host application host.
    *
-   * @param appId the app id
-   * @param envId the env id
-   * @param tagId the tag id
-   * @param host  the host
+   * @param appHost the app host
+   * @param tagId   the tag id
+   * @return the application host
    */
-  void addApplicationHost(String appId, String envId, String tagId, Host host);
+  ApplicationHost saveApplicationHost(ApplicationHost appHost, String tagId);
 
   /**
    * Exist boolean.

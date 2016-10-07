@@ -8,9 +8,13 @@ import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastru
 import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.EQUAL;
 import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.STARTS_WITH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
@@ -31,6 +35,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureService;
+import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,7 +44,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 10/4/16.
  */
-
 @RealMongo
 public class InfraIntegrationTest extends WingsBaseTest {
   /**
@@ -68,6 +72,8 @@ public class InfraIntegrationTest extends WingsBaseTest {
    * The Host service.
    */
   @Inject private HostService hostService;
+
+  @Inject private SettingsService settingsService;
 
   /**
    * The Infrastructure id.
@@ -143,6 +149,9 @@ public class InfraIntegrationTest extends WingsBaseTest {
     assertThat(appHosts).hasSize(1);
   }
 
+  /**
+   * Should sync aws host.
+   */
   @Test
   public void shouldSyncAwsHost() {
     List<Rule> rules = asList(new InfrastructureMappingRule.Rule("NAME", EQUAL, "DemoTargetHosts"));
@@ -154,5 +163,40 @@ public class InfraIntegrationTest extends WingsBaseTest {
                                         .withInfrastructureMappingRules(infrastructureMappingRules)
                                         .build();
     Infrastructure savedInfra = infrastructureService.save(infrastructure);
+  }
+
+  @Test
+  @Ignore
+  public void shouldSyncAwsInfraHost() {
+    SettingAttribute awsCredentials =
+        settingsService.save(aSettingAttribute()
+                                 .withName("AWS_CREDENTIALS")
+                                 .withValue(anAwsInfrastructureProviderConfig()
+                                                .withAccessKey("AKIAI6IK4KYQQQEEWEVA")
+                                                .withSecretKey("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")
+                                                .build())
+                                 .build());
+
+    Infrastructure infrastructure =
+        Infrastructure.Builder.anInfrastructure()
+            .withAppId(GLOBAL_APP_ID)
+            .withInfrastructureConfigId(awsCredentials.getUuid())
+            .withType(InfrastructureType.AWS)
+            .withInfrastructureMappingRules(asList(anInfrastructureMappingRule()
+                                                       .withAppId("ALL")
+                                                       .withRules(asList(new Rule("HOST_NAME", STARTS_WITH, "ip-")))
+                                                       .build()))
+            .build();
+    Infrastructure savedInfra = infrastructureService.save(infrastructure);
+
+    infrastructureService.sync(savedInfra.getUuid());
+
+    List<Host> hosts = wingsPersistence.createQuery(Host.class).asList();
+    List<ApplicationHost> applicationHosts =
+        wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infrastructure.getUuid()).asList();
+    int count = (int) wingsPersistence.createQuery(Environment.class).countAll();
+
+    Assertions.assertThat(hosts.size()).isEqualTo(19);
+    Assertions.assertThat(applicationHosts.size()).isEqualTo(hosts.size() * count);
   }
 }

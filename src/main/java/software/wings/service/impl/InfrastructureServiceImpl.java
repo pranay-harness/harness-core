@@ -3,10 +3,16 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastructureMappingRule;
 import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.CONTAINS;
+import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
+import static software.wings.common.NotificationMessageResolver.ADD_INFRA_HOST_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -18,6 +24,7 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.InfrastructureMappingRule.Rule;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.HostUsage;
@@ -32,6 +39,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Validator;
 
@@ -41,6 +49,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -56,6 +65,8 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   @Inject private ExecutorService executorService;
   @Inject private AppService appService;
   @Inject private SettingsService settingsService;
+  @Inject private NotificationService notificationService;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private final Set<InfrastructureProvider> infrastructureProviders;
@@ -179,7 +190,68 @@ public class InfrastructureServiceImpl implements InfrastructureService {
 
     InfrastructureProviderConfig config = getInfrastructureProviderConfig(infrastructure);
     List<Host> allHost = infrastructureProvider.get().getAllHost(config);
-    allHost.forEach(host -> { logger.info(host.toString()); });
+
+    List<String> deletedProviderHosts = getDeletedHostNames(infrastructure, allHost);
+    deletedProviderHosts.forEach(hostName -> deleteInfraHostByName(infrastructure, hostName));
+
+    List<Host> newProviderHosts = getNewProviderHosts(infrastructure, allHost);
+    SettingAttribute connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
+                                                .field("value.type")
+                                                .equal(HOST_CONNECTION_ATTRIBUTES)
+                                                .get(); // TODO:: remove it
+
+    newProviderHosts.forEach(host -> {
+      host.setHostConnAttr(connectionAttributes);
+      host.setInfraId(infrastructure.getUuid());
+      Host savedHost = wingsPersistence.saveAndGet(Host.class, host);
+      applyApplicableMappingRules(infrastructure, savedHost);
+    });
+    if (newProviderHosts.size() > 0) {
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(GLOBAL_APP_ID)
+              .withDisplayText(getDecoratedNotificationMessage(ADD_INFRA_HOST_NOTIFICATION,
+                  ImmutableMap.of(
+                      "COUNT", Integer.toString(newProviderHosts.size()), "INFRA_NAME", infrastructure.getName())))
+              .build());
+    }
+  }
+
+  private void deleteInfraHostByName(Infrastructure infrastructure, String hostName) {
+    Host host = wingsPersistence.createQuery(Host.class)
+                    .field("infraId")
+                    .equal(infrastructure.getUuid())
+                    .field("hostName")
+                    .equal(hostName)
+                    .get();
+    wingsPersistence.delete(host);
+  }
+
+  private List<Host> getNewProviderHosts(Infrastructure infrastructure, List<Host> allHost) {
+    Set<String> existingHostNames = wingsPersistence.createQuery(Host.class)
+                                        .field("infraId")
+                                        .equal(infrastructure.getUuid())
+                                        .retrievedFields(true, "hostName")
+                                        .asList()
+                                        .stream()
+                                        .map(Host::getHostName)
+                                        .collect(Collectors.toSet());
+    return allHost.stream()
+        .filter(host -> !existingHostNames.contains(host.getHostName()))
+        .collect(Collectors.toList());
+  }
+
+  private List<String> getDeletedHostNames(Infrastructure infrastructure, List<Host> allHost) {
+    Set<String> existingHostNames = wingsPersistence.createQuery(Host.class)
+                                        .field("infraId")
+                                        .equal(infrastructure.getUuid())
+                                        .retrievedFields(true, "hostName")
+                                        .asList()
+                                        .stream()
+                                        .map(Host::getHostName)
+                                        .collect(Collectors.toSet());
+    existingHostNames.removeAll(allHost.stream().map(Host::getHostName).collect(Collectors.toList()));
+    return existingHostNames.stream().collect(Collectors.toList());
   }
 
   public InfrastructureProviderConfig getInfrastructureProviderConfig(Infrastructure infrastructure) {
@@ -202,9 +274,28 @@ public class InfrastructureServiceImpl implements InfrastructureService {
       applications.stream()
           .filter(Objects::nonNull)
           .forEach(application
-              -> hostService.addApplicationHost(
-                  application.getAppId(), mappingRule.getEnvId(), mappingRule.getTagId(), host));
+              -> addApplicationHost(application.getAppId(), mappingRule.getEnvId(), mappingRule.getTagId(), host));
     }
+  }
+
+  public void addApplicationHost(String appId, String envId, String tagId, Host host) {
+    Application application = appService.get(appId);
+    notNullCheck("Application", application);
+
+    application.getEnvironments()
+        .stream()
+        .filter(environment -> envId == null || envId.equals(environment.getUuid()))
+        .forEach(environment -> {
+          ApplicationHost appHost = anApplicationHost()
+                                        .withAppId(environment.getAppId())
+                                        .withEnvId(environment.getUuid())
+                                        .withInfraId(host.getInfraId())
+                                        .withHostName(host.getHostName())
+                                        .withHost(host)
+                                        .build();
+          hostService.saveApplicationHost(appHost, tagId);
+          // TODO: add notification
+        });
   }
 
   private List<Application> getApplicableApplications(InfrastructureMappingRule mappingRule) {
