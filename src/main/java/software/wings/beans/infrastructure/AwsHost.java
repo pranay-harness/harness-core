@@ -2,10 +2,10 @@ package software.wings.beans.infrastructure;
 
 import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
-import software.wings.beans.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +50,9 @@ public class AwsHost extends Host {
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
     private String uuid;
     private String appId;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long createdAt;
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
@@ -205,7 +205,7 @@ public class AwsHost extends Host {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -227,7 +227,7 @@ public class AwsHost extends Host {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }

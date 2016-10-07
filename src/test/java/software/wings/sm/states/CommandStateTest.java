@@ -15,7 +15,6 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Release.Builder.aRelease;
@@ -28,6 +27,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;

@@ -12,10 +12,10 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
+import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
@@ -61,7 +61,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
           .withRevision("1.0")
           .withDisplayName("DISPLAY_NAME")
           .withCreatedAt(System.currentTimeMillis())
-          .withCreatedBy(anUser().withUuid("USER_ID").build())
+          .withCreatedBy(anEmbeddedUser().withUuid("USER_ID").build())
           .withServices(Lists.newArrayList(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()));
 
   /**

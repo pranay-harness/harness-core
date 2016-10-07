@@ -20,7 +20,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.LoadBalancer;
-import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.sm.ContextElement;
 

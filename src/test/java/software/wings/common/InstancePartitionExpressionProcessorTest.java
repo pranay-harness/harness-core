@@ -11,12 +11,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;

@@ -45,9 +45,9 @@ public class ChangeNotification extends Notification {
     private boolean complete = true;
     private String uuid;
     private String appId;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long createdAt;
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
@@ -145,7 +145,7 @@ public class ChangeNotification extends Notification {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -167,7 +167,7 @@ public class ChangeNotification extends Notification {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }

@@ -3,7 +3,7 @@ package software.wings.sm;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.beans.User;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsDeque;
 
@@ -458,9 +458,9 @@ public class StateExecutionInstance extends Base {
     private Long endTs;
     private String uuid;
     private String appId;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long createdAt;
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
@@ -723,7 +723,7 @@ public class StateExecutionInstance extends Base {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -745,7 +745,7 @@ public class StateExecutionInstance extends Base {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
