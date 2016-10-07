@@ -350,11 +350,11 @@ public class Artifact extends Base {
     private String displayName;
     private String appId;
     private String revision;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long createdAt;
     private List<Service> services;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private Status status;
     private boolean active = true;
@@ -453,7 +453,7 @@ public class Artifact extends Base {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -497,7 +497,7 @@ public class Artifact extends Base {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }

@@ -3,6 +3,7 @@ package software.wings.audit;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;
@@ -492,9 +493,9 @@ public class AuditHeader extends Base {
     private Long responseTime;
     private String uuid;
     private String appId;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long createdAt;
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
@@ -768,7 +769,7 @@ public class AuditHeader extends Base {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -790,7 +791,7 @@ public class AuditHeader extends Base {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }

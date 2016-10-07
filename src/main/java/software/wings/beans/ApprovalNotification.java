@@ -135,9 +135,9 @@ public class ApprovalNotification extends ActionableNotification {
     private EntityType entityType;
     private String uuid;
     private String appId;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long createdAt;
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
@@ -246,7 +246,7 @@ public class ApprovalNotification extends ActionableNotification {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -268,7 +268,7 @@ public class ApprovalNotification extends ActionableNotification {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }

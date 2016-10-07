@@ -5,9 +5,9 @@
 package software.wings.common;
 
 import software.wings.api.HostElement;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.HostService;
 import software.wings.sm.ContextElementType;

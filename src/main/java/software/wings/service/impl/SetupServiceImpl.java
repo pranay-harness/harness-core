@@ -6,7 +6,6 @@ import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
 import software.wings.beans.Application;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.Environment;
@@ -16,6 +15,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.SetupAction;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;

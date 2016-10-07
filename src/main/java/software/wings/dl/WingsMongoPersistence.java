@@ -3,6 +3,7 @@ package software.wings.dl;
 import static java.lang.System.currentTimeMillis;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 
 import com.google.inject.Singleton;
 
@@ -171,7 +172,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
     updateOperations.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
-      updateOperations.set("lastUpdatedBy", UserThreadLocal.get());
+      updateOperations.set("lastUpdatedBy",
+          anEmbeddedUser()
+              .withUuid(UserThreadLocal.get().getUuid())
+              .withEmail(UserThreadLocal.get().getEmail())
+              .withName(UserThreadLocal.get().getName())
+              .build());
     }
     return primaryDatastore.update(updateQuery, updateOperations);
   }
@@ -183,7 +189,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
     ops.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
-      ops.set("lastUpdatedBy", UserThreadLocal.get());
+      ops.set("lastUpdatedBy",
+          anEmbeddedUser()
+              .withUuid(UserThreadLocal.get().getUuid())
+              .withEmail(UserThreadLocal.get().getEmail())
+              .withName(UserThreadLocal.get().getName())
+              .build());
     }
     return primaryDatastore.update(ent, ops);
   }

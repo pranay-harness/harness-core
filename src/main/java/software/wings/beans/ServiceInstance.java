@@ -25,9 +25,6 @@ import java.util.Objects;
 public class ServiceInstance extends Base {
   @Indexed private String envId;
 
-  //@Reference(idOnly = true, ignoreMissing = true) private Host host;
-  //@Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
-
   @Property("serviceTemplate") private String serviceTemplateId;
 
   private String serviceTemplateName;
@@ -534,12 +531,12 @@ public class ServiceInstance extends Base {
     private String appId;
     private String lastActivityId;
     private ExecutionStatus lastActivityStatus;
-    private User createdBy;
+    private EmbeddedUser createdBy;
     private long lastActivityCreatedAt;
     private long createdAt;
     private String commandName;
     private String commandType;
-    private User lastUpdatedBy;
+    private EmbeddedUser lastUpdatedBy;
     private long lastDeployedOn;
     private long lastUpdatedAt;
     private boolean active = true;
@@ -779,7 +776,7 @@ public class ServiceInstance extends Base {
      * @param createdBy the created by
      * @return the builder
      */
-    public Builder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -834,7 +831,7 @@ public class ServiceInstance extends Base {
      * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }

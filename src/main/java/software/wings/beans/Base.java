@@ -1,13 +1,13 @@
 package software.wings.beans;
 
 import static java.lang.System.currentTimeMillis;
+import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
-import org.mongodb.morphia.annotations.Reference;
 import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
@@ -45,9 +45,9 @@ public class Base {
   };
   @Id @NotNull(groups = {Update.class}) private String uuid;
   @Indexed @NotNull private String appId;
-  @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
+  private EmbeddedUser createdBy;
   @Indexed private long createdAt;
-  @Reference(idOnly = true, ignoreMissing = true) private User lastUpdatedBy;
+  private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;
   @Indexed private boolean active = true;
 
@@ -74,7 +74,7 @@ public class Base {
    *
    * @return the created by
    */
-  public User getCreatedBy() {
+  public EmbeddedUser getCreatedBy() {
     return createdBy;
   }
 
@@ -83,7 +83,7 @@ public class Base {
    *
    * @param createdBy the created by
    */
-  public void setCreatedBy(User createdBy) {
+  public void setCreatedBy(EmbeddedUser createdBy) {
     this.createdBy = createdBy;
   }
 
@@ -110,7 +110,7 @@ public class Base {
    *
    * @return the last updated by
    */
-  public User getLastUpdatedBy() {
+  public EmbeddedUser getLastUpdatedBy() {
     return lastUpdatedBy;
   }
 
@@ -119,7 +119,7 @@ public class Base {
    *
    * @param lastUpdatedBy the last updated by
    */
-  public void setLastUpdatedBy(User lastUpdatedBy) {
+  public void setLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
     this.lastUpdatedBy = lastUpdatedBy;
   }
 
@@ -215,12 +215,25 @@ public class Base {
     if (createdAt == 0) {
       createdAt = currentTimeMillis();
     }
+
+    User user = UserThreadLocal.get();
+
+    EmbeddedUser embeddedUser = null;
+
+    if (user != null) {
+      embeddedUser = anEmbeddedUser()
+                         .withUuid(UserThreadLocal.get().getUuid())
+                         .withEmail(UserThreadLocal.get().getEmail())
+                         .withName(UserThreadLocal.get().getName())
+                         .build();
+    }
+
     if (createdBy == null) {
-      createdBy = UserThreadLocal.get();
+      createdBy = embeddedUser;
     }
 
     lastUpdatedAt = currentTimeMillis();
-    lastUpdatedBy = UserThreadLocal.get();
+    lastUpdatedBy = embeddedUser;
   }
 
   /* (non-Javadoc)
