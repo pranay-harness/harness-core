@@ -1,3 +1,4 @@
 <changeFiles>
     <file path="base-user-references-migration.xml"/>
+    <file path="application-env-service-references-migration.xml"/>
 </changeFiles>
