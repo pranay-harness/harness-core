@@ -269,9 +269,9 @@ public class HostServiceImpl implements HostService {
             .aggregate(ApplicationHostUsage.class);
 
     List<ApplicationHostUsage> hostUsageList = IteratorUtils.toList(hostUsageIterator);
-    hostUsageList.forEach(applicationHostUsage
-        -> applicationHostUsage.setAppName(applicationsById.get(applicationHostUsage.getAppId()).getName()));
-
+    hostUsageList.stream()
+        .filter(hostUsage -> applicationsById.get(hostUsage.getAppId()) != null)
+        .forEach(hostUsage -> hostUsage.setAppName(applicationsById.get(hostUsage.getAppId()).getName()));
     return hostUsageList;
   }
 
