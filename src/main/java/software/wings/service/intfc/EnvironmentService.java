@@ -47,6 +47,15 @@ public interface EnvironmentService {
   Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status);
 
   /**
+   * Exist boolean.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the boolean
+   */
+  boolean exist(@NotEmpty String appId, @NotEmpty String envId);
+
+  /**
    * Save.
    *
    * @param environment the environment

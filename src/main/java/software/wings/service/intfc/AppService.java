@@ -31,12 +31,20 @@ public interface AppService {
   PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions);
 
   /**
+   * Exist boolean.
+   *
+   * @param appId the app id
+   * @return the boolean
+   */
+  boolean exist(@NotEmpty String appId);
+
+  /**
    * Find by uuid.
    *
    * @param uuid the uuid
    * @return the application
    */
-  Application get(String uuid);
+  Application get(@NotEmpty String uuid);
 
   /**
    * Get application.
@@ -46,7 +54,7 @@ public interface AppService {
    * @param overview the overview
    * @return the application
    */
-  Application get(String appId, SetupStatus status, boolean overview);
+  Application get(@NotEmpty String appId, SetupStatus status, boolean overview);
 
   /**
    * Update.

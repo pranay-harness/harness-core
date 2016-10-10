@@ -121,6 +121,11 @@ public class AppServiceImpl implements AppService {
     return response;
   }
 
+  @Override
+  public boolean exist(String appId) {
+    return wingsPersistence.createQuery(Application.class).field("appId").equal(appId).getKey() != null;
+  }
+
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
     return notificationService
         .list(aPageRequest()

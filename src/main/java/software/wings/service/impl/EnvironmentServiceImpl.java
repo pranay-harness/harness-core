@@ -110,6 +110,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     return environment;
   }
 
+  @Override
+  public boolean exist(@NotEmpty String appId, @NotEmpty String envId) {
+    return wingsPersistence.createQuery(Environment.class)
+               .field("appId")
+               .equal(appId)
+               .field(ID_KEY)
+               .equal(envId)
+               .getKey()
+        != null;
+  }
+
   private void addWorkflows(Environment environment) {
     PageRequest<Orchestration> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);

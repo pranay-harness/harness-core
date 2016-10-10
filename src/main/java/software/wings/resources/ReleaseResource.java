@@ -5,7 +5,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.Application;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
@@ -114,8 +113,7 @@ public class ReleaseResource {
   @ExceptionMetered
   public RestResponse<Release> save(@QueryParam("appId") String appId, Release release) {
     try {
-      Application application = appService.get(appId);
-      if (application == null) {
+      if (!appService.exist(appId)) {
         throw new NotFoundException("application with id " + appId + " not found.");
       }
       release.setAppId(appId);
