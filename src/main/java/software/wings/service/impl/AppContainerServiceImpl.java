@@ -9,7 +9,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import software.wings.beans.AppContainer;
-import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -20,6 +19,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
@@ -43,6 +43,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class AppContainerServiceImpl implements AppContainerService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   /**
    * {@inheritDoc}
@@ -137,13 +138,13 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
   }
 
   private void ensureAppContainerNotInUse(String appContainerId) {
-    Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
-    if (application != null && application.getServices() != null) {
-      for (Service service : application.getServices()) {
-        if (service.getAppContainer().getUuid().equals(appContainerId)) {
-          throw new WingsException(INVALID_REQUEST, "message", "One or more services are using App Stack");
-        }
-      }
+    List<Service> services =
+        serviceResourceService.list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build())
+            .getResponse();
+    if (services.size() > 0) {
+      throw new WingsException(INVALID_REQUEST, "message",
+          String.format(
+              "Application stack is in use by %s service%s.", services.size(), services.size() == 1 ? "" : "s"));
     }
   }
 
