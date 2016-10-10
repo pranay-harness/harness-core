@@ -156,7 +156,7 @@ public class HostIntegrationTest extends WingsBaseTest {
     baseHost.setHostNames(hostNames);
     baseHost.setServiceTemplates(asList(orderServiceTemplate));
     hostService.bulkSave(infraId, environment.getUuid(), baseHost);
-    assertThat(hostService.getHostCountByInfrastructure(infraId)).isEqualTo(3);
+    assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3);
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid())).hasSize(3);
     assertThat(serviceTemplateService.get(orderServiceTemplate.getAppId(), orderServiceTemplate.getUuid())
                    .getHosts()
@@ -195,7 +195,7 @@ public class HostIntegrationTest extends WingsBaseTest {
     baseHost.setServiceTemplates(asList(accountServiceTemplate));
     hostService.bulkSave(infraId, environment.getUuid(), baseHost);
 
-    assertThat(hostService.getHostCountByInfrastructure(infraId)).isEqualTo(3);
+    assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3);
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid())).hasSize(3);
     assertThat(serviceTemplateService.get(orderServiceTemplate.getAppId(), orderServiceTemplate.getUuid())
                    .getHosts()
@@ -239,7 +239,7 @@ public class HostIntegrationTest extends WingsBaseTest {
 
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid()))
         .hasSize(2); // 2 applicationHosts
-    assertThat(hostService.getHostCountByInfrastructure(infraId)).isEqualTo(3); // 3 infraHosts
+    assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3); // 3 infraHosts
     assertThat(serviceInstanceService
                    .list(aPageRequest()
                              .addFilter("appId", EQ, environment.getAppId())
@@ -253,7 +253,7 @@ public class HostIntegrationTest extends WingsBaseTest {
 
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid()))
         .hasSize(3); // 3 applicationHosts
-    assertThat(hostService.getHostCountByInfrastructure(infraId)).isEqualTo(3); // 3 infraHosts
+    assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3); // 3 infraHosts
     assertThat(serviceInstanceService
                    .list(aPageRequest()
                              .addFilter("appId", EQ, environment.getAppId())
@@ -281,7 +281,7 @@ public class HostIntegrationTest extends WingsBaseTest {
     hostService.bulkSave(infraId, environment.getUuid(), baseHost);
     hostService.deleteByInfra(infraId);
 
-    assertThat(hostService.getHostCountByInfrastructure(infraId)).isEqualTo(3);
+    assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3);
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid())).hasSize(0);
     assertThat(serviceInstanceService
                    .list(aPageRequest()

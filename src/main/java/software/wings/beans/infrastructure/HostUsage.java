@@ -7,6 +7,7 @@ import java.util.List;
  */
 public class HostUsage {
   private int totalCount;
+  private int unmappedHostCount;
   private List<ApplicationHostUsage> applicationHosts;
 
   /**
@@ -46,10 +47,29 @@ public class HostUsage {
   }
 
   /**
+   * Gets unmapped host count.
+   *
+   * @return the unmapped host count
+   */
+  public int getUnmappedHostCount() {
+    return unmappedHostCount;
+  }
+
+  /**
+   * Sets unmapped host count.
+   *
+   * @param unmappedHostCount the unmapped host count
+   */
+  public void setUnmappedHostCount(int unmappedHostCount) {
+    this.unmappedHostCount = unmappedHostCount;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private int totalCount;
+    private int unmappedHostCount;
     private List<ApplicationHostUsage> applicationHosts;
 
     private Builder() {}
@@ -75,6 +95,17 @@ public class HostUsage {
     }
 
     /**
+     * With unmapped host count builder.
+     *
+     * @param unmappedHostCount the unmapped host count
+     * @return the builder
+     */
+    public Builder withUnmappedHostCount(int unmappedHostCount) {
+      this.unmappedHostCount = unmappedHostCount;
+      return this;
+    }
+
+    /**
      * With application hosts builder.
      *
      * @param applicationHosts the application hosts
@@ -91,7 +122,10 @@ public class HostUsage {
      * @return the builder
      */
     public Builder but() {
-      return aHostUsage().withTotalCount(totalCount).withApplicationHosts(applicationHosts);
+      return aHostUsage()
+          .withTotalCount(totalCount)
+          .withUnmappedHostCount(unmappedHostCount)
+          .withApplicationHosts(applicationHosts);
     }
 
     /**
@@ -102,6 +136,7 @@ public class HostUsage {
     public HostUsage build() {
       HostUsage hostUsage = new HostUsage();
       hostUsage.setTotalCount(totalCount);
+      hostUsage.setUnmappedHostCount(unmappedHostCount);
       hostUsage.setApplicationHosts(applicationHosts);
       return hostUsage;
     }

@@ -86,16 +86,21 @@ public class InfrastructureServiceImpl implements InfrastructureService {
     PageResponse<Infrastructure> infrastructures = wingsPersistence.query(Infrastructure.class, req);
     if (overview) {
       infrastructures.getResponse().forEach(
-          infrastructure -> { infrastructure.setHostUsage(getInfrastructureHostUsage(infrastructure)); });
+          infrastructure -> infrastructure.setHostUsage(getInfrastructureHostUsage(infrastructure)));
     }
     return infrastructures;
   }
 
   private HostUsage getInfrastructureHostUsage(Infrastructure infrastructure) {
-    int totalCount = hostService.getHostCountByInfrastructure(infrastructure.getUuid());
+    int totalCount = hostService.getInfraHostCount(infrastructure.getUuid());
+    int unmappedHostCount = totalCount - hostService.getMappedInfraHostCount(infrastructure.getUuid());
     List<ApplicationHostUsage> applicationHostUsages =
         hostService.getInfrastructureHostUsageByApplication(infrastructure.getUuid());
-    return aHostUsage().withTotalCount(totalCount).withApplicationHosts(applicationHostUsages).build();
+    return aHostUsage()
+        .withTotalCount(totalCount)
+        .withUnmappedHostCount(unmappedHostCount)
+        .withApplicationHosts(applicationHostUsages)
+        .build();
   }
 
   /* (non-Javadoc)

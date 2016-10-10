@@ -18,6 +18,7 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+import com.mongodb.BasicDBObject;
 import org.apache.commons.collections.IteratorUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
@@ -246,8 +247,16 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public int getHostCountByInfrastructure(String infraId) {
+  public int getInfraHostCount(String infraId) {
     return (int) wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).countAll();
+  }
+
+  @Override
+  public int getMappedInfraHostCount(String infraId) {
+    return wingsPersistence.getDatastore()
+        .getCollection(ApplicationHost.class)
+        .distinct("hostName", new BasicDBObject("infraId", infraId))
+        .size();
   }
 
   @Override

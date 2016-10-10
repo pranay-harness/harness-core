@@ -157,7 +157,7 @@ public interface HostService {
    * @param infraId the infra id
    * @return the host count by infrastructure
    */
-  int getHostCountByInfrastructure(String infraId);
+  int getInfraHostCount(String infraId);
 
   /**
    * Gets host usage by application for infrastructure.
@@ -184,4 +184,12 @@ public interface HostService {
    * @return the boolean
    */
   boolean exist(String appId, String hostId);
+
+  /**
+   * Gets mapped infra host count.
+   *
+   * @param infraId the infra id
+   * @return the mapped infra host count
+   */
+  int getMappedInfraHostCount(String infraId);
 }
