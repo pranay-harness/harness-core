@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -43,7 +44,8 @@ public class SetupResource {
   @GET
   @Path("/applications/{appId}")
   public RestResponse<Setup> verifyApplication(@PathParam("appId") String appId) {
-    return new RestResponse<>(setupService.getApplicationSetupStatus(appService.get(appId)));
+    return new RestResponse<>(
+        setupService.getApplicationSetupStatus(appService.get(appId, SetupStatus.INCOMPLETE, false)));
   }
 
   /**
