@@ -1,4 +1,5 @@
 <changeFiles>
     <file path="base-user-references-migration.xml"/>
     <file path="application-env-service-references-migration.xml"/>
+    <file path="tag-children-tag-references-migration.xml"/>
 </changeFiles>
