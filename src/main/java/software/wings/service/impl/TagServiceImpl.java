@@ -55,8 +55,24 @@ public class TagServiceImpl implements TagService {
    * @see software.wings.service.intfc.TagService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Tag> list(PageRequest<Tag> request) {
-    return wingsPersistence.query(Tag.class, request);
+  public PageResponse<Tag> list(PageRequest<Tag> request, boolean withTagHierarchy) {
+    PageResponse<Tag> pageResponse = wingsPersistence.query(Tag.class, request);
+    pageResponse.getResponse().forEach(tag -> attachChildren(tag));
+    return pageResponse;
+  }
+
+  private void attachChildren(Tag tag) {
+    if (tag == null) {
+      return;
+    }
+    List<Tag> children = wingsPersistence.createQuery(Tag.class)
+                             .field("appId")
+                             .equal(tag.getAppId())
+                             .field("parentTagId")
+                             .equal(tag.getUuid())
+                             .asList();
+    children.forEach(childTag -> attachChildren(childTag));
+    tag.setChildren(children);
   }
 
   /* (non-Javadoc)
@@ -82,7 +98,6 @@ public class TagServiceImpl implements TagService {
       tag.setRootTagId(
           parentTag.getTagType().equals(TagType.ENVIRONMENT) ? parentTag.getUuid() : parentTag.getRootTagId());
       tag = wingsPersistence.saveAndGet(Tag.class, tag);
-      wingsPersistence.addToList(Tag.class, tag.getAppId(), parentTag.getUuid(), "children", tag.getUuid());
       updateServiceTemplateWithCommandPredecessor(tag);
       return tag;
     }
@@ -137,8 +152,8 @@ public class TagServiceImpl implements TagService {
         .equal(tag.getAppId())
         .field("envId")
         .equal(tag.getEnvId())
-        .field("children")
-        .equal(tag.getUuid())
+        .field(ID_KEY)
+        .equal(tag.getParentTagId())
         .get();
   }
 
@@ -146,15 +161,34 @@ public class TagServiceImpl implements TagService {
    * @see software.wings.service.intfc.TagService#get(java.lang.String, java.lang.String)
    */
   @Override
-  public Tag get(String appId, String envId, String tagId) {
-    return wingsPersistence.createQuery(Tag.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field(ID_KEY)
-        .equal(tagId)
-        .get();
+  public Tag get(String appId, String envId, String tagId, boolean withTagHierarchy) {
+    Tag tag = wingsPersistence.createQuery(Tag.class)
+                  .field("appId")
+                  .equal(appId)
+                  .field("envId")
+                  .equal(envId)
+                  .field(ID_KEY)
+                  .equal(tagId)
+                  .get();
+    attachChildren(tag);
+    return tag;
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#getRootConfigTag(java.lang.String, java.lang.String)
+   */
+  @Override
+  public Tag getRootConfigTag(String appId, String envId) {
+    Tag tag = wingsPersistence.createQuery(Tag.class)
+                  .field("appId")
+                  .equal(appId)
+                  .field("envId")
+                  .equal(envId)
+                  .field("tagType")
+                  .equal(TagType.ENVIRONMENT)
+                  .get();
+    attachChildren(tag);
+    return tag;
   }
 
   /* (non-Javadoc)
@@ -162,7 +196,7 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public Tag update(Tag tag) {
-    tag = get(tag.getAppId(), tag.getEnvId(), tag.getUuid());
+    tag = get(tag.getAppId(), tag.getEnvId(), tag.getUuid(), true);
     if (tag == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Tag doesn't exist");
     }
@@ -185,7 +219,7 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public void delete(String appId, String envId, String tagId) {
-    Tag tag = get(appId, envId, tagId);
+    Tag tag = get(appId, envId, tagId, true);
     Validator.notNullCheck("Tag", tag);
     if (tag.getTagType().isModificationAllowed()) {
       cascadingDelete(tag);
@@ -218,12 +252,15 @@ public class TagServiceImpl implements TagService {
         .field("tagType")
         .equal(TagType.ENVIRONMENT)
         .asList()
-        .forEach(this ::cascadingDelete);
+        .forEach(tag -> {
+          attachChildren(tag);
+          cascadingDelete(tag);
+        });
   }
 
   @Override
   public List<Tag> flattenTagTree(String appId, String envId, String tagId) {
-    Tag tag = isNullOrEmpty(tagId) ? getRootConfigTag(appId, envId) : get(appId, envId, tagId);
+    Tag tag = isNullOrEmpty(tagId) ? getRootConfigTag(appId, envId) : get(appId, envId, tagId, true);
     List<Tag> flattenTreeNodes = new ArrayList<>();
     collectTreeNodes(tag, flattenTreeNodes);
     return flattenTreeNodes;
@@ -235,7 +272,7 @@ public class TagServiceImpl implements TagService {
     int maxDepth = 10;
     while (maxDepth > 0 && !isNullOrEmpty(tag.getParentTagId())) {
       maxDepth--;
-      tag = get(tag.getAppId(), tag.getEnvId(), tag.getParentTagId());
+      tag = get(tag.getAppId(), tag.getEnvId(), tag.getParentTagId(), true);
       path = tag.getName().trim() + "/" + path;
     }
     return path;
@@ -271,21 +308,6 @@ public class TagServiceImpl implements TagService {
     }
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#getRootConfigTag(java.lang.String, java.lang.String)
-   */
-  @Override
-  public Tag getRootConfigTag(String appId, String envId) {
-    return wingsPersistence.createQuery(Tag.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("tagType")
-        .equal(TagType.ENVIRONMENT)
-        .get();
-  }
-
   @Override
   public void tagHosts(Tag tag, List<ApplicationHost> inputHosts) {
     List<ApplicationHost> existingMappedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
@@ -302,7 +324,7 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public void tagHostsByApi(String appId, String envId, String tagId, List<String> hostIds) {
-    Tag tag = get(appId, envId, tagId);
+    Tag tag = get(appId, envId, tagId, true);
     Validator.notNullCheck("Tag", tag);
 
     if (!tag.getTagType().isModificationAllowed()) {

@@ -96,7 +96,7 @@ public class TagServiceTest extends WingsBaseTest {
     PageRequest<Tag> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(getTagBuilder().build()));
     when(wingsPersistence.query(Tag.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Tag> tags = tagService.list(pageRequest);
+    PageResponse<Tag> tags = tagService.list(pageRequest, true);
     assertThat(tags).containsAll(asList(getTagBuilder().build()));
   }
 
@@ -105,7 +105,7 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetTag() {
-    tagService.get(APP_ID, ENV_ID, TAG_ID);
+    tagService.get(APP_ID, ENV_ID, TAG_ID, true);
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(query).field("envId");
@@ -131,10 +131,11 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteTag() {
-    Tag child = getTagBuilder().withUuid(TAG_ID).withRootTagId("ROOT_TAG_ID").build();
+    Tag child = getTagBuilder().withUuid(TAG_ID).withRootTagId("ROOT_TAG_ID").withParentTagId("PARENT_TAG_ID").build();
     Tag parent =
         getTagBuilder().withUuid("PARENT_TAG_ID").withRootTagId("ROOT_TAG_ID").withChildren(asList(child)).build();
     when(query.get()).thenReturn(parent).thenReturn(child);
+    when(query.asList()).thenReturn(asList(child)).thenReturn(asList());
 
     tagService.delete(parent.getAppId(), parent.getEnvId(), parent.getUuid());
     InOrder inOrder = inOrder(wingsPersistence);
@@ -154,9 +155,10 @@ public class TagServiceTest extends WingsBaseTest {
                   .withChildren(asList())
                   .build();
     when(query.get()).thenReturn(tag);
+    when(query.asList()).thenReturn(asList());
 
     tagService.delete(tag.getAppId(), tag.getEnvId(), tag.getUuid());
-    verify(wingsPersistence).createQuery(Tag.class);
+    verify(wingsPersistence, times(2)).createQuery(Tag.class);
     verifyZeroInteractions(wingsPersistence);
   }
 
@@ -181,7 +183,7 @@ public class TagServiceTest extends WingsBaseTest {
             .withHost(aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).build())
             .build();
 
-    when(query.asList()).thenReturn(asList(tag));
+    when(query.asList()).thenReturn(asList(tag)).thenReturn(asList());
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(applicationHost));
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
 
@@ -229,7 +231,6 @@ public class TagServiceTest extends WingsBaseTest {
     tagPostSave = tagService.save("PARENT_TAG_ID", getTagBuilder().build());
 
     verify(wingsPersistence).saveAndGet(Tag.class, tagPreSave);
-    verify(wingsPersistence).addToList(Tag.class, APP_ID, "PARENT_TAG_ID", "children", TAG_ID);
     verify(serviceTemplateService).addLeafTag(aServiceTemplate().withUuid(TEMPLATE_ID).build(), tagPostSave);
   }
 
@@ -383,23 +384,22 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldFlattenTagTree() {
-    Tag childTag1 = getTagBuilder().withUuid("TAG_ID_1").withName("TAG_1").withRootTagId("ROOT_TAG_ID").build();
-    Tag childTag2 = getTagBuilder().withUuid("TAG_ID_2").withName("TAG_1").withRootTagId("ROOT_TAG_ID").build();
-    Tag rootTag = getTagBuilder()
-                      .withUuid("ROOT_TAG_ID")
-                      .withName("ROOT_TAG")
-                      .withTagType(ENVIRONMENT)
-                      .withChildren(asList(childTag1, childTag2))
-                      .build();
+    Tag childTag1 = getTagBuilder()
+                        .withUuid("TAG_ID_1")
+                        .withName("TAG_1")
+                        .withRootTagId("ROOT_TAG_ID")
+                        .withParentTagId("ROOT_TAG_ID")
+                        .build();
+    Tag childTag2 = getTagBuilder()
+                        .withUuid("TAG_ID_2")
+                        .withName("TAG_1")
+                        .withRootTagId("ROOT_TAG_ID")
+                        .withParentTagId("ROOT_TAG_ID")
+                        .build();
+    Tag rootTag = getTagBuilder().withUuid("ROOT_TAG_ID").withName("ROOT_TAG").withTagType(ENVIRONMENT).build();
     when(query.get()).thenReturn(rootTag);
+    when(query.asList()).thenReturn(asList(childTag1, childTag2)).thenReturn(asList()).thenReturn(asList());
     List<Tag> tags = tagService.flattenTagTree(APP_ID, ENV_ID, null);
     assertThat(tags).isNotNull().hasSize(3).containsExactlyInAnyOrder(rootTag, childTag1, childTag2);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field("tagType");
-    verify(end).equal(ENVIRONMENT);
-    verify(query).get();
   }
 }

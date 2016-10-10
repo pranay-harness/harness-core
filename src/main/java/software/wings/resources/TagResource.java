@@ -54,7 +54,7 @@ public class TagResource {
     request.addFilter("appId", appId, EQ);
     request.addFilter("envId", envId, EQ);
     request.addFilter("tagType", TagType.ENVIRONMENT, EQ);
-    return new RestResponse<>(tagService.list(request));
+    return new RestResponse<>(tagService.list(request, true));
   }
 
   /**
@@ -86,7 +86,7 @@ public class TagResource {
   @Path("{tagId}")
   public RestResponse<Tag> get(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("tagId") String tagId) {
-    return new RestResponse<>(tagService.get(appId, envId, tagId));
+    return new RestResponse<>(tagService.get(appId, envId, tagId, true));
   }
 
   /**

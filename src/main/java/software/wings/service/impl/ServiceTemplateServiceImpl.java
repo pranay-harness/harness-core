@@ -260,7 +260,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
-    List<Tag> newTags = tagIds.stream().map(tagId -> tagService.get(appId, envId, tagId)).collect(toList());
+    List<Tag> newTags = tagIds.stream().map(tagId -> tagService.get(appId, envId, tagId, true)).collect(toList());
     Set<Tag> newLeafTags =
         newTags.stream().map(tag -> tagService.getLeafTagInSubTree(tag)).flatMap(List::stream).collect(toSet());
 

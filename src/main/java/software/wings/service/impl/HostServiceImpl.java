@@ -444,7 +444,7 @@ public class HostServiceImpl implements HostService {
   private Tag validateAndFetchTag(String appId, String envId, Tag tag) {
     Tag fetchedTag;
     if (isValidDbReference(tag)) {
-      fetchedTag = tagService.get(appId, envId, tag.getUuid());
+      fetchedTag = tagService.get(appId, envId, tag.getUuid(), true);
       if (fetchedTag == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Config tag doesn't exist");
       } else if (fetchedTag.getChildren() != null && fetchedTag.getChildren().size() > 0) {

@@ -333,7 +333,7 @@ public class HostServiceTest extends WingsBaseTest {
 
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
-    when(tagService.get(APP_ID, ENV_ID, TAG_ID)).thenReturn(tag);
+    when(tagService.get(APP_ID, ENV_ID, TAG_ID, true)).thenReturn(tag);
     when(wingsPersistence.saveAndGet(Host.class, hostPreSave)).thenReturn(hostPostSave);
     when(wingsPersistence.saveAndGet(ApplicationHost.class, applicationHostPreSave))
         .thenReturn(applicationHostPostSave);
@@ -349,7 +349,7 @@ public class HostServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Host.class, hostPreSave);
     verify(wingsPersistence).saveAndGet(ApplicationHost.class, applicationHostPreSave);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
-    verify(tagService).get(APP_ID, ENV_ID, TAG_ID);
+    verify(tagService).get(APP_ID, ENV_ID, TAG_ID, true);
     verify(serviceTemplateService).addHosts(serviceTemplate, asList(applicationHostPostSave));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
   }

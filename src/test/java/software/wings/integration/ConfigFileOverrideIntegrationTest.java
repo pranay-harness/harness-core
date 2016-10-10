@@ -361,6 +361,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                                    .build();
     if (entityType == EntityType.SERVICE) {
       appConfigFile.setEnvId(GLOBAL_ENV_ID);
+      appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
     }
     FileInputStream fileInputStream = new FileInputStream(createRandomFile());
     configService.save(appConfigFile, fileInputStream);

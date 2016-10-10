@@ -8,7 +8,6 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class Tag extends Base {
   private String rootTagId;
   private String parentTagId;
   @NotEmpty private String envId;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children = new ArrayList<>();
+  @Transient private List<Tag> children = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
 

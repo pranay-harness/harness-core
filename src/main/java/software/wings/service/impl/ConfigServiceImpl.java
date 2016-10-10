@@ -179,7 +179,7 @@ public class ConfigServiceImpl implements ConfigService {
       case TAG:
       case ENVIRONMENT:
         return tagService.getTagHierarchyPathString(
-            tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()));
+            tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId(), true));
       case HOST:
         ApplicationHost host = hostService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId());
         String tagHierarchyPathString = tagService.getTagHierarchyPathString(host.getConfigTag());

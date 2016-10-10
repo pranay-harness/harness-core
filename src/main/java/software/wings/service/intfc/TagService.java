@@ -22,9 +22,10 @@ public interface TagService {
    * List root tags.
    *
    * @param request the request
+   * @param withTagHierarchy
    * @return the page response
    */
-  PageResponse<Tag> list(PageRequest<Tag> request);
+  PageResponse<Tag> list(PageRequest<Tag> request, boolean withTagHierarchy);
 
   /**
    * Save tag.
@@ -41,9 +42,10 @@ public interface TagService {
    * @param appId the app id
    * @param envId the env id
    * @param tagId the tag id
+   * @param withTagHierarchy
    * @return the tag
    */
-  Tag get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId);
+  Tag get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId, boolean withTagHierarchy);
 
   /**
    * Update tag.
