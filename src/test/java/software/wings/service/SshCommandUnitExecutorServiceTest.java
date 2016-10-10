@@ -25,8 +25,11 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.BASTION_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_PATH;
+import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
+import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 import static software.wings.utils.WingsTestConstants.SSH_KEY;
@@ -38,6 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -61,6 +65,7 @@ import software.wings.core.ssh.executors.SshPwdAuthExecutor;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.SettingsService;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,12 +81,17 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   public static final String EXEC_CMD = "ls";
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
-      aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
+      aSettingAttribute()
+          .withUuid(HOST_CONN_ATTR_ID)
+          .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build())
+          .build();
   private static final SettingAttribute BASTION_HOST_ATTR =
       aSettingAttribute()
+          .withUuid(BASTION_CONN_ATTR_ID)
           .withValue(aBastionConnectionAttributes().withHostName(HOST_NAME).withKey(SSH_KEY).build())
           .build();
   private static final SettingAttribute HOST_CONN_ATTR_KEY = aSettingAttribute()
+                                                                 .withUuid(HOST_CONN_ATTR_KEY_ID)
                                                                  .withValue(aHostConnectionAttributes()
                                                                                 .withAccessType(AccessType.KEY)
                                                                                 .withKey(SSH_KEY)
@@ -93,23 +103,25 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   /**
    * The Ssh executor factory.
    */
-  @Mock SshExecutorFactory sshExecutorFactory;
+  @Mock private SshExecutorFactory sshExecutorFactory;
   /**
    * The Ssh pwd auth executor.
    */
-  @Mock SshPwdAuthExecutor sshPwdAuthExecutor;
+  @Mock private SshPwdAuthExecutor sshPwdAuthExecutor;
   /**
    * The Ssh pub key auth executor.
    */
-  @Mock SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
+  @Mock private SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
   /**
    * The Ssh jumpbox executor.
    */
-  @Mock SshJumpboxExecutor sshJumpboxExecutor;
+  @Mock private SshJumpboxExecutor sshJumpboxExecutor;
   /**
    * The Log service.
    */
-  @Mock LogService logService;
+  @Mock private LogService logService;
+
+  @Mock private SettingsService settingsService;
 
   @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;
   private Builder builder = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME);
@@ -128,6 +140,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                             .build())
           .withServiceVariables(ImmutableMap.of("PORT", "8080"))
           .build();
+
+  @Before
+  public void setupMocks() {
+    when(settingsService.get(APP_ID, HOST_CONN_ATTR_ID)).thenReturn(HOST_CONN_ATTR_PWD);
+    when(settingsService.get(APP_ID, BASTION_CONN_ATTR_ID)).thenReturn(BASTION_HOST_ATTR);
+    when(settingsService.get(APP_ID, HOST_CONN_ATTR_KEY_ID)).thenReturn(HOST_CONN_ATTR_KEY);
+  }
 
   /**
    * Should create password based ssh config.
@@ -163,6 +182,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(KEY_AUTH)
                                              .withKey(SSH_KEY)
+                                             .withKeyName(HOST_CONN_ATTR_KEY.getUuid())
                                              .build();
 
     when(sshExecutorFactory.getExecutor(KEY_AUTH)).thenReturn(sshPubKeyAuthExecutor);
@@ -177,16 +197,19 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateBastionHostBasedSshConfig() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withBastionConnAttr(BASTION_HOST_ATTR).build();
-    SshSessionConfig expectedSshConfig =
-        aSshSessionConfig()
-            .withAppId(APP_ID)
-            .withExecutionId(ACTIVITY_ID)
-            .withHost(HOST_NAME)
-            .withUserName(SSH_USER_NAME)
-            .withExecutorType(BASTION_HOST)
-            .withPassword(SSH_USER_PASSWORD)
-            .withBastionHostConfig(aSshSessionConfig().withHost(HOST_NAME).withKey(SSH_KEY).build())
-            .build();
+    SshSessionConfig expectedSshConfig = aSshSessionConfig()
+                                             .withAppId(APP_ID)
+                                             .withExecutionId(ACTIVITY_ID)
+                                             .withHost(HOST_NAME)
+                                             .withUserName(SSH_USER_NAME)
+                                             .withExecutorType(BASTION_HOST)
+                                             .withPassword(SSH_USER_PASSWORD)
+                                             .withBastionHostConfig(aSshSessionConfig()
+                                                                        .withHost(HOST_NAME)
+                                                                        .withKey(SSH_KEY)
+                                                                        .withKeyName(BASTION_HOST_ATTR.getUuid())
+                                                                        .build())
+                                             .build();
 
     when(sshExecutorFactory.getExecutor(BASTION_HOST)).thenReturn(sshJumpboxExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT, commandExecutionContext);

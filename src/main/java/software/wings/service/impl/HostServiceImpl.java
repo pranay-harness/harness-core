@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -193,7 +194,7 @@ public class HostServiceImpl implements HostService {
       SettingAttribute bastionConnAttr =
           validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
       if (bastionConnAttr != null) {
-        baseHost.setBastionConnAttr(bastionConnAttr);
+        baseHost.setBastionConnAttr(bastionConnAttr.getUuid());
       }
       host = wingsPersistence.saveAndGet(Host.class, baseHost);
     }
@@ -456,12 +457,11 @@ public class HostServiceImpl implements HostService {
     return fetchedTag;
   }
 
-  private SettingAttribute validateAndFetchBastionHostConnectionReference(
-      String appId, SettingAttribute settingAttribute) {
-    if (!isValidDbReference(settingAttribute)) {
+  private SettingAttribute validateAndFetchBastionHostConnectionReference(String appId, String settingAttribute) {
+    if (isBlank(settingAttribute)) {
       return null;
     }
-    SettingAttribute fetchedAttribute = settingsService.get(appId, settingAttribute.getUuid());
+    SettingAttribute fetchedAttribute = settingsService.get(appId, settingAttribute);
     if (fetchedAttribute == null) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "bastionConnAttr");
     }

@@ -78,26 +78,26 @@ public class InfraIntegrationTest extends WingsBaseTest {
   /**
    * The Infrastructure id.
    */
-  String infraId;
+  private String infraId;
 
   /**
    * The Environment.
    */
-  Environment environment;
+  private Environment environment;
 
   /**
    * The Order service template.
    */
-  ServiceTemplate orderServiceTemplate;
+  private ServiceTemplate orderServiceTemplate;
   /**
    * The Account service template.
    */
-  ServiceTemplate accountServiceTemplate;
+  private ServiceTemplate accountServiceTemplate;
 
   /**
    * The Setting attribute.
    */
-  SettingAttribute settingAttribute;
+  private SettingAttribute settingAttribute;
 
   /**
    * Sets the up.
@@ -133,13 +133,8 @@ public class InfraIntegrationTest extends WingsBaseTest {
                                         .build();
     Infrastructure savedInfra = infrastructureService.save(infrastructure);
 
-    Host baseHost = aHost()
-                        .withAppId(GLOBAL_APP_ID)
-                        .withInfraId(savedInfra.getUuid())
-                        .withHostConnAttr(settingAttribute)
-                        .withBastionConnAttr(settingAttribute)
-                        .withHostName("aws.host1")
-                        .build();
+    Host baseHost =
+        aHost().withAppId(GLOBAL_APP_ID).withInfraId(savedInfra.getUuid()).withHostName("aws.host1").build();
     Host host = wingsPersistence.saveAndGet(Host.class, baseHost);
 
     infrastructureService.applyApplicableMappingRules(infrastructure, host);

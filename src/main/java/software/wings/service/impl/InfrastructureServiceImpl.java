@@ -208,7 +208,7 @@ public class InfrastructureServiceImpl implements InfrastructureService {
                                                 .get(); // TODO:: remove it
 
     newProviderHosts.forEach(host -> {
-      host.setHostConnAttr(connectionAttributes);
+      host.setHostConnAttr(connectionAttributes.getUuid());
       host.setInfraId(infrastructure.getUuid());
       Host savedHost = wingsPersistence.saveAndGet(Host.class, host);
       applyApplicableMappingRules(infrastructure, savedHost);

@@ -29,6 +29,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
@@ -57,6 +58,7 @@ public class StateMachineExecutionSimulator {
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
+  @Inject private SettingsService settingsService;
 
   /**
    * Gets status breakdown.
@@ -147,7 +149,7 @@ public class StateMachineExecutionSimulator {
                                              .getResponse();
 
     for (ApplicationHost host : hostResponse) {
-      SettingAttribute connAttribute = host.getHost().getHostConnAttr();
+      SettingAttribute connAttribute = settingsService.get(appId, host.getHost().getHostConnAttr());
       if (connAttribute == null || connAttribute.getValue() == null
           || !(connAttribute.getValue() instanceof HostConnectionAttributes)
           || ((HostConnectionAttributes) connAttribute.getValue()).getAccessType() == null) {

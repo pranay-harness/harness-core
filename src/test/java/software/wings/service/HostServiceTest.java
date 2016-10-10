@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
@@ -27,6 +28,7 @@ import static software.wings.beans.infrastructure.Infrastructure.InfrastructureT
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
@@ -48,7 +50,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
@@ -101,7 +102,10 @@ public class HostServiceTest extends WingsBaseTest {
   @Mock private AggregationPipeline aggregationPipeline;
 
   private SettingAttribute HOST_CONN_ATTR_PWD =
-      aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
+      aSettingAttribute()
+          .withUuid(HOST_CONN_ATTR_ID)
+          .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build())
+          .build();
   private HostConnectionCredential CREDENTIAL =
       aHostConnectionCredential().withSshUser(USER_NAME).withSshPassword(WingsTestConstants.USER_PASSWORD).build();
   private Host.Builder hostBuilder = aHost()
@@ -189,7 +193,7 @@ public class HostServiceTest extends WingsBaseTest {
     when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID))
         .thenReturn(aTag().withAppId(APP_ID).withEnvId(ENV_ID).withTagType(TagType.UNTAGGED_HOST).build());
     ApplicationHost savedHost = hostService.update(ENV_ID, host);
-    verify(wingsPersistence).updateFields(Host.class, HOST_ID, ImmutableMap.of("hostConnAttr", HOST_CONN_ATTR_PWD));
+    verify(wingsPersistence).updateFields(Host.class, HOST_ID, ImmutableMap.of("hostConnAttr", HOST_CONN_ATTR_ID));
     assertThat(savedHost).isNotNull();
     assertThat(savedHost).isInstanceOf(ApplicationHost.class);
   }
@@ -287,8 +291,10 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldBulkSave() {
     Tag tag = aTag().withUuid(TAG_ID).build();
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).build();
-    SettingAttribute hostConnAttr =
-        aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
+    SettingAttribute hostConnAttr = aSettingAttribute()
+                                        .withUuid(HOST_CONN_ATTR_ID)
+                                        .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build())
+                                        .build();
 
     Host requestHost = aHost()
                            .withAppId(APP_ID)
@@ -301,7 +307,7 @@ public class HostServiceTest extends WingsBaseTest {
                            .build();
 
     Host hostPreSave = aHost()
-                           .withAppId(Base.GLOBAL_APP_ID)
+                           .withAppId(GLOBAL_APP_ID)
                            .withInfraId(INFRA_ID)
                            .withHostName(HOST_NAME)
                            .withHostConnAttr(hostConnAttr)
@@ -340,9 +346,10 @@ public class HostServiceTest extends WingsBaseTest {
     when(infrastructureService.get(INFRA_ID))
         .thenReturn(Infrastructure.Builder.anInfrastructure()
                         .withType(STATIC)
-                        .withAppId(Base.GLOBAL_APP_ID)
+                        .withAppId(GLOBAL_APP_ID)
                         .withUuid(INFRA_ID)
                         .build());
+    when(settingsService.get(GLOBAL_APP_ID, HOST_CONN_ATTR_ID)).thenReturn(hostConnAttr);
 
     hostService.bulkSave(INFRA_ID, ENV_ID, requestHost);
 

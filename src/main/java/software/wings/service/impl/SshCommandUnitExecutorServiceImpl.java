@@ -24,6 +24,7 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
@@ -39,6 +40,7 @@ import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.utils.TimeoutManager;
 
 import java.util.concurrent.ExecutionException;
@@ -69,6 +71,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   @Inject private TimeoutManager timeoutManager;
 
   @Inject private Injector injector;
+
+  @Inject private SettingsService settingsService;
 
   private SshExecutorFactory sshExecutorFactory;
 
@@ -198,7 +202,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   }
 
   private SshSessionConfig getSshSessionConfig(Host host, CommandExecutionContext context, CommandUnit commandUnit) {
-    ExecutorType executorType = getExecutorType(host);
+    ExecutorType executorType = getExecutorType(context.getAppId(), host);
 
     SSHExecutionCredential sshExecutionCredential = (SSHExecutionCredential) context.getExecutionCredential();
 
@@ -215,31 +219,35 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                           .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase());
 
     if (executorType.equals(KEY_AUTH)) {
-      HostConnectionAttributes hostConnectionAttrs = (HostConnectionAttributes) host.getHostConnAttr().getValue();
-      builder.withKey(hostConnectionAttrs.getKey())
-          .withUserName(hostConnectionAttrs.getUserName())
-          .withKeyName(host.getHostConnAttr().getUuid())
+      SettingAttribute settingAttribute = settingsService.get(host.getAppId(), host.getHostConnAttr());
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+      builder.withKey(hostConnectionAttributes.getKey())
+          .withUserName(hostConnectionAttributes.getUserName())
+          .withKeyName(settingAttribute.getUuid())
           .withPassword(null);
     }
 
     if (host.getBastionConnAttr() != null) {
-      BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) host.getBastionConnAttr().getValue();
+      SettingAttribute settingAttribute = settingsService.get(host.getAppId(), host.getBastionConnAttr());
+      BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) settingAttribute.getValue();
       builder.withBastionHostConfig(aSshSessionConfig()
                                         .withHost(bastionAttrs.getHostName())
                                         .withKey(bastionAttrs.getKey())
-                                        .withKeyName(host.getBastionConnAttr().getUuid())
+                                        .withKeyName(settingAttribute.getUuid())
                                         .withUserName(bastionAttrs.getUserName())
                                         .build());
     }
     return builder.build();
   }
 
-  private ExecutorType getExecutorType(Host host) {
+  private ExecutorType getExecutorType(String appId, Host host) {
     ExecutorType executorType;
     if (host.getBastionConnAttr() != null) {
       executorType = BASTION_HOST;
     } else {
-      AccessType accessType = ((HostConnectionAttributes) host.getHostConnAttr().getValue()).getAccessType();
+      SettingAttribute settingAttribute = settingsService.get(appId, host.getHostConnAttr());
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+      AccessType accessType = hostConnectionAttributes.getAccessType();
       if (accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER)
           || accessType.equals(KEY_SUDO_APP_USER)) {
         executorType = KEY_AUTH;

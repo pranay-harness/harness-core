@@ -4,7 +4,6 @@ import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 
 import java.util.ArrayList;
@@ -42,8 +41,8 @@ public class AwsHost extends Host {
     private String infraId;
     private String hostName;
     private String osType;
-    private SettingAttribute hostConnAttr;
-    private SettingAttribute bastionConnAttr;
+    private String hostConnAttr;
+    private String bastionConnAttr;
     private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private List<String> hostNames; // to support bulk add host API
@@ -117,7 +116,7 @@ public class AwsHost extends Host {
      * @param hostConnAttr the host conn attr
      * @return the builder
      */
-    public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
+    public Builder withHostConnAttr(String hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
       return this;
     }
@@ -128,7 +127,7 @@ public class AwsHost extends Host {
      * @param bastionConnAttr the bastion conn attr
      * @return the builder
      */
-    public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
+    public Builder withBastionConnAttr(String bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
       return this;
     }

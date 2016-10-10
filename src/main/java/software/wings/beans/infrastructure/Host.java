@@ -40,14 +40,9 @@ public class Host extends Base {
   private String hostName;
   private String osType;
 
-  @FormDataParam("hostConnAttr")
-  @Reference(idOnly = true, ignoreMissing = true)
-  @NotNull
-  private SettingAttribute hostConnAttr;
+  @FormDataParam("hostConnAttr") @NotNull private String hostConnAttr;
 
-  @FormDataParam("bastionConnAttr")
-  @Reference(idOnly = true, ignoreMissing = true)
-  private SettingAttribute bastionConnAttr;
+  @FormDataParam("bastionConnAttr") private String bastionConnAttr;
 
   @FormDataParam("configTag") @Reference(idOnly = true, ignoreMissing = true) @Transient private Tag configTag;
 
@@ -101,7 +96,7 @@ public class Host extends Base {
    *
    * @return the host conn attr
    */
-  public SettingAttribute getHostConnAttr() {
+  public String getHostConnAttr() {
     return hostConnAttr;
   }
 
@@ -110,7 +105,7 @@ public class Host extends Base {
    *
    * @param hostConnAttr the host conn attr
    */
-  public void setHostConnAttr(SettingAttribute hostConnAttr) {
+  public void setHostConnAttr(String hostConnAttr) {
     this.hostConnAttr = hostConnAttr;
   }
 
@@ -119,7 +114,7 @@ public class Host extends Base {
    *
    * @return the bastion conn attr
    */
-  public SettingAttribute getBastionConnAttr() {
+  public String getBastionConnAttr() {
     return bastionConnAttr;
   }
 
@@ -128,7 +123,7 @@ public class Host extends Base {
    *
    * @param bastionConnAttr the bastion conn attr
    */
-  public void setBastionConnAttr(SettingAttribute bastionConnAttr) {
+  public void setBastionConnAttr(String bastionConnAttr) {
     this.bastionConnAttr = bastionConnAttr;
   }
 
@@ -271,8 +266,8 @@ public class Host extends Base {
     private String infraId;
     private String hostName;
     private String osType;
-    private SettingAttribute hostConnAttr;
-    private SettingAttribute bastionConnAttr;
+    private String hostConnAttr;
+    private String bastionConnAttr;
     private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private List<String> hostNames; // to support bulk add host API
@@ -335,8 +330,13 @@ public class Host extends Base {
      * @param hostConnAttr the host conn attr
      * @return the builder
      */
-    public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
+    public Builder withHostConnAttr(String hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
+      return this;
+    }
+
+    public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
+      this.hostConnAttr = hostConnAttr.getUuid();
       return this;
     }
 
@@ -346,8 +346,13 @@ public class Host extends Base {
      * @param bastionConnAttr the bastion conn attr
      * @return the builder
      */
-    public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
+    public Builder withBastionConnAttr(String bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
+      return this;
+    }
+
+    public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
+      this.bastionConnAttr = bastionConnAttr.getUuid();
       return this;
     }
 

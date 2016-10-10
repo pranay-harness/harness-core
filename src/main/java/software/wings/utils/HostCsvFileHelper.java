@@ -94,8 +94,8 @@ public class HostCsvFileHelper {
       hosts.forEach(host -> {
         List row = new ArrayList();
         row.add(host.getHostName());
-        row.add(host.getHostConnAttr() != null ? host.getHostConnAttr().getName() : null);
-        row.add(host.getBastionConnAttr() != null ? host.getBastionConnAttr().getName() : null);
+        /*row.add(host.getHostConnAttr() != null ? host.getHostConnAttr().getName() : null);
+        row.add(host.getBastionConnAttr() != null ? host.getBastionConnAttr().getName() : null);*/
         row.add(host.getConfigTag().getName());
         try {
           csvPrinter.printRecord(row);
