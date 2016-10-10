@@ -123,7 +123,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public boolean exist(String appId) {
-    return wingsPersistence.createQuery(Application.class).field("appId").equal(appId).getKey() != null;
+    return wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(appId).getKey() != null;
   }
 
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {

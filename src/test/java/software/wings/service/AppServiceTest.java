@@ -26,6 +26,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -178,6 +179,14 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(application.getNotifications())
         .hasSize(1)
         .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+  }
+
+  @Test
+  public void shouldReturnTrueForExistingApplicationInExistApi() {
+    when(query.getKey()).thenReturn(new Key<>(Application.class, "applications", APP_ID));
+    assertThat(appService.exist(APP_ID)).isTrue();
+    verify(query).field(ID_KEY);
+    verify(end).equal(APP_ID);
   }
 
   @Test

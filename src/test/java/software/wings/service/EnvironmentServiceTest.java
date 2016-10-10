@@ -10,6 +10,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -28,6 +29,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -146,6 +148,16 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
+  }
+
+  @Test
+  public void shouldReturnTrueForExistingEnvironmentInExistApi() {
+    when(query.getKey()).thenReturn(new Key<>(Environment.class, "environments", ENV_ID));
+    assertThat(environmentService.exist(APP_ID, ENV_ID)).isTrue();
+    verify(query).field(ID_KEY);
+    verify(end).equal(ENV_ID);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
   }
 
   /**
