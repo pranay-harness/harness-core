@@ -35,7 +35,7 @@ public class ApplicationHost extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) @NotNull private Host host;
 
-  @Property("configTagId") private String configTagId;
+  @Property("configTag") private String configTagId;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 

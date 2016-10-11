@@ -335,7 +335,7 @@ public class HostServiceImpl implements HostService {
         .equal(appId)
         .field("envId")
         .equal(envId)
-        .field("configTagId")
+        .field("configTag")
         .hasAnyOf(tags.stream().map(Tag::getUuid).collect(Collectors.toList()))
         .asList();
   }
@@ -346,7 +346,7 @@ public class HostServiceImpl implements HostService {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Can not tag host with null tag");
     }
     UpdateOperations<ApplicationHost> updateOp =
-        wingsPersistence.createUpdateOperations(ApplicationHost.class).set("configTagId", tag.getUuid());
+        wingsPersistence.createUpdateOperations(ApplicationHost.class).set("configTag", tag.getUuid());
     wingsPersistence.update(host, updateOp);
   }
 

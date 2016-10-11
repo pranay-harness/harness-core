@@ -261,7 +261,7 @@ public class HostServiceTest extends WingsBaseTest {
     verify(applicationHostQueryEnd).equal(APP_ID);
     verify(applicationHostQuery).field("envId");
     verify(applicationHostQueryEnd).equal(ENV_ID);
-    verify(applicationHostQuery).field("configTagId");
+    verify(applicationHostQuery).field("configTag");
     verify(applicationHostQueryEnd).hasAnyOf(tags.stream().map(Tag::getUuid).collect(Collectors.toList()));
     assertThat(hosts.get(0)).isInstanceOf(ApplicationHost.class);
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
@@ -379,7 +379,7 @@ public class HostServiceTest extends WingsBaseTest {
         .thenReturn(aTag().withUuid("TAG_ID_2").withRootTagId("TAG_ID_1").build());
     hostService.removeTagFromHost(applicationHost, tag);
     verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
-    verify(updateOperations).set("configTagId", defaultTag.getUuid());
+    verify(updateOperations).set("configTag", defaultTag.getUuid());
   }
 
   /**
@@ -395,11 +395,11 @@ public class HostServiceTest extends WingsBaseTest {
                                .build();
 
     Tag tag = aTag().withUuid(TAG_ID).build();
-    when(updateOperations.set("configTagId", tag.getUuid())).thenReturn(updateOperations);
+    when(updateOperations.set("configTag", tag.getUuid())).thenReturn(updateOperations);
     hostService.setTag(host, tag);
     verify(wingsPersistence).update(host, updateOperations);
     verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
-    verify(updateOperations).set("configTagId", tag.getUuid());
+    verify(updateOperations).set("configTag", tag.getUuid());
   }
 
   @Test
