@@ -322,7 +322,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private void deleteHostsMappedByTags(ApplicationHost host) {
-    getTemplatesByLeafTag(host.getConfigTag())
+    getTemplatesByLeafTag(host.getConfigTagId(), host.getAppId(), host.getEnvId())
         .forEach(
             serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }
@@ -338,14 +338,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public List<ServiceTemplate> getTemplatesByLeafTag(Tag tag) {
+  public List<ServiceTemplate> getTemplatesByLeafTag(String tagId, String appId, String envId) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
         .field("appId")
-        .equal(tag.getAppId())
+        .equal(appId)
         .field("envId")
-        .equal(tag.getEnvId())
+        .equal(envId)
         .field("leafTags")
-        .equal(tag.getUuid())
+        .equal(tagId)
         .asList();
   }
 

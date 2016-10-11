@@ -267,7 +267,8 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
-  public String getTagHierarchyPathString(Tag tag) {
+  public String getTagHierarchyPathString(String appId, String envId, String tagId) {
+    Tag tag = get(appId, envId, tagId, true);
     String path = tag.getName().trim();
     int maxDepth = 10;
     while (maxDepth > 0 && !isNullOrEmpty(tag.getParentTagId())) {
@@ -301,7 +302,8 @@ public class TagServiceImpl implements TagService {
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
     List<ApplicationHost> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
+    List<ServiceTemplate> serviceTemplates =
+        serviceTemplateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId());
     if (serviceTemplates != null) {
       serviceTemplates.forEach(
           serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, new ArrayList<>(), hosts));
@@ -341,7 +343,8 @@ public class TagServiceImpl implements TagService {
   }
 
   private void tagHosts(Tag tag, List<ApplicationHost> hostToBeUntagged, List<ApplicationHost> hostTobeTagged) {
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
+    List<ServiceTemplate> serviceTemplates =
+        serviceTemplateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId());
 
     // Tag
     hostTobeTagged.forEach(host -> {

@@ -139,10 +139,10 @@ public interface TagService {
   /**
    * Gets tag hierarchy path string.
    *
-   * @param tag the tag
+   * @param tagId the tag
    * @return the tag hierarchy path string
    */
-  String getTagHierarchyPathString(Tag tag);
+  String getTagHierarchyPathString(String appId, String envId, String tagId);
 
   /**
    * Gets default tag for untagged hosts.

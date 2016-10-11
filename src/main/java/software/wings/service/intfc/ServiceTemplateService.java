@@ -154,10 +154,10 @@ public interface ServiceTemplateService {
   /**
    * Gets templates by leaf tag.
    *
-   * @param tag the tag
+   * @param tagId the tagId
    * @return the templates by leaf tag
    */
-  List<ServiceTemplate> getTemplatesByLeafTag(@NotNull Tag tag);
+  List<ServiceTemplate> getTemplatesByLeafTag(@NotNull String tagId, @NotNull String appId, @NotNull String envId);
 
   /**
    * Gets template by mapped tags.

@@ -505,7 +505,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldFetchTemplatesByTag() {
     Tag tag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
-    templateService.getTemplatesByLeafTag(tag);
+    templateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId());
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(query).field("envId");

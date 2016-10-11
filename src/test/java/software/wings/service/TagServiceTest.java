@@ -185,7 +185,8 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.asList()).thenReturn(asList(tag)).thenReturn(asList());
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(applicationHost));
-    when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
+    when(serviceTemplateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId()))
+        .thenReturn(asList(serviceTemplate));
 
     tagService.deleteByEnv(APP_ID, ENV_ID);
 
@@ -291,7 +292,8 @@ public class TagServiceTest extends WingsBaseTest {
             .build();
 
     when(query.get()).thenReturn(tag);
-    when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
+    when(serviceTemplateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId()))
+        .thenReturn(asList(serviceTemplate));
     when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(anInfrastructure().withType(STATIC).withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList(HOST_ID))).thenReturn(asList(applicationHost));
@@ -318,7 +320,8 @@ public class TagServiceTest extends WingsBaseTest {
                                .build();
 
     when(query.get()).thenReturn(tag);
-    when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
+    when(serviceTemplateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId()))
+        .thenReturn(asList(serviceTemplate));
     when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(anInfrastructure().withType(STATIC).withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
 
@@ -361,7 +364,8 @@ public class TagServiceTest extends WingsBaseTest {
         .build();
 
     when(query.get()).thenReturn(tag);
-    when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
+    when(serviceTemplateService.getTemplatesByLeafTag(tag.getUuid(), tag.getAppId(), tag.getEnvId()))
+        .thenReturn(asList(serviceTemplate));
     when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(Infrastructure.Builder.anInfrastructure()
                         .withType(STATIC)

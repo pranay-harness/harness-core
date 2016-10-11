@@ -597,7 +597,7 @@ public class ServiceInstance extends Base {
     public Builder withHost(ApplicationHost host) {
       this.hostId = host.getUuid();
       this.hostName = host.getHostName();
-      this.tagName = host.getConfigTag() != null ? host.getConfigTag().getName() : null;
+      // this.tagName = host.getConfigTagId() != null ? host.getConfigTagId().getName() : null;
       return this;
     }
 
