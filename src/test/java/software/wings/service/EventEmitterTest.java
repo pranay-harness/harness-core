@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -14,6 +14,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.Event;
 import software.wings.beans.Event.Type;
+import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 
 /**
