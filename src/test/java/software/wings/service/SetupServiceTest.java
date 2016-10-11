@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +41,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 6/30/16.
  */
-public class SetupServiceImplTest extends WingsBaseTest {
+public class SetupServiceTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private ReleaseService releaseService;
   @Mock private ArtifactService artifactService;

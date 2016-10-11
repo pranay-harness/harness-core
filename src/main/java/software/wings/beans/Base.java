@@ -228,7 +228,7 @@ public class Base {
                          .build();
     }
 
-    if (createdBy == null) {
+    if (createdBy == null && !(this instanceof Account)) {
       createdBy = embeddedUser;
     }
 
