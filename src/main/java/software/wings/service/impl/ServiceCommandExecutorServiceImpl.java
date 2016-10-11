@@ -64,7 +64,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   private void prepareCommand(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     if (isNotEmpty(command.getReferenceId())) {
       Command referedCommand = serviceResourceService.getCommandByName(
-          serviceInstance.getAppId(), context.getServiceTemplate().getService().getUuid(), command.getReferenceId());
+          serviceInstance.getAppId(), context.getServiceTemplate().getServiceId(), command.getReferenceId());
       if (referedCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }

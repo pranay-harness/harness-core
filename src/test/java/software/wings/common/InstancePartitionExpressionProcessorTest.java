@@ -28,6 +28,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.PartitionElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
@@ -103,11 +104,10 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
 
-    ServiceTemplate serviceTemplate = aServiceTemplate()
-                                          .withUuid(TEMPLATE_ID)
-                                          .withName("template")
-                                          .withService(aService().withUuid("uuid1").withName("svc1").build())
-                                          .build();
+    Service service = aService().withUuid("uuid1").withName("svc1").build();
+    ServiceTemplate serviceTemplate =
+        aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(service.getUuid()).build();
+    serviceTemplate.setService(service);
 
     ServiceInstance instance1 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())

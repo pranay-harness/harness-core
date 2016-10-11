@@ -6,6 +6,7 @@ package software.wings.common;
 
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.collect.Lists;
 
@@ -18,7 +19,6 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -237,7 +237,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     Environment env = context.getEnv();
     Builder pageRequest = PageRequest.Builder.aPageRequest();
 
-    pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
+    pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
     applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
     applyHostNamesFilter(app.getUuid(), pageRequest);
     applyServiceInstanceIdsFilter(app.getUuid(), pageRequest);
@@ -285,13 +285,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (ArrayUtils.isNotEmpty(instanceIds)) {
-      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField(ID_KEY, Operator.IN, instanceIds).build());
+      pageRequest.addFilter(aSearchFilter().withField(ID_KEY, Operator.IN, instanceIds).build());
     } else {
       InstanceElement element = context.getContextElement(ContextElementType.INSTANCE);
       if (element != null) {
-        pageRequest.addFilter(SearchFilter.Builder.aSearchFilter()
-                                  .withField(ID_KEY, Operator.IN, new Object[] {element.getUuid()})
-                                  .build());
+        pageRequest.addFilter(aSearchFilter().withField(ID_KEY, Operator.IN, new Object[] {element.getUuid()}).build());
       }
     }
   }
@@ -316,7 +314,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (serviceTemplates != null && !serviceTemplates.isEmpty()) {
-      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter()
+      pageRequest.addFilter(aSearchFilter()
                                 .withField("serviceTemplate", Operator.IN,
                                     serviceTemplates.stream().map(ServiceTemplate::getUuid).toArray())
                                 .build());
@@ -356,16 +354,16 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private List<ServiceTemplate> getServiceTemplates(String envId, List<Service> services, String... names) {
     Builder pageRequestBuilder =
         PageRequest.Builder.aPageRequest()
-            .addFilter(SearchFilter.Builder.aSearchFilter().withField("envId", Operator.EQ, envId).build())
+            .addFilter(aSearchFilter().withField("envId", Operator.EQ, envId).build())
             .addOrder(SortOrder.Builder.aSortOrder().withField("createdAt", OrderType.ASC).build());
     if (services != null && !services.isEmpty()) {
-      pageRequestBuilder.addFilter(SearchFilter.Builder.aSearchFilter()
-                                       .withField("service", Operator.IN, services.toArray(new Service[0]))
-                                       .build());
+      pageRequestBuilder.addFilter(
+          aSearchFilter()
+              .withField("serviceId", Operator.IN, services.stream().map(Service::getUuid).collect(toList()).toArray())
+              .build());
     }
     if (!ArrayUtils.isEmpty(names)) {
-      pageRequestBuilder.addFilter(
-          SearchFilter.Builder.aSearchFilter().withField("name", Operator.IN, serviceTemplateNames).build());
+      pageRequestBuilder.addFilter(aSearchFilter().withField("name", Operator.IN, serviceTemplateNames).build());
     }
     return serviceTemplateService.list(pageRequestBuilder.build(), false).getResponse();
   }
@@ -387,8 +385,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (!StringUtils.isBlank(serviceName)) {
       PageRequest<Service> svcPageRequest =
           PageRequest.Builder.aPageRequest()
-              .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
-              .addFilter(SearchFilter.Builder.aSearchFilter().withField("name", Operator.EQ, serviceName).build())
+              .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+              .addFilter(aSearchFilter().withField("name", Operator.EQ, serviceName).build())
               .addFieldsIncluded(ID_KEY)
               .build();
 

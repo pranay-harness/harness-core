@@ -210,11 +210,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
 
     template = templateService.save(aServiceTemplate()
                                         .withAppId(app.getUuid())
-                                        .withService(service)
+                                        .withServiceId(service.getUuid())
                                         .withEnvId(environment.getUuid())
                                         .withName("Catalog:8080")
                                         .build());
-    log().info("Template id {}", template.getUuid());
+    template = templateService.get(template.getAppId(), template.getEnvId(), template.getUuid(), false);
 
     // add hosts and tags to template
     List<String> selectedTags = Arrays.asList(ncOz1.getUuid(), ncOz2.getUuid(), ncOz3.getUuid());

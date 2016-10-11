@@ -4,12 +4,12 @@ import static software.wings.beans.EntityType.HOST;
 
 import com.google.common.base.MoreObjects;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.infrastructure.ApplicationHost;
 
@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -27,14 +28,19 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class ServiceTemplate extends Base {
-  private String envId;
-  private String name;
+  @NotEmpty private String envId;
+  @NotEmpty private String name;
   private String description;
   @NotNull private EntityType mappedBy = HOST;
-  @Reference(idOnly = true, ignoreMissing = true) private Service service;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private List<ApplicationHost> hosts = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
+  @NotEmpty private String serviceId;
+  private List<String> tagIds = new ArrayList<>();
+  private List<String> hostIds = new ArrayList<>();
+  private List<String> leafTagIds = new ArrayList<>();
+
+  @Transient private Service service;
+  @Transient private List<Tag> tags = new ArrayList<>();
+  @Transient private List<ApplicationHost> hosts = new ArrayList<>();
+  @Transient private Set<Tag> leafTags = new HashSet<>();
   @Transient private List<ApplicationHost> taggedHosts = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
@@ -237,10 +243,104 @@ public class ServiceTemplate extends Base {
     this.defaultServiceTemplate = defaultServiceTemplate;
   }
 
+  /**
+   * Gets service id.
+   *
+   * @return the service id
+   */
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  /**
+   * Sets service id.
+   *
+   * @param serviceId the service id
+   */
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
+  }
+
+  /**
+   * Gets tag ids.
+   *
+   * @return the tag ids
+   */
+  public List<String> getTagIds() {
+    return tagIds;
+  }
+
+  /**
+   * Sets tag ids.
+   *
+   * @param tagIds the tag ids
+   */
+  public void setTagIds(List<String> tagIds) {
+    this.tagIds = tagIds;
+  }
+
+  /**
+   * Gets host ids.
+   *
+   * @return the host ids
+   */
+  public List<String> getHostIds() {
+    return hostIds;
+  }
+
+  /**
+   * Sets host ids.
+   *
+   * @param hostIds the host ids
+   */
+  public void setHostIds(List<String> hostIds) {
+    this.hostIds = hostIds;
+  }
+
+  /**
+   * Gets leaf tag ids.
+   *
+   * @return the leaf tag ids
+   */
+  public List<String> getLeafTagIds() {
+    return leafTagIds;
+  }
+
+  /**
+   * Sets leaf tag ids.
+   *
+   * @param leafTagIds the leaf tag ids
+   */
+  public void setLeafTagIds(List<String> leafTagIds) {
+    this.leafTagIds = leafTagIds;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("envId", envId)
+        .add("name", name)
+        .add("description", description)
+        .add("mappedBy", mappedBy)
+        .add("serviceId", serviceId)
+        .add("tagIds", tagIds)
+        .add("hostIds", hostIds)
+        .add("leafTagIds", leafTagIds)
+        .add("service", service)
+        .add("tags", tags)
+        .add("hosts", hosts)
+        .add("leafTags", leafTags)
+        .add("taggedHosts", taggedHosts)
+        .add("configFiles", configFiles)
+        .add("defaultServiceTemplate", defaultServiceTemplate)
+        .toString();
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, name, description, mappedBy, service, tags, hosts, leafTags, taggedHosts, configFiles);
+        + Objects.hash(envId, name, description, mappedBy, serviceId, tagIds, hostIds, leafTagIds, service, tags, hosts,
+              leafTags, taggedHosts, configFiles, defaultServiceTemplate);
   }
 
   @Override
@@ -257,25 +357,12 @@ public class ServiceTemplate extends Base {
     final ServiceTemplate other = (ServiceTemplate) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
         && Objects.equals(this.description, other.description) && Objects.equals(this.mappedBy, other.mappedBy)
+        && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.tagIds, other.tagIds)
+        && Objects.equals(this.hostIds, other.hostIds) && Objects.equals(this.leafTagIds, other.leafTagIds)
         && Objects.equals(this.service, other.service) && Objects.equals(this.tags, other.tags)
         && Objects.equals(this.hosts, other.hosts) && Objects.equals(this.leafTags, other.leafTags)
-        && Objects.equals(this.taggedHosts, other.taggedHosts) && Objects.equals(this.configFiles, other.configFiles);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("envId", envId)
-        .add("name", name)
-        .add("description", description)
-        .add("mappedBy", mappedBy)
-        .add("service", service)
-        .add("tags", tags)
-        .add("hosts", hosts)
-        .add("leafTags", leafTags)
-        .add("taggedHosts", taggedHosts)
-        .add("configFiles", configFiles)
-        .toString();
+        && Objects.equals(this.taggedHosts, other.taggedHosts) && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
   }
 
   /**
@@ -286,6 +373,10 @@ public class ServiceTemplate extends Base {
     private String name;
     private String description;
     private EntityType mappedBy = HOST;
+    private String serviceId;
+    private List<String> tagIds = new ArrayList<>();
+    private List<String> hostIds = new ArrayList<>();
+    private List<String> leafTagIds = new ArrayList<>();
     private Service service;
     private List<Tag> tags = new ArrayList<>();
     private List<ApplicationHost> hosts = new ArrayList<>();
@@ -357,13 +448,59 @@ public class ServiceTemplate extends Base {
     }
 
     /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
+     * With tag ids builder.
+     *
+     * @param tagIds the tag ids
+     * @return the builder
+     */
+    public Builder withTagIds(List<String> tagIds) {
+      this.tagIds = tagIds;
+      return this;
+    }
+
+    /**
+     * With host ids builder.
+     *
+     * @param hostIds the host ids
+     * @return the builder
+     */
+    public Builder withHostIds(List<String> hostIds) {
+      this.hostIds = hostIds;
+      return this;
+    }
+
+    /**
+     * With leaf tag ids builder.
+     *
+     * @param leafTagIds the leaf tag ids
+     * @return the builder
+     */
+    public Builder withLeafTagIds(List<String> leafTagIds) {
+      this.leafTagIds = leafTagIds;
+      return this;
+    }
+
+    /**
      * With service builder.
      *
      * @param service the service
      * @return the builder
      */
     public Builder withService(Service service) {
-      this.service = service;
+      if (service != null) {
+        this.serviceId = service.getUuid();
+      }
       return this;
     }
 
@@ -374,7 +511,7 @@ public class ServiceTemplate extends Base {
      * @return the builder
      */
     public Builder withTags(List<Tag> tags) {
-      this.tags = tags;
+      this.tagIds.addAll(tags.stream().map(Tag::getUuid).collect(Collectors.toList()));
       return this;
     }
 
@@ -385,7 +522,7 @@ public class ServiceTemplate extends Base {
      * @return the builder
      */
     public Builder withHosts(List<ApplicationHost> hosts) {
-      this.hosts = hosts;
+      this.hostIds.addAll(hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
       return this;
     }
 
@@ -396,7 +533,7 @@ public class ServiceTemplate extends Base {
      * @return the builder
      */
     public Builder withLeafTags(Set<Tag> leafTags) {
-      this.leafTags = leafTags;
+      this.leafTagIds.addAll(leafTags.stream().map(Tag::getUuid).collect(Collectors.toList()));
       return this;
     }
 
@@ -521,6 +658,10 @@ public class ServiceTemplate extends Base {
           .withName(name)
           .withDescription(description)
           .withMappedBy(mappedBy)
+          .withServiceId(serviceId)
+          .withTagIds(tagIds)
+          .withHostIds(hostIds)
+          .withLeafTagIds(leafTagIds)
           .withService(service)
           .withTags(tags)
           .withHosts(hosts)
@@ -548,6 +689,10 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setName(name);
       serviceTemplate.setDescription(description);
       serviceTemplate.setMappedBy(mappedBy);
+      serviceTemplate.setServiceId(serviceId);
+      serviceTemplate.setTagIds(tagIds);
+      serviceTemplate.setHostIds(hostIds);
+      serviceTemplate.setLeafTagIds(leafTagIds);
       serviceTemplate.setService(service);
       serviceTemplate.setTags(tags);
       serviceTemplate.setHosts(hosts);

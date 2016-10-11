@@ -978,10 +978,10 @@ private void addHostsToEnv(Environment env) {
                                                     .asList();
 
   for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
-    Response response = getRequestWithAuthHeader(target).post(
-        Entity.entity(ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttr",
-                          connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttr", envAttr),
-            APPLICATION_JSON));
+    Response response = getRequestWithAuthHeader(target).post(Entity.entity(
+        ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttr",
+            connectionAttributes.get(i % connectionAttributes.size()).getUuid(), "bastionConnAttr", envAttr.getUuid()),
+        APPLICATION_JSON));
     assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
   }
 }

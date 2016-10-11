@@ -296,15 +296,12 @@ public class ReleaseServiceImpl implements ReleaseService {
             .parallelStream()
             .flatMap(service
                 -> (Stream<ServiceTemplate>) serviceTemplateService
-                       .list(
-                           aPageRequest()
-                               .addFilter(aSearchFilter().withField("appId", EQ, release.getAppId()).build())
-                               .aPageRequest()
-                               .addFilter(aSearchFilter()
-                                              .withField("service", EQ, wingsPersistence.getDatastore().getKey(service))
-                                              .build())
-                               .addFieldsIncluded("name", "envId")
-                               .<ServiceTemplate>build(),
+                       .list(aPageRequest()
+                                 .addFilter(aSearchFilter().withField("appId", EQ, release.getAppId()).build())
+                                 .aPageRequest()
+                                 .addFilter(aSearchFilter().withField("serviceId", EQ, service.getUuid()).build())
+                                 .addFieldsIncluded("name", "envId")
+                                 .<ServiceTemplate>build(),
                            false)
                        .getResponse()
                        .stream())
@@ -328,10 +325,7 @@ public class ReleaseServiceImpl implements ReleaseService {
                          .list(aPageRequest()
                                    .addFilter(aSearchFilter().withField("appId", EQ, release.getAppId()).build())
                                    .aPageRequest()
-                                   .addFilter(
-                                       aSearchFilter()
-                                           .withField("service", EQ, wingsPersistence.getDatastore().getKey(service))
-                                           .build())
+                                   .addFilter(aSearchFilter().withField("serviceId", EQ, service.getUuid()).build())
                                    .addFieldsIncluded("name", "envId")
                                    .<ServiceTemplate>build(),
                              false)

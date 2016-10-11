@@ -12,8 +12,10 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.HOST;
 import static software.wings.beans.EntityType.TAG;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -38,7 +40,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -76,7 +77,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
-  @Inject private InfrastructureService infrastructureService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
@@ -87,6 +87,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
+    pageResponse.getResponse().forEach(this ::setReferences);
+
     if (withDetails) {
       pageResponse.getResponse().forEach(template -> {
         if (template.getTags().size() != 0) {
@@ -113,9 +115,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate update(ServiceTemplate serviceTemplate) {
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
-        ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription(), "service",
-            serviceTemplate.getService()));
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid());
+        ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription()));
+    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true);
   }
 
   /* (non-Javadoc)
@@ -124,6 +125,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
+
     if (withDetails) {
       if (serviceTemplate.getTags().size() != 0) {
         serviceTemplate.setTaggedHosts(
@@ -134,10 +136,50 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return serviceTemplate;
   }
 
+  public void setReferences(ServiceTemplate serviceTemplate) {
+    /*
+    Service service;
+    List<Tag> tags = new ArrayList<>();
+    List<ApplicationHost> hosts = new ArrayList<>();
+    private Set<Tag> leafTags = new HashSet<>();
+     */
+    serviceTemplate.setService(serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId()));
+    if (serviceTemplate.getTagIds().size() > 0) {
+      serviceTemplate.setTags(tagService
+                                  .list(aPageRequest()
+                                            .addFilter("appId", EQ, serviceTemplate.getAppId())
+                                            .addFilter(ID_KEY, IN, serviceTemplate.getTagIds().toArray())
+                                            .build(),
+                                      false)
+                                  .getResponse());
+    }
+
+    if (serviceTemplate.getLeafTagIds().size() > 0) {
+      List<Tag> tags = tagService
+                           .list(aPageRequest()
+                                     .addFilter("appId", EQ, serviceTemplate.getAppId())
+                                     .addFilter(ID_KEY, IN, serviceTemplate.getLeafTagIds().toArray())
+                                     .build(),
+                               false)
+                           .getResponse();
+      serviceTemplate.setLeafTags(tags.stream().collect(Collectors.toSet()));
+    }
+
+    if (serviceTemplate.getHostIds().size() > 0) {
+      serviceTemplate.setHosts(hostService
+                                   .list(aPageRequest()
+                                             .addFilter("appId", EQ, serviceTemplate.getAppId())
+                                             .addFilter(ID_KEY, IN, serviceTemplate.getHostIds().toArray())
+                                             .build())
+                                   .getResponse());
+    }
+  }
+
   @Override
   public ServiceTemplate get(String appId, String serviceTemplateId) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
     Validator.notNullCheck("ServiceTemplate", serviceTemplate);
+    setReferences(serviceTemplate);
     return serviceTemplate;
   }
 
@@ -153,7 +195,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Query<ServiceTemplate> templateQuery = wingsPersistence.createQuery(ServiceTemplate.class)
                                                .field("appId")
                                                .equal(appId)
-                                               .field("service")
+                                               .field("serviceId")
                                                .equal(serviceId);
     if (!isNullOrEmpty(envId)) {
       templateQuery.field("envId").equal(envId);
@@ -173,7 +215,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
                                        .field("appId")
                                        .equal(appId)
-                                       .field("service")
+                                       .field("serviceId")
                                        .equal(serviceId)
                                        .field("defaultServiceTemplate")
                                        .equal(true)
@@ -185,8 +227,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private List<ConfigFile> getOverrideFiles(ServiceTemplate template) {
-    List<ConfigFile> serviceConfigFiles = configService.getConfigFilesForEntity(
-        template.getAppId(), DEFAULT_TEMPLATE_ID, template.getService().getUuid());
+    List<ConfigFile> serviceConfigFiles =
+        configService.getConfigFilesForEntity(template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
     List<ConfigFile> overrideConfigFiles =
         configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template);
 
@@ -249,8 +291,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       ServiceTemplate serviceTemplate, List<ApplicationHost> hosts) {
     List<ApplicationHost> alreadyMappedHosts = serviceTemplate.getHosts();
     updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
+    List<String> hostIds = new ArrayList<>();
+    if (hosts != null) {
+      hostIds.addAll(hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
+    }
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
-        ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "hosts", hosts));
+        ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "hostIds",
+            hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList())));
     return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true);
   }
 
@@ -278,7 +325,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     updateServiceInstances(serviceTemplate, newHostsToBeMapped, existingMappedHosts);
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId,
-        ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "tags", newTags, "leafTags", newLeafTags));
+        ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "tagIds",
+            newTags.stream().map(Tag::getUuid).collect(Collectors.toList()), "leafTagIds",
+            newLeafTags.stream().map(Tag::getUuid).collect(Collectors.toList())));
 
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
@@ -310,8 +359,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public PageResponse<ApplicationHost> getTaggedHosts(
       String appId, String envId, String templateId, PageRequest<ApplicationHost> pageRequest) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, templateId);
-    List<Tag> tags = serviceTemplate.getTags();
-    pageRequest.addFilter("tags", tags, IN);
+    List<String> tagIds = serviceTemplate.getTags().stream().map(Tag::getUuid).collect(Collectors.toList());
+    pageRequest.addFilter("configTag", tagIds, IN);
     return hostService.list(pageRequest);
   }
 
@@ -331,7 +380,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
                                                  .field("appId")
                                                  .equal(host.getAppId())
-                                                 .field("hosts")
+                                                 .field("hostIds")
                                                  .equal(host.getUuid())
                                                  .asList();
     deleteHostFromATemplate(host, serviceTemplates);
@@ -344,7 +393,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .equal(tag.getAppId())
         .field("envId")
         .equal(tag.getEnvId())
-        .field("leafTags")
+        .field("leafTagIds")
         .equal(tag.getUuid())
         .asList();
   }
@@ -360,7 +409,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void addLeafTag(ServiceTemplate template, Tag tag) {
     wingsPersistence.update(
-        template, wingsPersistence.createUpdateOperations(ServiceTemplate.class).add("leafTags", tag));
+        template, wingsPersistence.createUpdateOperations(ServiceTemplate.class).add("leafTagIds", tag));
   }
 
   /* (non-Javadoc)
@@ -398,7 +447,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     wingsPersistence.createQuery(ServiceTemplate.class)
         .field("appId")
         .equal(appId)
-        .field("service")
+        .field("serviceId")
         .equal(serviceId)
         .asList()
         .forEach(serviceTemplate
@@ -436,7 +485,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .equal(tag.getAppId())
         .field("envId")
         .equal(tag.getEnvId())
-        .field("tags")
+        .field("tagIds")
         .equal(tag.getUuid())
         .asList();
   }
@@ -445,7 +494,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (serviceTemplates != null) {
       serviceTemplates.forEach(serviceTemplate -> {
         wingsPersistence.deleteFromList(
-            ServiceTemplate.class, host.getAppId(), serviceTemplate.getUuid(), "hosts", host.getUuid());
+            ServiceTemplate.class, host.getAppId(), serviceTemplate.getUuid(), "hostIds", host.getUuid());
         serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host));
       });
     }
@@ -464,7 +513,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles =
-        configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
+        configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
 
     // flatten tag hierarchy and [tag -> tag] overrides
     logger.info("Flatten Tag hierarchy and getInfo config overrides");
@@ -504,8 +553,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
 
-    List<ServiceVariable> serviceConfigFiles = serviceVariableService.getServiceVariablesForEntity(
-        appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
+    List<ServiceVariable> serviceConfigFiles =
+        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
 
     // flatten tag hierarchy and [tag -> tag] overrides
     logger.info("Flatten Tag hierarchy and getInfo config overrides");

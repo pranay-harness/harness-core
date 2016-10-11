@@ -56,6 +56,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Artifact;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
@@ -188,8 +189,9 @@ public class CommandStateTest extends WingsBaseTest {
                         .build());
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
     when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build());
+    ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build();
+    serviceTemplate.setService(SERVICE);
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID))
         .thenReturn(anApplicationHost().withHostName(HOST_NAME).build());
     commandState.setExecutorService(executorService);
@@ -203,6 +205,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   public void execute() throws Exception {
     when(serviceCommandExecutorService.execute(eq(SERVICE_INSTANCE), eq(COMMAND), any())).thenReturn(SUCCESS);
+
     ExecutionResponse executionResponse = commandState.execute(context);
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(

@@ -778,10 +778,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         aServiceTemplate()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
-            .withService(service)
+            .withServiceId(service.getUuid())
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
+    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -928,10 +929,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         aServiceTemplate()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
-            .withService(service)
+            .withServiceId(service.getUuid())
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
+    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -1047,20 +1049,22 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         aServiceTemplate()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
-            .withService(service1)
+            .withServiceId(service1.getUuid())
             .withName(service1.getName())
             .withAppId(app.getUuid())
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
+    serviceTemplate1.setService(service1);
     ServiceTemplate serviceTemplate2 = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
-            .withService(service2)
+            .withServiceId(service2.getUuid())
             .withName(service2.getName())
             .withAppId(app.getUuid())
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
+    serviceTemplate1.setService(service2);
 
     ServiceInstance.Builder builder1 =
         aServiceInstance().withServiceTemplate(serviceTemplate1).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -2032,10 +2036,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         aServiceTemplate()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
-            .withService(service)
+            .withServiceId(service.getUuid())
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
+    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -2256,10 +2261,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         aServiceTemplate()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
-            .withService(service)
+            .withServiceId(service.getUuid())
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
+    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
