@@ -9,6 +9,11 @@ import java.util.Map;
  */
 public interface ContextElement {
   /**
+   * The constant WORKFLOW
+   */
+  String WORKFLOW = "workflow";
+
+  /**
    * The constant APP
    */
   String APP = "app";

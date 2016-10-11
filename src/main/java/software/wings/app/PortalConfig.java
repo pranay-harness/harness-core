@@ -19,6 +19,10 @@ public class PortalConfig {
   private List<String> allowedDomains = Lists.newArrayList();
   @JsonProperty(defaultValue = "") private String companyName = "";
   @JsonProperty(defaultValue = "/register/verify") private String verificationUrl = "/register/verify";
+
+  @JsonProperty(defaultValue = "/app/%s/env/%s/execution/%s/detail")
+  private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
+
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**
@@ -129,5 +133,13 @@ public class PortalConfig {
     public String convert(List<String> value) {
       return Joiner.on(",").join(value);
     }
+  }
+
+  public String getExecutionUrlPattern() {
+    return executionUrlPattern;
+  }
+
+  public void setExecutionUrlPattern(String executionUrlPattern) {
+    this.executionUrlPattern = executionUrlPattern;
   }
 }

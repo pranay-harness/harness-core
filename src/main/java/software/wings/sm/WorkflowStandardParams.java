@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ServiceElement;
+import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
@@ -43,6 +44,7 @@ public class WorkflowStandardParams implements ContextElement {
   private String appId;
   private String envId;
   private List<String> artifactIds;
+  private WorkflowElement workflowElement;
 
   // TODO: centralized in-memory executionCredential and special encrypted mapping
   private ExecutionCredential executionCredential;
@@ -66,6 +68,9 @@ public class WorkflowStandardParams implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
+    if (workflowElement != null) {
+      map.put(WORKFLOW, workflowElement);
+    }
     map.put(APP, getApp());
     map.put(ENV, getEnv());
     map.put(TIMESTAMP_ID, timestampId);
@@ -249,6 +254,14 @@ public class WorkflowStandardParams implements ContextElement {
    */
   public void setErrorStrategy(ErrorStrategy errorStrategy) {
     this.errorStrategy = errorStrategy;
+  }
+
+  public WorkflowElement getWorkflowElement() {
+    return workflowElement;
+  }
+
+  public void setWorkflowElement(WorkflowElement workflowElement) {
+    this.workflowElement = workflowElement;
   }
 
   /**

@@ -418,4 +418,202 @@ public class WorkflowExecution extends Base {
   public void setEnvName(String envName) {
     this.envName = envName;
   }
+
+  public static final class WorkflowExecutionBuilder {
+    private String workflowId;
+    private String stateMachineId;
+    private String envId;
+    private String appName;
+    private String envName;
+    private WorkflowType workflowType;
+    private ExecutionStatus status = ExecutionStatus.NEW;
+    private Graph graph;
+    private List<String> expandedGroupIds;
+    private Node executionNode;
+    private ErrorStrategy errorStrategy;
+    private String name;
+    private int total;
+    private CountsByStatuses breakdown;
+    private ExecutionArgs executionArgs;
+    private List<ElementExecutionSummary> serviceExecutionSummaries;
+    private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap;
+    private Long startTs;
+    private Long endTs;
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
+    private boolean active = true;
+
+    private WorkflowExecutionBuilder() {}
+
+    public static WorkflowExecutionBuilder aWorkflowExecution() {
+      return new WorkflowExecutionBuilder();
+    }
+
+    public WorkflowExecutionBuilder withWorkflowId(String workflowId) {
+      this.workflowId = workflowId;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withStateMachineId(String stateMachineId) {
+      this.stateMachineId = stateMachineId;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withAppName(String appName) {
+      this.appName = appName;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEnvName(String envName) {
+      this.envName = envName;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withWorkflowType(WorkflowType workflowType) {
+      this.workflowType = workflowType;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withStatus(ExecutionStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withGraph(Graph graph) {
+      this.graph = graph;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withExpandedGroupIds(List<String> expandedGroupIds) {
+      this.expandedGroupIds = expandedGroupIds;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withExecutionNode(Node executionNode) {
+      this.executionNode = executionNode;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withErrorStrategy(ErrorStrategy errorStrategy) {
+      this.errorStrategy = errorStrategy;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withTotal(int total) {
+      this.total = total;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withBreakdown(CountsByStatuses breakdown) {
+      this.breakdown = breakdown;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withExecutionArgs(ExecutionArgs executionArgs) {
+      this.executionArgs = executionArgs;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withServiceExecutionSummaries(
+        List<ElementExecutionSummary> serviceExecutionSummaries) {
+      this.serviceExecutionSummaries = serviceExecutionSummaries;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withStatusInstanceBreakdownMap(
+        LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
+      this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withStartTs(Long startTs) {
+      this.startTs = startTs;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEndTs(Long endTs) {
+      this.endTs = endTs;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public WorkflowExecution build() {
+      WorkflowExecution workflowExecution = new WorkflowExecution();
+      workflowExecution.setWorkflowId(workflowId);
+      workflowExecution.setStateMachineId(stateMachineId);
+      workflowExecution.setEnvId(envId);
+      workflowExecution.setAppName(appName);
+      workflowExecution.setEnvName(envName);
+      workflowExecution.setWorkflowType(workflowType);
+      workflowExecution.setStatus(status);
+      workflowExecution.setGraph(graph);
+      workflowExecution.setExpandedGroupIds(expandedGroupIds);
+      workflowExecution.setExecutionNode(executionNode);
+      workflowExecution.setErrorStrategy(errorStrategy);
+      workflowExecution.setName(name);
+      workflowExecution.setTotal(total);
+      workflowExecution.setBreakdown(breakdown);
+      workflowExecution.setExecutionArgs(executionArgs);
+      workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
+      workflowExecution.setStatusInstanceBreakdownMap(statusInstanceBreakdownMap);
+      workflowExecution.setStartTs(startTs);
+      workflowExecution.setEndTs(endTs);
+      workflowExecution.setUuid(uuid);
+      workflowExecution.setAppId(appId);
+      workflowExecution.setCreatedBy(createdBy);
+      workflowExecution.setCreatedAt(createdAt);
+      workflowExecution.setLastUpdatedBy(lastUpdatedBy);
+      workflowExecution.setLastUpdatedAt(lastUpdatedAt);
+      workflowExecution.setActive(active);
+      return workflowExecution;
+    }
+  }
 }

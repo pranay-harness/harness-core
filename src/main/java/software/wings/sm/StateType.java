@@ -65,7 +65,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, ORCHESTRATION_STENCILS),
+  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", ORCHESTRATION_STENCILS),
 
   /**
    * Http state type.

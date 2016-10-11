@@ -8,6 +8,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 
 /**
  * A Pause state to pause state machine execution.
@@ -42,9 +43,13 @@ public class PauseState extends EmailState {
         .build();
   }
 
+  @DefaultValue(
+      value =
+          "${workflow.name} execution paused at manual step: ${stateName}. Please click on the link below to resume :\n ${workflow.url}")
   @Attributes(title = "Body")
   @Override
-  public String getBody() {
+  public String
+  getBody() {
     return super.getBody();
   }
 
@@ -60,6 +65,7 @@ public class PauseState extends EmailState {
     return super.getToAddress();
   }
 
+  @DefaultValue(value = "Action Required - ${workflow.name} execution paused at manual step ${currentState}")
   @Attributes(title = "Subject", required = true)
   @Override
   public String getSubject() {
