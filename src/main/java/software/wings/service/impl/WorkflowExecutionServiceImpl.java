@@ -7,6 +7,7 @@ package software.wings.service.impl;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.InstanceExecutionHistory.InstanceExecutionHistoryBuilder.anInstanceExecutionHistory;
 import static software.wings.beans.StatusInstanceBreakdown.StatusInstanceBreakdownBuilder.aStatusInstanceBreakdown;
@@ -25,6 +26,8 @@ import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
+import software.wings.api.WorkflowElement;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.CountsByStatuses;
@@ -101,6 +104,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private static final String COMMAND_NAME_PREF = "Command: ";
   private static final String WORKFLOW_NAME_PREF = "Workflow: ";
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Inject private MainConfiguration mainConfiguration;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private EnvironmentService environmentService;
@@ -452,6 +457,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
 
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
+    String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
+        + String.format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
+              workflowExecution.getEnvId(), workflowExecution.getUuid());
+    WorkflowElement workflowElement = aWorkflowElement()
+                                          .withUuid(workflowExecutionId)
+                                          .withName(workflowExecution.getName())
+                                          .withUrl(workflowUrl)
+                                          .build();
+    stdParams.setWorkflowElement(workflowElement);
+
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     elements.push(stdParams);
     if (contextElements != null) {

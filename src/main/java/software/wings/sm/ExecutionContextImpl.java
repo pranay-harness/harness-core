@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
  * @author Rishi
  */
 public class ExecutionContextImpl implements ExecutionContext {
+  private static final String CURRENT_STATE = "currentState";
   private static Pattern nameWindCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
@@ -205,7 +206,9 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext();
-    context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);
+    if (stateExecutionData != null) {
+      context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);
+    }
     return context;
   }
 
@@ -222,6 +225,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
     context.putAll(stateExecutionInstance.getStateExecutionMap());
+    context.put(CURRENT_STATE, getStateExecutionInstance().getStateName());
 
     // add context params
     Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
