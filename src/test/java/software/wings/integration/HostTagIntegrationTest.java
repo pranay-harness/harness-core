@@ -138,7 +138,9 @@ public class HostTagIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldAddNewHostsToDefaultTagForUntaggedHosts() {
     List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
-    hosts.forEach(host -> assertThat(host.getConfigTag().getTagType()).isEqualTo(TagType.UNTAGGED_HOST));
+    hosts.forEach(host
+        -> assertThat(wingsPersistence.get(Tag.class, host.getConfigTagId()).getTagType())
+               .isEqualTo(TagType.UNTAGGED_HOST));
   }
 
   /**
@@ -149,8 +151,12 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     tagService.tagHosts(nc, hosts);
     hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
-    hosts.forEach(host -> assertThat(host.getConfigTag()).isEqualTo(nc));
-    assertThat(hosts.stream().filter(host -> host.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)).count())
+    hosts.forEach(host -> assertThat(host.getConfigTagId()).isEqualTo(nc.getUuid()));
+    assertThat(
+        hosts.stream()
+            .filter(host
+                -> wingsPersistence.get(Tag.class, host.getConfigTagId()).getTagType().equals(TagType.UNTAGGED_HOST))
+            .count())
         .isEqualTo(0);
   }
 
@@ -166,9 +172,13 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     final List<ApplicationHost> finalHosts = hosts;
     hostsToTag.forEach(host
         -> assertThat(
-            finalHosts.stream().filter(h -> h.getUuid().equals(host.getUuid())).findFirst().get().getConfigTag())
-               .isEqualTo(nc));
-    assertThat(hosts.stream().filter(host -> host.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)).count())
+            finalHosts.stream().filter(h -> h.getUuid().equals(host.getUuid())).findFirst().get().getConfigTagId())
+               .isEqualTo(nc.getUuid()));
+    assertThat(
+        hosts.stream()
+            .filter(host
+                -> wingsPersistence.get(Tag.class, host.getConfigTagId()).getTagType().equals(TagType.UNTAGGED_HOST))
+            .count())
         .isEqualTo(2);
   }
 
@@ -180,11 +190,10 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     tagService.tagHosts(nc, hosts);
     hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
-    hosts.forEach(host -> assertThat(host.getConfigTag()).isEqualTo(nc));
+    hosts.forEach(host -> assertThat(host.getConfigTagId()).isEqualTo(nc.getUuid()));
     tagService.tagHosts(nc, Arrays.asList());
     hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
-    hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
-    hosts.forEach(host -> assertThat(host.getConfigTag()).isEqualTo(defaultTag));
+    hosts.forEach(host -> assertThat(host.getConfigTagId()).isEqualTo(defaultTag.getUuid()));
   }
 
   private List<ApplicationHost> importAndGetHosts(String appId, String envId, String infraId) {

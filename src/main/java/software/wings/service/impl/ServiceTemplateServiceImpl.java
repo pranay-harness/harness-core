@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -370,8 +371,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     deleteHostsMappedByTags(host);
   }
 
+  @Override
+  public List<ServiceTemplate> getTemplatesByLeafTag(
+      @NotNull String tagId, @NotNull String appId, @NotNull String envId) {
+    return wingsPersistence.createQuery(ServiceTemplate.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("leafTagIds")
+        .equal(tagId)
+        .asList();
+  }
+
   private void deleteHostsMappedByTags(ApplicationHost host) {
-    getTemplatesByLeafTag(host.getConfigTag())
+    getTemplatesByLeafTag(host.getConfigTagId(), host.getAppId(), host.getEnvId())
         .forEach(
             serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }
@@ -384,18 +398,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                                  .equal(host.getUuid())
                                                  .asList();
     deleteHostFromATemplate(host, serviceTemplates);
-  }
-
-  @Override
-  public List<ServiceTemplate> getTemplatesByLeafTag(Tag tag) {
-    return wingsPersistence.createQuery(ServiceTemplate.class)
-        .field("appId")
-        .equal(tag.getAppId())
-        .field("envId")
-        .equal(tag.getEnvId())
-        .field("leafTagIds")
-        .equal(tag.getUuid())
-        .asList();
   }
 
   @Override

@@ -76,6 +76,7 @@ import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -191,7 +192,8 @@ public class HostServiceTest extends WingsBaseTest {
     Host host = hostBuilder.withUuid(HOST_ID).build();
     when(applicationHostQuery.get()).thenReturn(appHostBuilder.withHost(host).build());
     when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID))
-        .thenReturn(aTag().withAppId(APP_ID).withEnvId(ENV_ID).withTagType(TagType.UNTAGGED_HOST).build());
+        .thenReturn(
+            aTag().withUuid(TAG_ID).withAppId(APP_ID).withEnvId(ENV_ID).withTagType(TagType.UNTAGGED_HOST).build());
     ApplicationHost savedHost = hostService.update(ENV_ID, host);
     verify(wingsPersistence).updateFields(Host.class, HOST_ID, ImmutableMap.of("hostConnAttr", HOST_CONN_ATTR_ID));
     assertThat(savedHost).isNotNull();
@@ -260,7 +262,7 @@ public class HostServiceTest extends WingsBaseTest {
     verify(applicationHostQuery).field("envId");
     verify(applicationHostQueryEnd).equal(ENV_ID);
     verify(applicationHostQuery).field("configTag");
-    verify(applicationHostQueryEnd).hasAnyOf(tags);
+    verify(applicationHostQueryEnd).hasAnyOf(tags.stream().map(Tag::getUuid).collect(Collectors.toList()));
     assertThat(hosts.get(0)).isInstanceOf(ApplicationHost.class);
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
   }
@@ -368,13 +370,16 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldRemoveTagFromHost() {
     Tag tag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
     Tag defaultTag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
-    ApplicationHost applicationHost =
-        appHostBuilder.withUuid(HOST_ID).withConfigTag(aTag().withRootTagId("TAG_ID_1").build()).build();
+    ApplicationHost applicationHost = appHostBuilder.withUuid(HOST_ID)
+                                          .withConfigTag(aTag().withUuid("TAG_ID_2").withRootTagId("TAG_ID_1").build())
+                                          .build();
     when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID)).thenReturn(defaultTag);
     when(updateOperations.set("configTag", tag)).thenReturn(updateOperations);
+    when(tagService.get(APP_ID, ENV_ID, "TAG_ID_2", false))
+        .thenReturn(aTag().withUuid("TAG_ID_2").withRootTagId("TAG_ID_1").build());
     hostService.removeTagFromHost(applicationHost, tag);
     verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
-    verify(updateOperations).set("configTag", defaultTag);
+    verify(updateOperations).set("configTag", defaultTag.getUuid());
   }
 
   /**
@@ -390,11 +395,11 @@ public class HostServiceTest extends WingsBaseTest {
                                .build();
 
     Tag tag = aTag().withUuid(TAG_ID).build();
-    when(updateOperations.set("configTag", tag)).thenReturn(updateOperations);
+    when(updateOperations.set("configTag", tag.getUuid())).thenReturn(updateOperations);
     hostService.setTag(host, tag);
     verify(wingsPersistence).update(host, updateOperations);
     verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
-    verify(updateOperations).set("configTag", tag);
+    verify(updateOperations).set("configTag", tag.getUuid());
   }
 
   @Test

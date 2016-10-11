@@ -13,7 +13,6 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -44,7 +43,7 @@ public class Host extends Base {
 
   @FormDataParam("bastionConnAttr") private String bastionConnAttr;
 
-  @FormDataParam("configTag") @Reference(idOnly = true, ignoreMissing = true) @Transient private Tag configTag;
+  @FormDataParam("configTag") @Transient private Tag configTag;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 

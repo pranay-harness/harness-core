@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -21,6 +22,7 @@ import com.google.common.collect.Maps;
 
 import com.mongodb.BasicDBObject;
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
@@ -132,8 +134,8 @@ public class HostServiceImpl implements HostService {
 
     Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
 
-    if (tag != null && tag.equals(applicationHost.getConfigTag())) {
-      return get(applicationHost.getAppId(), applicationHost.getEnvId(), applicationHost.getUuid());
+    if (tag != null && StringUtils.equals(tag.getUuid(), applicationHost.getConfigTagId())) {
+      return get(applicationHost.getAppId(), applicationHost.getEnvId(), tag.getUuid());
     }
 
     // Tag update -> should update host mapped in template
@@ -243,7 +245,9 @@ public class HostServiceImpl implements HostService {
   @Override
   public ApplicationHost saveApplicationHost(ApplicationHost appHost, String tagId) {
     Tag tag = validateAndFetchTag(appHost.getAppId(), appHost.getUuid(), aTag().withUuid(tagId).build());
-    appHost.setConfigTag(tag);
+    if (tag != null) {
+      appHost.setConfigTagId(tag.getUuid());
+    }
     return saveApplicationHost(appHost);
   }
 
@@ -332,7 +336,7 @@ public class HostServiceImpl implements HostService {
         .field("envId")
         .equal(envId)
         .field("configTag")
-        .hasAnyOf(tags)
+        .hasAnyOf(tags.stream().map(Tag::getUuid).collect(Collectors.toList()))
         .asList();
   }
 
@@ -342,15 +346,18 @@ public class HostServiceImpl implements HostService {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Can not tag host with null tag");
     }
     UpdateOperations<ApplicationHost> updateOp =
-        wingsPersistence.createUpdateOperations(ApplicationHost.class).set("configTag", tag);
+        wingsPersistence.createUpdateOperations(ApplicationHost.class).set("configTag", tag.getUuid());
     wingsPersistence.update(host, updateOp);
   }
 
   @Override
   public void removeTagFromHost(ApplicationHost applicationHost, Tag tag) {
-    if (applicationHost.getConfigTag() != null
-        && !applicationHost.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)) {
-      setTag(applicationHost, tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
+    if (isNotBlank(applicationHost.getConfigTagId())) {
+      Tag appHostTag = tagService.get(
+          applicationHost.getAppId(), applicationHost.getEnvId(), applicationHost.getConfigTagId(), false);
+      if (!appHostTag.getTagType().equals(TagType.UNTAGGED_HOST)) {
+        setTag(applicationHost, tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
+      }
     }
   }
 

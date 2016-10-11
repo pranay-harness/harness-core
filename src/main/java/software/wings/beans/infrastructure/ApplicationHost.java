@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -34,7 +35,7 @@ public class ApplicationHost extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) @NotNull private Host host;
 
-  @Reference(idOnly = true, ignoreMissing = true) private Tag configTag;
+  @Property("configTag") private String configTagId;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
@@ -79,17 +80,17 @@ public class ApplicationHost extends Base {
    *
    * @return the config tag
    */
-  public Tag getConfigTag() {
-    return configTag;
+  public String getConfigTagId() {
+    return configTagId;
   }
 
   /**
    * Sets config tag.
    *
-   * @param configTag the config tag
+   * @param configTagId the config tag
    */
-  public void setConfigTag(Tag configTag) {
-    this.configTag = configTag;
+  public void setConfigTagId(String configTagId) {
+    this.configTagId = configTagId;
   }
 
   /**
@@ -148,7 +149,7 @@ public class ApplicationHost extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(envId, infraId, hostName, host, configTag, configFiles);
+    return 31 * super.hashCode() + Objects.hash(envId, infraId, hostName, host, configTagId, configFiles);
   }
 
   @Override
@@ -165,7 +166,7 @@ public class ApplicationHost extends Base {
     final ApplicationHost other = (ApplicationHost) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.infraId, other.infraId)
         && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.host, other.host)
-        && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles);
+        && Objects.equals(this.configTagId, other.configTagId) && Objects.equals(this.configFiles, other.configFiles);
   }
 
   @Override
@@ -175,7 +176,7 @@ public class ApplicationHost extends Base {
         .add("infraId", infraId)
         .add("hostName", hostName)
         .add("host", host)
-        .add("configTag", configTag)
+        .add("configTagId", configTagId)
         .add("configFiles", configFiles)
         .toString();
   }
@@ -188,7 +189,7 @@ public class ApplicationHost extends Base {
     private String infraId;
     private String hostName;
     private Host host;
-    private Tag configTag;
+    private String configTagId;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
     private String appId;
@@ -260,7 +261,12 @@ public class ApplicationHost extends Base {
      * @return the builder
      */
     public Builder withConfigTag(Tag configTag) {
-      this.configTag = configTag;
+      this.configTagId = configTag.getUuid();
+      return this;
+    }
+
+    public Builder withConfigTagId(String configTag) {
+      this.configTagId = configTag;
       return this;
     }
 
@@ -363,7 +369,7 @@ public class ApplicationHost extends Base {
           .withInfraId(infraId)
           .withHostName(hostName)
           .withHost(host)
-          .withConfigTag(configTag)
+          .withConfigTagId(configTagId)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withAppId(appId)
@@ -385,7 +391,7 @@ public class ApplicationHost extends Base {
       applicationHost.setInfraId(infraId);
       applicationHost.setHostName(hostName);
       applicationHost.setHost(host);
-      applicationHost.setConfigTag(configTag);
+      applicationHost.setConfigTagId(configTagId);
       applicationHost.setConfigFiles(configFiles);
       applicationHost.setUuid(uuid);
       applicationHost.setAppId(appId);
