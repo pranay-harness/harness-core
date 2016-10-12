@@ -7,6 +7,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -235,8 +236,10 @@ public void populateData() throws IOException {
 }
 
 private void addDefaultRoleAndUsers() {
+  accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
   Role administrator = aRole()
                            .withAppId(Base.GLOBAL_APP_ID)
+                           .withAccountId(accountId)
                            .withName("Administrator")
                            .withPermissions(asList(aPermission()
                                                        .withPermissionScope(APP)
@@ -256,6 +259,7 @@ private void addDefaultRoleAndUsers() {
 
   Role engineers = aRole()
                        .withAppId(Base.GLOBAL_APP_ID)
+                       .withAccountId(accountId)
                        .withName("Software Engineering")
                        .withPermissions(asList(aPermission()
                                                    .withPermissionScope(APP)
@@ -274,6 +278,7 @@ private void addDefaultRoleAndUsers() {
 
   Role operation = aRole()
                        .withAppId(Base.GLOBAL_APP_ID)
+                       .withAccountId(accountId)
                        .withName("Operation Engineering")
                        .withPermissions(asList(aPermission()
                                                    .withPermissionScope(APP)
@@ -292,6 +297,7 @@ private void addDefaultRoleAndUsers() {
 
   Role quality = aRole()
                      .withAppId(Base.GLOBAL_APP_ID)
+                     .withAccountId(accountId)
                      .withName("Quality Engineering")
                      .withPermissions(asList(aPermission()
                                                  .withPermissionScope(APP)
@@ -330,7 +336,6 @@ private void addAdminUser() {
               .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});
-  accountId = response.getResource().getAccounts().get(0).getUuid();
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
   loginAdminUser();

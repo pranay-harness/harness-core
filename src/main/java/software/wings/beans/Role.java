@@ -18,6 +18,7 @@ import java.util.Objects;
 public class Role extends Base {
   @Indexed(unique = true) @NotEmpty private String name;
   private String description;
+  private String accountId;
   @Embedded private List<Permission> permissions;
   private boolean adminRole = false;
 
@@ -105,9 +106,27 @@ public class Role extends Base {
     this.adminRole = adminRole;
   }
 
+  /**
+   * Getter for property 'accountId'.
+   *
+   * @return Value for property 'accountId'.
+   */
+  public String getAccountId() {
+    return accountId;
+  }
+
+  /**
+   * Setter for property 'accountId'.
+   *
+   * @param accountId Value to set for property 'accountId'.
+   */
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, permissions, adminRole);
+    return 31 * super.hashCode() + Objects.hash(name, description, accountId, permissions, adminRole);
   }
 
   @Override
@@ -123,7 +142,8 @@ public class Role extends Base {
     }
     final Role other = (Role) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.permissions, other.permissions) && Objects.equals(this.adminRole, other.adminRole);
+        && Objects.equals(this.accountId, other.accountId) && Objects.equals(this.permissions, other.permissions)
+        && Objects.equals(this.adminRole, other.adminRole);
   }
 
   @Override
@@ -131,17 +151,16 @@ public class Role extends Base {
     return MoreObjects.toStringHelper(this)
         .add("name", name)
         .add("description", description)
+        .add("accountId", accountId)
         .add("permissions", permissions)
         .add("adminRole", adminRole)
         .toString();
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String name;
     private String description;
+    private String accountId;
     private List<Permission> permissions;
     private boolean adminRole = false;
     private String uuid;
@@ -153,134 +172,70 @@ public class Role extends Base {
 
     private Builder() {}
 
-    /**
-     * A role builder.
-     *
-     * @return the builder
-     */
     public static Builder aRole() {
       return new Builder();
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With description builder.
-     *
-     * @param description the description
-     * @return the builder
-     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * With permissions builder.
-     *
-     * @param permissions the permissions
-     * @return the builder
-     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder withPermissions(List<Permission> permissions) {
       this.permissions = permissions;
       return this;
     }
 
-    /**
-     * With admin role builder.
-     *
-     * @param adminRole the admin role
-     * @return the builder
-     */
     public Builder withAdminRole(boolean adminRole) {
       this.adminRole = adminRole;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aRole()
           .withName(name)
           .withDescription(description)
+          .withAccountId(accountId)
           .withPermissions(permissions)
           .withAdminRole(adminRole)
           .withUuid(uuid)
@@ -291,15 +246,11 @@ public class Role extends Base {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build role.
-     *
-     * @return the role
-     */
     public Role build() {
       Role role = new Role();
       role.setName(name);
       role.setDescription(description);
+      role.setAccountId(accountId);
       role.setPermissions(permissions);
       role.setAdminRole(adminRole);
       role.setUuid(uuid);
