@@ -75,4 +75,21 @@ public interface ActivityService {
    * @return the lastproduction activity for service
    */
   Activity getLastProductionActivityForService(String appId, String serviceId);
+
+  /**
+   * Delete boolean.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @return the boolean
+   */
+  boolean delete(String appId, String activityId);
+
+  /**
+   * Delete ny environment.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
+  void deleteByEnvironment(String appId, String envId);
 }

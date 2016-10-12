@@ -178,4 +178,12 @@ public interface WorkflowExecutionService {
    * @return the execution details for node
    */
   Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
+
+  /**
+   * Delete by workflow.
+   *
+   * @param appId      the app id
+   * @param workflowId the workflow id
+   */
+  void deleteByWorkflow(String appId, String workflowId);
 }

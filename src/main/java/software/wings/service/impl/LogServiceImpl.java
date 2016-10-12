@@ -89,4 +89,10 @@ public class LogServiceImpl implements LogService {
       throw new WingsException("Error in creating log file", ex);
     }
   }
+
+  @Override
+  public void deleteActivityLogs(String appId, String activityId) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(Log.class).field("appId").equal(appId).field("activityId").equal(activityId));
+  }
 }

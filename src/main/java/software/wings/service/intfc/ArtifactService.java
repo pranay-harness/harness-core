@@ -82,4 +82,11 @@ public interface ArtifactService {
    * @return the artifact
    */
   boolean delete(String appId, String artifactId);
+
+  /**
+   * Delete by application.
+   *
+   * @param appId the app id
+   */
+  void deleteByApplication(String appId);
 }

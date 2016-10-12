@@ -245,7 +245,7 @@ public class AppServiceTest extends WingsBaseTest {
         inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService, appContainerService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
-    inOrder.verify(serviceResourceService).deleteByAppId(APP_ID);
+    inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
     inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(appContainerService).deleteByAppId(APP_ID);
     verify(historyService).createAsync(historyArgumentCaptor.capture());

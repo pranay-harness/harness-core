@@ -248,6 +248,15 @@ public class ReleaseServiceImpl implements ReleaseService {
         wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId));
   }
 
+  @Override
+  public void deleteByApplication(String appId) {
+    wingsPersistence.createQuery(Release.class)
+        .field("appId")
+        .equal(appId)
+        .asList()
+        .forEach(release -> delete(appId, release.getUuid()));
+  }
+
   private void populateJenkinsSettingName(List<ArtifactSource> artifactSources) {
     if (!isEmpty(artifactSources)) {
       for (ArtifactSource artifactSource : artifactSources) {

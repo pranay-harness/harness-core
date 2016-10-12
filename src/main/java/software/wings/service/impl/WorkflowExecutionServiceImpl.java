@@ -776,6 +776,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return graphRenderer.convertToNode(stateExecutionInstance);
   }
 
+  @Override
+  public void deleteByWorkflow(String appId, String workflowId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(WorkflowExecution.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field("workflowId")
+                                .equal(workflowId));
+  }
+
   private void refreshSummaries(WorkflowExecution workflowExecution) {
     if (!(workflowExecution.getStatus() == ExecutionStatus.SUCCESS
             || workflowExecution.getStatus() == ExecutionStatus.FAILED

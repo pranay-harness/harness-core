@@ -217,7 +217,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void deleteByAppId(String appId) {
+  public void deleteByApp(String appId) {
     wingsPersistence.createQuery(Service.class)
         .field("appId")
         .equal(appId)

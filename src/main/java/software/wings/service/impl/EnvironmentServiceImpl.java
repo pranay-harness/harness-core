@@ -34,9 +34,10 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
@@ -64,11 +65,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private TagService tagService;
   @Inject private ExecutorService executorService;
-  @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private SetupService setupService;
   @Inject private NotificationService notificationService;
   @Inject private HistoryService historyService;
+  @Inject private HostService hostService;
+  @Inject private ActivityService activityService;
 
   /**
    * {@inheritDoc}
@@ -304,6 +306,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       executorService.submit(() -> {
         serviceTemplateService.deleteByEnv(appId, envId);
         tagService.deleteByEnv(appId, envId);
+        hostService.deleteByEnvironment(appId, envId);
+
+        activityService.deleteByEnvironment(appId, envId);
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(environment.getAppId())

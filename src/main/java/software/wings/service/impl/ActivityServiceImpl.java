@@ -175,4 +175,25 @@ public class ActivityServiceImpl implements ActivityService {
         .equal(EnvironmentType.PROD)
         .get();
   }
+
+  @Override
+  public boolean delete(String appId, String activityId) {
+    boolean deleted = wingsPersistence.delete(
+        wingsPersistence.createQuery(Activity.class).field("appId").equal(appId).field(ID_KEY).equal(activityId));
+    if (deleted) {
+      logService.deleteActivityLogs(appId, activityId);
+    }
+    return deleted;
+  }
+
+  @Override
+  public void deleteByEnvironment(String appId, String envId) {
+    wingsPersistence.createQuery(Activity.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .asKeyList()
+        .forEach(key -> delete(appId, (String) key.getId()));
+  }
 }

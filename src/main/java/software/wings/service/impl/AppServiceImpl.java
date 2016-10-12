@@ -30,14 +30,17 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -64,6 +67,9 @@ public class AppServiceImpl implements AppService {
   @Inject private NotificationService notificationService;
   @Inject private HistoryService historyService;
   @Inject private InfrastructureService infrastructureService;
+  @Inject private WorkflowService workflowService;
+  @Inject private ReleaseService releaseService;
+  @Inject private ArtifactService artifactService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -180,9 +186,15 @@ public class AppServiceImpl implements AppService {
                 .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
                 .build());
-        serviceResourceService.deleteByAppId(appId);
+        notificationService.deleteByApplication(appId);
+        serviceResourceService.deleteByApp(appId);
         environmentService.deleteByApp(appId);
+        workflowService.deleteWorkflowByApplication(appId);
+        releaseService.deleteByApplication(appId);
+        artifactService.deleteByApplication(appId);
         appContainerService.deleteByAppId(appId);
+        historyService.deleteByApplication(appId);
+        workflowService.deleteStateMachinesMyApplication(appId);
       });
     }
 

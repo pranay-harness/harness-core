@@ -38,4 +38,11 @@ public interface HistoryService {
    * @return history history
    */
   History get(String appId, String historyId);
+
+  /**
+   * Delete by application.
+   *
+   * @param appId the app id
+   */
+  void deleteByApplication(String appId);
 }

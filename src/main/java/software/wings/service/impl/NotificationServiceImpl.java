@@ -83,6 +83,11 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
+  public void deleteByApplication(String appId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(Notification.class).field("appId").equal(appId));
+  }
+
+  @Override
   public void sendNotificationAsync(@Valid Notification notification) {
     executorService.execute(() -> {
       save(notification); // block for persistence

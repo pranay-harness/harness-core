@@ -46,6 +46,7 @@ public interface WorkflowService {
    * @param cls        the cls
    * @param appId      the app id
    * @param workflowId the workflow id
+   * @return the boolean
    */
   <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId);
 
@@ -143,4 +144,18 @@ public interface WorkflowService {
    * @return the orchestration
    */
   Orchestration readLatestSimpleWorkflow(String appId, String envId);
+
+  /**
+   * Delete workflow by environment.
+   *
+   * @param appId the app id
+   */
+  void deleteWorkflowByApplication(String appId);
+
+  /**
+   * Delete state machines my application.
+   *
+   * @param appId the app id
+   */
+  void deleteStateMachinesMyApplication(String appId);
 }

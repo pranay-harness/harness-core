@@ -64,4 +64,11 @@ public interface NotificationService {
    * @param notificationId the notification id
    */
   void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId);
+
+  /**
+   * Delete by application.
+   *
+   * @param appId the app id
+   */
+  void deleteByApplication(String appId);
 }

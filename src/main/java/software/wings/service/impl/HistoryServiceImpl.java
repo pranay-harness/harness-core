@@ -44,4 +44,9 @@ public class HistoryServiceImpl implements HistoryService {
     }
     return history;
   }
+
+  @Override
+  public void deleteByApplication(String appId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(History.class).field("appId").equal(appId));
+  }
 }

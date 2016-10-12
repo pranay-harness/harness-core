@@ -34,6 +34,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
@@ -81,6 +82,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private PluginManager pluginManager;
   @Inject private StaticConfiguration staticConfiguration;
   @Inject private EnvironmentService environmentService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -361,8 +363,12 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId) {
-    return wingsPersistence.delete(
+    boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId));
+    if (deleted) {
+      workflowExecutionService.deleteByWorkflow(appId, workflowId);
+    }
+    return deleted;
   }
 
   /**
@@ -399,6 +405,25 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return workflow;
+  }
+
+  @Override
+  public void deleteWorkflowByApplication(String appId) {
+    wingsPersistence.createQuery(Pipeline.class)
+        .field("appId")
+        .equal(appId)
+        .asList()
+        .forEach(pipeline -> deleteWorkflow(Pipeline.class, appId, pipeline.getUuid()));
+    wingsPersistence.createQuery(Orchestration.class)
+        .field("appId")
+        .equal(appId)
+        .asList()
+        .forEach(orchestration -> deleteWorkflow(Orchestration.class, appId, orchestration.getUuid()));
+  }
+
+  @Override
+  public void deleteStateMachinesMyApplication(String appId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
   }
 
   private Orchestration createDefaultSimpleWorkflow(String appId, String envId) {

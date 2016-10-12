@@ -433,6 +433,17 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infraId).asList().forEach(this ::delete);
   }
 
+  @Override
+  public void deleteByEnvironment(String appId, String envId) {
+    wingsPersistence.createQuery(ApplicationHost.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .asList()
+        .forEach(this ::delete);
+  }
+
   private List<ServiceTemplate> validateAndFetchServiceTemplate(String appId, List<ServiceTemplate> serviceTemplates) {
     List<ServiceTemplate> fetchedServiceTemplate = new ArrayList<>();
     if (serviceTemplates != null) {

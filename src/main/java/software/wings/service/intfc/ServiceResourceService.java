@@ -158,7 +158,7 @@ public interface ServiceResourceService {
    * @param appId the app id
    * @return the boolean
    */
-  void deleteByAppId(String appId);
+  void deleteByApp(String appId);
 
   /**
    * Find services by app list.

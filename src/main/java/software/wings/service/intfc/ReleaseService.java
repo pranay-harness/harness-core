@@ -99,4 +99,11 @@ public interface ReleaseService {
    * @return true, if successful
    */
   boolean delete(@NotEmpty String id, @NotEmpty String appId);
+
+  /**
+   * Delete by application.
+   *
+   * @param appId the app id
+   */
+  void deleteByApplication(String appId);
 }

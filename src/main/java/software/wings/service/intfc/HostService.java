@@ -192,4 +192,12 @@ public interface HostService {
    * @return the mapped infra host count
    */
   int getMappedInfraHostCount(String infraId);
+
+  /**
+   * Delete by environment.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
+  void deleteByEnvironment(String appId, String envId);
 }

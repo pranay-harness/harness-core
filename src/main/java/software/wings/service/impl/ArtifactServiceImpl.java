@@ -163,4 +163,13 @@ public class ArtifactServiceImpl implements ArtifactService {
     return wingsPersistence.delete(
         wingsPersistence.createQuery(Artifact.class).field("appId").equal(appId).field(ID_KEY).equal(artifactId));
   }
+
+  @Override
+  public void deleteByApplication(String appId) {
+    wingsPersistence.createQuery(Artifact.class)
+        .field("appId")
+        .equal(appId)
+        .asList()
+        .forEach(artifact -> delete(appId, artifact.getUuid()));
+  }
 }
