@@ -316,7 +316,6 @@ public class History extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -484,17 +483,6 @@ public class History extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * Build history.
      *
      * @return the history
@@ -515,7 +503,6 @@ public class History extends Base {
       history.setCreatedAt(createdAt);
       history.setLastUpdatedBy(lastUpdatedBy);
       history.setLastUpdatedAt(lastUpdatedAt);
-      history.setActive(active);
       return history;
     }
   }

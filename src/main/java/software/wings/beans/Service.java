@@ -310,7 +310,6 @@ public class Service extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -533,17 +532,6 @@ public class Service extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -566,8 +554,7 @@ public class Service extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -594,7 +581,6 @@ public class Service extends Base {
       service.setCreatedAt(createdAt);
       service.setLastUpdatedBy(lastUpdatedBy);
       service.setLastUpdatedAt(lastUpdatedAt);
-      service.setActive(active);
       return service;
     }
   }

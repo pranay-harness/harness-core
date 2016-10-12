@@ -81,5 +81,5 @@ public interface ArtifactService {
    * @param artifactId the artifact id
    * @return the artifact
    */
-  Artifact softDelete(String appId, String artifactId);
+  boolean delete(String appId, String artifactId);
 }

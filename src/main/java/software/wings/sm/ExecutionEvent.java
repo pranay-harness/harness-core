@@ -109,7 +109,6 @@ public class ExecutionEvent extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -233,17 +232,6 @@ public class ExecutionEvent extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * Build workflow execution event.
      *
      * @return the workflow execution event
@@ -260,7 +248,6 @@ public class ExecutionEvent extends Base {
       workflowExecutionEvent.setCreatedAt(createdAt);
       workflowExecutionEvent.setLastUpdatedBy(lastUpdatedBy);
       workflowExecutionEvent.setLastUpdatedAt(lastUpdatedAt);
-      workflowExecutionEvent.setActive(active);
       return workflowExecutionEvent;
     }
   }

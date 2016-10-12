@@ -21,8 +21,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.security.UserThreadLocal;
@@ -91,7 +89,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(id).field("active").equal(true).get();
+    return createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(id).get();
   }
 
   /**
@@ -125,7 +123,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
-    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
     req.setLimit("1");
     PageResponse<T> res = query(cls, req, readPref);
     if (isEmpty(res)) {
@@ -294,7 +291,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
-    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
     if (req.getOrders() == null || req.getOrders().size() == 0) {
       SortOrder sortOrder = new SortOrder();
       sortOrder.setFieldName("createdAt");

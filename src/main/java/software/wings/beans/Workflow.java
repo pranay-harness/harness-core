@@ -112,7 +112,6 @@ public class Workflow extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -236,17 +235,6 @@ public class Workflow extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * Build workflow.
      *
      * @return the workflow
@@ -263,7 +251,6 @@ public class Workflow extends Base {
       workflow.setCreatedAt(createdAt);
       workflow.setLastUpdatedBy(lastUpdatedBy);
       workflow.setLastUpdatedAt(lastUpdatedAt);
-      workflow.setActive(active);
       return workflow;
     }
   }

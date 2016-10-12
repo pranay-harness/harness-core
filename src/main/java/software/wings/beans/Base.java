@@ -12,7 +12,6 @@ import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
-import java.util.Comparator;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -33,23 +32,13 @@ public class Base {
    * The constant GLOBAL_ENV_ID.
    */
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
-  /**
-   * The constant createdAtComparator.
-   */
-  public static final Comparator<Base> createdAtComparator = new Comparator<Base>() {
 
-    @Override
-    public int compare(Base o1, Base o2) {
-      return new Long(o1.createdAt).compareTo(new Long(o2.createdAt));
-    }
-  };
   @Id @NotNull(groups = {Update.class}) private String uuid;
   @Indexed @NotNull private String appId;
   private EmbeddedUser createdBy;
   @Indexed private long createdAt;
   private EmbeddedUser lastUpdatedBy;
   private long lastUpdatedAt;
-  @Indexed private boolean active = true;
 
   /**
    * Gets uuid.
@@ -142,24 +131,6 @@ public class Base {
   }
 
   /**
-   * Is active boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isActive() {
-    return active;
-  }
-
-  /**
-   * Sets active.
-   *
-   * @param active the active
-   */
-  public void setActive(boolean active) {
-    this.active = active;
-  }
-
-  /**
    * Gets app id.
    *
    * @return the app id
@@ -182,7 +153,7 @@ public class Base {
    */
   @Override
   public int hashCode() {
-    return Objects.hash(uuid, appId, active);
+    return Objects.hash(uuid, appId);
   }
 
   /* (non-Javadoc)
@@ -197,8 +168,7 @@ public class Base {
       return false;
     }
     final Base other = (Base) obj;
-    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.appId, other.appId)
-        && Objects.equals(this.active, other.active);
+    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.appId, other.appId);
   }
 
   /**
@@ -247,7 +217,6 @@ public class Base {
         .add("createdAt", createdAt)
         .add("lastUpdatedBy", lastUpdatedBy)
         .add("lastUpdatedAt", lastUpdatedAt)
-        .add("active", active)
         .toString();
   }
 }

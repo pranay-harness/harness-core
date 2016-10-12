@@ -76,7 +76,6 @@ public class ReleaseServiceImpl implements ReleaseService {
    */
   @Override
   public PageResponse<Release> list(PageRequest<Release> req) {
-    req.addFilter("active", true, EQ);
     PageResponse<Release> releases = wingsPersistence.query(Release.class, req);
     releases.forEach(release -> populateJenkinsSettingName(release.getArtifactSources()));
     releases.forEach(release
@@ -245,31 +244,8 @@ public class ReleaseServiceImpl implements ReleaseService {
    */
   @Override
   public boolean delete(String id, String appId) {
-    return wingsPersistence.getDatastore()
-               .delete(wingsPersistence.createQuery(Release.class)
-                           .field("active")
-                           .equal(false)
-                           .field(ID_KEY)
-                           .equal(id)
-                           .field("appId")
-                           .equal(appId))
-               .getN()
-        > 0;
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ReleaseService#softDelete(java.lang.String, java.lang.String)
-   */
-  @Override
-  public Release softDelete(String id, String appId) {
-    Query<Release> query =
-        wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId);
-
-    UpdateOperations<Release> updateOperations =
-        wingsPersistence.createUpdateOperations(Release.class).set("active", false);
-
-    wingsPersistence.update(query, updateOperations);
-    return get(id, appId);
+    return wingsPersistence.delete(
+        wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId));
   }
 
   private void populateJenkinsSettingName(List<ArtifactSource> artifactSources) {

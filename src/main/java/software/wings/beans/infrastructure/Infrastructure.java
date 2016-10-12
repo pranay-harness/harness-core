@@ -194,7 +194,6 @@ public class Infrastructure extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -329,17 +328,6 @@ public class Infrastructure extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -356,8 +344,7 @@ public class Infrastructure extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -378,7 +365,6 @@ public class Infrastructure extends Base {
       infrastructure.setCreatedAt(createdAt);
       infrastructure.setLastUpdatedBy(lastUpdatedBy);
       infrastructure.setLastUpdatedAt(lastUpdatedAt);
-      infrastructure.setActive(active);
       return infrastructure;
     }
   }

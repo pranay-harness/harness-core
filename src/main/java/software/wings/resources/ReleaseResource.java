@@ -153,8 +153,9 @@ public class ReleaseResource {
   @Timed
   @ExceptionMetered
   @Path("{id}")
-  public RestResponse<Release> delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
-    return new RestResponse<>(releaseService.softDelete(id, appId));
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
+    releaseService.delete(id, appId);
+    return new RestResponse<>();
   }
 
   /**

@@ -159,10 +159,8 @@ public class ArtifactServiceImpl implements ArtifactService {
    * @see software.wings.service.intfc.ArtifactService#softDelete(java.lang.String, java.lang.String)
    */
   @Override
-  public Artifact softDelete(String appId, String artifactId) {
-    wingsPersistence.update(
-        wingsPersistence.createQuery(Artifact.class).field("appId").equal(appId).field(ID_KEY).equal(artifactId),
-        wingsPersistence.createUpdateOperations(Artifact.class).set("active", false));
-    return wingsPersistence.get(Artifact.class, appId, artifactId);
+  public boolean delete(String appId, String artifactId) {
+    return wingsPersistence.delete(
+        wingsPersistence.createQuery(Artifact.class).field("appId").equal(appId).field(ID_KEY).equal(artifactId));
   }
 }

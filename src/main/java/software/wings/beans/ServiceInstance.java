@@ -539,7 +539,6 @@ public class ServiceInstance extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastDeployedOn;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     /**
      * Do not instantiate Builder.
@@ -859,17 +858,6 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -902,8 +890,7 @@ public class ServiceInstance extends Base {
           .withCommandType(commandType)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastDeployedOn(lastDeployedOn)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -960,7 +947,6 @@ public class ServiceInstance extends Base {
       serviceInstance.setLastUpdatedBy(lastUpdatedBy);
       serviceInstance.setLastDeployedOn(lastDeployedOn);
       serviceInstance.setLastUpdatedAt(lastUpdatedAt);
-      serviceInstance.setActive(active);
       serviceInstance.setServiceId(serviceId);
       serviceInstance.setServiceTemplateName(serviceTemplateName);
       return serviceInstance;

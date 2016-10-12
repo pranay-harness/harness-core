@@ -27,7 +27,6 @@ public class ExtendedFile extends BaseFile {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -184,17 +183,6 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -213,8 +201,7 @@ public class ExtendedFile extends BaseFile {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -237,7 +224,6 @@ public class ExtendedFile extends BaseFile {
       extendedFile.setCreatedAt(createdAt);
       extendedFile.setLastUpdatedBy(lastUpdatedBy);
       extendedFile.setLastUpdatedAt(lastUpdatedAt);
-      extendedFile.setActive(active);
       return extendedFile;
     }
   }

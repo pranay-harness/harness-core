@@ -53,7 +53,6 @@ public class AwsHost extends Host {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -243,17 +242,6 @@ public class AwsHost extends Host {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -275,8 +263,7 @@ public class AwsHost extends Host {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -302,7 +289,6 @@ public class AwsHost extends Host {
       awsHost.setCreatedAt(createdAt);
       awsHost.setLastUpdatedBy(lastUpdatedBy);
       awsHost.setLastUpdatedAt(lastUpdatedAt);
-      awsHost.setActive(active);
       return awsHost;
     }
   }

@@ -48,7 +48,6 @@ public class InformationNotification extends Notification {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -172,17 +171,6 @@ public class InformationNotification extends Notification {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -198,8 +186,7 @@ public class InformationNotification extends Notification {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -219,7 +206,6 @@ public class InformationNotification extends Notification {
       informationNotification.setCreatedAt(createdAt);
       informationNotification.setLastUpdatedBy(lastUpdatedBy);
       informationNotification.setLastUpdatedAt(lastUpdatedAt);
-      informationNotification.setActive(active);
       return informationNotification;
     }
   }

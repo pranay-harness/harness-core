@@ -357,7 +357,6 @@ public class Artifact extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private Status status;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -525,17 +524,6 @@ public class Artifact extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -555,8 +543,7 @@ public class Artifact extends Base {
           .withArtifactFiles(artifactFiles)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withStatus(status)
-          .withActive(active);
+          .withStatus(status);
     }
 
     /**
@@ -580,7 +567,6 @@ public class Artifact extends Base {
       artifact.setLastUpdatedBy(lastUpdatedBy);
       artifact.setLastUpdatedAt(lastUpdatedAt);
       artifact.setStatus(status);
-      artifact.setActive(active);
       return artifact;
     }
   }

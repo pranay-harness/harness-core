@@ -242,9 +242,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
    * Should soft delete artifact.
    */
   @Test
-  public void shouldSoftDeleteArtifact() {
+  public void shouldDeleteArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
-    artifactService.softDelete(savedArtifact.getAppId(), savedArtifact.getUuid());
+    artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
     assertThat(artifactService.list(new PageRequest<>())).hasSize(0);
   }
 }

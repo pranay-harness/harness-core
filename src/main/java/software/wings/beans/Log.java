@@ -193,7 +193,6 @@ public class Log extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -339,17 +338,6 @@ public class Log extends Base {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -367,8 +355,7 @@ public class Log extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -390,7 +377,6 @@ public class Log extends Base {
       log.setCreatedAt(createdAt);
       log.setLastUpdatedBy(lastUpdatedBy);
       log.setLastUpdatedAt(lastUpdatedAt);
-      log.setActive(active);
       return log;
     }
   }

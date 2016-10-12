@@ -105,7 +105,6 @@ public class ReleaseResourceTest extends WingsBaseTest {
     when(APP_SERVICE.exist(APP_ID)).thenReturn(true);
     when(RELEASE_SERVICE.create(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
     when(RELEASE_SERVICE.update(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
-    when(RELEASE_SERVICE.softDelete(anyString(), anyString())).then(invocation -> releaseBuilder.but().build());
     when(RELEASE_SERVICE.addArtifactSource(anyString(), anyString(), any(ArtifactSource.class)))
         .thenReturn(releaseBuilder.but().build());
     when(RELEASE_SERVICE.updateArtifactSource(anyString(), anyString(), any(ArtifactSource.class)))
@@ -257,6 +256,6 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                              .request()
                                              .delete(new GenericType<RestResponse<Release>>() {});
 
-    verify(RELEASE_SERVICE).softDelete(RELEASE_ID, APP_ID);
+    verify(RELEASE_SERVICE).delete(RELEASE_ID, APP_ID);
   }
 }

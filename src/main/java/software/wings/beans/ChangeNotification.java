@@ -49,7 +49,6 @@ public class ChangeNotification extends Notification {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -184,17 +183,6 @@ public class ChangeNotification extends Notification {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -211,8 +199,7 @@ public class ChangeNotification extends Notification {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -233,7 +220,6 @@ public class ChangeNotification extends Notification {
       changeNotification.setCreatedAt(createdAt);
       changeNotification.setLastUpdatedBy(lastUpdatedBy);
       changeNotification.setLastUpdatedAt(lastUpdatedAt);
-      changeNotification.setActive(active);
       return changeNotification;
     }
   }

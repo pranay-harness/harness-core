@@ -360,11 +360,9 @@ public class WorkflowServiceImpl implements WorkflowService {
    * {@inheritDoc}
    */
   @Override
-  public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
-    UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);
-    ops.set("active", false);
-    wingsPersistence.update(
-        wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
+  public <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId) {
+    return wingsPersistence.delete(
+        wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId));
   }
 
   /**

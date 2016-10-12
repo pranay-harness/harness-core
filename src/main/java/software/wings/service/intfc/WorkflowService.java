@@ -47,7 +47,7 @@ public interface WorkflowService {
    * @param appId      the app id
    * @param workflowId the workflow id
    */
-  <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId);
+  <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId);
 
   /**
    * List pipelines.

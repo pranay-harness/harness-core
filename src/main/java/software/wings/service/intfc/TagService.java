@@ -21,7 +21,7 @@ public interface TagService {
   /**
    * List root tags.
    *
-   * @param request the request
+   * @param request          the request
    * @param withTagHierarchy
    * @return the page response
    */
@@ -39,9 +39,9 @@ public interface TagService {
   /**
    * Gets the tag.
    *
-   * @param appId the app id
-   * @param envId the env id
-   * @param tagId the tag id
+   * @param appId            the app id
+   * @param envId            the env id
+   * @param tagId            the tag id
    * @param withTagHierarchy
    * @return the tag
    */

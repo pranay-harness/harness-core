@@ -99,13 +99,4 @@ public interface ReleaseService {
    * @return true, if successful
    */
   boolean delete(@NotEmpty String id, @NotEmpty String appId);
-
-  /**
-   * Soft delete.
-   *
-   * @param id    the id
-   * @param appId the app id
-   * @return the release
-   */
-  Release softDelete(String id, String appId);
 }

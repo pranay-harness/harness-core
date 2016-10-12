@@ -675,7 +675,6 @@ public class StateMachine extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     /**
      * Do not instantiate Builder.
@@ -824,17 +823,6 @@ public class StateMachine extends Base {
     }
 
     /**
-     * With active.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * Builds the.
      *
      * @return the state machine
@@ -853,7 +841,6 @@ public class StateMachine extends Base {
       stateMachine.setCreatedAt(createdAt);
       stateMachine.setLastUpdatedBy(lastUpdatedBy);
       stateMachine.setLastUpdatedAt(lastUpdatedAt);
-      stateMachine.setActive(active);
       return stateMachine;
     }
   }

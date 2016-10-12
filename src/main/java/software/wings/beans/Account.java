@@ -66,7 +66,6 @@ public class Account extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -109,11 +108,6 @@ public class Account extends Base {
       return this;
     }
 
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -122,8 +116,7 @@ public class Account extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     public Account build() {
@@ -135,7 +128,6 @@ public class Account extends Base {
       account.setCreatedAt(createdAt);
       account.setLastUpdatedBy(lastUpdatedBy);
       account.setLastUpdatedAt(lastUpdatedAt);
-      account.setActive(active);
       return account;
     }
   }

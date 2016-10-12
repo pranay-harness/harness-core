@@ -445,7 +445,6 @@ public class WorkflowExecution extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private WorkflowExecutionBuilder() {}
 
@@ -580,11 +579,6 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
-    public WorkflowExecutionBuilder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public WorkflowExecution build() {
       WorkflowExecution workflowExecution = new WorkflowExecution();
       workflowExecution.setWorkflowId(workflowId);
@@ -612,7 +606,6 @@ public class WorkflowExecution extends Base {
       workflowExecution.setCreatedAt(createdAt);
       workflowExecution.setLastUpdatedBy(lastUpdatedBy);
       workflowExecution.setLastUpdatedAt(lastUpdatedAt);
-      workflowExecution.setActive(active);
       return workflowExecution;
     }
   }

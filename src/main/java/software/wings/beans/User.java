@@ -320,7 +320,6 @@ public class User extends Base implements Principal {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private boolean active = true;
 
     private Builder() {}
 
@@ -510,17 +509,6 @@ public class User extends Base implements Principal {
     }
 
     /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -542,8 +530,7 @@ public class User extends Base implements Principal {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -569,7 +556,6 @@ public class User extends Base implements Principal {
       user.setCreatedAt(createdAt);
       user.setLastUpdatedBy(lastUpdatedBy);
       user.setLastUpdatedAt(lastUpdatedAt);
-      user.setActive(active);
       return user;
     }
   }

@@ -117,8 +117,9 @@ public class ArtifactResource {
    */
   @DELETE
   @Path("{artifactId}")
-  public RestResponse<Artifact> update(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
-    return new RestResponse<>(artifactService.softDelete(appId, artifactId));
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
+    artifactService.delete(appId, artifactId);
+    return new RestResponse();
   }
 
   /**

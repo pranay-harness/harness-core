@@ -115,32 +115,11 @@ public class ReleaseServiceTest extends WingsBaseTest {
    * Should soft delete release.
    */
   @Test
-  public void shouldSoftDeleteRelease() {
+  public void shouldDeleteRelease() {
     Release release =
         releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
-    releaseService.softDelete(release.getUuid(), release.getAppId());
+    releaseService.delete(release.getUuid(), release.getAppId());
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
-  }
-
-  /**
-   * Should delete inactive release.
-   */
-  @Test
-  public void shouldDeleteInactiveRelease() {
-    Release release = releaseService.create(
-        releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).withActive(false).build());
-    assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
-  }
-
-  /**
-   * Should not delete active release.
-   */
-  @Test
-  public void shouldNotDeleteActiveRelease() {
-    Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
-    assertThat(releaseService.delete(release.getUuid(), release.getAppId())).isFalse();
-    assertThat(releaseService.list(new PageRequest<>())).hasSize(1);
   }
 
   /**
