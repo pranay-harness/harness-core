@@ -9,12 +9,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ActionableNotification;
+import software.wings.beans.Application;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Injector injector;
   @Inject private ExecutorService executorService;
+  @Inject private AppService appService;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -90,6 +93,8 @@ public class NotificationServiceImpl implements NotificationService {
   @Override
   public void sendNotificationAsync(@Valid Notification notification) {
     executorService.execute(() -> {
+      Application application = appService.get(notification.getAppId());
+      notification.setAccountId(application.getAccountId());
       save(notification); // block for persistence
       // TODO: async broadcast
     });

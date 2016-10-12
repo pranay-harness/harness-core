@@ -17,6 +17,8 @@ public abstract class Notification extends Base {
   private String environmentId;
   private String entityId;
   private EntityType entityType;
+  private String accountId;
+
   @JsonTypeId @NotNull private NotificationType notificationType;
   @Indexed @NotNull private boolean complete = true;
   @Indexed @NotNull private boolean actionable = false;
@@ -135,6 +137,24 @@ public abstract class Notification extends Base {
    */
   public boolean isActionable() {
     return actionable;
+  }
+
+  /**
+   * Getter for property 'accountId'.
+   *
+   * @return Value for property 'accountId'.
+   */
+  public String getAccountId() {
+    return accountId;
+  }
+
+  /**
+   * Setter for property 'accountId'.
+   *
+   * @param accountId Value to set for property 'accountId'.
+   */
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -37,6 +38,7 @@ import software.wings.beans.Notification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.NotificationServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
 
 import javax.inject.Inject;
@@ -47,6 +49,7 @@ import javax.inject.Inject;
 public class NotificationServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Injector injector;
+  @Mock private AppService appService;
 
   @Inject @InjectMocks private NotificationService notificationService;
 
@@ -58,7 +61,10 @@ public class NotificationServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Before
-  public void setUp() throws Exception {}
+  public void setUp() throws Exception {
+    when(appService.get(APP_ID))
+        .thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId("ACCOUNT_ID").build());
+  }
 
   /**
    * Should list.

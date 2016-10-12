@@ -34,14 +34,13 @@ public class InformationNotification extends Notification {
     this.displayText = displayText;
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String displayText;
     private String environmentId;
     private String entityId;
     private EntityType entityType;
+    private String accountId;
+    private boolean complete = true;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -51,136 +50,78 @@ public class InformationNotification extends Notification {
 
     private Builder() {}
 
-    /**
-     * An information notification builder.
-     *
-     * @return the builder
-     */
     public static Builder anInformationNotification() {
       return new Builder();
     }
 
-    /**
-     * With display text builder.
-     *
-     * @param displayText the display text
-     * @return the builder
-     */
     public Builder withDisplayText(String displayText) {
       this.displayText = displayText;
       return this;
     }
 
-    /**
-     * With environment id builder.
-     *
-     * @param environmentId the environment id
-     * @return the builder
-     */
     public Builder withEnvironmentId(String environmentId) {
       this.environmentId = environmentId;
       return this;
     }
 
-    /**
-     * With entity id builder.
-     *
-     * @param entityId the entity id
-     * @return the builder
-     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
-    /**
-     * With entity type builder.
-     *
-     * @param entityType the entity type
-     * @return the builder
-     */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withComplete(boolean complete) {
+      this.complete = complete;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anInformationNotification()
           .withDisplayText(displayText)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
+          .withAccountId(accountId)
+          .withComplete(complete)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -189,17 +130,14 @@ public class InformationNotification extends Notification {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build information notification.
-     *
-     * @return the information notification
-     */
     public InformationNotification build() {
       InformationNotification informationNotification = new InformationNotification();
       informationNotification.setDisplayText(displayText);
       informationNotification.setEnvironmentId(environmentId);
       informationNotification.setEntityId(entityId);
       informationNotification.setEntityType(entityType);
+      informationNotification.setAccountId(accountId);
+      informationNotification.setComplete(complete);
       informationNotification.setUuid(uuid);
       informationNotification.setAppId(appId);
       informationNotification.setCreatedBy(createdBy);

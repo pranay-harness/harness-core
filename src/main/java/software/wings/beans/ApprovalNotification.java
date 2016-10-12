@@ -14,13 +14,14 @@ import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.NotificationAction.NotificationActionType;
+import software.wings.beans.artifact.Artifact.Status;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.HEAD;
 
 /**
  * Created by anubhaw on 7/25/16.
@@ -123,30 +124,24 @@ public class ApprovalNotification extends ActionableNotification {
     REJECTED
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
-    private String entityName;
-    private ApprovalStage stage = PENDING;
     private String artifactStreamId;
     private String environmentId;
     private String entityId;
     private EntityType entityType;
+    private String accountId;
+    private boolean complete = true;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
     private long createdAt;
+    private String entityName;
     private EmbeddedUser lastUpdatedBy;
+    private ApprovalStage stage = PENDING;
     private long lastUpdatedAt;
 
     private Builder() {}
 
-    /**
-     * An approval notification builder.
-     *
-     * @return the builder
-     */
     public static Builder anApprovalNotification() {
       return new Builder();
     }
@@ -195,99 +190,56 @@ public class ApprovalNotification extends ActionableNotification {
       return this;
     }
 
-    /**
-     * With entity id builder.
-     *
-     * @param entityId the entity id
-     * @return the builder
-     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
-    /**
-     * With entity type builder.
-     *
-     * @param entityType the entity type
-     * @return the builder
-     */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withComplete(boolean complete) {
+      this.complete = complete;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anApprovalNotification()
           .withEntityName(entityName)
@@ -304,11 +256,6 @@ public class ApprovalNotification extends ActionableNotification {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build approval notification.
-     *
-     * @return the approval notification
-     */
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
       approvalNotification.setEntityName(entityName);
@@ -317,11 +264,15 @@ public class ApprovalNotification extends ActionableNotification {
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);
+      approvalNotification.setAccountId(accountId);
+      approvalNotification.setComplete(complete);
       approvalNotification.setUuid(uuid);
       approvalNotification.setAppId(appId);
       approvalNotification.setCreatedBy(createdBy);
       approvalNotification.setCreatedAt(createdAt);
+      approvalNotification.setEntityName(entityName);
       approvalNotification.setLastUpdatedBy(lastUpdatedBy);
+      approvalNotification.setStage(stage);
       approvalNotification.setLastUpdatedAt(lastUpdatedAt);
       return approvalNotification;
     }
