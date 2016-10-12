@@ -138,13 +138,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   public void setReferences(ServiceTemplate serviceTemplate) {
-    /*
-    Service service;
-    List<Tag> tags = new ArrayList<>();
-    List<ApplicationHost> hosts = new ArrayList<>();
-    private Set<Tag> leafTags = new HashSet<>();
-     */
-    serviceTemplate.setService(serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId()));
+    if (serviceTemplate.getAppId() == null) {
+      return;
+    }
+
+    if (serviceTemplate.getServiceId() != null) {
+      serviceTemplate.setService(
+          serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId()));
+    }
     if (serviceTemplate.getTagIds().size() > 0) {
       serviceTemplate.setTags(tagService
                                   .list(aPageRequest()
