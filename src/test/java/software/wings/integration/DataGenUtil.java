@@ -86,6 +86,7 @@ import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.JsonSubtypeResolver;
@@ -132,6 +133,8 @@ public class DataGenUtil extends WingsBaseTest {
   private static final String password = "admin";
 
   private static String userToken = "INVALID_TOKEN";
+  private static String accountId = "INVALID_ID";
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Test folder.
@@ -145,6 +148,7 @@ public class DataGenUtil extends WingsBaseTest {
   private SettingAttribute envAttr = null;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private AccountService accountService;
 
   /**
    * Generated Data for across the API use.
@@ -326,6 +330,7 @@ private void addAdminUser() {
               .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});
+  accountId = response.getResource().getAccounts().get(0).getUuid();
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
   loginAdminUser();
@@ -352,6 +357,7 @@ private void createGlobalSettings() {
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("Wings Jenkins")
+                        .withAccountId(accountId)
                         .withValue(aJenkinsConfig()
                                        .withJenkinsUrl("http://ec2-54-174-51-35.compute-1.amazonaws.com/")
                                        .withUsername("wingsbuild")
@@ -362,6 +368,7 @@ private void createGlobalSettings() {
       new GenericType<RestResponse<SettingAttribute>>() {});
   getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
                                                           .withName("SMTP")
+                                                          .withAccountId(accountId)
                                                           .withValue(aSmtpConfig()
                                                                          .withFromAddress("wings_test@wings.software")
                                                                          .withUsername("wings_test@wings.software")
@@ -376,6 +383,7 @@ private void createGlobalSettings() {
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("Splunk")
+                        .withAccountId(accountId)
                         .withValue(aSplunkConfig()
                                        .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
                                        .withPort(8089)
@@ -389,6 +397,7 @@ private void createGlobalSettings() {
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("AppDynamics")
+                        .withAccountId(accountId)
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
                                        .withControllerUrl("https://na774.saas.appdynamics.com/controller")
                                        .withUsername("testuser")
@@ -401,6 +410,7 @@ private void createGlobalSettings() {
 
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
+                        .withAccountId(accountId)
                         .withName("AWS_CREDENTIALS")
                         .withValue(anAwsInfrastructureProviderConfig()
                                        .withSecretKey("AKIAI6IK4KYQQQEEWEVA")
@@ -416,7 +426,8 @@ private void createAppSettings(String appId) {
   getRequestWithAuthHeader(target).post(
       Entity.entity(
           aSettingAttribute()
-              .withAppId(appId)
+              .withAccountId(accountId)
+              .withAppId(GLOBAL_APP_ID)
               .withEnvId(GLOBAL_ENV_ID)
               .withName("Wings Key")
               .withValue(aHostConnectionAttributes()
@@ -514,7 +525,8 @@ private List<Application> createApplications() {
   for (int i = 0; i < NUM_APPS; i++) {
     String name = getName(appNames);
     RestResponse<Application> response = getRequestWithAuthHeader(target).post(
-        Entity.entity(anApplication().withName(name).withDescription(name).build(), APPLICATION_JSON),
+        Entity.entity(
+            anApplication().withName(name).withDescription(name).withAccountId(accountId).build(), APPLICATION_JSON),
         new GenericType<RestResponse<Application>>() {});
     assertThat(response.getResource()).isInstanceOf(Application.class);
     apps.add(response.getResource());
@@ -634,6 +646,7 @@ private void addHostsToEnv(Environment env) {
     envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute()
             .withAppId(env.getAppId())
+            .withAccountId(accountId)
             .withName("JumpBox")
             .withValue(new BastionConnectionAttributes())
             .build());

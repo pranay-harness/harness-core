@@ -143,6 +143,8 @@ public interface WingsPersistence {
    */
   <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
 
+  <T> T upsert(Query<T> query, UpdateOperations<T> updateOperations);
+
   /**
    * Update.
    *

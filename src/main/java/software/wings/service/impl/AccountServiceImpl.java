@@ -34,6 +34,12 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public Account findOrCreate(String companyName) {
+    return wingsPersistence.upsert(wingsPersistence.createQuery(Account.class).field("companyName").equal(companyName),
+        wingsPersistence.createUpdateOperations(Account.class).setOnInsert("companyName", companyName));
+  }
+
+  @Override
   public Account update(@Valid Account account) {
     wingsPersistence.update(
         account, wingsPersistence.createUpdateOperations(Account.class).set("companyName", account.getCompanyName()));

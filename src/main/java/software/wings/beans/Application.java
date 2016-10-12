@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static com.sun.jmx.snmp.EnumRowStatus.active;
+
 import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -25,6 +27,8 @@ import java.util.Objects;
 public class Application extends Base {
   @NotEmpty private String name;
   private String description;
+
+  @NotEmpty private String accountId;
 
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<Environment> environments = new ArrayList<>();
@@ -187,9 +191,29 @@ public class Application extends Base {
     this.appKeyStatistics = appKeyStatistics;
   }
 
+  /**
+   * Getter for property 'accountId'.
+   *
+   * @return Value for property 'accountId'.
+   */
+  public String getAccountId() {
+    return accountId;
+  }
+
+  /**
+   * Setter for property 'accountId'.
+   *
+   * @param accountId Value to set for property 'accountId'.
+   */
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, services, environments);
+    return 31 * super.hashCode()
+        + Objects.hash(
+              name, description, accountId, services, environments, recentExecutions, notifications, nextDeploymentOn);
   }
 
   @Override
@@ -205,7 +229,11 @@ public class Application extends Base {
     }
     final Application other = (Application) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.services, other.services) && Objects.equals(this.environments, other.environments);
+        && Objects.equals(this.accountId, other.accountId) && Objects.equals(this.services, other.services)
+        && Objects.equals(this.environments, other.environments)
+        && Objects.equals(this.recentExecutions, other.recentExecutions)
+        && Objects.equals(this.notifications, other.notifications)
+        && Objects.equals(this.nextDeploymentOn, other.nextDeploymentOn);
   }
 
   @Override
@@ -213,8 +241,13 @@ public class Application extends Base {
     return MoreObjects.toStringHelper(this)
         .add("name", name)
         .add("description", description)
+        .add("accountId", accountId)
         .add("services", services)
         .add("environments", environments)
+        .add("setup", setup)
+        .add("recentExecutions", recentExecutions)
+        .add("notifications", notifications)
+        .add("nextDeploymentOn", nextDeploymentOn)
         .toString();
   }
 
@@ -224,6 +257,7 @@ public class Application extends Base {
   public static final class Builder {
     private String name;
     private String description;
+    private String accountId;
     private List<Service> services = new ArrayList<>();
     private List<Environment> environments = new ArrayList<>();
     private Setup setup;
@@ -239,178 +273,90 @@ public class Application extends Base {
 
     private Builder() {}
 
-    /**
-     * An application builder.
-     *
-     * @return the builder
-     */
     public static Builder anApplication() {
       return new Builder();
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With description builder.
-     *
-     * @param description the description
-     * @return the builder
-     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * With services builder.
-     *
-     * @param services the services
-     * @return the builder
-     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
-    /**
-     * With environments builder.
-     *
-     * @param environments the environments
-     * @return the builder
-     */
     public Builder withEnvironments(List<Environment> environments) {
       this.environments = environments;
       return this;
     }
 
-    /**
-     * With setup builder.
-     *
-     * @param setup the setup
-     * @return the builder
-     */
     public Builder withSetup(Setup setup) {
       this.setup = setup;
       return this;
     }
 
-    /**
-     * With recent executions builder.
-     *
-     * @param recentExecutions the recent executions
-     * @return the builder
-     */
     public Builder withRecentExecutions(List<WorkflowExecution> recentExecutions) {
       this.recentExecutions = recentExecutions;
       return this;
     }
 
-    /**
-     * With notifications builder.
-     *
-     * @param notifications the notifications
-     * @return the builder
-     */
     public Builder withNotifications(List<Notification> notifications) {
       this.notifications = notifications;
       return this;
     }
 
-    /**
-     * With next deployment on builder.
-     *
-     * @param nextDeploymentOn the next deployment on
-     * @return the builder
-     */
     public Builder withNextDeploymentOn(long nextDeploymentOn) {
       this.nextDeploymentOn = nextDeploymentOn;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anApplication()
           .withName(name)
           .withDescription(description)
+          .withAccountId(accountId)
           .withServices(services)
           .withEnvironments(environments)
           .withSetup(setup)
@@ -425,15 +371,11 @@ public class Application extends Base {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build application.
-     *
-     * @return the application
-     */
     public Application build() {
       Application application = new Application();
       application.setName(name);
       application.setDescription(description);
+      application.setAccountId(accountId);
       application.setServices(services);
       application.setEnvironments(environments);
       application.setSetup(setup);

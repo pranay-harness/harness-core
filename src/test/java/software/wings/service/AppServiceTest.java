@@ -16,6 +16,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
@@ -37,7 +38,6 @@ import software.wings.beans.EventType;
 import software.wings.beans.History;
 import software.wings.beans.Notification;
 import software.wings.beans.Service;
-import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -111,13 +111,18 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldSaveApplication() {
     Application app = anApplication().withName("AppA").withDescription("Description1").build();
-    Application savedApp = anApplication().withUuid(APP_ID).withName("AppA").withDescription("Description1").build();
+    Application savedApp = anApplication()
+                               .withUuid(APP_ID)
+                               .withAccountId("ACCOUNT_ID")
+                               .withName("AppA")
+                               .withDescription("Description1")
+                               .build();
     when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(savedApp);
     when(notificationService.list(any(PageRequest.class))).thenReturn(new PageResponse<Notification>());
     appService.save(app);
     verify(wingsPersistence).saveAndGet(Application.class, app);
-    verify(settingsService).createDefaultSettings(APP_ID);
+    verify(settingsService).createDefaultSettings(APP_ID, "ACCOUNT_ID");
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     verify(historyService).createAsync(historyArgumentCaptor.capture());
     assertThat(historyArgumentCaptor.getValue())
@@ -195,8 +200,7 @@ public class AppServiceTest extends WingsBaseTest {
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
     when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
-    when(setupService.getApplicationSetupStatus(anApplication().withUuid(APP_ID).build()))
-        .thenReturn(Setup.Builder.aSetup().build());
+    when(setupService.getApplicationSetupStatus(anApplication().withUuid(APP_ID).build())).thenReturn(aSetup().build());
     Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE, false, 0);
 
     verify(wingsPersistence).get(Application.class, APP_ID);

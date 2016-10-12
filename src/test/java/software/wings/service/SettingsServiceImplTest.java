@@ -70,7 +70,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveSettingAttribute() {
-    settingsService.save(aSettingAttribute().build());
+    settingsService.save(aSettingAttribute().withAccountId("ACCOUNT_ID").build());
     verify(wingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
   }
 
@@ -142,6 +142,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldListConnectionAttributes() {
     SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
                                                                  .withAppId("APP_ID")
+                                                                 .withAccountId("ACCOUNT_ID")
                                                                  .withName("USER_PASSWORD")
                                                                  .withValue(aHostConnectionAttributes()
                                                                                 .withType(HOST_CONNECTION_ATTRIBUTES)
@@ -165,6 +166,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldListBastionHostConnectionAttributes() {
     SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
                                                                  .withAppId("APP_ID")
+                                                                 .withAccountId("ACCOUNT_ID")
                                                                  .withName("USER_PASSWORD")
                                                                  .withValue(new BastionConnectionAttributes())
                                                                  .build());

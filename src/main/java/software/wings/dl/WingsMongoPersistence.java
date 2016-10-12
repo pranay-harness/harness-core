@@ -21,6 +21,7 @@ import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 
 import java.util.ArrayList;
@@ -175,6 +176,28 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
               .build());
     }
     return primaryDatastore.update(updateQuery, updateOperations);
+  }
+
+  @Override
+  public <T> T upsert(Query<T> query, UpdateOperations<T> updateOperations) {
+    updateOperations.set("lastUpdatedAt", currentTimeMillis());
+    if (UserThreadLocal.get() != null) {
+      updateOperations.set("lastUpdatedBy",
+          anEmbeddedUser()
+              .withUuid(UserThreadLocal.get().getUuid())
+              .withEmail(UserThreadLocal.get().getEmail())
+              .withName(UserThreadLocal.get().getName())
+              .build());
+      updateOperations.setOnInsert("createdBy",
+          anEmbeddedUser()
+              .withUuid(UserThreadLocal.get().getUuid())
+              .withEmail(UserThreadLocal.get().getEmail())
+              .withName(UserThreadLocal.get().getName())
+              .build());
+    }
+    updateOperations.setOnInsert("createdAt", currentTimeMillis());
+    updateOperations.setOnInsert("_id", UUIDGenerator.getUuid());
+    return primaryDatastore.findAndModify(query, updateOperations, false, true);
   }
 
   /**

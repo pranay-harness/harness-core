@@ -6,6 +6,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
 import java.util.List;
+import javax.validation.Valid;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -25,7 +26,7 @@ public interface SettingsService {
    * @param envVar the env var
    * @return the setting attribute
    */
-  SettingAttribute save(SettingAttribute envVar);
+  SettingAttribute save(@Valid SettingAttribute envVar);
 
   /**
    * Gets the.
@@ -98,12 +99,10 @@ public interface SettingsService {
    */
   SettingAttribute getByName(String appId, String envId, String attributeName);
 
-  /**
-   * Creates the default settings.
-   *
-   * @param appId the app id
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.SettingsService#createDefaultSettings(java.lang.String)
    */
-  void createDefaultSettings(String appId);
+  void createDefaultSettings(String appId, String accountId);
 
   /**
    * Gets the setting attributes by type.

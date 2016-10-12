@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -8,6 +8,8 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 5/16/16.
@@ -17,6 +19,7 @@ import org.mongodb.morphia.annotations.Indexes;
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class SettingAttribute extends Base {
   @NotEmpty private String envId = GLOBAL_ENV_ID;
+  @NotEmpty private String accountId;
   private String name;
   private SettingValue value;
 
@@ -74,9 +77,27 @@ public class SettingAttribute extends Base {
     this.value = value;
   }
 
+  /**
+   * Getter for property 'accountId'.
+   *
+   * @return Value for property 'accountId'.
+   */
+  public String getAccountId() {
+    return accountId;
+  }
+
+  /**
+   * Setter for property 'accountId'.
+   *
+   * @param accountId Value to set for property 'accountId'.
+   */
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hashCode(envId, name, value);
+    return 31 * super.hashCode() + Objects.hash(envId, accountId, name, value);
   }
 
   @Override
@@ -91,19 +112,27 @@ public class SettingAttribute extends Base {
       return false;
     }
     final SettingAttribute other = (SettingAttribute) obj;
-    return Objects.equal(this.envId, other.envId) && Objects.equal(this.name, other.name)
-        && Objects.equal(this.value, other.value);
+    return Objects.equals(this.envId, other.envId) && Objects.equals(this.accountId, other.accountId)
+        && Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value);
   }
 
-  /**
-   * The type Builder.
-   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("envId", envId)
+        .add("accountId", accountId)
+        .add("name", name)
+        .add("value", value)
+        .toString();
+  }
+
   public static final class Builder {
     private String envId = GLOBAL_ENV_ID;
+    private String accountId;
     private String name;
     private SettingValue value;
     private String uuid;
-    private String appId;
+    private String appId = GLOBAL_APP_ID;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -111,122 +140,64 @@ public class SettingAttribute extends Base {
 
     private Builder() {}
 
-    /**
-     * A setting attribute builder.
-     *
-     * @return the builder
-     */
     public static Builder aSettingAttribute() {
       return new Builder();
     }
 
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With value builder.
-     *
-     * @param value the value
-     * @return the builder
-     */
     public Builder withValue(SettingValue value) {
       this.value = value;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aSettingAttribute()
           .withEnvId(envId)
+          .withAccountId(accountId)
           .withName(name)
           .withValue(value)
           .withUuid(uuid)
@@ -237,14 +208,10 @@ public class SettingAttribute extends Base {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build setting attribute.
-     *
-     * @return the setting attribute
-     */
     public SettingAttribute build() {
       SettingAttribute settingAttribute = new SettingAttribute();
       settingAttribute.setEnvId(envId);
+      settingAttribute.setAccountId(accountId);
       settingAttribute.setName(name);
       settingAttribute.setValue(value);
       settingAttribute.setUuid(uuid);

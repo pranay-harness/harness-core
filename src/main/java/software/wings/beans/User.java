@@ -33,7 +33,11 @@ public class User extends Base implements Principal {
 
   @JsonIgnore private String passwordHash;
 
+  @Transient private String companyName;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
+
+  @Reference(idOnly = true, ignoreMissing = true) private List<Account> accounts = new ArrayList<>();
 
   private long lastLogin;
 
@@ -41,8 +45,6 @@ public class User extends Base implements Principal {
   @Transient private String token;
 
   private boolean emailVerified = false;
-
-  private String companyName;
 
   private long statsFetchedOn;
 
@@ -57,7 +59,7 @@ public class User extends Base implements Principal {
     publicUser.setUuid(getUuid());
     publicUser.setName(getName());
     publicUser.setEmail(getEmail());
-    publicUser.setCompanyName(getCompanyName());
+    // publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
 
@@ -222,24 +224,6 @@ public class User extends Base implements Principal {
   }
 
   /**
-   * Gets company name.
-   *
-   * @return the company name
-   */
-  public String getCompanyName() {
-    return companyName;
-  }
-
-  /**
-   * Sets company name.
-   *
-   * @param companyName the company name
-   */
-  public void setCompanyName(String companyName) {
-    this.companyName = companyName;
-  }
-
-  /**
    * Gets stats fetched on.
    *
    * @return the stats fetched on
@@ -257,11 +241,47 @@ public class User extends Base implements Principal {
     this.statsFetchedOn = statsFetchedOn;
   }
 
+  /**
+   * Getter for property 'accounts'.
+   *
+   * @return Value for property 'accounts'.
+   */
+  public List<Account> getAccounts() {
+    return accounts;
+  }
+
+  /**
+   * Setter for property 'accounts'.
+   *
+   * @param accounts Value to set for property 'accounts'.
+   */
+  public void setAccounts(List<Account> accounts) {
+    this.accounts = accounts;
+  }
+
+  /**
+   * Getter for property 'companyName'.
+   *
+   * @return Value for property 'companyName'.
+   */
+  public String getCompanyName() {
+    return companyName;
+  }
+
+  /**
+   * Setter for property 'companyName'.
+   *
+   * @param companyName Value to set for property 'companyName'.
+   */
+  public void setCompanyName(String companyName) {
+    this.companyName = companyName;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(
-              name, email, passwordHash, roles, lastLogin, password, token, emailVerified, companyName, statsFetchedOn);
+              name, email, passwordHash, roles, accounts, lastLogin, password, token, emailVerified, statsFetchedOn);
   }
 
   @Override
@@ -278,9 +298,9 @@ public class User extends Base implements Principal {
     final User other = (User) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.email, other.email)
         && Objects.equals(this.passwordHash, other.passwordHash) && Objects.equals(this.roles, other.roles)
-        && Objects.equals(this.lastLogin, other.lastLogin) && Objects.equals(this.password, other.password)
-        && Objects.equals(this.token, other.token) && Objects.equals(this.emailVerified, other.emailVerified)
-        && Objects.equals(this.companyName, other.companyName)
+        && Objects.equals(this.accounts, other.accounts) && Objects.equals(this.lastLogin, other.lastLogin)
+        && Objects.equals(this.password, other.password) && Objects.equals(this.token, other.token)
+        && Objects.equals(this.emailVerified, other.emailVerified)
         && Objects.equals(this.statsFetchedOn, other.statsFetchedOn);
   }
 
@@ -291,28 +311,27 @@ public class User extends Base implements Principal {
         .add("email", email)
         .add("passwordHash", passwordHash)
         .add("roles", roles)
+        .add("accounts", accounts)
         .add("lastLogin", lastLogin)
         .add("password", password)
         .add("token", token)
         .add("emailVerified", emailVerified)
-        .add("companyName", companyName)
         .add("statsFetchedOn", statsFetchedOn)
+        .add("publicUser", getPublicUser())
         .toString();
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String name;
     private String email;
     private String passwordHash;
+    private String companyName;
     private List<Role> roles = new ArrayList<>();
+    private List<Account> accounts = new ArrayList<>();
     private long lastLogin;
     private String password;
     private String token;
     private boolean emailVerified = false;
-    private String companyName;
     private long statsFetchedOn;
     private String uuid;
     private String appId;
@@ -323,207 +342,107 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
-    /**
-     * An user builder.
-     *
-     * @return the builder
-     */
     public static Builder anUser() {
       return new Builder();
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With email builder.
-     *
-     * @param email the email
-     * @return the builder
-     */
     public Builder withEmail(String email) {
       this.email = email;
       return this;
     }
 
-    /**
-     * With password hash builder.
-     *
-     * @param passwordHash the password hash
-     * @return the builder
-     */
     public Builder withPasswordHash(String passwordHash) {
       this.passwordHash = passwordHash;
       return this;
     }
 
-    /**
-     * With roles builder.
-     *
-     * @param roles the roles
-     * @return the builder
-     */
-    public Builder withRoles(List<Role> roles) {
-      this.roles = roles;
-      return this;
-    }
-
-    /**
-     * With last login builder.
-     *
-     * @param lastLogin the last login
-     * @return the builder
-     */
-    public Builder withLastLogin(long lastLogin) {
-      this.lastLogin = lastLogin;
-      return this;
-    }
-
-    /**
-     * With password builder.
-     *
-     * @param password the password
-     * @return the builder
-     */
-    public Builder withPassword(String password) {
-      this.password = password;
-      return this;
-    }
-
-    /**
-     * With token builder.
-     *
-     * @param token the token
-     * @return the builder
-     */
-    public Builder withToken(String token) {
-      this.token = token;
-      return this;
-    }
-
-    /**
-     * With email verified builder.
-     *
-     * @param emailVerified the email verified
-     * @return the builder
-     */
-    public Builder withEmailVerified(boolean emailVerified) {
-      this.emailVerified = emailVerified;
-      return this;
-    }
-
-    /**
-     * With company name builder.
-     *
-     * @param companyName the company name
-     * @return the builder
-     */
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
       return this;
     }
 
-    /**
-     * With stats fetched on builder.
-     *
-     * @param statsFetchedOn the stats fetched on
-     * @return the builder
-     */
+    public Builder withRoles(List<Role> roles) {
+      this.roles = roles;
+      return this;
+    }
+
+    public Builder withAccounts(List<Account> accounts) {
+      this.accounts = accounts;
+      return this;
+    }
+
+    public Builder withLastLogin(long lastLogin) {
+      this.lastLogin = lastLogin;
+      return this;
+    }
+
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public Builder withToken(String token) {
+      this.token = token;
+      return this;
+    }
+
+    public Builder withEmailVerified(boolean emailVerified) {
+      this.emailVerified = emailVerified;
+      return this;
+    }
+
     public Builder withStatsFetchedOn(long statsFetchedOn) {
       this.statsFetchedOn = statsFetchedOn;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anUser()
           .withName(name)
           .withEmail(email)
           .withPasswordHash(passwordHash)
+          .withCompanyName(companyName)
           .withRoles(roles)
+          .withAccounts(accounts)
           .withLastLogin(lastLogin)
           .withPassword(password)
           .withToken(token)
           .withEmailVerified(emailVerified)
-          .withCompanyName(companyName)
           .withStatsFetchedOn(statsFetchedOn)
           .withUuid(uuid)
           .withAppId(appId)
@@ -533,22 +452,18 @@ public class User extends Base implements Principal {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
-    /**
-     * Build user.
-     *
-     * @return the user
-     */
     public User build() {
       User user = new User();
       user.setName(name);
       user.setEmail(email);
       user.setPasswordHash(passwordHash);
+      user.setCompanyName(companyName);
       user.setRoles(roles);
+      user.setAccounts(accounts);
       user.setLastLogin(lastLogin);
       user.setPassword(password);
       user.setToken(token);
       user.setEmailVerified(emailVerified);
-      user.setCompanyName(companyName);
       user.setStatsFetchedOn(statsFetchedOn);
       user.setUuid(uuid);
       user.setAppId(appId);

@@ -132,9 +132,10 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#createDefaultSettings(java.lang.String)
    */
   @Override
-  public void createDefaultSettings(String appId) {
+  public void createDefaultSettings(String appId, String accountId) {
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
+                              .withAccountId(accountId)
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName("User/Password")
                               .withValue(aHostConnectionAttributes()
@@ -145,6 +146,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
+                              .withAccountId(accountId)
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName("User/Password :: su - <app-account>")
                               .withValue(aHostConnectionAttributes()
@@ -155,6 +157,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
+                              .withAccountId(accountId)
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName("User/Password :: sudo - <app-account>")
                               .withValue(aHostConnectionAttributes()
@@ -166,6 +169,7 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.save(
         aSettingAttribute()
             .withAppId(appId)
+            .withAccountId(accountId)
             .withEnvId(GLOBAL_ENV_ID)
             .withName("RUNTIME_PATH")
             .withValue(
@@ -174,6 +178,7 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.save(
         aSettingAttribute()
             .withAppId(appId)
+            .withAccountId(accountId)
             .withEnvId(GLOBAL_ENV_ID)
             .withName("BACKUP_PATH")
             .withValue(aStringValue()
@@ -183,6 +188,7 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.save(
         aSettingAttribute()
             .withAppId(appId)
+            .withAccountId(accountId)
             .withEnvId(GLOBAL_ENV_ID)
             .withName("STAGING_PATH")
             .withValue(

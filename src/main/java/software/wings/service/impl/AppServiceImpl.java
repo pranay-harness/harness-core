@@ -92,7 +92,7 @@ public class AppServiceImpl implements AppService {
   @Metered
   public Application save(Application app) {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
-    settingsService.createDefaultSettings(application.getUuid());
+    settingsService.createDefaultSettings(application.getUuid(), application.getAccountId());
     infrastructureService.createDefaultInfrastructure(app.getUuid());
     environmentService.createDefaultEnvironments(application.getUuid());
     notificationService.sendNotificationAsync(

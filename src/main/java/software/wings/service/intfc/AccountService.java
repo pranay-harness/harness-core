@@ -20,4 +20,6 @@ public interface AccountService {
   Account get(String accountId);
 
   void delete(String accountId);
+
+  Account findOrCreate(String companyName);
 }

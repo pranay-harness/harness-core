@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.DOMAIN_NOT_ALLOWED_TO_REGISTER;
@@ -24,6 +25,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
@@ -35,6 +37,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -61,6 +64,7 @@ public class UserServiceImpl implements UserService {
   @Inject private EmailNotificationService<EmailData> emailNotificationService;
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
+  @Inject private AccountService accountService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -74,7 +78,11 @@ public class UserServiceImpl implements UserService {
     if (userAlreadyRegistered(user)) {
       throw new WingsException(USER_ALREADY_REGISTERED);
     }
-    user.setCompanyName(configuration.getPortal().getCompanyName());
+
+    String companyName =
+        isBlank(user.getCompanyName()) ? configuration.getPortal().getCompanyName() : user.getCompanyName();
+    Account account = accountService.findOrCreate(companyName);
+    user.getAccounts().add(account);
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
