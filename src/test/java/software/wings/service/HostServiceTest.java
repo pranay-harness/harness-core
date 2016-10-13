@@ -243,7 +243,6 @@ public class HostServiceTest extends WingsBaseTest {
     verify(applicationHostQueryEnd).equal(INFRA_ID);
     verify(wingsPersistence).delete(host);
     verify(serviceTemplateService).deleteHostFromTemplates(host);
-    verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
   /**

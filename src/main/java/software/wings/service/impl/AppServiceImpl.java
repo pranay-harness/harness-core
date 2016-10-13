@@ -181,6 +181,13 @@ public class AppServiceImpl implements AppService {
     if (deleted) {
       executorService.submit(() -> {
         notificationService.deleteByApplication(appId);
+        notificationService.sendNotificationAsync(
+            anInformationNotification()
+                .withAppId(application.getUuid())
+                .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
+                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+                .build());
+
         serviceResourceService.deleteByApp(appId);
         environmentService.deleteByApp(appId);
         releaseService.deleteByApplication(appId);
