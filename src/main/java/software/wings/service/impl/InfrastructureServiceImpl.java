@@ -303,7 +303,7 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   }
 
   private List<Application> getApplicableApplications(InfrastructureMappingRule mappingRule) {
-    return "ALL".equals(mappingRule.getAppId()) ? appService.list(aPageRequest().build(), false, 0).getResponse()
+    return "ALL".equals(mappingRule.getAppId()) ? appService.list(aPageRequest().build(), false, 0, 0).getResponse()
                                                 : asList(appService.get(mappingRule.getAppId()));
   }
 

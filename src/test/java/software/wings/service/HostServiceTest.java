@@ -407,7 +407,7 @@ public class HostServiceTest extends WingsBaseTest {
         anApplication().withUuid("ID2").withName("NAME2").build());
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(applications);
-    when(appService.list(any(), eq(false), eq(0))).thenReturn(pageResponse);
+    when(appService.list(any(), eq(false), eq(0), eq(0))).thenReturn(pageResponse);
     when(wingsPersistence.getDatastore().createAggregation(ApplicationHost.class)).thenReturn(aggregationPipeline);
     when(aggregationPipeline.match(applicationHostQuery)).thenReturn(aggregationPipeline);
     when(aggregationPipeline.group(anyString(), any())).thenReturn(aggregationPipeline);

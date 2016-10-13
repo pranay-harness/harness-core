@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.stats.AppKeyStatistics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ public class Application extends Base {
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
+  @Transient private AppKeyStatistics appKeyStatistics;
 
   /**
    * Gets name.
@@ -175,6 +177,14 @@ public class Application extends Base {
    */
   public void setNextDeploymentOn(long nextDeploymentOn) {
     this.nextDeploymentOn = nextDeploymentOn;
+  }
+
+  public AppKeyStatistics getAppKeyStatistics() {
+    return appKeyStatistics;
+  }
+
+  public void setAppKeyStatistics(AppKeyStatistics appKeyStatistics) {
+    this.appKeyStatistics = appKeyStatistics;
   }
 
   @Override

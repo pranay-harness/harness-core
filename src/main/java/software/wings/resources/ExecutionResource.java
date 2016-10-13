@@ -76,7 +76,7 @@ public class ExecutionResource {
     filter.setFieldName("appId");
     if (StringUtils.isBlank(appId)) {
       PageRequest<Application> applicationPageRequest = aPageRequest().addFieldsIncluded("uuid").build();
-      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0);
+      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
       if (res == null || res.isEmpty()) {
         throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "No applications");
       }

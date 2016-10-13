@@ -9,6 +9,9 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.beans.WorkflowType.ORCHESTRATION;
+import static software.wings.beans.WorkflowType.SIMPLE;
+import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
@@ -35,6 +38,7 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
+import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.KeyStatistics;
@@ -86,7 +90,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   @Override
   public WingsStatistics getTopConsumers() {
-    List<Application> applications = appService.list(new PageRequest<>(), false, 0).getResponse();
+    List<Application> applications = appService.list(new PageRequest<>(), false, 0, 0).getResponse();
     ImmutableMap<String, Application> appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
     List<TopConsumer> topConsumers =
         getTopConsumerForPastXDays(30).stream().filter(tc -> appIdMap.containsKey(tc.getAppId())).collect(toList());
@@ -110,6 +114,35 @@ public class StatisticsServiceImpl implements StatisticsService {
     keyStats.add(getKeyStatsForEnvType(PROD, activityByEnvType.get(PROD)));
     keyStats.add(getKeyStatsForEnvType(NON_PROD, activityByEnvType.get(NON_PROD)));
     return keyStats;
+  }
+
+  @Override
+  public Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays) {
+    List<Activity> activities =
+        wingsPersistence.createQuery(Activity.class)
+            .field("createdAt")
+            .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays))
+            .field("appId")
+            .in(appIds)
+            .field("workflowType")
+            .in(Arrays.asList(ORCHESTRATION, SIMPLE))
+            .retrievedFields(true, "appId", "serviceInstanceId", "artifactId", "workflowExecutionId")
+            .asList();
+
+    Map<String, List<Activity>> activitiesByApp = activities.stream().collect(groupingBy(Activity::getAppId));
+    Map<String, AppKeyStatistics> appKeyStatisticsMap = new HashMap<>();
+    activitiesByApp.forEach((appId, activityList) -> {
+      int deployments = activityList.stream().map(Activity::getWorkflowExecutionId).collect(toSet()).size();
+      int instances = activityList.size();
+      int artifacts = activities.stream().map(Activity::getArtifactId).collect(toSet()).size();
+      appKeyStatisticsMap.put(appId,
+          anAppKeyStatistics()
+              .withInstanceCount(instances)
+              .withDeploymentCount(deployments)
+              .withArtifactCount(artifacts)
+              .build());
+    });
+    return appKeyStatisticsMap;
   }
 
   @Override
@@ -137,9 +170,8 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, statsFetchedOn).build())
-            .addFilter(aSearchFilter()
-                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
-                           .build())
+            .addFilter(
+                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .build();
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
@@ -213,9 +245,8 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter()
-                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
-                           .build())
+            .addFilter(
+                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
 

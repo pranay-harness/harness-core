@@ -269,7 +269,7 @@ public class HostServiceImpl implements HostService {
     List<Application> apps =
         appService
             .list(aPageRequest().withLimit(PageRequest.UNLIMITED).withOffset("0").addFieldsIncluded("name").build(),
-                false, 0)
+                false, 0, 0)
             .getResponse();
     ImmutableMap<String, Application> applicationsById = Maps.uniqueIndex(apps, Application::getUuid);
 

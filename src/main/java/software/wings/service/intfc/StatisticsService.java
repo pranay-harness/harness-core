@@ -1,10 +1,12 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 8/15/16.
@@ -23,6 +25,15 @@ public interface StatisticsService {
    * @return the key stats
    */
   List<WingsStatistics> getKeyStats();
+
+  /**
+   * Gets application key stats.
+   *
+   * @param appIds    the app id
+   * @param numOfDays the num of days
+   * @return the application key stats
+   */
+  Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays);
 
   /**
    * Gets deployment activities.

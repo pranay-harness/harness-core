@@ -143,7 +143,7 @@ public class AppServiceTest extends WingsBaseTest {
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
     when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
-    PageResponse<Application> applications = appService.list(pageRequest, true, 5);
+    PageResponse<Application> applications = appService.list(pageRequest, true, 5, 0);
     assertThat(applications).containsAll(asList(application));
     assertThat(application.getRecentExecutions()).isNotNull();
     assertThat(application.getNotifications())
@@ -161,7 +161,7 @@ public class AppServiceTest extends WingsBaseTest {
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Application> applications = appService.list(pageRequest, false, 5);
+    PageResponse<Application> applications = appService.list(pageRequest, false, 5, 0);
     assertThat(applications).containsAll(asList(application));
   }
 

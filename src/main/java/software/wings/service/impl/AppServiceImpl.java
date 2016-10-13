@@ -7,6 +7,7 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -23,6 +24,7 @@ import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -39,11 +41,14 @@ import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -70,6 +75,7 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowService workflowService;
   @Inject private ReleaseService releaseService;
   @Inject private ArtifactService artifactService;
+  @Inject private StatisticsService statisticsService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -105,8 +111,17 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions) {
+  public PageResponse<Application> list(
+      PageRequest<Application> req, boolean overview, int numberOfExecutions, int overviewDays) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
+
+    if (overview) { // TODO: merge both overview block make service/env population part of overview option
+      Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(
+          response.stream().map(Application::getUuid).collect(Collectors.toList()), overviewDays);
+      response.forEach(application
+          -> application.setAppKeyStatistics(
+              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> anAppKeyStatistics().build())));
+    }
     response.getResponse().parallelStream().forEach(application -> {
       application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
       application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));

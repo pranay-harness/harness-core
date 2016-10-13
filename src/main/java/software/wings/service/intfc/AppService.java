@@ -26,9 +26,11 @@ public interface AppService {
    * @param req                the req
    * @param overview           the summary
    * @param numberOfExecutions the number of executions
+   * @param overviewDays
    * @return the page response
    */
-  PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions);
+  PageResponse<Application> list(
+      PageRequest<Application> req, boolean overview, int numberOfExecutions, int overviewDays);
 
   /**
    * Exist boolean.

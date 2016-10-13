@@ -2,7 +2,7 @@
 //changeset anubhawsrivastava:all-nonexistant-application-reference-migration
 
 function DBCleanup() {
-    var excludedCollections = ["system.profile", "audits", "mongeez"];
+    var excludedCollections = ["audits", "mongeez", "system.*", "*.chunks", "*.files"];
     var includedCollections = ["ALL"]; // By default goes over all collections excluding excludedCollection. Replace "ALL" with specific collections to override behavior
 
     if (includedCollections.length === 1 && includedCollections[0] === "ALL") {
@@ -35,7 +35,7 @@ function DBCleanup() {
     });
 
     includedCollections.forEach(function (collname) {
-        if (excludedCollections.indexOf(collname) !== -1) {
+        if ((excludedCollections.indexOf(collname) !== -1) || collname.endsWith(".chunks") || collname.endsWith(".files") || collname.startsWith("system.")) {
             print("Skip cleanup for excluded collection :" + collname);
             return;
         }
