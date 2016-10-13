@@ -39,12 +39,12 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -74,7 +74,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ExecutorService executorService;
   @Inject private StencilPostProcessor stencilPostProcessor;
-  @Inject private AppService appService;
+  @Inject private ServiceVariableService serviceVariableService;
   @Inject private ActivityService activityService;
   @Inject private SetupService setupService;
   @Inject private NotificationService notificationService;
@@ -212,6 +212,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                        .build());
         serviceTemplateService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
+        serviceVariableService.deleteByEntityId(appId, serviceId);
       });
     }
   }

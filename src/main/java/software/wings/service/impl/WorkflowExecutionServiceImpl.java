@@ -778,11 +778,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public void deleteByWorkflow(String appId, String workflowId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(WorkflowExecution.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("workflowId")
-                                .equal(workflowId));
+    wingsPersistence.createQuery(WorkflowExecution.class)
+        .field("appId")
+        .equal(appId)
+        .field("workflowId")
+        .equal(workflowId)
+        .asList()
+        .forEach(workflowExecution -> {
+          wingsPersistence.delete(workflowExecution);
+          wingsPersistence.createQuery(StateExecutionInstance.class)
+              .field("appId")
+              .equal(appId)
+              .field("stateMachineId")
+              .equal(workflowExecution.getStateMachineId())
+              .forEach(stateExecutionInstance -> {
+                wingsPersistence.delete(stateExecutionInstance);
+                wingsPersistence.delete(wingsPersistence.createQuery(ExecutionEvent.class)
+                                            .field("appId")
+                                            .equal(appId)
+                                            .field("stateExecutionInstanceId")
+                                            .equal(stateExecutionInstance.getUuid()));
+              });
+        });
   }
 
   private void refreshSummaries(WorkflowExecution workflowExecution) {

@@ -254,7 +254,7 @@ public class ReleaseServiceImpl implements ReleaseService {
         .field("appId")
         .equal(appId)
         .asList()
-        .forEach(release -> delete(appId, release.getUuid()));
+        .forEach(release -> delete(release.getUuid(), appId));
   }
 
   private void populateJenkinsSettingName(List<ArtifactSource> artifactSources) {

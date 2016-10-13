@@ -307,7 +307,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         serviceTemplateService.deleteByEnv(appId, envId);
         tagService.deleteByEnv(appId, envId);
         hostService.deleteByEnvironment(appId, envId);
-
         activityService.deleteByEnvironment(appId, envId);
         notificationService.sendNotificationAsync(
             anInformationNotification()

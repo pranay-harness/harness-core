@@ -180,22 +180,22 @@ public class AppServiceImpl implements AppService {
     boolean deleted = wingsPersistence.delete(Application.class, appId);
     if (deleted) {
       executorService.submit(() -> {
-        notificationService.sendNotificationAsync(
-            anInformationNotification()
-                .withAppId(application.getUuid())
-                .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
-                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
-                .build());
         notificationService.deleteByApplication(appId);
         serviceResourceService.deleteByApp(appId);
         environmentService.deleteByApp(appId);
-        workflowService.deleteWorkflowByApplication(appId);
         releaseService.deleteByApplication(appId);
         artifactService.deleteByApplication(appId);
+        workflowService.deleteWorkflowByApplication(appId);
+        workflowService.deleteStateMachinesByApplication(appId);
         appContainerService.deleteByAppId(appId);
         historyService.deleteByApplication(appId);
-        workflowService.deleteStateMachinesMyApplication(appId);
       });
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(application.getUuid())
+              .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
+                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+              .build());
     }
 
     historyService.createAsync(aHistory()

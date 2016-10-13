@@ -191,9 +191,9 @@ public class ActivityServiceImpl implements ActivityService {
     wingsPersistence.createQuery(Activity.class)
         .field("appId")
         .equal(appId)
-        .field("envId")
+        .field("environmentId")
         .equal(envId)
         .asKeyList()
-        .forEach(key -> delete(appId, (String) key.getId()));
+        .forEach(activityKey -> delete(appId, (String) activityKey.getId()));
   }
 }

@@ -395,7 +395,26 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void delete(String appId, String envId, String hostId) {
-    delete(get(appId, envId, hostId));
+    ApplicationHost applicationHost = get(appId, envId, hostId);
+    if (delete(applicationHost)) {
+      Environment environment = environmentService.get(applicationHost.getAppId(), applicationHost.getEnvId(), false);
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(applicationHost.getAppId())
+              .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
+                  ImmutableMap.of("HOST_NAME", applicationHost.getHostName(), "ENV_NAME", environment.getName())))
+              .build());
+      historyService.createAsync(aHistory()
+                                     .withEventType(EventType.DELETED)
+                                     .withAppId(applicationHost.getAppId())
+                                     .withEntityType(EntityType.HOST)
+                                     .withEntityId(applicationHost.getUuid())
+                                     .withEntityName(applicationHost.getHostName())
+                                     .withEntityNewValue(applicationHost)
+                                     .withShortDescription("Host " + applicationHost.getHostName() + " deleted")
+                                     .withTitle("Host " + applicationHost.getHostName() + " deleted")
+                                     .build());
+    }
   }
 
   private boolean delete(ApplicationHost applicationHost) {
@@ -405,23 +424,6 @@ public class HostServiceImpl implements HostService {
         serviceTemplateService.deleteHostFromTemplates(applicationHost);
         executorService.submit(
             () -> configService.deleteByEntityId(applicationHost.getAppId(), applicationHost.getUuid()));
-        Environment environment = environmentService.get(applicationHost.getAppId(), applicationHost.getEnvId(), false);
-        notificationService.sendNotificationAsync(
-            anInformationNotification()
-                .withAppId(applicationHost.getAppId())
-                .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
-                    ImmutableMap.of("HOST_NAME", applicationHost.getHostName(), "ENV_NAME", environment.getName())))
-                .build());
-        historyService.createAsync(aHistory()
-                                       .withEventType(EventType.DELETED)
-                                       .withAppId(applicationHost.getAppId())
-                                       .withEntityType(EntityType.HOST)
-                                       .withEntityId(applicationHost.getUuid())
-                                       .withEntityName(applicationHost.getHostName())
-                                       .withEntityNewValue(applicationHost)
-                                       .withShortDescription("Host " + applicationHost.getHostName() + " deleted")
-                                       .withTitle("Host " + applicationHost.getHostName() + " deleted")
-                                       .build());
       }
       return delete;
     }

@@ -157,5 +157,5 @@ public interface WorkflowService {
    *
    * @param appId the app id
    */
-  void deleteStateMachinesMyApplication(String appId);
+  void deleteStateMachinesByApplication(String appId);
 }

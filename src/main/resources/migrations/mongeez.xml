@@ -4,4 +4,5 @@
     <file path="tag-children-tag-references-migration.xml"/>
     <file path="service-template-reference-migration.xml"/>
     <file path="base-active-field-migration.xml"/>
+    <file path="all-nonexistant-application-reference-migration.js"/>
 </changeFiles>

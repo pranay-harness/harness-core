@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -409,20 +410,21 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public void deleteWorkflowByApplication(String appId) {
-    wingsPersistence.createQuery(Pipeline.class)
-        .field("appId")
-        .equal(appId)
-        .asList()
-        .forEach(pipeline -> deleteWorkflow(Pipeline.class, appId, pipeline.getUuid()));
-    wingsPersistence.createQuery(Orchestration.class)
-        .field("appId")
-        .equal(appId)
-        .asList()
-        .forEach(orchestration -> deleteWorkflow(Orchestration.class, appId, orchestration.getUuid()));
+    List<Key<Pipeline>> pipelineKeys =
+        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList();
+    for (Key key : pipelineKeys) {
+      deleteWorkflow(Pipeline.class, appId, (String) key.getId());
+    }
+
+    List<Key<Orchestration>> orchestrationKeys =
+        wingsPersistence.createQuery(Orchestration.class).field("appId").equal(appId).asKeyList();
+    for (Key key : orchestrationKeys) {
+      deleteWorkflow(Orchestration.class, appId, (String) key.getId());
+    }
   }
 
   @Override
-  public void deleteStateMachinesMyApplication(String appId) {
+  public void deleteStateMachinesByApplication(String appId) {
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
   }
 
