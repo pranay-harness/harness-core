@@ -7,4 +7,5 @@
     <file path="all-nonexistant-application-reference-migration.js"/>
     <file path="workflow-executions-environment-type-migration.js"/>
     <file path="workflow-migration.js"/>
+    <file path="account-migration.js"/>
 </changeFiles>
