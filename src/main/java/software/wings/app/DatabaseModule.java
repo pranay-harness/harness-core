@@ -64,7 +64,7 @@ public class DatabaseModule extends AbstractModule {
       this.secondaryDatastore = primaryDatastore;
     }
 
-    morphia.mapPackage("software.wings.beans");
+    morphia.mapPackage("software.wings");
     this.primaryDatastore.ensureIndexes();
     if (hosts.size() > 1) {
       this.secondaryDatastore.ensureIndexes();
