@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.beans.RestResponse;
@@ -48,8 +49,8 @@ public class NotificationResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Notification>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Notification> pageRequest) {
+  public RestResponse<PageResponse<Notification>> list(@QueryParam("appId") String appId,
+      @BeanParam PageRequest<Notification> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     if (!Strings.isNullOrEmpty(appId)) {
       pageRequest.addFilter("appId", appId, EQ);
     }

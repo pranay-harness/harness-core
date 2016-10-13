@@ -3,14 +3,19 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.atmosphere.cpr.MetaBroadcaster;
+import software.wings.beans.Application;
 import software.wings.beans.Event;
 import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.service.intfc.AppService;
+
+import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
 public class EventEmitter {
   private MetaBroadcaster metaBroadcaster;
+  @Inject private AppService appService;
 
   /**
    * Instantiates a new Event emitter.
@@ -28,6 +33,10 @@ public class EventEmitter {
    * @param event   the event
    */
   public void send(Channel channel, Event event) {
+    if ("*".equals(event.getOrgId()) && !"all".equals(event.getAppId())) {
+      Application application = appService.get(event.getAppId());
+      event.setOrgId(application.getAccountId());
+    }
     metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
             + event.getServiceId() + "/" + channel.getChannelName(),
         event);

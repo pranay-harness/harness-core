@@ -18,7 +18,7 @@ import java.util.Objects;
 public class Role extends Base {
   @Indexed(unique = true) @NotEmpty private String name;
   private String description;
-  private String accountId;
+  @NotEmpty private String accountId;
   @Embedded private List<Permission> permissions;
   private boolean adminRole = false;
 

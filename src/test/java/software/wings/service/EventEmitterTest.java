@@ -2,7 +2,10 @@ package software.wings.service;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
 import org.atmosphere.cpr.MetaBroadcaster;
@@ -16,6 +19,7 @@ import software.wings.beans.Event;
 import software.wings.beans.Event.Type;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
+import software.wings.service.intfc.AppService;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.
@@ -29,6 +33,7 @@ public class EventEmitterTest {
   @InjectMocks private EventEmitter eventEmitter = new EventEmitter(null);
 
   @Mock private MetaBroadcaster metaBroadcaster;
+  @Mock private AppService appService;
 
   /**
    * Should send to both id and general channel.
@@ -38,7 +43,7 @@ public class EventEmitterTest {
   @Test
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
-    eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
+    eventEmitter.send(Channel.ARTIFACTS, event);
     verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts", event);
     verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts/" + ARTIFACT_ID, event);
   }
@@ -54,5 +59,14 @@ public class EventEmitterTest {
     eventEmitter.send(Channel.ARTIFACTS, event);
     verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts", event);
     verifyNoMoreInteractions(metaBroadcaster);
+  }
+
+  @Test
+  public void shouldGetAccountIdToBroadcast() throws Exception {
+    when(appService.get(APP_ID)).thenReturn(anApplication().withAccountId("ACCOUNT_ID").withAppId(APP_ID).build());
+    Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).withAppId(APP_ID).build();
+    eventEmitter.send(Channel.ARTIFACTS, event);
+    verify(metaBroadcaster).broadcastTo("/stream/ACCOUNT_ID/APP_ID/all/all/artifacts", event);
+    verify(metaBroadcaster).broadcastTo("/stream/ACCOUNT_ID/APP_ID/all/all/artifacts/" + ARTIFACT_ID, event);
   }
 }

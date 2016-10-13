@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.dl.PageRequest;
@@ -20,6 +21,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -41,7 +43,8 @@ public class RoleResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Role>> list(@BeanParam PageRequest<Role> pageRequest) {
+  public RestResponse<PageResponse<Role>> list(
+      @BeanParam PageRequest<Role> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(roleService.list(pageRequest));
   }
 

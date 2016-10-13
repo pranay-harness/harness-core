@@ -54,7 +54,7 @@ public class SettingResource {
    */
   @GET
   public RestResponse<PageResponse<SettingAttribute>> list(@QueryParam("appId") String appId,
-      @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
+      @QueryParam("accountId") String accountId, @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;

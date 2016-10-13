@@ -10,6 +10,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.auth.Auth;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
@@ -30,6 +31,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -44,7 +46,12 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
-  @Inject private UserService userService;
+  private UserService userService;
+
+  @Inject
+  public UserResource(UserService userService) {
+    this.userService = userService;
+  }
 
   /**
    * List.
@@ -54,7 +61,8 @@ public class UserResource {
    */
   @GET
   @AuthRule("USER:READ")
-  public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
+  public RestResponse<PageResponse<User>> list(
+      @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     pageRequest.addFilter("appId", GLOBAL_APP_ID, EQ);
     return new RestResponse<>(userService.list(pageRequest));
   }
