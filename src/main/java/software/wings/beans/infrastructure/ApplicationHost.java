@@ -37,6 +37,8 @@ public class ApplicationHost extends Base {
 
   @Property("configTag") private String configTagId;
 
+  @Transient private Tag ConfigTag;
+
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   /**
@@ -179,6 +181,14 @@ public class ApplicationHost extends Base {
         .add("configTagId", configTagId)
         .add("configFiles", configFiles)
         .toString();
+  }
+
+  public Tag getConfigTag() {
+    return ConfigTag;
+  }
+
+  public void setConfigTag(Tag configTag) {
+    ConfigTag = configTag;
   }
 
   /**

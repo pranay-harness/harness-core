@@ -183,7 +183,7 @@ public class ConfigServiceImpl implements ConfigService {
       case HOST:
         ApplicationHost host = hostService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId());
         String tagHierarchyPathString =
-            tagService.getTagHierarchyPathString(host.getConfigTagId(), configFile.getAppId(), configFile.getEnvId());
+            tagService.getTagHierarchyPathString(host.getAppId(), host.getEnvId(), host.getConfigTagId());
         return tagHierarchyPathString + "/" + host.getHostName();
       default:
         throw new WingsException(UNKNOWN_ERROR, "message", "Unknown entity type encountered");

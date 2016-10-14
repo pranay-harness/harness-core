@@ -98,7 +98,14 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public PageResponse<ApplicationHost> list(PageRequest<ApplicationHost> req) {
-    return wingsPersistence.query(ApplicationHost.class, req);
+    PageResponse<ApplicationHost> pageResponse = wingsPersistence.query(ApplicationHost.class, req);
+    pageResponse.getResponse().forEach(applicationHost -> {
+      if (applicationHost.getConfigTagId() != null) {
+        applicationHost.setConfigTag(tagService.get(
+            applicationHost.getAppId(), applicationHost.getEnvId(), applicationHost.getConfigTagId(), false));
+      }
+    });
+    return pageResponse;
   }
 
   @Override
@@ -112,6 +119,10 @@ public class HostServiceImpl implements HostService {
                                           .equal(appId)
                                           .get();
     notNullCheck("ApplicationHost", applicationHost);
+    if (applicationHost.getConfigTagId() != null) {
+      applicationHost.setConfigTag(tagService.get(
+          applicationHost.getAppId(), applicationHost.getEnvId(), applicationHost.getConfigTagId(), false));
+    }
     return applicationHost;
   }
 
