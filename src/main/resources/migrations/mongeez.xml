@@ -5,4 +5,5 @@
     <file path="service-template-reference-migration.xml"/>
     <file path="base-active-field-migration.xml"/>
     <file path="all-nonexistant-application-reference-migration.js"/>
+    <file path="workflow-executions-environment-type-migration.js"/>
 </changeFiles>
