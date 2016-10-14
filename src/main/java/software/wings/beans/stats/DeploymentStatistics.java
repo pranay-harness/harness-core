@@ -1,20 +1,16 @@
 package software.wings.beans.stats;
 
-import com.google.common.base.MoreObjects;
-
 import software.wings.beans.Environment.EnvironmentType;
 
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 8/15/16.
  */
 public class DeploymentStatistics extends WingsStatistics {
-  private Integer count;
-  private Integer countChange;
-  private Integer avgTime;
-  private Integer avgTimeChange;
-  private EnvironmentType environmentType;
+  private Map<EnvironmentType, List<DayStats>> statsMap = new HashMap<>();
 
   /**
    * Instantiates a new Deployment statistics.
@@ -24,228 +20,194 @@ public class DeploymentStatistics extends WingsStatistics {
   }
 
   /**
-   * Gets count.
+   * Gets stats map.
    *
-   * @return the count
+   * @return the stats map
    */
-  public Integer getCount() {
-    return count;
+  public Map<EnvironmentType, List<DayStats>> getStatsMap() {
+    return statsMap;
   }
 
   /**
-   * Sets count.
+   * Sets stats map.
    *
-   * @param count the count
+   * @param statsMap the stats map
    */
-  public void setCount(Integer count) {
-    this.count = count;
+  public void setStatsMap(Map<EnvironmentType, List<DayStats>> statsMap) {
+    this.statsMap = statsMap;
   }
 
   /**
-   * Gets count change.
-   *
-   * @return the count change
+   * The type Day stats.
    */
-  public Integer getCountChange() {
-    return countChange;
-  }
-
-  /**
-   * Sets count change.
-   *
-   * @param countChange the count change
-   */
-  public void setCountChange(Integer countChange) {
-    this.countChange = countChange;
-  }
-
-  /**
-   * Gets avg time.
-   *
-   * @return the avg time
-   */
-  public Integer getAvgTime() {
-    return avgTime;
-  }
-
-  /**
-   * Sets avg time.
-   *
-   * @param avgTime the avg time
-   */
-  public void setAvgTime(Integer avgTime) {
-    this.avgTime = avgTime;
-  }
-
-  /**
-   * Gets avg time change.
-   *
-   * @return the avg time change
-   */
-  public Integer getAvgTimeChange() {
-    return avgTimeChange;
-  }
-
-  /**
-   * Sets avg time change.
-   *
-   * @param avgTimeChange the avg time change
-   */
-  public void setAvgTimeChange(Integer avgTimeChange) {
-    this.avgTimeChange = avgTimeChange;
-  }
-
-  /**
-   * Gets environment type.
-   *
-   * @return the environment type
-   */
-  public EnvironmentType getEnvironmentType() {
-    return environmentType;
-  }
-
-  /**
-   * Sets environment type.
-   *
-   * @param environmentType the environment type
-   */
-  public void setEnvironmentType(EnvironmentType environmentType) {
-    this.environmentType = environmentType;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(count, countChange, avgTime, avgTimeChange, environmentType);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final DeploymentStatistics other = (DeploymentStatistics) obj;
-    return Objects.equals(this.count, other.count) && Objects.equals(this.countChange, other.countChange)
-        && Objects.equals(this.avgTime, other.avgTime) && Objects.equals(this.avgTimeChange, other.avgTimeChange)
-        && Objects.equals(this.environmentType, other.environmentType);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("count", count)
-        .add("countChange", countChange)
-        .add("avgTime", avgTime)
-        .add("avgTimeChange", avgTimeChange)
-        .add("environmentType", environmentType)
-        .toString();
-  }
-
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
-    private Integer count;
-    private Integer countChange;
-    private Integer avgTime;
-    private Integer avgTimeChange;
-    private EnvironmentType environmentType;
-
-    private Builder() {}
+  public static class DayStats {
+    private int totalCount;
+    private int failedCount;
+    private int instancesCount;
+    private Long date;
 
     /**
-     * A deployment statistics builder.
+     * Gets total count.
      *
-     * @return the builder
+     * @return the total count
      */
-    public static Builder aDeploymentStatistics() {
-      return new Builder();
+    public int getTotalCount() {
+      return totalCount;
     }
 
     /**
-     * With count builder.
+     * Sets total count.
      *
-     * @param count the count
-     * @return the builder
+     * @param totalCount the total count
      */
-    public Builder withCount(Integer count) {
-      this.count = count;
-      return this;
+    public void setTotalCount(int totalCount) {
+      this.totalCount = totalCount;
     }
 
     /**
-     * With count change builder.
+     * Gets failed count.
      *
-     * @param countChange the count change
-     * @return the builder
+     * @return the failed count
      */
-    public Builder withCountChange(Integer countChange) {
-      this.countChange = countChange;
-      return this;
+    public int getFailedCount() {
+      return failedCount;
     }
 
     /**
-     * With avg time builder.
+     * Sets failed count.
      *
-     * @param avgTime the avg time
-     * @return the builder
+     * @param failedCount the failed count
      */
-    public Builder withAvgTime(Integer avgTime) {
-      this.avgTime = avgTime;
-      return this;
+    public void setFailedCount(int failedCount) {
+      this.failedCount = failedCount;
     }
 
     /**
-     * With avg time change builder.
+     * Gets instances count.
      *
-     * @param avgTimeChange the avg time change
-     * @return the builder
+     * @return the instances count
      */
-    public Builder withAvgTimeChange(Integer avgTimeChange) {
-      this.avgTimeChange = avgTimeChange;
-      return this;
+    public int getInstancesCount() {
+      return instancesCount;
     }
 
     /**
-     * With environment type builder.
+     * Sets instances count.
      *
-     * @param environmentType the environment type
-     * @return the builder
+     * @param instancesCount the instances count
      */
-    public Builder withEnvironmentType(EnvironmentType environmentType) {
-      this.environmentType = environmentType;
-      return this;
+    public void setInstancesCount(int instancesCount) {
+      this.instancesCount = instancesCount;
     }
 
     /**
-     * But builder.
+     * Gets date.
      *
-     * @return the builder
+     * @return the date
      */
-    public Builder but() {
-      return aDeploymentStatistics()
-          .withCount(count)
-          .withCountChange(countChange)
-          .withAvgTime(avgTime)
-          .withAvgTimeChange(avgTimeChange)
-          .withEnvironmentType(environmentType);
+    public Long getDate() {
+      return date;
     }
 
     /**
-     * Build deployment statistics.
+     * Sets date.
      *
-     * @return the deployment statistics
+     * @param date the date
      */
-    public DeploymentStatistics build() {
-      DeploymentStatistics deploymentStatistics = new DeploymentStatistics();
-      deploymentStatistics.setCount(count);
-      deploymentStatistics.setCountChange(countChange);
-      deploymentStatistics.setAvgTime(avgTime);
-      deploymentStatistics.setAvgTimeChange(avgTimeChange);
-      deploymentStatistics.setEnvironmentType(environmentType);
-      return deploymentStatistics;
+    public void setDate(Long date) {
+      this.date = date;
+    }
+
+    /**
+     * The type Builder.
+     */
+    public static final class Builder {
+      private int totalCount;
+      private int failedCount;
+      private int instancesCount;
+      private Long date;
+
+      private Builder() {}
+
+      /**
+       * A day stats builder.
+       *
+       * @return the builder
+       */
+      public static Builder aDayStats() {
+        return new Builder();
+      }
+
+      /**
+       * With total count builder.
+       *
+       * @param totalCount the total count
+       * @return the builder
+       */
+      public Builder withTotalCount(int totalCount) {
+        this.totalCount = totalCount;
+        return this;
+      }
+
+      /**
+       * With failed count builder.
+       *
+       * @param failedCount the failed count
+       * @return the builder
+       */
+      public Builder withFailedCount(int failedCount) {
+        this.failedCount = failedCount;
+        return this;
+      }
+
+      /**
+       * With instances count builder.
+       *
+       * @param instancesCount the instances count
+       * @return the builder
+       */
+      public Builder withInstancesCount(int instancesCount) {
+        this.instancesCount = instancesCount;
+        return this;
+      }
+
+      /**
+       * With date builder.
+       *
+       * @param date the date
+       * @return the builder
+       */
+      public Builder withDate(long date) {
+        this.date = date;
+        return this;
+      }
+
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
+      public Builder but() {
+        return aDayStats()
+            .withTotalCount(totalCount)
+            .withFailedCount(failedCount)
+            .withInstancesCount(instancesCount)
+            .withDate(date);
+      }
+
+      /**
+       * Build day stats.
+       *
+       * @return the day stats
+       */
+      public DayStats build() {
+        DayStats dayStats = new DayStats();
+        dayStats.setTotalCount(totalCount);
+        dayStats.setFailedCount(failedCount);
+        dayStats.setInstancesCount(instancesCount);
+        dayStats.setDate(date);
+        return dayStats;
+      }
     }
   }
 }

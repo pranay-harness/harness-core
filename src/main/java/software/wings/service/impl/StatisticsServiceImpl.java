@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -12,6 +13,7 @@ import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
+import static software.wings.beans.stats.DeploymentStatistics.DayStats.Builder.aDayStats;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
@@ -30,6 +32,7 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
@@ -41,6 +44,8 @@ import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
+import software.wings.beans.stats.DeploymentStatistics;
+import software.wings.beans.stats.DeploymentStatistics.DayStats;
 import software.wings.beans.stats.KeyStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
@@ -52,6 +57,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
@@ -87,6 +93,7 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
   @Inject private ReleaseService releaseService;
+  @Inject private EnvironmentService environmentService;
 
   @Override
   public WingsStatistics getTopConsumers() {
@@ -209,6 +216,102 @@ public class StatisticsServiceImpl implements StatisticsService {
         .withDeploymentCount(deploymentCount)
         .withLastFetchedOn(statsFetchedOn)
         .build();
+  }
+
+  @Override
+  public DeploymentStatistics getDeploymentStatistics(int numOfDays) {
+    long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
+
+    List<Environment> environments =
+        wingsPersistence.createQuery(Environment.class).retrievedFields(true, "environmentType").asList();
+    ImmutableMap<String, Environment> envById =
+        Maps.uniqueIndex(environments, Environment::getUuid); // TODO: remove. make envType part of wflExecution
+
+    long start = System.currentTimeMillis();
+    PageRequest pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
+            .addFilter(
+                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+            .build();
+    System.out.println("Time taken in query " + (System.currentTimeMillis() - start));
+
+    List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
+
+    Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
+        workflowExecutions.parallelStream()
+            .filter(wex -> envById.containsKey(wex.getEnvId()))
+            .collect(
+                groupingBy(wex -> PROD.equals(envById.get(wex.getEnvId()).getEnvironmentType()) ? PROD : NON_PROD));
+
+    DeploymentStatistics deploymentStats = new DeploymentStatistics();
+    deploymentStats.getStatsMap().put(
+        PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.PROD)));
+    deploymentStats.getStatsMap().put(
+        NON_PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.NON_PROD)));
+    deploymentStats.getStatsMap().put(
+        ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
+    System.out.println("totalTime " + (System.currentTimeMillis() - start));
+    return deploymentStats;
+  }
+
+  private List<DayStats> merge(List<DayStats> prodStats, List<DayStats> nonProdStats) {
+    List<DayStats> dayStats = new ArrayList<>(prodStats.size());
+    IntStream.range(0, prodStats.size()).forEach(idx -> {
+      DayStats prod = prodStats.get(idx);
+      DayStats nonProd = nonProdStats.get(idx);
+      dayStats.add(aDayStats()
+                       .withDate(prod.getDate())
+                       .withTotalCount(prod.getTotalCount() + nonProd.getTotalCount())
+                       .withFailedCount(prod.getFailedCount() + nonProd.getFailedCount())
+                       .withInstancesCount(prod.getInstancesCount() + nonProd.getInstancesCount())
+                       .build());
+    });
+    return dayStats;
+  }
+
+  private List<DayStats> getDeploymentStatisticsByEnvType(int numOfDays, List<WorkflowExecution> workflowExecutions) {
+    long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
+
+    List<DayStats> dayStats = new ArrayList<>(numOfDays);
+
+    Map<Long, List<WorkflowExecution>> wflExecutionByDate = new HashMap<>();
+    if (workflowExecutions != null) {
+      wflExecutionByDate =
+          workflowExecutions.parallelStream().collect(groupingBy(wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt()))));
+    }
+
+    final Map<Long, List<WorkflowExecution>> finalWflExecutionByDate = wflExecutionByDate;
+    IntStream.range(0, numOfDays).forEach(idx -> {
+      int totalCount = 0;
+      int failureCount = 0;
+      int instanceCount = 0;
+
+      Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
+      List<WorkflowExecution> wflExecutions = finalWflExecutionByDate.get(timeOffset);
+      if (wflExecutions != null) {
+        totalCount = wflExecutions.size();
+        failureCount = (int) wflExecutions.stream()
+                           .filter(workflowExecution -> workflowExecution.getStatus().equals(FAILED))
+                           .count();
+        instanceCount = wflExecutions.stream()
+                            .filter(wex -> wex.getServiceExecutionSummaries() != null)
+                            .flatMap(wex -> wex.getServiceExecutionSummaries().stream())
+                            .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                            .mapToInt(i -> i)
+                            .sum();
+      }
+      dayStats.add(aDayStats()
+                       .withDate(timeOffset)
+                       .withTotalCount(totalCount)
+                       .withFailedCount(failureCount)
+                       .withInstancesCount(instanceCount)
+                       .build());
+    });
+    return dayStats;
   }
 
   /**

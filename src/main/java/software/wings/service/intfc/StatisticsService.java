@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
+import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 
@@ -50,4 +51,6 @@ public interface StatisticsService {
    * @return the user stats
    */
   UserStatistics getUserStats();
+
+  DeploymentStatistics getDeploymentStatistics(int numOfDays);
 }

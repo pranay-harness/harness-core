@@ -7,11 +7,13 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.stats.DeploymentActivityStatistics;
+import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.service.intfc.StatisticsService;
 
 import java.util.List;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -73,5 +75,12 @@ public class StatisticsResource {
   @Path("user-stats")
   public RestResponse<UserStatistics> userStatistics() {
     return new RestResponse<>(statisticsService.getUserStats());
+  }
+
+  @GET
+  @Path("deployment-stats")
+  public RestResponse<DeploymentStatistics> deploymentStats(
+      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays) {
+    return new RestResponse<>(statisticsService.getDeploymentStatistics(numOfDays));
   }
 }
