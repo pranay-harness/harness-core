@@ -32,7 +32,6 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
@@ -222,11 +221,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   public DeploymentStatistics getDeploymentStatistics(int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
-    List<Environment> environments =
-        wingsPersistence.createQuery(Environment.class).retrievedFields(true, "environmentType").asList();
-    ImmutableMap<String, Environment> envById =
-        Maps.uniqueIndex(environments, Environment::getUuid); // TODO: remove. make envType part of wflExecution
-
     long start = System.currentTimeMillis();
     PageRequest pageRequest =
         aPageRequest()
@@ -236,16 +230,12 @@ public class StatisticsServiceImpl implements StatisticsService {
                 aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
-    System.out.println("Time taken in query " + (System.currentTimeMillis() - start));
 
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
 
     Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
-        workflowExecutions.parallelStream()
-            .filter(wex -> envById.containsKey(wex.getEnvId()))
-            .collect(
-                groupingBy(wex -> PROD.equals(envById.get(wex.getEnvId()).getEnvironmentType()) ? PROD : NON_PROD));
+        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
 
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
     deploymentStats.getStatsMap().put(
@@ -254,7 +244,6 @@ public class StatisticsServiceImpl implements StatisticsService {
         NON_PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.NON_PROD)));
     deploymentStats.getStatsMap().put(
         ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
-    System.out.println("totalTime " + (System.currentTimeMillis() - start));
     return deploymentStats;
   }
 

@@ -382,6 +382,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getEnvId() != null) {
       Environment env = environmentService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), false);
       workflowExecution.setEnvName(env.getName());
+      workflowExecution.setEnvType(env.getEnvironmentType());
     }
 
     if (workflowExecution.getExecutionArgs() != null) {

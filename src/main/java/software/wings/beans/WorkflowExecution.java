@@ -7,6 +7,7 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph.Node;
 import software.wings.sm.ExecutionStatus;
 
@@ -26,6 +27,7 @@ public class WorkflowExecution extends Base {
   @Indexed private String envId;
   private String appName;
   private String envName;
+  private EnvironmentType envType;
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
@@ -417,6 +419,14 @@ public class WorkflowExecution extends Base {
    */
   public void setEnvName(String envName) {
     this.envName = envName;
+  }
+
+  public EnvironmentType getEnvType() {
+    return envType;
+  }
+
+  public void setEnvType(EnvironmentType envType) {
+    this.envType = envType;
   }
 
   public static final class WorkflowExecutionBuilder {
