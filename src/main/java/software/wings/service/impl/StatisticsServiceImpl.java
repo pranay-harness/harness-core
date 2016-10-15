@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -218,10 +219,9 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
-  public DeploymentStatistics getDeploymentStatistics(int numOfDays) {
+  public DeploymentStatistics getDeploymentStatistics(String appId, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
-    long start = System.currentTimeMillis();
     PageRequest pageRequest =
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
@@ -230,6 +230,9 @@ public class StatisticsServiceImpl implements StatisticsService {
                 aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
+    if (!isNullOrEmpty(appId)) {
+      pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build());
+    }
 
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();

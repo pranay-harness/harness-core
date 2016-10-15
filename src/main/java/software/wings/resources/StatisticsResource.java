@@ -80,7 +80,7 @@ public class StatisticsResource {
   @GET
   @Path("deployment-stats")
   public RestResponse<DeploymentStatistics> deploymentStats(
-      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays) {
-    return new RestResponse<>(statisticsService.getDeploymentStatistics(numOfDays));
+      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
+    return new RestResponse<>(statisticsService.getDeploymentStatistics(appId, numOfDays));
   }
 }

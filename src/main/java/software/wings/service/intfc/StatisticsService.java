@@ -52,5 +52,5 @@ public interface StatisticsService {
    */
   UserStatistics getUserStats();
 
-  DeploymentStatistics getDeploymentStatistics(int numOfDays);
+  DeploymentStatistics getDeploymentStatistics(String appId, int numOfDays);
 }
