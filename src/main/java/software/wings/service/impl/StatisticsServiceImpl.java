@@ -14,7 +14,6 @@ import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
-import static software.wings.beans.stats.DeploymentStatistics.DayStats.Builder.aDayStats;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
@@ -45,7 +44,8 @@ import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
-import software.wings.beans.stats.DeploymentStatistics.DayStats;
+import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
+import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.KeyStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
@@ -57,7 +57,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
@@ -93,7 +92,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
   @Inject private ReleaseService releaseService;
-  @Inject private EnvironmentService environmentService;
 
   @Override
   public WingsStatistics getTopConsumers() {
@@ -250,25 +248,26 @@ public class StatisticsServiceImpl implements StatisticsService {
     return deploymentStats;
   }
 
-  private List<DayStats> merge(List<DayStats> prodStats, List<DayStats> nonProdStats) {
-    List<DayStats> dayStats = new ArrayList<>(prodStats.size());
-    IntStream.range(0, prodStats.size()).forEach(idx -> {
-      DayStats prod = prodStats.get(idx);
-      DayStats nonProd = nonProdStats.get(idx);
-      dayStats.add(aDayStats()
-                       .withDate(prod.getDate())
-                       .withTotalCount(prod.getTotalCount() + nonProd.getTotalCount())
-                       .withFailedCount(prod.getFailedCount() + nonProd.getFailedCount())
-                       .withInstancesCount(prod.getInstancesCount() + nonProd.getInstancesCount())
-                       .build());
+  private AggregatedDayStats merge(AggregatedDayStats prodAggStats, AggregatedDayStats nonProdAggStats) {
+    List<DayStat> dayStats = new ArrayList<>(prodAggStats.getDaysStats().size());
+
+    IntStream.range(0, prodAggStats.getDaysStats().size()).forEach(idx -> {
+      DayStat prod = prodAggStats.getDaysStats().get(idx);
+      DayStat nonProd = nonProdAggStats.getDaysStats().get(idx);
+      dayStats.add(
+          new DayStat(prod.getTotalCount() + nonProd.getTotalCount(), prod.getFailedCount() + nonProd.getFailedCount(),
+              prod.getInstancesCount() + nonProd.getInstancesCount(), prod.getDate()));
     });
-    return dayStats;
+    return new AggregatedDayStats(prodAggStats.getTotalCount() + nonProdAggStats.getTotalCount(),
+        prodAggStats.getFailedCount() + nonProdAggStats.getFailedCount(),
+        prodAggStats.getInstancesCount() + nonProdAggStats.getInstancesCount(), dayStats);
   }
 
-  private List<DayStats> getDeploymentStatisticsByEnvType(int numOfDays, List<WorkflowExecution> workflowExecutions) {
+  private AggregatedDayStats getDeploymentStatisticsByEnvType(
+      int numOfDays, List<WorkflowExecution> workflowExecutions) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
-    List<DayStats> dayStats = new ArrayList<>(numOfDays);
+    List<DayStat> dayStats = new ArrayList<>(numOfDays);
 
     Map<Long, List<WorkflowExecution>> wflExecutionByDate = new HashMap<>();
     if (workflowExecutions != null) {
@@ -276,14 +275,17 @@ public class StatisticsServiceImpl implements StatisticsService {
           workflowExecutions.parallelStream().collect(groupingBy(wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt()))));
     }
 
-    final Map<Long, List<WorkflowExecution>> finalWflExecutionByDate = wflExecutionByDate;
-    IntStream.range(0, numOfDays).forEach(idx -> {
+    int aggTotalCount = 0;
+    int aggFailureCount = 0;
+    int aggInstanceCount = 0;
+
+    for (int idx = 0; idx < numOfDays; idx++) {
       int totalCount = 0;
       int failureCount = 0;
       int instanceCount = 0;
 
       Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
-      List<WorkflowExecution> wflExecutions = finalWflExecutionByDate.get(timeOffset);
+      List<WorkflowExecution> wflExecutions = wflExecutionByDate.get(timeOffset);
       if (wflExecutions != null) {
         totalCount = wflExecutions.size();
         failureCount = (int) wflExecutions.stream()
@@ -296,14 +298,14 @@ public class StatisticsServiceImpl implements StatisticsService {
                             .mapToInt(i -> i)
                             .sum();
       }
-      dayStats.add(aDayStats()
-                       .withDate(timeOffset)
-                       .withTotalCount(totalCount)
-                       .withFailedCount(failureCount)
-                       .withInstancesCount(instanceCount)
-                       .build());
-    });
-    return dayStats;
+
+      dayStats.add(new DayStat(totalCount, failureCount, instanceCount, timeOffset));
+      aggTotalCount += totalCount;
+      aggFailureCount += failureCount;
+      aggInstanceCount += instanceCount;
+    }
+
+    return new AggregatedDayStats(aggTotalCount, aggFailureCount, aggInstanceCount, dayStats);
   }
 
   /**

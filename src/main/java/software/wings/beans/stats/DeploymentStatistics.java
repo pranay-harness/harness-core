@@ -10,7 +10,7 @@ import java.util.Map;
  * Created by anubhaw on 8/15/16.
  */
 public class DeploymentStatistics extends WingsStatistics {
-  private Map<EnvironmentType, List<DayStats>> statsMap = new HashMap<>();
+  private Map<EnvironmentType, AggregatedDayStats> statsMap = new HashMap<>();
 
   /**
    * Instantiates a new Deployment statistics.
@@ -24,7 +24,7 @@ public class DeploymentStatistics extends WingsStatistics {
    *
    * @return the stats map
    */
-  public Map<EnvironmentType, List<DayStats>> getStatsMap() {
+  public Map<EnvironmentType, AggregatedDayStats> getStatsMap() {
     return statsMap;
   }
 
@@ -33,18 +33,25 @@ public class DeploymentStatistics extends WingsStatistics {
    *
    * @param statsMap the stats map
    */
-  public void setStatsMap(Map<EnvironmentType, List<DayStats>> statsMap) {
+  public void setStatsMap(Map<EnvironmentType, AggregatedDayStats> statsMap) {
     this.statsMap = statsMap;
   }
 
   /**
-   * The type Day stats.
+   * The type Aggregrated day stats.
    */
-  public static class DayStats {
+  public static class AggregatedDayStats {
     private int totalCount;
     private int failedCount;
     private int instancesCount;
-    private Long date;
+    private List<DayStat> daysStats;
+
+    public AggregatedDayStats(int totalCount, int failedCount, int instancesCount, List<DayStat> daysStats) {
+      this.totalCount = totalCount;
+      this.failedCount = failedCount;
+      this.instancesCount = instancesCount;
+      this.daysStats = daysStats;
+    }
 
     /**
      * Gets total count.
@@ -101,112 +108,109 @@ public class DeploymentStatistics extends WingsStatistics {
     }
 
     /**
-     * Gets date.
+     * Gets days stats.
      *
-     * @return the date
+     * @return the days stats
      */
-    public Long getDate() {
-      return date;
+    public List<DayStat> getDaysStats() {
+      return daysStats;
     }
 
     /**
-     * Sets date.
+     * Sets days stats.
      *
-     * @param date the date
+     * @param daysStats the days stats
      */
-    public void setDate(Long date) {
-      this.date = date;
+    public void setDaysStats(List<DayStat> daysStats) {
+      this.daysStats = daysStats;
     }
 
     /**
-     * The type Builder.
+     * The type Day stats.
      */
-    public static final class Builder {
+    public static class DayStat {
       private int totalCount;
       private int failedCount;
       private int instancesCount;
       private Long date;
 
-      private Builder() {}
-
-      /**
-       * A day stats builder.
-       *
-       * @return the builder
-       */
-      public static Builder aDayStats() {
-        return new Builder();
+      public DayStat(int totalCount, int failedCount, int instancesCount, Long date) {
+        this.totalCount = totalCount;
+        this.failedCount = failedCount;
+        this.instancesCount = instancesCount;
+        this.date = date;
       }
 
       /**
-       * With total count builder.
+       * Gets total count.
+       *
+       * @return the total count
+       */
+      public int getTotalCount() {
+        return totalCount;
+      }
+
+      /**
+       * Sets total count.
        *
        * @param totalCount the total count
-       * @return the builder
        */
-      public Builder withTotalCount(int totalCount) {
+      public void setTotalCount(int totalCount) {
         this.totalCount = totalCount;
-        return this;
       }
 
       /**
-       * With failed count builder.
+       * Gets failed count.
+       *
+       * @return the failed count
+       */
+      public int getFailedCount() {
+        return failedCount;
+      }
+
+      /**
+       * Sets failed count.
        *
        * @param failedCount the failed count
-       * @return the builder
        */
-      public Builder withFailedCount(int failedCount) {
+      public void setFailedCount(int failedCount) {
         this.failedCount = failedCount;
-        return this;
       }
 
       /**
-       * With instances count builder.
+       * Gets instances count.
+       *
+       * @return the instances count
+       */
+      public int getInstancesCount() {
+        return instancesCount;
+      }
+
+      /**
+       * Sets instances count.
        *
        * @param instancesCount the instances count
-       * @return the builder
        */
-      public Builder withInstancesCount(int instancesCount) {
+      public void setInstancesCount(int instancesCount) {
         this.instancesCount = instancesCount;
-        return this;
       }
 
       /**
-       * With date builder.
+       * Gets date.
+       *
+       * @return the date
+       */
+      public Long getDate() {
+        return date;
+      }
+
+      /**
+       * Sets date.
        *
        * @param date the date
-       * @return the builder
        */
-      public Builder withDate(long date) {
+      public void setDate(Long date) {
         this.date = date;
-        return this;
-      }
-
-      /**
-       * But builder.
-       *
-       * @return the builder
-       */
-      public Builder but() {
-        return aDayStats()
-            .withTotalCount(totalCount)
-            .withFailedCount(failedCount)
-            .withInstancesCount(instancesCount)
-            .withDate(date);
-      }
-
-      /**
-       * Build day stats.
-       *
-       * @return the day stats
-       */
-      public DayStats build() {
-        DayStats dayStats = new DayStats();
-        dayStats.setTotalCount(totalCount);
-        dayStats.setFailedCount(failedCount);
-        dayStats.setInstancesCount(instancesCount);
-        dayStats.setDate(date);
-        return dayStats;
       }
     }
   }
