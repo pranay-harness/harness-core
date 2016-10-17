@@ -152,6 +152,11 @@
         </dependency>
 
         <dependency>
+            <groupId>ro.fortsoft.pf4j</groupId>
+            <artifactId>pf4j-update</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.deftlabs</groupId>
             <artifactId>mongo-java-distributed-lock</artifactId>
         </dependency>
