@@ -3,7 +3,7 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.dl.PageRequest;

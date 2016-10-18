@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.ArtifactFile;
-import software.wings.beans.ArtifactSource;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactSource;
 
 import java.util.List;
 import java.util.Map;

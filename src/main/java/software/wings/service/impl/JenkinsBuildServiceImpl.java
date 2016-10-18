@@ -8,18 +8,17 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.ArtifactSource;
-import software.wings.beans.ArtifactSource.SourceType;
+import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactSource.SourceType;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.JenkinsArtifactSource;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.Release;
+import software.wings.beans.artifact.JenkinsArtifactSource;
+import software.wings.beans.artifact.JenkinsConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.JenkinsBuildService;
-import software.wings.service.intfc.ReleaseService;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -36,7 +35,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   /**
    * The constant RELEASE_ID.
    */
-  public static final String RELEASE_ID = "releaseId";
+  public static final String ARTIFACT_SOURCE_ID = "artifactSourceId";
   /**
    * The constant APP_ID.
    */
@@ -47,21 +46,21 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public static final String ARTIFACT_SOURCE_NAME = "artifactSourceName";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private JenkinsFactory jenkinsFactory;
-  @Inject private ReleaseService releaseService;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private MainConfiguration configuration;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.JenkinsBuildService#getBuilds(javax.ws.rs.core.MultivaluedMap,
-   * software.wings.beans.JenkinsConfig)
+   * software.wings.beans.artifact.JenkinsConfig)
    */
   @Override
   public List<BuildDetails> getBuilds(MultivaluedMap<String, String> queryParameters, JenkinsConfig jenkinsConfig)
       throws IOException {
-    String releaseId = queryParameters.getFirst(RELEASE_ID);
+    String artifactSourceId = queryParameters.getFirst(ARTIFACT_SOURCE_ID);
     String appId = queryParameters.getFirst(APP_ID);
     String artifactSourceName = queryParameters.getFirst(ARTIFACT_SOURCE_NAME);
 
-    return getBuildDetails(jenkinsConfig, appId, releaseId, artifactSourceName);
+    return getBuildDetails(jenkinsConfig, appId, artifactSourceId, artifactSourceName);
   }
 
   @Override
@@ -71,16 +70,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   private List<BuildDetails> getBuildDetails(
-      JenkinsConfig jenkinsConfig, String appId, String releaseId, String artifactSourceName) {
-    notNullCheck(RELEASE_ID, releaseId);
+      JenkinsConfig jenkinsConfig, String appId, String artifactSourceId, String artifactSourceName) {
+    notNullCheck(ARTIFACT_SOURCE_ID, artifactSourceId);
     notNullCheck(APP_ID, appId);
     notNullCheck(ARTIFACT_SOURCE_NAME, artifactSourceName);
 
-    Release release = releaseService.get(releaseId, appId);
-    notNullCheck("release", release);
-
-    ArtifactSource artifactSource = release.get(artifactSourceName);
-
+    ArtifactSource artifactSource = artifactStreamService.get(artifactSourceId, appId);
     notNullCheck("artifactSource", artifactSource);
     equalCheck(artifactSource.getSourceType(), SourceType.JENKINS);
 

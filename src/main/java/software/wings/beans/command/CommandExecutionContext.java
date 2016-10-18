@@ -6,7 +6,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;

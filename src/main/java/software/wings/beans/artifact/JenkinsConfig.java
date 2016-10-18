@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -6,6 +6,7 @@ import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
+import software.wings.beans.SettingValue;
 
 /**
  * Created by peeyushaggarwal on 5/26/16.

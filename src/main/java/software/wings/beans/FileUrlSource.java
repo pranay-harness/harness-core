@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.beans.artifact.ArtifactSource;
 import software.wings.utils.ArtifactType;
 
 import java.util.Set;

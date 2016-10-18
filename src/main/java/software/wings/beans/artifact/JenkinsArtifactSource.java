@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -8,6 +8,8 @@ import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.EmbeddedUser;
+import software.wings.beans.Service;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -114,7 +116,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.beans.ArtifactSource#equals(java.lang.Object)
+   * @see software.wings.beans.artifact.ArtifactSource#equals(java.lang.Object)
    */
   @Override
   public boolean equals(Object o) {
@@ -130,7 +132,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.beans.ArtifactSource#hashCode()
+   * @see software.wings.beans.artifact.ArtifactSource#hashCode()
    */
   @Override
   public int hashCode() {
@@ -138,7 +140,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.beans.ArtifactSource#toString()
+   * @see software.wings.beans.artifact.ArtifactSource#toString()
    */
   @Override
   public String toString() {
@@ -150,7 +152,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String jenkinsSettingId;
@@ -158,12 +160,23 @@ public class JenkinsArtifactSource extends ArtifactSource {
     private String jobname;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private String sourceName;
+    private SourceType sourceType;
     private ArtifactType artifactType;
+    private ArtifactDownloadType downloadType;
+    private boolean autoApproveForProduction = false;
+    private List<PostArtifactDownloadAction> postDownloadActions;
+    private Artifact lastArtifact;
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
 
     private Builder() {}
 
     /**
-     * A jenkins artifact source.
+     * A jenkins artifact source builder.
      *
      * @return the builder
      */
@@ -172,7 +185,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * With jenkins setting id.
+     * With jenkins setting id builder.
      *
      * @param jenkinsSettingId the jenkins setting id
      * @return the builder
@@ -183,7 +196,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
      * @return the builder
@@ -194,7 +207,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * With jobname.
+     * With jobname builder.
      *
      * @param jobname the jobname
      * @return the builder
@@ -205,7 +218,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * With artifact path services.
+     * With artifact path services builder.
      *
      * @param artifactPathServices the artifact path services
      * @return the builder
@@ -216,7 +229,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * With source name.
+     * With source name builder.
      *
      * @param sourceName the source name
      * @return the builder
@@ -227,7 +240,18 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * With artifact type.
+     * With source type builder.
+     *
+     * @param sourceType the source type
+     * @return the builder
+     */
+    public Builder withSourceType(SourceType sourceType) {
+      this.sourceType = sourceType;
+      return this;
+    }
+
+    /**
+     * With artifact type builder.
      *
      * @param artifactType the artifact type
      * @return the builder
@@ -238,7 +262,117 @@ public class JenkinsArtifactSource extends ArtifactSource {
     }
 
     /**
-     * But.
+     * With download type builder.
+     *
+     * @param downloadType the download type
+     * @return the builder
+     */
+    public Builder withDownloadType(ArtifactDownloadType downloadType) {
+      this.downloadType = downloadType;
+      return this;
+    }
+
+    /**
+     * With auto approve for production builder.
+     *
+     * @param autoApproveForProduction the auto approve for production
+     * @return the builder
+     */
+    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+      this.autoApproveForProduction = autoApproveForProduction;
+      return this;
+    }
+
+    /**
+     * With post download actions builder.
+     *
+     * @param postDownloadActions the post download actions
+     * @return the builder
+     */
+    public Builder withPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
+      this.postDownloadActions = postDownloadActions;
+      return this;
+    }
+
+    /**
+     * With last artifact builder.
+     *
+     * @param lastArtifact the last artifact
+     * @return the builder
+     */
+    public Builder withLastArtifact(Artifact lastArtifact) {
+      this.lastArtifact = lastArtifact;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    /**
+     * But builder.
      *
      * @return the builder
      */
@@ -249,11 +383,22 @@ public class JenkinsArtifactSource extends ArtifactSource {
           .withJobname(jobname)
           .withArtifactPathServices(artifactPathServices)
           .withSourceName(sourceName)
-          .withArtifactType(artifactType);
+          .withSourceType(sourceType)
+          .withArtifactType(artifactType)
+          .withDownloadType(downloadType)
+          .withAutoApproveForProduction(autoApproveForProduction)
+          .withPostDownloadActions(postDownloadActions)
+          .withLastArtifact(lastArtifact)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
-     * Builds the.
+     * Build jenkins artifact source.
      *
      * @return the jenkins artifact source
      */
@@ -264,7 +409,18 @@ public class JenkinsArtifactSource extends ArtifactSource {
       jenkinsArtifactSource.setJobname(jobname);
       jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactSource.setSourceName(sourceName);
+      jenkinsArtifactSource.setSourceType(sourceType);
       jenkinsArtifactSource.setArtifactType(artifactType);
+      jenkinsArtifactSource.setDownloadType(downloadType);
+      jenkinsArtifactSource.setAutoApproveForProduction(autoApproveForProduction);
+      jenkinsArtifactSource.setPostDownloadActions(postDownloadActions);
+      jenkinsArtifactSource.setLastArtifact(lastArtifact);
+      jenkinsArtifactSource.setUuid(uuid);
+      jenkinsArtifactSource.setAppId(appId);
+      jenkinsArtifactSource.setCreatedBy(createdBy);
+      jenkinsArtifactSource.setCreatedAt(createdAt);
+      jenkinsArtifactSource.setLastUpdatedBy(lastUpdatedBy);
+      jenkinsArtifactSource.setLastUpdatedAt(lastUpdatedAt);
       return jenkinsArtifactSource;
     }
   }

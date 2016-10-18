@@ -1,13 +1,16 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Base;
+import software.wings.beans.Service;
 import software.wings.utils.ArtifactType;
 
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -17,12 +20,19 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType")
-public abstract class ArtifactSource {
+@Entity(value = "artifactStream")
+public abstract class ArtifactSource extends Base {
   @NotEmpty private String sourceName;
 
-  @JsonTypeId @NotNull private SourceType sourceType;
+  private SourceType sourceType;
 
   @NotNull private ArtifactType artifactType;
+
+  private ArtifactDownloadType downloadType;
+
+  private boolean autoApproveForProduction = false;
+
+  private List<PostArtifactDownloadAction> postDownloadActions;
 
   @Transient private Artifact lastArtifact;
 
@@ -148,6 +158,44 @@ public abstract class ArtifactSource {
         .add("sourceType", sourceType)
         .add("artifactType", artifactType)
         .toString();
+  }
+
+  public ArtifactDownloadType getDownloadType() {
+    return downloadType;
+  }
+
+  public void setDownloadType(ArtifactDownloadType downloadType) {
+    this.downloadType = downloadType;
+  }
+
+  public boolean isAutoApproveForProduction() {
+    return autoApproveForProduction;
+  }
+
+  public void setAutoApproveForProduction(boolean autoApproveForProduction) {
+    this.autoApproveForProduction = autoApproveForProduction;
+  }
+
+  public List<PostArtifactDownloadAction> getPostDownloadActions() {
+    return postDownloadActions;
+  }
+
+  public void setPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
+    this.postDownloadActions = postDownloadActions;
+  }
+
+  /**
+   * The enum Artifact download type.
+   */
+  public enum ArtifactDownloadType {
+    /**
+     * Automatic artifact download type.
+     */
+    AUTOMATIC,
+    /**
+     * Manual artifact download type.
+     */
+    MANUAL
   }
 
   /**

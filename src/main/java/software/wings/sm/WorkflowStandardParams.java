@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ServiceElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;

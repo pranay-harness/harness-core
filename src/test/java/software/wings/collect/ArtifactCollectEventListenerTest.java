@@ -5,16 +5,13 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
-import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.artifact.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.RELEASE_ID;
-
-import com.google.common.collect.Lists;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_ID;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,9 +21,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ApprovalNotification;
-import software.wings.beans.Artifact.Status;
-import software.wings.beans.ArtifactFile;
-import software.wings.beans.ArtifactSource;
+import software.wings.beans.artifact.Artifact.Status;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactSource;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.NotificationService;
@@ -89,15 +86,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   public void shouldFailWhenArtifactNotAvailable() throws Exception {
     artifactCollectEventListener.onMessage(
         aCollectEvent()
-            .withArtifact(anArtifact()
-                              .withUuid(ARTIFACT_ID)
-                              .withAppId(APP_ID)
-                              .withRelease(aRelease()
-                                               .withUuid(RELEASE_ID)
-                                               .withArtifactSources(Lists.newArrayList(ARTIFACT_SOURCE))
-                                               .build())
-                              .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
-                              .build())
+            .withArtifact(anArtifact().withUuid(ARTIFACT_ID).withArtifactSourceId(ARTIFACT_SOURCE_ID).build())
             .build());
 
     verify(collectorServiceMap).get(anyString());
@@ -117,17 +106,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
         .thenReturn(Collections.singletonList(ARTIFACT_FILE));
 
     artifactCollectEventListener.onMessage(
-        aCollectEvent()
-            .withArtifact(anArtifact()
-                              .withUuid(ARTIFACT_ID)
-                              .withAppId(APP_ID)
-                              .withRelease(aRelease()
-                                               .withUuid(RELEASE_ID)
-                                               .withArtifactSources(Lists.newArrayList(ARTIFACT_SOURCE))
-                                               .build())
-                              .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
-                              .build())
-            .build());
+        aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withUuid(ARTIFACT_ID).build()).build());
 
     verify(collectorServiceMap).get(anyString());
     verify(artifactCollectorService).collect(ARTIFACT_SOURCE, Collections.emptyMap());
@@ -149,15 +128,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
         .thenReturn(Collections.singletonList(ARTIFACT_FILE));
 
     artifactCollectEventListener.onMessage(
-        aCollectEvent()
-            .withArtifact(
-                anArtifact()
-                    .withUuid(ARTIFACT_ID)
-                    .withAppId(APP_ID)
-                    .withRelease(aRelease().withUuid(RELEASE_ID).withArtifactSources(Lists.newArrayList()).build())
-                    .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
-                    .build())
-            .build());
+        aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withUuid(ARTIFACT_ID).build()).build());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.FAILED);

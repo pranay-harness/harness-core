@@ -27,7 +27,7 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -36,6 +36,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
+import software.wings.beans.artifact.ArtifactSource;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
@@ -47,7 +48,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ReleaseService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -112,7 +113,7 @@ public class CommandState extends State {
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
-  @Inject @Transient private ReleaseService releaseService;
+  @Inject @Transient private ArtifactStreamService artifactStreamService;
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
 
@@ -263,8 +264,10 @@ public class CommandState extends State {
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
-        activityBuilder.withReleaseId(artifact.getRelease().getUuid())
-            .withReleaseName(artifact.getRelease().getReleaseName())
+        ArtifactSource artifactSource = artifactStreamService.get(artifact.getArtifactSourceId(), artifact.getAppId());
+
+        activityBuilder.withArtifactSourceId(artifactSource.getUuid())
+            .withArtifactSourceName(artifactSource.getSourceName())
             .withArtifactName(artifact.getDisplayName())
             .withArtifactId(artifact.getUuid());
         commandExecutionContextBuilder.withArtifact(artifact);
@@ -355,9 +358,10 @@ public class CommandState extends State {
     Activity activity = activityService.get(activityId, appId);
     String oldReleaseId = serviceInstance.getReleaseId();
 
-    if (artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(executionResultData, activity, oldReleaseId)) {
-      releaseService.addSuccessCount(appId, activity.getReleaseId(), envId, 1);
-    }
+    // TODO:: ArtifactStream
+    //    if (artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(executionResultData, activity, oldReleaseId)) {
+    //      artifactStreamService.addSuccessCount(appId, activity.getArtifactSourceId(), envId, 1);
+    //    }
 
     ExecutionStatus executionStatus =
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
@@ -379,8 +383,8 @@ public class CommandState extends State {
   private boolean artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(
       ExecutionResultData executionResultData, Activity activity, String oldReleaseId) {
     return executionResultData.getResult().equals(SUCCESS)
-        && (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getReleaseId()))
-        && (oldReleaseId == null || !StringUtils.equals(oldReleaseId, activity.getReleaseId()));
+        && (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getArtifactSourceId()))
+        && (oldReleaseId == null || !StringUtils.equals(oldReleaseId, activity.getArtifactSourceId()));
   }
 
   /**

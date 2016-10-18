@@ -23,6 +23,8 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_TYPE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -142,8 +144,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                             .withAppId(APP_ID)
                             .withUuid(ACTIVITY_ID)
                             .withServiceInstanceId(SERVICE_INSTANCE_ID)
-                            .withReleaseId(RELEASE_ID)
-                            .withReleaseName(RELEASE_NAME)
+                            .withArtifactSourceId(ARTIFACT_SOURCE_ID)
+                            .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
                             .withArtifactId(ARTIFACT_ID)
                             .withArtifactName(ARTIFACT_NAME)
                             .withStatus(ExecutionStatus.SUCCESS)

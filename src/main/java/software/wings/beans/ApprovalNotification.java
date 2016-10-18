@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Artifact.Status;
+import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;

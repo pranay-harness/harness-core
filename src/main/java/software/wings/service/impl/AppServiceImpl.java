@@ -33,11 +33,11 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
@@ -73,7 +73,7 @@ public class AppServiceImpl implements AppService {
   @Inject private HistoryService historyService;
   @Inject private InfrastructureService infrastructureService;
   @Inject private WorkflowService workflowService;
-  @Inject private ReleaseService releaseService;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private StatisticsService statisticsService;
 
@@ -205,7 +205,7 @@ public class AppServiceImpl implements AppService {
 
         serviceResourceService.deleteByApp(appId);
         environmentService.deleteByApp(appId);
-        releaseService.deleteByApplication(appId);
+        artifactStreamService.deleteByApplication(appId);
         artifactService.deleteByApplication(appId);
         workflowService.deleteWorkflowByApplication(appId);
         workflowService.deleteStateMachinesByApplication(appId);

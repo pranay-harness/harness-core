@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -7,12 +7,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
-import software.wings.beans.ArtifactSource.SourceType;
+import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
+import software.wings.beans.Service;
 import software.wings.utils.validation.Create;
 
 import java.lang.annotation.Retention;
@@ -20,7 +21,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -32,12 +32,9 @@ import javax.validation.Payload;
  * @author Rishi
  */
 @Entity(value = "artifacts", noClassnameStored = true)
-//@Artifact.ValidArtifact(groups = Create.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact extends Base {
-  @Indexed @Reference(idOnly = true, ignoreMissing = true) private Release release;
-
-  @Indexed @NotEmpty(groups = Create.class) private String artifactSourceName;
+  @Indexed private String artifactSourceId;
 
   private Map<String, String> metadata = Maps.newHashMap();
 
@@ -50,42 +47,6 @@ public class Artifact extends Base {
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 
   @Indexed private Status status;
-
-  /**
-   * Gets release.
-   *
-   * @return the release
-   */
-  public Release getRelease() {
-    return release;
-  }
-
-  /**
-   * Sets release.
-   *
-   * @param release the release
-   */
-  public void setRelease(Release release) {
-    this.release = release;
-  }
-
-  /**
-   * Gets artifact source name.
-   *
-   * @return the artifact source name
-   */
-  public String getArtifactSourceName() {
-    return artifactSourceName;
-  }
-
-  /**
-   * Sets artifact source name.
-   *
-   * @param artifactSourceName the artifact source name
-   */
-  public void setArtifactSourceName(String artifactSourceName) {
-    this.artifactSourceName = artifactSourceName;
-  }
 
   /**
    * Gets metadata.
@@ -195,63 +156,22 @@ public class Artifact extends Base {
     this.services = services;
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(release, artifactSourceName, metadata, displayName, revision, services, artifactFiles, status);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Artifact other = (Artifact) obj;
-    return Objects.equals(this.release, other.release)
-        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
-        && Objects.equals(this.metadata, other.metadata) && Objects.equals(this.displayName, other.displayName)
-        && Objects.equals(this.revision, other.revision) && Objects.equals(this.services, other.services)
-        && Objects.equals(this.artifactFiles, other.artifactFiles) && Objects.equals(this.status, other.status);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("release", release)
-        .add("artifactSourceName", artifactSourceName)
-        .add("metadata", metadata)
-        .add("displayName", displayName)
-        .add("revision", revision)
-        .add("services", services)
-        .add("artifactFiles", artifactFiles)
-        .add("status", status)
-        .add("sourceType", getSourceType())
-        .toString();
+  /**
+   * Gets artifact source id.
+   *
+   * @return the artifact source id
+   */
+  public String getArtifactSourceId() {
+    return artifactSourceId;
   }
 
   /**
-   * Gets source type.
+   * Sets artifact source id.
    *
-   * @return the source type
+   * @param artifactSourceId the artifact source id
    */
-  @JsonProperty("sourceType")
-  public SourceType getSourceType() {
-    if (release != null) {
-      Optional<ArtifactSource> artifactSource = release.getArtifactSources()
-                                                    .stream()
-                                                    .filter(source -> source.getSourceName().equals(artifactSourceName))
-                                                    .findFirst();
-      if (artifactSource.isPresent()) {
-        return artifactSource.get().getSourceType();
-      }
-    }
-    return null;
+  public void setArtifactSourceId(String artifactSourceId) {
+    this.artifactSourceId = artifactSourceId;
   }
 
   /**
@@ -334,29 +254,65 @@ public class Artifact extends Base {
        */
       @Override
       public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
-        return isNotBlank(bean.getAppId()) && isNotBlank(bean.getRelease().getUuid());
+        return isNotBlank(bean.getAppId()); // TODO: ArtifactStream - && isNotBlank(bean.artifactSource.getAppId());
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(artifactSourceId, metadata, displayName, revision, services, artifactFiles, status);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Artifact other = (Artifact) obj;
+    return Objects.equals(this.artifactSourceId, other.artifactSourceId)
+        && Objects.equals(this.metadata, other.metadata) && Objects.equals(this.displayName, other.displayName)
+        && Objects.equals(this.revision, other.revision) && Objects.equals(this.services, other.services)
+        && Objects.equals(this.artifactFiles, other.artifactFiles) && Objects.equals(this.status, other.status);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("artifactSourceId", artifactSourceId)
+        .add("metadata", metadata)
+        .add("displayName", displayName)
+        .add("revision", revision)
+        .add("services", services)
+        .add("artifactFiles", artifactFiles)
+        .add("status", status)
+        .toString();
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private Release release;
-    private String artifactSourceName;
+    private String artifactSourceId;
     private Map<String, String> metadata = Maps.newHashMap();
-    private String uuid;
     private String displayName;
-    private String appId;
     private String revision;
-    private EmbeddedUser createdBy;
-    private long createdAt;
     private List<Service> services;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
+    private Status status;
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private Status status;
 
     private Builder() {}
 
@@ -370,24 +326,13 @@ public class Artifact extends Base {
     }
 
     /**
-     * With release builder.
+     * With artifact source id builder.
      *
-     * @param release the release
+     * @param artifactSourceId the artifact source id
      * @return the builder
      */
-    public Builder withRelease(Release release) {
-      this.release = release;
-      return this;
-    }
-
-    /**
-     * With artifact source name builder.
-     *
-     * @param artifactSourceName the artifact source name
-     * @return the builder
-     */
-    public Builder withArtifactSourceName(String artifactSourceName) {
-      this.artifactSourceName = artifactSourceName;
+    public Builder withArtifactSourceId(String artifactSourceId) {
+      this.artifactSourceId = artifactSourceId;
       return this;
     }
 
@@ -403,17 +348,6 @@ public class Artifact extends Base {
     }
 
     /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    /**
      * With display name builder.
      *
      * @param displayName the display name
@@ -425,17 +359,6 @@ public class Artifact extends Base {
     }
 
     /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
      * With revision builder.
      *
      * @param revision the revision
@@ -443,28 +366,6 @@ public class Artifact extends Base {
      */
     public Builder withRevision(String revision) {
       this.revision = revision;
-      return this;
-    }
-
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
       return this;
     }
 
@@ -491,6 +392,61 @@ public class Artifact extends Base {
     }
 
     /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
      * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
@@ -513,37 +469,25 @@ public class Artifact extends Base {
     }
 
     /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return anArtifact()
-          .withRelease(release)
-          .withArtifactSourceName(artifactSourceName)
+          .withArtifactSourceId(artifactSourceId)
           .withMetadata(metadata)
-          .withUuid(uuid)
           .withDisplayName(displayName)
-          .withAppId(appId)
           .withRevision(revision)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
           .withServices(services)
           .withArtifactFiles(artifactFiles)
+          .withStatus(status)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withStatus(status);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -553,20 +497,19 @@ public class Artifact extends Base {
      */
     public Artifact build() {
       Artifact artifact = new Artifact();
-      artifact.setRelease(release);
-      artifact.setArtifactSourceName(artifactSourceName);
+      artifact.setArtifactSourceId(artifactSourceId);
       artifact.setMetadata(metadata);
-      artifact.setUuid(uuid);
       artifact.setDisplayName(displayName);
-      artifact.setAppId(appId);
       artifact.setRevision(revision);
-      artifact.setCreatedBy(createdBy);
-      artifact.setCreatedAt(createdAt);
       artifact.setServices(services);
       artifact.setArtifactFiles(artifactFiles);
+      artifact.setStatus(status);
+      artifact.setUuid(uuid);
+      artifact.setAppId(appId);
+      artifact.setCreatedBy(createdBy);
+      artifact.setCreatedAt(createdAt);
       artifact.setLastUpdatedBy(lastUpdatedBy);
       artifact.setLastUpdatedAt(lastUpdatedAt);
-      artifact.setStatus(status);
       return artifact;
     }
   }

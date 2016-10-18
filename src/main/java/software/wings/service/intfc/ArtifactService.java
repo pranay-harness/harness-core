@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.Artifact;
-import software.wings.beans.ArtifactFile;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 

@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.InstanceCountByEnv;
-import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -23,9 +22,7 @@ import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
 import java.util.List;
@@ -43,8 +40,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ActivityService activityService;
   @Inject private TagService tagService;
 
   @Override
@@ -154,23 +149,6 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   @Override
-  public Iterable<InstanceCountByEnv> getCountsByEnvReleaseAndTemplate(
-      String appId, Release release, Set<ServiceTemplate> serviceTemplates) {
-    return ()
-               -> wingsPersistence.getDatastore()
-                      .createAggregation(ServiceInstance.class)
-                      .match(wingsPersistence.createQuery(ServiceInstance.class)
-                                 .field("serviceTemplate")
-                                 .in(serviceTemplates)
-                                 .field("appId")
-                                 .equal(appId)
-                                 .field("releaseId")
-                                 .equal(release.getUuid()))
-                      .group("envId", grouping("count", new Accumulator("$sum", 1)))
-                      .out(InstanceCountByEnv.class);
-  }
-
-  @Override
   public Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates) {
     return ()
                -> wingsPersistence.getDatastore()
@@ -196,8 +174,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
     if (!isNullOrEmpty(activity.getArtifactId())) {
       operations.set("artifactId", activity.getArtifactId())
           .set("artifactName", activity.getArtifactName())
-          .set("releaseId", activity.getReleaseId())
-          .set("releaseName", activity.getReleaseName())
+          .set("releaseId", activity.getArtifactSourceId())
+          .set("releaseName", activity.getArtifactSourceName())
           .set("artifactDeployedOn", activity.getCreatedAt())
           .set("artifactDeploymentStatus", activity.getStatus())
           .set("artifactDeploymentActivityId", activity.getUuid());

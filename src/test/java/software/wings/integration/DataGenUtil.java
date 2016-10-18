@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.shuffle;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
@@ -13,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
-import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
@@ -29,12 +27,10 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
-import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
@@ -42,6 +38,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.artifact.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
@@ -83,7 +80,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.EntityType;
@@ -92,7 +88,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
-import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
@@ -106,7 +101,6 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
@@ -559,31 +553,6 @@ private void addServiceInstances(List<Service> services, List<Environment> appEn
   });
 }
 
-private void addActivitiesAndLogs(Application application, List<Service> services, List<Environment> appEnvs) {
-  // TODO: improve make http calls and use better generation scheme
-  appEnvs.forEach(environment -> {
-    String infraId =
-        wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(Base.GLOBAL_APP_ID).get().getUuid();
-    List<Host> hosts = wingsPersistence.createQuery(Host.class)
-                           .field("appId")
-                           .equal(environment.getAppId())
-                           .field("infraId")
-                           .equal(infraId)
-                           .asList();
-    ServiceTemplate template = wingsPersistence.query(ServiceTemplate.class, new PageRequest<>()).get(0);
-    template.setService(services.get(0));
-    Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
-    Artifact artifact =
-        wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
-
-    shuffle(hosts);
-    createDeployActivity(application, environment, template, hosts.get(0), release, artifact, ExecutionStatus.RUNNING);
-    createStartActivity(application, environment, template, hosts.get(1), ExecutionStatus.SUCCESS);
-    createStopActivity(application, environment, template, hosts.get(2), ExecutionStatus.FAILED);
-    createDeployActivity(application, environment, template, hosts.get(0), release, artifact, ExecutionStatus.ABORTED);
-  });
-}
-
 private void createStopActivity(
     Application application, Environment environment, ServiceTemplate template, Host host, ExecutionStatus status) {
   Activity activity = wingsPersistence.saveAndGet(Activity.class,
@@ -625,35 +594,6 @@ private void createStartActivity(
   addLogLine(application, template, host, activity,
       "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
   addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
-}
-
-private void createDeployActivity(Application application, Environment environment, ServiceTemplate template, Host host,
-    Release release, Artifact artifact, ExecutionStatus status) {
-  Activity activity = wingsPersistence.saveAndGet(Activity.class,
-      anActivity()
-          .withAppId(application.getUuid())
-          .withArtifactName(artifact.getDisplayName())
-          .withCommandType("COMMAND")
-          .withCommandName("DEPLOY")
-          .withEnvironmentId(environment.getUuid())
-          .withHostName(host.getHostName())
-          .withReleaseName(release.getReleaseName())
-          .withReleaseId(release.getUuid())
-          .withServiceId(template.getService().getUuid())
-          .withServiceName(template.getService().getName())
-          .withServiceTemplateId(template.getUuid())
-          .withServiceTemplateName(template.getName())
-          .withStatus(status)
-          .build());
-
-  addLogLine(application, template, host, activity,
-      "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO stopping tomcat ./bin/shutdown.sh");
-  addLogLine(application, template, host, activity,
-      getTimeStamp() + "INFO copying artifact artifact.war to stating /home/staging");
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO untar artifact to /home/tomcat");
   addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
 }
 

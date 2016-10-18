@@ -29,7 +29,7 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
@@ -427,7 +427,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
         if (artifacts.size() > 0) {
-          workflowExecution.getExecutionArgs().setReleaseId(artifacts.get(0).getRelease().getUuid());
+          workflowExecution.getExecutionArgs().setArtifactSourceId(artifacts.get(0).getArtifactSourceId());
         }
 
         List<ServiceElement> services = new ArrayList<>();

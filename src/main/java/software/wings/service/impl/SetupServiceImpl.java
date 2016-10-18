@@ -6,10 +6,7 @@ import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
-import software.wings.beans.Artifact.Status;
 import software.wings.beans.Environment;
-import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup;
@@ -20,8 +17,8 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
@@ -39,7 +36,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class SetupServiceImpl implements SetupService {
   @Inject private HostService hostService;
-  @Inject private ReleaseService releaseService;
+  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
@@ -65,12 +62,14 @@ public class SetupServiceImpl implements SetupService {
    * @return
    */
   private SetupAction nextAction(Application application) {
-    SetupAction releaseSetupAction = getReleaseSetupAction(application);
-    if (releaseSetupAction != null) {
-      return releaseSetupAction;
-    } else {
-      return getDeploymentSetupAction(application);
-    }
+    return getDeploymentSetupAction(application);
+
+    //    SetupAction releaseSetupAction = getReleaseSetupAction(application);
+    //    if (releaseSetupAction != null) {
+    //      return releaseSetupAction;
+    //    } else {
+    //      return getDeploymentSetupAction(application);
+    //    }
   }
 
   private SetupAction getDeploymentSetupAction(Application application) {
@@ -94,62 +93,51 @@ public class SetupServiceImpl implements SetupService {
     }
     return null;
   }
-
-  /**
-   * @param application
-   * @return
-   */
-  private SetupAction getReleaseSetupAction(Application application) {
-    PageRequest<Release> req =
-        PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
-    PageResponse<Release> res = releaseService.list(req);
-    if (res == null || res.isEmpty()) {
-      return SetupAction.Builder.aSetupAction()
-          .withCode("NO_RELEASE_FOUND")
-          .withDisplayText("Setup complete: now you can create release and deployment.")
-          .withUrl(String.format("/#/app/%s/releases", application.getUuid()))
-          .build();
-    }
-
-    Release rel = findReleaseWithSource(res.getResponse());
-    if (rel == null) {
-      return SetupAction.Builder.aSetupAction()
-          .withCode("NO_ARTIFACT_SOURCE_FOUND")
-          .withDisplayText("Setup complete: Please add a build source.")
-          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), res.get(0).getUuid()))
-          .build();
-    }
-
-    PageRequest<Artifact> pageReques = PageRequest.Builder.aPageRequest()
-                                           .addFilter("appId", Operator.EQ, application.getUuid())
-                                           .withLimit("1")
-                                           .build();
-    PageResponse<Artifact> artRes = artifactService.list(pageReques);
-    if (artRes == null || artRes.isEmpty()) {
-      return SetupAction.Builder.aSetupAction()
-          .withCode("NO_ARTIFACT_FOUND")
-          .withDisplayText("Setup complete: Please add an artifact for the release.")
-          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid()))
-          .build();
-    }
-    if (artRes.getTotal() == 1 && artRes.get(0).getStatus() == Status.QUEUED) {
-      return SetupAction.Builder.aSetupAction()
-          .withCode("ARTIFACT_NOT_READY")
-          .withDisplayText("Setup complete: Please wait for the artifact to finish downloading.")
-          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid()))
-          .build();
-    }
-    return null;
-  }
-
-  private Release findReleaseWithSource(List<Release> list) {
-    for (Release rel : list) {
-      if (rel != null && rel.getArtifactSources() != null && !rel.getArtifactSources().isEmpty()) {
-        return rel;
-      }
-    }
-    return null;
-  }
+  //
+  //  /**
+  //   * @param application
+  //   * @return
+  //   */
+  //  private SetupAction getReleaseSetupAction(Application application) {
+  //    PageRequest<Release> req = PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ,
+  //    application.getUuid()).build(); PageResponse<Release> res = artifactStreamService.list(req); if (res == null ||
+  //    res.isEmpty()) {
+  //      return SetupAction.Builder.aSetupAction().withCode("NO_RELEASE_FOUND").withDisplayText("Setup complete: now
+  //      you can create release and deployment.")
+  //          .withUrl(String.format("/#/app/%s/releases", application.getUuid())).build();
+  //    }
+  //
+  //    Release rel = findReleaseWithSource(res.getResponse());
+  //    if (rel == null) {
+  //      return SetupAction.Builder.aSetupAction().withCode("NO_ARTIFACT_SOURCE_FOUND").withDisplayText("Setup
+  //      complete: Please add a build source.")
+  //          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(),
+  //          res.get(0).getUuid())).build();
+  //    }
+  //
+  //    PageRequest<Artifact> pageReques = PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ,
+  //    application.getUuid()).withLimit("1").build(); PageResponse<Artifact> artRes = artifactService.list(pageReques);
+  //    if (artRes == null || artRes.isEmpty()) {
+  //      return SetupAction.Builder.aSetupAction().withCode("NO_ARTIFACT_FOUND").withDisplayText("Setup complete:
+  //      Please add an artifact for the release.")
+  //          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid())).build();
+  //    }
+  //    if (artRes.getTotal() == 1 && artRes.get(0).getStatus() == Status.QUEUED) {
+  //      return SetupAction.Builder.aSetupAction().withCode("ARTIFACT_NOT_READY")
+  //          .withDisplayText("Setup complete: Please wait for the artifact to finish downloading.")
+  //          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid())).build();
+  //    }
+  //    return null;
+  //  }
+  //
+  //  private Release findReleaseWithSource(List<Release> list) {
+  //    for (Release rel : list) {
+  //      if (rel != null && rel.getArtifactSources() != null && !rel.getArtifactSources().isEmpty()) {
+  //        return rel;
+  //      }
+  //    }
+  //    return null;
+  //  }
 
   @Override
   public Setup getServiceSetupStatus(Service service) {

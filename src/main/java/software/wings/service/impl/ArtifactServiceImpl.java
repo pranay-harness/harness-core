@@ -1,22 +1,22 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
-import software.wings.beans.Artifact.Status;
-import software.wings.beans.ArtifactFile;
-import software.wings.beans.Release;
 import software.wings.beans.Service;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.Status;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactSource;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
@@ -57,20 +57,19 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.Artifact)
+   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.artifact.Artifact)
    */
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
     Application application = wingsPersistence.get(Application.class, artifact.getAppId());
     Validator.notNullCheck("application", application);
-    Release release = wingsPersistence.get(Release.class, artifact.getRelease().getUuid());
-    Validator.notNullCheck("release", release);
+    ArtifactSource artifactSource = wingsPersistence.get(ArtifactSource.class, artifact.getArtifactSourceId());
+    Validator.notNullCheck("artifactSource", artifactSource);
 
-    Validator.equalCheck(application.getUuid(), release.getAppId());
+    Validator.equalCheck(application.getUuid(), artifactSource.getAppId());
 
-    artifact.setRelease(release);
-    artifact.setServices(newArrayList(release.get(artifact.getArtifactSourceName()).getServices()));
+    artifact.setServices(Lists.newArrayList(artifactSource.getServices()));
     artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 
@@ -81,7 +80,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#update(software.wings.beans.Artifact)
+   * @see software.wings.service.intfc.ArtifactService#update(software.wings.beans.artifact.Artifact)
    */
   @Override
   @ValidationGroups(Update.class)
@@ -97,7 +96,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#updateStatus(java.lang.String, java.lang.String,
-   * software.wings.beans.Artifact.Status)
+   * software.wings.beans.artifact.Artifact.Status)
    */
   @Override
   public void updateStatus(String artifactId, String appId, Artifact.Status status) {
@@ -152,7 +151,8 @@ public class ArtifactServiceImpl implements ArtifactService {
    */
   @Override
   public Artifact get(String appId, String artifactId) {
-    return wingsPersistence.get(Artifact.class, appId, artifactId);
+    Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
+    return artifact;
   }
 
   /* (non-Javadoc)

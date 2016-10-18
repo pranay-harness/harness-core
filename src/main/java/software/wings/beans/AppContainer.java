@@ -6,6 +6,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.artifact.ArtifactSource;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 

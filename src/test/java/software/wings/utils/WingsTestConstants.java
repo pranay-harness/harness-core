@@ -59,6 +59,17 @@ public class WingsTestConstants {
    * The constant RELEASE_ID.
    */
   public static final String RELEASE_ID = "RELEASE_ID";
+
+  /**
+   * The constant ARTIFACT_SOURCE_ID.
+   */
+  public static final String ARTIFACT_SOURCE_ID = "ARTIFACT_SOURCE_ID";
+
+  /**
+   * The constant ARTIFACT_SOURCE_NAME.
+   */
+  public static final String ARTIFACT_SOURCE_NAME = "ARTIFACT_SOURCE_NAME";
+
   /**
    * The constant RELEASE_NAME.
    */
@@ -221,9 +232,18 @@ public class WingsTestConstants {
    */
   public static final String SERVICE_VARIABLE_ID = "SERVICE_VARIABLE_ID";
 
+  /**
+   * The constant HOST_CONN_ATTR_ID.
+   */
   public static final String HOST_CONN_ATTR_ID = "HOST_CONN_ATTR_ID";
 
+  /**
+   * The constant BASTION_CONN_ATTR_ID.
+   */
   public static final String BASTION_CONN_ATTR_ID = "BASTION_CONN_ATTR_ID";
 
+  /**
+   * The constant HOST_CONN_ATTR_KEY_ID.
+   */
   public static final String HOST_CONN_ATTR_KEY_ID = "HOST_CONN_ATTR_KEY_ID";
 }

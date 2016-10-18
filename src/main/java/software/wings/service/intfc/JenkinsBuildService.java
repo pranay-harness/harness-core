@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.JenkinsConfig;
+import software.wings.beans.artifact.JenkinsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;

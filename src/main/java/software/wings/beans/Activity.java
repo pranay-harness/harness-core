@@ -34,8 +34,8 @@ public class Activity extends Base {
   @NotEmpty private String stateExecutionInstanceId;
   @NotEmpty private String stateExecutionInstanceName;
 
-  private String releaseId;
-  private String releaseName;
+  private String artifactSourceId;
+  private String artifactSourceName;
   private boolean isPipeline;
   private String artifactId;
   private String artifactName;
@@ -208,17 +208,17 @@ public class Activity extends Base {
    *
    * @return the release id
    */
-  public String getReleaseId() {
-    return releaseId;
+  public String getArtifactSourceId() {
+    return artifactSourceId;
   }
 
   /**
    * Sets release id.
    *
-   * @param releaseId the release id
+   * @param artifactSourceId the release id
    */
-  public void setReleaseId(String releaseId) {
-    this.releaseId = releaseId;
+  public void setArtifactSourceId(String artifactSourceId) {
+    this.artifactSourceId = artifactSourceId;
   }
 
   /**
@@ -226,17 +226,17 @@ public class Activity extends Base {
    *
    * @return the release name
    */
-  public String getReleaseName() {
-    return releaseName;
+  public String getArtifactSourceName() {
+    return artifactSourceName;
   }
 
   /**
    * Sets release name.
    *
-   * @param releaseName the release name
+   * @param artifactSourceName the release name
    */
-  public void setReleaseName(String releaseName) {
-    this.releaseName = releaseName;
+  public void setArtifactSourceName(String artifactSourceName) {
+    this.artifactSourceName = artifactSourceName;
   }
 
   /**
@@ -479,7 +479,8 @@ public class Activity extends Base {
         + Objects.hash(type, applicationName, environmentId, environmentName, environmentType, commandName, commandType,
               serviceId, serviceName, serviceTemplateId, serviceTemplateName, hostName, serviceInstanceId,
               workflowExecutionId, workflowExecutionName, workflowType, stateExecutionInstanceId,
-              stateExecutionInstanceName, releaseId, releaseName, isPipeline, artifactId, artifactName, status);
+              stateExecutionInstanceName, artifactSourceId, artifactSourceName, isPipeline, artifactId, artifactName,
+              status);
   }
 
   @Override
@@ -509,7 +510,8 @@ public class Activity extends Base {
         && Objects.equals(this.workflowType, other.workflowType)
         && Objects.equals(this.stateExecutionInstanceId, other.stateExecutionInstanceId)
         && Objects.equals(this.stateExecutionInstanceName, other.stateExecutionInstanceName)
-        && Objects.equals(this.releaseId, other.releaseId) && Objects.equals(this.releaseName, other.releaseName)
+        && Objects.equals(this.artifactSourceId, other.artifactSourceId)
+        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
         && Objects.equals(this.isPipeline, other.isPipeline) && Objects.equals(this.artifactId, other.artifactId)
         && Objects.equals(this.artifactName, other.artifactName) && Objects.equals(this.status, other.status);
   }
@@ -535,8 +537,8 @@ public class Activity extends Base {
         .add("workflowType", workflowType)
         .add("stateExecutionInstanceId", stateExecutionInstanceId)
         .add("stateExecutionInstanceName", stateExecutionInstanceName)
-        .add("releaseId", releaseId)
-        .add("releaseName", releaseName)
+        .add("artifactSourceId", artifactSourceId)
+        .add("artifactSourceName", artifactSourceName)
         .add("isPipeline", isPipeline)
         .add("artifactId", artifactId)
         .add("artifactName", artifactName)
@@ -579,8 +581,8 @@ public class Activity extends Base {
     private WorkflowType workflowType;
     private String stateExecutionInstanceId;
     private String stateExecutionInstanceName;
-    private String releaseId;
-    private String releaseName;
+    private String artifactSourceId;
+    private String artifactSourceName;
     private boolean isPipeline;
     private String artifactId;
     private String artifactName;
@@ -802,24 +804,24 @@ public class Activity extends Base {
     }
 
     /**
-     * With release id builder.
+     * With artifact source id builder.
      *
-     * @param releaseId the release id
+     * @param artifactSourceId the artifact source id
      * @return the builder
      */
-    public Builder withReleaseId(String releaseId) {
-      this.releaseId = releaseId;
+    public Builder withArtifactSourceId(String artifactSourceId) {
+      this.artifactSourceId = artifactSourceId;
       return this;
     }
 
     /**
-     * With release name builder.
+     * With artifact source name builder.
      *
-     * @param releaseName the release name
+     * @param artifactSourceName the artifact source name
      * @return the builder
      */
-    public Builder withReleaseName(String releaseName) {
-      this.releaseName = releaseName;
+    public Builder withArtifactSourceName(String artifactSourceName) {
+      this.artifactSourceName = artifactSourceName;
       return this;
     }
 
@@ -958,8 +960,8 @@ public class Activity extends Base {
           .withWorkflowType(workflowType)
           .withStateExecutionInstanceId(stateExecutionInstanceId)
           .withStateExecutionInstanceName(stateExecutionInstanceName)
-          .withReleaseId(releaseId)
-          .withReleaseName(releaseName)
+          .withArtifactSourceId(artifactSourceId)
+          .withArtifactSourceName(artifactSourceName)
           .withIsPipeline(isPipeline)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
@@ -997,8 +999,8 @@ public class Activity extends Base {
       activity.setWorkflowType(workflowType);
       activity.setStateExecutionInstanceId(stateExecutionInstanceId);
       activity.setStateExecutionInstanceName(stateExecutionInstanceName);
-      activity.setReleaseId(releaseId);
-      activity.setReleaseName(releaseName);
+      activity.setArtifactSourceId(artifactSourceId);
+      activity.setArtifactSourceName(artifactSourceName);
       activity.setArtifactId(artifactId);
       activity.setArtifactName(artifactName);
       activity.setStatus(status);

@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -6,6 +6,7 @@ import com.google.common.base.Objects;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.beans.Service;
 
 import java.util.List;
 
