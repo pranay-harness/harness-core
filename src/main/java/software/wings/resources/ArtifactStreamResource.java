@@ -6,7 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppService;
@@ -79,8 +79,8 @@ public class ArtifactStreamResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<ArtifactSource>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<ArtifactSource> pageRequest) {
+  public RestResponse<PageResponse<ArtifactStream>> list(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(artifactStreamService.list(pageRequest));
   }
@@ -96,7 +96,7 @@ public class ArtifactStreamResource {
   @Timed
   @ExceptionMetered
   @Path("{id}")
-  public RestResponse<ArtifactSource> get(@QueryParam("appId") String appId, @PathParam("id") String id) {
+  public RestResponse<ArtifactStream> get(@QueryParam("appId") String appId, @PathParam("id") String id) {
     return new RestResponse<>(artifactStreamService.get(id, appId));
   }
 
@@ -104,19 +104,19 @@ public class ArtifactStreamResource {
    * Endpoint to create a new release.
    *
    * @param appId          QueryParam app_id.
-   * @param artifactSource the artifact source
+   * @param artifactStream the artifact source
    * @return newly created release.
    */
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<ArtifactSource> save(@QueryParam("appId") String appId, ArtifactSource artifactSource) {
+  public RestResponse<ArtifactStream> save(@QueryParam("appId") String appId, ArtifactStream artifactStream) {
     try {
       if (!appService.exist(appId)) {
         throw new NotFoundException("application with id " + appId + " not found.");
       }
-      artifactSource.setAppId(appId);
-      return new RestResponse<>(artifactStreamService.create(artifactSource));
+      artifactStream.setAppId(appId);
+      return new RestResponse<>(artifactStreamService.create(artifactStream));
     } catch (Exception exception) {
       exception.printStackTrace();
       throw exception;
@@ -128,18 +128,18 @@ public class ArtifactStreamResource {
    *
    * @param appId          QueryParam app_id.
    * @param id             the id
-   * @param artifactSource the artifact source
+   * @param artifactStream the artifact source
    * @return release to be updated.
    */
   @PUT
   @Timed
   @ExceptionMetered
   @Path("{id}")
-  public RestResponse<ArtifactSource> update(
-      @QueryParam("appId") String appId, @PathParam("id") String id, ArtifactSource artifactSource) {
-    artifactSource.setUuid(id);
-    artifactSource.setAppId(appId);
-    return new RestResponse<>(artifactStreamService.update(artifactSource));
+  public RestResponse<ArtifactStream> update(
+      @QueryParam("appId") String appId, @PathParam("id") String id, ArtifactStream artifactStream) {
+    artifactStream.setUuid(id);
+    artifactStream.setAppId(appId);
+    return new RestResponse<>(artifactStreamService.update(artifactStream));
   }
 
   /**

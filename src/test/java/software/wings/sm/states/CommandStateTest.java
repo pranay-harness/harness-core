@@ -22,7 +22,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;

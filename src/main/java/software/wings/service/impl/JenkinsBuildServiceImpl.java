@@ -8,10 +8,10 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.artifact.ArtifactSource;
-import software.wings.beans.artifact.ArtifactSource.SourceType;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.artifact.JenkinsArtifactSource;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.JenkinsConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -75,11 +75,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     notNullCheck(APP_ID, appId);
     notNullCheck(ARTIFACT_SOURCE_NAME, artifactSourceName);
 
-    ArtifactSource artifactSource = artifactStreamService.get(artifactSourceId, appId);
-    notNullCheck("artifactSource", artifactSource);
-    equalCheck(artifactSource.getSourceType(), SourceType.JENKINS);
+    ArtifactStream artifactStream = artifactStreamService.get(artifactSourceId, appId);
+    notNullCheck("artifactStream", artifactStream);
+    equalCheck(artifactStream.getSourceType(), SourceType.JENKINS);
 
-    JenkinsArtifactSource jenkinsArtifactSource = ((JenkinsArtifactSource) artifactSource);
+    JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
 
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());

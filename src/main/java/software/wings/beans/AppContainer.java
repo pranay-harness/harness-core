@@ -6,7 +6,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 
@@ -23,7 +23,7 @@ import java.util.Objects;
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;
   @FormDataParam("description") private String description;
-  @FormDataParam("source") private ArtifactSource source;
+  @FormDataParam("source") private ArtifactStream source;
   private boolean standardUpload = false;
   @FormDataParam("family") private ContainerFamily family;
   private String stackRootDirectory;
@@ -70,7 +70,7 @@ public class AppContainer extends BaseFile {
    *
    * @return the source
    */
-  public ArtifactSource getSource() {
+  public ArtifactStream getSource() {
     return source;
   }
 
@@ -79,7 +79,7 @@ public class AppContainer extends BaseFile {
    *
    * @param source the source
    */
-  public void setSource(ArtifactSource source) {
+  public void setSource(ArtifactStream source) {
     this.source = source;
   }
 
@@ -193,7 +193,7 @@ public class AppContainer extends BaseFile {
     private String checksum;
     private boolean standard;
     private String description;
-    private ArtifactSource source;
+    private ArtifactStream source;
     private boolean standardUpload = false;
     private ContainerFamily family;
     private String stackRootDirectory;
@@ -321,7 +321,7 @@ public class AppContainer extends BaseFile {
      * @param source the source
      * @return the builder
      */
-    public Builder withSource(ArtifactSource source) {
+    public Builder withSource(ArtifactStream source) {
       this.source = source;
       return this;
     }

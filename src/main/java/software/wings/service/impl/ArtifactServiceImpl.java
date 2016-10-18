@@ -16,7 +16,7 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
@@ -64,12 +64,12 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact create(@Valid Artifact artifact) {
     Application application = wingsPersistence.get(Application.class, artifact.getAppId());
     Validator.notNullCheck("application", application);
-    ArtifactSource artifactSource = wingsPersistence.get(ArtifactSource.class, artifact.getArtifactSourceId());
-    Validator.notNullCheck("artifactSource", artifactSource);
+    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, artifact.getArtifactSourceId());
+    Validator.notNullCheck("artifactStream", artifactStream);
 
-    Validator.equalCheck(application.getUuid(), artifactSource.getAppId());
+    Validator.equalCheck(application.getUuid(), artifactStream.getAppId());
 
-    artifact.setServices(Lists.newArrayList(artifactSource.getServices()));
+    artifact.setServices(Lists.newArrayList(artifactStream.getServices()));
     artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 

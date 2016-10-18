@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -19,7 +19,7 @@ public interface ArtifactStreamService {
    * @param req the req
    * @return the page response
    */
-  PageResponse<ArtifactSource> list(PageRequest<ArtifactSource> req);
+  PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req);
 
   /**
    * Gets the.
@@ -28,23 +28,23 @@ public interface ArtifactStreamService {
    * @param appId the app id
    * @return the release
    */
-  ArtifactSource get(String id, String appId);
+  ArtifactStream get(String id, String appId);
 
   /**
    * Creates the.
    *
-   * @param artifactSource the artifact source
+   * @param artifactStream the artifact source
    * @return the release
    */
-  ArtifactSource create(@Valid ArtifactSource artifactSource);
+  ArtifactStream create(@Valid ArtifactStream artifactStream);
 
   /**
    * Update.
    *
-   * @param artifactSource the artifact source
+   * @param artifactStream the artifact source
    * @return the release
    */
-  ArtifactSource update(@Valid ArtifactSource artifactSource);
+  ArtifactStream update(@Valid ArtifactStream artifactStream);
 
   /**
    * Delete.

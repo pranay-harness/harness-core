@@ -9,7 +9,7 @@ import com.google.inject.multibindings.Multibinder;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
-import software.wings.beans.artifact.ArtifactSource.SourceType;
+import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.core.ssh.executors.SshExecutorFactory;

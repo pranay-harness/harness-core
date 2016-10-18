@@ -11,7 +11,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -53,10 +53,10 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 
-      ArtifactSource artifactSource = artifactStreamService.get(artifact.getArtifactSourceId(), artifact.getAppId());
+      ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactSourceId(), artifact.getAppId());
       ArtifactCollectorService artifactCollectorService =
-          artifactCollectorServiceMap.get(artifactSource.getSourceType().name());
-      List<ArtifactFile> artifactFiles = artifactCollectorService.collect(artifactSource, artifact.getMetadata());
+          artifactCollectorServiceMap.get(artifactStream.getSourceType().name());
+      List<ArtifactFile> artifactFiles = artifactCollectorService.collect(artifactStream, artifact.getMetadata());
 
       if (isNotEmpty(artifactFiles)) {
         artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), artifactFiles);

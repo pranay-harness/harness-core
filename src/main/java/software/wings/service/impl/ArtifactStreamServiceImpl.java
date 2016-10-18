@@ -8,8 +8,8 @@ import com.google.inject.Singleton;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactSource;
-import software.wings.beans.artifact.JenkinsArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -34,29 +34,29 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService {
   @Inject private SettingsService settingsService;
 
   @Override
-  public PageResponse<ArtifactSource> list(PageRequest<ArtifactSource> req) {
-    return wingsPersistence.query(ArtifactSource.class, req);
+  public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
+    return wingsPersistence.query(ArtifactStream.class, req);
   }
 
   @Override
-  public ArtifactSource get(String id, String appId) {
-    return wingsPersistence.get(ArtifactSource.class, appId, id);
+  public ArtifactStream get(String id, String appId) {
+    return wingsPersistence.get(ArtifactStream.class, appId, id);
   }
 
   @Override
   @ValidationGroups(Create.class)
-  public ArtifactSource create(ArtifactSource artifactSource) {
-    String id = wingsPersistence.save(artifactSource);
-    return get(id, artifactSource.getAppId());
+  public ArtifactStream create(ArtifactStream artifactStream) {
+    String id = wingsPersistence.save(artifactStream);
+    return get(id, artifactStream.getAppId());
   }
 
   @Override
   @ValidationGroups(Update.class)
-  public ArtifactSource update(ArtifactSource artifactSource) {
-    ArtifactSource savedArtifactSource =
-        wingsPersistence.get(ArtifactSource.class, artifactSource.getAppId(), artifactSource.getUuid());
-    if (savedArtifactSource == null) {
-      throw new NotFoundException("Artifact stream with id " + artifactSource.getUuid() + " not found");
+  public ArtifactStream update(ArtifactStream artifactStream) {
+    ArtifactStream savedArtifactStream =
+        wingsPersistence.get(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
+    if (savedArtifactStream == null) {
+      throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
     throw new WingsException(INVALID_REQUEST, "message", "feature not implemented");
   }
@@ -64,27 +64,27 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService {
   @Override
   public boolean delete(String id, String appId) {
     return wingsPersistence.delete(
-        wingsPersistence.createQuery(ArtifactSource.class).field(ID_KEY).equal(id).field("appId").equal(appId));
+        wingsPersistence.createQuery(ArtifactStream.class).field(ID_KEY).equal(id).field("appId").equal(appId));
   }
 
   @Override
   public void deleteByApplication(String appId) {
-    wingsPersistence.createQuery(ArtifactSource.class)
+    wingsPersistence.createQuery(ArtifactStream.class)
         .field("appId")
         .equal(appId)
         .asList()
         .forEach(artifactSource -> delete(artifactSource.getUuid(), appId));
   }
 
-  private void populateJenkinsSettingName(List<ArtifactSource> artifactSources) {
-    if (!isEmpty(artifactSources)) {
-      for (ArtifactSource artifactSource : artifactSources) {
-        if (artifactSource instanceof JenkinsArtifactSource) {
+  private void populateJenkinsSettingName(List<ArtifactStream> artifactStreams) {
+    if (!isEmpty(artifactStreams)) {
+      for (ArtifactStream artifactStream : artifactStreams) {
+        if (artifactStream instanceof JenkinsArtifactStream) {
           try {
             SettingAttribute attribute =
-                settingsService.get(((JenkinsArtifactSource) artifactSource).getJenkinsSettingId());
+                settingsService.get(((JenkinsArtifactStream) artifactStream).getJenkinsSettingId());
             if (attribute != null) {
-              ((JenkinsArtifactSource) artifactSource).setName(attribute.getName());
+              ((JenkinsArtifactStream) artifactStream).setSourceName(attribute.getName());
             }
           } catch (Exception e) {
             // Ignore

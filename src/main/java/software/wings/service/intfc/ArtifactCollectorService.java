@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 
 import java.util.List;
 import java.util.Map;
@@ -13,9 +13,9 @@ public interface ArtifactCollectorService {
   /**
    * Collect.
    *
-   * @param artifactSource the artifact source
+   * @param artifactStream the artifact source
    * @param arguments      the arguments
    * @return the list
    */
-  List<ArtifactFile> collect(ArtifactSource artifactSource, Map<String, String> arguments);
+  List<ArtifactFile> collect(ArtifactStream artifactStream, Map<String, String> arguments);
 }

@@ -15,13 +15,13 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 /**
- * ArtifactSource bean class.
+ * ArtifactStream bean class.
  *
  * @author Rishi
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType")
 @Entity(value = "artifactStream")
-public abstract class ArtifactSource extends Base {
+public abstract class ArtifactStream extends Base {
   @NotEmpty private String sourceName;
 
   private SourceType sourceType;
@@ -41,7 +41,7 @@ public abstract class ArtifactSource extends Base {
    *
    * @param sourceType the source type
    */
-  public ArtifactSource(SourceType sourceType) {
+  public ArtifactStream(SourceType sourceType) {
     this.sourceType = sourceType;
   }
 
@@ -126,7 +126,7 @@ public abstract class ArtifactSource extends Base {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    ArtifactSource that = (ArtifactSource) obj;
+    ArtifactStream that = (ArtifactStream) obj;
     return com.google.common.base.Objects.equal(sourceName, that.sourceName) && sourceType == that.sourceType
         && artifactType == that.artifactType;
   }

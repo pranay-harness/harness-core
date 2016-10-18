@@ -1,7 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.artifact.ArtifactSource.SourceType.HTTP;
+import static software.wings.beans.artifact.ArtifactStream.SourceType.HTTP;
 import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
@@ -15,7 +15,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
-import software.wings.beans.artifact.ArtifactSource.SourceType;
+import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.beans.FileUploadSource;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;

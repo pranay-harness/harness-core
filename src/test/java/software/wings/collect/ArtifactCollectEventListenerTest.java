@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.artifact.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -23,7 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ApprovalNotification;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -47,7 +47,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
    * The constant ARTIFACT_SOURCE_NAME.
    */
   public static final String ARTIFACT_SOURCE_NAME = "job1";
-  private final ArtifactSource ARTIFACT_SOURCE = aJenkinsArtifactSource().withSourceName(ARTIFACT_SOURCE_NAME).build();
+  private final ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactSource().withSourceName(ARTIFACT_SOURCE_NAME).build();
 
   @InjectMocks @Inject private ArtifactCollectEventListener artifactCollectEventListener;
 

@@ -8,7 +8,7 @@
 // import static org.assertj.core.api.Assertions.assertThat;
 // import static software.wings.beans.Application.Builder.anApplication;
 // import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
-// import static software.wings.beans.artifact.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
+// import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
 // import static software.wings.beans.Release.Builder.aRelease;
 // import static software.wings.beans.Service.Builder.aService;
 // import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -19,7 +19,7 @@
 // import org.junit.Before;
 // import org.junit.Test;
 // import software.wings.WingsBaseTest;
-// import software.wings.beans.artifact.JenkinsArtifactSource;
+// import software.wings.beans.artifact.JenkinsArtifactStream;
 // import software.wings.beans.Release;
 // import software.wings.beans.Release.Builder;
 // import software.wings.dl.PageRequest;
@@ -43,7 +43,7 @@
 //  aRelease().withAppId(APP_ID).withReleaseName("REL1").withDescription("RELEASE 1")
 //      .withServices(newHashSet(aService().withUuid(SERVICE_ID).withAppId(APP_ID).build()));
 //
-//  private static final JenkinsArtifactSource artifactSource =
+//  private static final JenkinsArtifactStream artifactSource =
 //      aJenkinsArtifactSource().withArtifactType(ArtifactType.WAR).withSourceName("job1").withJobname("job1").withJenkinsSettingId("JENKINS_SETTING_ID")
 //          .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry().withArtifactPathRegex("dist/svr-*.war")
 //              .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId(APP_ID).build())).build())).build();
@@ -134,7 +134,7 @@
 //
 //    artifactStreamService.addArtifactSource(release.getUuid(), APP_ID, artifactSource);
 //
-//    JenkinsArtifactSource updatedArtifactSource =
+//    JenkinsArtifactStream updatedArtifactSource =
 //        aJenkinsArtifactSource().withArtifactType(ArtifactType.WAR).withSourceName("job1").withJobname("job1").withJenkinsSettingId("JENKINS_SETTING_ID2")
 //            .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry().withArtifactPathRegex("dist/svr-*.war")
 //                .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId(APP_ID).build())).build())).build();

@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Reference;
-import software.wings.beans.artifact.ArtifactSource;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.utils.ArtifactType;
 
 import java.util.Set;
@@ -11,7 +11,7 @@ import java.util.Set;
  * Created by anubhaw on 4/13/16.
  */
 @JsonTypeName("HTTP")
-public class FileUrlSource extends ArtifactSource {
+public class FileUrlSource extends ArtifactStream {
   private String url;
 
   @Reference(idOnly = true, ignoreMissing = true, lazy = true) private Set<Service> services;

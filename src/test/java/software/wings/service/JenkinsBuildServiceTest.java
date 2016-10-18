@@ -6,7 +6,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.artifact.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -25,7 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.artifact.JenkinsArtifactSource;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.JenkinsConfig;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
@@ -76,7 +76,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupData() {
-    JenkinsArtifactSource jenkinsArtifactSource = aJenkinsArtifactSource()
+    JenkinsArtifactStream jenkinsArtifactSource = aJenkinsArtifactSource()
                                                       .withUuid(ARTIFACT_SOURCE_ID)
                                                       .withJenkinsSettingId("")
                                                       .withSourceName(artifactSourceName)
@@ -97,7 +97,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
         .isThrownBy(() -> jenkinsBuildService.getBuilds(new MultivaluedStringMap(), new JenkinsConfig()));
   }
 
-  // TODO:: ArtifactSource: fix tests
+  // TODO:: ArtifactStream: fix tests
 
   //  /**
   //   * Should fail validation when artifact source name is null.

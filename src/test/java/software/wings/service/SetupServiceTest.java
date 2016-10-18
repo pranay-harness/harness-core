@@ -55,7 +55,7 @@ public class SetupServiceTest extends WingsBaseTest {
     when(portalConfig.getUrl()).thenReturn("http://localhost:9090/wings/");
   }
 
-  // TODO:: ArtifactSource: fix tests
+  // TODO:: ArtifactStream: fix tests
 
   //  /**
   //   * Should get application setup status.
@@ -81,7 +81,7 @@ public class SetupServiceTest extends WingsBaseTest {
   //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
   //    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_ARTIFACT_SOURCE_FOUND");
   //
-  //    rel.setArtifactSources(asList(new JenkinsArtifactSource()));
+  //    rel.setArtifactSources(asList(new JenkinsArtifactStream()));
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
   //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();

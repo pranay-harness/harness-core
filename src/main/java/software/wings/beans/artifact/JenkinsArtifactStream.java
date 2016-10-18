@@ -17,13 +17,11 @@ import java.util.Set;
 import javax.validation.Valid;
 
 /**
- * The Class JenkinsArtifactSource.
+ * The Class JenkinsArtifactStream.
  */
 @JsonTypeName("JENKINS")
-public class JenkinsArtifactSource extends ArtifactSource {
+public class JenkinsArtifactStream extends ArtifactStream {
   @NotEmpty private String jenkinsSettingId;
-
-  private String name;
 
   @NotEmpty private String jobname;
 
@@ -32,8 +30,9 @@ public class JenkinsArtifactSource extends ArtifactSource {
   /**
    * Instantiates a new jenkins artifact source.
    */
-  public JenkinsArtifactSource() {
+  public JenkinsArtifactStream() {
     super(SourceType.JENKINS);
+    super.setSourceName(jobname);
   }
 
   @Override
@@ -97,26 +96,8 @@ public class JenkinsArtifactSource extends ArtifactSource {
     this.artifactPathServices = artifactPathServices;
   }
 
-  /**
-   * Gets name.
-   *
-   * @return the name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Sets name.
-   *
-   * @param name the name
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
-
   /* (non-Javadoc)
-   * @see software.wings.beans.artifact.ArtifactSource#equals(java.lang.Object)
+   * @see software.wings.beans.artifact.ArtifactStream#equals(java.lang.Object)
    */
   @Override
   public boolean equals(Object o) {
@@ -126,13 +107,13 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return false;
     if (!super.equals(o))
       return false;
-    JenkinsArtifactSource that = (JenkinsArtifactSource) o;
+    JenkinsArtifactStream that = (JenkinsArtifactStream) o;
     return Objects.equal(jenkinsSettingId, that.jenkinsSettingId) && Objects.equal(jobname, that.jobname)
         && Objects.equal(artifactPathServices, that.artifactPathServices);
   }
 
   /* (non-Javadoc)
-   * @see software.wings.beans.artifact.ArtifactSource#hashCode()
+   * @see software.wings.beans.artifact.ArtifactStream#hashCode()
    */
   @Override
   public int hashCode() {
@@ -140,7 +121,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.beans.artifact.ArtifactSource#toString()
+   * @see software.wings.beans.artifact.ArtifactStream#toString()
    */
   @Override
   public String toString() {
@@ -156,7 +137,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
    */
   public static final class Builder {
     private String jenkinsSettingId;
-    private String name;
     private String jobname;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private String sourceName;
@@ -191,17 +171,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
      */
     public Builder withJenkinsSettingId(String jenkinsSettingId) {
       this.jenkinsSettingId = jenkinsSettingId;
-      return this;
-    }
-
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
-    public Builder withName(String name) {
-      this.name = name;
       return this;
     }
 
@@ -367,7 +336,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
     public Builder but() {
       return aJenkinsArtifactSource()
           .withJenkinsSettingId(jenkinsSettingId)
-          .withName(name)
           .withJobname(jobname)
           .withArtifactPathServices(artifactPathServices)
           .withSourceName(sourceName)
@@ -389,10 +357,9 @@ public class JenkinsArtifactSource extends ArtifactSource {
      *
      * @return the jenkins artifact source
      */
-    public JenkinsArtifactSource build() {
-      JenkinsArtifactSource jenkinsArtifactSource = new JenkinsArtifactSource();
+    public JenkinsArtifactStream build() {
+      JenkinsArtifactStream jenkinsArtifactSource = new JenkinsArtifactStream();
       jenkinsArtifactSource.setJenkinsSettingId(jenkinsSettingId);
-      jenkinsArtifactSource.setName(name);
       jenkinsArtifactSource.setJobname(jobname);
       jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactSource.setSourceName(sourceName);
