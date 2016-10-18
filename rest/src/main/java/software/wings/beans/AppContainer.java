@@ -1,6 +1,9 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -28,6 +31,7 @@ public class AppContainer extends BaseFile {
   @FormDataParam("family") private ContainerFamily family;
   private String stackRootDirectory;
   private FileType fileType;
+  @FormDataParam("accountId") @NotEmpty private String accountId;
 
   /**
    * Is standard boolean.
@@ -155,10 +159,32 @@ public class AppContainer extends BaseFile {
     this.fileType = fileType;
   }
 
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(standard, description, source, standardUpload, family, stackRootDirectory, fileType);
+        + Objects.hash(standard, description, source, standardUpload, family, stackRootDirectory, fileType, accountId);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("standard", standard)
+        .add("description", description)
+        .add("source", source)
+        .add("standardUpload", standardUpload)
+        .add("family", family)
+        .add("stackRootDirectory", stackRootDirectory)
+        .add("fileType", fileType)
+        .add("accountId", accountId)
+        .toString();
   }
 
   @Override
@@ -177,7 +203,7 @@ public class AppContainer extends BaseFile {
         && Objects.equals(this.source, other.source) && Objects.equals(this.standardUpload, other.standardUpload)
         && Objects.equals(this.family, other.family)
         && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
-        && Objects.equals(this.fileType, other.fileType);
+        && Objects.equals(this.fileType, other.fileType) && Objects.equals(this.accountId, other.accountId);
   }
 
   /**

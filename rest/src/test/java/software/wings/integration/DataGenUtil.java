@@ -598,13 +598,13 @@ private List<AppContainer> addAppContainers(String appId) {
 
 private List<AppContainer> getAppContainers(String appId) {
   RestResponse<PageResponse<AppContainer>> response =
-      getRequestWithAuthHeader(client.target(API_BASE + "/app-containers/?appId=" + appId))
+      getRequestWithAuthHeader(client.target(API_BASE + "/app-containers/?appId=" + appId + "&accountId=" + accountId))
           .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
   return response.getResource().getResponse();
 }
 
 private boolean addOneAppContainer(String appId) {
-  WebTarget target = client.target(API_BASE + "/app-containers/?appId=" + appId);
+  WebTarget target = client.target(API_BASE + "/app-containers/?appId=" + appId + "&accountId=" + accountId);
   String version = format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
   String name = containerNames.get(randomInt() % containerNames.size());
 

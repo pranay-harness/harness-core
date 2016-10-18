@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
 import ro.fortsoft.pf4j.Extension;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
@@ -15,10 +16,10 @@ import java.util.Objects;
 @Extension
 @JsonTypeName("APP_DYNAMICS")
 public class AppDynamicsConfig extends SettingValue {
-  private String username;
-  private String accountname;
-  private String password;
-  private String controllerUrl;
+  @Attributes(title = "User Name") private String username;
+  @Attributes(title = "Account Name") private String accountname;
+  @Attributes(title = "Password") private String password;
+  @Attributes(title = "Controller Url") private String controllerUrl;
 
   /**
    * Instantiates a new App dynamics config.

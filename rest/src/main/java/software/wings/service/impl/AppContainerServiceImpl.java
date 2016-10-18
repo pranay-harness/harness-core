@@ -9,7 +9,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import software.wings.beans.AppContainer;
-import software.wings.beans.Base;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -50,13 +49,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public PageResponse<AppContainer> list(PageRequest<AppContainer> request) {
-    PageRequest<AppContainer> req =
-        aPageRequest()
-            .withLimit(request.getLimit())
-            .withOffset(request.getOffset())
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, Base.GLOBAL_APP_ID).build())
-            .build(); // FIXME
-    return wingsPersistence.query(AppContainer.class, req);
+    return wingsPersistence.query(AppContainer.class, request);
   }
 
   /**
@@ -64,7 +57,6 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public AppContainer get(String appId, String platformId) {
-    appId = GLOBAL_APP_ID; // FIXME
     return wingsPersistence.get(AppContainer.class, appId, platformId);
   }
 

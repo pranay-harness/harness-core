@@ -2,8 +2,8 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.artifact.ArtifactStream.SourceType.HTTP;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.inject.Inject;
@@ -13,6 +13,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.artifact.ArtifactStream.SourceType;
@@ -28,6 +29,7 @@ import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -56,9 +58,8 @@ public class AppContainerResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<AppContainer>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<AppContainer> request) {
-    request.addFilter("appId", appId, EQ);
+  public RestResponse<PageResponse<AppContainer>> list(@QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
+      @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<AppContainer> request) {
     return new RestResponse<>(appContainerService.list(request));
   }
 
@@ -71,8 +72,8 @@ public class AppContainerResource {
    */
   @GET
   @Path("{appContainerId}")
-  public RestResponse<AppContainer> get(
-      @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+  public RestResponse<AppContainer> get(@QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
+      @PathParam("appContainerId") String appContainerId) {
     return new RestResponse<>(appContainerService.get(appId, appContainerId));
   }
 
@@ -89,12 +90,14 @@ public class AppContainerResource {
    */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<AppContainer> uploadPlatform(@QueryParam("appId") String appId,
+  public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(appId);
     appContainer.setFileName(fileDetail.getFileName());
+    appContainer.setAccountId(accountId);
     setSourceForAppContainer(sourceType, urlString, appContainer);
 
     uploadedInputStream =
@@ -118,13 +121,15 @@ public class AppContainerResource {
   @PUT
   @Path("{appContainerId}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<AppContainer> updatePlatform(@QueryParam("appId") String appId,
-      @PathParam("appContainerId") String appContainerId, @FormDataParam("sourceType") SourceType sourceType,
-      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
+  public RestResponse<AppContainer> updatePlatform(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId,
+      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(appId);
     appContainer.setUuid(appContainerId);
     appContainer.setFileName(fileDetail.getFileName());
+    appContainer.setAccountId(accountId);
     setSourceForAppContainer(sourceType, urlString, appContainer);
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());

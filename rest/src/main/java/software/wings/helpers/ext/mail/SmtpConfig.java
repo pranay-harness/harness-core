@@ -4,19 +4,21 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue;
+import software.wings.stencils.DefaultValue;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */
 @JsonTypeName("SMTP")
 public class SmtpConfig extends SettingValue {
-  private String host;
-  private int port;
-  private String fromAddress;
-  private boolean useSSL;
-  private String username;
-  private String password;
+  @Attributes(title = "Host") private String host;
+  @Attributes(title = "Port") private int port;
+  @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
+  @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
+  @Attributes(title = "Username") private String username;
+  @Attributes(title = "Password") private String password;
 
   /**
    * Instantiates a new smtp config.

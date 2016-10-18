@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue;
 
 /**
@@ -8,10 +9,10 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("SPLUNK")
 public class SplunkConfig extends SettingValue {
-  private String host;
-  private int port;
-  private String username;
-  private String password;
+  @Attributes(title = "Host") private String host;
+  @Attributes(title = "Port") private int port;
+  @Attributes(title = "Username") private String username;
+  @Attributes(title = "Password") private String password;
 
   /**
    * Instantiates a new Splunk config.

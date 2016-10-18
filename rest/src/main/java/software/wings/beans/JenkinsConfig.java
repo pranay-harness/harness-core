@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 import software.wings.settings.SettingValue;
@@ -13,9 +14,9 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsConfig extends SettingValue {
-  @URL private String jenkinsUrl;
-  @NotEmpty private String username;
-  @NotEmpty private String password;
+  @Attributes(title = "Jenkins Url") @URL private String jenkinsUrl;
+  @Attributes(title = "Username") @NotEmpty private String username;
+  @Attributes(title = "Password") @NotEmpty private String password;
 
   /**
    * Instantiates a new jenkins config.

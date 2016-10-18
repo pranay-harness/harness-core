@@ -9,4 +9,5 @@ if(db.account.count() == 0) {
   db.notifications.updateMany({}, { "accountId": "kmpySmUISimoRrJL6NL73w"});
   db.roles.updateMany({}, { "accountId": "kmpySmUISimoRrJL6NL73w"});
   db.users.updateMany({}, { "accounts": ["kmpySmUISimoRrJL6NL73w"]});
+  db.appContainers.updateMany({}, { "accountId": "kmpySmUISimoRrJL6NL73w"});
 }
