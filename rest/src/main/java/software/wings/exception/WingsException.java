@@ -13,7 +13,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public class WingsException extends RuntimeException {
+public class WingsException extends WingsApiException {
   private static final long serialVersionUID = -3266129015976960503L;
 
   /**

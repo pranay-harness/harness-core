@@ -11,7 +11,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -27,7 +27,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
@@ -140,19 +140,16 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListConnectionAttributes() {
-    SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
-                                                                 .withAppId("APP_ID")
-                                                                 .withAccountId("ACCOUNT_ID")
-                                                                 .withName("USER_PASSWORD")
-                                                                 .withValue(aHostConnectionAttributes()
-                                                                                .withType(HOST_CONNECTION_ATTRIBUTES)
-                                                                                .withAccessType(USER_PASSWORD)
-                                                                                .withConnectionType(SSH)
-                                                                                .build())
-                                                                 .build());
+    SettingAttribute settingAttribute = settingsService.save(
+        aSettingAttribute()
+            .withAppId("APP_ID")
+            .withAccountId("ACCOUNT_ID")
+            .withName("USER_PASSWORD")
+            .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).withConnectionType(SSH).build())
+            .build());
 
     List<SettingAttribute> connectionAttributes =
-        settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES);
+        settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
     assertThat(connectionAttributes)
         .isNotNull()
         .extracting(SettingAttribute::getValue)
@@ -171,8 +168,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                                  .withValue(new BastionConnectionAttributes())
                                                                  .build());
 
-    List<SettingAttribute> connectionAttributes =
-        settingsService.getSettingAttributesByType("APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES);
+    List<SettingAttribute> connectionAttributes = settingsService.getSettingAttributesByType(
+        "APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name());
     assertThat(connectionAttributes)
         .isNotNull()
         .extracting(SettingAttribute::getValue)

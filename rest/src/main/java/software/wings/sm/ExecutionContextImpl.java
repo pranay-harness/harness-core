@@ -6,6 +6,7 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -13,6 +14,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowType;
 import software.wings.common.VariableProcessor;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
@@ -35,6 +38,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
   @Inject private VariableProcessor variableProcessor;
+  @Inject private SettingsService settingsService;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
@@ -132,7 +136,6 @@ public class ExecutionContextImpl implements ExecutionContext {
         .collect(toList());
   }
 
-  @Override
   public Application getApp() {
     WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
     if (stdParam != null) {
@@ -141,7 +144,6 @@ public class ExecutionContextImpl implements ExecutionContext {
     return null;
   }
 
-  @Override
   public Environment getEnv() {
     WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
     if (stdParam != null) {
@@ -326,5 +328,15 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public Map<String, String> getServiceVariables() {
     return variableProcessor.getVariables(stateExecutionInstance.getContextElements());
+  }
+
+  @Override
+  public SettingValue getSettingValue(String name, String type) {
+    return settingsService.getSettingAttributesByType(getEnv().getAppId(), getEnv().getUuid(), type)
+        .stream()
+        .filter(settingAttribute -> StringUtils.equals(settingAttribute.getName(), name))
+        .findFirst()
+        .map(settingAttribute -> settingAttribute.getValue())
+        .orElse(null);
   }
 }

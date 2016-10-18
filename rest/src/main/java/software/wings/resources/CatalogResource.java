@@ -14,7 +14,7 @@ import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
 
@@ -96,14 +96,14 @@ public class CatalogResource {
         switch (catalogType) {
           case CONNECTION_ATTRIBUTES: {
             catalogs.put(CONNECTION_ATTRIBUTES,
-                settingsService.getSettingAttributesByType(
-                    uriInfo.getQueryParameters().getFirst(APP_ID), SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES));
+                settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst(APP_ID),
+                    SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name()));
             break;
           }
           case BASTION_HOST_ATTRIBUTES: {
             catalogs.put(BASTION_HOST_ATTRIBUTES,
                 settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst(APP_ID),
-                    SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES));
+                    SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name()));
             break;
           }
           case CatalogNames.EXECUTION_TYPE: {

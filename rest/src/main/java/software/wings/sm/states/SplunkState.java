@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
@@ -54,7 +54,7 @@ public class SplunkState extends HttpState {
     logger.info("evaluatedQuery: {}", evaluatedQuery);
 
     SettingAttribute splunkSettingAttribute =
-        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK).get(0);
+        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK.name()).get(0);
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
 
     setUrl("https://" + splunkConfig.getHost() + ":" + splunkConfig.getPort() + "/services/search/jobs");

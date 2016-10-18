@@ -29,7 +29,6 @@ import software.wings.beans.CatalogNames;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ResourceTestRule;
@@ -75,8 +74,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws IOException {
     when(settingsService.get(anyString())).thenReturn(aSettingAttribute().withValue(new JenkinsConfig()).build());
-    when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
-        .thenReturn(newArrayList());
+    when(settingsService.getSettingAttributesByType(anyString(), anyString())).thenReturn(newArrayList());
   }
 
   /**

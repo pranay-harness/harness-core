@@ -65,7 +65,7 @@ public class HostElement implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(HOST, this);
+    map.put(ContextElement.HOST, this);
     return map;
   }
 

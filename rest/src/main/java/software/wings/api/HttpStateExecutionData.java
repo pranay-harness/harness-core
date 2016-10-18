@@ -4,11 +4,11 @@
 
 package software.wings.api;
 
-import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.base.MoreObjects;
 
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -202,7 +202,7 @@ public class HttpStateExecutionData extends StateExecutionData {
         anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
     putNotNull(executionDetails, "httpResponseBody",
         anExecutionDataValue()
-            .withValue(abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT))
+            .withValue(StringUtils.abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT))
             .withDisplayName("Response Body")
             .build());
     putNotNull(executionDetails, "assertionStatement",

@@ -4,7 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import software.wings.beans.SettingValue;
+import software.wings.settings.SettingValue;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
@@ -22,7 +22,7 @@ public class SmtpConfig extends SettingValue {
    * Instantiates a new smtp config.
    */
   public SmtpConfig() {
-    super(SettingVariableTypes.SMTP);
+    super(SettingVariableTypes.SMTP.name());
   }
 
   /**

@@ -1,8 +1,9 @@
 package software.wings.beans;
 
-import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import software.wings.settings.SettingValue;
 
 import java.util.Objects;
 
@@ -20,7 +21,7 @@ public class HostConnectionAttributes extends SettingValue {
    * Instantiates a new host connection attributes.
    */
   public HostConnectionAttributes() {
-    super(HOST_CONNECTION_ATTRIBUTES);
+    super(HOST_CONNECTION_ATTRIBUTES.name());
   }
 
   /**
@@ -29,7 +30,7 @@ public class HostConnectionAttributes extends SettingValue {
    * @param type the type
    */
   public HostConnectionAttributes(SettingVariableTypes type) {
-    super(type);
+    super(type.name());
   }
 
   /**
@@ -172,7 +173,6 @@ public class HostConnectionAttributes extends SettingValue {
     private AccessType accessType;
     private String key;
     private String userName;
-    private SettingVariableTypes type;
 
     private Builder() {}
 
@@ -230,17 +230,6 @@ public class HostConnectionAttributes extends SettingValue {
     }
 
     /**
-     * With type.
-     *
-     * @param type the type
-     * @return the host connection attributes builder
-     */
-    public Builder withType(SettingVariableTypes type) {
-      this.type = type;
-      return this;
-    }
-
-    /**
      * But.
      *
      * @return the host connection attributes builder
@@ -250,8 +239,7 @@ public class HostConnectionAttributes extends SettingValue {
           .withConnectionType(connectionType)
           .withAccessType(accessType)
           .withKey(key)
-          .withUserName(userName)
-          .withType(type);
+          .withUserName(userName);
     }
 
     /**
@@ -265,7 +253,6 @@ public class HostConnectionAttributes extends SettingValue {
       hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setKey(key);
       hostConnectionAttributes.setUserName(userName);
-      hostConnectionAttributes.setType(type);
       return hostConnectionAttributes;
     }
   }

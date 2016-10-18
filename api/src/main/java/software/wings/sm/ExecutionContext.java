@@ -4,10 +4,9 @@
 
 package software.wings.sm;
 
-import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowType;
+import software.wings.settings.SettingValue;
 
 import java.util.List;
 import java.util.Map;
@@ -78,20 +77,6 @@ public interface ExecutionContext {
   <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType);
 
   /**
-   * Gets app.
-   *
-   * @return app app
-   */
-  Application getApp();
-
-  /**
-   * Gets env.
-   *
-   * @return env env
-   */
-  Environment getEnv();
-
-  /**
    * Gets error strategy.
    *
    * @return the error strategy
@@ -139,4 +124,6 @@ public interface ExecutionContext {
    * @return the service variables
    */
   Map<String, String> getServiceVariables();
+
+  SettingValue getSettingValue(String name, String type);
 }

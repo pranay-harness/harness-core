@@ -10,13 +10,11 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -133,39 +131,32 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void createDefaultSettings(String appId, String accountId) {
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName("User/Password")
-                              .withValue(aHostConnectionAttributes()
-                                             .withConnectionType(SSH)
-                                             .withType(HOST_CONNECTION_ATTRIBUTES)
-                                             .withAccessType(USER_PASSWORD)
-                                             .build())
-                              .build());
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName("User/Password :: su - <app-account>")
-                              .withValue(aHostConnectionAttributes()
-                                             .withConnectionType(SSH)
-                                             .withType(HOST_CONNECTION_ATTRIBUTES)
-                                             .withAccessType(USER_PASSWORD_SU_APP_USER)
-                                             .build())
-                              .build());
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(appId)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName("User/Password :: sudo - <app-account>")
-                              .withValue(aHostConnectionAttributes()
-                                             .withConnectionType(SSH)
-                                             .withType(HOST_CONNECTION_ATTRIBUTES)
-                                             .withAccessType(USER_PASSWORD_SUDO_APP_USER)
-                                             .build())
-                              .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(appId)
+            .withAccountId(accountId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("User/Password")
+            .withValue(aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD).build())
+            .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(appId)
+            .withAccountId(accountId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("User/Password :: su - <app-account>")
+            .withValue(
+                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SU_APP_USER).build())
+            .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(appId)
+            .withAccountId(accountId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("User/Password :: sudo - <app-account>")
+            .withValue(
+                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SUDO_APP_USER).build())
+            .build());
     wingsPersistence.save(
         aSettingAttribute()
             .withAppId(appId)
@@ -200,15 +191,15 @@ public class SettingsServiceImpl implements SettingsService {
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#getSettingAttributesByType(java.lang.String,
-   * software.wings.beans.SettingValue.SettingVariableTypes)
+   * software.wings.settings.SettingValue.SettingVariableTypes)
    */
   @Override
-  public List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type) {
+  public List<SettingAttribute> getSettingAttributesByType(String appId, String type) {
     return getSettingAttributesByType(appId, GLOBAL_ENV_ID, type);
   }
 
   @Override
-  public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, SettingVariableTypes type) {
+  public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
         .in(asList(appId, GLOBAL_APP_ID))
@@ -221,10 +212,10 @@ public class SettingsServiceImpl implements SettingsService {
 
   /* (non-Javadoc)
    * @see
-   * software.wings.service.intfc.SettingsService#getGlobalSettingAttributesByType(software.wings.beans.SettingValue.SettingVariableTypes)
+   * software.wings.service.intfc.SettingsService#getGlobalSettingAttributesByType(software.wings.settings.SettingValue.SettingVariableTypes)
    */
   @Override
-  public List<SettingAttribute> getGlobalSettingAttributesByType(SettingVariableTypes type) {
+  public List<SettingAttribute> getGlobalSettingAttributesByType(String type) {
     return getSettingAttributesByType(GLOBAL_APP_ID, type);
   }
 }

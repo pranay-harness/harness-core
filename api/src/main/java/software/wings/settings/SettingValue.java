@@ -1,21 +1,22 @@
-package software.wings.beans;
+package software.wings.settings;
 
 import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import ro.fortsoft.pf4j.ExtensionPoint;
 
 /**
  * Created by anubhaw on 5/16/16.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-public abstract class SettingValue {
-  @JsonTypeId private SettingVariableTypes type;
+public abstract class SettingValue implements ExtensionPoint {
+  @JsonTypeId private String type;
 
   /**
    * Instantiates a new setting value.
    *
    * @param type the type
    */
-  public SettingValue(SettingVariableTypes type) {
+  public SettingValue(String type) {
     this.type = type;
   }
 
@@ -24,7 +25,7 @@ public abstract class SettingValue {
    *
    * @return the type
    */
-  public SettingVariableTypes getType() {
+  public String getType() {
     return type;
   }
 
@@ -33,7 +34,7 @@ public abstract class SettingValue {
    *
    * @param type the type
    */
-  public void setType(SettingVariableTypes type) {
+  public void setType(String type) {
     this.type = type;
   }
 

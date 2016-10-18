@@ -39,6 +39,7 @@ import software.wings.beans.Environment;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -90,7 +91,8 @@ public class HttpState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
     ExecutionResponse response = executeInternal(context);
-    updateActivityStatus(activityId, context.getApp().getUuid(), response.getExecutionStatus());
+    updateActivityStatus(
+        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), response.getExecutionStatus());
     return response;
   }
 
@@ -359,8 +361,8 @@ public class HttpState extends State {
    * @return the string
    */
   protected String createActivity(ExecutionContext executionContext) {
-    Application app = executionContext.getApp();
-    Environment env = executionContext.getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
     Activity.Builder activityBuilder =

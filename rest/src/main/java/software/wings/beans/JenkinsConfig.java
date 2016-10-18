@@ -6,6 +6,7 @@ import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
+import software.wings.settings.SettingValue;
 
 /**
  * Created by peeyushaggarwal on 5/26/16.
@@ -20,7 +21,7 @@ public class JenkinsConfig extends SettingValue {
    * Instantiates a new jenkins config.
    */
   public JenkinsConfig() {
-    super(SettingVariableTypes.JENKINS);
+    super(SettingVariableTypes.JENKINS.name());
   }
 
   /**

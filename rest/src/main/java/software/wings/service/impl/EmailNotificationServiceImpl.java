@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
@@ -84,7 +84,8 @@ public class EmailNotificationServiceImpl implements EmailNotificationService<Em
   }
 
   private SmtpConfig getSmtpConfig() {
-    SettingAttribute settings = settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP).get(0);
+    SettingAttribute settings =
+        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name()).get(0);
     return (SmtpConfig) settings.getValue();
   }
 }

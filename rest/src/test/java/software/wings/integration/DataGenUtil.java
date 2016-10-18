@@ -25,7 +25,6 @@ import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
@@ -41,6 +40,7 @@ import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.ANY;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.collect.ImmutableMap;
@@ -81,7 +81,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
@@ -437,7 +436,6 @@ private void createAppSettings(String appId) {
               .withName("Wings Key")
               .withValue(aHostConnectionAttributes()
                              .withConnectionType(SSH)
-                             .withType(HOST_CONNECTION_ATTRIBUTES)
                              .withAccessType(KEY)
                              .withUserName("ubuntu")
                              .withKey("-----BEGIN RSA PRIVATE KEY-----\n"
@@ -513,7 +511,6 @@ private String createLoadBalancerConfig(String appId, String envId, String lbNam
                                        .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
                                        .withSecretKey("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")
                                        .withLoadBalancerName(lbName)
-                                       .withType(SettingVariableTypes.ELB)
                                        .build())
                         .build(),
           APPLICATION_JSON),

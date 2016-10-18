@@ -1,6 +1,6 @@
 package software.wings.beans.infrastructure;
 
-import software.wings.beans.SettingValue;
+import software.wings.settings.SettingValue;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -11,7 +11,7 @@ public abstract class InfrastructureProviderConfig extends SettingValue {
    *
    * @param type the type
    */
-  public InfrastructureProviderConfig(SettingVariableTypes type) {
+  public InfrastructureProviderConfig(String type) {
     super(type);
   }
 }

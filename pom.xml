@@ -13,6 +13,7 @@
     <modules>
         <module>rest</module>
         <module>tools</module>
+        <module>api</module>
     </modules>
 
     <scm>

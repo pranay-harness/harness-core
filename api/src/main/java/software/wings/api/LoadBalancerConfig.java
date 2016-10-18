@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import software.wings.beans.SettingValue;
+import software.wings.settings.SettingValue;
 
 /**
  * Created by peeyushaggarwal on 9/15/16.
@@ -11,7 +11,7 @@ public abstract class LoadBalancerConfig extends SettingValue {
    *
    * @param type the type
    */
-  public LoadBalancerConfig(SettingVariableTypes type) {
+  public LoadBalancerConfig(String type) {
     super(type);
   }
 }

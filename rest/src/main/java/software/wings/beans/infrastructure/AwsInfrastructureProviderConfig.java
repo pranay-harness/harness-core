@@ -1,6 +1,6 @@
 package software.wings.beans.infrastructure;
 
-import static software.wings.beans.SettingValue.SettingVariableTypes.AWS_CREDENTIALS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS_CREDENTIALS;
 
 import com.google.common.base.MoreObjects;
 
@@ -20,7 +20,7 @@ public class AwsInfrastructureProviderConfig extends InfrastructureProviderConfi
    * Instantiates a new setting value.
    */
   public AwsInfrastructureProviderConfig() {
-    super(AWS_CREDENTIALS);
+    super(AWS_CREDENTIALS.name());
   }
 
   /**

@@ -22,7 +22,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
    * Instantiates a new Elastic load balancer config.
    */
   public ElasticLoadBalancerConfig() {
-    super(SettingVariableTypes.ELB);
+    super(SettingVariableTypes.ELB.name());
   }
 
   /**
@@ -133,7 +133,6 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
     private String loadBalancerName;
     private String accessKey;
     private String secretKey;
-    private SettingVariableTypes type;
 
     private Builder() {}
 
@@ -191,17 +190,6 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
     }
 
     /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
-    public Builder withType(SettingVariableTypes type) {
-      this.type = type;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -211,8 +199,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
           .withRegion(region)
           .withLoadBalancerName(loadBalancerName)
           .withAccessKey(accessKey)
-          .withSecretKey(secretKey)
-          .withType(type);
+          .withSecretKey(secretKey);
     }
 
     /**
@@ -226,7 +213,6 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
       elasticLoadBalancerConfig.setLoadBalancerName(loadBalancerName);
       elasticLoadBalancerConfig.setAccessKey(accessKey);
       elasticLoadBalancerConfig.setSecretKey(secretKey);
-      elasticLoadBalancerConfig.setType(type);
       return elasticLoadBalancerConfig;
     }
   }

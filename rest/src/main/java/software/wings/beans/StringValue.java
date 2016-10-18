@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import software.wings.settings.SettingValue;
 
 import java.util.Objects;
 
@@ -18,7 +19,7 @@ public class StringValue extends SettingValue {
    * Instantiates a new String setting value.
    */
   public StringValue() {
-    super(SettingVariableTypes.STRING);
+    super(SettingVariableTypes.STRING.name());
   }
 
   /**
@@ -64,7 +65,6 @@ public class StringValue extends SettingValue {
      * The Value.
      */
     private String value;
-    private SettingVariableTypes type;
 
     private Builder() {}
 
@@ -89,23 +89,12 @@ public class StringValue extends SettingValue {
     }
 
     /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
-    public Builder withType(SettingVariableTypes type) {
-      this.type = type;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return aStringValue().withValue(value).withType(type);
+      return aStringValue().withValue(value);
     }
 
     /**
@@ -116,7 +105,6 @@ public class StringValue extends SettingValue {
     public StringValue build() {
       StringValue stringValue = new StringValue();
       stringValue.setValue(value);
-      stringValue.setType(type);
       return stringValue;
     }
   }

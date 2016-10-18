@@ -6,7 +6,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastructureMappingRule;
 import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.CONTAINS;
-import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
 import static software.wings.common.NotificationMessageResolver.ADD_INFRA_HOST_NOTIFICATION;

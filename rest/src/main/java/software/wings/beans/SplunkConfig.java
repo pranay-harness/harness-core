@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import software.wings.settings.SettingValue;
 
 /**
  * The type Splunk config.
@@ -16,7 +17,7 @@ public class SplunkConfig extends SettingValue {
    * Instantiates a new Splunk config.
    */
   public SplunkConfig() {
-    super(SettingVariableTypes.SPLUNK);
+    super(SettingVariableTypes.SPLUNK.name());
   }
 
   /**

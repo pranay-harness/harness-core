@@ -3,12 +3,16 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import ro.fortsoft.pf4j.Extension;
+import software.wings.settings.SettingValue;
+import software.wings.sm.StateType;
 
 import java.util.Objects;
 
 /**
  * Created by anubhaw on 8/4/16.
  */
+@Extension
 @JsonTypeName("APP_DYNAMICS")
 public class AppDynamicsConfig extends SettingValue {
   private String username;
@@ -20,7 +24,7 @@ public class AppDynamicsConfig extends SettingValue {
    * Instantiates a new App dynamics config.
    */
   public AppDynamicsConfig() {
-    super(SettingVariableTypes.APP_DYNAMICS);
+    super(StateType.APP_DYNAMICS.name());
   }
 
   /**

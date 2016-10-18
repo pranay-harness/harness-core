@@ -4,8 +4,7 @@
 
 package software.wings.stencils;
 
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import com.google.common.base.CaseFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -63,13 +62,13 @@ public enum StencilCategory {
 
   StencilCategory(String displayName) {
     if (displayName == null) {
-      this.displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
+      this.displayName = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
     }
   }
 
   StencilCategory(String displayName, Integer displayOrder) {
     if (displayName == null) {
-      this.displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
+      this.displayName = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
     }
     this.displayOrder = displayOrder;
   }

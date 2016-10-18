@@ -2,21 +2,15 @@ package software.wings.sm.states;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.codec.binary.Base64;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
@@ -30,7 +24,10 @@ import java.nio.charset.StandardCharsets;
  */
 public class AppDynamicsState extends HttpState {
   private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
-  @Transient @Inject private SettingsService settingsService;
+  /*@Transient
+  @Inject
+  private SettingsService settingsService;*/
+  @Attributes(required = true, title = "Config") private String configName;
   @Attributes(required = true, title = "Application Name") private String applicationName;
   @Attributes(required = true, title = "Metric Path",
       description = "Overall Application Performance|Average Response Time (ms)")
@@ -50,9 +47,8 @@ public class AppDynamicsState extends HttpState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     AppDynamicsConfig appdConfig =
-        (AppDynamicsConfig) settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS)
-            .get(0)
-            .getValue();
+        (AppDynamicsConfig) context.getSettingValue(configName, StateType.APP_DYNAMICS.name());
+
     String controllerUrl = appdConfig.getControllerUrl();
 
     String evaluatedMetricPath = context.renderExpression(metricPath);
@@ -91,36 +87,6 @@ public class AppDynamicsState extends HttpState {
     } catch (UnsupportedEncodingException ex) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
     }
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getBody() {
-    return super.getBody();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getHeader() {
-    return super.getHeader();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getMethod() {
-    return super.getMethod();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getUrl() {
-    return super.getUrl();
-  }
-
-  @Attributes(required = true, title = "Assertion")
-  @Override
-  public String getAssertion() {
-    return super.getAssertion();
   }
 
   /**

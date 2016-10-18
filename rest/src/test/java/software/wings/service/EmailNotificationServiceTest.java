@@ -17,7 +17,7 @@ import org.junit.rules.Verifier;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
@@ -66,7 +66,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
-    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP))
+    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name()))
         .thenReturn(newArrayList(aSettingAttribute().withValue(smtpConfig).build()));
   }
 
@@ -80,7 +80,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(emailTemplateData.getTo(), emailTemplateData.getCc(),
         emailTemplateData.getTemplateName(), emailTemplateData.getTemplateModel());
     verify(mailer).send(smtpConfig, emailTemplateData);
-    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
+    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name());
   }
 
   /**
@@ -93,7 +93,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     emailDataNotificationService.send(
         emailBodyData.getTo(), emailBodyData.getCc(), emailBodyData.getSubject(), emailBodyData.getBody());
     verify(mailer).send(smtpConfig, emailBodyData);
-    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
+    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name());
   }
 
   /**
@@ -105,7 +105,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   public void shouldSendEmailWithEmailData() throws Exception {
     emailDataNotificationService.send(emailBodyData);
     verify(mailer).send(smtpConfig, emailBodyData);
-    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
+    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name());
   }
 
   /**

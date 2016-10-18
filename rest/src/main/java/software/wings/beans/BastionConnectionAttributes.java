@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.common.base.MoreObjects;
 
@@ -83,7 +83,6 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     private String hostName;
     private String key;
     private String userName;
-    private SettingVariableTypes type;
 
     private Builder() {}
 
@@ -152,17 +151,6 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     }
 
     /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
-    public Builder withType(SettingVariableTypes type) {
-      this.type = type;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -173,8 +161,7 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
           .withAccessType(accessType)
           .withHostName(hostName)
           .withKey(key)
-          .withUserName(userName)
-          .withType(type);
+          .withUserName(userName);
     }
 
     /**
@@ -189,7 +176,6 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
       bastionConnectionAttributes.setHostName(hostName);
       bastionConnectionAttributes.setKey(key);
       bastionConnectionAttributes.setUserName(userName);
-      bastionConnectionAttributes.setType(type);
       return bastionConnectionAttributes;
     }
   }

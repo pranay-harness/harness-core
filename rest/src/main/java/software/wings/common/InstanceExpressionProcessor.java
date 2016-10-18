@@ -36,6 +36,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
@@ -233,8 +234,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return the page request
    */
   PageRequest<ServiceInstance> buildPageRequest() {
-    Application app = context.getApp();
-    Environment env = context.getEnv();
+    Application app = ((ExecutionContextImpl) context).getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
     Builder pageRequest = PageRequest.Builder.aPageRequest();
 
     pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());

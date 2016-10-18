@@ -1,7 +1,6 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -111,7 +110,7 @@ public interface SettingsService {
    * @param type  the type
    * @return the setting attributes by type
    */
-  List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type);
+  List<SettingAttribute> getSettingAttributesByType(String appId, String type);
 
   /**
    * Gets setting attributes by type.
@@ -121,7 +120,7 @@ public interface SettingsService {
    * @param type  the type
    * @return the setting attributes by type
    */
-  List<SettingAttribute> getSettingAttributesByType(String appId, String envId, SettingVariableTypes type);
+  List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type);
 
   /**
    * Gets the global setting attributes by type.
@@ -129,5 +128,5 @@ public interface SettingsService {
    * @param type the type
    * @return the global setting attributes by type
    */
-  List<SettingAttribute> getGlobalSettingAttributesByType(SettingVariableTypes type);
+  List<SettingAttribute> getGlobalSettingAttributesByType(String type);
 }
