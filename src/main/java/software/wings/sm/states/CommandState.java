@@ -356,7 +356,7 @@ public class CommandState extends State {
     activityService.updateStatus(activityId, appId,
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
     Activity activity = activityService.get(activityId, appId);
-    String oldReleaseId = serviceInstance.getReleaseId();
+    String oldReleaseId = serviceInstance.getArtifactSourceId();
 
     // TODO:: ArtifactStream
     //    if (artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(executionResultData, activity, oldReleaseId)) {

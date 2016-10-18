@@ -26,6 +26,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactSource;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.Collections;
@@ -58,6 +59,8 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
 
   @Mock private NotificationService notificationService;
 
+  @Mock private ArtifactStreamService artifactStreamService;
+
   /**
    * The Verifier.
    */
@@ -75,6 +78,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(collectorServiceMap.get(anyString())).thenReturn(artifactCollectorService);
+    when(artifactStreamService.get(ARTIFACT_SOURCE_ID, APP_ID)).thenReturn(ARTIFACT_SOURCE);
   }
 
   /**
@@ -86,7 +90,8 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   public void shouldFailWhenArtifactNotAvailable() throws Exception {
     artifactCollectEventListener.onMessage(
         aCollectEvent()
-            .withArtifact(anArtifact().withUuid(ARTIFACT_ID).withArtifactSourceId(ARTIFACT_SOURCE_ID).build())
+            .withArtifact(
+                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactSourceId(ARTIFACT_SOURCE_ID).build())
             .build());
 
     verify(collectorServiceMap).get(anyString());
@@ -106,7 +111,10 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
         .thenReturn(Collections.singletonList(ARTIFACT_FILE));
 
     artifactCollectEventListener.onMessage(
-        aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withUuid(ARTIFACT_ID).build()).build());
+        aCollectEvent()
+            .withArtifact(
+                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactSourceId(ARTIFACT_SOURCE_ID).build())
+            .build());
 
     verify(collectorServiceMap).get(anyString());
     verify(artifactCollectorService).collect(ARTIFACT_SOURCE, Collections.emptyMap());
@@ -128,7 +136,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
         .thenReturn(Collections.singletonList(ARTIFACT_FILE));
 
     artifactCollectEventListener.onMessage(
-        aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withUuid(ARTIFACT_ID).build()).build());
+        aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build()).build());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.FAILED);

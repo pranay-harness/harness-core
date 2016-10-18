@@ -160,7 +160,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
     private String jobname;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private String sourceName;
-    private SourceType sourceType;
     private ArtifactType artifactType;
     private ArtifactDownloadType downloadType;
     private boolean autoApproveForProduction = false;
@@ -236,17 +235,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
      */
     public Builder withSourceName(String sourceName) {
       this.sourceName = sourceName;
-      return this;
-    }
-
-    /**
-     * With source type builder.
-     *
-     * @param sourceType the source type
-     * @return the builder
-     */
-    public Builder withSourceType(SourceType sourceType) {
-      this.sourceType = sourceType;
       return this;
     }
 
@@ -383,7 +371,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
           .withJobname(jobname)
           .withArtifactPathServices(artifactPathServices)
           .withSourceName(sourceName)
-          .withSourceType(sourceType)
           .withArtifactType(artifactType)
           .withDownloadType(downloadType)
           .withAutoApproveForProduction(autoApproveForProduction)
@@ -409,7 +396,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
       jenkinsArtifactSource.setJobname(jobname);
       jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactSource.setSourceName(sourceName);
-      jenkinsArtifactSource.setSourceType(sourceType);
       jenkinsArtifactSource.setArtifactType(artifactType);
       jenkinsArtifactSource.setDownloadType(downloadType);
       jenkinsArtifactSource.setAutoApproveForProduction(autoApproveForProduction);

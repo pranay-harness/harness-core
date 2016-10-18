@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;
-  private String releaseId;
+  private String artifactSourceId;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private transient ArtifactService artifactService;
 
@@ -94,17 +94,17 @@ public class ApprovalNotification extends ActionableNotification {
    *
    * @return the release id
    */
-  public String getReleaseId() {
-    return releaseId;
+  public String getArtifactSourceId() {
+    return artifactSourceId;
   }
 
   /**
    * Sets release id.
    *
-   * @param releaseId the release id
+   * @param artifactSourceId the release id
    */
-  public void setReleaseId(String releaseId) {
-    this.releaseId = releaseId;
+  public void setArtifactSourceId(String artifactSourceId) {
+    this.artifactSourceId = artifactSourceId;
   }
 
   /**
@@ -129,7 +129,7 @@ public class ApprovalNotification extends ActionableNotification {
   public static final class Builder {
     private String entityName;
     private ApprovalStage stage = PENDING;
-    private String releaseId;
+    private String artifactSourceId;
     private String environmentId;
     private String entityId;
     private EntityType entityType;
@@ -176,11 +176,11 @@ public class ApprovalNotification extends ActionableNotification {
     /**
      * With release id builder.
      *
-     * @param releaseId the release id
+     * @param artifactSourceId the artifact source id
      * @return the builder
      */
-    public Builder withReleaseId(String releaseId) {
-      this.releaseId = releaseId;
+    public Builder withArtifactSourceId(String artifactSourceId) {
+      this.artifactSourceId = artifactSourceId;
       return this;
     }
 
@@ -292,7 +292,7 @@ public class ApprovalNotification extends ActionableNotification {
       return anApprovalNotification()
           .withEntityName(entityName)
           .withStage(stage)
-          .withReleaseId(releaseId)
+          .withArtifactSourceId(artifactSourceId)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
@@ -313,7 +313,7 @@ public class ApprovalNotification extends ActionableNotification {
       ApprovalNotification approvalNotification = new ApprovalNotification();
       approvalNotification.setEntityName(entityName);
       approvalNotification.setStage(stage);
-      approvalNotification.setReleaseId(releaseId);
+      approvalNotification.setArtifactSourceId(artifactSourceId);
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);

@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -11,16 +10,13 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.DEV;
-import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -369,35 +365,6 @@ private void loginAdminUser() {
   if (response.getResource() != null) {
     userToken = response.getResource().getToken();
   }
-}
-
-private void addNotifications(Application application) {
-  String appId = application.getUuid();
-  String envId = application.getEnvironments().get(0).getUuid();
-
-  wingsPersistence.save(aChangeNotification()
-                            .withAppId(appId)
-                            .withEnvironmentId(envId)
-                            .withEntityId("pipelineId")
-                            .withEntityType(EntityType.PIPELINE)
-                            .withScheduledOn(currentTimeMillis())
-                            .build());
-  wingsPersistence.save(anApprovalNotification()
-                            .withAppId(appId)
-                            .withEnvironmentId(envId)
-                            .withEntityId("artifactId")
-                            .withEntityType(EntityType.ARTIFACT)
-                            .withEntityName("Final_Build_05_02_08_16_9_15pm")
-                            .withReleaseId("releaseId")
-                            .build());
-  wingsPersistence.save(aFailureNotification()
-                            .withAppId(appId)
-                            .withEntityId("executionId")
-                            .withEntityType(EntityType.WORKFLOW)
-                            .withEnvironmentId(envId)
-                            .withEntityName("workflow_ui_svr_2:04_12_2016")
-                            .withExecutionId("executionId")
-                            .build());
 }
 
 private void addOrchestrationAndPipeline(

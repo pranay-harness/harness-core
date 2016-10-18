@@ -73,15 +73,6 @@ public abstract class ArtifactSource extends Base {
   }
 
   /**
-   * Sets source type.
-   *
-   * @param sourceType the source type
-   */
-  public void setSourceType(SourceType sourceType) {
-    this.sourceType = sourceType;
-  }
-
-  /**
    * Gets artifact type.
    *
    * @return the artifact type

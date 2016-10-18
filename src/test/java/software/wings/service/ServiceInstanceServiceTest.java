@@ -29,8 +29,6 @@ import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_TYPE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
-import static software.wings.utils.WingsTestConstants.RELEASE_ID;
-import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -80,8 +78,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
           .withEnvId(ENV_ID)
           .withHost(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build())
           .withServiceTemplate(serviceTemplate)
-          .withReleaseId(RELEASE_NAME)
-          .withReleaseId(RELEASE_ID)
+          .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+          .withArtifactSourceId(ARTIFACT_SOURCE_ID)
           .withArtifactId(ARTIFACT_ID)
           .withArtifactName(ARTIFACT_NAME);
 
@@ -164,8 +162,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
     verify(updateOperations).set("artifactId", ARTIFACT_ID);
     verify(updateOperations).set("artifactName", ARTIFACT_NAME);
-    verify(updateOperations).set("releaseId", RELEASE_ID);
-    verify(updateOperations).set("releaseName", RELEASE_NAME);
+    verify(updateOperations).set("artifactSourceId", ARTIFACT_SOURCE_ID);
+    verify(updateOperations).set("artifactSourceName", ARTIFACT_SOURCE_NAME);
     verify(updateOperations).set("artifactDeployedOn", createdAt);
     verify(updateOperations).set("artifactDeploymentStatus", ExecutionStatus.SUCCESS);
     verify(updateOperations).set("artifactDeploymentActivityId", ACTIVITY_ID);

@@ -39,8 +39,8 @@ public class ServiceInstance extends Base {
 
   @Indexed private String tagName;
 
-  private String releaseId;
-  @Indexed private String releaseName;
+  private String artifactSourceId;
+  @Indexed private String artifactSourceName;
   private String artifactId;
   @Indexed private String artifactName;
   @Indexed private long artifactDeployedOn;
@@ -77,17 +77,17 @@ public class ServiceInstance extends Base {
    *
    * @return the release id
    */
-  public String getReleaseId() {
-    return releaseId;
+  public String getArtifactSourceId() {
+    return artifactSourceId;
   }
 
   /**
    * Sets release id.
    *
-   * @param releaseId the release id
+   * @param artifactSourceId the release id
    */
-  public void setReleaseId(String releaseId) {
-    this.releaseId = releaseId;
+  public void setArtifactSourceId(String artifactSourceId) {
+    this.artifactSourceId = artifactSourceId;
   }
 
   /**
@@ -95,17 +95,17 @@ public class ServiceInstance extends Base {
    *
    * @return the release name
    */
-  public String getReleaseName() {
-    return releaseName;
+  public String getArtifactSourceName() {
+    return artifactSourceName;
   }
 
   /**
    * Sets release name.
    *
-   * @param releaseName the release name
+   * @param artifactSourceName the release name
    */
-  public void setReleaseName(String releaseName) {
-    this.releaseName = releaseName;
+  public void setArtifactSourceName(String artifactSourceName) {
+    this.artifactSourceName = artifactSourceName;
   }
 
   /**
@@ -446,9 +446,9 @@ public class ServiceInstance extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName, tagName,
-              releaseId, releaseName, artifactId, artifactName, artifactDeployedOn, artifactDeploymentStatus,
-              artifactDeploymentActivityId, lastActivityId, lastActivityStatus, lastActivityCreatedAt, commandName,
-              commandType, lastDeployedOn);
+              artifactSourceId, artifactSourceName, artifactId, artifactName, artifactDeployedOn,
+              artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId, lastActivityStatus,
+              lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
   }
 
   @Override
@@ -467,9 +467,9 @@ public class ServiceInstance extends Base {
         && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
         && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
         && Objects.equals(this.hostId, other.hostId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.tagName, other.tagName) && Objects.equals(this.releaseId, other.releaseId)
-        && Objects.equals(this.releaseName, other.releaseName) && Objects.equals(this.artifactId, other.artifactId)
-        && Objects.equals(this.artifactName, other.artifactName)
+        && Objects.equals(this.tagName, other.tagName) && Objects.equals(this.artifactSourceId, other.artifactSourceId)
+        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
+        && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.artifactDeployedOn, other.artifactDeployedOn)
         && Objects.equals(this.artifactDeploymentStatus, other.artifactDeploymentStatus)
         && Objects.equals(this.artifactDeploymentActivityId, other.artifactDeploymentActivityId)
@@ -491,8 +491,8 @@ public class ServiceInstance extends Base {
         .add("hostId", hostId)
         .add("hostName", hostName)
         .add("tagName", tagName)
-        .add("releaseId", releaseId)
-        .add("releaseName", releaseName)
+        .add("artifactSourceId", artifactSourceId)
+        .add("artifactSourceName", artifactSourceName)
         .add("artifactId", artifactId)
         .add("artifactName", artifactName)
         .add("artifactDeployedOn", artifactDeployedOn)
@@ -520,8 +520,8 @@ public class ServiceInstance extends Base {
     private String hostId;
     private String hostName;
     private String tagName;
-    private String releaseId;
-    private String releaseName;
+    private String artifactSourceId;
+    private String artifactSourceName;
     private String artifactId;
     private String artifactName;
     private long artifactDeployedOn;
@@ -651,22 +651,22 @@ public class ServiceInstance extends Base {
     /**
      * With release id builder.
      *
-     * @param releaseId the release id
+     * @param artifactSourceId the artifact source id
      * @return the builder
      */
-    public Builder withReleaseId(String releaseId) {
-      this.releaseId = releaseId;
+    public Builder withArtifactSourceId(String artifactSourceId) {
+      this.artifactSourceId = artifactSourceId;
       return this;
     }
 
     /**
      * With release name builder.
      *
-     * @param releaseName the release name
+     * @param artifactSourceName the artifact source name
      * @return the builder
      */
-    public Builder withReleaseName(String releaseName) {
-      this.releaseName = releaseName;
+    public Builder withArtifactSourceName(String artifactSourceName) {
+      this.artifactSourceName = artifactSourceName;
       return this;
     }
 
@@ -872,8 +872,8 @@ public class ServiceInstance extends Base {
           .withHostId(hostId)
           .withHostName(hostName)
           .withTagName(tagName)
-          .withReleaseId(releaseId)
-          .withReleaseName(releaseName)
+          .withArtifactSourceId(artifactSourceId)
+          .withArtifactSourceName(artifactSourceName)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
           .withArtifactDeployedOn(artifactDeployedOn)
@@ -928,8 +928,8 @@ public class ServiceInstance extends Base {
       serviceInstance.setHostId(hostId);
       serviceInstance.setHostName(hostName);
       serviceInstance.setTagName(tagName);
-      serviceInstance.setReleaseId(releaseId);
-      serviceInstance.setReleaseName(releaseName);
+      serviceInstance.setArtifactSourceId(artifactSourceId);
+      serviceInstance.setArtifactSourceName(artifactSourceName);
       serviceInstance.setArtifactId(artifactId);
       serviceInstance.setArtifactName(artifactName);
       serviceInstance.setArtifactDeployedOn(artifactDeployedOn);
