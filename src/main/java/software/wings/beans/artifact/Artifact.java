@@ -1,7 +1,5 @@
 package software.wings.beans.artifact;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -16,15 +14,9 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
 import software.wings.utils.validation.Create;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
 
 /**
  * Artifact bean class.
@@ -34,7 +26,7 @@ import javax.validation.Payload;
 @Entity(value = "artifacts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact extends Base {
-  @Indexed private String artifactSourceId;
+  @Indexed private String artifactStreamId;
 
   private Map<String, String> metadata = Maps.newHashMap();
 
@@ -161,17 +153,17 @@ public class Artifact extends Base {
    *
    * @return the artifact source id
    */
-  public String getArtifactSourceId() {
-    return artifactSourceId;
+  public String getArtifactStreamId() {
+    return artifactStreamId;
   }
 
   /**
    * Sets artifact source id.
    *
-   * @param artifactSourceId the artifact source id
+   * @param artifactStreamId the artifact source id
    */
-  public void setArtifactSourceId(String artifactSourceId) {
-    this.artifactSourceId = artifactSourceId;
+  public void setArtifactStreamId(String artifactStreamId) {
+    this.artifactStreamId = artifactStreamId;
   }
 
   /**
@@ -211,58 +203,10 @@ public class Artifact extends Base {
     ERROR
   }
 
-  /**
-   * Created by peeyushaggarwal on 4/4/16.
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Constraint(validatedBy = ValidArtifact.Validator.class)
-  public @interface ValidArtifact {
-    /**
-     * Message.
-     *
-     * @return the string
-     */
-    String
-    message() default "bean isNotBlank(bean.getApplication().getUuid()) have id for updating and application id is not same.";
-
-    /**
-     * Groups.
-     *
-     * @return the class[]
-     */
-    Class<?>[] groups() default {};
-
-    /**
-     * Payload.
-     *
-     * @return the class<? extends payload>[]
-     */
-    Class<? extends Payload>[] payload() default {};
-
-    /**
-     * The Class Validator.
-     */
-    class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public void initialize(final ValidArtifact validateForUpdate) {}
-
-      /**
-       * {@inheritDoc}
-       */
-      @Override
-      public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
-        return isNotBlank(bean.getAppId()); // TODO: ArtifactStream - && isNotBlank(bean.artifactSource.getAppId());
-      }
-    }
-  }
-
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(artifactSourceId, metadata, displayName, revision, services, artifactFiles, status);
+        + Objects.hash(artifactStreamId, metadata, displayName, revision, services, artifactFiles, status);
   }
 
   @Override
@@ -277,7 +221,7 @@ public class Artifact extends Base {
       return false;
     }
     final Artifact other = (Artifact) obj;
-    return Objects.equals(this.artifactSourceId, other.artifactSourceId)
+    return Objects.equals(this.artifactStreamId, other.artifactStreamId)
         && Objects.equals(this.metadata, other.metadata) && Objects.equals(this.displayName, other.displayName)
         && Objects.equals(this.revision, other.revision) && Objects.equals(this.services, other.services)
         && Objects.equals(this.artifactFiles, other.artifactFiles) && Objects.equals(this.status, other.status);
@@ -286,7 +230,7 @@ public class Artifact extends Base {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("artifactSourceId", artifactSourceId)
+        .add("artifactStreamId", artifactStreamId)
         .add("metadata", metadata)
         .add("displayName", displayName)
         .add("revision", revision)
@@ -300,7 +244,7 @@ public class Artifact extends Base {
    * The type Builder.
    */
   public static final class Builder {
-    private String artifactSourceId;
+    private String artifactStreamId;
     private Map<String, String> metadata = Maps.newHashMap();
     private String displayName;
     private String revision;
@@ -328,11 +272,11 @@ public class Artifact extends Base {
     /**
      * With artifact source id builder.
      *
-     * @param artifactSourceId the artifact source id
+     * @param artifactStreamId the artifact stream id
      * @return the builder
      */
-    public Builder withArtifactSourceId(String artifactSourceId) {
-      this.artifactSourceId = artifactSourceId;
+    public Builder withArtifactStreamId(String artifactStreamId) {
+      this.artifactStreamId = artifactStreamId;
       return this;
     }
 
@@ -475,7 +419,7 @@ public class Artifact extends Base {
      */
     public Builder but() {
       return anArtifact()
-          .withArtifactSourceId(artifactSourceId)
+          .withArtifactStreamId(artifactStreamId)
           .withMetadata(metadata)
           .withDisplayName(displayName)
           .withRevision(revision)
@@ -497,7 +441,7 @@ public class Artifact extends Base {
      */
     public Artifact build() {
       Artifact artifact = new Artifact();
-      artifact.setArtifactSourceId(artifactSourceId);
+      artifact.setArtifactStreamId(artifactStreamId);
       artifact.setMetadata(metadata);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);

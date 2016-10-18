@@ -22,7 +22,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
@@ -33,7 +33,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -195,8 +195,8 @@ public class CommandStateTest extends WingsBaseTest {
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID))
         .thenReturn(anApplicationHost().withHostName(HOST_NAME).build());
     commandState.setExecutorService(executorService);
-    when(artifactStreamService.get(ARTIFACT_SOURCE_ID, APP_ID))
-        .thenReturn(aJenkinsArtifactSource().withUuid(ARTIFACT_SOURCE_ID).withAppId(APP_ID).build());
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID))
+        .thenReturn(aJenkinsArtifactStream().withUuid(ARTIFACT_STREAM_ID).withAppId(APP_ID).build());
   }
 
   /**
@@ -214,11 +214,10 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, "START");
-    verify(serviceInstanceService, times(2)).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
     verify(activityService).save(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
-    verify(activityService).get(ACTIVITY_ID, APP_ID);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
     verify(serviceCommandExecutorService)
@@ -234,7 +233,7 @@ public class CommandStateTest extends WingsBaseTest {
                 .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowExecutionName();
@@ -267,7 +266,7 @@ public class CommandStateTest extends WingsBaseTest {
     Artifact artifact = anArtifact()
                             .withUuid(ARTIFACT_ID)
                             .withAppId(APP_ID)
-                            .withArtifactSourceId(ARTIFACT_SOURCE_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
                             .withServices(asList(SERVICE))
                             .build();
 
@@ -302,7 +301,7 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, "START");
-    verify(serviceInstanceService, times(2)).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
 
     verify(serviceCommandExecutorService)
@@ -319,7 +318,7 @@ public class CommandStateTest extends WingsBaseTest {
                 .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowType();
@@ -331,13 +330,12 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
-    verify(activityService).get(ACTIVITY_ID, APP_ID);
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-    verify(artifactStreamService).get(ARTIFACT_SOURCE_ID, APP_ID);
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID, APP_ID);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
   }

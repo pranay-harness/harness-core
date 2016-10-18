@@ -230,7 +230,7 @@ public enum ErrorCodes {
   /**
    * Duplicate artifactsource names error codes.
    */
-  DUPLICATE_ARTIFACTSOURCE_NAMES("DUPLICATE_ARTIFACTSOURCE_NAMES"),
+  DUPLICATE_ARTIFACTSTREAM_NAMES("DUPLICATE_ARTIFACTSTREAM_NAMES"),
 
   /**
    * Duplicate host names error codes.

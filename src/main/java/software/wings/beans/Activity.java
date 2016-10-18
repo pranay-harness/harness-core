@@ -34,8 +34,8 @@ public class Activity extends Base {
   @NotEmpty private String stateExecutionInstanceId;
   @NotEmpty private String stateExecutionInstanceName;
 
-  private String artifactSourceId;
-  private String artifactSourceName;
+  private String artifactStreamId;
+  private String artifactStreamName;
   private boolean isPipeline;
   private String artifactId;
   private String artifactName;
@@ -208,17 +208,17 @@ public class Activity extends Base {
    *
    * @return the release id
    */
-  public String getArtifactSourceId() {
-    return artifactSourceId;
+  public String getArtifactStreamId() {
+    return artifactStreamId;
   }
 
   /**
    * Sets release id.
    *
-   * @param artifactSourceId the release id
+   * @param artifactStreamId the release id
    */
-  public void setArtifactSourceId(String artifactSourceId) {
-    this.artifactSourceId = artifactSourceId;
+  public void setArtifactStreamId(String artifactStreamId) {
+    this.artifactStreamId = artifactStreamId;
   }
 
   /**
@@ -226,17 +226,17 @@ public class Activity extends Base {
    *
    * @return the release name
    */
-  public String getArtifactSourceName() {
-    return artifactSourceName;
+  public String getArtifactStreamName() {
+    return artifactStreamName;
   }
 
   /**
    * Sets release name.
    *
-   * @param artifactSourceName the release name
+   * @param artifactStreamName the release name
    */
-  public void setArtifactSourceName(String artifactSourceName) {
-    this.artifactSourceName = artifactSourceName;
+  public void setArtifactStreamName(String artifactStreamName) {
+    this.artifactStreamName = artifactStreamName;
   }
 
   /**
@@ -479,7 +479,7 @@ public class Activity extends Base {
         + Objects.hash(type, applicationName, environmentId, environmentName, environmentType, commandName, commandType,
               serviceId, serviceName, serviceTemplateId, serviceTemplateName, hostName, serviceInstanceId,
               workflowExecutionId, workflowExecutionName, workflowType, stateExecutionInstanceId,
-              stateExecutionInstanceName, artifactSourceId, artifactSourceName, isPipeline, artifactId, artifactName,
+              stateExecutionInstanceName, artifactStreamId, artifactStreamName, isPipeline, artifactId, artifactName,
               status);
   }
 
@@ -510,8 +510,8 @@ public class Activity extends Base {
         && Objects.equals(this.workflowType, other.workflowType)
         && Objects.equals(this.stateExecutionInstanceId, other.stateExecutionInstanceId)
         && Objects.equals(this.stateExecutionInstanceName, other.stateExecutionInstanceName)
-        && Objects.equals(this.artifactSourceId, other.artifactSourceId)
-        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
+        && Objects.equals(this.artifactStreamId, other.artifactStreamId)
+        && Objects.equals(this.artifactStreamName, other.artifactStreamName)
         && Objects.equals(this.isPipeline, other.isPipeline) && Objects.equals(this.artifactId, other.artifactId)
         && Objects.equals(this.artifactName, other.artifactName) && Objects.equals(this.status, other.status);
   }
@@ -537,8 +537,8 @@ public class Activity extends Base {
         .add("workflowType", workflowType)
         .add("stateExecutionInstanceId", stateExecutionInstanceId)
         .add("stateExecutionInstanceName", stateExecutionInstanceName)
-        .add("artifactSourceId", artifactSourceId)
-        .add("artifactSourceName", artifactSourceName)
+        .add("artifactStreamId", artifactStreamId)
+        .add("artifactStreamName", artifactStreamName)
         .add("isPipeline", isPipeline)
         .add("artifactId", artifactId)
         .add("artifactName", artifactName)
@@ -581,8 +581,8 @@ public class Activity extends Base {
     private WorkflowType workflowType;
     private String stateExecutionInstanceId;
     private String stateExecutionInstanceName;
-    private String artifactSourceId;
-    private String artifactSourceName;
+    private String artifactStreamId;
+    private String artifactStreamName;
     private boolean isPipeline;
     private String artifactId;
     private String artifactName;
@@ -806,22 +806,22 @@ public class Activity extends Base {
     /**
      * With artifact source id builder.
      *
-     * @param artifactSourceId the artifact source id
+     * @param artifactStreamId the artifact stream id
      * @return the builder
      */
-    public Builder withArtifactSourceId(String artifactSourceId) {
-      this.artifactSourceId = artifactSourceId;
+    public Builder withArtifactStreamId(String artifactStreamId) {
+      this.artifactStreamId = artifactStreamId;
       return this;
     }
 
     /**
      * With artifact source name builder.
      *
-     * @param artifactSourceName the artifact source name
+     * @param artifactStreamName the artifact stream name
      * @return the builder
      */
-    public Builder withArtifactSourceName(String artifactSourceName) {
-      this.artifactSourceName = artifactSourceName;
+    public Builder withArtifactStreamName(String artifactStreamName) {
+      this.artifactStreamName = artifactStreamName;
       return this;
     }
 
@@ -960,8 +960,8 @@ public class Activity extends Base {
           .withWorkflowType(workflowType)
           .withStateExecutionInstanceId(stateExecutionInstanceId)
           .withStateExecutionInstanceName(stateExecutionInstanceName)
-          .withArtifactSourceId(artifactSourceId)
-          .withArtifactSourceName(artifactSourceName)
+          .withArtifactStreamId(artifactStreamId)
+          .withArtifactStreamName(artifactStreamName)
           .withIsPipeline(isPipeline)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
@@ -999,8 +999,8 @@ public class Activity extends Base {
       activity.setWorkflowType(workflowType);
       activity.setStateExecutionInstanceId(stateExecutionInstanceId);
       activity.setStateExecutionInstanceName(stateExecutionInstanceName);
-      activity.setArtifactSourceId(artifactSourceId);
-      activity.setArtifactSourceName(artifactSourceName);
+      activity.setArtifactStreamId(artifactStreamId);
+      activity.setArtifactStreamName(artifactStreamName);
       activity.setArtifactId(artifactId);
       activity.setArtifactName(artifactName);
       activity.setStatus(status);

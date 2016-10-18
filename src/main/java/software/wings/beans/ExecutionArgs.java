@@ -20,7 +20,6 @@ public class ExecutionArgs {
   private String serviceId;
   private String commandName;
   private ExecutionStrategy executionStrategy;
-  private String artifactSourceId;
   @Transient private List<Artifact> artifacts;
   private Map<String, String> artifactIdNames;
   private String orchestrationId;
@@ -63,24 +62,6 @@ public class ExecutionArgs {
    */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
-  }
-
-  /**
-   * Gets release id.
-   *
-   * @return the release id
-   */
-  public String getArtifactSourceId() {
-    return artifactSourceId;
-  }
-
-  /**
-   * Sets release id.
-   *
-   * @param artifactSourceId the release id
-   */
-  public void setArtifactSourceId(String artifactSourceId) {
-    this.artifactSourceId = artifactSourceId;
   }
 
   /**

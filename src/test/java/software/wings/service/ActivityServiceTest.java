@@ -17,7 +17,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -67,7 +67,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                                              .withCommandName(COMMAND_NAME)
                                              .withCommandType(EXEC.name())
                                              .withHostName(HOST_NAME)
-                                             .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                                             .withArtifactStreamId(ARTIFACT_STREAM_NAME)
                                              .withServiceName(SERVICE_NAME)
                                              .withServiceId(SERVICE_ID)
                                              .withServiceTemplateName(TEMPLATE_NAME)

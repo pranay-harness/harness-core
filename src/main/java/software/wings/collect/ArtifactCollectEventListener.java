@@ -53,7 +53,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 
-      ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactSourceId(), artifact.getAppId());
+      ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
       ArtifactCollectorService artifactCollectorService =
           artifactCollectorServiceMap.get(artifactStream.getSourceType().name());
       List<ArtifactFile> artifactFiles = artifactCollectorService.collect(artifactStream, artifact.getMetadata());
@@ -73,7 +73,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
                                                     .withEntityId(artifact.getUuid())
                                                     .withEntityType(EntityType.ARTIFACT)
                                                     .withEntityName(artifact.getDisplayName())
-                                                    .withArtifactSourceId(artifact.getArtifactSourceId())
+                                                    .withArtifactStreamId(artifact.getArtifactStreamId())
                                                     .build());
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);

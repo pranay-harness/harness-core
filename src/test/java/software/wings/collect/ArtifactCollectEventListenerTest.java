@@ -7,11 +7,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,10 +45,9 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
       anArtifactFile().withAppId(APP_ID).withUuid("ARTIFACT_FILE_ID").build();
 
   /**
-   * The constant ARTIFACT_SOURCE_NAME.
+   * The constant ARTIFACT_STREAM_NAME.
    */
-  public static final String ARTIFACT_SOURCE_NAME = "job1";
-  private final ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactSource().withSourceName(ARTIFACT_SOURCE_NAME).build();
+  private final ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactStream().withSourceName(ARTIFACT_STREAM_NAME).build();
 
   @InjectMocks @Inject private ArtifactCollectEventListener artifactCollectEventListener;
 
@@ -78,7 +78,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(collectorServiceMap.get(anyString())).thenReturn(artifactCollectorService);
-    when(artifactStreamService.get(ARTIFACT_SOURCE_ID, APP_ID)).thenReturn(ARTIFACT_SOURCE);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID)).thenReturn(ARTIFACT_SOURCE);
   }
 
   /**
@@ -91,7 +91,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     artifactCollectEventListener.onMessage(
         aCollectEvent()
             .withArtifact(
-                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactSourceId(ARTIFACT_SOURCE_ID).build())
+                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
             .build());
 
     verify(collectorServiceMap).get(anyString());
@@ -113,7 +113,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     artifactCollectEventListener.onMessage(
         aCollectEvent()
             .withArtifact(
-                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactSourceId(ARTIFACT_SOURCE_ID).build())
+                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
             .build());
 
     verify(collectorServiceMap).get(anyString());

@@ -174,8 +174,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
     if (!isNullOrEmpty(activity.getArtifactId())) {
       operations.set("artifactId", activity.getArtifactId())
           .set("artifactName", activity.getArtifactName())
-          .set("artifactSourceId", activity.getArtifactSourceId())
-          .set("artifactSourceName", activity.getArtifactSourceName())
+          .set("artifactSourceId", activity.getArtifactStreamId())
+          .set("artifactSourceName", activity.getArtifactStreamName())
           .set("artifactDeployedOn", activity.getCreatedAt())
           .set("artifactDeploymentStatus", activity.getStatus())
           .set("artifactDeploymentActivityId", activity.getUuid());

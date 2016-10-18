@@ -23,8 +23,8 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_TYPE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -78,8 +78,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
           .withEnvId(ENV_ID)
           .withHost(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build())
           .withServiceTemplate(serviceTemplate)
-          .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
-          .withArtifactSourceId(ARTIFACT_SOURCE_ID)
+          .withArtifactStreamName(ARTIFACT_STREAM_NAME)
+          .withArtifactStreamId(ARTIFACT_STREAM_ID)
           .withArtifactId(ARTIFACT_ID)
           .withArtifactName(ARTIFACT_NAME);
 
@@ -142,8 +142,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                             .withAppId(APP_ID)
                             .withUuid(ACTIVITY_ID)
                             .withServiceInstanceId(SERVICE_INSTANCE_ID)
-                            .withArtifactSourceId(ARTIFACT_SOURCE_ID)
-                            .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withArtifactStreamName(ARTIFACT_STREAM_NAME)
                             .withArtifactId(ARTIFACT_ID)
                             .withArtifactName(ARTIFACT_NAME)
                             .withStatus(ExecutionStatus.SUCCESS)
@@ -162,8 +162,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
     verify(updateOperations).set("artifactId", ARTIFACT_ID);
     verify(updateOperations).set("artifactName", ARTIFACT_NAME);
-    verify(updateOperations).set("artifactSourceId", ARTIFACT_SOURCE_ID);
-    verify(updateOperations).set("artifactSourceName", ARTIFACT_SOURCE_NAME);
+    verify(updateOperations).set("artifactSourceId", ARTIFACT_STREAM_ID);
+    verify(updateOperations).set("artifactSourceName", ARTIFACT_STREAM_NAME);
     verify(updateOperations).set("artifactDeployedOn", createdAt);
     verify(updateOperations).set("artifactDeploymentStatus", ExecutionStatus.SUCCESS);
     verify(updateOperations).set("artifactDeploymentActivityId", ACTIVITY_ID);

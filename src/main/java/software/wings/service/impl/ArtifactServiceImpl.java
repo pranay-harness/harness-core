@@ -11,7 +11,7 @@ import com.google.common.io.Files;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Application;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
@@ -22,7 +22,10 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
@@ -47,6 +50,8 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
   @Inject private Queue<CollectEvent> collectQueue;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private AppService appService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
@@ -62,12 +67,11 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
-    Application application = wingsPersistence.get(Application.class, artifact.getAppId());
-    Validator.notNullCheck("application", application);
-    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, artifact.getArtifactSourceId());
+    if (!appService.exist(artifact.getAppId())) {
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
+    }
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
     Validator.notNullCheck("artifactStream", artifactStream);
-
-    Validator.equalCheck(application.getUuid(), artifactStream.getAppId());
 
     artifact.setServices(Lists.newArrayList(artifactStream.getServices()));
     artifact.setStatus(Status.QUEUED);

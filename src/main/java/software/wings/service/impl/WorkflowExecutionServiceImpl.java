@@ -426,9 +426,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
-        if (artifacts.size() > 0) {
-          workflowExecution.getExecutionArgs().setArtifactSourceId(artifacts.get(0).getArtifactSourceId());
-        }
 
         List<ServiceElement> services = new ArrayList<>();
         artifacts.forEach(artifact -> {

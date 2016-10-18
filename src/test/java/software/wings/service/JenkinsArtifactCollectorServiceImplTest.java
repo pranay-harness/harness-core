@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.artifact.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -59,7 +59,7 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
    * The constant JENKINS_ARTIFACT_SOURCE.
    */
   public static final JenkinsArtifactStream JENKINS_ARTIFACT_SOURCE =
-      aJenkinsArtifactSource()
+      aJenkinsArtifactStream()
           .withSourceName("job1")
           .withJobname("job1")
           .withArtifactType(ArtifactType.WAR)

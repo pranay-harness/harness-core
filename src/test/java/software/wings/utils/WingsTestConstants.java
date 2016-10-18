@@ -61,14 +61,14 @@ public class WingsTestConstants {
   public static final String RELEASE_ID = "RELEASE_ID";
 
   /**
-   * The constant ARTIFACT_SOURCE_ID.
+   * The constant ARTIFACT_STREAM_ID.
    */
-  public static final String ARTIFACT_SOURCE_ID = "ARTIFACT_SOURCE_ID";
+  public static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
   /**
-   * The constant ARTIFACT_SOURCE_NAME.
+   * The constant ARTIFACT_STREAM_NAME.
    */
-  public static final String ARTIFACT_SOURCE_NAME = "ARTIFACT_SOURCE_NAME";
+  public static final String ARTIFACT_STREAM_NAME = "ARTIFACT_STREAM_NAME";
 
   /**
    * The constant RELEASE_NAME.

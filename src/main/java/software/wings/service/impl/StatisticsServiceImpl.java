@@ -54,7 +54,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -87,7 +86,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
-  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public WingsStatistics getTopConsumers() {
