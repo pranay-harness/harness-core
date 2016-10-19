@@ -147,6 +147,7 @@ public class StatisticsServiceImpl implements StatisticsService {
               .withArtifactCount(artifacts)
               .build());
     });
+    appIds.forEach(appId -> appKeyStatisticsMap.computeIfAbsent(appId, v -> new AppKeyStatistics()));
     return appKeyStatisticsMap;
   }
 
