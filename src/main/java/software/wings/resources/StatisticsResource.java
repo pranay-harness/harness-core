@@ -11,6 +11,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
+import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.service.intfc.StatisticsService;
@@ -92,5 +93,12 @@ public class StatisticsResource {
   public RestResponse<AppKeyStatistics> appKeyStats(
       @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
     return new RestResponse<>(statisticsService.getApplicationKeyStats(asList(appId), numOfDays).get(appId));
+  }
+
+  @GET
+  @Path("notification-count")
+  public RestResponse<NotificationCount> notificationCount(
+      @DefaultValue("60") @QueryParam("minutesFromNow") Integer minutesFromNow, @QueryParam("appId") String appId) {
+    return new RestResponse<>(statisticsService.getNotificationCount(appId, minutesFromNow));
   }
 }

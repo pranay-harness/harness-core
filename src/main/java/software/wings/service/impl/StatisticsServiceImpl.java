@@ -16,6 +16,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
+import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -34,6 +35,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Notification;
 import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -49,6 +51,7 @@ import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.KeyStatistics;
+import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
@@ -58,7 +61,9 @@ import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
@@ -93,6 +98,8 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
   @Inject private ReleaseService releaseService;
+  @Inject private NotificationService notificationService;
+  @Inject private ActivityService activityService;
 
   @Override
   public WingsStatistics getTopConsumers() {
@@ -276,6 +283,39 @@ public class StatisticsServiceImpl implements StatisticsService {
     deploymentStats.getStatsMap().put(
         ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
     return deploymentStats;
+  }
+
+  @Override
+  public NotificationCount getNotificationCount(String appId, int minutesFromNow) {
+    long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
+    PageRequest notificationRequest = aPageRequest()
+                                          .addFilter("createdAt", Operator.GT, queryStartEpoch)
+                                          .addFieldsIncluded("appId", "complete", "actionable")
+                                          .build();
+    PageRequest failureRequest = aPageRequest()
+                                     .addFilter("createdAt", Operator.GT, queryStartEpoch)
+                                     .addFilter("status", Operator.EQ, FAILED)
+                                     .addFieldsIncluded("appId")
+                                     .build();
+
+    if (appId != null) {
+      notificationRequest.addFilter("appId", appId, Operator.EQ);
+      failureRequest.addFilter("appId", appId, Operator.EQ);
+    }
+
+    List<Notification> notifications = notificationService.list(notificationRequest).getResponse();
+    Map<Boolean, Long> notificationCountByStatus =
+        notifications.stream().collect(groupingBy(Notification::isComplete, counting()));
+
+    int pendingNotificationCount = notificationCountByStatus.computeIfAbsent(false, v -> 0L).intValue();
+    int completedNotificationCount = notificationCountByStatus.computeIfAbsent(true, v -> 0L).intValue();
+    int failureCount = activityService.list(failureRequest).getResponse().size();
+
+    return aNotificationCount()
+        .withCompletedNotificationsCount(completedNotificationCount)
+        .withPendingNotificationsCount(pendingNotificationCount)
+        .withFailureCount(failureCount)
+        .build();
   }
 
   private AggregatedDayStats merge(AggregatedDayStats prodAggStats, AggregatedDayStats nonProdAggStats) {
