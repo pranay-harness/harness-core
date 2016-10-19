@@ -105,11 +105,13 @@ public class AppResource {
   @GET
   @Path("{appId}")
   @AuthRule("APPLICATION:WRITE")
-  public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status) {
+  public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
+      @QueryParam("overview") @DefaultValue("false") boolean overview,
+      @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
     }
-    return new RestResponse<>(appService.get(appId, status, true));
+    return new RestResponse<>(appService.get(appId, status, true, overviewDays));
   }
 
   /**

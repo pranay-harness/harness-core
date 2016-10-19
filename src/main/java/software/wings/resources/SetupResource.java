@@ -45,7 +45,7 @@ public class SetupResource {
   @Path("/applications/{appId}")
   public RestResponse<Setup> verifyApplication(@PathParam("appId") String appId) {
     return new RestResponse<>(
-        setupService.getApplicationSetupStatus(appService.get(appId, SetupStatus.INCOMPLETE, false)));
+        setupService.getApplicationSetupStatus(appService.get(appId, SetupStatus.INCOMPLETE, false, 0)));
   }
 
   /**

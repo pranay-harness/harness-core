@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -13,8 +14,9 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
-import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
+import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
+import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
@@ -39,12 +42,14 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.AppKeyStatistics;
+import software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown;
 import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.KeyStatistics;
+import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
@@ -53,7 +58,9 @@ import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -64,7 +71,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +92,8 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
+  @Inject private NotificationService notificationService;
+  @Inject private ActivityService activityService;
 
   @Override
   public WingsStatistics getTopConsumers() {
@@ -124,24 +132,53 @@ public class StatisticsServiceImpl implements StatisticsService {
             .field("appId")
             .in(appIds)
             .field("workflowType")
-            .in(Arrays.asList(ORCHESTRATION, SIMPLE))
-            .retrievedFields(true, "appId", "serviceInstanceId", "artifactId", "workflowExecutionId")
+            .in(asList(ORCHESTRATION, SIMPLE))
+            .retrievedFields(true, "appId", "environmentType", "serviceInstanceId", "artifactId", "workflowExecutionId")
             .asList();
 
     Map<String, List<Activity>> activitiesByApp = activities.stream().collect(groupingBy(Activity::getAppId));
+
+    appIds.forEach(appId -> activitiesByApp.computeIfAbsent(appId, id -> asList()));
+
     Map<String, AppKeyStatistics> appKeyStatisticsMap = new HashMap<>();
     activitiesByApp.forEach((appId, activityList) -> {
-      int deployments = activityList.stream().map(Activity::getWorkflowExecutionId).collect(toSet()).size();
-      int instances = activityList.size();
+      AppKeyStatistics keyStatistics = getAppKeyStatistics(activityList);
+      appKeyStatisticsMap.put(appId, keyStatistics);
+    });
+    appIds.forEach(appId -> appKeyStatisticsMap.computeIfAbsent(appId, v -> new AppKeyStatistics()));
+    return appKeyStatisticsMap;
+  }
+
+  public AppKeyStatistics getAppKeyStatistics(List<Activity> applicationActivities) {
+    AppKeyStatistics appKeyStatistics = new AppKeyStatistics();
+
+    Map<EnvironmentType, List<Activity>> activitiesByEnvType = applicationActivities.stream().collect(
+        groupingBy(activity -> PROD.equals(activity.getEnvironmentType()) ? PROD : NON_PROD));
+    activitiesByEnvType.computeIfAbsent(PROD, v -> asList());
+    activitiesByEnvType.computeIfAbsent(NON_PROD, v -> asList());
+
+    activitiesByEnvType.forEach((environmentType, activities) -> {
+      int deployments = activities.stream().map(Activity::getWorkflowExecutionId).collect(toSet()).size();
+      int instances = activities.size();
       int artifacts = activities.stream().map(Activity::getArtifactId).collect(toSet()).size();
-      appKeyStatisticsMap.put(appId,
+      appKeyStatistics.getStatsMap().put(environmentType,
           anAppKeyStatistics()
               .withInstanceCount(instances)
               .withDeploymentCount(deployments)
               .withArtifactCount(artifacts)
               .build());
     });
-    return appKeyStatisticsMap;
+    appKeyStatistics.getStatsMap().put(
+        ALL, mergeAppKeyStats(appKeyStatistics.getStatsMap().get(PROD), appKeyStatistics.getStatsMap().get(NON_PROD)));
+    return appKeyStatistics;
+  }
+
+  private AppKeyStatsBreakdown mergeAppKeyStats(AppKeyStatsBreakdown prod, AppKeyStatsBreakdown nonProd) {
+    return anAppKeyStatistics()
+        .withInstanceCount(prod.getInstanceCount() + nonProd.getInstanceCount())
+        .withDeploymentCount(prod.getDeploymentCount() + nonProd.getDeploymentCount())
+        .withArtifactCount(prod.getArtifactCount() + nonProd.getArtifactCount())
+        .build();
   }
 
   @Override
@@ -230,6 +267,39 @@ public class StatisticsServiceImpl implements StatisticsService {
     deploymentStats.getStatsMap().put(
         ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
     return deploymentStats;
+  }
+
+  @Override
+  public NotificationCount getNotificationCount(String appId, int minutesFromNow) {
+    long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
+    PageRequest notificationRequest = aPageRequest()
+                                          .addFilter("createdAt", Operator.GT, queryStartEpoch)
+                                          .addFieldsIncluded("appId", "complete", "actionable")
+                                          .build();
+    PageRequest failureRequest = aPageRequest()
+                                     .addFilter("createdAt", Operator.GT, queryStartEpoch)
+                                     .addFilter("status", Operator.EQ, FAILED)
+                                     .addFieldsIncluded("appId")
+                                     .build();
+
+    if (appId != null) {
+      notificationRequest.addFilter("appId", appId, Operator.EQ);
+      failureRequest.addFilter("appId", appId, Operator.EQ);
+    }
+
+    List<Notification> notifications = notificationService.list(notificationRequest).getResponse();
+    Map<Boolean, Long> notificationCountByStatus =
+        notifications.stream().collect(groupingBy(Notification::isComplete, counting()));
+
+    int pendingNotificationCount = notificationCountByStatus.computeIfAbsent(false, v -> 0L).intValue();
+    int completedNotificationCount = notificationCountByStatus.computeIfAbsent(true, v -> 0L).intValue();
+    int failureCount = activityService.list(failureRequest).getResponse().size();
+
+    return aNotificationCount()
+        .withCompletedNotificationsCount(completedNotificationCount)
+        .withPendingNotificationsCount(pendingNotificationCount)
+        .withFailureCount(failureCount)
+        .build();
   }
 
   private AggregatedDayStats merge(AggregatedDayStats prodAggStats, AggregatedDayStats nonProdAggStats) {
@@ -360,7 +430,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                                 .field("createdAt")
                                 .greaterThanOrEq(epochMilli)
                                 .field("status")
-                                .hasAnyOf(Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
+                                .hasAnyOf(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
     wingsPersistence.getDatastore()
         .createAggregation(Activity.class)

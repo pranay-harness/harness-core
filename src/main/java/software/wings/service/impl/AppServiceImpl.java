@@ -7,7 +7,6 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -45,6 +44,7 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -104,7 +104,7 @@ public class AppServiceImpl implements AppService {
                                    .withShortDescription("Application " + application.getName() + " created")
                                    .withTitle("Application " + application.getName() + " created")
                                    .build());
-    return get(application.getUuid(), INCOMPLETE, true);
+    return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
   /* (non-Javadoc)
@@ -120,7 +120,7 @@ public class AppServiceImpl implements AppService {
           response.stream().map(Application::getUuid).collect(Collectors.toList()), overviewDays);
       response.forEach(application
           -> application.setAppKeyStatistics(
-              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> anAppKeyStatistics().build())));
+              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics())));
     }
     response.getResponse().parallelStream().forEach(application -> {
       application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
@@ -233,14 +233,17 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application get(String appId, SetupStatus status, boolean overview) {
+  public Application get(String appId, SetupStatus status, boolean overview, int overviewDays) {
     Application application = get(appId);
     application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
     application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
 
     if (overview) {
-      application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
+      application.setNotifications(getIncompleteActionableApplicationNotifications(appId));
+      application.setAppKeyStatistics(
+          statisticsService.getApplicationKeyStats(Arrays.asList(appId), overviewDays).get(appId));
     }
+
     if (status == INCOMPLETE) {
       application.setSetup(setupService.getApplicationSetupStatus(application));
     }

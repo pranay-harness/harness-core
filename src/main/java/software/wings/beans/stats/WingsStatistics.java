@@ -54,7 +54,11 @@ public abstract class WingsStatistics {
     /**
      * App key statistics statistics type.
      */
-    APP_KEY_STATISTICS
+    APP_KEY_STATISTICS,
 
+    /**
+     * Notification count statistics type.
+     */
+    NOTIFICATION_COUNT
   }
 }
