@@ -7,7 +7,6 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.beans.stats.AppKeyStatistics.Builder.anAppKeyStatistics;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -121,7 +120,7 @@ public class AppServiceImpl implements AppService {
           response.stream().map(Application::getUuid).collect(Collectors.toList()), overviewDays);
       response.forEach(application
           -> application.setAppKeyStatistics(
-              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> anAppKeyStatistics().build())));
+              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics())));
     }
     response.getResponse().parallelStream().forEach(application -> {
       application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));

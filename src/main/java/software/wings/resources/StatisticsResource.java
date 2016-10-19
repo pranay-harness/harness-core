@@ -1,11 +1,14 @@
 package software.wings.resources;
 
+import static java.util.Arrays.asList;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.UserStatistics;
@@ -82,5 +85,12 @@ public class StatisticsResource {
   public RestResponse<DeploymentStatistics> deploymentStats(
       @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
     return new RestResponse<>(statisticsService.getDeploymentStatistics(appId, numOfDays));
+  }
+
+  @GET
+  @Path("app-keystats")
+  public RestResponse<AppKeyStatistics> appKeyStats(
+      @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
+    return new RestResponse<>(statisticsService.getApplicationKeyStats(asList(appId), numOfDays).get(appId));
   }
 }
