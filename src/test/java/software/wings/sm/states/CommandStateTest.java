@@ -267,7 +267,7 @@ public class CommandStateTest extends WingsBaseTest {
                             .withUuid(ARTIFACT_ID)
                             .withAppId(APP_ID)
                             .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .withServices(asList(SERVICE))
+                            .withServiceIds(asList(SERVICE_ID))
                             .build();
 
     Command command =

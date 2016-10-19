@@ -162,8 +162,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
     verify(updateOperations).set("artifactId", ARTIFACT_ID);
     verify(updateOperations).set("artifactName", ARTIFACT_NAME);
-    verify(updateOperations).set("artifactSourceId", ARTIFACT_STREAM_ID);
-    verify(updateOperations).set("artifactSourceName", ARTIFACT_STREAM_NAME);
+    verify(updateOperations).set("artifactStreamId", ARTIFACT_STREAM_ID);
+    verify(updateOperations).set("artifactStreamName", ARTIFACT_STREAM_NAME);
     verify(updateOperations).set("artifactDeployedOn", createdAt);
     verify(updateOperations).set("artifactDeploymentStatus", ExecutionStatus.SUCCESS);
     verify(updateOperations).set("artifactDeploymentActivityId", ACTIVITY_ID);

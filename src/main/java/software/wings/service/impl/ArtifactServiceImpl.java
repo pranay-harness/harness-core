@@ -5,7 +5,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import org.mongodb.morphia.query.Query;
@@ -27,6 +26,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -34,6 +34,7 @@ import software.wings.utils.validation.Update;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Valid;
@@ -52,13 +53,22 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private Queue<CollectEvent> collectQueue;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest) {
-    return wingsPersistence.query(Artifact.class, pageRequest);
+  public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices) {
+    PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
+    if (withServices) {
+      pageResponse.getResponse().forEach(artifact
+          -> artifact.setServices(artifact.getServiceIds()
+                                      .stream()
+                                      .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
+                                      .collect(Collectors.toList())));
+    }
+    return pageResponse;
   }
 
   /* (non-Javadoc)
@@ -73,7 +83,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
     Validator.notNullCheck("artifactStream", artifactStream);
 
-    artifact.setServices(Lists.newArrayList(artifactStream.getServices()));
+    artifact.setServiceIds(artifactStream.getServices().stream().map(Service::getUuid).collect(Collectors.toList()));
     artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 
@@ -130,12 +140,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public File download(String appId, String artifactId, String serviceId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
     if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())
-        || !artifact.getServices()
-                .stream()
-                .map(Service::getUuid)
-                .filter(id -> id.equals(serviceId))
-                .findFirst()
-                .isPresent()) {
+        || !artifact.getServiceIds().contains(serviceId)) {
       return null;
     }
 
@@ -155,7 +160,19 @@ public class ArtifactServiceImpl implements ArtifactService {
    */
   @Override
   public Artifact get(String appId, String artifactId) {
+    return get(appId, artifactId, false);
+  }
+
+  @Override
+  public Artifact get(String appId, String artifactId, boolean withServices) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
+    if (withServices) {
+      List<Service> services = artifact.getServiceIds()
+                                   .stream()
+                                   .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
+                                   .collect(Collectors.toList());
+      artifact.setServices(services);
+    }
     return artifact;
   }
 

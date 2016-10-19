@@ -91,7 +91,7 @@ public class SetupServiceImpl implements SetupService {
                                            .addFilter("appId", Operator.EQ, application.getUuid())
                                            .withLimit("1")
                                            .build();
-    PageResponse<Artifact> artRes = artifactService.list(pageReques);
+    PageResponse<Artifact> artRes = artifactService.list(pageReques, false);
     if (artRes == null || artRes.isEmpty()) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_FOUND")

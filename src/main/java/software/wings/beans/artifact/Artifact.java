@@ -8,12 +8,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
 import software.wings.utils.validation.Create;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +35,9 @@ public class Artifact extends Base {
 
   @Indexed @NotEmpty(groups = Create.class) private String revision;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
+  private List<String> serviceIds = new ArrayList<>();
+
+  @Transient private List<Service> services;
 
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 
@@ -167,6 +170,24 @@ public class Artifact extends Base {
   }
 
   /**
+   * Gets service ids.
+   *
+   * @return the service ids
+   */
+  public List<String> getServiceIds() {
+    return serviceIds;
+  }
+
+  /**
+   * Sets service ids.
+   *
+   * @param serviceIds the service ids
+   */
+  public void setServiceIds(List<String> serviceIds) {
+    this.serviceIds = serviceIds;
+  }
+
+  /**
    * The Enum Status.
    */
   public enum Status {
@@ -206,7 +227,7 @@ public class Artifact extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(artifactStreamId, metadata, displayName, revision, services, artifactFiles, status);
+        + Objects.hash(artifactStreamId, metadata, displayName, revision, serviceIds, services, artifactFiles, status);
   }
 
   @Override
@@ -223,8 +244,9 @@ public class Artifact extends Base {
     final Artifact other = (Artifact) obj;
     return Objects.equals(this.artifactStreamId, other.artifactStreamId)
         && Objects.equals(this.metadata, other.metadata) && Objects.equals(this.displayName, other.displayName)
-        && Objects.equals(this.revision, other.revision) && Objects.equals(this.services, other.services)
-        && Objects.equals(this.artifactFiles, other.artifactFiles) && Objects.equals(this.status, other.status);
+        && Objects.equals(this.revision, other.revision) && Objects.equals(this.serviceIds, other.serviceIds)
+        && Objects.equals(this.services, other.services) && Objects.equals(this.artifactFiles, other.artifactFiles)
+        && Objects.equals(this.status, other.status);
   }
 
   @Override
@@ -234,6 +256,7 @@ public class Artifact extends Base {
         .add("metadata", metadata)
         .add("displayName", displayName)
         .add("revision", revision)
+        .add("serviceIds", serviceIds)
         .add("services", services)
         .add("artifactFiles", artifactFiles)
         .add("status", status)
@@ -248,7 +271,7 @@ public class Artifact extends Base {
     private Map<String, String> metadata = Maps.newHashMap();
     private String displayName;
     private String revision;
-    private List<Service> services;
+    private List<String> serviceIds = new ArrayList<>();
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
     private Status status;
     private String uuid;
@@ -270,7 +293,7 @@ public class Artifact extends Base {
     }
 
     /**
-     * With artifact source id builder.
+     * With artifact stream id builder.
      *
      * @param artifactStreamId the artifact stream id
      * @return the builder
@@ -314,13 +337,13 @@ public class Artifact extends Base {
     }
 
     /**
-     * With services builder.
+     * With service ids builder.
      *
-     * @param services the services
+     * @param serviceIds the service ids
      * @return the builder
      */
-    public Builder withServices(List<Service> services) {
-      this.services = services;
+    public Builder withServiceIds(List<String> serviceIds) {
+      this.serviceIds = serviceIds;
       return this;
     }
 
@@ -423,7 +446,7 @@ public class Artifact extends Base {
           .withMetadata(metadata)
           .withDisplayName(displayName)
           .withRevision(revision)
-          .withServices(services)
+          .withServiceIds(serviceIds)
           .withArtifactFiles(artifactFiles)
           .withStatus(status)
           .withUuid(uuid)
@@ -445,7 +468,7 @@ public class Artifact extends Base {
       artifact.setMetadata(metadata);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
-      artifact.setServices(services);
+      artifact.setServiceIds(serviceIds);
       artifact.setArtifactFiles(artifactFiles);
       artifact.setStatus(status);
       artifact.setUuid(uuid);

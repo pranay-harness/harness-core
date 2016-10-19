@@ -62,7 +62,7 @@ public class ArtifactResource {
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    return new RestResponse<>(artifactService.list(pageRequest));
+    return new RestResponse<>(artifactService.list(pageRequest, false));
   }
 
   /**
@@ -75,7 +75,7 @@ public class ArtifactResource {
   @GET
   @Path("{artifactId}")
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
-    return new RestResponse<>(artifactService.get(appId, artifactId));
+    return new RestResponse<>(artifactService.get(appId, artifactId, true));
   }
 
   /**

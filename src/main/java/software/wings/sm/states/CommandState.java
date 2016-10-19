@@ -259,7 +259,7 @@ public class CommandState extends State {
               .withServiceTemplate(serviceTemplate);
 
       if (command.isArtifactNeeded()) {
-        Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getService());
+        Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getServiceId());
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }

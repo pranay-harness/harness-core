@@ -5,16 +5,14 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ServiceElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
-import software.wings.beans.Service;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
@@ -256,10 +254,20 @@ public class WorkflowStandardParams implements ContextElement {
     this.errorStrategy = errorStrategy;
   }
 
+  /**
+   * Gets workflow element.
+   *
+   * @return the workflow element
+   */
   public WorkflowElement getWorkflowElement() {
     return workflowElement;
   }
 
+  /**
+   * Sets workflow element.
+   *
+   * @param workflowElement the workflow element
+   */
   public void setWorkflowElement(WorkflowElement workflowElement) {
     this.workflowElement = workflowElement;
   }
@@ -307,18 +315,13 @@ public class WorkflowStandardParams implements ContextElement {
   /**
    * Gets artifact for service.
    *
-   * @param service the service
+   * @param serviceId the service id
    * @return the artifact for service
    */
-  public Artifact getArtifactForService(Service service) {
+  public Artifact getArtifactForService(String serviceId) {
     return getArtifacts()
         .stream()
-        .filter(artifact
-            -> artifact.getServices()
-                   .stream()
-                   .filter(service1 -> StringUtils.equals(service1.getUuid(), service.getUuid()))
-                   .findFirst()
-                   .isPresent())
+        .filter(artifact -> artifact.getServiceIds().contains(serviceId))
         .findFirst()
         .orElse(null);
   }

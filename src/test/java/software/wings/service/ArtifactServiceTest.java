@@ -50,15 +50,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private ArtifactService artifactService;
 
-  private Builder builder =
-      anArtifact()
-          .withAppId(APP_ID)
-          .withArtifactStreamId(ARTIFACT_STREAM_ID)
-          .withRevision("1.0")
-          .withDisplayName("DISPLAY_NAME")
-          .withCreatedAt(System.currentTimeMillis())
-          .withCreatedBy(anEmbeddedUser().withUuid("USER_ID").build())
-          .withServices(Lists.newArrayList(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()));
+  private Builder builder = anArtifact()
+                                .withAppId(APP_ID)
+                                .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                .withRevision("1.0")
+                                .withDisplayName("DISPLAY_NAME")
+                                .withCreatedAt(System.currentTimeMillis())
+                                .withCreatedBy(anEmbeddedUser().withUuid("USER_ID").build())
+                                .withServiceIds(asList(SERVICE_ID));
 
   /**
    * test setup.
@@ -183,34 +182,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
-    assertThat(artifactService.list(new PageRequest<>())).hasSize(1).containsExactly(savedArtifact);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1).containsExactly(savedArtifact);
   }
-
-  //  /**
-  //   * Should list artifact.
-  //   */
-  //  @Test
-  //  public void shouldListArtifactByReleases() {
-  //    wingsRule.getDatastore().save(aRelease().withUuid(RELEASE_ID + "1").withAppId(APP_ID)
-  //        .withArtifactSources(Lists.newArrayList(aJenkinsArtifactSource().withSourceName("ARTIFACT_SOURCE").build())).build());
-  //
-  //    Artifact savedArtifact1 = artifactService.create(builder.but().build());
-  //
-  //    Artifact savedArtifact2 = artifactService.create(builder.but().withRelease(aRelease().withUuid(RELEASE_ID +
-  //    "1").build()).build());
-  //
-  //    UriInfo uriInfo = mock(UriInfo.class);
-  //    when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<String, String>() {{
-  //      putSingle("release", RELEASE_ID);
-  //    }});
-  //    assertThat(artifactService.list(aPageRequest().withUriInfo(uriInfo).build())).hasSize(1).containsExactly(savedArtifact1);
-  //
-  //    uriInfo = mock(UriInfo.class);
-  //    when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<String, String>() {{
-  //      putSingle("release", RELEASE_ID + "1");
-  //    }});
-  //    assertThat(artifactService.list(aPageRequest().withUriInfo(uriInfo).build())).hasSize(1).containsExactly(savedArtifact2);
-  //  }
 
   /**
    * Should get artifact.
@@ -228,6 +201,6 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldDeleteArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
     artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
-    assertThat(artifactService.list(new PageRequest<>())).hasSize(0);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
   }
 }

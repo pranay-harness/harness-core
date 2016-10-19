@@ -226,7 +226,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .addFilter(
                     "uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIdNames().keySet().toArray())
                 .build();
-        workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest).getResponse());
+        workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest, false).getResponse());
       }
     }
     refreshBreakdown(workflowExecution);
@@ -418,7 +418,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                 .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
                                                 .addFilter("uuid", Operator.IN, artifactIds.toArray())
                                                 .build();
-        List<Artifact> artifacts = artifactService.list(pageRequest).getResponse();
+        List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
 
         if (artifacts == null || artifacts.size() != artifactIds.size()) {
           logger.error("Artifact argument and valid artifact retrieved size not matching");
@@ -429,7 +429,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         List<ServiceElement> services = new ArrayList<>();
         artifacts.forEach(artifact -> {
-          artifact.getServices().forEach(service -> {
+          artifact.getServiceIds().forEach(serviceId -> {
+            Service service = serviceResourceService.get(artifact.getAppId(), serviceId);
             ServiceElement se = new ServiceElement();
             MapperUtils.mapObject(service, se);
             services.add(se);
