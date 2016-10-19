@@ -14,8 +14,6 @@ import java.util.Set;
  */
 @JsonTypeName("FILE_UPLOAD")
 public class FileUploadSource extends ArtifactStream {
-  @Reference(idOnly = true, ignoreMissing = true, lazy = true) private Set<Service> services;
-
   /**
    * Instantiates a new file upload source.
    */
@@ -24,24 +22,14 @@ public class FileUploadSource extends ArtifactStream {
   }
 
   @Override
-  public Set<Service> getServices() {
-    return services;
-  }
-
-  /**
-   * Sets services.
-   *
-   * @param services the services
-   */
-  public void setServices(Set<Service> services) {
-    this.services = services;
+  public Set<String> getServiceIds() {
+    return Sets.newHashSet();
   }
 
   /**
    * The Class Builder.
    */
   public static final class Builder {
-    private Set<Service> services = Sets.newHashSet();
     private String sourceName;
     private ArtifactType artifactType;
 
@@ -54,17 +42,6 @@ public class FileUploadSource extends ArtifactStream {
      */
     public static Builder aFileUploadSource() {
       return new Builder();
-    }
-
-    /**
-     * With services.
-     *
-     * @param services the services
-     * @return the builder
-     */
-    public Builder withServices(Set<Service> services) {
-      this.services = services;
-      return this;
     }
 
     /**
@@ -96,7 +73,6 @@ public class FileUploadSource extends ArtifactStream {
      */
     public FileUploadSource build() {
       FileUploadSource fileUploadSource = new FileUploadSource();
-      fileUploadSource.setServices(services);
       fileUploadSource.setSourceName(sourceName);
       fileUploadSource.setArtifactType(artifactType);
       return fileUploadSource;

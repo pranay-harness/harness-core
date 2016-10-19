@@ -45,6 +45,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -65,7 +66,7 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
           .withArtifactType(ArtifactType.WAR)
           .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
                                                            .withArtifactPathRegex("build/svr-*.war")
-                                                           .withServices(Lists.newArrayList(SERVICE))
+                                                           .withServiceIds(Arrays.asList(SERVICE_ID))
                                                            .build()))
           .build();
   /**

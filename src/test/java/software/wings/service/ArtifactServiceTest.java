@@ -68,16 +68,14 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     when(appService.exist(APP_ID)).thenReturn(true);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID))
-        .thenReturn(aJenkinsArtifactStream()
-                        .withUuid(ARTIFACT_STREAM_ID)
-                        .withAppId(APP_ID)
-                        .withSourceName("ARTIFACT_SOURCE")
-                        .withArtifactPathServices(
-                            asList(anArtifactPathServiceEntry()
-                                       .withArtifactPathRegex("*")
-                                       .withServices(asList(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()))
-                                       .build()))
-                        .build());
+        .thenReturn(
+            aJenkinsArtifactStream()
+                .withUuid(ARTIFACT_STREAM_ID)
+                .withAppId(APP_ID)
+                .withSourceName("ARTIFACT_SOURCE")
+                .withArtifactPathServices(asList(
+                    anArtifactPathServiceEntry().withArtifactPathRegex("*").withServiceIds(asList(SERVICE_ID)).build()))
+                .build());
   }
 
   /**

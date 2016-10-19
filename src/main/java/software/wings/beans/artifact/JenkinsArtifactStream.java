@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.Service;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -36,9 +35,9 @@ public class JenkinsArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public Set<Service> getServices() {
+  public Set<String> getServiceIds() {
     return artifactPathServices.stream()
-        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServices().stream())
+        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
         .collect(toSet());
   }
 

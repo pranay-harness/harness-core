@@ -1,7 +1,5 @@
 package software.wings.service;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Service.Builder.aService;
@@ -22,6 +20,7 @@ import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.utils.ArtifactType;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -37,14 +36,11 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
           .withSourceName("job1")
           .withJobname("job1")
           .withJenkinsSettingId("JENKINS_SETTING_ID")
-          .withArtifactPathServices(Lists.newArrayList(
-              anArtifactPathServiceEntry()
-                  .withArtifactPathRegex("dist/svr-*.war")
-                  .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId(APP_ID).build()))
-                  .build()))
+          .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
+                                                           .withArtifactPathRegex("dist/svr-*.war")
+                                                           .withServiceIds(Arrays.asList(SERVICE_ID))
+                                                           .build()))
           .build();
-
-  private static final long futureOffset = MILLISECONDS.convert(10, MINUTES);
 
   @Inject private ArtifactStreamService artifactStreamService;
 

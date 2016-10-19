@@ -7,7 +7,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.Service;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -95,7 +94,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the services
    */
-  public abstract Set<Service> getServices();
+  public abstract Set<String> getServiceIds();
 
   /**
    * Gets last artifact.

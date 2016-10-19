@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.collect.Sets;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.artifact.ArtifactStream;
@@ -13,8 +15,6 @@ import java.util.Set;
 @JsonTypeName("HTTP")
 public class FileUrlSource extends ArtifactStream {
   private String url;
-
-  @Reference(idOnly = true, ignoreMissing = true, lazy = true) private Set<Service> services;
 
   /**
    * Instantiates a new file url source.
@@ -42,17 +42,8 @@ public class FileUrlSource extends ArtifactStream {
   }
 
   @Override
-  public Set<Service> getServices() {
-    return services;
-  }
-
-  /**
-   * Sets services.
-   *
-   * @param services the services
-   */
-  public void setServices(Set<Service> services) {
-    this.services = services;
+  public Set<String> getServiceIds() {
+    return Sets.newHashSet();
   }
 
   /**
@@ -60,7 +51,6 @@ public class FileUrlSource extends ArtifactStream {
    */
   public static final class Builder {
     private String url;
-    private Set<Service> services;
     private String sourceName;
     private ArtifactType artifactType;
 
@@ -83,17 +73,6 @@ public class FileUrlSource extends ArtifactStream {
      */
     public Builder withUrl(String url) {
       this.url = url;
-      return this;
-    }
-
-    /**
-     * With services.
-     *
-     * @param serviceIds the service ids
-     * @return the builder
-     */
-    public Builder withServices(Set<Service> serviceIds) {
-      this.services = serviceIds;
       return this;
     }
 
@@ -127,7 +106,6 @@ public class FileUrlSource extends ArtifactStream {
     public FileUrlSource build() {
       FileUrlSource fileUrlSource = new FileUrlSource();
       fileUrlSource.setUrl(url);
-      fileUrlSource.setServices(services);
       fileUrlSource.setSourceName(sourceName);
       fileUrlSource.setArtifactType(artifactType);
       return fileUrlSource;
