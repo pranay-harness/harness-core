@@ -40,9 +40,9 @@ public class ArtifactStreamResource {
   private AppService appService;
 
   /**
-   * Instantiates a new release resource.
+   * Instantiates a new Artifact stream resource.
    *
-   * @param artifactStreamService the release service
+   * @param artifactStreamService the artifact stream service
    * @param appService            the app service
    */
   @Inject
@@ -52,9 +52,9 @@ public class ArtifactStreamResource {
   }
 
   /**
-   * Sets release service.
+   * Sets artifact stream service.
    *
-   * @param artifactStreamService the release service
+   * @param artifactStreamService the artifact stream service
    */
   public void setArtifactStreamService(ArtifactStreamService artifactStreamService) {
     this.artifactStreamService = artifactStreamService;
@@ -101,11 +101,11 @@ public class ArtifactStreamResource {
   }
 
   /**
-   * Endpoint to create a new release.
+   * Save rest response.
    *
-   * @param appId          QueryParam app_id.
-   * @param artifactStream the artifact source
-   * @return newly created release.
+   * @param appId          the app id
+   * @param artifactStream the artifact stream
+   * @return the rest response
    */
   @POST
   @Timed
@@ -124,12 +124,12 @@ public class ArtifactStreamResource {
   }
 
   /**
-   * Endpoint to update a release.
+   * Update rest response.
    *
-   * @param appId          QueryParam app_id.
+   * @param appId          the app id
    * @param id             the id
-   * @param artifactStream the artifact source
-   * @return release to be updated.
+   * @param artifactStream the artifact stream
+   * @return the rest response
    */
   @PUT
   @Timed

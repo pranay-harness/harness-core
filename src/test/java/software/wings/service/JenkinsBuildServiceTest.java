@@ -81,9 +81,9 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should fail validation when release id is null.
+   * Should fail validation when artifact source id is null.
    *
-   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws IOException the io exception
    */
   @Test
   public void shouldFailValidationWhenArtifactSourceIdIsNull() throws IOException {
@@ -92,9 +92,9 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should fail validation when release does not exists.
+   * Should fail validation when artifact source does not exists.
    *
-   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws IOException the io exception
    */
   @Test
   public void shouldFailValidationWhenArtifactSourceDoesNotExists() throws IOException {

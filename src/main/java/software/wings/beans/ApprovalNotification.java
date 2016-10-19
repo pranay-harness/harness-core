@@ -90,18 +90,18 @@ public class ApprovalNotification extends ActionableNotification {
   }
 
   /**
-   * Gets release id.
+   * Gets artifact stream id.
    *
-   * @return the release id
+   * @return the artifact stream id
    */
   public String getArtifactStreamId() {
     return artifactStreamId;
   }
 
   /**
-   * Sets release id.
+   * Sets artifact stream id.
    *
-   * @param artifactStreamId the release id
+   * @param artifactStreamId the artifact stream id
    */
   public void setArtifactStreamId(String artifactStreamId) {
     this.artifactStreamId = artifactStreamId;
@@ -174,7 +174,7 @@ public class ApprovalNotification extends ActionableNotification {
     }
 
     /**
-     * With release id builder.
+     * With artifact stream id builder.
      *
      * @param artifactStreamId the artifact stream id
      * @return the builder

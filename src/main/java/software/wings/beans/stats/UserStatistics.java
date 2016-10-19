@@ -150,7 +150,6 @@ public class UserStatistics {
    */
   public static final class Builder {
     private int deploymentCount;
-    private int releaseCount;
     private long lastFetchedOn;
     private List<AppDeployment> appDeployments;
 
@@ -173,17 +172,6 @@ public class UserStatistics {
      */
     public Builder withDeploymentCount(int deploymentCount) {
       this.deploymentCount = deploymentCount;
-      return this;
-    }
-
-    /**
-     * With release count builder.
-     *
-     * @param releaseCount the release count
-     * @return the builder
-     */
-    public Builder withReleaseCount(int releaseCount) {
-      this.releaseCount = releaseCount;
       return this;
     }
 

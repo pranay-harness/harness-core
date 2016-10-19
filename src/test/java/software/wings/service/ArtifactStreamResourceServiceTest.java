@@ -58,7 +58,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should create valid release.
+   * Should create artifact stream.
    */
   @Test
   public void shouldCreateArtifactStream() {
@@ -66,17 +66,20 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list all releases.
+   * Should list all artifact streams.
    */
   @Test
-  public void shouldListAllReleases() {
+  public void shouldListAllArtifactStreams() {
     List<ArtifactStream> artifactStreams = Lists.newArrayList();
     artifactStreams.add(artifactStreamService.create(artifactStream));
     assertThat(artifactStreamService.list(new PageRequest<>())).hasSameElementsAs(artifactStreams);
   }
 
+  /**
+   * Should delete artifact stream.
+   */
   @Test
-  public void shouldDeleteRelease() {
+  public void shouldDeleteArtifactStream() {
     ArtifactStream artifactStream = artifactStreamService.create(ArtifactStreamResourceServiceTest.artifactStream);
     artifactStreamService.delete(artifactStream.getUuid(), artifactStream.getAppId());
     assertThat(artifactStreamService.list(new PageRequest<>())).hasSize(0);

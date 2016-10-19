@@ -22,27 +22,27 @@ public interface ArtifactStreamService {
   PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req);
 
   /**
-   * Gets the.
+   * Get artifact stream.
    *
    * @param id    the id
    * @param appId the app id
-   * @return the release
+   * @return the artifact stream
    */
   ArtifactStream get(String id, String appId);
 
   /**
-   * Creates the.
+   * Create artifact stream.
    *
-   * @param artifactStream the artifact source
-   * @return the release
+   * @param artifactStream the artifact stream
+   * @return the artifact stream
    */
   ArtifactStream create(@Valid ArtifactStream artifactStream);
 
   /**
-   * Update.
+   * Update artifact stream.
    *
-   * @param artifactStream the artifact source
-   * @return the release
+   * @param artifactStream the artifact stream
+   * @return the artifact stream
    */
   ArtifactStream update(@Valid ArtifactStream artifactStream);
 
