@@ -45,6 +45,7 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -104,7 +105,7 @@ public class AppServiceImpl implements AppService {
                                    .withShortDescription("Application " + application.getName() + " created")
                                    .withTitle("Application " + application.getName() + " created")
                                    .build());
-    return get(application.getUuid(), INCOMPLETE, true);
+    return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
   /* (non-Javadoc)
@@ -233,14 +234,16 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application get(String appId, SetupStatus status, boolean overview) {
+  public Application get(String appId, SetupStatus status, boolean overview, int overviewDays) {
     Application application = get(appId);
     application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
     application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
 
     if (overview) {
-      application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
+      application.setNotifications(getIncompleteActionableApplicationNotifications(appId));
+      application.setAppKeyStatistics(statisticsService.getApplicationKeyStats(Arrays.asList(appId), 4).get(appId));
     }
+
     if (status == INCOMPLETE) {
       application.setSetup(setupService.getApplicationSetupStatus(application));
     }

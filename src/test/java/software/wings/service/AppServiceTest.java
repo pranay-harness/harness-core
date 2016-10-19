@@ -174,7 +174,7 @@ public class AppServiceTest extends WingsBaseTest {
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
     when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
-    Application application = appService.get(APP_ID, SetupStatus.COMPLETE, true);
+    Application application = appService.get(APP_ID, SetupStatus.COMPLETE, true, 0);
     verify(wingsPersistence).get(Application.class, APP_ID);
     assertThat(application.getNotifications())
         .hasSize(1)
@@ -197,7 +197,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     when(setupService.getApplicationSetupStatus(anApplication().withUuid(APP_ID).build()))
         .thenReturn(Setup.Builder.aSetup().build());
-    Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE, false);
+    Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE, false, 0);
 
     verify(wingsPersistence).get(Application.class, APP_ID);
     verify(setupService).getApplicationSetupStatus(anApplication().withUuid(APP_ID).build());

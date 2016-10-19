@@ -26,7 +26,7 @@ public interface AppService {
    * @param req                the req
    * @param overview           the summary
    * @param numberOfExecutions the number of executions
-   * @param overviewDays
+   * @param overviewDays       the overview days
    * @return the page response
    */
   PageResponse<Application> list(
@@ -51,12 +51,13 @@ public interface AppService {
   /**
    * Get application.
    *
-   * @param appId    the app id
-   * @param status   the status
-   * @param overview the overview
+   * @param appId        the app id
+   * @param status       the status
+   * @param overview     the overview
+   * @param overviewDays the overview days
    * @return the application
    */
-  Application get(@NotEmpty String appId, SetupStatus status, boolean overview);
+  Application get(@NotEmpty String appId, SetupStatus status, boolean overview, int overviewDays);
 
   /**
    * Update.
