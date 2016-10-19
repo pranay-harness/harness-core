@@ -241,7 +241,8 @@ public class AppServiceImpl implements AppService {
 
     if (overview) {
       application.setNotifications(getIncompleteActionableApplicationNotifications(appId));
-      application.setAppKeyStatistics(statisticsService.getApplicationKeyStats(Arrays.asList(appId), 4).get(appId));
+      application.setAppKeyStatistics(
+          statisticsService.getApplicationKeyStats(Arrays.asList(appId), overviewDays).get(appId));
     }
 
     if (status == INCOMPLETE) {
