@@ -246,6 +246,8 @@ public class HostServiceImpl implements HostService {
                                           .equal(appHost.getHostName())
                                           .field("appId")
                                           .equal(appHost.getAppId())
+                                          .field("envId")
+                                          .equal(appHost.getEnvId())
                                           .get();
     if (applicationHost == null) {
       applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class, appHost);
