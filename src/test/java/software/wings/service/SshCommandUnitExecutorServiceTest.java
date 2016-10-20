@@ -143,9 +143,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
   @Before
   public void setupMocks() {
-    when(settingsService.get(APP_ID, HOST_CONN_ATTR_ID)).thenReturn(HOST_CONN_ATTR_PWD);
-    when(settingsService.get(APP_ID, BASTION_CONN_ATTR_ID)).thenReturn(BASTION_HOST_ATTR);
-    when(settingsService.get(APP_ID, HOST_CONN_ATTR_KEY_ID)).thenReturn(HOST_CONN_ATTR_KEY);
+    when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(HOST_CONN_ATTR_PWD);
+    when(settingsService.get(BASTION_CONN_ATTR_ID)).thenReturn(BASTION_HOST_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_KEY_ID)).thenReturn(HOST_CONN_ATTR_KEY);
   }
 
   /**

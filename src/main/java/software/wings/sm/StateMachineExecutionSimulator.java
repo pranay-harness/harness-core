@@ -149,7 +149,7 @@ public class StateMachineExecutionSimulator {
                                              .getResponse();
 
     for (ApplicationHost host : hostResponse) {
-      SettingAttribute connAttribute = settingsService.get(appId, host.getHost().getHostConnAttr());
+      SettingAttribute connAttribute = settingsService.get(host.getHost().getHostConnAttr());
       if (connAttribute == null || connAttribute.getValue() == null
           || !(connAttribute.getValue() instanceof HostConnectionAttributes)
           || ((HostConnectionAttributes) connAttribute.getValue()).getAccessType() == null) {
