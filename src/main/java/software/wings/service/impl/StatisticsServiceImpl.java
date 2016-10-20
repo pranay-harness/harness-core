@@ -133,7 +133,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     List<Activity> activities =
         wingsPersistence.createQuery(Activity.class)
             .field("createdAt")
-            .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays - 1))
+            .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays))
             .field("appId")
             .in(appIds)
             .field("workflowType")
@@ -506,7 +506,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {
     return LocalDate.now(ZoneId.systemDefault())
-        .minus(days, ChronoUnit.DAYS)
+        .minus(days - 1, ChronoUnit.DAYS)
         .atStartOfDay(ZoneId.systemDefault())
         .toInstant()
         .toEpochMilli();
