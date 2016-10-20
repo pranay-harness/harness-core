@@ -35,7 +35,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Notification;
 import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -288,10 +287,15 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Override
   public NotificationCount getNotificationCount(String appId, int minutesFromNow) {
     long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
-    PageRequest notificationRequest = aPageRequest()
-                                          .addFilter("createdAt", Operator.GT, queryStartEpoch)
-                                          .addFieldsIncluded("appId", "complete", "actionable")
-                                          .build();
+
+    PageRequest actionableNotificationRequest =
+        aPageRequest().addFilter("actionable", Operator.EQ, true).addFilter("complete", Operator.EQ, false).build();
+
+    PageRequest nonActionableNotificationRequest = aPageRequest()
+                                                       .addFilter("createdAt", Operator.GT, queryStartEpoch)
+                                                       .addFilter("actionable", Operator.EQ, false)
+                                                       .build();
+
     PageRequest failureRequest = aPageRequest()
                                      .addFilter("createdAt", Operator.GT, queryStartEpoch)
                                      .addFilter("status", Operator.EQ, FAILED)
@@ -299,21 +303,18 @@ public class StatisticsServiceImpl implements StatisticsService {
                                      .build();
 
     if (appId != null) {
-      notificationRequest.addFilter("appId", appId, Operator.EQ);
+      actionableNotificationRequest.addFilter("appId", appId, Operator.EQ);
+      nonActionableNotificationRequest.addFilter("appId", appId, Operator.EQ);
       failureRequest.addFilter("appId", appId, Operator.EQ);
     }
 
-    List<Notification> notifications = notificationService.list(notificationRequest).getResponse();
-    Map<Boolean, Long> notificationCountByStatus =
-        notifications.stream().collect(groupingBy(Notification::isComplete, counting()));
-
-    int pendingNotificationCount = notificationCountByStatus.computeIfAbsent(false, v -> 0L).intValue();
-    int completedNotificationCount = notificationCountByStatus.computeIfAbsent(true, v -> 0L).intValue();
+    int actionableNotificationCount = notificationService.list(actionableNotificationRequest).getResponse().size();
+    int nonActionableNotification = notificationService.list(nonActionableNotificationRequest).getResponse().size();
     int failureCount = activityService.list(failureRequest).getResponse().size();
 
     return aNotificationCount()
-        .withCompletedNotificationsCount(completedNotificationCount)
-        .withPendingNotificationsCount(pendingNotificationCount)
+        .withCompletedNotificationsCount(nonActionableNotification)
+        .withPendingNotificationsCount(actionableNotificationCount)
         .withFailureCount(failureCount)
         .build();
   }
