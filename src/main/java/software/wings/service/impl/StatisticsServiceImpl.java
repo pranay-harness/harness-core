@@ -134,7 +134,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     List<Activity> activities =
         wingsPersistence.createQuery(Activity.class)
             .field("createdAt")
-            .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays))
+            .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays - 1))
             .field("appId")
             .in(appIds)
             .field("workflowType")
