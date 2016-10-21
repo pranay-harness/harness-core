@@ -219,7 +219,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                           .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase());
 
     if (executorType.equals(KEY_AUTH)) {
-      SettingAttribute settingAttribute = settingsService.get(host.getAppId(), host.getHostConnAttr());
+      SettingAttribute settingAttribute = settingsService.get(host.getHostConnAttr());
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       builder.withKey(hostConnectionAttributes.getKey())
           .withUserName(hostConnectionAttributes.getUserName())
@@ -228,7 +228,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     }
 
     if (host.getBastionConnAttr() != null) {
-      SettingAttribute settingAttribute = settingsService.get(host.getAppId(), host.getBastionConnAttr());
+      SettingAttribute settingAttribute = settingsService.get(host.getBastionConnAttr());
       BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) settingAttribute.getValue();
       builder.withBastionHostConfig(aSshSessionConfig()
                                         .withHost(bastionAttrs.getHostName())
@@ -245,7 +245,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     if (host.getBastionConnAttr() != null) {
       executorType = BASTION_HOST;
     } else {
-      SettingAttribute settingAttribute = settingsService.get(appId, host.getHostConnAttr());
+      SettingAttribute settingAttribute = settingsService.get(host.getHostConnAttr());
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       AccessType accessType = hostConnectionAttributes.getAccessType();
       if (accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER)

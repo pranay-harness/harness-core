@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -34,7 +33,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
@@ -74,8 +72,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 
@@ -158,9 +156,11 @@ public class StatisticsServiceImpl implements StatisticsService {
     activitiesByEnvType.computeIfAbsent(NON_PROD, v -> asList());
 
     activitiesByEnvType.forEach((environmentType, activities) -> {
-      int deployments = activities.stream().map(Activity::getWorkflowExecutionId).collect(toSet()).size();
+      int deployments =
+          (int) activities.stream().map(Activity::getWorkflowExecutionId).filter(Objects::nonNull).distinct().count();
       int instances = activities.size();
-      int artifacts = activities.stream().map(Activity::getArtifactId).collect(toSet()).size();
+      int artifacts =
+          (int) activities.stream().map(Activity::getArtifactId).filter(Objects::nonNull).distinct().count();
       appKeyStatistics.getStatsMap().put(environmentType,
           anAppKeyStatistics()
               .withInstanceCount(instances)
@@ -272,10 +272,15 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Override
   public NotificationCount getNotificationCount(String appId, int minutesFromNow) {
     long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
-    PageRequest notificationRequest = aPageRequest()
-                                          .addFilter("createdAt", Operator.GT, queryStartEpoch)
-                                          .addFieldsIncluded("appId", "complete", "actionable")
-                                          .build();
+
+    PageRequest actionableNotificationRequest =
+        aPageRequest().addFilter("actionable", Operator.EQ, true).addFilter("complete", Operator.EQ, false).build();
+
+    PageRequest nonActionableNotificationRequest = aPageRequest()
+                                                       .addFilter("createdAt", Operator.GT, queryStartEpoch)
+                                                       .addFilter("actionable", Operator.EQ, false)
+                                                       .build();
+
     PageRequest failureRequest = aPageRequest()
                                      .addFilter("createdAt", Operator.GT, queryStartEpoch)
                                      .addFilter("status", Operator.EQ, FAILED)
@@ -283,21 +288,18 @@ public class StatisticsServiceImpl implements StatisticsService {
                                      .build();
 
     if (appId != null) {
-      notificationRequest.addFilter("appId", appId, Operator.EQ);
+      actionableNotificationRequest.addFilter("appId", appId, Operator.EQ);
+      nonActionableNotificationRequest.addFilter("appId", appId, Operator.EQ);
       failureRequest.addFilter("appId", appId, Operator.EQ);
     }
 
-    List<Notification> notifications = notificationService.list(notificationRequest).getResponse();
-    Map<Boolean, Long> notificationCountByStatus =
-        notifications.stream().collect(groupingBy(Notification::isComplete, counting()));
-
-    int pendingNotificationCount = notificationCountByStatus.computeIfAbsent(false, v -> 0L).intValue();
-    int completedNotificationCount = notificationCountByStatus.computeIfAbsent(true, v -> 0L).intValue();
+    int actionableNotificationCount = notificationService.list(actionableNotificationRequest).getResponse().size();
+    int nonActionableNotification = notificationService.list(nonActionableNotificationRequest).getResponse().size();
     int failureCount = activityService.list(failureRequest).getResponse().size();
 
     return aNotificationCount()
-        .withCompletedNotificationsCount(completedNotificationCount)
-        .withPendingNotificationsCount(pendingNotificationCount)
+        .withCompletedNotificationsCount(nonActionableNotification)
+        .withPendingNotificationsCount(actionableNotificationCount)
         .withFailureCount(failureCount)
         .build();
   }
@@ -410,8 +412,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     int instanceCount = 0;
 
     if (activities != null && activities.size() > 0) {
-      appCount = activities.stream().map(Activity::getAppId).collect(Collectors.toSet()).size();
-      artifactCount = activities.stream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+      appCount = (int) activities.stream().map(Activity::getAppId).filter(Objects::nonNull).distinct().count();
+      artifactCount =
+          (int) activities.stream().map(Activity::getArtifactId).filter(Objects::nonNull).distinct().count();
       instanceCount = activities.size();
     }
     return aKeyStatistics()
@@ -461,7 +464,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {
     return LocalDate.now(ZoneId.systemDefault())
-        .minus(days, ChronoUnit.DAYS)
+        .minus(days - 1, ChronoUnit.DAYS)
         .atStartOfDay(ZoneId.systemDefault())
         .toInstant()
         .toEpochMilli();

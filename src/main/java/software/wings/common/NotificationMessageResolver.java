@@ -31,12 +31,12 @@ public class NotificationMessageResolver {
   /**
    * The constant HOST_DELETE_NOTIFICATION.
    */
-  public static final String HOST_DELETE_NOTIFICATION = "A host {HOST_NAME} deleted from ${ENV_NAME} environment.";
+  public static final String HOST_DELETE_NOTIFICATION = "A host ${HOST_NAME} deleted from ${ENV_NAME} environment.";
   /**
    * The constant DEPLOYMENT_COMPLETED_NOTIFICATION.
    */
   public static final String DEPLOYMENT_COMPLETED_NOTIFICATION =
-      "{DATE} : Deployment {NAME} completed on ${HOST_COUNT} in {ENV_NAME} environment.";
+      "${DATE} : Deployment {NAME} completed on ${HOST_COUNT} in ${ENV_NAME} environment.";
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
 
   /**

@@ -204,8 +204,7 @@ public class HostServiceImpl implements HostService {
                     .equal(baseHost.getInfraId())
                     .get();
     if (host == null) {
-      SettingAttribute bastionConnAttr =
-          validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
+      SettingAttribute bastionConnAttr = validateAndFetchBastionHostConnectionReference(baseHost.getBastionConnAttr());
       if (bastionConnAttr != null) {
         baseHost.setBastionConnAttr(bastionConnAttr.getUuid());
       }
@@ -246,6 +245,8 @@ public class HostServiceImpl implements HostService {
                                           .equal(appHost.getHostName())
                                           .field("appId")
                                           .equal(appHost.getAppId())
+                                          .field("envId")
+                                          .equal(appHost.getEnvId())
                                           .get();
     if (applicationHost == null) {
       applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class, appHost);
@@ -488,11 +489,11 @@ public class HostServiceImpl implements HostService {
     return fetchedTag;
   }
 
-  private SettingAttribute validateAndFetchBastionHostConnectionReference(String appId, String settingAttribute) {
+  private SettingAttribute validateAndFetchBastionHostConnectionReference(String settingAttribute) {
     if (isBlank(settingAttribute)) {
       return null;
     }
-    SettingAttribute fetchedAttribute = settingsService.get(appId, settingAttribute);
+    SettingAttribute fetchedAttribute = settingsService.get(settingAttribute);
     if (fetchedAttribute == null) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "bastionConnAttr");
     }

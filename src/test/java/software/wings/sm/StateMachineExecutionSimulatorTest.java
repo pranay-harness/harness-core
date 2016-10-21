@@ -177,7 +177,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
     when(hostService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Arrays.asList(anApplicationHost().withHost(host).build())).build());
-    when(settingsService.get(app.getUuid(), HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -234,7 +234,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
     when(hostService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Arrays.asList(anApplicationHost().withHost(host).build())).build());
-    when(settingsService.get(app.getUuid(), HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -294,8 +294,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
     when(hostService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Arrays.asList(applicationHost1, applicationHost2)).build());
-    when(settingsService.get(app.getUuid(), HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
-    when(settingsService.get(app.getUuid(), HOST_CONN_ATTR_KEY_ID)).thenReturn(USER_PASS_SU_HOST_CONN_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_KEY_ID)).thenReturn(USER_PASS_SU_HOST_CONN_ATTR);
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -357,8 +357,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
     when(hostService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(Arrays.asList(applicationHost1, applicationHost2)).build());
-    when(settingsService.get(app.getUuid(), HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
-    when(settingsService.get(app.getUuid(), HOST_CONN_ATTR_KEY_ID)).thenReturn(USER_PASS_SUDO_HOST_CONN_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
+    when(settingsService.get(HOST_CONN_ATTR_KEY_ID)).thenReturn(USER_PASS_SUDO_HOST_CONN_ATTR);
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
