@@ -10,4 +10,5 @@ if(db.account.count() == 0) {
   db.roles.updateMany({}, { "accountId": "kmpySmUISimoRrJL6NL73w"});
   db.users.updateMany({}, { "accounts": ["kmpySmUISimoRrJL6NL73w"]});
   db.appContainers.updateMany({}, { "accountId": "kmpySmUISimoRrJL6NL73w"});
+  db.settingAttributes.updateMany({ name: { "$in": ["Wings Jenkins", "SMTP", "Splunk", "AppDynamics"] }}, { "$set": { "isPluginSetting": true }});
 }

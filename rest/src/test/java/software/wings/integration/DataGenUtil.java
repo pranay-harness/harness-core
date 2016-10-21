@@ -361,6 +361,7 @@ private void createGlobalSettings() {
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("Wings Jenkins")
+                        .withIsPluginSetting(true)
                         .withAccountId(accountId)
                         .withValue(aJenkinsConfig()
                                        .withJenkinsUrl("http://ec2-54-174-51-35.compute-1.amazonaws.com/")
@@ -371,6 +372,7 @@ private void createGlobalSettings() {
           APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
   getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
+                                                          .withIsPluginSetting(true)
                                                           .withName("SMTP")
                                                           .withAccountId(accountId)
                                                           .withValue(aSmtpConfig()
@@ -386,6 +388,7 @@ private void createGlobalSettings() {
       new GenericType<RestResponse<SettingAttribute>>() {});
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
+                        .withIsPluginSetting(true)
                         .withName("Splunk")
                         .withAccountId(accountId)
                         .withValue(aSplunkConfig()
@@ -400,6 +403,7 @@ private void createGlobalSettings() {
 
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
+                        .withIsPluginSetting(true)
                         .withName("AppDynamics")
                         .withAccountId(accountId)
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()

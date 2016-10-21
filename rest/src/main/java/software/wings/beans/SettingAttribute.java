@@ -23,6 +23,7 @@ public class SettingAttribute extends Base {
   @NotEmpty private String accountId;
   private String name;
   private SettingValue value;
+  private boolean isPluginSetting = false;
 
   /**
    * Gets env id.
@@ -98,7 +99,7 @@ public class SettingAttribute extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(envId, accountId, name, value);
+    return 31 * super.hashCode() + Objects.hash(envId, accountId, name, value, isPluginSetting);
   }
 
   @Override
@@ -114,7 +115,8 @@ public class SettingAttribute extends Base {
     }
     final SettingAttribute other = (SettingAttribute) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value);
+        && Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value)
+        && Objects.equals(this.isPluginSetting, other.isPluginSetting);
   }
 
   @Override
@@ -132,6 +134,7 @@ public class SettingAttribute extends Base {
     private String accountId;
     private String name;
     private SettingValue value;
+    private boolean isPluginSetting = false;
     private String uuid;
     private String appId = GLOBAL_APP_ID;
     private EmbeddedUser createdBy;
@@ -162,6 +165,11 @@ public class SettingAttribute extends Base {
 
     public Builder withValue(SettingValue value) {
       this.value = value;
+      return this;
+    }
+
+    public Builder withIsPluginSetting(boolean isPluginSetting) {
+      this.isPluginSetting = isPluginSetting;
       return this;
     }
 
@@ -201,6 +209,7 @@ public class SettingAttribute extends Base {
           .withAccountId(accountId)
           .withName(name)
           .withValue(value)
+          .withIsPluginSetting(isPluginSetting)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -221,6 +230,7 @@ public class SettingAttribute extends Base {
       settingAttribute.setCreatedAt(createdAt);
       settingAttribute.setLastUpdatedBy(lastUpdatedBy);
       settingAttribute.setLastUpdatedAt(lastUpdatedAt);
+      settingAttribute.isPluginSetting = this.isPluginSetting;
       return settingAttribute;
     }
   }

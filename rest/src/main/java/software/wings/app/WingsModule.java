@@ -44,8 +44,12 @@ import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
+<<<<<<< HEAD
 import software.wings.service.impl.PipelineServiceImpl;
+=======
+>>>>>>> e08d927... feature: api for supporting plugins
 import software.wings.service.impl.PlatformServiceImpl;
+import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
@@ -86,8 +90,12 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+<<<<<<< HEAD
 import software.wings.service.intfc.PipelineService;
+=======
+>>>>>>> e08d927... feature: api for supporting plugins
 import software.wings.service.intfc.PlatformService;
+import software.wings.service.intfc.PluginService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -171,6 +179,7 @@ public class WingsModule extends AbstractModule {
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
     bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
+    bind(PluginService.class).to(PluginServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()
