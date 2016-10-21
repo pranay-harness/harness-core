@@ -77,9 +77,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 
@@ -163,9 +163,11 @@ public class StatisticsServiceImpl implements StatisticsService {
     activitiesByEnvType.computeIfAbsent(NON_PROD, v -> asList());
 
     activitiesByEnvType.forEach((environmentType, activities) -> {
-      int deployments = activities.stream().map(Activity::getWorkflowExecutionId).collect(toSet()).size();
+      int deployments =
+          (int) activities.stream().map(Activity::getWorkflowExecutionId).filter(Objects::nonNull).distinct().count();
       int instances = activities.size();
-      int artifacts = activities.stream().map(Activity::getArtifactId).collect(toSet()).size();
+      int artifacts =
+          (int) activities.stream().map(Activity::getArtifactId).filter(Objects::nonNull).distinct().count();
       appKeyStatistics.getStatsMap().put(environmentType,
           anAppKeyStatistics()
               .withInstanceCount(instances)
@@ -455,8 +457,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     int instanceCount = 0;
 
     if (activities != null && activities.size() > 0) {
-      appCount = activities.stream().map(Activity::getAppId).collect(Collectors.toSet()).size();
-      artifactCount = activities.stream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+      appCount = (int) activities.stream().map(Activity::getAppId).filter(Objects::nonNull).distinct().count();
+      artifactCount =
+          (int) activities.stream().map(Activity::getArtifactId).filter(Objects::nonNull).distinct().count();
       instanceCount = activities.size();
     }
     return aKeyStatistics()
