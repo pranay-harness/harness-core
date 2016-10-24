@@ -59,9 +59,9 @@ public class CronSchedulerTest {
 
   @Test
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
-    CronScheduler cronScheduler = new CronScheduler(createProps());
-    cronScheduler.getScheduler().resumeAll();
-    Thread.sleep(100000);
-    System.out.println("Completed");
+    //    CronScheduler cronScheduler = new CronScheduler(createProps());
+    //    cronScheduler.getScheduler().resumeAll();
+    //    Thread.sleep(100000);
+    //    System.out.println("Completed");
   }
 }

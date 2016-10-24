@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -28,7 +29,7 @@ public abstract class ArtifactStream extends Base {
 
   private boolean autoApproveForProduction = false;
 
-  private List<ArtifactStreamAction> streamActions;
+  private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
   @Transient private Artifact lastArtifact;
 

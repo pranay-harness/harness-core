@@ -65,6 +65,11 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       }
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
+
+      if (artifactStream.isAutoApproveForProduction()) {
+        artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.APPROVED);
+      }
+      artifactStreamService.triggerStreamActionAsync(artifact);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 

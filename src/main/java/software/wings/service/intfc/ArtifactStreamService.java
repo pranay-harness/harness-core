@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
@@ -92,4 +93,11 @@ public interface ArtifactStreamService {
    * @return the artifact stream
    */
   ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction);
+
+  /**
+   * Trigger stream action.
+   *
+   * @param artifact the artifact
+   */
+  void triggerStreamActionAsync(Artifact artifact);
 }

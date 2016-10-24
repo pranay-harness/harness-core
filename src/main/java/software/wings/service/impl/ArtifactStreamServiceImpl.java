@@ -1,13 +1,17 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.WorkflowType.ORCHESTRATION;
 
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -20,6 +24,7 @@ import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -33,6 +38,8 @@ import javax.ws.rs.NotFoundException;
 public class ArtifactStreamServiceImpl implements ArtifactStreamService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ExecutorService executorService;
+  private final Logger logger = LoggerFactory.getLogger(ArtifactStreamService.class);
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -142,5 +149,37 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService {
   public ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
     deleteStreamAction(appId, streamId, artifactStreamAction.getWorkflowId());
     return addStreamAction(appId, streamId, artifactStreamAction);
+  }
+
+  @Override
+  public void triggerStreamActionAsync(Artifact artifact) {
+    executorService.execute(() -> triggerStreamAction(artifact));
+  }
+
+  private void triggerStreamAction(Artifact artifact) {
+    ArtifactStream artifactStream = get(artifact.getArtifactStreamId(), artifact.getAppId());
+    Validator.notNullCheck("ArtifactStream", artifactStream);
+    artifactStream.getStreamActions().forEach(
+        artifactStreamAction -> triggerStreamAction(artifact, artifactStreamAction));
+  }
+
+  private void triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    if (artifactStreamAction.isCustomAction()) {
+      return; // do nothing for scheduled actions
+    }
+
+    if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
+      triggerWorkflowAction(artifact, artifactStreamAction);
+    } else {
+      triggerPipelineAction(artifact, artifactStreamAction);
+    }
+  }
+
+  private void triggerPipelineAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    logger.info("Execute pipeline jobs " + artifactStreamAction.getWorkflowId());
+  }
+
+  private void triggerWorkflowAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
+    logger.info("Execute workflow jobs " + artifactStreamAction.getWorkflowId());
   }
 }
