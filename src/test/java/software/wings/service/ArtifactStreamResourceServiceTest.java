@@ -18,7 +18,6 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.utils.ArtifactType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +31,6 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   private static final JenkinsArtifactStream artifactStream =
       aJenkinsArtifactStream()
           .withAppId(APP_ID)
-          .withArtifactType(ArtifactType.WAR)
           .withSourceName("job1")
           .withJobname("job1")
           .withJenkinsSettingId("JENKINS_SETTING_ID")

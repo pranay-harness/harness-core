@@ -4,14 +4,19 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -88,5 +93,54 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService {
         .equal(appId)
         .asList()
         .forEach(artifactSource -> delete(artifactSource.getUuid(), appId));
+  }
+
+  @Override
+  public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .field("appId")
+                                      .equal(appId)
+                                      .field(ID_KEY)
+                                      .equal(streamId)
+                                      .field("streamActions.workflowId")
+                                      .notEqual(artifactStreamAction.getWorkflowId());
+    UpdateOperations<ArtifactStream> operations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class).add("streamActions", artifactStreamAction);
+    UpdateResults update = wingsPersistence.update(query, operations);
+    return get(streamId, appId);
+  }
+
+  @Override
+  public ArtifactStream deleteStreamAction(String appId, String streamId, String workflowId) {
+    Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
+                                      .field("appId")
+                                      .equal(appId)
+                                      .field(ID_KEY)
+                                      .equal(streamId)
+                                      .field("streamActions.workflowId")
+                                      .equal(workflowId);
+
+    ArtifactStream artifactStream = query.get();
+    Validator.notNullCheck("ArtifactStream", artifactStream);
+
+    ArtifactStreamAction streamAction =
+        artifactStream.getStreamActions()
+            .stream()
+            .filter(artifactStreamAction -> artifactStreamAction.getWorkflowId().equals(workflowId))
+            .findFirst()
+            .orElseGet(null);
+    Validator.notNullCheck("StreamAction", streamAction);
+
+    UpdateOperations<ArtifactStream> operations =
+        wingsPersistence.createUpdateOperations(ArtifactStream.class).removeAll("streamActions", streamAction);
+
+    wingsPersistence.update(query, operations);
+    return get(streamId, appId);
+  }
+
+  @Override
+  public ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+    deleteStreamAction(appId, streamId, artifactStreamAction.getWorkflowId());
+    return addStreamAction(appId, streamId, artifactStreamAction);
   }
 }

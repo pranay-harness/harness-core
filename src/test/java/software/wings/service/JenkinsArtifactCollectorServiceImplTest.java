@@ -7,11 +7,11 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.artifact.JenkinsConfig.Builder.aJenkinsConfig;
-import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -29,9 +29,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.Service;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
@@ -39,7 +39,6 @@ import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.ArtifactType;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -63,7 +62,6 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
       aJenkinsArtifactStream()
           .withSourceName("job1")
           .withJobname("job1")
-          .withArtifactType(ArtifactType.WAR)
           .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
                                                            .withArtifactPathRegex("build/svr-*.war")
                                                            .withServiceIds(Arrays.asList(SERVICE_ID))

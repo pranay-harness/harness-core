@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -61,4 +62,34 @@ public interface ArtifactStreamService {
    * @param appId the app id
    */
   void deleteByApplication(String appId);
+
+  /**
+   * Add stream action artifact stream.
+   *
+   * @param appId                the app id
+   * @param streamId             the stream id
+   * @param artifactStreamAction the artifact stream action
+   * @return the artifact stream
+   */
+  ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction);
+
+  /**
+   * Delete stream action artifact stream.
+   *
+   * @param appId      the app id
+   * @param streamId   the stream id
+   * @param workflowId the action id
+   * @return the artifact stream
+   */
+  ArtifactStream deleteStreamAction(String appId, String streamId, String workflowId);
+
+  /**
+   * Update stream action artifact stream.
+   *
+   * @param appId                the app id
+   * @param streamId             the stream id
+   * @param artifactStreamAction the artifact stream action
+   * @return the artifact stream
+   */
+  ArtifactStream updateStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction);
 }

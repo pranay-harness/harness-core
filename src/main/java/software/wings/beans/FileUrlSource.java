@@ -5,7 +5,7 @@ import com.google.common.collect.Sets;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.PostArtifactDownloadAction;
+import software.wings.beans.artifact.ArtifactStreamAction;
 
 import java.util.List;
 import java.util.Set;
@@ -55,7 +55,7 @@ public class FileUrlSource extends ArtifactStream {
     private String sourceName;
     private boolean autoDownload = false;
     private boolean autoApproveForProduction = false;
-    private List<PostArtifactDownloadAction> postDownloadActions;
+    private List<ArtifactStreamAction> postDownloadActions;
     private Artifact lastArtifact;
     private String uuid;
     private String appId;
@@ -125,7 +125,7 @@ public class FileUrlSource extends ArtifactStream {
      * @param postDownloadActions the post download actions
      * @return the builder
      */
-    public Builder withPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
+    public Builder withPostDownloadActions(List<ArtifactStreamAction> postDownloadActions) {
       this.postDownloadActions = postDownloadActions;
       return this;
     }
@@ -239,7 +239,7 @@ public class FileUrlSource extends ArtifactStream {
       fileUrlSource.setSourceName(sourceName);
       fileUrlSource.setAutoDownload(autoDownload);
       fileUrlSource.setAutoApproveForProduction(autoApproveForProduction);
-      fileUrlSource.setPostDownloadActions(postDownloadActions);
+      fileUrlSource.setStreamActions(postDownloadActions);
       fileUrlSource.setLastArtifact(lastArtifact);
       fileUrlSource.setUuid(uuid);
       fileUrlSource.setAppId(appId);

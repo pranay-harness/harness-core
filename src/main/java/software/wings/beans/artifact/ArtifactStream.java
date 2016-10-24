@@ -28,7 +28,7 @@ public abstract class ArtifactStream extends Base {
 
   private boolean autoApproveForProduction = false;
 
-  private List<PostArtifactDownloadAction> postDownloadActions;
+  private List<ArtifactStreamAction> streamActions;
 
   @Transient private Artifact lastArtifact;
 
@@ -116,17 +116,17 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the post download actions
    */
-  public List<PostArtifactDownloadAction> getPostDownloadActions() {
-    return postDownloadActions;
+  public List<ArtifactStreamAction> getStreamActions() {
+    return streamActions;
   }
 
   /**
    * Sets post download actions.
    *
-   * @param postDownloadActions the post download actions
+   * @param streamActions the post download actions
    */
-  public void setPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
-    this.postDownloadActions = postDownloadActions;
+  public void setStreamActions(List<ArtifactStreamAction> streamActions) {
+    this.streamActions = streamActions;
   }
 
   /**
@@ -154,7 +154,7 @@ public abstract class ArtifactStream extends Base {
         .add("sourceType", sourceType)
         .add("autoDownload", autoDownload)
         .add("autoApproveForProduction", autoApproveForProduction)
-        .add("postDownloadActions", postDownloadActions)
+        .add("streamActions", streamActions)
         .add("lastArtifact", lastArtifact)
         .toString();
   }
@@ -162,8 +162,7 @@ public abstract class ArtifactStream extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              sourceName, sourceType, autoDownload, autoApproveForProduction, postDownloadActions, lastArtifact);
+        + Objects.hash(sourceName, sourceType, autoDownload, autoApproveForProduction, streamActions, lastArtifact);
   }
 
   @Override
@@ -181,7 +180,7 @@ public abstract class ArtifactStream extends Base {
     return Objects.equals(this.sourceName, other.sourceName) && Objects.equals(this.sourceType, other.sourceType)
         && Objects.equals(this.autoDownload, other.autoDownload)
         && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
-        && Objects.equals(this.postDownloadActions, other.postDownloadActions)
+        && Objects.equals(this.streamActions, other.streamActions)
         && Objects.equals(this.lastArtifact, other.lastArtifact);
   }
 

@@ -5,13 +5,22 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import net.redhogs.cronparser.CronExpressionDescriptor;
+import net.redhogs.cronparser.DescriptionTypeEnum;
+import net.redhogs.cronparser.I18nMessages;
+import net.redhogs.cronparser.Options;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 
+import java.text.ParseException;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -30,10 +39,12 @@ import javax.ws.rs.QueryParam;
  *
  * @author Rishi
  */
-@Api("artifactstream")
-@Path("/artifactstream")
+@Api("artifactstreams")
+@Path("/artifactstreams")
 @Produces("application/json")
 @Consumes("application/json")
+@Timed
+@ExceptionMetered
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
 
@@ -77,8 +88,6 @@ public class ArtifactStreamResource {
    * @return the rest response
    */
   @GET
-  @Timed
-  @ExceptionMetered
   public RestResponse<PageResponse<ArtifactStream>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
@@ -88,16 +97,14 @@ public class ArtifactStreamResource {
   /**
    * Gets the.
    *
-   * @param appId the app id
-   * @param id    the id
+   * @param appId    the app id
+   * @param streamId the stream id
    * @return the rest response
    */
   @GET
-  @Timed
-  @ExceptionMetered
-  @Path("{id}")
-  public RestResponse<ArtifactStream> get(@QueryParam("appId") String appId, @PathParam("id") String id) {
-    return new RestResponse<>(artifactStreamService.get(id, appId));
+  @Path("{streamId}")
+  public RestResponse<ArtifactStream> get(@QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
+    return new RestResponse<>(artifactStreamService.get(streamId, appId));
   }
 
   /**
@@ -108,8 +115,6 @@ public class ArtifactStreamResource {
    * @return the rest response
    */
   @POST
-  @Timed
-  @ExceptionMetered
   public RestResponse<ArtifactStream> save(@QueryParam("appId") String appId, ArtifactStream artifactStream) {
     try {
       if (!appService.exist(appId)) {
@@ -127,17 +132,15 @@ public class ArtifactStreamResource {
    * Update rest response.
    *
    * @param appId          the app id
-   * @param id             the id
+   * @param streamId       the stream id
    * @param artifactStream the artifact stream
    * @return the rest response
    */
   @PUT
-  @Timed
-  @ExceptionMetered
-  @Path("{id}")
+  @Path("{streamId}")
   public RestResponse<ArtifactStream> update(
-      @QueryParam("appId") String appId, @PathParam("id") String id, ArtifactStream artifactStream) {
-    artifactStream.setUuid(id);
+      @QueryParam("appId") String appId, @PathParam("streamId") String streamId, ArtifactStream artifactStream) {
+    artifactStream.setUuid(streamId);
     artifactStream.setAppId(appId);
     return new RestResponse<>(artifactStreamService.update(artifactStream));
   }
@@ -150,11 +153,74 @@ public class ArtifactStreamResource {
    * @return the rest response
    */
   @DELETE
-  @Timed
-  @ExceptionMetered
   @Path("{id}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
     artifactStreamService.delete(id, appId);
     return new RestResponse<>();
+  }
+
+  /**
+   * Add action rest response.
+   *
+   * @param appId                the app id
+   * @param streamId             the stream id
+   * @param artifactStreamAction the artifact stream action
+   * @return the rest response
+   */
+  @POST
+  @Path("{streamId}/actions")
+  public RestResponse<ArtifactStream> addAction(@QueryParam("appId") String appId,
+      @PathParam("streamId") String streamId, ArtifactStreamAction artifactStreamAction) {
+    return new RestResponse<>(artifactStreamService.addStreamAction(appId, streamId, artifactStreamAction));
+  }
+
+  /**
+   * Update action rest response.
+   *
+   * @param appId                the app id
+   * @param streamId             the stream id
+   * @param workflowId           the workflow id
+   * @param artifactStreamAction the artifact stream action
+   * @return the rest response
+   */
+  @PUT
+  @Path("{streamId}/actions/{workflowId}")
+  public RestResponse<ArtifactStream> updateAction(@QueryParam("appId") String appId,
+      @PathParam("streamId") String streamId, @PathParam("workflowId") String workflowId,
+      ArtifactStreamAction artifactStreamAction) {
+    artifactStreamAction.setWorkflowId(workflowId);
+    return new RestResponse<>(artifactStreamService.updateStreamAction(appId, streamId, artifactStreamAction));
+  }
+
+  /**
+   * Add action rest response.
+   *
+   * @param appId      the app id
+   * @param streamId   the stream id
+   * @param workflowId the action id
+   * @return the rest response
+   */
+  @DELETE
+  @Path("{streamId}/actions/{workflowId}")
+  public RestResponse<ArtifactStream> deleteAction(@QueryParam("appId") String appId,
+      @PathParam("streamId") String streamId, @PathParam("workflowId") String workflowId) {
+    return new RestResponse<>(artifactStreamService.deleteStreamAction(appId, streamId, workflowId));
+  }
+
+  /**
+   * Translate cron rest response.
+   *
+   * @param inputMap the input map
+   * @return the rest response
+   */
+  @POST
+  @Path("cron/translate")
+  public RestResponse<String> translateCron(Map<String, String> inputMap) {
+    try {
+      return new RestResponse<>(CronExpressionDescriptor.getDescription(
+          DescriptionTypeEnum.FULL, inputMap.get("expression"), new Options(), I18nMessages.DEFAULT_LOCALE));
+    } catch (ParseException e) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Incorrect cron expression");
+    }
   }
 }

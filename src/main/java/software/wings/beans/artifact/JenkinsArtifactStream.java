@@ -140,7 +140,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
     private String sourceName;
     private boolean autoDownload = false;
     private boolean autoApproveForProduction = false;
-    private List<PostArtifactDownloadAction> postDownloadActions;
+    private List<ArtifactStreamAction> postDownloadActions;
     private Artifact lastArtifact;
     private String uuid;
     private String appId;
@@ -232,7 +232,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
      * @param postDownloadActions the post download actions
      * @return the builder
      */
-    public Builder withPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
+    public Builder withPostDownloadActions(List<ArtifactStreamAction> postDownloadActions) {
       this.postDownloadActions = postDownloadActions;
       return this;
     }
@@ -350,7 +350,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
       jenkinsArtifactStream.setSourceName(sourceName);
       jenkinsArtifactStream.setAutoDownload(autoDownload);
       jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      jenkinsArtifactStream.setPostDownloadActions(postDownloadActions);
+      jenkinsArtifactStream.setStreamActions(postDownloadActions);
       jenkinsArtifactStream.setLastArtifact(lastArtifact);
       jenkinsArtifactStream.setUuid(uuid);
       jenkinsArtifactStream.setAppId(appId);
