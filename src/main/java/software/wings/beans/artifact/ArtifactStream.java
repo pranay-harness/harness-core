@@ -7,12 +7,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 /**
  * ArtifactStream bean class.
@@ -25,8 +23,6 @@ public abstract class ArtifactStream extends Base {
   @NotEmpty private String sourceName;
 
   private SourceType sourceType;
-
-  @NotNull private ArtifactType artifactType;
 
   private boolean autoDownload = false;
 
@@ -70,24 +66,6 @@ public abstract class ArtifactStream extends Base {
    */
   public SourceType getSourceType() {
     return sourceType;
-  }
-
-  /**
-   * Gets artifact type.
-   *
-   * @return the artifact type
-   */
-  public ArtifactType getArtifactType() {
-    return artifactType;
-  }
-
-  /**
-   * Sets artifact type.
-   *
-   * @param artifactType the artifact type
-   */
-  public void setArtifactType(ArtifactType artifactType) {
-    this.artifactType = artifactType;
   }
 
   /**
@@ -170,10 +148,22 @@ public abstract class ArtifactStream extends Base {
   }
 
   @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("sourceName", sourceName)
+        .add("sourceType", sourceType)
+        .add("autoDownload", autoDownload)
+        .add("autoApproveForProduction", autoApproveForProduction)
+        .add("postDownloadActions", postDownloadActions)
+        .add("lastArtifact", lastArtifact)
+        .toString();
+  }
+
+  @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(sourceName, sourceType, artifactType, autoDownload, autoApproveForProduction,
-              postDownloadActions, lastArtifact);
+        + Objects.hash(
+              sourceName, sourceType, autoDownload, autoApproveForProduction, postDownloadActions, lastArtifact);
   }
 
   @Override
@@ -189,38 +179,10 @@ public abstract class ArtifactStream extends Base {
     }
     final ArtifactStream other = (ArtifactStream) obj;
     return Objects.equals(this.sourceName, other.sourceName) && Objects.equals(this.sourceType, other.sourceType)
-        && Objects.equals(this.artifactType, other.artifactType)
         && Objects.equals(this.autoDownload, other.autoDownload)
         && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
         && Objects.equals(this.postDownloadActions, other.postDownloadActions)
         && Objects.equals(this.lastArtifact, other.lastArtifact);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("sourceName", sourceName)
-        .add("sourceType", sourceType)
-        .add("artifactType", artifactType)
-        .add("autoDownload", autoDownload)
-        .add("autoApproveForProduction", autoApproveForProduction)
-        .add("postDownloadActions", postDownloadActions)
-        .add("lastArtifact", lastArtifact)
-        .toString();
-  }
-
-  /**
-   * The enum Artifact download type.
-   */
-  public enum ArtifactDownloadType {
-    /**
-     * Automatic artifact download type.
-     */
-    AUTOMATIC,
-    /**
-     * Manual artifact download type.
-     */
-    MANUAL
   }
 
   /**
