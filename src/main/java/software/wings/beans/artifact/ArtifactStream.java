@@ -10,6 +10,7 @@ import software.wings.beans.Base;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -27,7 +28,7 @@ public abstract class ArtifactStream extends Base {
 
   @NotNull private ArtifactType artifactType;
 
-  private ArtifactDownloadType downloadType;
+  private boolean autoDownload = false;
 
   private boolean autoApproveForProduction = false;
 
@@ -114,9 +115,67 @@ public abstract class ArtifactStream extends Base {
     this.lastArtifact = lastArtifact;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
+  /**
+   * Is auto approve for production boolean.
+   *
+   * @return the boolean
    */
+  public boolean isAutoApproveForProduction() {
+    return autoApproveForProduction;
+  }
+
+  /**
+   * Sets auto approve for production.
+   *
+   * @param autoApproveForProduction the auto approve for production
+   */
+  public void setAutoApproveForProduction(boolean autoApproveForProduction) {
+    this.autoApproveForProduction = autoApproveForProduction;
+  }
+
+  /**
+   * Gets post download actions.
+   *
+   * @return the post download actions
+   */
+  public List<PostArtifactDownloadAction> getPostDownloadActions() {
+    return postDownloadActions;
+  }
+
+  /**
+   * Sets post download actions.
+   *
+   * @param postDownloadActions the post download actions
+   */
+  public void setPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
+    this.postDownloadActions = postDownloadActions;
+  }
+
+  /**
+   * Is auto download boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isAutoDownload() {
+    return autoDownload;
+  }
+
+  /**
+   * Sets auto download.
+   *
+   * @param autoDownload the auto download
+   */
+  public void setAutoDownload(boolean autoDownload) {
+    this.autoDownload = autoDownload;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(sourceName, sourceType, artifactType, autoDownload, autoApproveForProduction,
+              postDownloadActions, lastArtifact);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -125,53 +184,29 @@ public abstract class ArtifactStream extends Base {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    ArtifactStream that = (ArtifactStream) obj;
-    return com.google.common.base.Objects.equal(sourceName, that.sourceName) && sourceType == that.sourceType
-        && artifactType == that.artifactType;
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final ArtifactStream other = (ArtifactStream) obj;
+    return Objects.equals(this.sourceName, other.sourceName) && Objects.equals(this.sourceType, other.sourceType)
+        && Objects.equals(this.artifactType, other.artifactType)
+        && Objects.equals(this.autoDownload, other.autoDownload)
+        && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
+        && Objects.equals(this.postDownloadActions, other.postDownloadActions)
+        && Objects.equals(this.lastArtifact, other.lastArtifact);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return com.google.common.base.Objects.hashCode(sourceName, sourceType, artifactType);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("sourceName", sourceName)
         .add("sourceType", sourceType)
         .add("artifactType", artifactType)
+        .add("autoDownload", autoDownload)
+        .add("autoApproveForProduction", autoApproveForProduction)
+        .add("postDownloadActions", postDownloadActions)
+        .add("lastArtifact", lastArtifact)
         .toString();
-  }
-
-  public ArtifactDownloadType getDownloadType() {
-    return downloadType;
-  }
-
-  public void setDownloadType(ArtifactDownloadType downloadType) {
-    this.downloadType = downloadType;
-  }
-
-  public boolean isAutoApproveForProduction() {
-    return autoApproveForProduction;
-  }
-
-  public void setAutoApproveForProduction(boolean autoApproveForProduction) {
-    this.autoApproveForProduction = autoApproveForProduction;
-  }
-
-  public List<PostArtifactDownloadAction> getPostDownloadActions() {
-    return postDownloadActions;
-  }
-
-  public void setPostDownloadActions(List<PostArtifactDownloadAction> postDownloadActions) {
-    this.postDownloadActions = postDownloadActions;
   }
 
   /**
