@@ -127,17 +127,16 @@ public class ArtifactResource {
    *
    * @param appId      the app id
    * @param artifactId the artifact id
-   * @param serviceId  the service id
    * @return the response
    * @throws IOException              Signals that an I/O exception has occurred.
    * @throws GeneralSecurityException the general security exception
    */
   @GET
-  @Path("{artifactId}/artifactFile/{serviceId}")
+  @Path("{artifactId}/artifactFile")
   @Encoded
-  public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId,
-      @PathParam("serviceId") String serviceId) throws IOException, GeneralSecurityException {
-    File artifactFile = artifactService.download(appId, artifactId, serviceId);
+  public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId)
+      throws IOException, GeneralSecurityException {
+    File artifactFile = artifactService.download(appId, artifactId);
     ResponseBuilder response = Response.ok(artifactFile, MediaType.APPLICATION_OCTET_STREAM);
     response.header("Content-Disposition", "attachment; filename=" + artifactFile.getName());
     return response.build();

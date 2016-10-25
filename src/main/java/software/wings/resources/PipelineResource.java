@@ -47,10 +47,12 @@ public class PipelineResource {
    * Instantiates a new pipeline resource.
    *
    * @param workflowService the workflow service
+   * @param workflowExecutionService
    */
   @Inject
-  public PipelineResource(WorkflowService workflowService) {
+  public PipelineResource(WorkflowService workflowService, WorkflowExecutionService workflowExecutionService) {
     this.workflowService = workflowService;
+    this.workflowExecutionService = workflowExecutionService;
   }
 
   /**

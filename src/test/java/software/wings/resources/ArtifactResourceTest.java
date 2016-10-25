@@ -99,7 +99,7 @@ public class ArtifactResourceTest {
 
     tempFile = tempFolder.newFile();
     Files.write("Dummy".getBytes(), tempFile);
-    when(ARTIFACT_SERVICE.download(APP_ID, ARTIFACT_ID, SERVICE_ID)).thenReturn(tempFile);
+    when(ARTIFACT_SERVICE.download(APP_ID, ARTIFACT_ID)).thenReturn(tempFile);
     PageResponse<Artifact> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(ACTUAL));
     pageResponse.setTotal(1);
@@ -168,7 +168,7 @@ public class ArtifactResourceTest {
         .isEqualTo("attachment; filename=" + tempFile.getName());
     assertThat(restResponse.getEntity()).isInstanceOf(ByteArrayInputStream.class);
     assertThat(tempFile).hasContent(new String(ByteStreams.toByteArray((InputStream) restResponse.getEntity())));
-    verify(ARTIFACT_SERVICE).download(APP_ID, ARTIFACT_ID, SERVICE_ID);
+    verify(ARTIFACT_SERVICE).download(APP_ID, ARTIFACT_ID);
   }
 
   /**

@@ -137,10 +137,9 @@ public class ArtifactServiceImpl implements ArtifactService {
    * @see software.wings.service.intfc.ArtifactService#download(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public File download(String appId, String artifactId, String serviceId) {
+  public File download(String appId, String artifactId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
-    if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())
-        || !artifact.getServiceIds().contains(serviceId)) {
+    if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())) {
       return null;
     }
 

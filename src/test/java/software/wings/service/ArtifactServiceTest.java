@@ -142,7 +142,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
-    assertThat(artifactService.download(APP_ID, savedArtifact.getUuid(), SERVICE_ID)).isNull();
+    assertThat(artifactService.download(APP_ID, savedArtifact.getUuid())).isNull();
   }
 
   /**
@@ -165,7 +165,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
         return inputFile;
       });
 
-      file = artifactService.download(APP_ID, savedArtifact.getUuid(), SERVICE_ID);
+      file = artifactService.download(APP_ID, savedArtifact.getUuid());
       assertThat(file).isNotNull().hasContent("Dummy");
     } finally {
       if (file != null) {
