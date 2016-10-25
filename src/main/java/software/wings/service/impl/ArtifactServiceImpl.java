@@ -16,7 +16,6 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
 import software.wings.beans.Release;
-import software.wings.beans.Service;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
@@ -124,15 +123,9 @@ public class ArtifactServiceImpl implements ArtifactService {
    * @see software.wings.service.intfc.ArtifactService#download(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public File download(String appId, String artifactId, String serviceId) {
+  public File download(String appId, String artifactId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
-    if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())
-        || !artifact.getServices()
-                .stream()
-                .map(Service::getUuid)
-                .filter(id -> id.equals(serviceId))
-                .findFirst()
-                .isPresent()) {
+    if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())) {
       return null;
     }
 

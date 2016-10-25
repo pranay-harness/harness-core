@@ -60,10 +60,9 @@ public interface ArtifactService {
    *
    * @param appId      the app id
    * @param artifactId the artifact id
-   * @param serviceId  the service id
    * @return the file
    */
-  File download(String appId, String artifactId, String serviceId);
+  File download(String appId, String artifactId);
 
   /**
    * Gets the.
