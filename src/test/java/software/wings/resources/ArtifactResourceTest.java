@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -157,11 +156,11 @@ public class ArtifactResourceTest {
    */
   @Test
   public void shouldDownloadArtifact() throws IOException {
-    Response restResponse =
-        RESOURCES.client()
-            .target("/artifacts/" + ARTIFACT_ID + "/artifactFile/" + SERVICE_ID + "?appId=" + APP_ID)
-            .request()
-            .get();
+    Response restResponse = RESOURCES.client()
+                                .target("/artifacts/" + ARTIFACT_ID + "/artifactFile"
+                                    + "?appId=" + APP_ID)
+                                .request()
+                                .get();
     assertThat(restResponse.getMediaType()).isEqualTo(MediaType.APPLICATION_OCTET_STREAM_TYPE);
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + tempFile.getName());
