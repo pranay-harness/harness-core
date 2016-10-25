@@ -1,7 +1,9 @@
 package software.wings.helpers.ext.jenkins;
 
+import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -41,13 +43,7 @@ public interface Jenkins {
    */
   List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException;
 
-  /**
-   * Trigger.
-   *
-   * @param jobname the jobname
-   * @return the string
-   */
-  String trigger(String jobname);
+  QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException;
 
   /**
    * Check status.
@@ -109,4 +105,6 @@ public interface Jenkins {
    */
   Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
       throws IOException, URISyntaxException;
+
+  Build getBuild(QueueReference queueItem) throws IOException;
 }

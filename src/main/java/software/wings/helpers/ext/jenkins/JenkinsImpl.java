@@ -12,8 +12,12 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
+import com.offbytwo.jenkins.model.ExtractHeader;
 import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import com.offbytwo.jenkins.model.QueueItem;
+import com.offbytwo.jenkins.model.QueueReference;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -108,8 +112,17 @@ public class JenkinsImpl implements Jenkins {
    * @see software.wings.helpers.ext.jenkins.Jenkins#trigger(java.lang.String)
    */
   @Override
-  public String trigger(String jobname) {
-    throw new NotImplementedException();
+  public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
+    JobWithDetails jobWithDetails = getJob(jobname);
+    QueueReference queueReference;
+    if (MapUtils.isEmpty(parameters)) {
+      ExtractHeader location =
+          jobWithDetails.getClient().post(jobWithDetails.getUrl() + "build", null, ExtractHeader.class, true);
+      queueReference = new QueueReference(location.getLocation());
+    } else {
+      queueReference = jobWithDetails.build(parameters, true);
+    }
+    return queueReference;
   }
 
   /* (non-Javadoc)
@@ -172,6 +185,16 @@ public class JenkinsImpl implements Jenkins {
     }
     Build build = jobDetails.getBuildByNumber(Integer.parseInt(buildNo));
     return downloadArtifactFromABuild(build, artifactpathRegex);
+  }
+
+  @Override
+  public Build getBuild(QueueReference queueItem) throws IOException {
+    QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
+    if (queueItem1.getExecutable() != null) {
+      return jenkinsServer.getBuild(queueItem1);
+    } else {
+      return null;
+    }
   }
 
   private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)
