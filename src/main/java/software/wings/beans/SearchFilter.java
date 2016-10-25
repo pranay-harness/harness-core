@@ -148,7 +148,11 @@ public class SearchFilter {
     NOT_IN, /**
              * Exists operator.
              */
-    EXISTS
+    EXISTS,
+
+    OR,
+
+    AND;
   }
 
   /**

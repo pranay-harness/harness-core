@@ -1,6 +1,10 @@
 package software.wings.dl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.SearchFilter.Operator.AND;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.EXISTS;
+import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -8,14 +12,18 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.exception.WingsException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +32,7 @@ import java.util.stream.Collectors;
  * The Class MongoHelper.
  */
 public class MongoHelper {
+  private static final Logger logger = LoggerFactory.getLogger(MongoHelper.class);
   /**
    * Query page request.
    *
@@ -76,9 +85,30 @@ public class MongoHelper {
 
     if (req.getFilters() != null) {
       for (SearchFilter filter : req.getFilters()) {
-        FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
+        if (filter == null || filter.getOp() == null) {
+          continue;
+        }
 
-        query = applyOperator(fieldEnd, filter);
+        if (filter.getOp() == OR || filter.getOp() == AND) {
+          List<Criteria> criterias = new ArrayList<>();
+          for (Object opFilter : filter.getFieldValues()) {
+            if (opFilter == null || !(opFilter instanceof SearchFilter)) {
+              logger.error("OR/AND operator can only be used with SearchFiter values");
+              throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
+            }
+            SearchFilter opSearchFilter = (SearchFilter) opFilter;
+            criterias.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
+          }
+
+          if (filter.getOp() == OR) {
+            query.or(criterias.toArray(new Criteria[criterias.size()]));
+          } else {
+            query.and(criterias.toArray(new Criteria[criterias.size()]));
+          }
+        } else {
+          FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
+          query = applyOperator(fieldEnd, filter);
+        }
       }
     }
 
@@ -101,13 +131,13 @@ public class MongoHelper {
     return query;
   }
 
-  private static <T> Query<T> applyOperator(FieldEnd<? extends Query<T>> fieldEnd, SearchFilter filter) {
-    if (!filter.getOp().equals(Operator.EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
+  private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
+    if (!filter.getOp().equals(EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
     if (op == null) {
-      op = Operator.EQ;
+      op = EQ;
     }
     switch (op) {
       case LT:
