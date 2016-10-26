@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.MoreObjects;
 
@@ -288,6 +290,40 @@ public class WingsPersistenceTest extends WingsBaseTest {
     TestEntity entity2 = wingsPersistence.get(TestEntity.class, entity.getUuid());
     assertThat(entity2).isNotNull();
     assertThat(entity2.getMapField()).isEqualTo(map2);
+  }
+
+  /**
+   * Should query map
+   */
+  @Test
+  public void shouldQueryMap() {
+    TestEntity entity = new TestEntity();
+    entity.setFieldA("fieldA11");
+    Map<String, String> map = new HashMap<>();
+    map.put("abc", "123");
+    map.put("ghi", "345");
+    entity.setMapField(map);
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setFieldA("fieldA11");
+    Map<String, String> map2 = new HashMap<>();
+    map2.put("def", "234");
+    map2.put("ghi", "345");
+    entity.setMapField(map2);
+    wingsPersistence.save(entity);
+
+    PageRequest<TestEntity> req =
+        aPageRequest()
+            .addFilter(aSearchFilter()
+                           .withField(null, Operator.OR,
+                               aSearchFilter().withField("mapField.abc", Operator.EXISTS, null).build(),
+                               aSearchFilter().withField("mapField.def", Operator.EXISTS, null).build())
+                           .build())
+            .build();
+
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    assertThat(res).isNotNull().doesNotContainNull().hasSize(2).extracting("mapField").contains(map, map2);
   }
 
   private void assertPaginationResult(PageResponse<TestEntity> res) {

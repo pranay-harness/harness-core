@@ -3,7 +3,11 @@ package software.wings.helpers.ext.jenkins;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.offbytwo.jenkins.model.Build;
+import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -14,6 +18,7 @@ import software.wings.WingsBaseTest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -35,7 +40,7 @@ public class JenkinsTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws URISyntaxException {
-    jenkins = jenkinsFactory.create("http://localhost:8089", "admin", "admin");
+    jenkins = jenkinsFactory.create("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2");
   }
 
   /**
@@ -153,5 +158,23 @@ public class JenkinsTest extends WingsBaseTest {
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple(65, "39"), tuple(64, "39"), tuple(63, "39"), tuple(62, "39"));
+  }
+
+  @Test
+  public void shouldTriggerJobWithParameters() throws URISyntaxException, IOException {
+    QueueReference queueItem = jenkins.trigger("todolist_war", ImmutableMap.of("Test", "Test"));
+    assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
+  }
+
+  @Test
+  public void shouldFetchBuildFromQueueItem() throws URISyntaxException, IOException {
+    Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"));
+    assertThat(build.getQueueId()).isEqualTo(27287);
+  }
+
+  @Test
+  public void shouldTriggerJobWithoutParameters() throws URISyntaxException, IOException {
+    QueueReference queueItem = jenkins.trigger("todolist_war", Collections.emptyMap());
+    assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
 }

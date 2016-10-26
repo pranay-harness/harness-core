@@ -95,7 +95,7 @@ public class ExecutionContextImpl implements ExecutionContext {
    * {@inheritDoc}
    */
   @Override
-  public Object evaluateExpression(String expression, StateExecutionData stateExecutionData) {
+  public Object evaluateExpression(String expression, Object stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
     return evaluateExpression(expression, context);
   }
@@ -204,7 +204,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     return evaluator.evaluate(expression, context);
   }
 
-  private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {
+  private Map<String, Object> prepareContext(Object stateExecutionData) {
     Map<String, Object> context = prepareContext();
     if (stateExecutionData != null) {
       context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);

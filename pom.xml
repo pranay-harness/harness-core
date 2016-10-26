@@ -976,7 +976,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.6.201602180812</version>
+                <version>0.7.7.201606060606</version>
                 <configuration>
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>
@@ -1207,7 +1207,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.6.201602180812</version>
+                <version>0.7.7.201606060606</version>
                 <configuration>
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>

@@ -7,7 +7,7 @@
         "equalTo" : "gzip,deflate"
       },
       "Authorization" : {
-        "equalTo" : "Basic YWRtaW46YWRtaW4="
+        "equalTo" : "Basic d2luZ3NidWlsZDowZGIyOGFhMGY0ZmMwNjg1ZGY5YTIxNmZjN2FmMGNhOTYyNTRiN2My"
       }
     }
   },

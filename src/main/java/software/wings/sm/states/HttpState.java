@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
+import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 
 import com.google.common.base.MoreObjects;
@@ -248,10 +249,8 @@ public class HttpState extends State {
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
 
-    HttpStateExecutionData executionData = new HttpStateExecutionData();
-    executionData.setHttpUrl(evaluatedUrl);
-    executionData.setHttpMethod(method);
-    executionData.setAssertionStatement(assertion);
+    HttpStateExecutionData.Builder executionDataBuilder =
+        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(method).withAssertionStatement(assertion);
 
     SSLContextBuilder builder = new SSLContextBuilder();
     try {
@@ -322,17 +321,17 @@ public class HttpState extends State {
 
     try {
       HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      executionData.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
+      executionDataBuilder.withHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
       HttpEntity entity = httpResponse.getEntity();
-      executionData.setHttpResponseBody(
+      executionDataBuilder.withHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
       logger.error("Exception: ", e);
       errorMessage = getMessage(e);
-      executionData.setHttpResponseCode(500);
-      executionData.setHttpResponseBody(getMessage(e));
+      executionDataBuilder.withHttpResponseCode(500).withHttpResponseBody(getMessage(e));
     }
 
+    HttpStateExecutionData executionData = executionDataBuilder.build();
     boolean status = false;
     try {
       status = (boolean) context.evaluateExpression(assertion, executionData);

@@ -1,0 +1,17 @@
+{
+  "request" : {
+    "url" : "/job/todolist_war/buildWithParameters/api/json?Test=Test",
+    "method" : "POST"
+  },
+  "response" : {
+    "status" : 201,
+    "bodyFileName" : "body-api-json-wwCZk.txt",
+    "headers" : {
+      "Server" : "nginx/1.4.6 (Ubuntu)",
+      "Date" : "Mon, 24 Oct 2016 23:08:59 GMT",
+      "Connection" : "keep-alive",
+      "X-Content-Type-Options" : "nosniff",
+      "Location" : "http://localhost:8089/queue/item/27288/"
+    }
+  }
+}

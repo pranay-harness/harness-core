@@ -33,7 +33,7 @@ public interface ExecutionContext {
    * @param stateExecutionData the state execution data
    * @return the object
    */
-  Object evaluateExpression(String expression, StateExecutionData stateExecutionData);
+  Object evaluateExpression(String expression, Object stateExecutionData);
 
   /**
    * Gets state execution data.
