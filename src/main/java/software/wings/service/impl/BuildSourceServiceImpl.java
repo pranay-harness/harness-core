@@ -39,9 +39,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
+  public List<BuildDetails> getBuilds(String artifactStreamId, String appId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return jenkinsBuildService.getBuilds(appId, artifactStreamId, (JenkinsConfig) settingAttribute.getValue());
+    return jenkinsBuildService.getBuilds(artifactStreamId, appId, (JenkinsConfig) settingAttribute.getValue());
   }
 }

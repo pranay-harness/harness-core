@@ -30,10 +30,10 @@ public interface BuildSourceService {
   /**
    * Gets builds.
    *
-   * @param appId            the app id
    * @param artifactStreamId the artifact source id
+   * @param appId            the app id
    * @param settingId        the setting id
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId);
+  List<BuildDetails> getBuilds(String artifactStreamId, String appId, String settingId);
 }

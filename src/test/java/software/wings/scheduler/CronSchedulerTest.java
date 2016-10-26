@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -38,6 +39,7 @@ public class CronSchedulerTest {
   }
 
   @Test
+  @Ignore
   public void shouldCreateScheduler() throws SchedulerException, InterruptedException {
     CronScheduler cronScheduler = new CronScheduler(createProps());
 
@@ -58,10 +60,11 @@ public class CronSchedulerTest {
   }
 
   @Test
+  @Ignore
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
-    //    CronScheduler cronScheduler = new CronScheduler(createProps());
-    //    cronScheduler.getScheduler().resumeAll();
-    //    Thread.sleep(100000);
-    //    System.out.println("Completed");
+    CronScheduler cronScheduler = new CronScheduler(createProps());
+    cronScheduler.getScheduler().resumeAll();
+    Thread.sleep(100000);
+    System.out.println("Completed");
   }
 }

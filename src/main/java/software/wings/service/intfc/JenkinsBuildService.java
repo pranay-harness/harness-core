@@ -13,12 +13,12 @@ public interface JenkinsBuildService {
   /**
    * Gets builds.
    *
-   * @param appId            the app id
    * @param artifactSourceId the artifact source id
+   * @param appId            the app id
    * @param jenkinsConfig    the jenkins config
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, String artifactSourceId, JenkinsConfig jenkinsConfig);
+  List<BuildDetails> getBuilds(String artifactSourceId, String appId, JenkinsConfig jenkinsConfig);
 
   /**
    * Gets jobs.

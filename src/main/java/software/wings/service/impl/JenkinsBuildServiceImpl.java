@@ -48,11 +48,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Inject private MainConfiguration configuration;
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
+  public List<BuildDetails> getBuilds(String artifactStreamId, String appId, JenkinsConfig jenkinsConfig) {
     return getBuildDetails(artifactStreamId, appId, jenkinsConfig);
   }
 
-  private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
+  private List<BuildDetails> getBuildDetails(String artifactStreamId, String appId, JenkinsConfig jenkinsConfig) {
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId, appId);
     notNullCheck("artifactStream", artifactStream);
     equalCheck(artifactStream.getSourceType(), SourceType.JENKINS);
