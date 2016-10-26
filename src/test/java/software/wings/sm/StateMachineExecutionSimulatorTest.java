@@ -24,7 +24,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
-import static software.wings.sm.StateMachine.Builder.aStateMachine;
+import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.sm.Transition.Builder.aTransition;
 import static software.wings.sm.states.CommandState.Builder.aCommandState;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;

@@ -13,7 +13,7 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.Orchestration.OrchestrationBuilder.anOrchestration;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
@@ -79,10 +79,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary) {
     PageResponse<Environment> pageResponse = wingsPersistence.query(Environment.class, request);
     if (withSummary) {
-      pageResponse.getResponse().forEach(environment -> {
-        addServiceTemplates(environment);
-        addWorkflows(environment);
-      });
+      pageResponse.getResponse().forEach(environment -> { addServiceTemplates(environment); });
     }
     return pageResponse;
   }
@@ -98,7 +95,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
     if (withSummary) {
       addServiceTemplates(environment);
-      addWorkflows(environment);
     }
     return environment;
   }
@@ -121,13 +117,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                .equal(envId)
                .getKey()
         != null;
-  }
-
-  private void addWorkflows(Environment environment) {
-    PageRequest<Orchestration> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    pageRequest.addFilter("environment", environment, SearchFilter.Operator.EQ);
-    environment.setOrchestrations(workflowService.listOrchestration(pageRequest).getResponse());
   }
 
   private void addServiceTemplates(Environment environment) {
@@ -274,7 +263,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                     aLink().withId("l7").withType(TransitionType.FORK.name()).withFrom("n7").withTo("n8").build(),
                     aLink().withId("l8").withType(TransitionType.FORK.name()).withFrom("n7").withTo("n9").build())
                 .build())
-        .withEnvironment(env)
         .withAppId(env.getAppId())
         .build();
   }

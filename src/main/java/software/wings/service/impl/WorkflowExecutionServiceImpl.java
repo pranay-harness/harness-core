@@ -595,7 +595,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
+    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId);
     String orchestrationId = workflow.getUuid();
 
     StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId, null);

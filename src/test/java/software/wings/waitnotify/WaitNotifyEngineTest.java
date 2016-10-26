@@ -68,7 +68,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
     assertThat(responseMap).hasSize(1).isEqualTo(of("123", data));
     assertThat(callCount.get()).isEqualTo(1);
-  }
+  } // realmongo
 
   /**
    * Should wait for correlation ids.

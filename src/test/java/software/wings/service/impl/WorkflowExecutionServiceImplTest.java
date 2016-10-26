@@ -12,7 +12,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.Orchestration.OrchestrationBuilder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -706,7 +706,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    Orchestration workflow = workflowService.readLatestSimpleWorkflow(app.getUuid(), env.getUuid());
+    Orchestration workflow = workflowService.readLatestSimpleWorkflow(app.getUuid());
     assertThat(workflow).isNotNull();
     assertThat(workflow.getWorkflowType()).isEqualTo(WorkflowType.SIMPLE);
     assertThat(workflow.getGraph()).isNotNull();
@@ -1130,7 +1130,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -1473,7 +1472,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(appId)
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -1499,7 +1497,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     // 2nd orchestration
     Orchestration orchestration = createExecutableOrchestration(appId, env);
     PageRequest<Orchestration> pageRequest = new PageRequest<>();
-    PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest);
+    PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest, null);
 
     assertThat(res).isNotNull().hasSize(2);
   }
@@ -1543,7 +1541,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -1656,7 +1653,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -1822,7 +1818,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -1932,7 +1927,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -2078,7 +2072,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
@@ -2302,7 +2295,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();

@@ -117,17 +117,16 @@ public interface WorkflowService {
    * @param pageRequest the page request
    * @return the page response
    */
-  PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest);
+  PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest, List<String> envIds);
 
   /**
    * Read orchestration.
    *
    * @param appId           the app id
-   * @param envId           the env id
    * @param orchestrationId the orchestration id
    * @return the orchestration
    */
-  Orchestration readOrchestration(@NotNull String appId, @NotNull String envId, @NotNull String orchestrationId);
+  Orchestration readOrchestration(@NotNull String appId, @NotNull String orchestrationId);
 
   /**
    * Update orchestration.
@@ -141,11 +140,9 @@ public interface WorkflowService {
    * Read latest simple workflow orchestration.
    *
    * @param appId the app id
-   * @param envId the env id
    * @return the orchestration
    */
-  Orchestration readLatestSimpleWorkflow(String appId, String envId);
-
+  Orchestration readLatestSimpleWorkflow(String appId);
   /**
    * Delete workflow by environment.
    *

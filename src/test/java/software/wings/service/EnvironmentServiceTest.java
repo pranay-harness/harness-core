@@ -118,22 +118,11 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     serviceTemplatePageResponse.setResponse(asList(serviceTemplate));
     when(serviceTemplateService.list(serviceTemplatePageRequest, true)).thenReturn(serviceTemplatePageResponse);
 
-    Orchestration orchestration =
-        Orchestration.Builder.anOrchestration().withAppId(APP_ID).withEnvironment(environment).build();
-    PageRequest<Orchestration> orchestrationPageRequest = new PageRequest<>();
-    orchestrationPageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    orchestrationPageRequest.addFilter("environment", environment, SearchFilter.Operator.EQ);
-    PageResponse<Orchestration> orchestrationPageResponse = new PageResponse<>();
-    orchestrationPageResponse.setResponse(asList(orchestration));
-    when(workflowService.listOrchestration(orchestrationPageRequest)).thenReturn(orchestrationPageResponse);
-
     PageResponse<Environment> environments = environmentService.list(envPageRequest, true);
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
-    assertThat(environments.get(0).getOrchestrations()).containsAll(asList(orchestration));
     verify(serviceTemplateService).list(serviceTemplatePageRequest, true);
-    verify(workflowService).listOrchestration(orchestrationPageRequest);
   }
 
   /**
@@ -144,8 +133,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(serviceTemplateService.list(any(PageRequest.class), eq(true))).thenReturn(new PageResponse<>());
-
-    when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
