@@ -40,6 +40,7 @@ import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
+import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
@@ -78,6 +79,7 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
@@ -159,6 +161,7 @@ public class WingsModule extends AbstractModule {
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
     bind(AccountService.class).to(AccountServiceImpl.class);
+    bind(PipelineService.class).to(PipelineServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()

@@ -7,13 +7,14 @@ package software.wings.resources;
 import io.swagger.annotations.Api;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineExecution;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
@@ -42,17 +43,21 @@ import javax.ws.rs.QueryParam;
 public class PipelineResource {
   private WorkflowService workflowService;
   private WorkflowExecutionService workflowExecutionService;
+  private PipelineService pipelineService;
 
   /**
    * Instantiates a new pipeline resource.
    *
-   * @param workflowService the workflow service
-   * @param workflowExecutionService
+   * @param workflowService          the workflow service
+   * @param workflowExecutionService the workflow execution service
+   * @param pipelineService
    */
   @Inject
-  public PipelineResource(WorkflowService workflowService, WorkflowExecutionService workflowExecutionService) {
+  public PipelineResource(WorkflowService workflowService, WorkflowExecutionService workflowExecutionService,
+      PipelineService pipelineService) {
     this.workflowService = workflowService;
     this.workflowExecutionService = workflowExecutionService;
+    this.pipelineService = pipelineService;
   }
 
   /**
@@ -129,7 +134,7 @@ public class PipelineResource {
   }
 
   /**
-   * List executions.
+   * List executions rest response.
    *
    * @param appId       the app id
    * @param pipelineId  the pipeline id
@@ -137,26 +142,30 @@ public class PipelineResource {
    * @return the rest response
    */
   @GET
-  @Path("{pipelineId}/executions")
-  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
-      @PathParam("pipelineId") String pipelineId, @BeanParam PageRequest<WorkflowExecution> pageRequest) {
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("appId");
-    filter.setFieldValues(appId);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
+  @Path("executions")
+  @PublicApi
+  public RestResponse<PageResponse<PipelineExecution>> listExecutions(@QueryParam("appId") String appId,
+      @QueryParam("pipelineId") String pipelineId, @BeanParam PageRequest<PipelineExecution> pageRequest) {
+    /*
+        SearchFilter filter = new SearchFilter();
+        filter.setFieldName("appId");
+        filter.setFieldValues(appId);
+        filter.setOp(Operator.EQ);
+        pageRequest.addFilter(filter);
 
-    filter = new SearchFilter();
-    filter.setFieldName("workflowType");
-    filter.setFieldValues(WorkflowType.PIPELINE);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
+        filter = new SearchFilter();
+        filter.setFieldName("workflowType");
+        filter.setFieldValues(WorkflowType.PIPELINE);
+        filter.setOp(Operator.EQ);
+        pageRequest.addFilter(filter);
 
-    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, true));
+        return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, true));
+        */
+    return new RestResponse<>(pipelineService.listPipelineExecutions(pageRequest, appId));
   }
 
   /**
-   * Trigger execution.
+   * Trigger execution rest response.
    *
    * @param appId         the app id
    * @param pipelineId    the pipeline id
@@ -164,9 +173,9 @@ public class PipelineResource {
    * @return the rest response
    */
   @POST
-  @Path("{pipelineId}/executions")
+  @Path("executions")
   public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
+      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.triggerPipelineExecution(appId, pipelineId));
   }
 
