@@ -30,12 +30,10 @@ public interface BuildSourceService {
   /**
    * Gets builds.
    *
-   * @param appId              the app id
-   * @param releaseId          the release id
-   * @param artifactSourceName the artifact source name
-   * @param settingId          the jenkins setting id
+   * @param artifactStreamId the artifact source id
+   * @param appId            the app id
+   * @param settingId        the setting id
    * @return the builds
    */
-  List<BuildDetails> getBuilds(@NotEmpty String appId, @NotEmpty String releaseId, @NotEmpty String artifactSourceName,
-      @NotEmpty String settingId);
+  List<BuildDetails> getBuilds(String artifactStreamId, String appId, String settingId);
 }

@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Artifact.Status;
+import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;
-  private String releaseId;
+  private String artifactStreamId;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private transient ArtifactService artifactService;
 
@@ -90,21 +90,21 @@ public class ApprovalNotification extends ActionableNotification {
   }
 
   /**
-   * Gets release id.
+   * Gets artifact stream id.
    *
-   * @return the release id
+   * @return the artifact stream id
    */
-  public String getReleaseId() {
-    return releaseId;
+  public String getArtifactStreamId() {
+    return artifactStreamId;
   }
 
   /**
-   * Sets release id.
+   * Sets artifact stream id.
    *
-   * @param releaseId the release id
+   * @param artifactStreamId the artifact stream id
    */
-  public void setReleaseId(String releaseId) {
-    this.releaseId = releaseId;
+  public void setArtifactStreamId(String artifactStreamId) {
+    this.artifactStreamId = artifactStreamId;
   }
 
   /**
@@ -129,7 +129,7 @@ public class ApprovalNotification extends ActionableNotification {
   public static final class Builder {
     private String entityName;
     private ApprovalStage stage = PENDING;
-    private String releaseId;
+    private String artifactStreamId;
     private String environmentId;
     private String entityId;
     private EntityType entityType;
@@ -174,13 +174,13 @@ public class ApprovalNotification extends ActionableNotification {
     }
 
     /**
-     * With release id builder.
+     * With artifact stream id builder.
      *
-     * @param releaseId the release id
+     * @param artifactStreamId the artifact stream id
      * @return the builder
      */
-    public Builder withReleaseId(String releaseId) {
-      this.releaseId = releaseId;
+    public Builder withArtifactStreamId(String artifactStreamId) {
+      this.artifactStreamId = artifactStreamId;
       return this;
     }
 
@@ -292,7 +292,7 @@ public class ApprovalNotification extends ActionableNotification {
       return anApprovalNotification()
           .withEntityName(entityName)
           .withStage(stage)
-          .withReleaseId(releaseId)
+          .withArtifactStreamId(artifactStreamId)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
@@ -313,7 +313,7 @@ public class ApprovalNotification extends ActionableNotification {
       ApprovalNotification approvalNotification = new ApprovalNotification();
       approvalNotification.setEntityName(entityName);
       approvalNotification.setStage(stage);
-      approvalNotification.setReleaseId(releaseId);
+      approvalNotification.setArtifactStreamId(artifactStreamId);
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);

@@ -1,4 +1,8 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
+
+import software.wings.beans.BaseFile;
+import software.wings.beans.ChecksumType;
+import software.wings.beans.EmbeddedUser;
 
 /**
  * The Class ArtifactFile.

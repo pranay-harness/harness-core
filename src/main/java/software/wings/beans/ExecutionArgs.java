@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.artifact.Artifact;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,6 @@ public class ExecutionArgs {
   private String serviceId;
   private String commandName;
   private ExecutionStrategy executionStrategy;
-  private String releaseId;
   @Transient private List<Artifact> artifacts;
   private Map<String, String> artifactIdNames;
   private String orchestrationId;
@@ -62,24 +62,6 @@ public class ExecutionArgs {
    */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
-  }
-
-  /**
-   * Gets release id.
-   *
-   * @return the release id
-   */
-  public String getReleaseId() {
-    return releaseId;
-  }
-
-  /**
-   * Sets release id.
-   *
-   * @param releaseId the release id
-   */
-  public void setReleaseId(String releaseId) {
-    this.releaseId = releaseId;
   }
 
   /**

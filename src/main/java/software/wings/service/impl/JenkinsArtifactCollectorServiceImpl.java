@@ -6,11 +6,11 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.ArtifactFile;
-import software.wings.beans.ArtifactPathServiceEntry;
-import software.wings.beans.ArtifactSource;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactPathServiceEntry;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.FileMetadata;
-import software.wings.beans.JenkinsArtifactSource;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -41,12 +41,12 @@ public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorSer
   @Inject private JenkinsFactory jenkinsFactory;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactCollectorService#collect(software.wings.beans.ArtifactSource,
+   * @see software.wings.service.intfc.ArtifactCollectorService#collect(software.wings.beans.artifact.ArtifactStream,
    * java.util.Map)
    */
   @Override
-  public List<ArtifactFile> collect(ArtifactSource artifactSource, Map<String, String> arguments) {
-    JenkinsArtifactSource jenkinsArtifactSource = (JenkinsArtifactSource) artifactSource;
+  public List<ArtifactFile> collect(ArtifactStream artifactStream, Map<String, String> arguments) {
+    JenkinsArtifactStream jenkinsArtifactSource = (JenkinsArtifactStream) artifactStream;
     List<ArtifactFile> artifactFiles = Lists.newArrayList();
     InputStream in = null;
     try {

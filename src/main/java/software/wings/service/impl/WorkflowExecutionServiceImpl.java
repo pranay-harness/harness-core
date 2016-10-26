@@ -29,7 +29,7 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
@@ -226,7 +226,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .addFilter(
                     "uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIdNames().keySet().toArray())
                 .build();
-        workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest).getResponse());
+        workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest, false).getResponse());
       }
     }
     refreshBreakdown(workflowExecution);
@@ -418,7 +418,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                 .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
                                                 .addFilter("uuid", Operator.IN, artifactIds.toArray())
                                                 .build();
-        List<Artifact> artifacts = artifactService.list(pageRequest).getResponse();
+        List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
 
         if (artifacts == null || artifacts.size() != artifactIds.size()) {
           logger.error("Artifact argument and valid artifact retrieved size not matching");
@@ -426,13 +426,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
-        if (artifacts.size() > 0) {
-          workflowExecution.getExecutionArgs().setReleaseId(artifacts.get(0).getRelease().getUuid());
-        }
 
         List<ServiceElement> services = new ArrayList<>();
         artifacts.forEach(artifact -> {
-          artifact.getServices().forEach(service -> {
+          artifact.getServiceIds().forEach(serviceId -> {
+            Service service = serviceResourceService.get(artifact.getAppId(), serviceId);
             ServiceElement se = new ServiceElement();
             MapperUtils.mapObject(service, se);
             services.add(se);

@@ -17,9 +17,9 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
-import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;
@@ -127,7 +127,7 @@ public class NotificationServiceTest extends WingsBaseTest {
                                                                 .withEntityId(ARTIFACT_ID)
                                                                 .withEntityType(ARTIFACT)
                                                                 .withEntityName(ARTIFACT_NAME)
-                                                                .withReleaseId(RELEASE_ID)
+                                                                .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                                                 .build());
 
     doReturn(approvalNotification).when(spyNotificationService).get(APP_ID, NOTIFICATION_ID);

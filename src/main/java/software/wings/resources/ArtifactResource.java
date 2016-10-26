@@ -3,7 +3,7 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.dl.PageRequest;
@@ -62,7 +62,7 @@ public class ArtifactResource {
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    return new RestResponse<>(artifactService.list(pageRequest));
+    return new RestResponse<>(artifactService.list(pageRequest, false));
   }
 
   /**
@@ -75,7 +75,7 @@ public class ArtifactResource {
   @GET
   @Path("{artifactId}")
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
-    return new RestResponse<>(artifactService.get(appId, artifactId));
+    return new RestResponse<>(artifactService.get(appId, artifactId, true));
   }
 
   /**

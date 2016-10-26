@@ -1,13 +1,15 @@
-package software.wings.beans;
+package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 5/4/16.
@@ -16,7 +18,9 @@ import java.util.List;
 public class ArtifactPathServiceEntry {
   @NotEmpty private String artifactPathRegex;
 
-  @Reference(idOnly = true, ignoreMissing = true, lazy = true) private List<Service> services;
+  @Transient private List<Service> services;
+
+  private List<String> serviceIds = new ArrayList<>();
 
   /**
    * Gets artifact path regex.
@@ -54,9 +58,29 @@ public class ArtifactPathServiceEntry {
     this.services = services;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
+  /**
+   * Gets service ids.
+   *
+   * @return the service ids
    */
+  public List<String> getServiceIds() {
+    return serviceIds;
+  }
+
+  /**
+   * Sets service ids.
+   *
+   * @param serviceIds the service ids
+   */
+  public void setServiceIds(List<String> serviceIds) {
+    this.serviceIds = serviceIds;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(artifactPathRegex, services, serviceIds);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -65,40 +89,31 @@ public class ArtifactPathServiceEntry {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    ArtifactPathServiceEntry that = (ArtifactPathServiceEntry) obj;
-    return Objects.equal(artifactPathRegex, that.artifactPathRegex) && Objects.equal(services, that.services);
+    final ArtifactPathServiceEntry other = (ArtifactPathServiceEntry) obj;
+    return Objects.equals(this.artifactPathRegex, other.artifactPathRegex)
+        && Objects.equals(this.services, other.services) && Objects.equals(this.serviceIds, other.serviceIds);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(artifactPathRegex, services);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("serviceIds", services)
         .add("artifactPathRegex", artifactPathRegex)
+        .add("services", services)
+        .add("serviceIds", serviceIds)
         .toString();
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String artifactPathRegex;
-    private List<Service> services;
+    private List<String> serviceIds = new ArrayList<>();
 
     private Builder() {}
 
     /**
-     * An artifact path service entry.
+     * An artifact path service entry builder.
      *
      * @return the builder
      */
@@ -107,7 +122,7 @@ public class ArtifactPathServiceEntry {
     }
 
     /**
-     * With artifact path regex.
+     * With artifact path regex builder.
      *
      * @param artifactPathRegex the artifact path regex
      * @return the builder
@@ -118,25 +133,34 @@ public class ArtifactPathServiceEntry {
     }
 
     /**
-     * With services.
+     * With service ids builder.
      *
-     * @param services the services
+     * @param serviceIds the service ids
      * @return the builder
      */
-    public Builder withServices(List<Service> services) {
-      this.services = services;
+    public Builder withServiceIds(List<String> serviceIds) {
+      this.serviceIds = serviceIds;
       return this;
     }
 
     /**
-     * Builds the.
+     * But builder.
      *
-     * @return A new ArtifactPathServiceEntry object.
+     * @return the builder
+     */
+    public Builder but() {
+      return anArtifactPathServiceEntry().withArtifactPathRegex(artifactPathRegex).withServiceIds(serviceIds);
+    }
+
+    /**
+     * Build artifact path service entry.
+     *
+     * @return the artifact path service entry
      */
     public ArtifactPathServiceEntry build() {
       ArtifactPathServiceEntry artifactPathServiceEntry = new ArtifactPathServiceEntry();
       artifactPathServiceEntry.setArtifactPathRegex(artifactPathRegex);
-      artifactPathServiceEntry.setServices(services);
+      artifactPathServiceEntry.setServiceIds(serviceIds);
       return artifactPathServiceEntry;
     }
   }

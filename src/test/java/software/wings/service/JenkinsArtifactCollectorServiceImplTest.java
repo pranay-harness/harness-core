@@ -7,11 +7,11 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
-import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -29,21 +29,22 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ArtifactFile;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.Service;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.ArtifactType;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -57,14 +58,13 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
   /**
    * The constant JENKINS_ARTIFACT_SOURCE.
    */
-  public static final software.wings.beans.JenkinsArtifactSource JENKINS_ARTIFACT_SOURCE =
-      aJenkinsArtifactSource()
+  public static final JenkinsArtifactStream JENKINS_ARTIFACT_SOURCE =
+      aJenkinsArtifactStream()
           .withSourceName("job1")
           .withJobname("job1")
-          .withArtifactType(ArtifactType.WAR)
           .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
                                                            .withArtifactPathRegex("build/svr-*.war")
-                                                           .withServices(Lists.newArrayList(SERVICE))
+                                                           .withServiceIds(Arrays.asList(SERVICE_ID))
                                                            .build()))
           .build();
   /**

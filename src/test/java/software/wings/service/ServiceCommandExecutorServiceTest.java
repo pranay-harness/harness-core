@@ -6,7 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;

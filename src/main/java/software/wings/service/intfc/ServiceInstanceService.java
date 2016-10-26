@@ -4,7 +4,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.InstanceCountByEnv;
-import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.ApplicationHost;
@@ -82,17 +81,6 @@ public interface ServiceInstanceService {
    * @param templateId the template id
    */
   void deleteByServiceTemplate(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String templateId);
-
-  /**
-   * Gets counts by env release and template.
-   *
-   * @param appId            the app id
-   * @param release          the release
-   * @param serviceTemplates the service templates
-   * @return the counts by env release and template
-   */
-  Iterable<InstanceCountByEnv> getCountsByEnvReleaseAndTemplate(
-      @NotEmpty String appId, @NotNull Release release, Set<ServiceTemplate> serviceTemplates);
 
   /**
    * Gets counts by env.

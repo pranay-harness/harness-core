@@ -57,17 +57,15 @@ public class BuildSourceResource {
   /**
    * Gets builds.
    *
-   * @param appId              the app id
-   * @param releaseId          the release id
-   * @param artifactSourceName the artifact source name
-   * @param settingId          the setting id
+   * @param appId            the app id
+   * @param artifactStreamId the artifact source id
+   * @param settingId        the setting id
    * @return the builds
    */
   @GET
   @Path("builds")
   public RestResponse<List<BuildDetails>> getBuilds(@QueryParam("appId") String appId,
-      @QueryParam("releaseId") String releaseId, @QueryParam("artifactSourceName") String artifactSourceName,
-      @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getBuilds(appId, releaseId, artifactSourceName, settingId));
+      @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getBuilds(artifactStreamId, appId, settingId));
   }
 }

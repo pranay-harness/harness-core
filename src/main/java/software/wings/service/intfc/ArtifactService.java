@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.Artifact;
-import software.wings.beans.ArtifactFile;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -16,10 +16,11 @@ public interface ArtifactService {
   /**
    * List.
    *
-   * @param pageRequest the page request
+   * @param pageRequest  the page request
+   * @param withServices the with services
    * @return the page response
    */
-  PageResponse<Artifact> list(PageRequest<Artifact> pageRequest);
+  PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices);
 
   /**
    * Creates the.
@@ -72,6 +73,16 @@ public interface ArtifactService {
    * @return the artifact
    */
   Artifact get(String appId, String artifactId);
+
+  /**
+   * Get artifact.
+   *
+   * @param appId        the app id
+   * @param artifactId   the artifact id
+   * @param withServices the with services
+   * @return the artifact
+   */
+  Artifact get(String appId, String artifactId, boolean withServices);
 
   /**
    * Soft delete.

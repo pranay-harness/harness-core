@@ -2,12 +2,13 @@ package software.wings.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
@@ -21,9 +22,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
-import software.wings.beans.Artifact;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.ConstraintViolationExceptionMapper;
@@ -92,7 +93,7 @@ public class ArtifactResourceTest {
     reset(ARTIFACT_SERVICE);
     when(ARTIFACT_SERVICE.create(any(Artifact.class))).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.update(any(Artifact.class))).thenReturn(ACTUAL);
-    when(ARTIFACT_SERVICE.get(APP_ID, ARTIFACT_ID)).thenReturn(ACTUAL);
+    when(ARTIFACT_SERVICE.get(APP_ID, ARTIFACT_ID, true)).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.delete(APP_ID, ARTIFACT_ID)).thenReturn(true);
 
     tempFile = tempFolder.newFile();
@@ -101,7 +102,7 @@ public class ArtifactResourceTest {
     PageResponse<Artifact> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(ACTUAL));
     pageResponse.setTotal(1);
-    when(ARTIFACT_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(ARTIFACT_SERVICE.list(any(PageRequest.class), eq(true))).thenReturn(pageResponse);
   }
 
   /**
@@ -146,7 +147,7 @@ public class ArtifactResourceTest {
                                               .request()
                                               .get(new GenericType<RestResponse<Artifact>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Artifact.class);
-    verify(ARTIFACT_SERVICE).get(APP_ID, ARTIFACT_ID);
+    verify(ARTIFACT_SERVICE).get(APP_ID, ARTIFACT_ID, true);
   }
 
   /**
@@ -185,7 +186,7 @@ public class ArtifactResourceTest {
     expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
-    verify(ARTIFACT_SERVICE).list(expectedPageRequest);
+    verify(ARTIFACT_SERVICE).list(expectedPageRequest, false);
   }
 
   /**

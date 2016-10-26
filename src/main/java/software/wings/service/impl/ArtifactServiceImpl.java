@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
@@ -11,18 +10,23 @@ import com.google.common.io.Files;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Application;
-import software.wings.beans.Artifact;
-import software.wings.beans.Artifact.Status;
-import software.wings.beans.ArtifactFile;
-import software.wings.beans.Release;
+import software.wings.beans.ErrorCodes;
+import software.wings.beans.Service;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.Status;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -30,6 +34,7 @@ import software.wings.utils.validation.Update;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Valid;
@@ -46,30 +51,39 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
   @Inject private Queue<CollectEvent> collectQueue;
+  @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest) {
-    return wingsPersistence.query(Artifact.class, pageRequest);
+  public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices) {
+    PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
+    if (withServices) {
+      pageResponse.getResponse().forEach(artifact
+          -> artifact.setServices(artifact.getServiceIds()
+                                      .stream()
+                                      .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
+                                      .collect(Collectors.toList())));
+    }
+    return pageResponse;
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.Artifact)
+   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.artifact.Artifact)
    */
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
-    Application application = wingsPersistence.get(Application.class, artifact.getAppId());
-    Validator.notNullCheck("application", application);
-    Release release = wingsPersistence.get(Release.class, artifact.getRelease().getUuid());
-    Validator.notNullCheck("release", release);
+    if (!appService.exist(artifact.getAppId())) {
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
+    }
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
+    Validator.notNullCheck("artifactStream", artifactStream);
 
-    Validator.equalCheck(application.getUuid(), release.getAppId());
-
-    artifact.setRelease(release);
-    artifact.setServices(newArrayList(release.get(artifact.getArtifactSourceName()).getServices()));
+    artifact.setServiceIds(artifactStream.getServiceIds().stream().collect(Collectors.toList()));
     artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 
@@ -80,7 +94,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#update(software.wings.beans.Artifact)
+   * @see software.wings.service.intfc.ArtifactService#update(software.wings.beans.artifact.Artifact)
    */
   @Override
   @ValidationGroups(Update.class)
@@ -96,7 +110,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#updateStatus(java.lang.String, java.lang.String,
-   * software.wings.beans.Artifact.Status)
+   * software.wings.beans.artifact.Artifact.Status)
    */
   @Override
   public void updateStatus(String artifactId, String appId, Artifact.Status status) {
@@ -145,7 +159,20 @@ public class ArtifactServiceImpl implements ArtifactService {
    */
   @Override
   public Artifact get(String appId, String artifactId) {
-    return wingsPersistence.get(Artifact.class, appId, artifactId);
+    return get(appId, artifactId, false);
+  }
+
+  @Override
+  public Artifact get(String appId, String artifactId, boolean withServices) {
+    Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
+    if (withServices) {
+      List<Service> services = artifact.getServiceIds()
+                                   .stream()
+                                   .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
+                                   .collect(Collectors.toList());
+      artifact.setServices(services);
+    }
+    return artifact;
   }
 
   /* (non-Javadoc)

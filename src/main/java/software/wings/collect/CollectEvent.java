@@ -5,7 +5,7 @@ import com.google.common.base.Objects;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.core.queue.Queuable;
 
 import java.util.Date;

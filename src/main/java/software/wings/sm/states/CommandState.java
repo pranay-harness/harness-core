@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -36,6 +34,8 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
@@ -45,9 +45,9 @@ import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -112,7 +112,7 @@ public class CommandState extends State {
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
-  @Inject @Transient private ReleaseService releaseService;
+  @Inject @Transient private ArtifactStreamService artifactStreamService;
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
 
@@ -259,12 +259,14 @@ public class CommandState extends State {
               .withServiceTemplate(serviceTemplate);
 
       if (command.isArtifactNeeded()) {
-        Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getService());
+        Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getServiceId());
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
-        activityBuilder.withReleaseId(artifact.getRelease().getUuid())
-            .withReleaseName(artifact.getRelease().getReleaseName())
+        ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
+
+        activityBuilder.withArtifactStreamId(artifactStream.getUuid())
+            .withArtifactStreamName(artifactStream.getSourceName())
             .withArtifactName(artifact.getDisplayName())
             .withArtifactId(artifact.getUuid());
         commandExecutionContextBuilder.withArtifact(artifact);
@@ -331,10 +333,6 @@ public class CommandState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
-    String envId = workflowStandardParams.getEnvId();
-
-    InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
-    ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
 
     ExecutionResultData executionResultData = null;
     String activityId = null;
@@ -352,12 +350,6 @@ public class CommandState extends State {
 
     activityService.updateStatus(activityId, appId,
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
-    Activity activity = activityService.get(activityId, appId);
-    String oldReleaseId = serviceInstance.getReleaseId();
-
-    if (artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(executionResultData, activity, oldReleaseId)) {
-      releaseService.addSuccessCount(appId, activity.getReleaseId(), envId, 1);
-    }
 
     ExecutionStatus executionStatus =
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
@@ -374,13 +366,6 @@ public class CommandState extends State {
         .withErrorMessage(executionResultData.getErrorMessage())
         .withStateExecutionData(commandStateExecutionData)
         .build();
-  }
-
-  private boolean artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(
-      ExecutionResultData executionResultData, Activity activity, String oldReleaseId) {
-    return executionResultData.getResult().equals(SUCCESS)
-        && (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getReleaseId()))
-        && (oldReleaseId == null || !StringUtils.equals(oldReleaseId, activity.getReleaseId()));
   }
 
   /**

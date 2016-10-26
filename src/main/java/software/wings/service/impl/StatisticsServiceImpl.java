@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
@@ -30,12 +29,10 @@ import com.google.common.collect.Maps;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
@@ -55,7 +52,6 @@ import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
-import software.wings.beans.stats.UserStatistics.ReleaseDetails;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
@@ -63,7 +59,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -78,7 +73,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
@@ -96,7 +90,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
-  @Inject private ReleaseService releaseService;
   @Inject private NotificationService notificationService;
   @Inject private ActivityService activityService;
 
@@ -224,31 +217,21 @@ public class StatisticsServiceImpl implements StatisticsService {
         -> wflExecutionsByApp.computeIfAbsent(wflExecution.getAppId(), s -> new ArrayList<>()).add(wflExecution));
 
     List<AppDeployment> appDeployments = new ArrayList<>();
-    List<ReleaseDetails> releaseDetailsList = new ArrayList<>();
 
     wflExecutionsByApp.forEach((appId, wflExecutions) -> {
       if (wflExecutions.size() != 0) {
         String appName = wflExecutions.get(0).getAppName();
 
         appDeployments.add(new AppDeployment(appId, appName, wflExecutions));
-
-        List<Release> releases = getAssociatedReleasesFromExecutions(appId, wflExecutions);
-        if (releases.size() > 0) {
-          releaseDetailsList.add(new ReleaseDetails(appId, appName, releases));
-        }
       }
     });
 
-    int releaseCount =
-        (int) releaseDetailsList.stream().map(releaseDetails -> releaseDetails.getReleases().size()).count();
     int deploymentCount =
         (int) appDeployments.stream().map(appDeployment -> appDeployment.getDeployments().size()).count();
 
     executorService.submit(() -> userService.updateStatsFetchedOnForUser(user));
     return anUserStatistics()
         .withAppDeployments(appDeployments)
-        .withReleaseDetails(releaseDetailsList)
-        .withReleaseCount(releaseCount)
         .withDeploymentCount(deploymentCount)
         .withLastFetchedOn(statsFetchedOn)
         .build();
@@ -379,34 +362,6 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     return new AggregatedDayStats(aggTotalCount, aggFailureCount, aggInstanceCount, dayStats);
-  }
-
-  /**
-   * Gets associated releases from executions.
-   *
-   * @param appId         the app id
-   * @param wflExecutions the wfl executions
-   * @return the associated releases from executions
-   */
-  public List<Release> getAssociatedReleasesFromExecutions(String appId, List<WorkflowExecution> wflExecutions) {
-    Set<String> releaseIds =
-        wflExecutions.stream()
-            .filter(wfle -> wfle.getExecutionArgs() != null && wfle.getExecutionArgs().getReleaseId() != null)
-            .map(e -> e.getExecutionArgs().getReleaseId())
-            .collect(toSet());
-    if (releaseIds.size() == 0) {
-      return new ArrayList<>();
-    }
-
-    return releaseService
-        .list(
-            aPageRequest()
-                .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-                .addFilter(aSearchFilter()
-                               .withField(Mapper.ID_KEY, Operator.IN, releaseIds.toArray(new String[releaseIds.size()]))
-                               .build())
-                .build())
-        .getResponse();
   }
 
   private DeploymentActivityStatistics getDeploymentActivitiesForXDaysStartingFrom(
