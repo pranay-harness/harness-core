@@ -26,7 +26,7 @@ import org.junit.rules.Verifier;
 import org.junit.runner.RunWith;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogNames;
-import software.wings.beans.artifact.JenkinsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;

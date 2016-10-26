@@ -11,7 +11,7 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.beans.artifact.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;

@@ -11,7 +11,7 @@ import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.artifact.JenkinsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;

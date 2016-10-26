@@ -12,7 +12,7 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.artifact.JenkinsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;

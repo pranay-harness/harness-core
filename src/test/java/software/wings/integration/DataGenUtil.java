@@ -34,7 +34,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.beans.artifact.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;

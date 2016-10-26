@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.utils.Validator.notNullCheck;
 
-import software.wings.beans.artifact.JenkinsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BuildSourceService;

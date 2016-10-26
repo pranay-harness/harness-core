@@ -34,7 +34,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.artifact.JenkinsConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
