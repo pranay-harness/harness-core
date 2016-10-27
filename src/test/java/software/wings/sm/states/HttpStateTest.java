@@ -200,6 +200,31 @@ public class HttpStateTest extends WingsBaseTest {
   }
 
   /**
+   * Should execute and get summary/details.
+   */
+  @Test
+  public void shouldGetExecutionDataSummaryDetails() {
+    wireMockRule.stubFor(get(urlEqualTo("/health/status"))
+                             .withHeader("Content-Type", equalTo("application/json"))
+                             .withHeader("Accept", equalTo("*/*"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withBody("<health><status>Enabled</status></health>")
+                                             .withHeader("Content-Type", "text/xml")));
+
+    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
+
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    assertThat(response.getStateExecutionData()).isNotNull().isInstanceOf(HttpStateExecutionData.class);
+    response.getStateExecutionData().setStatus(ExecutionStatus.SUCCESS);
+    assertThat(response.getStateExecutionData().getExecutionSummary()).isNotNull();
+    assertThat(response.getStateExecutionData().getExecutionDetails()).isNotNull();
+
+    verify(activityService).save(activityBuilder.build());
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+  }
+
+  /**
    * Should fail on socket timeout.
    */
   @Test
