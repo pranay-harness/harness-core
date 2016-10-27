@@ -150,6 +150,8 @@ public class SearchFilter {
              */
     EXISTS,
 
+    NOT_EXISTS,
+
     OR,
 
     AND;

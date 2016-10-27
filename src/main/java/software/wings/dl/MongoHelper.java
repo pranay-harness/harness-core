@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
+import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
 import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 
@@ -132,7 +133,7 @@ public class MongoHelper {
   }
 
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
-    if (!filter.getOp().equals(EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
+    if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
@@ -166,6 +167,9 @@ public class MongoHelper {
 
       case EXISTS:
         return fieldEnd.exists();
+
+      case NOT_EXISTS:
+        return fieldEnd.doesNotExist();
     }
     return null;
   }
