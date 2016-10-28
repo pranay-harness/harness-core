@@ -143,24 +143,9 @@ public class PipelineResource {
    */
   @GET
   @Path("executions")
-  public RestResponse<PageResponse<PipelineExecution>> listExecutions(@QueryParam("appId") String appId,
-      @QueryParam("pipelineId") String pipelineId, @BeanParam PageRequest<PipelineExecution> pageRequest) {
-    /*
-        SearchFilter filter = new SearchFilter();
-        filter.setFieldName("appId");
-        filter.setFieldValues(appId);
-        filter.setOp(Operator.EQ);
-        pageRequest.addFilter(filter);
-
-        filter = new SearchFilter();
-        filter.setFieldName("workflowType");
-        filter.setFieldValues(WorkflowType.PIPELINE);
-        filter.setOp(Operator.EQ);
-        pageRequest.addFilter(filter);
-
-        return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, true));
-        */
-    return new RestResponse<>(pipelineService.listPipelineExecutions(pageRequest, appId));
+  public RestResponse<PageResponse<PipelineExecution>> listExecutions(
+      @BeanParam PageRequest<PipelineExecution> pageRequest) {
+    return new RestResponse<>(pipelineService.listPipelineExecutions(pageRequest));
   }
 
   /**
@@ -174,7 +159,7 @@ public class PipelineResource {
   @Path("executions")
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
-    return new RestResponse<>(workflowExecutionService.triggerPipelineExecution(appId, pipelineId));
+    return new RestResponse<>(pipelineService.execute(appId, pipelineId));
   }
 
   /**

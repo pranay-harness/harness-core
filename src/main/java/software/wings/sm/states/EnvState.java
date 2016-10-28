@@ -68,6 +68,8 @@ public class EnvState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = context.getApp().getUuid();
+    String pipelineExecutionId = context.getWorkflowExecutionId();
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<String> artifactIds = workflowStandardParams.getArtifactIds();
     List<Artifact> artifacts = artifactIds.stream()
@@ -89,6 +91,7 @@ public class EnvState extends State {
       WorkflowExecution execution = executionService.triggerEnvExecution(appId, envId, executionArgs);
       waitNotifyEngine.waitForAll(anEnvStateCallback()
                                       .withAppId(appId)
+                                      .withPipelineExecutionId(pipelineExecutionId)
                                       .withCorrelationId(envStateExecutionData.getCorrelationId())
                                       .withWorkflowExecutionId(execution.getUuid())
                                       .build(),

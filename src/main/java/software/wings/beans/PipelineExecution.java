@@ -4,11 +4,9 @@ import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.artifact.Artifact;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,13 +16,12 @@ import java.util.Objects;
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 public class PipelineExecution extends Base {
   @Indexed private String pipelineId;
-  @Transient private Pipeline pipeline;
-  @Transient private Artifact artifact;
-  private List<PipelineStageExecution> pipelineStageExecutions;
-  @Indexed private String envId;
+  @Indexed private String workflowExecutionId;
+  private String artifactId;
+  private String artifactName;
+  private Pipeline pipeline;
+  private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
   private String appName;
-  private String envName;
-  private EnvironmentType envType;
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
 
@@ -70,24 +67,6 @@ public class PipelineExecution extends Base {
   }
 
   /**
-   * Gets artifact.
-   *
-   * @return the artifact
-   */
-  public Artifact getArtifact() {
-    return artifact;
-  }
-
-  /**
-   * Sets artifact.
-   *
-   * @param artifact the artifact
-   */
-  public void setArtifact(Artifact artifact) {
-    this.artifact = artifact;
-  }
-
-  /**
    * Gets pipeline stage executions.
    *
    * @return the pipeline stage executions
@@ -106,24 +85,6 @@ public class PipelineExecution extends Base {
   }
 
   /**
-   * Gets env id.
-   *
-   * @return the env id
-   */
-  public String getEnvId() {
-    return envId;
-  }
-
-  /**
-   * Sets env id.
-   *
-   * @param envId the env id
-   */
-  public void setEnvId(String envId) {
-    this.envId = envId;
-  }
-
-  /**
    * Gets app name.
    *
    * @return the app name
@@ -139,42 +100,6 @@ public class PipelineExecution extends Base {
    */
   public void setAppName(String appName) {
     this.appName = appName;
-  }
-
-  /**
-   * Gets env name.
-   *
-   * @return the env name
-   */
-  public String getEnvName() {
-    return envName;
-  }
-
-  /**
-   * Sets env name.
-   *
-   * @param envName the env name
-   */
-  public void setEnvName(String envName) {
-    this.envName = envName;
-  }
-
-  /**
-   * Gets env type.
-   *
-   * @return the env type
-   */
-  public EnvironmentType getEnvType() {
-    return envType;
-  }
-
-  /**
-   * Sets env type.
-   *
-   * @param envType the env type
-   */
-  public void setEnvType(EnvironmentType envType) {
-    this.envType = envType;
   }
 
   /**
@@ -267,11 +192,65 @@ public class PipelineExecution extends Base {
     this.endTs = endTs;
   }
 
+  /**
+   * Gets workflow execution id.
+   *
+   * @return the workflow execution id
+   */
+  public String getWorkflowExecutionId() {
+    return workflowExecutionId;
+  }
+
+  /**
+   * Sets workflow execution id.
+   *
+   * @param workflowExecutionId the workflow execution id
+   */
+  public void setWorkflowExecutionId(String workflowExecutionId) {
+    this.workflowExecutionId = workflowExecutionId;
+  }
+
+  /**
+   * Gets artifact id.
+   *
+   * @return the artifact id
+   */
+  public String getArtifactId() {
+    return artifactId;
+  }
+
+  /**
+   * Sets artifact id.
+   *
+   * @param artifactId the artifact id
+   */
+  public void setArtifactId(String artifactId) {
+    this.artifactId = artifactId;
+  }
+
+  /**
+   * Gets artifact name.
+   *
+   * @return the artifact name
+   */
+  public String getArtifactName() {
+    return artifactName;
+  }
+
+  /**
+   * Sets artifact name.
+   *
+   * @param artifactName the artifact name
+   */
+  public void setArtifactName(String artifactName) {
+    this.artifactName = artifactName;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(pipelineId, pipeline, artifact, pipelineStageExecutions, envId, appName, envName, envType,
-              workflowType, status, name, startTs, endTs);
+        + Objects.hash(pipelineId, workflowExecutionId, artifactId, artifactName, pipeline, pipelineStageExecutions,
+              appName, workflowType, status, name, startTs, endTs);
   }
 
   @Override
@@ -286,27 +265,26 @@ public class PipelineExecution extends Base {
       return false;
     }
     final PipelineExecution other = (PipelineExecution) obj;
-    return Objects.equals(this.pipelineId, other.pipelineId) && Objects.equals(this.pipeline, other.pipeline)
-        && Objects.equals(this.artifact, other.artifact)
+    return Objects.equals(this.pipelineId, other.pipelineId)
+        && Objects.equals(this.workflowExecutionId, other.workflowExecutionId)
+        && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
+        && Objects.equals(this.pipeline, other.pipeline)
         && Objects.equals(this.pipelineStageExecutions, other.pipelineStageExecutions)
-        && Objects.equals(this.envId, other.envId) && Objects.equals(this.appName, other.appName)
-        && Objects.equals(this.envName, other.envName) && Objects.equals(this.envType, other.envType)
-        && Objects.equals(this.workflowType, other.workflowType) && Objects.equals(this.status, other.status)
-        && Objects.equals(this.name, other.name) && Objects.equals(this.startTs, other.startTs)
-        && Objects.equals(this.endTs, other.endTs);
+        && Objects.equals(this.appName, other.appName) && Objects.equals(this.workflowType, other.workflowType)
+        && Objects.equals(this.status, other.status) && Objects.equals(this.name, other.name)
+        && Objects.equals(this.startTs, other.startTs) && Objects.equals(this.endTs, other.endTs);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("pipelineId", pipelineId)
+        .add("workflowExecutionId", workflowExecutionId)
+        .add("artifactId", artifactId)
+        .add("artifactName", artifactName)
         .add("pipeline", pipeline)
-        .add("artifact", artifact)
         .add("pipelineStageExecutions", pipelineStageExecutions)
-        .add("envId", envId)
         .add("appName", appName)
-        .add("envName", envName)
-        .add("envType", envType)
         .add("workflowType", workflowType)
         .add("status", status)
         .add("name", name)
@@ -320,13 +298,12 @@ public class PipelineExecution extends Base {
    */
   public static final class Builder {
     private String pipelineId;
+    private String workflowExecutionId;
+    private String artifactId;
+    private String artifactName;
     private Pipeline pipeline;
-    private Artifact artifact;
-    private List<PipelineStageExecution> pipelineStageExecutions;
-    private String envId;
+    private List<PipelineStageExecution> pipelineStageExecutions = new ArrayList<>();
     private String appName;
-    private String envName;
-    private EnvironmentType envType;
     private WorkflowType workflowType;
     private ExecutionStatus status = ExecutionStatus.NEW;
     private String name;
@@ -362,6 +339,39 @@ public class PipelineExecution extends Base {
     }
 
     /**
+     * With workflow execution id builder.
+     *
+     * @param workflowExecutionId the workflow execution id
+     * @return the builder
+     */
+    public Builder withWorkflowExecutionId(String workflowExecutionId) {
+      this.workflowExecutionId = workflowExecutionId;
+      return this;
+    }
+
+    /**
+     * With artifact id builder.
+     *
+     * @param artifactId the artifact id
+     * @return the builder
+     */
+    public Builder withArtifactId(String artifactId) {
+      this.artifactId = artifactId;
+      return this;
+    }
+
+    /**
+     * With artifact name builder.
+     *
+     * @param artifactName the artifact name
+     * @return the builder
+     */
+    public Builder withArtifactName(String artifactName) {
+      this.artifactName = artifactName;
+      return this;
+    }
+
+    /**
      * With pipeline builder.
      *
      * @param pipeline the pipeline
@@ -369,17 +379,6 @@ public class PipelineExecution extends Base {
      */
     public Builder withPipeline(Pipeline pipeline) {
       this.pipeline = pipeline;
-      return this;
-    }
-
-    /**
-     * With artifact builder.
-     *
-     * @param artifact the artifact
-     * @return the builder
-     */
-    public Builder withArtifact(Artifact artifact) {
-      this.artifact = artifact;
       return this;
     }
 
@@ -395,17 +394,6 @@ public class PipelineExecution extends Base {
     }
 
     /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
-    /**
      * With app name builder.
      *
      * @param appName the app name
@@ -413,28 +401,6 @@ public class PipelineExecution extends Base {
      */
     public Builder withAppName(String appName) {
       this.appName = appName;
-      return this;
-    }
-
-    /**
-     * With env name builder.
-     *
-     * @param envName the env name
-     * @return the builder
-     */
-    public Builder withEnvName(String envName) {
-      this.envName = envName;
-      return this;
-    }
-
-    /**
-     * With env type builder.
-     *
-     * @param envType the env type
-     * @return the builder
-     */
-    public Builder withEnvType(EnvironmentType envType) {
-      this.envType = envType;
       return this;
     }
 
@@ -567,13 +533,12 @@ public class PipelineExecution extends Base {
     public Builder but() {
       return aPipelineExecution()
           .withPipelineId(pipelineId)
+          .withWorkflowExecutionId(workflowExecutionId)
+          .withArtifactId(artifactId)
+          .withArtifactName(artifactName)
           .withPipeline(pipeline)
-          .withArtifact(artifact)
           .withPipelineStageExecutions(pipelineStageExecutions)
-          .withEnvId(envId)
           .withAppName(appName)
-          .withEnvName(envName)
-          .withEnvType(envType)
           .withWorkflowType(workflowType)
           .withStatus(status)
           .withName(name)
@@ -595,13 +560,12 @@ public class PipelineExecution extends Base {
     public PipelineExecution build() {
       PipelineExecution pipelineExecution = new PipelineExecution();
       pipelineExecution.setPipelineId(pipelineId);
+      pipelineExecution.setWorkflowExecutionId(workflowExecutionId);
+      pipelineExecution.setArtifactId(artifactId);
+      pipelineExecution.setArtifactName(artifactName);
       pipelineExecution.setPipeline(pipeline);
-      pipelineExecution.setArtifact(artifact);
       pipelineExecution.setPipelineStageExecutions(pipelineStageExecutions);
-      pipelineExecution.setEnvId(envId);
       pipelineExecution.setAppName(appName);
-      pipelineExecution.setEnvName(envName);
-      pipelineExecution.setEnvType(envType);
       pipelineExecution.setWorkflowType(workflowType);
       pipelineExecution.setStatus(status);
       pipelineExecution.setName(name);

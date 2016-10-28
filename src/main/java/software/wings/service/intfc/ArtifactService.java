@@ -107,5 +107,5 @@ public interface ArtifactService {
    * @param artifactStreamId the artifact stream id
    * @return the artifact
    */
-  String fetchLatestArtifactIdForArtifactStream(String appId, String artifactStreamId);
+  Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId);
 }

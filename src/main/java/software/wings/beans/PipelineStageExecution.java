@@ -8,6 +8,10 @@ import java.util.List;
 public class PipelineStageExecution {
   private List<WorkflowExecution> workflowExecutions;
 
+  public PipelineStageExecution(List<WorkflowExecution> workflowExecutions) {
+    this.workflowExecutions = workflowExecutions;
+  }
+
   public List<WorkflowExecution> getWorkflowExecutions() {
     return workflowExecutions;
   }

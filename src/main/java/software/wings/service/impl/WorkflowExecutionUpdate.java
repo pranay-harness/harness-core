@@ -15,7 +15,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -38,6 +40,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private PipelineService pipelineService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -114,6 +117,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                                         .set("status", status)
                                                         .set("endTs", System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
+
+    if (context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+      pipelineService.updatePipelineExecutionData(appId, workflowExecutionId, status);
+    }
 
     if (!isNullOrEmpty(workflowExecutionId)) { // TODO:: remove this check.
       waitNotifyEngine.notify(workflowExecutionId, anExecutionStatusData().withExecutionStatus(status).build());

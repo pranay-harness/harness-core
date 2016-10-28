@@ -7,7 +7,6 @@ import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
 
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -195,14 +194,13 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public String fetchLatestArtifactIdForArtifactStream(String appId, String artifactStreamId) {
-    Key<Artifact> key = wingsPersistence.createQuery(Artifact.class)
-                            .field("appId")
-                            .equal(appId)
-                            .field("artifactStreamId")
-                            .equal(artifactStreamId)
-                            .order("-createdAt")
-                            .getKey();
-    return key != null ? (String) key.getId() : null;
+  public Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId) {
+    return wingsPersistence.createQuery(Artifact.class)
+        .field("appId")
+        .equal(appId)
+        .field("artifactStreamId")
+        .equal(artifactStreamId)
+        .order("-createdAt")
+        .get();
   }
 }

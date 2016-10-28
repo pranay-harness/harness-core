@@ -2,7 +2,9 @@ package software.wings.sm.states;
 
 import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
 
+import software.wings.beans.WorkflowExecution;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.waitnotify.NotifyCallback;
@@ -18,17 +20,20 @@ import javax.inject.Inject;
 public class EnvStateCallback implements NotifyCallback {
   @Inject private PipelineService pipelineService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   private String correlationId;
-  private String workflowExecutionId;
   private String appId;
+  private String pipelineExecutionId;
+  private String workflowExecutionId;
 
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
     if (response.containsKey(workflowExecutionId) && response.get(workflowExecutionId) instanceof ExecutionStatusData) {
       ExecutionStatus status = ((ExecutionStatusData) response.get(workflowExecutionId)).getExecutionStatus();
       waitNotifyEngine.notify(correlationId, anExecutionStatusData().withExecutionStatus(status).build());
-      pipelineService.updatePipelineExecutionData(appId, workflowExecutionId, status);
+      WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
+      pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, executionDetails);
     }
   }
 
@@ -78,14 +83,33 @@ public class EnvStateCallback implements NotifyCallback {
   }
 
   /**
+   * Gets pipeline execution id.
+   *
+   * @return the pipeline execution id
+   */
+  public String getPipelineExecutionId() {
+    return pipelineExecutionId;
+  }
+
+  /**
+   * Sets pipeline execution id.
+   *
+   * @param pipelineExecutionId the pipeline execution id
+   */
+  public void setPipelineExecutionId(String pipelineExecutionId) {
+    this.pipelineExecutionId = pipelineExecutionId;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private PipelineService pipelineService;
     private WaitNotifyEngine waitNotifyEngine;
     private String correlationId;
-    private String workflowExecutionId;
     private String appId;
+    private String pipelineExecutionId;
+    private String workflowExecutionId;
 
     private Builder() {}
 
@@ -132,17 +156,6 @@ public class EnvStateCallback implements NotifyCallback {
     }
 
     /**
-     * With workflow execution id builder.
-     *
-     * @param workflowExecutionId the workflow execution id
-     * @return the builder
-     */
-    public Builder withWorkflowExecutionId(String workflowExecutionId) {
-      this.workflowExecutionId = workflowExecutionId;
-      return this;
-    }
-
-    /**
      * With app id builder.
      *
      * @param appId the app id
@@ -150,6 +163,28 @@ public class EnvStateCallback implements NotifyCallback {
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With pipeline execution id builder.
+     *
+     * @param pipelineExecutionId the pipeline execution id
+     * @return the builder
+     */
+    public Builder withPipelineExecutionId(String pipelineExecutionId) {
+      this.pipelineExecutionId = pipelineExecutionId;
+      return this;
+    }
+
+    /**
+     * With workflow execution id builder.
+     *
+     * @param workflowExecutionId the workflow execution id
+     * @return the builder
+     */
+    public Builder withWorkflowExecutionId(String workflowExecutionId) {
+      this.workflowExecutionId = workflowExecutionId;
       return this;
     }
 
@@ -163,8 +198,9 @@ public class EnvStateCallback implements NotifyCallback {
           .withPipelineService(pipelineService)
           .withWaitNotifyEngine(waitNotifyEngine)
           .withCorrelationId(correlationId)
-          .withWorkflowExecutionId(workflowExecutionId)
-          .withAppId(appId);
+          .withAppId(appId)
+          .withPipelineExecutionId(pipelineExecutionId)
+          .withWorkflowExecutionId(workflowExecutionId);
     }
 
     /**
@@ -175,8 +211,9 @@ public class EnvStateCallback implements NotifyCallback {
     public EnvStateCallback build() {
       EnvStateCallback envStateCallback = new EnvStateCallback();
       envStateCallback.setCorrelationId(correlationId);
-      envStateCallback.setWorkflowExecutionId(workflowExecutionId);
       envStateCallback.setAppId(appId);
+      envStateCallback.setPipelineExecutionId(pipelineExecutionId);
+      envStateCallback.setWorkflowExecutionId(workflowExecutionId);
       envStateCallback.pipelineService = this.pipelineService;
       envStateCallback.waitNotifyEngine = this.waitNotifyEngine;
       return envStateCallback;

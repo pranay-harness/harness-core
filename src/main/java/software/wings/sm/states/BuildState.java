@@ -3,12 +3,12 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.base.Strings;
-
 import com.github.reinert.jjschema.Attributes;
 import software.wings.api.BuildStateExecutionData;
+import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -31,6 +31,7 @@ public class BuildState extends State {
   private String artifactStreamId;
 
   @Inject private ArtifactService artifactService;
+  @Inject private PipelineService pipelineService;
 
   /**
    * Creates pause state with given name.
@@ -47,18 +48,20 @@ public class BuildState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = context.getApp().getUuid();
+    String pipelineExecutionId = context.getWorkflowExecutionId();
     BuildStateExecutionData buildStateExecutionData = new BuildStateExecutionData();
     buildStateExecutionData.setArtifactStreamId(artifactStreamId);
-    String artifactId = artifactService.fetchLatestArtifactIdForArtifactStream(appId, artifactStreamId);
+    Artifact artifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
 
-    if (Strings.isNullOrEmpty(artifactId)) {
+    if (artifact == null) {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withErrorMessage("No artifact found for deployment")
           .build();
     }
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    workflowStandardParams.setArtifactIds(asList(artifactId));
+    workflowStandardParams.setArtifactIds(asList(artifact.getUuid()));
+    pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, artifact);
     return anExecutionResponse().withStateExecutionData(buildStateExecutionData).build();
   }
 
