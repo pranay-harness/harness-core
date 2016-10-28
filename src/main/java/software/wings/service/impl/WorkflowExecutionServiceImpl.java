@@ -819,6 +819,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
             .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name())
+            .addFilter("parentInstanceId", Operator.NOT_EXISTS, null)
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
@@ -827,10 +828,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (pageResponse == null || pageResponse.isEmpty()) {
       return;
     }
-    String nullParent = "NULL_PARENT";
-    Map<String, List<StateExecutionInstance>> parentIdMap = createHierarchy(pageResponse.getResponse(), nullParent);
 
-    List<StateExecutionInstance> topInstances = parentIdMap.get(nullParent);
+    List<StateExecutionInstance> topInstances = pageResponse.getResponse();
 
     List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(topInstances);
     workflowExecution.setStatusInstanceBreakdownMap(getStatusInstanceBreakdownMap(instanceStatusSummary));
@@ -1032,23 +1031,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                      .build());
     }
     return statusInstanceBreakdownMap;
-  }
-
-  private Map<String, List<StateExecutionInstance>> createHierarchy(
-      List<StateExecutionInstance> response, String nullParent) {
-    Map<String, List<StateExecutionInstance>> map = new HashMap<>();
-    response.forEach(stateExecutionInstance -> {
-      String parentId = (stateExecutionInstance.getParentInstanceId() == null)
-          ? nullParent
-          : stateExecutionInstance.getParentInstanceId();
-      List<StateExecutionInstance> list = map.get(parentId);
-      if (list == null) {
-        list = new ArrayList<StateExecutionInstance>();
-        map.put(parentId, list);
-      }
-      list.add(stateExecutionInstance);
-    });
-    return map;
   }
 
   private void refreshBreakdown(WorkflowExecution workflowExecution) {
