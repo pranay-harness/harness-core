@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
-import software.wings.beans.Artifact;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -17,7 +17,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateMachine;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +32,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowService workflowService;
 
   @Override
   public PageResponse<PipelineExecution> listPipelineExecutions(
@@ -53,9 +56,10 @@ public class PipelineServiceImpl implements PipelineService {
                                              .orElse(null);
     WorkflowExecution execution = prodExecution != null ? prodExecution : nonProdExecution; // non null
 
-    Artifact artifacts = (Artifact) artifactService.list(aPageRequest().addFilter("appId", Operator.EQ, appId).build())
-                             .getResponse()
-                             .get(0);
+    Artifact artifacts =
+        (Artifact) artifactService.list(aPageRequest().addFilter("appId", Operator.EQ, appId).build(), false)
+            .getResponse()
+            .get(0);
 
     Pipeline pipeline = wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).get();
     if (pipeline == null) {
@@ -83,5 +87,11 @@ public class PipelineServiceImpl implements PipelineService {
                                               .build();
 
     return PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(pipelineExecution)).build();
+  }
+
+  @Override
+  public void updatePipelineExecutionData(String appId, String workflowExecutionId, ExecutionStatus status) {
+    WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
+    StateMachine stateMachine = workflowService.readLatest(appId, executionDetails.getWorkflowId(), null);
   }
 }

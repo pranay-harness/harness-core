@@ -125,7 +125,7 @@ TAIL_FILE_PATH=$(realpath "${tailPattern.filePath}")
 touch "$TAIL_FILE_PATH"
 
 #now tail the file
-tail -F -n0 "$TAIL_FILE_PATH" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
+tail -F -n0 "$TAIL_FILE_PATH" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${workflowExecutionId}${tailPattern?index} &
 pid${tailPattern?index}=$!
 </#list>
 
@@ -151,7 +151,7 @@ TAIL_COUNT=${tailPatterns?size}
 while [ "$TAIL_TIMEOUT" -gt 0 -a "$TAIL_COUNT" -gt 0 ]
 do
 <#list tailPatterns as tailPattern>
-  if [ -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
+  if [ -s ${executionStagingDir}/tailoutput${workflowExecutionId}${tailPattern?index} ]
   then
     if $(kill -0 $pid${tailPattern?index} 2>/dev/null)
     then
@@ -180,12 +180,12 @@ echo " "
 echo " "
 echo "===================================================================================================="
 printf "Searching file ${r"${bold}"}'$TAIL_FILE_PATH'${r"${normal}"} for pattern ${r"${boldgreen}"}'${tailPattern.pattern}'${r"${normal}"} ... "
-if [ -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
+if [ -s ${executionStagingDir}/tailoutput${workflowExecutionId}${tailPattern?index} ]
 then
   printf "${r"${boldgreen}"}[Found]${r"${normal}"}\n"
   echo "===================================================================================================="
   echo "Output: "
-  cat ${executionStagingDir}/tailoutput${executionId}${tailPattern?index}
+  cat ${executionStagingDir}/tailoutput${workflowExecutionId}${tailPattern?index}
 else
   printf "${r"${boldred}"}[Not Found]${r"${normal}"}\n"
   returnvalue=1
@@ -199,7 +199,7 @@ then
   echo " "
   printf "${r"${bold}"}Unable to following patterns: ${r"${normal}"}\n"
   <#list tailPatterns as tailPattern>
-  if [ ! -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
+  if [ ! -s ${executionStagingDir}/tailoutput${workflowExecutionId}${tailPattern?index} ]
   then
     echo "File: '${tailPattern.pattern}'"
     echo "Pattern: '$TAIL_FILE_PATH'"

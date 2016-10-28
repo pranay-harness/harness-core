@@ -6,6 +6,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.List;

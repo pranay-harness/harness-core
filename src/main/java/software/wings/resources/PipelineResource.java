@@ -5,7 +5,6 @@
 package software.wings.resources;
 
 import io.swagger.annotations.Api;
-import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.RestResponse;
@@ -40,6 +39,7 @@ import javax.ws.rs.QueryParam;
 @Api("pipelines")
 @Path("/pipelines")
 @Produces("application/json")
+@PublicApi // TODO: remove it
 public class PipelineResource {
   private WorkflowService workflowService;
   private WorkflowExecutionService workflowExecutionService;
@@ -143,7 +143,6 @@ public class PipelineResource {
    */
   @GET
   @Path("executions")
-  @PublicApi
   public RestResponse<PageResponse<PipelineExecution>> listExecutions(@QueryParam("appId") String appId,
       @QueryParam("pipelineId") String pipelineId, @BeanParam PageRequest<PipelineExecution> pageRequest) {
     /*
@@ -169,13 +168,12 @@ public class PipelineResource {
    *
    * @param appId         the app id
    * @param pipelineId    the pipeline id
-   * @param executionArgs the execution args
    * @return the rest response
    */
   @POST
   @Path("executions")
   public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
+      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
     return new RestResponse<>(workflowExecutionService.triggerPipelineExecution(appId, pipelineId));
   }
 

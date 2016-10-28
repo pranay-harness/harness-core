@@ -4,7 +4,9 @@
 
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.google.inject.Inject;
 
@@ -18,6 +20,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   /**
    * Instantiates a new workflow execution update.
@@ -110,6 +114,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                                         .set("status", status)
                                                         .set("endTs", System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
+
+    if (!isNullOrEmpty(workflowExecutionId)) { // TODO:: remove this check.
+      waitNotifyEngine.notify(workflowExecutionId, anExecutionStatusData().withExecutionStatus(status).build());
+    }
 
     try {
       workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);

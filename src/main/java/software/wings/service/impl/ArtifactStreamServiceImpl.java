@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
@@ -11,6 +12,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -20,10 +22,12 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -35,7 +39,7 @@ import javax.ws.rs.NotFoundException;
  */
 @Singleton
 @ValidateOnExecution
-public class ArtifactStreamServiceImpl implements ArtifactStreamService {
+public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
@@ -181,5 +185,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService {
 
   private void triggerWorkflowAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
     logger.info("Execute workflow jobs " + artifactStreamAction.getWorkflowId());
+  }
+
+  @Override
+  public Map<String, String> getData(String appId, String... params) {
+    return (Map<String, String>) list(aPageRequest().addFilter("appId", Operator.EQ, appId).build())
+        .getResponse()
+        .stream()
+        .collect(Collectors.toMap(ArtifactStream::getUuid, ArtifactStream::getSourceName));
   }
 }

@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Singleton;
@@ -41,6 +42,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 
@@ -62,7 +64,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @Singleton
 @ValidateOnExecution
-public class WorkflowServiceImpl implements WorkflowService {
+public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final Comparator<Stencil> stencilDefaultSorter = (o1, o2) -> {
     int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
     if (comp != 0) {
@@ -449,5 +451,15 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   void setStaticConfiguration(StaticConfiguration staticConfiguration) {
     this.staticConfiguration = staticConfiguration;
+  }
+
+  @Override
+  public Map<String, String> getData(String appId, String... params) {
+    PageRequest<Orchestration> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("workflowType", WorkflowType.ORCHESTRATION, EQ);
+    return listOrchestration(pageRequest)
+        .stream()
+        .collect(toMap(Orchestration::getUuid, o -> (o.getEnvironment().getName() + ":" + o.getName())));
   }
 }
