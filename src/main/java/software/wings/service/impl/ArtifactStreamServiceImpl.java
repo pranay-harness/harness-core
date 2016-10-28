@@ -3,9 +3,14 @@ package software.wings.service.impl;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.beans.WorkflowType.PIPELINE;
 
 import com.google.inject.Singleton;
 
+import net.redhogs.cronparser.CronExpressionDescriptor;
+import net.redhogs.cronparser.DescriptionTypeEnum;
+import net.redhogs.cronparser.I18nMessages;
+import net.redhogs.cronparser.Options;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -28,6 +33,7 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.util.Map;
+import java.text.ParseException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -108,6 +114,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+    artifactStreamAction.setActionSummary(getActionSummary(appId, artifactStreamAction));
+
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .field("appId")
                                       .equal(appId)
@@ -119,6 +127,24 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         wingsPersistence.createUpdateOperations(ArtifactStream.class).add("streamActions", artifactStreamAction);
     UpdateResults update = wingsPersistence.update(query, operations);
     return get(streamId, appId);
+  }
+
+  private String getActionSummary(String appId, ArtifactStreamAction artifactStreamAction) {
+    return (artifactStreamAction.getWorkflowType().equals(PIPELINE) ? "Trigger pipeline at  " : "Trigger workflow at ")
+        + getCronDisplayString(artifactStreamAction);
+  }
+
+  private String getCronDisplayString(ArtifactStreamAction artifactStreamAction) {
+    if (!artifactStreamAction.isCustomAction()) {
+      return "every artifact collection";
+    }
+    try {
+      return CronExpressionDescriptor.getDescription(DescriptionTypeEnum.FULL, artifactStreamAction.getCronExpression(),
+          new Options(), I18nMessages.DEFAULT_LOCALE);
+    } catch (ParseException e) {
+      logger.error("Error in translating corn expression " + artifactStreamAction.getCronExpression());
+      return artifactStreamAction.getCronExpression();
+    }
   }
 
   @Override
