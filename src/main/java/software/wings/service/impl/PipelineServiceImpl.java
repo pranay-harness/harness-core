@@ -5,18 +5,19 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 
 import javax.inject.Inject;
@@ -26,9 +27,8 @@ import javax.inject.Inject;
  */
 public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private ArtifactService artifactService;
+  @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private WorkflowService workflowService;
 
   @Override
   public PageResponse<PipelineExecution> listPipelineExecutions(PageRequest<PipelineExecution> pageRequest) {
@@ -66,11 +66,14 @@ public class PipelineServiceImpl implements PipelineService {
   public WorkflowExecution execute(String appId, String pipelineId) {
     WorkflowExecution workflowExecution = workflowExecutionService.triggerPipelineExecution(appId, pipelineId);
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Application application = appService.get(appId);
     PipelineExecution pipelineExecution = aPipelineExecution()
                                               .withAppId(appId)
+                                              .withAppName(application.getName())
                                               .withPipelineId(pipelineId)
                                               .withPipeline(pipeline)
                                               .withWorkflowExecutionId(workflowExecution.getUuid())
+                                              .withWorkflowType(WorkflowType.PIPELINE)
                                               .withStatus(workflowExecution.getStatus())
                                               .build();
     wingsPersistence.save(pipelineExecution);
