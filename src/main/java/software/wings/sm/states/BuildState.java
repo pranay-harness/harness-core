@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.BuildStateExecutionData;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
@@ -18,6 +19,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -30,8 +32,9 @@ public class BuildState extends State {
   @Attributes(required = true, title = "Artifact Stream")
   private String artifactStreamId;
 
-  @Inject private ArtifactService artifactService;
-  @Inject private PipelineService pipelineService;
+  @Transient @Inject private ArtifactService artifactService;
+  @Transient @Inject private PipelineService pipelineService;
+  @Transient @Inject private ExecutorService executorService;
 
   /**
    * Creates pause state with given name.
@@ -61,7 +64,7 @@ public class BuildState extends State {
     }
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     workflowStandardParams.setArtifactIds(asList(artifact.getUuid()));
-    pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, artifact);
+    executorService.submit(() -> pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, artifact));
     return anExecutionResponse().withStateExecutionData(buildStateExecutionData).build();
   }
 

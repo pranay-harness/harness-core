@@ -118,7 +118,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                                         .set("endTs", System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
 
-    if (context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (context.getWorkflowType() != null && context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
       pipelineService.updatePipelineExecutionData(appId, workflowExecutionId, status);
     }
 

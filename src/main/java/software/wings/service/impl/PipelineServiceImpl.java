@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -20,6 +20,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -43,9 +44,16 @@ public class PipelineServiceImpl implements PipelineService {
                                          .equal(appId)
                                          .field("workflowExecutionId")
                                          .equal(pipelineExecutionId);
+
+    PipelineStageExecution stageExecution = aPipelineStageExecution()
+                                                .withWorkflowExecutions(Arrays.asList(workflowExecution))
+                                                .withStartTs(workflowExecution.getStartTs())
+                                                .withEndTs(workflowExecution.getEndTs())
+                                                .withStatus(workflowExecution.getStatus())
+                                                .build();
+
     UpdateOperations<PipelineExecution> operations =
-        wingsPersistence.createUpdateOperations(PipelineExecution.class)
-            .add("pipelineStageExecutions", new PipelineStageExecution(asList(workflowExecution)));
+        wingsPersistence.createUpdateOperations(PipelineExecution.class).add("pipelineStageExecutions", stageExecution);
     wingsPersistence.update(query, operations);
   }
 
@@ -63,6 +71,19 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
+  public void updatePipelineExecutionData(String appId, String workflowExecutionId, ExecutionStatus status) {
+    Query<PipelineExecution> query = wingsPersistence.createQuery(PipelineExecution.class)
+                                         .field("appId")
+                                         .equal(appId)
+                                         .field("workflowExecutionId")
+                                         .equal(workflowExecutionId);
+    UpdateOperations<PipelineExecution> operations = wingsPersistence.createUpdateOperations(PipelineExecution.class)
+                                                         .set("status", status)
+                                                         .set("endTs", System.currentTimeMillis());
+    wingsPersistence.update(query, operations);
+  }
+
+  @Override
   public WorkflowExecution execute(String appId, String pipelineId) {
     WorkflowExecution workflowExecution = workflowExecutionService.triggerPipelineExecution(appId, pipelineId);
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
@@ -75,20 +96,9 @@ public class PipelineServiceImpl implements PipelineService {
                                               .withWorkflowExecutionId(workflowExecution.getUuid())
                                               .withWorkflowType(WorkflowType.PIPELINE)
                                               .withStatus(workflowExecution.getStatus())
+                                              .withStartTs(System.currentTimeMillis())
                                               .build();
     wingsPersistence.save(pipelineExecution);
     return workflowExecution;
-  }
-
-  @Override
-  public void updatePipelineExecutionData(String appId, String workflowExecutionId, ExecutionStatus status) {
-    Query<PipelineExecution> query = wingsPersistence.createQuery(PipelineExecution.class)
-                                         .field("appId")
-                                         .equal(appId)
-                                         .field("workflowExecutionId")
-                                         .equal(workflowExecutionId);
-    UpdateOperations<PipelineExecution> operations =
-        wingsPersistence.createUpdateOperations(PipelineExecution.class).set("status", status);
-    wingsPersistence.update(query, operations);
   }
 }

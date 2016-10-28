@@ -16,6 +16,7 @@ import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -52,6 +53,8 @@ public class EnvState extends State {
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Transient @Inject private ExecutorService executorService;
+
+  @Transient @Inject private PipelineService pipelineService;
 
   /**
    * Creates env state with given name.
