@@ -5,7 +5,9 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EntityVersion.EntityVersionBuilder.anEntityVersion;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -16,7 +18,6 @@ import com.google.inject.Singleton;
 
 import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -188,7 +189,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Pipeline pipeline : res.getResponse()) {
-        StateMachine stateMachine = readLatest(pipeline.getAppId(), pipeline.getUuid(), null);
+        StateMachine stateMachine = readLatest(pipeline.getAppId(), pipeline.getUuid());
         if (stateMachine != null) {
           pipeline.setGraph(stateMachine.getGraph());
         }
@@ -275,7 +276,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Pipeline readPipeline(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    StateMachine stateMachine = readLatest(appId, pipelineId, null);
+    StateMachine stateMachine = readLatest(appId, pipelineId);
     if (stateMachine != null) {
       pipeline.setGraph(stateMachine.getGraph());
     }
@@ -286,11 +287,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public StateMachine readLatest(String appId, String originId, String name) {
-    if (StringUtils.isBlank(name)) {
-      name = Constants.DEFAULT_WORKFLOW_NAME;
-    }
+  public StateMachine readLatest(String appId, String originId) {
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValues(appId);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
 
+    filter.setFieldName("originId");
+    filter.setFieldValues(originId);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+
+    return wingsPersistence.get(StateMachine.class, req);
+  }
+
+  private StateMachine read(String appId, String originId, Integer version) {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -304,8 +317,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     req.addFilter(filter);
 
     filter = new SearchFilter();
-    filter.setFieldName("name");
-    filter.setFieldValues(name);
+    filter.setFieldName("originVersion");
+    filter.setFieldValues(version);
     filter.setOp(Operator.EQ);
     req.addFilter(filter);
 
@@ -316,7 +329,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest, List<String> envIds) {
+  public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest, String envId) {
     boolean workflowTypeFilter = false;
     if (pageRequest != null && pageRequest.getFilters() != null) {
       for (SearchFilter filter : pageRequest.getFilters()) {
@@ -328,19 +341,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (!workflowTypeFilter) {
       pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION).build());
     }
-    if (envIds != null && !envIds.isEmpty()) {
-      SearchFilter[] searchFilters = new SearchFilter[envIds.size() + 1];
+    if (isNotBlank(envId)) {
+      SearchFilter[] searchFilters = new SearchFilter[2];
       searchFilters[0] = aSearchFilter().withField("targetToAllEnv", Operator.EQ, true).build();
-      for (int i = 0; i < envIds.size(); i++) {
-        searchFilters[i + 1] =
-            aSearchFilter().withField("envIdVersionMap." + envIds.get(i), Operator.EXISTS, null).build();
-      }
-      pageRequest.addFilter(null, searchFilters, Operator.OR);
+      searchFilters[1] = aSearchFilter().withField("envIdVersionMap." + envId, Operator.EXISTS, null).build();
+      pageRequest.addFilter(aSearchFilter().withField(null, Operator.OR, searchFilters).build());
     }
     PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Orchestration orchestration : res.getResponse()) {
-        StateMachine stateMachine = readLatest(orchestration.getAppId(), orchestration.getUuid(), null);
+        StateMachine stateMachine = null;
+        if (isNotBlank(envId)) {
+          stateMachine = readLatest(orchestration.getAppId(), orchestration.getUuid());
+        } else {
+          Integer version =
+              orchestration.getEnvIdVersionMap()
+                  .getOrDefault(envId, anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
+                  .getVersion();
+          stateMachine = read(orchestration.getAppId(), orchestration.getUuid(), version);
+        }
         if (stateMachine != null) {
           orchestration.setGraph(stateMachine.getGraph());
         }
@@ -369,7 +388,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .equal(orchestration.getUuid()),
         ops);
 
-    Graph graph = orchestration.getGraph();
     orchestration = updateWorkflow(orchestration);
     return orchestration;
   }
@@ -384,7 +402,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestration == null) {
       return orchestration;
     }
-    StateMachine stateMachine = readLatest(appId, orchestrationId, null);
+    StateMachine stateMachine = readLatest(appId, orchestrationId);
     if (stateMachine != null) {
       orchestration.setGraph(stateMachine.getGraph());
     }
@@ -457,6 +475,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public void deleteStateMachinesByApplication(String appId) {
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
+  }
+
+  @Override
+  public StateMachine readForEnv(String appId, String envId, String orchestrationId) {
+    Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
+    if (orchestration.getEnvIdVersionMap().containsKey(envId) || orchestration.getTargetToAllEnv()) {
+      Integer version =
+          orchestration.getEnvIdVersionMap()
+              .getOrDefault(envId, anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
+              .getVersion();
+      return read(appId, orchestrationId, version);
+    }
+    return null;
   }
 
   private Orchestration createDefaultSimpleWorkflow(String appId) {

@@ -52,15 +52,14 @@ public class OrchestrationResource {
    * List.
    *
    * @param appId       the app id
-   * @param envIds       the env ids
    * @param pageRequest the page request
    * @return the rest response
    */
   @GET
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
-      @QueryParam("envId") List<String> envIds, @BeanParam PageRequest<Orchestration> pageRequest) {
+      @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    return new RestResponse<>(workflowService.listOrchestration(pageRequest, envIds));
+    return new RestResponse<>(workflowService.listOrchestration(pageRequest, envId));
   }
 
   /**

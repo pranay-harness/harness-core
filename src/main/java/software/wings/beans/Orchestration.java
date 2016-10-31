@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class Orchestration extends Workflow {
   private WorkflowType workflowType;
 
-  private Map<String, EntityVersion> envIdVersionMap;
+  @Reference(idOnly = true) private Map<String, EntityVersion> envIdVersionMap;
 
   private Boolean targetToAllEnv;
 

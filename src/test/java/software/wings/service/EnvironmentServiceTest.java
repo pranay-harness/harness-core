@@ -38,7 +38,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.EventType;
 import software.wings.beans.History;
 import software.wings.beans.Notification;
-import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
@@ -54,7 +53,6 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
-import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 
@@ -75,7 +73,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
-  @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -162,7 +159,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Environment.class, environment);
     verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
-    verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     verify(historyService).createAsync(historyArgumentCaptor.capture());
     assertThat(historyArgumentCaptor.getValue())

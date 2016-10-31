@@ -244,7 +244,7 @@ import javax.inject.Inject;
 
     assertThat(res).isNotNull().hasSize(graphCount);
 
-    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid(), null);
+    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid());
     assertThat(sm.getGraph()).isEqualTo(graph);
   }
 
@@ -383,7 +383,7 @@ import javax.inject.Inject;
 
     assertThat(res).isNotNull().hasSize(2);
 
-    StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid(), null);
+    StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid());
     assertThat(sm.getGraph()).isNotNull().isEqualTo(graph);
   }
 
