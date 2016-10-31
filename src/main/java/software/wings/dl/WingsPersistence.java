@@ -235,6 +235,8 @@ public interface WingsPersistence {
    */
   <T extends Base> boolean delete(Class<T> cls, String uuid);
 
+  <T extends Base> boolean delete(Class<T> cls, String appId, String uuid);
+
   /**
    * Delete.
    *

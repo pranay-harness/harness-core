@@ -24,6 +24,7 @@ import software.wings.service.impl.ActivityServiceImpl;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProviderImpl;
@@ -39,9 +40,10 @@ import software.wings.service.impl.InfrastructureServiceImpl;
 import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
+import software.wings.service.impl.NotificationDispatcherServiceImpl;
+import software.wings.service.impl.NotificationSetupServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
-import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
@@ -62,6 +64,7 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BuildSourceService;
@@ -77,9 +80,10 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.NotificationDispatcherService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PlatformService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -159,6 +163,8 @@ public class WingsModule extends AbstractModule {
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
     bind(AccountService.class).to(AccountServiceImpl.class);
+    bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
+    bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()
