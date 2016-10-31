@@ -207,20 +207,22 @@ public class StateMachineExecutionSimulator {
         return null;
       }
       State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
-      repeatElements.forEach(repeatElement -> {
-        StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-        cloned.setStateName(repeat.getName());
-        ExecutionContextImpl childContext =
-            (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
-        childContext.pushContextElement(repeatElement);
-        Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
-        addArgsTypeFromContextElement(repeatArgsInContext, repeatElement.getElementType());
-        Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
-            childContext, stateMachine, repeat, repeatArgsInContext, commandMap, serviceInstanceIds);
-        if (nextReqEntities != null) {
-          entityTypes.addAll(nextReqEntities);
-        }
-      });
+      ContextElement repeatElement = repeatElements.get(0);
+
+      // Now repeat for one element
+      StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+      cloned.setStateName(repeat.getName());
+      ExecutionContextImpl childContext =
+          (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
+      childContext.pushContextElement(repeatElement);
+      Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
+      addArgsTypeFromContextElement(repeatArgsInContext, repeatElement.getElementType());
+      Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
+          childContext, stateMachine, repeat, repeatArgsInContext, commandMap, serviceInstanceIds);
+      if (nextReqEntities != null) {
+        entityTypes.addAll(nextReqEntities);
+      }
+
     } else if (state instanceof ForkState) {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
         State child = stateMachine.getState(childStateName);
