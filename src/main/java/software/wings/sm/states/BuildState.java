@@ -19,7 +19,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 
-import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -34,7 +33,6 @@ public class BuildState extends State {
 
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private PipelineService pipelineService;
-  @Transient @Inject private ExecutorService executorService;
 
   /**
    * Creates pause state with given name.
@@ -64,7 +62,7 @@ public class BuildState extends State {
     }
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     workflowStandardParams.setArtifactIds(asList(artifact.getUuid()));
-    executorService.submit(() -> pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, artifact));
+    pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, artifact);
     return anExecutionResponse().withStateExecutionData(buildStateExecutionData).build();
   }
 

@@ -12,7 +12,6 @@ public class PipelineStageExecution {
   private ExecutionStatus status;
   private Long startTs;
   private Long endTs;
-  private List<String> workflowExecutionIds = new ArrayList<>();
   private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   /**
@@ -88,31 +87,12 @@ public class PipelineStageExecution {
   }
 
   /**
-   * Gets workflow execution ids.
-   *
-   * @return the workflow execution ids
-   */
-  public List<String> getWorkflowExecutionIds() {
-    return workflowExecutionIds;
-  }
-
-  /**
-   * Sets workflow execution ids.
-   *
-   * @param workflowExecutionIds the workflow execution ids
-   */
-  public void setWorkflowExecutionIds(List<String> workflowExecutionIds) {
-    this.workflowExecutionIds = workflowExecutionIds;
-  }
-
-  /**
    * The type Builder.
    */
   public static final class Builder {
     private ExecutionStatus status;
     private Long startTs;
     private Long endTs;
-    private List<String> workflowExecutionIds = new ArrayList<>();
     private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
     private Builder() {}
@@ -160,17 +140,6 @@ public class PipelineStageExecution {
     }
 
     /**
-     * With workflow execution ids builder.
-     *
-     * @param workflowExecutionIds the workflow execution ids
-     * @return the builder
-     */
-    public Builder withWorkflowExecutionIds(List<String> workflowExecutionIds) {
-      this.workflowExecutionIds = workflowExecutionIds;
-      return this;
-    }
-
-    /**
      * With workflow executions builder.
      *
      * @param workflowExecutions the workflow executions
@@ -187,12 +156,8 @@ public class PipelineStageExecution {
      * @return the builder
      */
     public Builder but() {
-      return aPipelineStageExecution()
-          .withStatus(status)
-          .withStartTs(startTs)
-          .withEndTs(endTs)
-          .withWorkflowExecutionIds(workflowExecutionIds)
-          .withWorkflowExecutions(workflowExecutions);
+      return aPipelineStageExecution().withStatus(status).withStartTs(startTs).withEndTs(endTs).withWorkflowExecutions(
+          workflowExecutions);
     }
 
     /**
@@ -205,7 +170,6 @@ public class PipelineStageExecution {
       pipelineStageExecution.setStatus(status);
       pipelineStageExecution.setStartTs(startTs);
       pipelineStageExecution.setEndTs(endTs);
-      pipelineStageExecution.setWorkflowExecutionIds(workflowExecutionIds);
       pipelineStageExecution.setWorkflowExecutions(workflowExecutions);
       return pipelineStageExecution;
     }
