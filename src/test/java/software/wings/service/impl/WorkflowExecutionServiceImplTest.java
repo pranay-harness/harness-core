@@ -1132,6 +1132,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1474,6 +1475,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1543,6 +1545,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1655,6 +1658,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1820,6 +1824,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1929,6 +1934,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -2074,6 +2080,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -2297,6 +2304,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();

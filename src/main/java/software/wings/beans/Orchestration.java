@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import com.google.common.collect.Maps;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
@@ -20,9 +22,9 @@ import java.util.Map;
 public class Orchestration extends Workflow {
   private WorkflowType workflowType;
 
-  @Reference(idOnly = true) private Map<String, EntityVersion> envIdVersionMap;
+  @Reference(idOnly = true) private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
 
-  private Boolean targetToAllEnv;
+  private boolean targetToAllEnv;
 
   /**
    * Gets workflow type.
@@ -50,19 +52,19 @@ public class Orchestration extends Workflow {
     this.envIdVersionMap = envIdVersionMap;
   }
 
-  public Boolean getTargetToAllEnv() {
+  public boolean getTargetToAllEnv() {
     return targetToAllEnv;
   }
 
-  public void setTargetToAllEnv(Boolean targetToAllEnv) {
+  public void setTargetToAllEnv(boolean targetToAllEnv) {
     this.targetToAllEnv = targetToAllEnv;
   }
 
   public static final class OrchestrationBuilder {
     private WorkflowType workflowType;
     private Integer defaultVersion;
-    private Map<String, EntityVersion> envIdVersionMap;
-    private Boolean targetToAllEnv;
+    private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+    private boolean targetToAllEnv;
     private String name;
     private String description;
     private List<Service> services = new ArrayList<>();
@@ -95,7 +97,7 @@ public class Orchestration extends Workflow {
       return this;
     }
 
-    public OrchestrationBuilder withTargetToAllEnv(Boolean targetToAllEnv) {
+    public OrchestrationBuilder withTargetToAllEnv(boolean targetToAllEnv) {
       this.targetToAllEnv = targetToAllEnv;
       return this;
     }
