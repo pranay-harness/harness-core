@@ -21,12 +21,13 @@ public interface PipelineService {
 
   /**
    * Update pipeline execution data.
-   *
-   * @param appId               the app id
+   *  @param appId               the app id
    * @param pipelineExecutionId the pipeline execution id
    * @param workflowExecution   the workflow execution
+   * @param startingStageExecution
    */
-  void updatePipelineExecutionData(String appId, String pipelineExecutionId, WorkflowExecution workflowExecution);
+  void updatePipelineStageExecutionData(
+      String appId, String pipelineExecutionId, WorkflowExecution workflowExecution, boolean startingStageExecution);
 
   /**
    * Update pipeline execution data.

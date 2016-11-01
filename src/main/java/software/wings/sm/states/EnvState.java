@@ -1,9 +1,9 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.states.EnvStateCallback.Builder.anEnvStateCallback;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
@@ -21,14 +21,15 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
-import software.wings.waitnotify.WaitNotifyEngine;
+import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -50,11 +51,11 @@ public class EnvState extends State {
 
   @Transient @Inject private WorkflowExecutionService executionService;
 
-  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
-
   @Transient @Inject private ExecutorService executorService;
 
   @Transient @Inject private PipelineService pipelineService;
+
+  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Creates env state with given name.
@@ -88,22 +89,15 @@ public class EnvState extends State {
     EnvStateExecutionData envStateExecutionData = new EnvStateExecutionData();
     envStateExecutionData.setWorkflowId(workflowId);
     envStateExecutionData.setEnvId(envId);
+
+    WorkflowExecution execution = executionService.triggerEnvExecution(appId, envId, executionArgs);
+    executorService.submit(
+        () -> { pipelineService.updatePipelineStageExecutionData(appId, pipelineExecutionId, execution, true); });
+
     envStateExecutionData.setCorrelationId(UUIDGenerator.getUuid());
-
-    executorService.submit(() -> {
-      WorkflowExecution execution = executionService.triggerEnvExecution(appId, envId, executionArgs);
-      waitNotifyEngine.waitForAll(anEnvStateCallback()
-                                      .withAppId(appId)
-                                      .withPipelineExecutionId(pipelineExecutionId)
-                                      .withCorrelationId(envStateExecutionData.getCorrelationId())
-                                      .withWorkflowExecutionId(execution.getUuid())
-                                      .build(),
-          execution.getUuid());
-    });
-
     return anExecutionResponse()
         .withAsync(true)
-        .withCorrelationIds(Arrays.asList(envStateExecutionData.getCorrelationId()))
+        .withCorrelationIds(asList(execution.getUuid()))
         .withStateExecutionData(envStateExecutionData)
         .build();
   }
@@ -115,6 +109,18 @@ public class EnvState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    String pipelineExecutionId = context.getWorkflowExecutionId();
+    String appId = context.getApp().getUuid();
+
+    EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().toArray()[0];
+
+    WorkflowExecution executionDetails =
+        workflowExecutionService.getExecutionDetails(appId, responseData.getWorkflowExecutionId());
+    pipelineService.updatePipelineStageExecutionData(appId, pipelineExecutionId, executionDetails, false);
+    return anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
+  }
 
   /**
    * Gets env id.
@@ -150,5 +156,60 @@ public class EnvState extends State {
    */
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
+  }
+
+  /**
+   * The type Env execution response data.
+   */
+  public static class EnvExecutionResponseData implements NotifyResponseData {
+    private String workflowExecutionId;
+    private ExecutionStatus status;
+
+    /**
+     * Instantiates a new Env execution response data.
+     *
+     * @param workflowExecutionId the workflow execution id
+     * @param status              the status
+     */
+    public EnvExecutionResponseData(String workflowExecutionId, ExecutionStatus status) {
+      this.workflowExecutionId = workflowExecutionId;
+      this.status = status;
+    }
+
+    /**
+     * Gets workflow execution id.
+     *
+     * @return the workflow execution id
+     */
+    public String getWorkflowExecutionId() {
+      return workflowExecutionId;
+    }
+
+    /**
+     * Sets workflow execution id.
+     *
+     * @param workflowExecutionId the workflow execution id
+     */
+    public void setWorkflowExecutionId(String workflowExecutionId) {
+      this.workflowExecutionId = workflowExecutionId;
+    }
+
+    /**
+     * Gets status.
+     *
+     * @return the status
+     */
+    public ExecutionStatus getStatus() {
+      return status;
+    }
+
+    /**
+     * Sets status.
+     *
+     * @param status the status
+     */
+    public void setStatus(ExecutionStatus status) {
+      this.status = status;
+    }
   }
 }

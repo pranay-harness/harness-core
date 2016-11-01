@@ -33,7 +33,7 @@ public class EnvStateCallback implements NotifyCallback {
       ExecutionStatus status = ((ExecutionStatusData) response.get(workflowExecutionId)).getExecutionStatus();
       waitNotifyEngine.notify(correlationId, anExecutionStatusData().withExecutionStatus(status).build());
       WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
-      pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, executionDetails);
+      pipelineService.updatePipelineStageExecutionData(appId, pipelineExecutionId, executionDetails, false);
     }
   }
 

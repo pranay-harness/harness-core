@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -20,7 +22,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionStatus;
 
-import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -37,24 +38,36 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public void updatePipelineExecutionData(
-      String appId, String pipelineExecutionId, WorkflowExecution workflowExecution) {
+  public void updatePipelineStageExecutionData(
+      String appId, String pipelineExecutionId, WorkflowExecution workflowExecution, boolean startingStageExecution) {
     Query<PipelineExecution> query = wingsPersistence.createQuery(PipelineExecution.class)
                                          .field("appId")
                                          .equal(appId)
                                          .field("workflowExecutionId")
                                          .equal(pipelineExecutionId);
 
-    PipelineStageExecution stageExecution = aPipelineStageExecution()
-                                                .withWorkflowExecutions(Arrays.asList(workflowExecution))
-                                                .withStartTs(workflowExecution.getStartTs())
-                                                .withEndTs(workflowExecution.getEndTs())
-                                                .withStatus(workflowExecution.getStatus())
-                                                .build();
+    UpdateOperations<PipelineExecution> operations;
 
-    UpdateOperations<PipelineExecution> operations =
-        wingsPersistence.createUpdateOperations(PipelineExecution.class).add("pipelineStageExecutions", stageExecution);
-    wingsPersistence.update(query, operations);
+    if (startingStageExecution) {
+      PipelineStageExecution stageExecution = aPipelineStageExecution()
+                                                  .withWorkflowExecutions(asList(workflowExecution))
+                                                  .withStartTs(workflowExecution.getStartTs())
+                                                  .withEndTs(workflowExecution.getEndTs())
+                                                  .withStatus(workflowExecution.getStatus())
+                                                  .build();
+      query.field("pipelineStageExecutions.workflowExecutions._id").notEqual(workflowExecution.getUuid());
+      operations = wingsPersistence.createUpdateOperations(PipelineExecution.class)
+                       .add("pipelineStageExecutions", stageExecution);
+    } else {
+      query.field("pipelineStageExecutions.workflowExecutions._id").equal(workflowExecution.getUuid());
+      operations = wingsPersistence.createUpdateOperations(PipelineExecution.class)
+                       .set("pipelineStageExecutions.$.workflowExecutions", asList(workflowExecution))
+                       .set("pipelineStageExecutions.$.endTs", workflowExecution.getEndTs())
+                       .set("pipelineStageExecutions.$.status", workflowExecution.getStatus());
+    }
+
+    UpdateResults update = wingsPersistence.update(query, operations);
+    System.out.println(update.toString());
   }
 
   @Override
