@@ -44,9 +44,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public List<NotificationGroup> listNotificationGroups(String appId) {
-    return wingsPersistence
-        .query(NotificationGroup.class, aPageRequest().addFilter("appId", Operator.EQ, appId).build())
-        .getResponse();
+    return listNotificationGroups(aPageRequest().addFilter("appId", Operator.EQ, appId).build()).getResponse();
   }
 
   @Override

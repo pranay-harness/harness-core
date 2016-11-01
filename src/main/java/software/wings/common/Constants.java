@@ -83,4 +83,6 @@ public interface Constants {
    * The constant DEV_ENV.
    */
   String DEV_ENV = "Development";
+
+  String ALL = "All";
 }

@@ -1,12 +1,17 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.PauseAction.PauseActionBuilder.aPauseAction;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
+import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import org.assertj.core.util.Lists;
@@ -18,12 +23,15 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.WorkflowFailAction;
+import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -518,5 +526,69 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
         .contains("REPEAT", "FORK");
+  }
+
+  @Test
+  public void shouldCreateWorkflowFailure() {
+    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(appId);
+  }
+
+  @Test
+  public void shouldListWorkflowFailureStrategies() {
+    String appId = UUIDGenerator.getUuid();
+    createAndAssertWorkflowFailureStrategy(appId);
+    createAndAssertWorkflowFailureStrategy(appId);
+    createAndAssertWorkflowFailureStrategy(appId);
+    createAndAssertWorkflowFailureStrategy(UUIDGenerator.getUuid());
+
+    PageRequest<WorkflowFailureStrategy> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
+    PageResponse<WorkflowFailureStrategy> pageResponse = workflowService.listWorkflowFailureStrategies(pageRequest);
+    assertThat(pageResponse)
+        .isNotNull()
+        .hasSize(3)
+        .doesNotContainNull()
+        .extracting("appId")
+        .containsExactly(appId, appId, appId);
+  }
+
+  @Test
+  public void shouldListWorkflowFailureStrategiesByAppId() {
+    String appId = UUIDGenerator.getUuid();
+    createAndAssertWorkflowFailureStrategy(appId);
+    createAndAssertWorkflowFailureStrategy(appId);
+    createAndAssertWorkflowFailureStrategy(appId);
+    createAndAssertWorkflowFailureStrategy(UUIDGenerator.getUuid());
+
+    List<WorkflowFailureStrategy> res = workflowService.listWorkflowFailureStrategies(appId);
+    assertThat(res).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(
+        appId, appId, appId);
+  }
+
+  @Test
+  public void shouldDeleteWorkflowFailureStrategy() {
+    String appId = UUIDGenerator.getUuid();
+    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(appId);
+    boolean deleted = workflowService.deleteWorkflowFailureStrategy(appId, workflowFailureStrategy.getUuid());
+    assertThat(deleted).isTrue();
+  }
+
+  private WorkflowFailureStrategy createAndAssertWorkflowFailureStrategy(String appId) {
+    WorkflowFailureStrategy workflowFailureStrategy =
+        aWorkflowFailureStrategy()
+            .withAppId(appId)
+            .withName("Non-Prod Failure Strategy")
+            .addFailureStrategy(aFailureStrategy()
+                                    .addFailureTypes(FailureType.CONNECTIVITY)
+                                    .addFailureTypes(FailureType.AUTHENTICATION)
+                                    .addRepairActions(aPauseAction().withTimeout(20).build())
+                                    .addRepairActions(new WorkflowFailAction())
+                                    .build())
+            .withWorkflowExecutionFilter(aWorkflowExecutionFilter().addWorkflowId("workflow1").addEnvId("env1").build())
+            .build();
+
+    WorkflowFailureStrategy created = workflowService.create(workflowFailureStrategy);
+    assertThat(created).isNotNull().hasFieldOrProperty("uuid").isEqualToComparingFieldByFieldRecursively(
+        workflowFailureStrategy);
+    return created;
   }
 }

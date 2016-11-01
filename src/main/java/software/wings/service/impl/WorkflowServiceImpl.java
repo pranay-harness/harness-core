@@ -9,6 +9,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
@@ -28,6 +29,7 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
@@ -53,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.inject.Inject;
+import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -449,5 +452,32 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   void setStaticConfiguration(StaticConfiguration staticConfiguration) {
     this.staticConfiguration = staticConfiguration;
+  }
+
+  @Override
+  public List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId) {
+    return listWorkflowFailureStrategies(aPageRequest().addFilter("appId", Operator.EQ, appId).build()).getResponse();
+  }
+
+  @Override
+  public PageResponse<WorkflowFailureStrategy> listWorkflowFailureStrategies(
+      PageRequest<WorkflowFailureStrategy> pageRequest) {
+    return wingsPersistence.query(WorkflowFailureStrategy.class, pageRequest);
+  }
+
+  @Override
+  public WorkflowFailureStrategy create(@Valid WorkflowFailureStrategy workflowFailureStrategy) {
+    return wingsPersistence.saveAndGet(WorkflowFailureStrategy.class, workflowFailureStrategy);
+  }
+
+  @Override
+  public WorkflowFailureStrategy update(@Valid WorkflowFailureStrategy workflowFailureStrategy) {
+    // TODO:
+    return workflowFailureStrategy;
+  }
+
+  @Override
+  public boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId) {
+    return wingsPersistence.delete(WorkflowFailureStrategy.class, appId, workflowFailureStrategyId);
   }
 }

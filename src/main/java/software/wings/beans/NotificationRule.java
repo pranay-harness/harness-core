@@ -5,6 +5,8 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * Created by rishi on 10/30/16.
@@ -12,11 +14,11 @@ import java.util.Map;
 
 @Entity(value = "notificationRules", noClassnameStored = true)
 public class NotificationRule extends Base {
-  private String ruleName;
+  @NotNull private String ruleName;
 
-  private Map<String, Object> notificationFilters;
+  @NotNull @Size(min = 1) private Map<String, Object> notificationFilters;
 
-  private List<NotificationGroup> notificationGroups = new ArrayList<>();
+  @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
   private boolean active = true;
 

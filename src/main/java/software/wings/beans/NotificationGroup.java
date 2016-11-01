@@ -5,15 +5,17 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * Created by rishi on 10/30/16.
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
 public class NotificationGroup extends Base {
-  private String name;
+  @NotNull private String name;
 
-  private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
+  @NotNull @Size(min = 1) private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
 
   public String getName() {
     return name;
