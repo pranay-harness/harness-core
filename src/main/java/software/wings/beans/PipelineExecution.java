@@ -29,6 +29,7 @@ public class PipelineExecution extends Base {
 
   private Long startTs;
   private Long endTs;
+  private Long estimatedTime = Long.valueOf(30 * 60 * 1000);
 
   /**
    * Gets pipeline id.
@@ -294,6 +295,24 @@ public class PipelineExecution extends Base {
   }
 
   /**
+   * Gets estimated time.
+   *
+   * @return the estimated time
+   */
+  public Long getEstimatedTime() {
+    return estimatedTime;
+  }
+
+  /**
+   * Sets estimated time.
+   *
+   * @param estimatedTime the estimated time
+   */
+  public void setEstimatedTime(Long estimatedTime) {
+    this.estimatedTime = estimatedTime;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -309,6 +328,7 @@ public class PipelineExecution extends Base {
     private String name;
     private Long startTs;
     private Long endTs;
+    private Long estimatedTime = Long.valueOf(5 * 60 * 1000);
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -460,6 +480,17 @@ public class PipelineExecution extends Base {
     }
 
     /**
+     * With estimated time builder.
+     *
+     * @param estimatedTime the estimated time
+     * @return the builder
+     */
+    public Builder withEstimatedTime(Long estimatedTime) {
+      this.estimatedTime = estimatedTime;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -544,6 +575,7 @@ public class PipelineExecution extends Base {
           .withName(name)
           .withStartTs(startTs)
           .withEndTs(endTs)
+          .withEstimatedTime(estimatedTime)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -571,6 +603,7 @@ public class PipelineExecution extends Base {
       pipelineExecution.setName(name);
       pipelineExecution.setStartTs(startTs);
       pipelineExecution.setEndTs(endTs);
+      pipelineExecution.setEstimatedTime(estimatedTime);
       pipelineExecution.setUuid(uuid);
       pipelineExecution.setAppId(appId);
       pipelineExecution.setCreatedBy(createdBy);

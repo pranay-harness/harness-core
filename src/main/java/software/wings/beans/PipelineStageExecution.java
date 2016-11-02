@@ -14,6 +14,7 @@ public class PipelineStageExecution {
   private ExecutionStatus status;
   private Long startTs;
   private Long endTs;
+  private Long estimatedTime = Long.valueOf(5 * 60 * 1000);
   private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   /**
@@ -125,6 +126,24 @@ public class PipelineStageExecution {
   }
 
   /**
+   * Gets estimated time.
+   *
+   * @return the estimated time
+   */
+  public Long getEstimatedTime() {
+    return estimatedTime;
+  }
+
+  /**
+   * Sets estimated time.
+   *
+   * @param estimatedTime the estimated time
+   */
+  public void setEstimatedTime(Long estimatedTime) {
+    this.estimatedTime = estimatedTime;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -133,6 +152,7 @@ public class PipelineStageExecution {
     private ExecutionStatus status;
     private Long startTs;
     private Long endTs;
+    private Long estimatedTime = Long.valueOf(5 * 60 * 1000);
     private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
     private Builder() {}
@@ -202,6 +222,17 @@ public class PipelineStageExecution {
     }
 
     /**
+     * With estimated time builder.
+     *
+     * @param estimatedTime the estimated time
+     * @return the builder
+     */
+    public Builder withEstimatedTime(Long estimatedTime) {
+      this.estimatedTime = estimatedTime;
+      return this;
+    }
+
+    /**
      * With workflow executions builder.
      *
      * @param workflowExecutions the workflow executions
@@ -224,6 +255,7 @@ public class PipelineStageExecution {
           .withStatus(status)
           .withStartTs(startTs)
           .withEndTs(endTs)
+          .withEstimatedTime(estimatedTime)
           .withWorkflowExecutions(workflowExecutions);
     }
 
@@ -239,6 +271,7 @@ public class PipelineStageExecution {
       pipelineStageExecution.setStatus(status);
       pipelineStageExecution.setStartTs(startTs);
       pipelineStageExecution.setEndTs(endTs);
+      pipelineStageExecution.setEstimatedTime(estimatedTime);
       pipelineStageExecution.setWorkflowExecutions(workflowExecutions);
       return pipelineStageExecution;
     }
