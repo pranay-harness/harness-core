@@ -15,6 +15,7 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWOR
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.inject.Injector;
 
 import org.slf4j.Logger;
@@ -227,7 +228,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           .withPassword(null);
     }
 
-    if (host.getBastionConnAttr() != null) {
+    if (!Strings.isNullOrEmpty(host.getBastionConnAttr())) {
       SettingAttribute settingAttribute = settingsService.get(host.getBastionConnAttr());
       BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) settingAttribute.getValue();
       builder.withBastionHostConfig(aSshSessionConfig()
@@ -242,7 +243,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   private ExecutorType getExecutorType(String appId, Host host) {
     ExecutorType executorType;
-    if (host.getBastionConnAttr() != null) {
+    if (!Strings.isNullOrEmpty(host.getBastionConnAttr())) {
       executorType = BASTION_HOST;
     } else {
       SettingAttribute settingAttribute = settingsService.get(host.getHostConnAttr());

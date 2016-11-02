@@ -64,6 +64,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -137,6 +138,7 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/6/16.
  */
 @Integration
+@Ignore
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
