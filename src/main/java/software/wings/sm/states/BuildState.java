@@ -9,7 +9,6 @@ import software.wings.api.BuildStateExecutionData;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.PipelineService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -32,7 +31,6 @@ public class BuildState extends State {
   private String artifactStreamId;
 
   @Transient @Inject private ArtifactService artifactService;
-  @Transient @Inject private PipelineService pipelineService;
 
   /**
    * Creates pause state with given name.
@@ -49,9 +47,6 @@ public class BuildState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = context.getApp().getUuid();
-    String pipelineExecutionId = context.getWorkflowExecutionId();
-    BuildStateExecutionData buildStateExecutionData = new BuildStateExecutionData();
-    buildStateExecutionData.setArtifactStreamId(artifactStreamId);
     Artifact artifact = artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
 
     if (artifact == null) {
@@ -62,7 +57,11 @@ public class BuildState extends State {
     }
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     workflowStandardParams.setArtifactIds(asList(artifact.getUuid()));
-    pipelineService.updatePipelineExecutionData(appId, pipelineExecutionId, artifact);
+
+    BuildStateExecutionData buildStateExecutionData = new BuildStateExecutionData();
+    buildStateExecutionData.setArtifactStreamId(artifactStreamId);
+    buildStateExecutionData.setArtifactId(artifact.getUuid());
+    buildStateExecutionData.setArtifactName(artifact.getDisplayName());
     return anExecutionResponse().withStateExecutionData(buildStateExecutionData).build();
   }
 

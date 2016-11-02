@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
 import com.google.common.collect.Lists;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -1205,6 +1206,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void triggerPipeline() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
     String appId = app.getUuid();
@@ -1239,6 +1241,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void shouldListPipelineExecutions() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
     String appId = app.getUuid();

@@ -13,10 +13,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -30,7 +28,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -51,12 +48,6 @@ public class EnvState extends State {
 
   @Transient @Inject private WorkflowExecutionService executionService;
 
-  @Transient @Inject private ExecutorService executorService;
-
-  @Transient @Inject private PipelineService pipelineService;
-
-  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
-
   /**
    * Creates env state with given name.
    *
@@ -72,7 +63,6 @@ public class EnvState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = context.getApp().getUuid();
-    String pipelineExecutionId = context.getWorkflowExecutionId();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<String> artifactIds = workflowStandardParams.getArtifactIds();
@@ -91,10 +81,7 @@ public class EnvState extends State {
     envStateExecutionData.setEnvId(envId);
 
     WorkflowExecution execution = executionService.triggerEnvExecution(appId, envId, executionArgs);
-    executorService.submit(
-        () -> { pipelineService.updatePipelineStageExecutionData(appId, pipelineExecutionId, execution, true); });
-
-    envStateExecutionData.setCorrelationId(UUIDGenerator.getUuid());
+    envStateExecutionData.setCorrelationId(execution.getUuid());
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(asList(execution.getUuid()))
@@ -111,14 +98,7 @@ public class EnvState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    String pipelineExecutionId = context.getWorkflowExecutionId();
-    String appId = context.getApp().getUuid();
-
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().toArray()[0];
-
-    WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(appId, responseData.getWorkflowExecutionId());
-    pipelineService.updatePipelineStageExecutionData(appId, pipelineExecutionId, executionDetails, false);
     return anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
   }
 

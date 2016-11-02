@@ -9,6 +9,7 @@ import java.util.List;
  * Created by anubhaw on 10/26/16.
  */
 public class PipelineStageExecution {
+  private String stateType;
   private ExecutionStatus status;
   private Long startTs;
   private Long endTs;
@@ -87,9 +88,28 @@ public class PipelineStageExecution {
   }
 
   /**
+   * Gets state type.
+   *
+   * @return the state type
+   */
+  public String getStateType() {
+    return stateType;
+  }
+
+  /**
+   * Sets state type.
+   *
+   * @param stateType the state type
+   */
+  public void setStateType(String stateType) {
+    this.stateType = stateType;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
+    private String stateType;
     private ExecutionStatus status;
     private Long startTs;
     private Long endTs;
@@ -104,6 +124,17 @@ public class PipelineStageExecution {
      */
     public static Builder aPipelineStageExecution() {
       return new Builder();
+    }
+
+    /**
+     * With state type builder.
+     *
+     * @param stateType the state type
+     * @return the builder
+     */
+    public Builder withStateType(String stateType) {
+      this.stateType = stateType;
+      return this;
     }
 
     /**
@@ -156,8 +187,12 @@ public class PipelineStageExecution {
      * @return the builder
      */
     public Builder but() {
-      return aPipelineStageExecution().withStatus(status).withStartTs(startTs).withEndTs(endTs).withWorkflowExecutions(
-          workflowExecutions);
+      return aPipelineStageExecution()
+          .withStateType(stateType)
+          .withStatus(status)
+          .withStartTs(startTs)
+          .withEndTs(endTs)
+          .withWorkflowExecutions(workflowExecutions);
     }
 
     /**
@@ -167,6 +202,7 @@ public class PipelineStageExecution {
      */
     public PipelineStageExecution build() {
       PipelineStageExecution pipelineStageExecution = new PipelineStageExecution();
+      pipelineStageExecution.setStateType(stateType);
       pipelineStageExecution.setStatus(status);
       pipelineStageExecution.setStartTs(startTs);
       pipelineStageExecution.setEndTs(endTs);
