@@ -89,8 +89,11 @@ public class PipelineServiceImpl implements PipelineService {
                                        .build());
       } else if (stateExecutionInstance != null && APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
         stateExecutionDataList.add(aPipelineStageExecution()
-                                       .withStateType(currState.getStateType())
+                                       .withStateType(stateExecutionInstance.getStateType())
                                        .withStatus(stateExecutionInstance.getStatus())
+                                       .withStateName(stateExecutionInstance.getStateName())
+                                       .withStartTs(stateExecutionInstance.getStartTs())
+                                       .withEndTs(stateExecutionInstance.getEndTs())
                                        .build());
       } else if (stateExecutionInstance != null && ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
         PipelineStageExecution stageExecution = aPipelineStageExecution()
