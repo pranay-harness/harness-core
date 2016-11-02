@@ -50,7 +50,7 @@ public class PipelineResource {
    *
    * @param workflowService          the workflow service
    * @param workflowExecutionService the workflow execution service
-   * @param pipelineService
+   * @param pipelineService          the pipeline service
    */
   @Inject
   public PipelineResource(WorkflowService workflowService, WorkflowExecutionService workflowExecutionService,
@@ -136,8 +136,6 @@ public class PipelineResource {
   /**
    * List executions rest response.
    *
-   * @param appId       the app id
-   * @param pipelineId  the pipeline id
    * @param pageRequest the page request
    * @return the rest response
    */
@@ -151,8 +149,8 @@ public class PipelineResource {
   /**
    * Trigger execution rest response.
    *
-   * @param appId         the app id
-   * @param pipelineId    the pipeline id
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
    * @return the rest response
    */
   @POST

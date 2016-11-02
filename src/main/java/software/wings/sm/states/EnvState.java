@@ -81,7 +81,7 @@ public class EnvState extends State {
     envStateExecutionData.setEnvId(envId);
 
     WorkflowExecution execution = executionService.triggerEnvExecution(appId, envId, executionArgs);
-    envStateExecutionData.setCorrelationId(execution.getUuid());
+    envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(asList(execution.getUuid()))

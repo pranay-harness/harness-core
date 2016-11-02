@@ -84,6 +84,7 @@ public class PipelineServiceImpl implements PipelineService {
       } else if (stateExecutionInstance == null) {
         stateExecutionDataList.add(aPipelineStageExecution()
                                        .withStateType(currState.getStateType())
+                                       .withStateName(currState.getName())
                                        .withStatus(ExecutionStatus.QUEUED)
                                        .build());
       } else if (stateExecutionInstance != null && APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
@@ -92,18 +93,30 @@ public class PipelineServiceImpl implements PipelineService {
                                        .withStatus(stateExecutionInstance.getStatus())
                                        .build());
       } else if (stateExecutionInstance != null && ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
-        EnvStateExecutionData envStateExecutionData =
-            (EnvStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(currState.getName());
-        WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-            pipelineExecution.getAppId(), envStateExecutionData.getCorrelationId());
         PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                     .withStateType(currState.getStateType())
-                                                    .withStatus(stateExecutionInstance.getStatus())
-                                                    .withWorkflowExecutions(asList(workflowExecution))
-                                                    .withStartTs(workflowExecution.getStartTs())
-                                                    .withEndTs(workflowExecution.getEndTs())
-                                                    .withStatus(workflowExecution.getStatus())
+                                                    .withStateName(currState.getName())
+                                                    .withStatus(ExecutionStatus.QUEUED)
                                                     .build();
+
+        EnvStateExecutionData envStateExecutionData =
+            (EnvStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(currState.getName());
+
+        if (envStateExecutionData != null) {
+          WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
+              pipelineExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
+
+          stageExecution = aPipelineStageExecution()
+                               .withStateType(currState.getStateType())
+                               .withStateName(currState.getName())
+                               .withStatus(stateExecutionInstance.getStatus())
+                               .withWorkflowExecutions(asList(workflowExecution))
+                               .withStartTs(workflowExecution.getStartTs())
+                               .withEndTs(workflowExecution.getEndTs())
+                               .withStatus(workflowExecution.getStatus())
+                               .build();
+        }
+
         stateExecutionDataList.add(stageExecution);
       } else {
         throw new WingsException(

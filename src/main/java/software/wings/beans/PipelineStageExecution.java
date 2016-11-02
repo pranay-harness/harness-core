@@ -9,6 +9,7 @@ import java.util.List;
  * Created by anubhaw on 10/26/16.
  */
 public class PipelineStageExecution {
+  private String stateName;
   private String stateType;
   private ExecutionStatus status;
   private Long startTs;
@@ -106,9 +107,28 @@ public class PipelineStageExecution {
   }
 
   /**
+   * Gets state name.
+   *
+   * @return the state name
+   */
+  public String getStateName() {
+    return stateName;
+  }
+
+  /**
+   * Sets state name.
+   *
+   * @param stateName the state name
+   */
+  public void setStateName(String stateName) {
+    this.stateName = stateName;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
+    private String stateName;
     private String stateType;
     private ExecutionStatus status;
     private Long startTs;
@@ -124,6 +144,17 @@ public class PipelineStageExecution {
      */
     public static Builder aPipelineStageExecution() {
       return new Builder();
+    }
+
+    /**
+     * With state name builder.
+     *
+     * @param stateName the state name
+     * @return the builder
+     */
+    public Builder withStateName(String stateName) {
+      this.stateName = stateName;
+      return this;
     }
 
     /**
@@ -188,6 +219,7 @@ public class PipelineStageExecution {
      */
     public Builder but() {
       return aPipelineStageExecution()
+          .withStateName(stateName)
           .withStateType(stateType)
           .withStatus(status)
           .withStartTs(startTs)
@@ -202,6 +234,7 @@ public class PipelineStageExecution {
      */
     public PipelineStageExecution build() {
       PipelineStageExecution pipelineStageExecution = new PipelineStageExecution();
+      pipelineStageExecution.setStateName(stateName);
       pipelineStageExecution.setStateType(stateType);
       pipelineStageExecution.setStatus(status);
       pipelineStageExecution.setStartTs(startTs);

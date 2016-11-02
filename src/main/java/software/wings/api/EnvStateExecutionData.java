@@ -7,7 +7,7 @@ import software.wings.sm.StateExecutionData;
  */
 public class EnvStateExecutionData extends StateExecutionData {
   private String workflowId;
-  private String correlationId;
+  private String workflowExecutionId;
   private String envId;
 
   public String getWorkflowId() {
@@ -18,12 +18,12 @@ public class EnvStateExecutionData extends StateExecutionData {
     this.workflowId = workflowId;
   }
 
-  public String getCorrelationId() {
-    return correlationId;
+  public String getWorkflowExecutionId() {
+    return workflowExecutionId;
   }
 
-  public void setCorrelationId(String correlationId) {
-    this.correlationId = correlationId;
+  public void setWorkflowExecutionId(String workflowExecutionId) {
+    this.workflowExecutionId = workflowExecutionId;
   }
 
   public String getEnvId() {
