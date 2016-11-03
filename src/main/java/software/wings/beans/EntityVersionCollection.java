@@ -16,6 +16,8 @@ import org.mongodb.morphia.annotations.Indexes;
 public class EntityVersionCollection extends EntityVersion {
   public static final class Builder {
     private EntityType entityType;
+    private String entityName;
+    private ChangeType changeType;
     private String entityUuid;
     private String entityData;
     private Integer version;
@@ -34,6 +36,16 @@ public class EntityVersionCollection extends EntityVersion {
 
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
+      return this;
+    }
+
+    public Builder withEntityName(String entityName) {
+      this.entityName = entityName;
+      return this;
+    }
+
+    public Builder withChangeType(ChangeType changeType) {
+      this.changeType = changeType;
       return this;
     }
 
@@ -85,6 +97,8 @@ public class EntityVersionCollection extends EntityVersion {
     public Builder but() {
       return anEntityVersionCollection()
           .withEntityType(entityType)
+          .withEntityName(entityName)
+          .withChangeType(changeType)
           .withEntityUuid(entityUuid)
           .withEntityData(entityData)
           .withVersion(version)
@@ -99,6 +113,8 @@ public class EntityVersionCollection extends EntityVersion {
     public EntityVersionCollection build() {
       EntityVersionCollection entityVersionCollection = new EntityVersionCollection();
       entityVersionCollection.setEntityType(entityType);
+      entityVersionCollection.setEntityName(entityName);
+      entityVersionCollection.setChangeType(changeType);
       entityVersionCollection.setEntityUuid(entityUuid);
       entityVersionCollection.setEntityData(entityData);
       entityVersionCollection.setVersion(version);

@@ -26,6 +26,7 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
@@ -224,7 +225,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     // create initial version
-    entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid());
+    entityVersionService.newEntityVersion(
+        workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid(), workflow.getName(), ChangeType.CREATED);
 
     return workflow;
   }
@@ -374,8 +376,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Orchestration updateOrchestration(Orchestration orchestration) {
-    EntityVersion entityVersion =
-        entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW, orchestration.getUuid());
+    EntityVersion entityVersion = entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW,
+        orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED);
     orchestration.setDefaultVersion(entityVersion.getVersion());
 
     UpdateOperations<Orchestration> ops = wingsPersistence.createUpdateOperations(Orchestration.class);

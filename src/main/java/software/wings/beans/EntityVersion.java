@@ -7,6 +7,8 @@ public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
 
   private EntityType entityType;
+  private String entityName;
+  private ChangeType changeType;
   private String entityUuid;
   private String entityData;
   private Integer version;
@@ -43,8 +45,48 @@ public class EntityVersion extends Base {
     this.entityData = entityData;
   }
 
+  /**
+   * Getter for property 'entityName'.
+   *
+   * @return Value for property 'entityName'.
+   */
+  public String getEntityName() {
+    return entityName;
+  }
+
+  /**
+   * Setter for property 'entityName'.
+   *
+   * @param entityName Value to set for property 'entityName'.
+   */
+  public void setEntityName(String entityName) {
+    this.entityName = entityName;
+  }
+
+  /**
+   * Getter for property 'changeType'.
+   *
+   * @return Value for property 'changeType'.
+   */
+  public ChangeType getChangeType() {
+    return changeType;
+  }
+
+  /**
+   * Setter for property 'changeType'.
+   *
+   * @param changeType Value to set for property 'changeType'.
+   */
+  public void setChangeType(ChangeType changeType) {
+    this.changeType = changeType;
+  }
+
+  public enum ChangeType { CREATED, UPDATED }
+
   public static final class Builder {
     private EntityType entityType;
+    private String entityName;
+    private ChangeType changeType;
     private String entityUuid;
     private String entityData;
     private Integer version;
@@ -63,6 +105,16 @@ public class EntityVersion extends Base {
 
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
+      return this;
+    }
+
+    public Builder withEntityName(String entityName) {
+      this.entityName = entityName;
+      return this;
+    }
+
+    public Builder withChangeType(ChangeType changeType) {
+      this.changeType = changeType;
       return this;
     }
 
@@ -111,9 +163,27 @@ public class EntityVersion extends Base {
       return this;
     }
 
+    public Builder but() {
+      return anEntityVersion()
+          .withEntityType(entityType)
+          .withEntityName(entityName)
+          .withChangeType(changeType)
+          .withEntityUuid(entityUuid)
+          .withEntityData(entityData)
+          .withVersion(version)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt);
+    }
+
     public EntityVersion build() {
       EntityVersion entityVersion = new EntityVersion();
       entityVersion.setEntityType(entityType);
+      entityVersion.setEntityName(entityName);
+      entityVersion.setChangeType(changeType);
       entityVersion.setEntityUuid(entityUuid);
       entityVersion.setEntityData(entityData);
       entityVersion.setVersion(version);

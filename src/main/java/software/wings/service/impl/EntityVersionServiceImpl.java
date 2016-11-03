@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.SearchFilter.Operator;
@@ -46,12 +47,14 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   }
 
   @Override
-  public EntityVersion newEntityVersion(String appId, EntityType entityType, String entityUuid) {
-    return newEntityVersion(appId, entityType, entityUuid, null);
+  public EntityVersion newEntityVersion(
+      String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType) {
+    return newEntityVersion(appId, entityType, entityUuid, name, changeType, null);
   }
 
   @Override
-  public EntityVersion newEntityVersion(String appId, EntityType entityType, String entityUuid, String entityData) {
+  public EntityVersion newEntityVersion(
+      String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType, String entityData) {
     EntityVersionCollection entityVersion = null;
     int i = 0;
     boolean done = false;
@@ -62,6 +65,8 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                             .withEntityType(entityType)
                             .withEntityUuid(entityUuid)
                             .withEntityData(entityData)
+                            .withEntityName(name)
+                            .withChangeType(changeType)
                             .build();
         EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid);
         if (lastEntityVersion == null) {
