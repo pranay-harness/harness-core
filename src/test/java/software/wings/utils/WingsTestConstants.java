@@ -152,6 +152,22 @@ public class WingsTestConstants {
    * The constant ACTIVITY_ID.
    */
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
+
+  /**
+   * The constant WORKFLOW_ID.
+   */
+  public static final String WORKFLOW_ID = "WORKFLOW_ID";
+
+  /**
+   * The constant WORKFLOW_EXECUTION_ID.
+   */
+  public static final String WORKFLOW_EXECUTION_ID = "WORKFLOW_EXECUTION_ID";
+
+  /**
+   * The constant PIPELINE_EXECUTION_ID.
+   */
+  public static final String PIPELINE_EXECUTION_ID = "PIPELINE_EXECUTION_ID";
+
   /**
    * The constant USER_NAME.
    */
