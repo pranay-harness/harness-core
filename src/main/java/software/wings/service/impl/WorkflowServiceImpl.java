@@ -251,8 +251,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
-    EntityVersion entityVersion =
-        entityVersionService.newEntityVersion(pipeline.getAppId(), EntityType.WORKFLOW, pipeline.getUuid());
+    EntityVersion entityVersion = entityVersionService.newEntityVersion(
+        pipeline.getAppId(), EntityType.WORKFLOW, pipeline.getUuid(), pipeline.getName(), ChangeType.UPDATED);
     pipeline.setDefaultVersion(entityVersion.getVersion());
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
     setUnset(ops, "description", pipeline.getDescription());
