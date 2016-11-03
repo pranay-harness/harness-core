@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -36,7 +36,8 @@ public class VersionResource {
   }
 
   @GET
-  public RestResponse<PageResponse<EntityVersion>> list(@BeanParam PageRequest<EntityVersion> pageRequest) {
+  public RestResponse<PageResponse<EntityVersionCollection>> list(
+      @BeanParam PageRequest<EntityVersionCollection> pageRequest) {
     return new RestResponse<>(entityVersionService.listEntityVersions(pageRequest));
   }
 }

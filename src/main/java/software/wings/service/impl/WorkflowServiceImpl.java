@@ -7,7 +7,7 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.EntityVersion.EntityVersionBuilder.anEntityVersion;
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -60,6 +60,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -231,6 +232,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   /**
    * {@inheritDoc}
    */
+
   @Override
   public <T extends Workflow> T updateWorkflow(T workflow) {
     Graph graph = workflow.getGraph();
@@ -354,10 +356,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (isNotBlank(envId)) {
           stateMachine = readLatest(orchestration.getAppId(), orchestration.getUuid());
         } else {
-          Integer version =
-              orchestration.getEnvIdVersionMap()
-                  .getOrDefault(envId, anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
-                  .getVersion();
+          Integer version = Optional.ofNullable(orchestration.getEnvIdVersionMap().get(envId))
+                                .orElse(anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
+                                .getVersion();
           stateMachine = read(orchestration.getAppId(), orchestration.getUuid(), version);
         }
         if (stateMachine != null) {
@@ -481,10 +482,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public StateMachine readForEnv(String appId, String envId, String orchestrationId) {
     Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
     if (orchestration.getEnvIdVersionMap().containsKey(envId) || orchestration.getTargetToAllEnv()) {
-      Integer version =
-          orchestration.getEnvIdVersionMap()
-              .getOrDefault(envId, anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
-              .getVersion();
+      Integer version = Optional.ofNullable(orchestration.getEnvIdVersionMap().get(envId))
+                            .orElse(anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
+                            .getVersion();
       return read(appId, orchestrationId, version);
     }
     return null;

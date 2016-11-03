@@ -1,18 +1,8 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
-
 /**
  * Created by rishi on 10/13/16.
  */
-@Indexes(@Index(
-    fields = { @Field("entityType")
-               , @Field("entityUuid"), @Field("version") }, options = @IndexOptions(unique = true)))
-@Entity(value = "entityVersions", noClassnameStored = true)
 public class EntityVersion extends Base {
   public static final Integer INITIAL_VERSION = 1;
 
@@ -53,7 +43,7 @@ public class EntityVersion extends Base {
     this.entityData = entityData;
   }
 
-  public static final class EntityVersionBuilder {
+  public static final class Builder {
     private EntityType entityType;
     private String entityUuid;
     private String entityData;
@@ -65,58 +55,58 @@ public class EntityVersion extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
 
-    private EntityVersionBuilder() {}
+    private Builder() {}
 
-    public static EntityVersionBuilder anEntityVersion() {
-      return new EntityVersionBuilder();
+    public static Builder anEntityVersion() {
+      return new Builder();
     }
 
-    public EntityVersionBuilder withEntityType(EntityType entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
-    public EntityVersionBuilder withEntityUuid(String entityUuid) {
+    public Builder withEntityUuid(String entityUuid) {
       this.entityUuid = entityUuid;
       return this;
     }
 
-    public EntityVersionBuilder withEntityData(String entityData) {
+    public Builder withEntityData(String entityData) {
       this.entityData = entityData;
       return this;
     }
 
-    public EntityVersionBuilder withVersion(Integer version) {
+    public Builder withVersion(Integer version) {
       this.version = version;
       return this;
     }
 
-    public EntityVersionBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public EntityVersionBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public EntityVersionBuilder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public EntityVersionBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public EntityVersionBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public EntityVersionBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }

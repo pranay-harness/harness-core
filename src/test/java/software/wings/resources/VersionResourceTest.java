@@ -6,12 +6,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.EntityVersion.EntityVersionBuilder.anEntityVersion;
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -44,7 +45,7 @@ public class VersionResourceTest {
             .target("/versions?appId=" + APP_ID)
             .request()
             .get(new GenericType<RestResponse<PageResponse<EntityVersion>>>() {});
-    PageRequest<EntityVersion> pageRequest = new PageRequest<>();
+    PageRequest<EntityVersionCollection> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
     pageRequest.setLimit("50");
     verify(ENTITY_VERSION_SERVICE).listEntityVersions(pageRequest);

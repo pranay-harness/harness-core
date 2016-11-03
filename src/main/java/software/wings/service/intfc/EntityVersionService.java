@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersionCollection;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -9,7 +10,7 @@ import software.wings.dl.PageResponse;
  * Created by rishi on 10/18/16.
  */
 public interface EntityVersionService {
-  PageResponse<EntityVersion> listEntityVersions(PageRequest<EntityVersion> pageRequest);
+  PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest);
 
   EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid);
 

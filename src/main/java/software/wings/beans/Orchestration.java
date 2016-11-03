@@ -6,8 +6,8 @@ package software.wings.beans;
 
 import com.google.common.collect.Maps;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class Orchestration extends Workflow {
   private WorkflowType workflowType;
 
-  @Reference(idOnly = true) private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+  @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
 
   private boolean targetToAllEnv;
 
