@@ -7,7 +7,7 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.Orchestration.OrchestrationBuilder.anOrchestration;
+import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;

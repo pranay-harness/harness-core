@@ -60,7 +60,7 @@ public class Orchestration extends Workflow {
     this.targetToAllEnv = targetToAllEnv;
   }
 
-  public static final class OrchestrationBuilder {
+  public static final class Builder {
     private WorkflowType workflowType;
     private Integer defaultVersion;
     private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
@@ -76,78 +76,78 @@ public class Orchestration extends Workflow {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
 
-    private OrchestrationBuilder() {}
+    private Builder() {}
 
-    public static OrchestrationBuilder anOrchestration() {
-      return new OrchestrationBuilder();
+    public static Builder anOrchestration() {
+      return new Builder();
     }
 
-    public OrchestrationBuilder withWorkflowType(WorkflowType workflowType) {
+    public Builder withWorkflowType(WorkflowType workflowType) {
       this.workflowType = workflowType;
       return this;
     }
 
-    public OrchestrationBuilder withDefaultVersion(Integer defaultVersion) {
+    public Builder withDefaultVersion(Integer defaultVersion) {
       this.defaultVersion = defaultVersion;
       return this;
     }
 
-    public OrchestrationBuilder withEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
+    public Builder withEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
       this.envIdVersionMap = envIdVersionMap;
       return this;
     }
 
-    public OrchestrationBuilder withTargetToAllEnv(boolean targetToAllEnv) {
+    public Builder withTargetToAllEnv(boolean targetToAllEnv) {
       this.targetToAllEnv = targetToAllEnv;
       return this;
     }
 
-    public OrchestrationBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    public OrchestrationBuilder withDescription(String description) {
+    public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    public OrchestrationBuilder withServices(List<Service> services) {
+    public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
-    public OrchestrationBuilder withGraph(Graph graph) {
+    public Builder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
-    public OrchestrationBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public OrchestrationBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public OrchestrationBuilder withCreatedBy(EmbeddedUser createdBy) {
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public OrchestrationBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public OrchestrationBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public OrchestrationBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }

@@ -5,7 +5,7 @@ import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailu
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Orchestration.OrchestrationBuilder.anOrchestration;
+import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.PauseAction.PauseActionBuilder.aPauseAction;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
@@ -59,14 +59,13 @@ import java.util.Map;
 import java.util.Random;
 import javax.inject.Inject;
 
-=
-
-    /**
-     * The Class WorkflowServiceTest.
-     *
-     * @author Rishi
-     */
-    @Listeners(NotifyEventListener.class) public class WorkflowServiceTest extends WingsBaseTest {
+/**
+ * The Class WorkflowServiceTest.
+ *
+ * @author Rishi
+ */
+@Listeners(NotifyEventListener.class)
+public class WorkflowServiceTest extends WingsBaseTest {
   private static String appId = UUIDGenerator.getUuid();
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @InjectMocks @Inject private WorkflowService workflowService;

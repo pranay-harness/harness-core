@@ -12,7 +12,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Orchestration.OrchestrationBuilder.anOrchestration;
+import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
