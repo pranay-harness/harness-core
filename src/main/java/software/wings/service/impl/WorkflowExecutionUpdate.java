@@ -123,8 +123,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     }
 
     if (!isNullOrEmpty(workflowExecutionId)) { // TODO:: remove this check.
-      waitNotifyEngine.notify(
-          workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status)); // TODO:: merge with status
+      waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
     }
 
     try {

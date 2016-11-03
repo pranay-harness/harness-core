@@ -11,9 +11,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import io.dropwizard.lifecycle.Managed;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -25,7 +23,6 @@ import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.security.UserThreadLocal;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,11 +102,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return query.get();
   }
 
-  @Override
-  public <T extends Base> List<T> executeGetListQuery(Query<T> query) {
-    return query.asList();
-  }
-
   /**
    * {@inheritDoc}
    */
@@ -129,6 +121,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       return null;
     }
     return res.get(0);
+  }
+
+  @Override
+  public <T extends Base> String merge(T t) {
+    Key<T> key = primaryDatastore.merge(t);
+    return (String) key.getId();
   }
 
   /**
@@ -217,15 +215,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       operations.set(entry.getKey(), entry.getValue());
     }
     update(query, operations);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T> void addToList(Class<T> cls, String appId, String entityId, String listFieldName, Object object) {
-    primaryDatastore.update(createQuery(cls).field(ID_KEY).equal(entityId).field("appId").equal(appId),
-        createUpdateOperations(cls).add(listFieldName, object));
   }
 
   /**
@@ -332,17 +321,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
     return GridFSBuckets.create(
         primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
-    GridFSBucket gridFsBucket =
-        GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
-    ObjectId fileId = gridFsBucket.uploadFromStream(filename, in, options);
-    return fileId.toHexString();
   }
 
   /**

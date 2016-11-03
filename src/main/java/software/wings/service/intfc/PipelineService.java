@@ -35,4 +35,11 @@ public interface PipelineService {
    * @param status              the status
    */
   void updatePipelineExecutionData(String appId, String workflowExecutionId, ExecutionStatus status);
+
+  /**
+   * Refresh pipeline execution.
+   *  @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   */
+  void refreshPipelineExecutionAsync(String appId, String workflowExecutionId);
 }

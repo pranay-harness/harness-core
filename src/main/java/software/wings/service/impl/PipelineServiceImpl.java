@@ -14,9 +14,8 @@ import static software.wings.sm.StateType.ENV_STATE;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.BuildStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.Application;
@@ -42,7 +41,9 @@ import software.wings.sm.StateMachine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -53,6 +54,9 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ExecutorService executorService;
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public PageResponse<PipelineExecution> listPipelineExecutions(PageRequest<PipelineExecution> pageRequest) {
@@ -128,29 +132,19 @@ public class PipelineServiceImpl implements PipelineService {
       List<State> nextStates = stateMachine.getNextStates(currState.getName());
       currState = nextStates != null ? nextStates.get(0) : null;
     }
-    UpdateResults updateResults = wingsPersistence.update(pipelineExecution,
-        wingsPersistence.createUpdateOperations(PipelineExecution.class)
-            .set("artifactId", pipelineExecution.getArtifactId())
-            .set("artifactName", pipelineExecution.getArtifactName())
-            .set("pipelineStageExecutions", stateExecutionDataList)); // TODO:: version based update
-    if (updateResults.getUpdatedCount() > 0) {
-      WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(
-          pipelineExecution.getAppId(), pipelineExecution.getWorkflowExecutionId());
-      updatePipelineExecutionStatus(
-          executionDetails.getAppId(), executionDetails.getUuid(), executionDetails.getStatus());
-    }
-  }
 
-  private void updatePipelineExecutionStatus(String appId, String workflowExecutionId, ExecutionStatus status) {
-    Query<PipelineExecution> query = wingsPersistence.createQuery(PipelineExecution.class)
-                                         .field("appId")
-                                         .equal(appId)
-                                         .field("workflowExecutionId")
-                                         .equal(workflowExecutionId);
-    UpdateOperations<PipelineExecution> operations = wingsPersistence.createUpdateOperations(PipelineExecution.class)
-                                                         .set("status", status)
-                                                         .set("endTs", System.currentTimeMillis());
-    wingsPersistence.update(query, operations);
+    WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(
+        pipelineExecution.getAppId(), pipelineExecution.getWorkflowExecutionId());
+    pipelineExecution.setPipelineStageExecutions(stateExecutionDataList);
+    pipelineExecution.setEndTs(System.currentTimeMillis());
+    pipelineExecution.setStatus(executionDetails.getStatus());
+
+    try {
+      wingsPersistence.merge(pipelineExecution);
+    } catch (ConcurrentModificationException cex) {
+      // do nothing as it gets refreshed in next fetch
+      logger.error("Pipeline execution update failed " + cex); // TODO: add retry
+    }
   }
 
   private ImmutableMap<String, StateExecutionInstance> getStateExecutionInstanceMap(
@@ -168,10 +162,15 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public void updatePipelineExecutionData(String appId, String workflowExecutionId, ExecutionStatus status) {
-    refreshPipelineExecution(appId, workflowExecutionId);
+    refreshPipelineExecutionAsync(appId, workflowExecutionId);
   }
 
-  private void refreshPipelineExecution(String appId, String workflowExecutionId) {
+  @Override
+  public void refreshPipelineExecutionAsync(String appId, String workflowExecutionId) {
+    executorService.submit(() -> refreshPipelineExecution(appId, workflowExecutionId));
+  }
+
+  public void refreshPipelineExecution(String appId, String workflowExecutionId) {
     PipelineExecution pipelineExecution = wingsPersistence.createQuery(PipelineExecution.class)
                                               .field("appId")
                                               .equal(appId)

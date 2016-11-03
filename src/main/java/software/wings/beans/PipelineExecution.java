@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Version;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class PipelineExecution extends Base {
   private String appName;
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
+  @Version private Long version;
 
   private String name;
 
@@ -310,6 +312,10 @@ public class PipelineExecution extends Base {
    */
   public void setEstimatedTime(Long estimatedTime) {
     this.estimatedTime = estimatedTime;
+  }
+
+  public Long getVersion() {
+    return version;
   }
 
   /**

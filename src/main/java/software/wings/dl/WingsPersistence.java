@@ -2,7 +2,6 @@ package software.wings.dl;
 
 import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -10,7 +9,6 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -100,13 +98,13 @@ public interface WingsPersistence {
   <T extends Base> T executeGetOneQuery(Query<T> query);
 
   /**
-   * Find all by query list.
+   * Merge string.
    *
-   * @param <T>   the type parameter
-   * @param query the query
-   * @return the list
+   * @param <T> the type parameter
+   * @param t   the t
+   * @return the string
    */
-  <T extends Base> List<T> executeGetListQuery(Query<T> query);
+  <T extends Base> String merge(T t);
 
   /**
    * Save.
@@ -193,18 +191,6 @@ public interface WingsPersistence {
    * @param cls           the cls
    * @param appId         the app id
    * @param entityId      the entity id
-   * @param listFieldName the list field name
-   * @param object        the object
-   */
-  <T> void addToList(Class<T> cls, String appId, String entityId, String listFieldName, Object object);
-
-  /**
-   * Adds the to list.
-   *
-   * @param <T>           the generic type
-   * @param cls           the cls
-   * @param appId         the app id
-   * @param entityId      the entity id
    * @param query         the query
    * @param listFieldName the list field name
    * @param object        the object
@@ -273,17 +259,6 @@ public interface WingsPersistence {
    * @return the page response
    */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref);
-
-  /**
-   * Upload from stream.
-   *
-   * @param bucketName the bucket name
-   * @param options    the options
-   * @param filename   the filename
-   * @param in         the in
-   * @return the string
-   */
-  String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in);
 
   /**
    * Creates the query.

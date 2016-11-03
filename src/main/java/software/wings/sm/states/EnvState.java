@@ -15,6 +15,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -47,6 +48,8 @@ public class EnvState extends State {
   private String workflowId;
 
   @Transient @Inject private WorkflowExecutionService executionService;
+
+  @Transient @Inject private PipelineService pipelineService;
 
   /**
    * Creates env state with given name.
@@ -82,6 +85,7 @@ public class EnvState extends State {
 
     WorkflowExecution execution = executionService.triggerEnvExecution(appId, envId, executionArgs);
     envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
+    pipelineService.refreshPipelineExecutionAsync(appId, context.getWorkflowExecutionId());
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(asList(execution.getUuid()))
@@ -99,6 +103,7 @@ public class EnvState extends State {
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().toArray()[0];
+    pipelineService.refreshPipelineExecutionAsync(context.getApp().getUuid(), responseData.getWorkflowExecutionId());
     return anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
   }
 

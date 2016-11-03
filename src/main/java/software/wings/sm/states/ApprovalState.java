@@ -1,10 +1,14 @@
 package software.wings.sm.states;
 
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.service.intfc.PipelineService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
+
+import javax.inject.Inject;
 
 /**
  * A Pause state to pause state machine execution.
@@ -13,6 +17,8 @@ import software.wings.utils.Misc;
  */
 public class ApprovalState extends State {
   private String groupName;
+
+  @Transient @Inject private PipelineService pipelineService;
 
   /**
    * Creates pause state with given name.
@@ -29,6 +35,7 @@ public class ApprovalState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     Misc.quietSleep(2000);
+    pipelineService.refreshPipelineExecutionAsync(context.getApp().getUuid(), context.getWorkflowExecutionId());
     return new ExecutionResponse();
   }
 
