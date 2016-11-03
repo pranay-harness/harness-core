@@ -19,6 +19,7 @@ public class ArtifactStreamAction {
   private String envId;
   @NotNull private boolean customAction = false;
   private String cronExpression;
+  private String actionSummary;
   private String jobId;
 
   /**
@@ -161,6 +162,24 @@ public class ArtifactStreamAction {
   }
 
   /**
+   * Gets action summary.
+   *
+   * @return the action summary
+   */
+  public String getActionSummary() {
+    return actionSummary;
+  }
+
+  /**
+   * Sets action summary.
+   *
+   * @param actionSummary the action summary
+   */
+  public void setActionSummary(String actionSummary) {
+    this.actionSummary = actionSummary;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -169,6 +188,7 @@ public class ArtifactStreamAction {
     private String envId;
     private boolean customAction = false;
     private String cronExpression;
+    private String actionSummary;
     private String jobId;
 
     private Builder() {}
@@ -238,6 +258,17 @@ public class ArtifactStreamAction {
     }
 
     /**
+     * With action summary builder.
+     *
+     * @param actionSummary the action summary
+     * @return the builder
+     */
+    public Builder withActionSummary(String actionSummary) {
+      this.actionSummary = actionSummary;
+      return this;
+    }
+
+    /**
      * With job id builder.
      *
      * @param jobId the job id
@@ -260,6 +291,7 @@ public class ArtifactStreamAction {
           .withEnvId(envId)
           .withCustomAction(customAction)
           .withCronExpression(cronExpression)
+          .withActionSummary(actionSummary)
           .withJobId(jobId);
     }
 
@@ -275,6 +307,7 @@ public class ArtifactStreamAction {
       artifactStreamAction.setEnvId(envId);
       artifactStreamAction.setCustomAction(customAction);
       artifactStreamAction.setCronExpression(cronExpression);
+      artifactStreamAction.setActionSummary(actionSummary);
       artifactStreamAction.setJobId(jobId);
       return artifactStreamAction;
     }
