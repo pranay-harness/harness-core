@@ -44,6 +44,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -299,7 +300,7 @@ public class JenkinsState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
-    updateActivityStatus(jenkinsExecutionResponse.getActivityId(), context.getApp().getUuid(),
+    updateActivityStatus(jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(),
         jenkinsExecutionResponse.getExecutionStatus());
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
     jenkinsExecutionData.setFilePathAssertionMap(jenkinsExecutionResponse.getFilePathAssertionMap());
@@ -315,8 +316,8 @@ public class JenkinsState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   protected String createActivity(ExecutionContext executionContext) {
-    Application app = executionContext.getApp();
-    Environment env = executionContext.getEnv();
+    Application app = ((ExecutionContextImpl) executionContext).getApp();
+    Environment env = ((ExecutionContextImpl) executionContext).getEnv();
     InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
 
     Activity.Builder activityBuilder =

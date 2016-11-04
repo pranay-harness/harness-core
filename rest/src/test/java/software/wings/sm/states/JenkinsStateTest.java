@@ -39,7 +39,7 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.FilePathAssertionEntry;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -58,7 +58,7 @@ public class JenkinsStateTest {
   @Mock private ExecutorService executorService;
   @Mock private ActivityService activityService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
-  @Mock private ExecutionContext executionContext;
+  @Mock private ExecutionContextImpl executionContext;
   @Mock private Jenkins jenkins;
   @Mock private Build build;
   @Mock private BuildWithDetails buildWithDetails;

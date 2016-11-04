@@ -32,7 +32,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     for (NotificationChannelType notificationChannelType : NotificationChannelType.values()) {
       if (notificationChannelType.getSettingVariableTypes() != null) {
         List<SettingAttribute> settingAttributes =
-            settingsService.getSettingAttributesByType(appId, notificationChannelType.getSettingVariableTypes());
+            settingsService.getSettingAttributesByType(appId, notificationChannelType.getSettingVariableTypes().name());
         if (settingAttributes != null && !settingAttributes.isEmpty()) {
           supportedChannelTypeDetails.put(notificationChannelType, new Object());
           // Put more details for the given notificationChannelType, else leave it as blank object.

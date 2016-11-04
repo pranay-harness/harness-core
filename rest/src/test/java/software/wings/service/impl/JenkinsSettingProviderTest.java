@@ -9,7 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.SettingsService;
 
 /**
@@ -25,6 +25,6 @@ public class JenkinsSettingProviderTest {
   @Test
   public void shouldGetJenkinsSettingData() throws Exception {
     jenkinsSettingProvider.getData(APP_ID);
-    verify(settingsService).getSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS);
+    verify(settingsService).getSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name());
   }
 }

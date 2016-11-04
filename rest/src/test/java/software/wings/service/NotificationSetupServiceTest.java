@@ -17,7 +17,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -40,7 +40,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   public void shouldReturnSupportedChannelTypes() {
     List<SettingAttribute> settingList = Lists.newArrayList(new SettingAttribute());
     String appId = UUIDGenerator.getUuid();
-    when(settingsService.getSettingAttributesByType(appId, SettingVariableTypes.SMTP)).thenReturn(settingList);
+    when(settingsService.getSettingAttributesByType(appId, SettingVariableTypes.SMTP.name())).thenReturn(settingList);
     Map<NotificationChannelType, Object> channelTypes = notificationSetupService.getSupportedChannelTypeDetails(appId);
     assertThat(channelTypes).isNotNull().hasSize(1).containsKey(NotificationChannelType.EMAIL);
   }

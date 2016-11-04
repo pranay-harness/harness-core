@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import com.google.inject.Inject;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.SettingsService;
 import software.wings.stencils.DataProvider;
 
@@ -19,7 +19,7 @@ public class JenkinsSettingProvider implements DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.JENKINS)
+    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.JENKINS.name())
         .stream()
         .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
   }
