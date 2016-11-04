@@ -235,7 +235,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
-    assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(0).getHostName()))
         .isEqualTo(configService.getConfigFilesForEntity(
             template.getAppId(), DEFAULT_TEMPLATE_ID, template.getService().getUuid()));
   }
@@ -254,7 +254,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
-    assertThat(hostConfigMapping.get(hosts.get(1).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(1).getHostName()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), ncOz1.getUuid()));
   }
 
@@ -273,7 +273,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
-    assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(0).getHostName()))
         .isEqualTo(
             configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), hosts.get(0).getUuid()));
   }
@@ -293,7 +293,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
-    assertThat(hostConfigMapping.get(hosts.get(8).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(8).getHostName()))
         .isEqualTo(
             configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), hosts.get(8).getUuid()));
   }
@@ -327,18 +327,18 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
-    assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(0).getHostName()))
         .isEqualTo(
             configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), hosts.get(0).getUuid()));
 
-    assertThat(hostConfigMapping.get(hosts.get(1).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(1).getHostName()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), ncOz1.getUuid()));
 
-    assertThat(hostConfigMapping.get(hosts.get(8).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(8).getHostName()))
         .isEqualTo(
             configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), hosts.get(8).getUuid()));
 
-    assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
+    assertThat(hostConfigMapping.get(hosts.get(9).getHostName()))
         .isEqualTo(
             configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), rootEnvTag.getUuid()));
   }

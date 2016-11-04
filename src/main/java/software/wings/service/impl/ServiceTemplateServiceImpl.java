@@ -539,7 +539,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     for (Tag tag : leafTagNodes) {
       List<ApplicationHost> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
       for (ApplicationHost host : taggedHosts) {
-        computedHostConfigs.put(host.getUuid(),
+        computedHostConfigs.put(host.getHostName(),
             overrideConfigFiles(
                 tag.getConfigFiles(), configService.getConfigFilesForEntity(appId, templateId, host.getUuid())));
       }
