@@ -59,6 +59,7 @@ public class User extends Base implements Principal {
     publicUser.setUuid(getUuid());
     publicUser.setName(getName());
     publicUser.setEmail(getEmail());
+    publicUser.setAccounts(getAccounts());
     // publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
