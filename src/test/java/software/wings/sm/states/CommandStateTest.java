@@ -195,7 +195,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID))
         .thenReturn(anApplicationHost().withHostName(HOST_NAME).build());
     commandState.setExecutorService(executorService);
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID))
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(aJenkinsArtifactStream().withUuid(ARTIFACT_STREAM_ID).withAppId(APP_ID).build());
   }
 
@@ -335,7 +335,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-    verify(artifactStreamService).get(ARTIFACT_STREAM_ID, APP_ID);
+    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
   }

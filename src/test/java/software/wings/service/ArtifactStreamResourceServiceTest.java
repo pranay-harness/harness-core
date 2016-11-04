@@ -75,7 +75,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteArtifactStream() {
     ArtifactStream artifactStream = artifactStreamService.create(ArtifactStreamResourceServiceTest.artifactStream);
-    artifactStreamService.delete(artifactStream.getUuid(), artifactStream.getAppId());
+    artifactStreamService.delete(artifactStream.getAppId(), artifactStream.getUuid());
     assertThat(artifactStreamService.list(new PageRequest<>())).hasSize(0);
   }
 }

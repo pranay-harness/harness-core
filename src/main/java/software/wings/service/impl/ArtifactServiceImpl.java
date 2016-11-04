@@ -80,7 +80,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (!appService.exist(artifact.getAppId())) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
     }
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("artifactStream", artifactStream);
 
     artifact.setServiceIds(artifactStream.getServiceIds().stream().collect(Collectors.toList()));

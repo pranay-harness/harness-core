@@ -77,7 +77,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
                                                       .withJobname(ARTIFACT_STREAM_NAME)
                                                       .withArtifactPathServices(Lists.newArrayList())
                                                       .build();
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID)).thenReturn(jenkinsArtifactStream);
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
   }
 
   /**

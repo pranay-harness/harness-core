@@ -8,11 +8,9 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
@@ -38,7 +36,6 @@ import javax.ws.rs.QueryParam;
 @Api("pipelines")
 @Path("/pipelines")
 @Produces("application/json")
-@PublicApi // TODO: remove it
 public class PipelineResource {
   private WorkflowService workflowService;
   private PipelineService pipelineService;
@@ -65,7 +62,6 @@ public class PipelineResource {
   @GET
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
-    pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
     return new RestResponse<>(workflowService.listPipelines(pageRequest));
   }
 

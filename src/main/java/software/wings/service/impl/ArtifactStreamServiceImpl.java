@@ -72,7 +72,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public ArtifactStream get(String id, String appId) {
+  public ArtifactStream get(String appId, String id) {
     ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, id);
     populateStreamSpecificData(artifactStream);
     return artifactStream;
@@ -82,7 +82,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
     String id = wingsPersistence.save(artifactStream);
-    return get(id, artifactStream.getAppId());
+    return get(artifactStream.getAppId(), id);
   }
 
   @Override
@@ -98,7 +98,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public boolean delete(String id, String appId) {
+  public boolean delete(String appId, String id) {
     return wingsPersistence.delete(
         wingsPersistence.createQuery(ArtifactStream.class).field(ID_KEY).equal(id).field("appId").equal(appId));
   }
@@ -109,7 +109,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .field("appId")
         .equal(appId)
         .asList()
-        .forEach(artifactSource -> delete(artifactSource.getUuid(), appId));
+        .forEach(artifactSource -> delete(appId, artifactSource.getUuid()));
   }
 
   @Override
@@ -126,7 +126,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     UpdateOperations<ArtifactStream> operations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).add("streamActions", artifactStreamAction);
     UpdateResults update = wingsPersistence.update(query, operations);
-    return get(streamId, appId);
+    return get(appId, streamId);
   }
 
   private String getActionSummary(String appId, ArtifactStreamAction artifactStreamAction) {
@@ -172,7 +172,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         wingsPersistence.createUpdateOperations(ArtifactStream.class).removeAll("streamActions", streamAction);
 
     wingsPersistence.update(query, operations);
-    return get(streamId, appId);
+    return get(appId, streamId);
   }
 
   @Override
@@ -187,7 +187,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void triggerStreamAction(Artifact artifact) {
-    ArtifactStream artifactStream = get(artifact.getArtifactStreamId(), artifact.getAppId());
+    ArtifactStream artifactStream = get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("ArtifactStream", artifactStream);
     artifactStream.getStreamActions().forEach(
         artifactStreamAction -> triggerStreamAction(artifact, artifactStreamAction));

@@ -67,7 +67,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     wingsRule.getDatastore().save(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build());
 
     when(appService.exist(APP_ID)).thenReturn(true);
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID))
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(
             aJenkinsArtifactStream()
                 .withUuid(ARTIFACT_STREAM_ID)

@@ -129,7 +129,7 @@ public class PipelineServiceImpl implements PipelineService {
         stageExecutionDataList.add(stageExecution);
       } else {
         throw new WingsException(
-            ErrorCodes.UNKNOWN_ERROR, "message", "Unknow stateType " + stateExecutionInstance.getStateType());
+            ErrorCodes.UNKNOWN_ERROR, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
       }
       List<State> nextStates = stateMachine.getNextStates(currState.getName());
       currState = nextStates != null ? nextStates.get(0) : null;

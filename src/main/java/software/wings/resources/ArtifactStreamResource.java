@@ -104,7 +104,7 @@ public class ArtifactStreamResource {
   @GET
   @Path("{streamId}")
   public RestResponse<ArtifactStream> get(@QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
-    return new RestResponse<>(artifactStreamService.get(streamId, appId));
+    return new RestResponse<>(artifactStreamService.get(appId, streamId));
   }
 
   /**
@@ -155,7 +155,7 @@ public class ArtifactStreamResource {
   @DELETE
   @Path("{id}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
-    artifactStreamService.delete(id, appId);
+    artifactStreamService.delete(appId, id);
     return new RestResponse<>();
   }
 

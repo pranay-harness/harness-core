@@ -263,7 +263,7 @@ public class CommandState extends State {
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
-        ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId(), artifact.getAppId());
+        ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
         activityBuilder.withArtifactStreamId(artifactStream.getUuid())
             .withArtifactStreamName(artifactStream.getSourceName())

@@ -26,11 +26,11 @@ public interface ArtifactStreamService {
   /**
    * Get artifact stream.
    *
-   * @param id    the id
    * @param appId the app id
+   * @param id    the id
    * @return the artifact stream
    */
-  ArtifactStream get(String id, String appId);
+  ArtifactStream get(String appId, String id);
 
   /**
    * Create artifact stream.
@@ -51,11 +51,11 @@ public interface ArtifactStreamService {
   /**
    * Delete.
    *
-   * @param id    the id
    * @param appId the app id
+   * @param id    the id
    * @return true, if successful
    */
-  boolean delete(@NotEmpty String id, @NotEmpty String appId);
+  boolean delete(@NotEmpty String appId, @NotEmpty String id);
 
   /**
    * Delete by application.

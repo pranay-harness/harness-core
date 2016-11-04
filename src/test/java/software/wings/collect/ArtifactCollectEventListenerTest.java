@@ -78,7 +78,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(collectorServiceMap.get(anyString())).thenReturn(artifactCollectorService);
-    when(artifactStreamService.get(ARTIFACT_STREAM_ID, APP_ID)).thenReturn(ARTIFACT_SOURCE);
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
   }
 
   /**
