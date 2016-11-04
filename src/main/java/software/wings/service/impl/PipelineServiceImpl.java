@@ -73,26 +73,28 @@ public class PipelineServiceImpl implements PipelineService {
         workflowService.readLatest(pipelineExecution.getAppId(), pipelineExecution.getPipelineId(), null);
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         getStateExecutionInstanceMap(pipelineExecution);
-    List<PipelineStageExecution> stateExecutionDataList = new ArrayList<>();
+    List<PipelineStageExecution> stageExecutionDataList = new ArrayList<>();
 
     State currState = stateMachine.getInitialState();
 
     while (currState != null) {
       StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(currState.getName());
 
-      if (currState.getStateType().equals("BUILD") && stateExecutionInstance != null) {
-        BuildStateExecutionData buildStateExecutionData =
-            (BuildStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(currState.getName());
-        pipelineExecution.setArtifactId(buildStateExecutionData.getArtifactId());
-        pipelineExecution.setArtifactName(buildStateExecutionData.getArtifactName());
+      if (currState.getStateType().equals("BUILD")) {
+        if (stateExecutionInstance != null) {
+          BuildStateExecutionData buildStateExecutionData =
+              (BuildStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(currState.getName());
+          pipelineExecution.setArtifactId(buildStateExecutionData.getArtifactId());
+          pipelineExecution.setArtifactName(buildStateExecutionData.getArtifactName());
+        }
       } else if (stateExecutionInstance == null) {
-        stateExecutionDataList.add(aPipelineStageExecution()
+        stageExecutionDataList.add(aPipelineStageExecution()
                                        .withStateType(currState.getStateType())
                                        .withStateName(currState.getName())
                                        .withStatus(ExecutionStatus.QUEUED)
                                        .build());
       } else if (stateExecutionInstance != null && APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
-        stateExecutionDataList.add(aPipelineStageExecution()
+        stageExecutionDataList.add(aPipelineStageExecution()
                                        .withStateType(stateExecutionInstance.getStateType())
                                        .withStatus(stateExecutionInstance.getStatus())
                                        .withStateName(stateExecutionInstance.getStateName())
@@ -103,7 +105,7 @@ public class PipelineServiceImpl implements PipelineService {
         PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                     .withStateType(currState.getStateType())
                                                     .withStateName(currState.getName())
-                                                    .withStatus(ExecutionStatus.QUEUED)
+                                                    .withStatus(stateExecutionInstance.getStatus())
                                                     .build();
 
         EnvStateExecutionData envStateExecutionData =
@@ -124,7 +126,7 @@ public class PipelineServiceImpl implements PipelineService {
                                .build();
         }
 
-        stateExecutionDataList.add(stageExecution);
+        stageExecutionDataList.add(stageExecution);
       } else {
         throw new WingsException(
             ErrorCodes.UNKNOWN_ERROR, "message", "Unknow stateType " + stateExecutionInstance.getStateType());
@@ -135,7 +137,7 @@ public class PipelineServiceImpl implements PipelineService {
 
     WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(
         pipelineExecution.getAppId(), pipelineExecution.getWorkflowExecutionId());
-    pipelineExecution.setPipelineStageExecutions(stateExecutionDataList);
+    pipelineExecution.setPipelineStageExecutions(stageExecutionDataList);
     pipelineExecution.setEndTs(System.currentTimeMillis());
     pipelineExecution.setStatus(executionDetails.getStatus());
 
@@ -161,15 +163,11 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public void updatePipelineExecutionData(String appId, String workflowExecutionId, ExecutionStatus status) {
-    refreshPipelineExecutionAsync(appId, workflowExecutionId);
-  }
-
-  @Override
   public void refreshPipelineExecutionAsync(String appId, String workflowExecutionId) {
     executorService.submit(() -> refreshPipelineExecution(appId, workflowExecutionId));
   }
 
+  @Override
   public void refreshPipelineExecution(String appId, String workflowExecutionId) {
     PipelineExecution pipelineExecution = wingsPersistence.createQuery(PipelineExecution.class)
                                               .field("appId")
@@ -196,7 +194,7 @@ public class PipelineServiceImpl implements PipelineService {
                                               .withStartTs(System.currentTimeMillis())
                                               .build();
     pipelineExecution = wingsPersistence.saveAndGet(PipelineExecution.class, pipelineExecution);
-    refreshPipelineExecution(pipelineExecution);
+    refreshPipelineExecution(appId, pipelineExecution.getWorkflowExecutionId());
     return workflowExecution;
   }
 }

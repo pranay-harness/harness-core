@@ -119,7 +119,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     wingsPersistence.update(query, updateOps);
 
     if (context.getWorkflowType() != null && context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
-      pipelineService.updatePipelineExecutionData(appId, workflowExecutionId, status);
+      pipelineService.refreshPipelineExecution(appId, workflowExecutionId);
     }
 
     if (!isNullOrEmpty(workflowExecutionId)) { // TODO:: remove this check.

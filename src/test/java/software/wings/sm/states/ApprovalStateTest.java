@@ -7,7 +7,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
-    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_EXECUTION_ID);
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
   }
 
   @Test
@@ -46,6 +46,6 @@ public class ApprovalStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = approvalState.execute(context);
     assertThat(executionResponse.isAsync()).isFalse();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_EXECUTION_ID);
+    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
   }
 }

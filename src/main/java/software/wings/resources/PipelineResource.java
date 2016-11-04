@@ -14,7 +14,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
@@ -42,21 +41,17 @@ import javax.ws.rs.QueryParam;
 @PublicApi // TODO: remove it
 public class PipelineResource {
   private WorkflowService workflowService;
-  private WorkflowExecutionService workflowExecutionService;
   private PipelineService pipelineService;
 
   /**
    * Instantiates a new pipeline resource.
    *
    * @param workflowService          the workflow service
-   * @param workflowExecutionService the workflow execution service
    * @param pipelineService          the pipeline service
    */
   @Inject
-  public PipelineResource(WorkflowService workflowService, WorkflowExecutionService workflowExecutionService,
-      PipelineService pipelineService) {
+  public PipelineResource(WorkflowService workflowService, PipelineService pipelineService) {
     this.workflowService = workflowService;
-    this.workflowExecutionService = workflowExecutionService;
     this.pipelineService = pipelineService;
   }
 

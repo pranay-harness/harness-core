@@ -12,7 +12,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
@@ -54,7 +54,7 @@ public class EnvStateTest extends WingsBaseTest {
     envState.setWorkflowId(WORKFLOW_ID);
     when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
-    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_EXECUTION_ID);
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), any()))
         .thenReturn(aWorkflowExecution().withUuid(WORKFLOW_EXECUTION_ID).build());
   }
@@ -63,7 +63,7 @@ public class EnvStateTest extends WingsBaseTest {
   public void shouldExecute() {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService).triggerEnvExecution(eq(APP_ID), eq(ENV_ID), any());
-    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_EXECUTION_ID);
+    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(Arrays.asList(WORKFLOW_EXECUTION_ID));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.isAsync()).isTrue();
@@ -76,9 +76,10 @@ public class EnvStateTest extends WingsBaseTest {
   @Test
   public void shouldHandleAsyncResponse() {
     ExecutionResponse executionResponse = envState.handleAsyncResponse(context,
-        ImmutableMap.of(ACTIVITY_ID, new EnvExecutionResponseData(PIPELINE_EXECUTION_ID, ExecutionStatus.SUCCESS)));
+        ImmutableMap.of(
+            ACTIVITY_ID, new EnvExecutionResponseData(PIPELINE_WORKFLOW_EXECUTION_ID, ExecutionStatus.SUCCESS)));
     assertThat(executionResponse.isAsync()).isFalse();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_EXECUTION_ID);
+    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
   }
 }
