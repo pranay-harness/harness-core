@@ -136,6 +136,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   public void shouldAddStreamAction() {
     ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
                                                     .withCustomAction(true)
+                                                    .withCronExpression("*.war")
                                                     .withWorkflowType(WorkflowType.ORCHESTRATION)
                                                     .withWorkflowId(WORKFLOW_ID)
                                                     .build();
