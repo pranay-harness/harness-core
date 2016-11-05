@@ -94,6 +94,33 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   /**
+   * Should evaluate with default prefix.
+   */
+  @Test
+  public void shouldEvaluateWithDefaultPrefix() {
+    Person sam = new Person();
+    sam.setAge(20);
+    Address address = new Address();
+    address.setCity("San Francisco");
+    sam.setAddress(address);
+
+    Person bob = new Person();
+    bob.setAge(40);
+    address = new Address();
+    address.setCity("New York");
+    bob.setAddress(address);
+
+    String expr = "sam.age < bob.age && sam.address.city.length() > ${address.city.length()}";
+    Map<String, Object> map = new HashMap<>();
+    map.put("sam", sam);
+    map.put("bob", bob);
+    Object retValue = expressionEvaluator.evaluate(expr, map, "bob");
+    assertThat(retValue).isNotNull();
+    assertThat(retValue).isInstanceOf(Boolean.class);
+    assertThat(retValue).isEqualTo(true);
+  }
+
+  /**
    * The Class Person.
    */
   public static class Person {

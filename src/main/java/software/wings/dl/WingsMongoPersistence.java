@@ -253,6 +253,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
+  public <T extends Base> boolean delete(Class<T> cls, String appId, String uuid) {
+    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(uuid).field("appId").equal(appId);
+    return delete(query);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T extends Base> boolean delete(Query<T> query) {
     WriteResult result = primaryDatastore.delete(query);
     return !(result == null || result.getN() == 0);

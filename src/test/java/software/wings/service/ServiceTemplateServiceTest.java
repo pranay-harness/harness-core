@@ -562,11 +562,16 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                         .withChildren(asList(aTag().withUuid(TAG_ID).withTagType(TagType.UNTAGGED_HOST).build()))
                         .build());
     when(hostService.getHostsByTags(any(), any(), anyList()))
-        .thenReturn(asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("HOST_ID_1").build()));
+        .thenReturn(asList(anApplicationHost()
+                               .withAppId(APP_ID)
+                               .withEnvId(ENV_ID)
+                               .withHostName("HOST_NAME_1")
+                               .withUuid("HOST_ID_1")
+                               .build()));
 
     Map<String, List<ConfigFile>> hostConfigFileMapping =
         templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID);
-    assertThat(hostConfigFileMapping.get("HOST_ID_1"))
+    assertThat(hostConfigFileMapping.get("HOST_NAME_1"))
         .isEqualTo(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
   }
 }

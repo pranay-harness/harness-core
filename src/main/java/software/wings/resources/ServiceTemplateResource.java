@@ -17,7 +17,6 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
-import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -157,21 +156,6 @@ public class ServiceTemplateResource {
   public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, List<String> tagIds) {
     return new RestResponse<>(serviceTemplateService.updateTags(appId, envId, serviceTemplateId, tagIds));
-  }
-
-  /**
-   * Host configs.
-   *
-   * @param envId      the env id
-   * @param appId      the app id
-   * @param templateId the template id
-   * @return the rest response
-   */
-  @GET
-  @Path("{templateId}/host-configs")
-  public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
-    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));
   }
 
   /**

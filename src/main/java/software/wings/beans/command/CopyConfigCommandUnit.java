@@ -44,7 +44,7 @@ public class CopyConfigCommandUnit extends CommandUnit {
     ServiceTemplate serviceTemplate = context.getServiceTemplate();
     Map<String, List<ConfigFile>> computedConfigFiles = serviceTemplateService.computedConfigFiles(
         serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
-    List<ConfigFile> configFiles = computedConfigFiles.get(context.getHost().getUuid());
+    List<ConfigFile> configFiles = computedConfigFiles.get(context.getHost().getHostName());
 
     ExecutionResult result = ExecutionResult.SUCCESS;
     if (!isEmpty(configFiles)) {

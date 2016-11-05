@@ -9,7 +9,7 @@ import software.wings.service.intfc.EmailNotificationService;
 /**
  * Created by peeyushaggarwal on 5/24/16.
  *
- * @see EmailNotificationEvent
+ * @see EmailData
  */
 public class EmailNotificationListener extends AbstractQueueListener<EmailData> {
   @Inject private EmailNotificationService<EmailData> emailNotificationService;

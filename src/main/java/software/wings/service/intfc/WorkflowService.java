@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
@@ -158,4 +159,20 @@ public interface WorkflowService {
    * @param appId the app id
    */
   void deleteStateMachinesByApplication(String appId);
+
+  List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId);
+
+  PageResponse<WorkflowFailureStrategy> listWorkflowFailureStrategies(PageRequest<WorkflowFailureStrategy> pageRequest);
+
+  /**
+   * Creates the.
+   *
+   * @param workflowFailureStrategy the workflow failure strategy
+   * @return the workflow failure strategy
+   */
+  WorkflowFailureStrategy create(@Valid WorkflowFailureStrategy workflowFailureStrategy);
+
+  WorkflowFailureStrategy update(@Valid WorkflowFailureStrategy workflowFailureStrategy);
+
+  boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId);
 }
