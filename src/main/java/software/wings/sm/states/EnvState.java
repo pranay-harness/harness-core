@@ -25,6 +25,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
+import software.wings.stencils.Expand;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -39,6 +40,7 @@ import javax.inject.Inject;
  */
 @Attributes(title = "Env")
 public class EnvState extends State {
+  @Expand(dataProvider = EnvironmentServiceImpl.class)
   @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   private String envId;
