@@ -58,9 +58,11 @@ public interface WorkflowExecutionService {
    *
    * @param appId      the app id
    * @param pipelineId the pipeline id
+   * @param executionArgs
    * @return the workflow execution
    */
-  WorkflowExecution triggerPipelineExecution(@NotNull String appId, @NotNull String pipelineId);
+  WorkflowExecution triggerPipelineExecution(
+      @NotNull String appId, @NotNull String pipelineId, ExecutionArgs executionArgs);
 
   /**
    * Trigger orchestration execution.

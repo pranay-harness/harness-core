@@ -1219,7 +1219,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerPipelineExecution(appId, pipeline.getUuid(), callback);
+                                      .triggerPipelineExecution(appId, pipeline.getUuid(), null, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(execution).isNotNull();
@@ -1310,14 +1310,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return aGraph()
         .addNodes(aNode()
                       .withId("n1")
-                      .withOrigin(true)
-                      .withName("BUILD")
-                      .withX(200)
-                      .withY(50)
-                      .withType(StateType.BUILD.name())
-                      .build())
-        .addNodes(aNode()
-                      .withId("n2")
                       .withName("IT")
                       .withX(250)
                       .withY(50)
@@ -1325,7 +1317,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addProperty("envId", "12345")
                       .build())
         .addNodes(aNode()
-                      .withId("n3")
+                      .withId("n2")
                       .withName("QA")
                       .withX(300)
                       .withY(50)
@@ -1333,7 +1325,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addProperty("envId", "23456")
                       .build())
         .addNodes(aNode()
-                      .withId("n4")
+                      .withId("n3")
                       .withName("UAT")
                       .withX(300)
                       .withY(50)
@@ -1342,7 +1334,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .build())
         .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
         .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-        .addLinks(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build())
         .build();
   }
 

@@ -3,12 +3,10 @@ package software.wings.integration;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -17,16 +15,11 @@ import static software.wings.beans.ElasticLoadBalancerConfig.Builder.anElasticLo
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.DEV;
-import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Permission.Builder.aPermission;
-import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
@@ -34,7 +27,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
@@ -73,7 +65,6 @@ import org.mongodb.morphia.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -82,31 +73,22 @@ import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Graph;
-import software.wings.beans.Orchestration;
-import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.beans.User;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateType;
 import software.wings.utils.JsonSubtypeResolver;
-import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -115,14 +97,10 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -248,10 +226,6 @@ public void populateData() throws IOException {
     appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
     containers.put(application.getUuid(), addAppContainers(application.getUuid()));
     services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
-    //      addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-    //      addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-    //      addOrchestrationAndPipeline(services, appEnvs, application);
-    //      addNotifications(application);
     createAppSettings(application.getUuid());
   }
 }
@@ -369,218 +343,8 @@ private void loginAdminUser() {
   }
 }
 
-private void addOrchestrationAndPipeline(
-    Map<String, List<Service>> services, Map<String, List<Environment>> appEnvs, Application application) {
-  Map<String, String> envWorkflowMap =
-      addOrchestrationAndPipeline(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-  Pipeline pipeline =
-      addPipeline(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
-  addPipelineExecution(application, pipeline);
-  addPipelineExecution(application, pipeline);
-  addPipelineExecution(application, pipeline);
-  addPipelineExecution(application, pipeline);
-  addPipelineExecution(application, pipeline);
-}
-
-private void addPipelineExecution(Application application, Pipeline pipeline) {
-  WorkflowExecution execution =
-      workflowExecutionService.triggerPipelineExecution(application.getUuid(), pipeline.getUuid());
-  assertThat(execution).isNotNull();
-  String executionId = execution.getUuid();
-  logger.debug("Pipeline executionId: {}", executionId);
-  assertThat(executionId).isNotNull();
-  Misc.quietSleep(2000);
-  execution = workflowExecutionService.getExecutionDetails(application.getUuid(), executionId);
-  assertThat(execution)
-      .isNotNull()
-      .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
-      .containsExactly(executionId, ExecutionStatus.SUCCESS);
-}
-
-private Pipeline addPipeline(Application application, List<Service> services, List<Environment> environments,
-    Map<String, String> envWorkflowMap) {
-  int x = 80;
-  software.wings.beans.Graph.Builder graphBuilder = aGraph();
-
-  x += 200;
-  graphBuilder.addNodes(aNode()
-                            .withId("n1")
-                            .withOrigin(true)
-                            .withName("build")
-                            .withX(x)
-                            .withY(80)
-                            .withType(StateType.BUILD.name())
-                            .build());
-
-  String fromNode = "n1";
-  for (Environment env : environments) {
-    String toNode = "n-" + env.getName();
-    x += 200;
-    graphBuilder
-        .addNodes(aNode()
-                      .withId(toNode)
-                      .withName(env.getName())
-                      .withX(x)
-                      .withY(80)
-                      .withType(StateType.ENV_STATE.name())
-                      .addProperty("envId", env.getUuid())
-                      .addProperty("workflowId", envWorkflowMap.get(env.getUuid()))
-                      .build())
-        .addLinks(aLink().withId("l-" + env.getName()).withFrom(fromNode).withTo(toNode).withType("success").build());
-    fromNode = toNode;
-  }
-
-  Graph graph = graphBuilder.build();
-  Pipeline pipeline = aPipeline()
-                          .withAppId(application.getUuid())
-                          .withName("pipeline1")
-                          .withDescription("Sample Pipeline")
-                          .addServices(services.stream().map(Service::getUuid).collect(toList()).toArray(new String[0]))
-                          .withGraph(graph)
-                          .build();
-
-  pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
-  assertThat(pipeline).isNotNull();
-  assertThat(pipeline.getUuid()).isNotNull();
-
-  return pipeline;
-}
-
-private Map<String, String> addOrchestrationAndPipeline(
-    Application application, List<Service> services, List<Environment> environments) {
-  Graph graph =
-      aGraph()
-          .addNodes(aNode()
-                        .withId("n1")
-                        .withOrigin(true)
-                        .withName("stop")
-                        .withX(200)
-                        .withY(80)
-                        .withType(StateType.ENV_STATE.name())
-                        .build())
-          .addNodes(aNode()
-                        .withId("n2")
-                        .withName("wait")
-                        .withX(360)
-                        .withY(80)
-                        .withType(StateType.WAIT.name())
-                        .addProperty("duration", 5000l)
-                        .build())
-          .addNodes(
-              aNode().withId("n3").withName("start").withX(530).withY(80).withType(StateType.ENV_STATE.name()).build())
-          .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-          .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-          .build();
-
-  Map<String, String> envWorkflowMap = new HashMap<>();
-  environments.forEach(env -> {
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(application.getUuid())
-                                      .withName("workflow-" + env.getName())
-                                      .withDescription("Sample Workflow for " + env.getName() + " environment")
-                                      .withEnvironment(env)
-                                      .withGraph(graph)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
-    envWorkflowMap.put(env.getUuid(), orchestration.getUuid());
-  });
-  return envWorkflowMap;
-}
-
 private Builder getRequestWithAuthHeader(WebTarget target) {
   return target.request().header("Authorization", "Bearer " + userToken);
-}
-
-private void addServiceInstances(List<Service> services, List<Environment> appEnvs) {
-  // TODO: improve make http calls and use better generation scheme
-
-  services.forEach(service -> {
-    appEnvs.forEach(environment -> {
-      String infraId =
-          wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(Base.GLOBAL_APP_ID).get().getUuid();
-      List<Host> hosts = wingsPersistence.createQuery(Host.class)
-                             .field("appId")
-                             .equal(environment.getAppId())
-                             .field("infraId")
-                             .equal(infraId)
-                             .asList();
-      ServiceTemplate template = wingsPersistence.createQuery(ServiceTemplate.class)
-                                     .field("appId")
-                                     .equal(environment.getAppId())
-                                     .field("envId")
-                                     .equal(environment.getUuid())
-                                     .get();
-
-      List<String> hostIds = hosts.stream().map(Host::getUuid).collect(toList());
-
-      WebTarget target = client.target(format("%s/service-templates/%s/map-hosts?appId=%s&envId=%s", API_BASE,
-          template.getUuid(), template.getAppId(), template.getEnvId()));
-      getRequestWithAuthHeader(target).put(Entity.entity(hostIds, APPLICATION_JSON));
-    });
-  });
-}
-
-private void createStopActivity(
-    Application application, Environment environment, ServiceTemplate template, Host host, ExecutionStatus status) {
-  Activity activity = wingsPersistence.saveAndGet(Activity.class,
-      anActivity()
-          .withAppId(application.getUuid())
-          .withCommandType("COMMAND")
-          .withCommandName("STOP")
-          .withEnvironmentId(environment.getUuid())
-          .withHostName(host.getHostName())
-          .withServiceId(template.getService().getUuid())
-          .withServiceName(template.getService().getName())
-          .withServiceTemplateId(template.getUuid())
-          .withServiceTemplateName(template.getName())
-          .withStatus(status)
-          .build());
-
-  addLogLine(application, template, host, activity,
-      "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
-}
-
-private void createStartActivity(
-    Application application, Environment environment, ServiceTemplate template, Host host, ExecutionStatus status) {
-  Activity activity = wingsPersistence.saveAndGet(Activity.class,
-      anActivity()
-          .withAppId(application.getUuid())
-          .withCommandType("COMMAND")
-          .withCommandName("START")
-          .withEnvironmentId(environment.getUuid())
-          .withHostName(host.getHostName())
-          .withServiceId(template.getService().getUuid())
-          .withServiceName(template.getService().getName())
-          .withServiceTemplateId(template.getUuid())
-          .withServiceTemplateName(template.getName())
-          .withStatus(status)
-          .build());
-
-  addLogLine(application, template, host, activity,
-      "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
-  addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
-}
-
-private void addLogLine(
-    Application application, ServiceTemplate template, Host host, Activity activity, String logLine) {
-  wingsPersistence.save(aLog()
-                            .withAppId(application.getUuid())
-                            .withActivityId(activity.getUuid())
-                            .withHostName(host.getHostName())
-                            .withLogLine(logLine)
-                            .build());
-}
-
-private String getTimeStamp() {
-  TimeZone tz = TimeZone.getTimeZone("UTC");
-  DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
-  df.setTimeZone(tz);
-  return df.format(new Date());
 }
 
 private void createGlobalSettings() {

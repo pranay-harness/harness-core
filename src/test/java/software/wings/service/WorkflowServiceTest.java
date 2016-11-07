@@ -217,14 +217,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Graph graph = pipeline.getGraph();
     graph.getNodes().add(aNode()
-                             .withId("n5")
+                             .withId("n4")
                              .withName("PROD")
                              .withX(350)
                              .withY(50)
                              .addProperty("envId", "34567")
                              .withType(StateType.ENV_STATE.name())
                              .build());
-    graph.getLinks().add(aLink().withId("l3").withFrom("n4").withTo("n5").withType("success").build());
+    graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build());
 
     Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
     assertThat(updatedPipeline)
@@ -285,22 +285,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return aGraph()
         .addNodes(aNode()
                       .withId("n1")
-                      .withName("BUILD")
-                      .withX(200)
-                      .withY(50)
-                      .withType(StateType.BUILD.name())
-                      .withOrigin(true)
-                      .build())
-        .addNodes(aNode()
-                      .withId("n2")
                       .withName("IT")
                       .withX(250)
                       .withY(50)
                       .withType(StateType.ENV_STATE.name())
+                      .withOrigin(true)
                       .addProperty("envId", "12345")
                       .build())
         .addNodes(aNode()
-                      .withId("n3")
+                      .withId("n2")
                       .withName("QA")
                       .withX(300)
                       .withY(50)
@@ -308,7 +301,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                       .addProperty("envId", "23456")
                       .build())
         .addNodes(aNode()
-                      .withId("n4")
+                      .withId("n3")
                       .withName("UAT")
                       .withX(300)
                       .withY(50)
@@ -317,7 +310,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                       .build())
         .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
         .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-        .addLinks(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build())
         .build();
   }
 
@@ -503,7 +495,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.PIPELINE_STENCILS);
     assertThat(stencils.get(StateTypeScope.PIPELINE_STENCILS))
         .extracting(Stencil::getType)
-        .contains("BUILD", "ENV_STATE")
+        .contains("APPROVAL", "ENV_STATE")
         .doesNotContain("REPEAT", "FORK");
   }
 

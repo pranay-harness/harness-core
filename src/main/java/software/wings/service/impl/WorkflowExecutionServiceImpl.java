@@ -271,8 +271,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId) {
-    return triggerPipelineExecution(appId, pipelineId, null);
+  public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs) {
+    return triggerPipelineExecution(appId, pipelineId, executionArgs, null);
   }
 
   /**
@@ -280,11 +280,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    *
    * @param appId                   the app id
    * @param pipelineId              the pipeline id
-   * @param workflowExecutionUpdate the workflow execution update
+   * @param executionArgs           the execution args
+   * @param workflowExecutionUpdate the workflow execution update  @return the workflow execution
    * @return the workflow execution
    */
   public WorkflowExecution triggerPipelineExecution(
-      String appId, String pipelineId, WorkflowExecutionUpdate workflowExecutionUpdate) {
+      String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     if (pipeline == null) {
       throw new WingsException(ErrorCodes.NON_EXISTING_PIPELINE);
@@ -314,6 +315,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
+    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+      stdParams.setArtifactIds(
+          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+    }
 
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }

@@ -13,6 +13,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.QUEUED;
@@ -23,7 +24,8 @@ import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
@@ -40,15 +42,18 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -58,7 +63,6 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ApprovalState;
-import software.wings.sm.states.BuildState;
 import software.wings.sm.states.EnvState;
 import software.wings.utils.WingsTestConstants;
 
@@ -75,6 +79,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ExecutorService executorService;
+  @Mock private ArtifactService artifactService;
   @Mock private Query<PipelineExecution> query;
   @Mock private FieldEnd end;
 
@@ -116,9 +121,13 @@ public class PipelineServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecute() {
-    when(workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID))
+    Artifact artifact = anArtifact().withUuid(ARTIFACT_ID).withDisplayName(ARTIFACT_NAME).build();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(artifact));
+    when(workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs))
         .thenReturn(
             aWorkflowExecution().withUuid(PIPELINE_WORKFLOW_EXECUTION_ID).withStatus(ExecutionStatus.SUCCESS).build());
+    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(aPipeline().withUuid(PIPELINE_ID).build());
     when(wingsPersistence.saveAndGet(eq(PipelineExecution.class), any()))
@@ -129,7 +138,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .build());
     doNothing().when(spyPipelineService).refreshPipelineExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
-    WorkflowExecution workflowExecution = spyPipelineService.execute(APP_ID, PIPELINE_ID);
+    WorkflowExecution workflowExecution = spyPipelineService.execute(APP_ID, PIPELINE_ID, executionArgs);
 
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(workflowExecution.getUuid()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
@@ -290,14 +299,11 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   private StateMachine createPipelineStateMachine() {
     /*
-    pipeline: |BUILD-->DEV--->APPROVAL-->PROD|
+    pipeline: |DEV--->APPROVAL-->PROD|
      */
     StateMachine sm = new StateMachine();
     sm.setAppId(APP_ID);
     sm.setUuid(WingsTestConstants.STATE_MACHINE_ID);
-    BuildState buildState = new BuildState("BUILD");
-    buildState.setArtifactStreamId(ARTIFACT_STREAM_ID);
-    sm.addState(buildState);
 
     EnvState devEnvState = new EnvState("DEV");
     devEnvState.setEnvId("DEV_ENV_ID");
@@ -312,13 +318,8 @@ public class PipelineServiceTest extends WingsBaseTest {
     devEnvState.setWorkflowId(WORKFLOW_ID);
     sm.addState(prodEnvState);
 
-    sm.setInitialStateName(buildState.getName());
+    sm.setInitialStateName(devEnvState.getName());
 
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(buildState)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(devEnvState)
-                         .build());
     sm.addTransition(Transition.Builder.aTransition()
                          .withFromState(devEnvState)
                          .withTransitionType(TransitionType.SUCCESS)

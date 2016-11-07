@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
@@ -22,9 +23,10 @@ public interface PipelineService {
    *
    * @param appId      the app id
    * @param pipelineId the pipeline id
+   * @param executionArgs
    * @return the workflow execution
    */
-  WorkflowExecution execute(String appId, String pipelineId);
+  WorkflowExecution execute(String appId, String pipelineId, ExecutionArgs executionArgs);
 
   /**
    * Refresh pipeline execution.

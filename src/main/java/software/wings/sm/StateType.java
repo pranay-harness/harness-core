@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
-import software.wings.sm.states.BuildState;
+import software.wings.sm.states.ArtifactState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
@@ -89,9 +89,9 @@ public enum StateType implements StateTypeDescriptor {
   EMAIL(EmailState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
 
   /**
-   * Build state type.
+   * Atifact state type.
    */
-  BUILD(BuildState.class, StencilCategory.BUILD, PIPELINE_STENCILS),
+  ARTIFACT(ArtifactState.class, StencilCategory.BUILD, PIPELINE_STENCILS),
 
   /**
    * Env state state type.
@@ -108,8 +108,14 @@ public enum StateType implements StateTypeDescriptor {
    */
   APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS),
 
+  /**
+   * The Load balancer.
+   */
   LOAD_BALANCER(LoadBalancerState.class, StencilCategory.COMMANDS, "Load Balancer", ORCHESTRATION_STENCILS),
 
+  /**
+   * Jenkins state type.
+   */
   JENKINS(JenkinsState.class, StencilCategory.VERIFICATIONS, ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

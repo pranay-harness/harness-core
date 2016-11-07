@@ -5,6 +5,7 @@
 package software.wings.resources;
 
 import io.swagger.annotations.Api;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.RestResponse;
@@ -147,8 +148,8 @@ public class PipelineResource {
   @POST
   @Path("executions")
   public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
-    return new RestResponse<>(pipelineService.execute(appId, pipelineId));
+      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(pipelineService.execute(appId, pipelineId, executionArgs));
   }
 
   /**

@@ -9,28 +9,32 @@ import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.APPROVAL;
+import static software.wings.sm.StateType.ARTIFACT;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.BuildStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -55,6 +59,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AppService appService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
+  @Inject private ArtifactService artifactService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -80,14 +85,7 @@ public class PipelineServiceImpl implements PipelineService {
     while (currState != null) {
       StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(currState.getName());
 
-      if (currState.getStateType().equals("BUILD")) {
-        if (stateExecutionInstance != null) {
-          BuildStateExecutionData buildStateExecutionData =
-              (BuildStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(currState.getName());
-          pipelineExecution.setArtifactId(buildStateExecutionData.getArtifactId());
-          pipelineExecution.setArtifactName(buildStateExecutionData.getArtifactName());
-        }
-      } else if (stateExecutionInstance == null) {
+      if (stateExecutionInstance == null) {
         stageExecutionDataList.add(aPipelineStageExecution()
                                        .withStateType(currState.getStateType())
                                        .withStateName(currState.getName())
@@ -127,6 +125,8 @@ public class PipelineServiceImpl implements PipelineService {
         }
 
         stageExecutionDataList.add(stageExecution);
+      } else if (stateExecutionInstance != null && ARTIFACT.name().equals(stateExecutionInstance.getStateType())) {
+        // do nothing
       } else {
         throw new WingsException(
             ErrorCodes.UNKNOWN_ERROR, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
@@ -179,10 +179,14 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public WorkflowExecution execute(String appId, String pipelineId) {
-    WorkflowExecution workflowExecution = workflowExecutionService.triggerPipelineExecution(appId, pipelineId);
+  public WorkflowExecution execute(String appId, String pipelineId, ExecutionArgs executionArgs) {
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.triggerPipelineExecution(appId, pipelineId, executionArgs);
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     Application application = appService.get(appId);
+    List<Artifact> artifacts = validateAndFetchArtifact(appId, executionArgs.getArtifacts());
+    executionArgs.setArtifacts(artifacts);
+    Artifact artifact = artifacts.get(0);
     PipelineExecution pipelineExecution = aPipelineExecution()
                                               .withAppId(appId)
                                               .withAppName(application.getName())
@@ -192,9 +196,21 @@ public class PipelineServiceImpl implements PipelineService {
                                               .withWorkflowType(WorkflowType.PIPELINE)
                                               .withStatus(workflowExecution.getStatus())
                                               .withStartTs(System.currentTimeMillis())
+                                              .withArtifactId(artifact.getUuid())
+                                              .withArtifactName(artifact.getDisplayName())
                                               .build();
     pipelineExecution = wingsPersistence.saveAndGet(PipelineExecution.class, pipelineExecution);
     refreshPipelineExecution(appId, pipelineExecution.getWorkflowExecutionId());
     return workflowExecution;
+  }
+
+  private List<Artifact> validateAndFetchArtifact(String appId, List<Artifact> artifacts) {
+    notNullCheck("artifacts", artifacts);
+    List<Artifact> validatedArtifacts = new ArrayList<>();
+    artifacts.forEach(artifact -> {
+      notNullCheck("artifact", artifact);
+      validatedArtifacts.add(artifactService.get(appId, artifact.getUuid()));
+    });
+    return validatedArtifacts;
   }
 }
