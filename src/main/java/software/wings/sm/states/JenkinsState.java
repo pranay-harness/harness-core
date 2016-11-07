@@ -70,7 +70,7 @@ import javax.xml.parsers.ParserConfigurationException;
  * Created by peeyushaggarwal on 10/21/16.
  */
 public class JenkinsState extends State {
-  @Transient private final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
+  @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
 
   @EnumData(enumDataProvider = JenkinsSettingProvider.class)
   @Attributes(title = "Jenkins Server")
