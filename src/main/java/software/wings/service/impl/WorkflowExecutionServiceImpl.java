@@ -709,7 +709,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             ErrorCodes.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
       }
 
-      StateMachine stateMachine = workflowService.readLatest(appId, executionArgs.getOrchestrationId());
+      StateMachine stateMachine = workflowService.readForEnv(appId, envId, executionArgs.getOrchestrationId());
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }

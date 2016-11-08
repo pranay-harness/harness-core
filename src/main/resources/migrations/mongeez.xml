@@ -6,4 +6,5 @@
     <file path="base-active-field-migration.xml"/>
     <file path="all-nonexistant-application-reference-migration.js"/>
     <file path="workflow-executions-environment-type-migration.js"/>
+    <file path="workflow-migration.js"/>
 </changeFiles>
