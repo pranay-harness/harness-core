@@ -1019,7 +1019,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     instanceStatusSummaries.forEach(instanceStatusSummary -> {
       ExecutionStatus status = instanceStatusSummary.getStatus();
-      StatusInstanceBreakdown statusInstanceBreakdown = statusInstanceBreakdownMap.get(status);
+      StatusInstanceBreakdown statusInstanceBreakdown =
+          statusInstanceBreakdownMap.getOrDefault(status, aStatusInstanceBreakdown().withStatus(status).build());
       statusInstanceBreakdown.setInstanceCount(statusInstanceBreakdown.getInstanceCount() + 1);
     });
     // TODO: interpret history
