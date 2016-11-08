@@ -19,6 +19,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -67,7 +68,7 @@ public class EnvState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    String appId = context.getApp().getUuid();
+    String appId = ((ExecutionContextImpl) context).getApp().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     List<String> artifactIds = workflowStandardParams.getArtifactIds();
@@ -105,7 +106,8 @@ public class EnvState extends State {
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().toArray()[0];
-    pipelineService.refreshPipelineExecutionAsync(context.getApp().getUuid(), responseData.getWorkflowExecutionId());
+    pipelineService.refreshPipelineExecutionAsync(
+        ((ExecutionContextImpl) context).getApp().getUuid(), responseData.getWorkflowExecutionId());
     return anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
   }
 

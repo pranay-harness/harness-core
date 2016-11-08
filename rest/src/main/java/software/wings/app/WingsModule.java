@@ -44,10 +44,7 @@ import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
-<<<<<<< HEAD
 import software.wings.service.impl.PipelineServiceImpl;
-=======
->>>>>>> e08d927... feature: api for supporting plugins
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
@@ -90,10 +87,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
-<<<<<<< HEAD
 import software.wings.service.intfc.PipelineService;
-=======
->>>>>>> e08d927... feature: api for supporting plugins
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.PluginService;
 import software.wings.service.intfc.RoleService;

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
@@ -35,7 +36,8 @@ public class ApprovalState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     Misc.quietSleep(2000);
-    pipelineService.refreshPipelineExecutionAsync(context.getApp().getUuid(), context.getWorkflowExecutionId());
+    pipelineService.refreshPipelineExecutionAsync(
+        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
     return new ExecutionResponse();
   }
 
