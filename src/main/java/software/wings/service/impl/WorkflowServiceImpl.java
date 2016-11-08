@@ -518,9 +518,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     PageRequest<Orchestration> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("workflowType", WorkflowType.ORCHESTRATION, EQ);
-    return listOrchestration(pageRequest)
-        .stream()
-        .collect(toMap(Orchestration::getUuid, o -> (o.getEnvironment().getName() + ":" + o.getName())));
+    return listOrchestration(pageRequest, null).stream().collect(toMap(Orchestration::getUuid, o -> (o.getName())));
   }
 
   public List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId) {

@@ -75,7 +75,7 @@ public class PipelineServiceImpl implements PipelineService {
       return;
     }
     StateMachine stateMachine =
-        workflowService.readLatest(pipelineExecution.getAppId(), pipelineExecution.getPipelineId(), null);
+        workflowService.readLatest(pipelineExecution.getAppId(), pipelineExecution.getPipelineId());
     ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
         getStateExecutionInstanceMap(pipelineExecution);
     List<PipelineStageExecution> stageExecutionDataList = new ArrayList<>();
