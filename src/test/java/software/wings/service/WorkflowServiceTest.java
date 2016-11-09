@@ -229,8 +229,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
     assertThat(updatedPipeline)
         .isNotNull()
-        .extracting(Pipeline::getUuid, Pipeline::getName, Pipeline::getDescription, Pipeline::getServices)
-        .containsExactly(pipeline.getUuid(), "pipeline2", "newDescription", newServices);
+        .extracting(Pipeline::getUuid, Pipeline::getName, Pipeline::getDescription, Pipeline::getServices,
+            Pipeline::getDefaultVersion)
+        .containsExactly(pipeline.getUuid(), "pipeline2", "newDescription", newServices, 2);
 
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
@@ -242,7 +243,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(res).isNotNull().hasSize(graphCount);
 
-    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid(), null);
+    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid());
     assertThat(sm.getGraph()).isEqualTo(graph);
   }
 
@@ -257,8 +258,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                             .build();
 
     pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
-    assertThat(pipeline).isNotNull();
-    assertThat(pipeline.getUuid()).isNotNull();
+    assertThat(pipeline).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
 
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
@@ -353,7 +353,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateOrchestration() {
     Orchestration orchestration = createOrchestration();
     String uuid = orchestration.getUuid();
-    orchestration = workflowService.readOrchestration(appId, orchestration.getEnvironment().getUuid(), uuid);
+    orchestration = workflowService.readOrchestration(appId, uuid);
 
     assertThat(orchestration).isNotNull();
     assertThat(orchestration.getUuid()).isNotNull();
@@ -367,7 +367,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
     Orchestration updatedOrchestration = workflowService.updateOrchestration(orchestration);
-    assertThat(updatedOrchestration).isNotNull();
+    assertThat(updatedOrchestration).isNotNull().hasFieldOrPropertyWithValue("defaultVersion", 2);
     assertThat(updatedOrchestration.getUuid()).isNotNull();
     assertThat(updatedOrchestration.getUuid()).isEqualTo(orchestration.getUuid());
     assertThat(updatedOrchestration.getName()).isEqualTo("orchestration2");
@@ -382,7 +382,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(res).isNotNull().hasSize(2);
 
-    StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid(), null);
+    StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid());
     assertThat(sm.getGraph()).isNotNull().isEqualTo(graph);
   }
 
@@ -394,7 +394,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Orchestration orchestration = createOrchestration();
     String uuid = orchestration.getUuid();
     workflowService.deleteWorkflow(Orchestration.class, appId, uuid);
-    orchestration = workflowService.readOrchestration(appId, orchestration.getEnvironment().getUuid(), uuid);
+    orchestration = workflowService.readOrchestration(appId, uuid);
     assertThat(orchestration).isNull();
   }
 
@@ -431,14 +431,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                       .withAppId(appId)
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(getEnvironment())
                                       .withGraph(graph)
                                       .withServices(getServices())
                                       .build();
 
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    assertThat(orchestration).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
 
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();

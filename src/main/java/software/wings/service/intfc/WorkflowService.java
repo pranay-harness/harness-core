@@ -89,10 +89,9 @@ public interface WorkflowService {
    *
    * @param appId    the app id
    * @param originId the origin id
-   * @param name     the name
    * @return the state machine
    */
-  StateMachine readLatest(String appId, String originId, String name);
+  StateMachine readLatest(String appId, String originId);
 
   /**
    * List.
@@ -117,17 +116,16 @@ public interface WorkflowService {
    * @param pageRequest the page request
    * @return the page response
    */
-  PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest);
+  PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest, String envId);
 
   /**
    * Read orchestration.
    *
    * @param appId           the app id
-   * @param envId           the env id
    * @param orchestrationId the orchestration id
    * @return the orchestration
    */
-  Orchestration readOrchestration(@NotNull String appId, @NotNull String envId, @NotNull String orchestrationId);
+  Orchestration readOrchestration(@NotNull String appId, @NotNull String orchestrationId);
 
   /**
    * Update orchestration.
@@ -141,11 +139,9 @@ public interface WorkflowService {
    * Read latest simple workflow orchestration.
    *
    * @param appId the app id
-   * @param envId the env id
    * @return the orchestration
    */
-  Orchestration readLatestSimpleWorkflow(String appId, String envId);
-
+  Orchestration readLatestSimpleWorkflow(String appId);
   /**
    * Delete workflow by environment.
    *
@@ -175,4 +171,6 @@ public interface WorkflowService {
   WorkflowFailureStrategy update(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
   boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId);
+
+  StateMachine readForEnv(String appId, String envId, String orchestrationId);
 }

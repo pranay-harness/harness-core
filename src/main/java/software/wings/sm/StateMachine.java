@@ -51,6 +51,8 @@ public class StateMachine extends Base {
 
   @Indexed private String originId;
 
+  @Indexed private Integer originVersion;
+
   @Indexed private String name;
 
   private Graph graph;
@@ -77,10 +79,12 @@ public class StateMachine extends Base {
    * @param graph      the graph
    * @param stencilMap the stencil map
    */
-  public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
+  public StateMachine(
+      Workflow workflow, Integer originVersion, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
     logger.info("graph received for transform: {}", graph);
     setAppId(workflow.getAppId());
     this.originId = workflow.getUuid();
+    this.originVersion = originVersion;
     this.graph = graph;
     this.name = graph.getGraphName();
     try {
@@ -648,6 +652,14 @@ public class StateMachine extends Base {
     this.graph = graph;
   }
 
+  public Integer getOriginVersion() {
+    return originVersion;
+  }
+
+  public void setOriginVersion(Integer originVersion) {
+    this.originVersion = originVersion;
+  }
+
   /**
    * {@inheritDoc}
    */ /* (non-Javadoc)
@@ -659,15 +671,13 @@ public class StateMachine extends Base {
         + "]";
   }
 
-  /**
-   * The Class Builder.
-   */
-  public static final class Builder {
+  public static final class StateMachineBuilder {
     private String originId;
+    private Integer originVersion;
     private String name;
     private Graph graph;
-    private List<State> states = new ArrayList<>();
-    private List<Transition> transitions = new ArrayList<>();
+    private List<State> states = Lists.newArrayList();
+    private List<Transition> transitions = Lists.newArrayList();
     private String initialStateName;
     private String uuid;
     private String appId;
@@ -676,160 +686,81 @@ public class StateMachine extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
 
-    /**
-     * Do not instantiate Builder.
-     */
-    private Builder() {}
+    private StateMachineBuilder() {}
 
-    /**
-     * A state machine.
-     *
-     * @return the builder
-     */
-    public static Builder aStateMachine() {
-      return new Builder();
+    public static StateMachineBuilder aStateMachine() {
+      return new StateMachineBuilder();
     }
 
-    /**
-     * With origin id.
-     *
-     * @param originId the origin id
-     * @return the builder
-     */
-    public Builder withOriginId(String originId) {
+    public StateMachineBuilder withOriginId(String originId) {
       this.originId = originId;
       return this;
     }
 
-    /**
-     * With name.
-     *
-     * @param name the name
-     * @return the builder
-     */
-    public Builder withName(String name) {
+    public StateMachineBuilder withOriginVersion(Integer originVersion) {
+      this.originVersion = originVersion;
+      return this;
+    }
+
+    public StateMachineBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With graph.
-     *
-     * @param graph the graph
-     * @return the builder
-     */
-    public Builder withGraph(Graph graph) {
+    public StateMachineBuilder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
-    /**
-     * Add state.
-     *
-     * @param state the state
-     * @return the builder
-     */
-    public Builder addState(State state) {
+    public StateMachineBuilder addState(State state) {
       this.states.add(state);
       return this;
     }
 
-    /**
-     * Add transition.
-     *
-     * @param transition the transitions
-     * @return the builder
-     */
-    public Builder addTransition(Transition transition) {
+    public StateMachineBuilder addTransition(Transition transition) {
       this.transitions.add(transition);
       return this;
     }
 
-    /**
-     * With initial state name.
-     *
-     * @param initialStateName the initial state name
-     * @return the builder
-     */
-    public Builder withInitialStateName(String initialStateName) {
+    public StateMachineBuilder withInitialStateName(String initialStateName) {
       this.initialStateName = initialStateName;
       return this;
     }
 
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
-    public Builder withUuid(String uuid) {
+    public StateMachineBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
+    public StateMachineBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
+    public StateMachineBuilder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
-    public Builder withCreatedAt(long createdAt) {
+    public StateMachineBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+    public StateMachineBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public StateMachineBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the state machine
-     */
     public StateMachine build() {
       StateMachine stateMachine = new StateMachine();
       stateMachine.setOriginId(originId);
+      stateMachine.setOriginVersion(originVersion);
       stateMachine.setName(name);
       stateMachine.setGraph(graph);
       stateMachine.setStates(states);

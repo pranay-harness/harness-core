@@ -4,13 +4,14 @@
 
 package software.wings.beans;
 
+import com.google.common.collect.Maps;
+
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 /**
  * The Class Orchestration.
@@ -19,27 +20,11 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "orchestrations", noClassnameStored = true)
 public class Orchestration extends Workflow {
-  @Indexed @Reference(idOnly = true) @NotNull private Environment environment;
-
   private WorkflowType workflowType;
 
-  /**
-   * Gets environment.
-   *
-   * @return the environment
-   */
-  public Environment getEnvironment() {
-    return environment;
-  }
+  @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
 
-  /**
-   * Sets environment.
-   *
-   * @param environment the environment
-   */
-  public void setEnvironment(Environment environment) {
-    this.environment = environment;
-  }
+  private boolean targetToAllEnv;
 
   /**
    * Gets workflow type.
@@ -59,16 +44,31 @@ public class Orchestration extends Workflow {
     this.workflowType = workflowType;
   }
 
-  /**
-   * The type Builder.
-   */
+  public Map<String, EntityVersion> getEnvIdVersionMap() {
+    return envIdVersionMap;
+  }
+
+  public void setEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
+    this.envIdVersionMap = envIdVersionMap;
+  }
+
+  public boolean getTargetToAllEnv() {
+    return targetToAllEnv;
+  }
+
+  public void setTargetToAllEnv(boolean targetToAllEnv) {
+    this.targetToAllEnv = targetToAllEnv;
+  }
+
   public static final class Builder {
+    private WorkflowType workflowType;
+    private Integer defaultVersion;
+    private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+    private boolean targetToAllEnv;
     private String name;
     private String description;
     private List<Service> services = new ArrayList<>();
     private Graph graph;
-    private Environment environment;
-    private WorkflowType workflowType;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -78,180 +78,90 @@ public class Orchestration extends Workflow {
 
     private Builder() {}
 
-    /**
-     * An orchestration builder.
-     *
-     * @return the builder
-     */
     public static Builder anOrchestration() {
       return new Builder();
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    /**
-     * With services builder.
-     *
-     * @param services the services
-     * @return the builder
-     */
-    public Builder withServices(List<Service> services) {
-      this.services = services;
-      return this;
-    }
-
-    /**
-     * With description builder.
-     *
-     * @param description the description
-     * @return the builder
-     */
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    /**
-     * With graph builder.
-     *
-     * @param graph the graph
-     * @return the builder
-     */
-    public Builder withGraph(Graph graph) {
-      this.graph = graph;
-      return this;
-    }
-
-    /**
-     * With environment builder.
-     *
-     * @param environment the environment
-     * @return the builder
-     */
-    public Builder withEnvironment(Environment environment) {
-      this.environment = environment;
-      return this;
-    }
-
-    /**
-     * With workflow type builder.
-     *
-     * @param workflowType the workflow type
-     * @return the builder
-     */
     public Builder withWorkflowType(WorkflowType workflowType) {
       this.workflowType = workflowType;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withDefaultVersion(Integer defaultVersion) {
+      this.defaultVersion = defaultVersion;
+      return this;
+    }
+
+    public Builder withEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
+      this.envIdVersionMap = envIdVersionMap;
+      return this;
+    }
+
+    public Builder withTargetToAllEnv(boolean targetToAllEnv) {
+      this.targetToAllEnv = targetToAllEnv;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withServices(List<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    public Builder withGraph(Graph graph) {
+      this.graph = graph;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return anOrchestration()
-          .withName(name)
-          .withDescription(description)
-          .withGraph(graph)
-          .withEnvironment(environment)
-          .withWorkflowType(workflowType)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
-    }
-
-    /**
-     * Build orchestration.
-     *
-     * @return the orchestration
-     */
     public Orchestration build() {
       Orchestration orchestration = new Orchestration();
+      orchestration.setWorkflowType(workflowType);
+      orchestration.setDefaultVersion(defaultVersion);
+      orchestration.setEnvIdVersionMap(envIdVersionMap);
+      orchestration.setTargetToAllEnv(targetToAllEnv);
       orchestration.setName(name);
       orchestration.setDescription(description);
       orchestration.setServices(services);
       orchestration.setGraph(graph);
-      orchestration.setEnvironment(environment);
-      orchestration.setWorkflowType(workflowType);
       orchestration.setUuid(uuid);
       orchestration.setAppId(appId);
       orchestration.setCreatedBy(createdBy);

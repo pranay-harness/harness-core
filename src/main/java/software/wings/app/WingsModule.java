@@ -33,6 +33,7 @@ import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
+import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HistoryServiceImpl;
@@ -42,8 +43,8 @@ import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
-import software.wings.service.impl.NotificationSetupServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
+import software.wings.service.impl.NotificationSetupServiceImpl;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
@@ -74,6 +75,7 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HistoryService;
@@ -83,8 +85,8 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationDispatcherService;
-import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.RoleService;
@@ -170,6 +172,7 @@ public class WingsModule extends AbstractModule {
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
     bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);
     bind(CronScheduler.class);
+    bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()

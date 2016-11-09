@@ -706,7 +706,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    Orchestration workflow = workflowService.readLatestSimpleWorkflow(app.getUuid(), env.getUuid());
+    Orchestration workflow = workflowService.readLatestSimpleWorkflow(app.getUuid());
     assertThat(workflow).isNotNull();
     assertThat(workflow.getWorkflowType()).isEqualTo(WorkflowType.SIMPLE);
     assertThat(workflow.getGraph()).isNotNull();
@@ -1130,9 +1130,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1473,9 +1473,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(appId)
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1499,7 +1499,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     // 2nd orchestration
     Orchestration orchestration = createExecutableOrchestration(appId, env);
     PageRequest<Orchestration> pageRequest = new PageRequest<>();
-    PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest);
+    PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest, null);
 
     assertThat(res).isNotNull().hasSize(2);
   }
@@ -1543,9 +1543,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1656,9 +1656,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1822,9 +1822,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -1932,9 +1932,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -2078,9 +2078,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -2302,9 +2302,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                       .withAppId(app.getUuid())
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();

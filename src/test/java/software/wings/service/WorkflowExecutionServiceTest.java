@@ -127,9 +127,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                       .withAppId(appId)
                                       .withName("workflow1")
                                       .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
                                       .withGraph(graph)
                                       .withServices(services)
+                                      .withTargetToAllEnv(true)
                                       .build();
 
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);

@@ -303,7 +303,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    StateMachine stateMachine = workflowService.readLatest(appId, pipelineId, null);
+    StateMachine stateMachine = workflowService.readLatest(appId, pipelineId);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
@@ -351,7 +351,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId, null);
+    StateMachine stateMachine = workflowService.readForEnv(appId, envId, orchestrationId);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
@@ -595,10 +595,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
+    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId);
     String orchestrationId = workflow.getUuid();
 
-    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId, null);
+    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
@@ -709,7 +709,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             ErrorCodes.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
       }
 
-      StateMachine stateMachine = workflowService.readLatest(appId, executionArgs.getOrchestrationId(), null);
+      StateMachine stateMachine = workflowService.readForEnv(appId, envId, executionArgs.getOrchestrationId());
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }
@@ -1019,7 +1019,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     instanceStatusSummaries.forEach(instanceStatusSummary -> {
       ExecutionStatus status = instanceStatusSummary.getStatus();
-      StatusInstanceBreakdown statusInstanceBreakdown = statusInstanceBreakdownMap.get(status);
+      StatusInstanceBreakdown statusInstanceBreakdown =
+          statusInstanceBreakdownMap.getOrDefault(status, aStatusInstanceBreakdown().withStatus(status).build());
       statusInstanceBreakdown.setInstanceCount(statusInstanceBreakdown.getInstanceCount() + 1);
     });
     // TODO: interpret history

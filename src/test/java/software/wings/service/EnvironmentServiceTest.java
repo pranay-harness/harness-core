@@ -38,7 +38,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.EventType;
 import software.wings.beans.History;
 import software.wings.beans.Notification;
-import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
@@ -54,7 +53,6 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
-import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 
@@ -75,7 +73,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
-  @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -118,22 +115,11 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     serviceTemplatePageResponse.setResponse(asList(serviceTemplate));
     when(serviceTemplateService.list(serviceTemplatePageRequest, true)).thenReturn(serviceTemplatePageResponse);
 
-    Orchestration orchestration =
-        Orchestration.Builder.anOrchestration().withAppId(APP_ID).withEnvironment(environment).build();
-    PageRequest<Orchestration> orchestrationPageRequest = new PageRequest<>();
-    orchestrationPageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    orchestrationPageRequest.addFilter("environment", environment, SearchFilter.Operator.EQ);
-    PageResponse<Orchestration> orchestrationPageResponse = new PageResponse<>();
-    orchestrationPageResponse.setResponse(asList(orchestration));
-    when(workflowService.listOrchestration(orchestrationPageRequest)).thenReturn(orchestrationPageResponse);
-
     PageResponse<Environment> environments = environmentService.list(envPageRequest, true);
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
-    assertThat(environments.get(0).getOrchestrations()).containsAll(asList(orchestration));
     verify(serviceTemplateService).list(serviceTemplatePageRequest, true);
-    verify(workflowService).listOrchestration(orchestrationPageRequest);
   }
 
   /**
@@ -144,8 +130,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(serviceTemplateService.list(any(PageRequest.class), eq(true))).thenReturn(new PageResponse<>());
-
-    when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
@@ -175,7 +159,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Environment.class, environment);
     verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
-    verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     verify(historyService).createAsync(historyArgumentCaptor.capture());
     assertThat(historyArgumentCaptor.getValue())

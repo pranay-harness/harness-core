@@ -5,16 +5,12 @@
 package software.wings.resources;
 
 import io.swagger.annotations.Api;
-import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
 import software.wings.beans.Orchestration;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
@@ -41,25 +37,21 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 public class OrchestrationResource {
   private WorkflowService workflowService;
-  private EnvironmentService environmentService;
 
   /**
    * Instantiates a new orchestration resource.
    *
    * @param workflowService    the workflow service
-   * @param environmentService the environment service
    */
   @Inject
-  public OrchestrationResource(WorkflowService workflowService, EnvironmentService environmentService) {
+  public OrchestrationResource(WorkflowService workflowService) {
     this.workflowService = workflowService;
-    this.environmentService = environmentService;
   }
 
   /**
    * List.
    *
    * @param appId       the app id
-   * @param envId       the env id
    * @param pageRequest the page request
    * @return the rest response
    */
@@ -67,27 +59,21 @@ public class OrchestrationResource {
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    Environment env = environmentService.get(appId, envId, false);
-    if (env == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
-    }
-    pageRequest.addFilter("environment", env, SearchFilter.Operator.EQ);
-    return new RestResponse<>(workflowService.listOrchestration(pageRequest));
+    return new RestResponse<>(workflowService.listOrchestration(pageRequest, envId));
   }
 
   /**
    * Read.
    *
    * @param appId           the app id
-   * @param envId           the env id
    * @param orchestrationId the orchestration id
    * @return the rest response
    */
   @GET
   @Path("{orchestrationId}")
-  public RestResponse<Orchestration> read(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
-      @PathParam("orchestrationId") String orchestrationId) {
-    return new RestResponse<>(workflowService.readOrchestration(appId, envId, orchestrationId));
+  public RestResponse<Orchestration> read(
+      @QueryParam("appId") String appId, @PathParam("orchestrationId") String orchestrationId) {
+    return new RestResponse<>(workflowService.readOrchestration(appId, orchestrationId));
   }
 
   /**
@@ -102,11 +88,6 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> create(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, Orchestration orchestration) {
     orchestration.setAppId(appId);
-    Environment env = environmentService.get(appId, envId, false);
-    if (env == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
-    }
-    orchestration.setEnvironment(env);
     orchestration.setWorkflowType(WorkflowType.ORCHESTRATION);
     return new RestResponse<>(workflowService.createWorkflow(Orchestration.class, orchestration));
   }
@@ -115,22 +96,16 @@ public class OrchestrationResource {
    * Update.
    *
    * @param appId           the app id
-   * @param envId           the env id
    * @param orchestrationId the orchestration id
    * @param orchestration   the orchestration
    * @return the rest response
    */
   @PUT
   @Path("{orchestrationId}")
-  public RestResponse<Orchestration> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+  public RestResponse<Orchestration> update(@QueryParam("appId") String appId,
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
     orchestration.setUuid(orchestrationId);
-    Environment env = environmentService.get(appId, envId, false);
-    if (env == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
-    }
-    orchestration.setEnvironment(env);
     return new RestResponse<>(workflowService.updateOrchestration(orchestration));
   }
 
