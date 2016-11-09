@@ -146,7 +146,7 @@ public class HostServiceImpl implements HostService {
     Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
 
     if (tag != null && StringUtils.equals(tag.getUuid(), applicationHost.getConfigTagId())) {
-      return get(applicationHost.getAppId(), applicationHost.getEnvId(), tag.getUuid());
+      return get(applicationHost.getAppId(), applicationHost.getEnvId(), host.getUuid());
     }
 
     // Tag update -> should update host mapped in template
