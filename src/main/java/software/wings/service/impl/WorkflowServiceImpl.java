@@ -483,7 +483,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public StateMachine readForEnv(String appId, String envId, String orchestrationId) {
     Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
-    if (orchestration.getEnvIdVersionMap().containsKey(envId) || orchestration.getTargetToAllEnv()) {
+    if (orchestration != null
+        && (orchestration.getEnvIdVersionMap().containsKey(envId) || orchestration.getTargetToAllEnv())) {
       Integer version = Optional.ofNullable(orchestration.getEnvIdVersionMap().get(envId))
                             .orElse(anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
                             .getVersion();

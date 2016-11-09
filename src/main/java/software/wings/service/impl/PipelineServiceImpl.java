@@ -40,6 +40,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 
@@ -91,7 +92,7 @@ public class PipelineServiceImpl implements PipelineService {
                                        .withStateName(currState.getName())
                                        .withStatus(ExecutionStatus.QUEUED)
                                        .build());
-      } else if (stateExecutionInstance != null && APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
+      } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
         stageExecutionDataList.add(aPipelineStageExecution()
                                        .withStateType(stateExecutionInstance.getStateType())
                                        .withStatus(stateExecutionInstance.getStatus())
@@ -99,33 +100,26 @@ public class PipelineServiceImpl implements PipelineService {
                                        .withStartTs(stateExecutionInstance.getStartTs())
                                        .withEndTs(stateExecutionInstance.getEndTs())
                                        .build());
-      } else if (stateExecutionInstance != null && ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
+      } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
         PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                     .withStateType(currState.getStateType())
                                                     .withStateName(currState.getName())
                                                     .withStatus(stateExecutionInstance.getStatus())
+                                                    .withStartTs(stateExecutionInstance.getStartTs())
+                                                    .withEndTs(stateExecutionInstance.getEndTs())
                                                     .build();
 
-        EnvStateExecutionData envStateExecutionData =
-            (EnvStateExecutionData) stateExecutionInstance.getStateExecutionMap().get(currState.getName());
+        StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionMap().get(currState.getName());
 
-        if (envStateExecutionData != null) {
+        if (stateExecutionData != null && stateExecutionData instanceof EnvStateExecutionData) {
+          EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
           WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
               pipelineExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
-
-          stageExecution = aPipelineStageExecution()
-                               .withStateType(currState.getStateType())
-                               .withStateName(currState.getName())
-                               .withStatus(stateExecutionInstance.getStatus())
-                               .withWorkflowExecutions(asList(workflowExecution))
-                               .withStartTs(workflowExecution.getStartTs())
-                               .withEndTs(workflowExecution.getEndTs())
-                               .withStatus(workflowExecution.getStatus())
-                               .build();
+          stageExecution.setWorkflowExecutions(asList(workflowExecution));
         }
 
         stageExecutionDataList.add(stageExecution);
-      } else if (stateExecutionInstance != null && ARTIFACT.name().equals(stateExecutionInstance.getStateType())) {
+      } else if (ARTIFACT.name().equals(stateExecutionInstance.getStateType())) {
         // do nothing
       } else {
         throw new WingsException(
