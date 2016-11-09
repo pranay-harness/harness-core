@@ -97,6 +97,24 @@ public class SettingAttribute extends Base {
     this.accountId = accountId;
   }
 
+  /**
+   * Getter for property 'pluginSetting'.
+   *
+   * @return Value for property 'pluginSetting'.
+   */
+  public boolean isPluginSetting() {
+    return isPluginSetting;
+  }
+
+  /**
+   * Setter for property 'pluginSetting'.
+   *
+   * @param pluginSetting Value to set for property 'pluginSetting'.
+   */
+  public void setPluginSetting(boolean pluginSetting) {
+    isPluginSetting = pluginSetting;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(envId, accountId, name, value, isPluginSetting);
@@ -230,7 +248,7 @@ public class SettingAttribute extends Base {
       settingAttribute.setCreatedAt(createdAt);
       settingAttribute.setLastUpdatedBy(lastUpdatedBy);
       settingAttribute.setLastUpdatedAt(lastUpdatedAt);
-      settingAttribute.isPluginSetting = this.isPluginSetting;
+      settingAttribute.setPluginSetting(isPluginSetting);
       return settingAttribute;
     }
   }
