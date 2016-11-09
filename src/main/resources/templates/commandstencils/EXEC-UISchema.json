@@ -4,7 +4,7 @@
     "classNames": "__execCommandTextarea"
   },
   "tailPatterns": {
-    "classNames": "__execCommandTailPatterns"
+    "classNames": "__2Col"
   },
   "ui:order": ["commandPath", "commandString", "tailPatterns"]
 }
