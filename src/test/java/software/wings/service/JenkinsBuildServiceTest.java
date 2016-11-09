@@ -88,7 +88,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldFailValidationWhenArtifactSourceIdIsNull() throws IOException {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(null, APP_ID, new JenkinsConfig()));
+        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, null, new JenkinsConfig()));
   }
 
   /**
@@ -99,7 +99,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldFailValidationWhenArtifactSourceDoesNotExists() throws IOException {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds("NON_EXISTENT_ID", APP_ID, jenkinsConfig));
+        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, "NON_EXISTENT_ID", jenkinsConfig));
   }
 
   /**
@@ -111,7 +111,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Ignore // TODO:: remove ignore
   public void shouldFailValidationWhenJobDoesNotExists() throws IOException {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(ARTIFACT_STREAM_ID, APP_ID, jenkinsConfig));
+        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, jenkinsConfig));
   }
 
   /**
@@ -121,7 +121,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
-    assertThat(jenkinsBuildService.getBuilds(ARTIFACT_STREAM_ID, APP_ID, jenkinsConfig))
+    assertThat(jenkinsBuildService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, jenkinsConfig))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));

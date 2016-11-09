@@ -13,12 +13,12 @@ public interface JenkinsBuildService {
   /**
    * Gets builds.
    *
-   * @param artifactSourceId the artifact source id
    * @param appId            the app id
+   * @param artifactSourceId the artifact source id
    * @param jenkinsConfig    the jenkins config
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String artifactSourceId, String appId, JenkinsConfig jenkinsConfig);
+  List<BuildDetails> getBuilds(String appId, String artifactSourceId, JenkinsConfig jenkinsConfig);
 
   /**
    * Gets jobs.
@@ -36,4 +36,14 @@ public interface JenkinsBuildService {
    * @return the artifact paths
    */
   Set<String> getArtifactPaths(String jobName, JenkinsConfig jenkinsConfig);
+
+  /**
+   * Gets last successful build.
+   *
+   * @param appId            the app id
+   * @param artifactStreamId the artifact stream id
+   * @param jenkinsConfig    the jenkins config
+   * @return the last successful build
+   */
+  BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig);
 }

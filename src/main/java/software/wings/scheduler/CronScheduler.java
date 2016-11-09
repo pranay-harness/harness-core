@@ -1,12 +1,16 @@
 package software.wings.scheduler;
 
+import com.google.inject.Injector;
+
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
+import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
 
 import java.util.Properties;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
@@ -15,21 +19,21 @@ import javax.inject.Singleton;
 
 @Singleton
 public class CronScheduler {
-  private static Scheduler scheduler;
+  private Injector injector;
+  private Scheduler scheduler;
 
-  public CronScheduler() {
-    this(getDefaultProperties());
+  @Inject
+  public CronScheduler(Injector injector) {
+    this.injector = injector;
+    this.scheduler = createScheduler(getDefaultProperties());
   }
 
-  public CronScheduler(Properties properties) {
-    this.scheduler = createScheduler(properties);
-  }
-
-  public static Scheduler createScheduler(Properties properties) {
+  private Scheduler createScheduler(Properties properties) {
     try {
       StdSchedulerFactory factory = new StdSchedulerFactory();
       factory.initialize(properties);
       Scheduler scheduler = factory.getScheduler();
+      scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
       scheduler.start();
       return scheduler;
     } catch (SchedulerException e) {
@@ -37,7 +41,7 @@ public class CronScheduler {
     }
   }
 
-  private static Properties getDefaultProperties() {
+  private static Properties getDefaultProperties() { // TODO: read from properties file
     Properties props = new Properties();
     props.setProperty("org.quartz.jobStore.class", "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore");
     props.setProperty("org.quartz.jobStore.mongoUri", "mongodb://localhost:27017");

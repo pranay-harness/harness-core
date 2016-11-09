@@ -100,12 +100,5 @@ public interface ArtifactService {
    */
   void deleteByApplication(String appId);
 
-  /**
-   * Fetch latest artifact for artifact stream artifact.
-   *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
-   * @return the artifact
-   */
-  Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId);
+  void collectNewArtifactsFromArtifactStream(String appId, String streamId);
 }

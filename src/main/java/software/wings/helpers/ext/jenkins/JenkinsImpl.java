@@ -108,6 +108,25 @@ public class JenkinsImpl implements Jenkins {
         .collect(toList());
   }
 
+  @Override
+  public BuildDetails getLastSuccessfulBuildForJob(String jobName) throws IOException {
+    JobWithDetails jobWithDetails = getJob(jobName);
+    if (jobWithDetails == null) {
+      return null;
+    }
+
+    Build lastSuccessfulBuild = jobWithDetails.getLastSuccessfulBuild();
+
+    if (lastSuccessfulBuild == null) {
+      return null;
+    }
+    BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
+    return aBuildDetails()
+        .withNumber(buildWithDetails.getNumber())
+        .withRevision(extractRevision(buildWithDetails))
+        .build();
+  }
+
   /* (non-Javadoc)
    * @see software.wings.helpers.ext.jenkins.Jenkins#trigger(java.lang.String)
    */

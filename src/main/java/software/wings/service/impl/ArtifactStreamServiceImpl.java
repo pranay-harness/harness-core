@@ -72,8 +72,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public ArtifactStream get(String appId, String id) {
-    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, id);
+  public ArtifactStream get(String appId, String artifactStreamId) {
+    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
     populateStreamSpecificData(artifactStream);
     return artifactStream;
   }
@@ -98,9 +98,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public boolean delete(String appId, String id) {
-    return wingsPersistence.delete(
-        wingsPersistence.createQuery(ArtifactStream.class).field(ID_KEY).equal(id).field("appId").equal(appId));
+  public boolean delete(String appId, String artifactStreamId) {
+    return wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
+                                       .field(ID_KEY)
+                                       .equal(artifactStreamId)
+                                       .field("appId")
+                                       .equal(appId));
   }
 
   @Override

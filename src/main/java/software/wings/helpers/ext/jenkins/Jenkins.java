@@ -43,6 +43,23 @@ public interface Jenkins {
    */
   List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException;
 
+  /**
+   * Gets last successful build for job.
+   *
+   * @param jobName the job name
+   * @return the last successful build for job
+   * @throws IOException the io exception
+   */
+  BuildDetails getLastSuccessfulBuildForJob(String jobName) throws IOException;
+
+  /**
+   * Trigger queue reference.
+   *
+   * @param jobname    the jobname
+   * @param parameters the parameters
+   * @return the queue reference
+   * @throws IOException the io exception
+   */
   QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException;
 
   /**
@@ -106,5 +123,12 @@ public interface Jenkins {
   Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
       throws IOException, URISyntaxException;
 
+  /**
+   * Gets build.
+   *
+   * @param queueItem the queue item
+   * @return the build
+   * @throws IOException the io exception
+   */
   Build getBuild(QueueReference queueItem) throws IOException;
 }

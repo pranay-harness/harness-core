@@ -48,7 +48,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Inject private MainConfiguration configuration;
 
   @Override
-  public List<BuildDetails> getBuilds(String artifactStreamId, String appId, JenkinsConfig jenkinsConfig) {
+  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
     return getBuildDetails(artifactStreamId, appId, jenkinsConfig);
   }
 
@@ -96,5 +96,22 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       logger.error("Exception in generating artifact path suggestions for {}", ex);
     }
     return artifactPaths;
+  }
+
+  @Override
+  public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    notNullCheck("artifactStream", artifactStream);
+    equalCheck(artifactStream.getSourceType(), SourceType.JENKINS);
+
+    JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
+
+    Jenkins jenkins =
+        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
+    try {
+      return jenkins.getLastSuccessfulBuildForJob(jenkinsArtifactSource.getJobname());
+    } catch (IOException ex) {
+      throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Error in fetching build from jenkins server");
+    }
   }
 }

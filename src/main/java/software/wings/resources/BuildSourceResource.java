@@ -66,6 +66,6 @@ public class BuildSourceResource {
   @Path("builds")
   public RestResponse<List<BuildDetails>> getBuilds(@QueryParam("appId") String appId,
       @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getBuilds(artifactStreamId, appId, settingId));
+    return new RestResponse<>(buildSourceService.getBuilds(appId, artifactStreamId, settingId));
   }
 }
