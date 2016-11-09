@@ -1,3 +1,6 @@
 {
-  "ui:order": ["jenkinsConfigId", "jobName", "jobParameters", "filePathsForAssertion"]
+  "ui:order": ["jenkinsConfigId", "jobName", "jobParameters", "filePathsForAssertion"],
+  "custom:propsOrder:jsonSchema": {
+    "properties.filePathsForAssertion.items.properties": ["filePath", "assertion"]
+  }
 }
