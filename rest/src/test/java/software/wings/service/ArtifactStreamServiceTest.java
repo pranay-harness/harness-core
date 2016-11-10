@@ -1,22 +1,5 @@
 package software.wings.service;
 
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
-import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -40,8 +23,18 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import java.util.concurrent.ExecutorService;
+
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
+import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.utils.WingsTestConstants.*;
 
 /**
  * Created by anubhaw on 11/4/16.

@@ -8,10 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SchedulerConfig {
   @JsonProperty(defaultValue = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")
   private String jobstoreclass = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore";
-  @JsonProperty(defaultValue = "wings") private String jobstoreDbName = "wings";
-  @JsonProperty(defaultValue = "mongodb://localhost:27017") private String jobstoreDbUrl = "mongodb://localhost:27017";
-  @JsonProperty(defaultValue = "2") private String threadCount = "2";
+  @JsonProperty(defaultValue = "1") private String threadCount = "1";
   @JsonProperty(defaultValue = "10000") private String idleWaitTime = "10000";
+  @JsonProperty(defaultValue = "true") private String autoStart = "true";
 
   public String getJobstoreclass() {
     return jobstoreclass;
@@ -19,22 +18,6 @@ public class SchedulerConfig {
 
   public void setJobstoreclass(String jobstoreclass) {
     this.jobstoreclass = jobstoreclass;
-  }
-
-  public String getJobstoreDbName() {
-    return jobstoreDbName;
-  }
-
-  public void setJobstoreDbName(String jobstoreDbName) {
-    this.jobstoreDbName = jobstoreDbName;
-  }
-
-  public String getJobstoreDbUrl() {
-    return jobstoreDbUrl;
-  }
-
-  public void setJobstoreDbUrl(String jobstoreDbUrl) {
-    this.jobstoreDbUrl = jobstoreDbUrl;
   }
 
   public String getThreadCount() {
@@ -51,5 +34,13 @@ public class SchedulerConfig {
 
   public void setIdleWaitTime(String idleWaitTime) {
     this.idleWaitTime = idleWaitTime;
+  }
+
+  public String getAutoStart() {
+    return autoStart;
+  }
+
+  public void setAutoStart(String autoStart) {
+    this.autoStart = autoStart;
   }
 }

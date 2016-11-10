@@ -9,6 +9,7 @@ import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCodes;
+import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
 
 import javax.inject.Inject;
@@ -36,13 +37,19 @@ public class JobScheduler {
   public JobScheduler(Injector injector, MainConfiguration configuration) {
     this.injector = injector;
     this.configuration = configuration;
-    this.scheduler = createScheduler();
+    setupScheduler();
+  }
+
+  private void setupScheduler() { // TODO: remove this. find a way to disable cronScheduler in test
+    SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
+    if (schedulerConfig.getAutoStart().equals("true")) {
+      this.scheduler = createScheduler();
+    }
   }
 
   private Scheduler createScheduler() {
     try {
-      StdSchedulerFactory factory = new StdSchedulerFactory();
-      factory.initialize(getDefaultProperties());
+      StdSchedulerFactory factory = new StdSchedulerFactory(getDefaultProperties());
       Scheduler scheduler = factory.getScheduler();
       scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
       scheduler.start();
@@ -54,10 +61,12 @@ public class JobScheduler {
 
   private Properties getDefaultProperties() {
     SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
+    MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
     Properties props = new Properties();
     props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobstoreclass());
-    props.setProperty("org.quartz.jobStore.mongoUri", schedulerConfig.getJobstoreDbUrl());
-    props.setProperty("org.quartz.jobStore.dbName", schedulerConfig.getJobstoreDbName());
+    props.setProperty(
+        "org.quartz.jobStore.mongoUri", String.format("mongodb://%s:%s", mongoConfig.getHost(), mongoConfig.getPort()));
+    props.setProperty("org.quartz.jobStore.dbName", mongoConfig.getDb());
     props.setProperty("org.quartz.scheduler.idleWaitTime", schedulerConfig.getIdleWaitTime());
     props.setProperty("org.quartz.threadPool.threadCount", schedulerConfig.getThreadCount());
     props.setProperty("org.quartz.scheduler.skipUpdateCheck", "true");
