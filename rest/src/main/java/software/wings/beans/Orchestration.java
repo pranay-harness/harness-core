@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,8 @@ public class Orchestration extends Workflow {
   @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
 
   private boolean targetToAllEnv;
+
+  @Transient private boolean setAsDefault;
 
   /**
    * Gets workflow type.
@@ -58,6 +61,24 @@ public class Orchestration extends Workflow {
 
   public void setTargetToAllEnv(boolean targetToAllEnv) {
     this.targetToAllEnv = targetToAllEnv;
+  }
+
+  /**
+   * Getter for property 'setAsDefault'.
+   *
+   * @return Value for property 'setAsDefault'.
+   */
+  public boolean isSetAsDefault() {
+    return setAsDefault;
+  }
+
+  /**
+   * Setter for property 'setAsDefault'.
+   *
+   * @param setAsDefault Value to set for property 'setAsDefault'.
+   */
+  public void setSetAsDefault(boolean setAsDefault) {
+    this.setAsDefault = setAsDefault;
   }
 
   public static final class Builder {

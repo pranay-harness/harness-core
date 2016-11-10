@@ -38,7 +38,7 @@ public interface WorkflowService {
    * @param workflow the workflow
    * @return the t
    */
-  <T extends Workflow> T updateWorkflow(@Valid T workflow);
+  <T extends Workflow> T updateWorkflow(@Valid T workflow, Integer version);
 
   /**
    * Delete workflow.

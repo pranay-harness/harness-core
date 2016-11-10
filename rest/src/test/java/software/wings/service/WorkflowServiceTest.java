@@ -361,6 +361,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     orchestration.setName("orchestration2");
     orchestration.setDescription(null);
+    orchestration.setSetAsDefault(true);
     Graph graph = orchestration.getGraph();
 
     graph.getNodes().add(aNode().withId("n5").withName("http").withX(350).withType(StateType.HTTP.name()).build());
