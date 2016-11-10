@@ -216,10 +216,10 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if (lastSuccessfulBuild != null) {
       Artifact lastCollectedArtifact = fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-      int buildNo = lastCollectedArtifact.getMetadata().get("buildNo") != null
+      int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
           ? Integer.parseInt(lastCollectedArtifact.getMetadata().get("buildNo"))
           : 0;
-      if (lastCollectedArtifact == null || lastSuccessfulBuild.getNumber() > buildNo) {
+      if (lastSuccessfulBuild.getNumber() > buildNo) {
         logger.info(
             "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
             buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);

@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
@@ -14,6 +14,11 @@ import net.redhogs.cronparser.Options;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -25,6 +30,8 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.ArtifactCollectionJob;
+import software.wings.scheduler.CronScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
@@ -32,8 +39,9 @@ import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
-import java.util.Map;
 import java.text.ParseException;
+import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -49,7 +57,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
-  private final Logger logger = LoggerFactory.getLogger(ArtifactStreamService.class);
+  @Inject private CronScheduler cronScheduler;
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -82,7 +92,37 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
     String id = wingsPersistence.save(artifactStream);
+    if (artifactStream.isAutoDownload()) {
+      addCronForAutoArtifactCollection(artifactStream);
+    }
     return get(artifactStream.getAppId(), id);
+  }
+
+  private void addCronForAutoArtifactCollection(ArtifactStream artifactStream) {
+    JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
+                        .withIdentity(artifactStream.getUuid())
+                        .usingJobData("artifactStreamId", artifactStream.getUuid())
+                        .usingJobData("appId", artifactStream.getAppId())
+                        .build();
+
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity(artifactStream.getUuid())
+            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60 * 5).repeatForever())
+            .build();
+
+    Date date = cronScheduler.scheduleJob(job, trigger);
+    if (date != null) {
+      wingsPersistence.updateField(
+          ArtifactStream.class, artifactStream.getUuid(), "autoDownloadJobName", job.getKey().getName());
+    }
+  }
+
+  private void deleteCronForAutoArtifactCollection(ArtifactStream artifactStream) {
+    boolean deleted = cronScheduler.deleteJob(artifactStream.getAutoDownloadJobName());
+    if (deleted) {
+      wingsPersistence.updateField(ArtifactStream.class, artifactStream.getUuid(), "autoDownloadJobName", "");
+    }
   }
 
   @Override
@@ -93,17 +133,25 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
-    artifactStream.setUuid(savedArtifactStream.getUuid());
-    return create(artifactStream);
+    artifactStream = create(artifactStream);
+    if (!artifactStream.isAutoDownload()) {
+      deleteCronForAutoArtifactCollection(savedArtifactStream);
+    }
+    return artifactStream;
   }
 
   @Override
   public boolean delete(String appId, String artifactStreamId) {
-    return wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
-                                       .field(ID_KEY)
-                                       .equal(artifactStreamId)
-                                       .field("appId")
-                                       .equal(appId));
+    ArtifactStream artifactStream = get(appId, artifactStreamId);
+    boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
+                                                  .field(ID_KEY)
+                                                  .equal(artifactStreamId)
+                                                  .field("appId")
+                                                  .equal(appId));
+    if (deleted) {
+      deleteCronForAutoArtifactCollection(artifactStream);
+    }
+    return deleted;
   }
 
   @Override

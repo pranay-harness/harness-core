@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * ArtifactStream bean class.
@@ -23,7 +25,7 @@ import java.util.Set;
 public abstract class ArtifactStream extends Base {
   @NotEmpty private String sourceName;
 
-  private SourceType sourceType;
+  @NotNull private SourceType sourceType;
 
   private boolean autoDownload = false;
 
@@ -32,6 +34,8 @@ public abstract class ArtifactStream extends Base {
   private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
   @Transient private Artifact lastArtifact;
+
+  @JsonIgnore private String autoDownloadJobName;
 
   /**
    * Instantiates a new lastArtifact source.
@@ -183,6 +187,24 @@ public abstract class ArtifactStream extends Base {
         && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
         && Objects.equals(this.streamActions, other.streamActions)
         && Objects.equals(this.lastArtifact, other.lastArtifact);
+  }
+
+  /**
+   * Gets auto download job key.
+   *
+   * @return the auto download job key
+   */
+  public String getAutoDownloadJobName() {
+    return autoDownloadJobName;
+  }
+
+  /**
+   * Sets auto download job key.
+   *
+   * @param autoDownloadJobName the auto download job key
+   */
+  public void setAutoDownloadJobName(String autoDownloadJobName) {
+    this.autoDownloadJobName = autoDownloadJobName;
   }
 
   /**

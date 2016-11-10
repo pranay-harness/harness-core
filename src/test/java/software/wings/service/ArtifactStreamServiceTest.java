@@ -35,6 +35,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.CronScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -51,6 +52,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private ExecutorService executorService;
   @Mock private Query<ArtifactStream> query;
   @Mock private UpdateOperations<ArtifactStream> updateOperations;
+  @Mock private CronScheduler cronScheduler;
   @Mock private FieldEnd end;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;

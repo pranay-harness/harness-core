@@ -15,7 +15,6 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import software.wings.WingsBaseTest;
 
-import java.util.Properties;
 import javax.inject.Inject;
 
 /**
@@ -53,7 +52,7 @@ public class CronSchedulerTest extends WingsBaseTest {
   public void shouldCreateScheduler() throws SchedulerException, InterruptedException {
     // define the job and tie it to our HelloJob class
     JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
-                        .withIdentity("myJob", "group1")
+                        .withIdentity("myJob")
                         .usingJobData("artifactStreamId", "AnKfDNKdReaQoDVLJbeWpQ")
                         .usingJobData("appId", "vwWDnKjhSzml8GuBPQq-6Q")
                         .build();
@@ -80,19 +79,5 @@ public class CronSchedulerTest extends WingsBaseTest {
     cronScheduler.getScheduler().resumeAll();
     Thread.sleep(100000);
     System.out.println("Completed");
-  }
-
-  private static Properties createProps() {
-    Properties props = new Properties();
-    props.setProperty("org.quartz.jobStore.class", "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore");
-    props.setProperty("org.quartz.jobStore.mongoUri", "mongodb://localhost:27017");
-    //;; Often check for triggers to speed up collisions:
-    props.setProperty("org.quartz.scheduler.idleWaitTime", "1000");
-    props.setProperty("org.quartz.jobStore.dbName", "wings");
-    props.setProperty("org.quartz.threadPool.threadCount", "1");
-    props.setProperty("org.quartz.scheduler.skipUpdateCheck", "true");
-    props.setProperty("org.quartz.plugin.triggHistory.class", "org.quartz.plugins.history.LoggingTriggerHistoryPlugin");
-    props.setProperty("org.quartz.plugin.jobHistory.class", "org.quartz.plugins.history.LoggingJobHistoryPlugin");
-    return props;
   }
 }
