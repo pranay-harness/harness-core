@@ -236,10 +236,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
 
   @Override
-  public <T extends Workflow> T updateWorkflow(T workflow) {
+  public <T extends Workflow> T updateWorkflow(T workflow, Integer version) {
     Graph graph = workflow.getGraph();
     if (graph != null) {
-      StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(), graph, stencilMap());
+      StateMachine stateMachine = new StateMachine(workflow, version, graph, stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       workflow.setGraph(stateMachine.getGraph());
     }
@@ -269,7 +269,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ops);
 
     Graph graph = pipeline.getGraph();
-    pipeline = updateWorkflow(pipeline);
+    pipeline = updateWorkflow(pipeline, pipeline.getDefaultVersion());
     pipeline.setGraph(graph);
     return pipeline;
   }
@@ -376,14 +376,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Orchestration updateOrchestration(Orchestration orchestration) {
-    EntityVersion entityVersion = entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW,
-        orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED);
-    orchestration.setDefaultVersion(entityVersion.getVersion());
-
     UpdateOperations<Orchestration> ops = wingsPersistence.createUpdateOperations(Orchestration.class);
     setUnset(ops, "description", orchestration.getDescription());
     setUnset(ops, "name", orchestration.getName());
-    setUnset(ops, "defaultVersion", orchestration.getDefaultVersion());
+
+    EntityVersion entityVersion = entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW,
+        orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED);
+    if (orchestration.isSetAsDefault()) {
+      orchestration.setDefaultVersion(entityVersion.getVersion());
+      setUnset(ops, "defaultVersion", orchestration.getDefaultVersion());
+    }
+
     wingsPersistence.update(wingsPersistence.createQuery(Orchestration.class)
                                 .field("appId")
                                 .equal(orchestration.getAppId())
@@ -391,7 +394,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .equal(orchestration.getUuid()),
         ops);
 
-    orchestration = updateWorkflow(orchestration);
+    orchestration = updateWorkflow(orchestration, entityVersion.getVersion());
     return orchestration;
   }
 
