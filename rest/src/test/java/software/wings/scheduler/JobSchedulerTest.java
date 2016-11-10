@@ -20,6 +20,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 10/21/16.
  */
+@Ignore
 public class JobSchedulerTest extends WingsBaseTest {
   @Inject private JobScheduler jobScheduler;
 
