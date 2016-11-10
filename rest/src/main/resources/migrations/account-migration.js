@@ -8,7 +8,7 @@ if(db.account.count() == 0) {
   db.settingAttributes.updateMany({}, { "$set": { "accountId": "kmpySmUISimoRrJL6NL73w"}});
   db.notifications.updateMany({}, { "$set": { "accountId": "kmpySmUISimoRrJL6NL73w"}});
   db.roles.updateMany({}, { "$set": { "accountId": "kmpySmUISimoRrJL6NL73w"}});
-  db.users.updateMany({}, { "$set": { "accountId": "kmpySmUISimoRrJL6NL73w"}});
+  db.users.updateMany({}, { "$set": { "accounts": [ "kmpySmUISimoRrJL6NL73w"]}});
   db.appContainers.updateMany({}, { "$set": { "accountId": "kmpySmUISimoRrJL6NL73w"}});
   db.settingAttributes.updateMany({ name: { "$in": ["Wings Jenkins", "SMTP", "Splunk", "AppDynamics"] }}, { "$set": { "isPluginSetting": true }});
 }
