@@ -16,9 +16,12 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
+
+import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +55,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.inject.Inject;
 
@@ -120,6 +124,9 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(savedApp);
     when(notificationService.list(any(PageRequest.class))).thenReturn(new PageResponse<Notification>());
+    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name()))
+        .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
+
     appService.save(app);
     verify(wingsPersistence).saveAndGet(Application.class, app);
     verify(settingsService).createDefaultSettings(APP_ID, "ACCOUNT_ID");

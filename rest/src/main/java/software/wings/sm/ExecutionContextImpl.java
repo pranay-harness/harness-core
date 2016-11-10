@@ -331,10 +331,10 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   @Override
-  public SettingValue getSettingValue(String name, String type) {
+  public SettingValue getSettingValue(String id, String type) {
     return settingsService.getSettingAttributesByType(getEnv().getAppId(), getEnv().getUuid(), type)
         .stream()
-        .filter(settingAttribute -> StringUtils.equals(settingAttribute.getName(), name))
+        .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), id))
         .findFirst()
         .map(settingAttribute -> settingAttribute.getValue())
         .orElse(null);

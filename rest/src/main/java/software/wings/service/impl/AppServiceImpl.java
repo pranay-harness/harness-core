@@ -49,6 +49,7 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
 
@@ -201,6 +202,10 @@ public class AppServiceImpl implements AppService {
                         .withX(1050)
                         .withY(150)
                         .addProperty("applicationName", "MyApp")
+                        .addProperty("appDynamicsConfigId",
+                            settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name())
+                                .get(0)
+                                .getUuid())
                         .addProperty("metricPath",
                             "Overall Application Performance|MyTier|Individual Nodes|Tomcat@${host.hostName}|Average Response Time (ms)")
                         .addProperty("assertion", "${xpath('//metric-value/value/text()')} < 100")

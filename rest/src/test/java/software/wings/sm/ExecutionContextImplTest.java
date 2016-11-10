@@ -1,10 +1,16 @@
 package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.ServiceElement;
@@ -15,6 +21,8 @@ import software.wings.beans.Environment.Builder;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.inject.Inject;
 
@@ -36,6 +44,15 @@ public class ExecutionContextImplTest extends WingsBaseTest {
    * The Environment service.
    */
   @Inject EnvironmentService environmentService;
+
+  @Mock SettingsService settingsService;
+
+  @Before
+  public void setup() {
+    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name()))
+        .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
+    on(appService).set("settingsService", settingsService);
+  }
 
   /**
    * Should fetch context element.

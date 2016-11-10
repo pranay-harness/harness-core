@@ -3,7 +3,9 @@ package software.wings.sm.states;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.codec.binary.Base64;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
@@ -11,9 +13,11 @@ import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.stencils.EnumData;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -23,11 +27,12 @@ import java.nio.charset.StandardCharsets;
  * Created by anubhaw on 8/4/16.
  */
 public class AppDynamicsState extends HttpState {
-  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
-  /*@Transient
-  @Inject
-  private SettingsService settingsService;*/
-  @Attributes(required = true, title = "Config") private String configName;
+  @Transient private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
+
+  @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
+  @Attributes(required = true, title = "AppDynamics Server")
+  private String appDynamicsConfigId;
+
   @Attributes(required = true, title = "Application Name") private String applicationName;
   @Attributes(required = true, title = "Metric Path",
       description = "Overall Application Performance|Average Response Time (ms)")
@@ -47,7 +52,7 @@ public class AppDynamicsState extends HttpState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     AppDynamicsConfig appdConfig =
-        (AppDynamicsConfig) context.getSettingValue(configName, StateType.APP_DYNAMICS.name());
+        (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
 
     String controllerUrl = appdConfig.getControllerUrl();
 
@@ -141,5 +146,47 @@ public class AppDynamicsState extends HttpState {
    */
   public void setTimeDuration(String timeDuration) {
     this.timeDuration = timeDuration;
+  }
+
+  /**
+   * Getter for property 'appDynamicsConfigId'.
+   *
+   * @return Value for property 'appDynamicsConfigId'.
+   */
+  public String getAppDynamicsConfigId() {
+    return appDynamicsConfigId;
+  }
+
+  /**
+   * Setter for property 'appDynamicsConfigId'.
+   *
+   * @param appDynamicsConfigId Value to set for property 'appDynamicsConfigId'.
+   */
+  public void setAppDynamicsConfigId(String appDynamicsConfigId) {
+    this.appDynamicsConfigId = appDynamicsConfigId;
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getBody() {
+    return super.getBody();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getMethod() {
+    return super.getMethod();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getHeader() {
+    return super.getHeader();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getUrl() {
+    return super.getUrl();
   }
 }
