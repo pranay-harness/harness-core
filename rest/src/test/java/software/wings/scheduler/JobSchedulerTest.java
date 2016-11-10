@@ -20,16 +20,16 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 10/21/16.
  */
-public class CronSchedulerTest extends WingsBaseTest {
-  @Inject private CronScheduler cronScheduler;
+public class JobSchedulerTest extends WingsBaseTest {
+  @Inject private JobScheduler jobScheduler;
 
   @Before
   public void setUp() throws Exception {
-    cronScheduler.getScheduler().getJobGroupNames().forEach(groupName -> {
+    jobScheduler.getScheduler().getJobGroupNames().forEach(groupName -> {
       try {
-        cronScheduler.getScheduler().getJobKeys(GroupMatcher.groupEquals(groupName)).forEach(jobKey -> {
+        jobScheduler.getScheduler().getJobKeys(GroupMatcher.groupEquals(groupName)).forEach(jobKey -> {
           try {
-            cronScheduler.getScheduler().deleteJob(jobKey);
+            jobScheduler.getScheduler().deleteJob(jobKey);
           } catch (SchedulerException e) {
             e.printStackTrace();
           }
@@ -68,7 +68,7 @@ public class CronSchedulerTest extends WingsBaseTest {
     Trigger trigger2 = TriggerBuilder.newTrigger().withIdentity("a", "v").startNow().build();
 
     // Tell quartz to schedule the job using our trigger
-    cronScheduler.getScheduler().scheduleJob(job, trigger2);
+    jobScheduler.getScheduler().scheduleJob(job, trigger2);
     Thread.sleep(1000000);
     System.out.println("Completed");
   }
@@ -76,7 +76,7 @@ public class CronSchedulerTest extends WingsBaseTest {
   @Test
   @Ignore
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
-    cronScheduler.getScheduler().resumeAll();
+    jobScheduler.getScheduler().resumeAll();
     Thread.sleep(100000);
     System.out.println("Completed");
   }

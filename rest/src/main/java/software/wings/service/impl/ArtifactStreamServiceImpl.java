@@ -31,7 +31,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ArtifactCollectionJob;
-import software.wings.scheduler.CronScheduler;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.DataProvider;
@@ -57,7 +57,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
-  @Inject private CronScheduler cronScheduler;
+  @Inject private JobScheduler jobScheduler;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -111,7 +111,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60 * 5).repeatForever())
             .build();
 
-    Date date = cronScheduler.scheduleJob(job, trigger);
+    Date date = jobScheduler.scheduleJob(job, trigger);
     if (date != null) {
       wingsPersistence.updateField(
           ArtifactStream.class, artifactStream.getUuid(), "autoDownloadJobName", job.getKey().getName());
@@ -119,7 +119,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void deleteCronForAutoArtifactCollection(ArtifactStream artifactStream) {
-    boolean deleted = cronScheduler.deleteJob(artifactStream.getAutoDownloadJobName());
+    boolean deleted = jobScheduler.deleteJob(artifactStream.getAutoDownloadJobName());
     if (deleted) {
       wingsPersistence.updateField(ArtifactStream.class, artifactStream.getUuid(), "autoDownloadJobName", "");
     }

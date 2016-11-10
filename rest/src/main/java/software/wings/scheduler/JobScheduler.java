@@ -20,7 +20,7 @@ import java.util.Properties;
  * Created by anubhaw on 10/21/16.
  */
 @Singleton
-public class CronScheduler {
+public class JobScheduler {
   private Injector injector;
   private Scheduler scheduler;
   private MainConfiguration configuration;
@@ -33,7 +33,7 @@ public class CronScheduler {
    * @param configuration the configuration
    */
   @Inject
-  public CronScheduler(Injector injector, MainConfiguration configuration) {
+  public JobScheduler(Injector injector, MainConfiguration configuration) {
     this.injector = injector;
     this.configuration = configuration;
     this.scheduler = createScheduler();

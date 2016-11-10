@@ -19,7 +19,7 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.scheduler.CronScheduler;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
 import software.wings.service.impl.AppContainerServiceImpl;
@@ -173,7 +173,7 @@ public class WingsModule extends AbstractModule {
     bind(PipelineService.class).to(PipelineServiceImpl.class);
     bind(NotificationSetupService.class).to(NotificationSetupServiceImpl.class);
     bind(NotificationDispatcherService.class).to(NotificationDispatcherServiceImpl.class);
-    bind(CronScheduler.class);
+    bind(JobScheduler.class);
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
     bind(PluginService.class).to(PluginServiceImpl.class);
 
