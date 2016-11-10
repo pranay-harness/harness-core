@@ -1,0 +1,72 @@
+package software.wings.service;
+
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.Collaboration;
+import static software.wings.beans.PluginCategory.Verification;
+
+import org.junit.Test;
+import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SplunkConfig;
+import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.impl.PluginServiceImpl;
+import software.wings.service.intfc.PluginService;
+
+/**
+ * Created by peeyushaggarwal on 10/21/16.
+ */
+public class PluginServiceTest {
+  private PluginService pluginService = new PluginServiceImpl();
+
+  @Test
+  public void shouldGetInstalledPlugins() throws Exception {
+    String accountId = "ACCOUNT_ID";
+
+    assertThat(pluginService.getInstalledPlugins(accountId))
+        .hasSize(4)
+        .containsExactly(anAccountPlugin()
+                             .withSettingClass(JenkinsConfig.class)
+                             .withAccountId(accountId)
+                             .withIsEnabled(true)
+                             .withDisplayName("Jenkins")
+                             .withType("JENKINS")
+                             .withPluginCategories(asList(Verification, Artifact))
+                             .build(),
+            anAccountPlugin()
+                .withSettingClass(AppDynamicsConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("AppDynamics")
+                .withType("APP_DYNAMICS")
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(SplunkConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Splunk")
+                .withType("SPLUNK")
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(SmtpConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("SMTP")
+                .withType("SMTP")
+                .withPluginCategories(asList(Collaboration))
+                .build());
+  }
+
+  @Test
+  public void shouldGetPluginSettingSchema() throws Exception {
+    String accountId = "ACCOUNT_ID";
+
+    assertThat(pluginService.getPluginSettingSchema(accountId))
+        .hasSize(4)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "SMTP", "SPLUNK");
+  }
+}

@@ -1,0 +1,52 @@
+package software.wings.resources;
+
+import static software.wings.beans.RestResponse.Builder.aRestResponse;
+
+import com.google.inject.Inject;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.annotations.Api;
+import software.wings.beans.AccountPlugin;
+import software.wings.beans.RestResponse;
+import software.wings.service.intfc.PluginService;
+
+import java.util.List;
+import java.util.Map;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+/**
+ * Created by peeyushaggarwal on 10/20/16.
+ */
+@Api("plugins")
+@Path("/plugins")
+@Timed
+@ExceptionMetered
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+public class PluginResource {
+  private PluginService pluginService;
+
+  @Inject
+  public PluginResource(PluginService pluginService) {
+    this.pluginService = pluginService;
+  }
+
+  @GET
+  @Path("{accountId}/installed")
+  public RestResponse<List<AccountPlugin>> installedPlugins(@PathParam("accountId") String accountId) {
+    return aRestResponse().withResource(pluginService.getInstalledPlugins(accountId)).build();
+  }
+
+  @GET
+  @Path("{accountId}/installed/settingschema")
+  public RestResponse<Map<String, JsonNode>> installedPluginSettingSchema(@PathParam("accountId") String accountId) {
+    return aRestResponse().withResource(pluginService.getPluginSettingSchema(accountId)).build();
+  }
+}

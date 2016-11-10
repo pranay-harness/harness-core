@@ -8,6 +8,13 @@
     <groupId>software.wings</groupId>
     <artifactId>portal</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>rest</module>
+        <module>tools</module>
+        <module>api</module>
+    </modules>
 
     <scm>
         <url>https://github.com/wings-software/wings</url>
@@ -64,590 +71,560 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.mortbay.jetty.alpn</groupId>
+                <artifactId>alpn-boot</artifactId>
+                <version>${alpnboot.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.newrelic.agent.java</groupId>
+                <artifactId>newrelic-agent</artifactId>
+                <version>${newrelic.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.atmosphere</groupId>
+                <artifactId>atmosphere-runtime</artifactId>
+                <version>${atmosphere-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.atmosphere</groupId>
+                <artifactId>atmosphere-hazelcast</artifactId>
+                <version>${extensions-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.hazelcast</groupId>
+                        <artifactId>hazelcast</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty.websocket</groupId>
+                <artifactId>websocket-server</artifactId>
+                <version>9.3.9.v20160517</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm-commons</artifactId>
+                <version>5.0.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongo-java-driver</artifactId>
+                <version>3.2.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mongodb.morphia</groupId>
+                <artifactId>morphia</artifactId>
+                <version>1.2.1</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>mongo-java-driver</artifactId>
+                        <groupId>org.mongodb</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mongodb.morphia</groupId>
+                <artifactId>morphia-logging-slf4j</artifactId>
+                <version>1.2.0</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>morphia</artifactId>
+                        <groupId>org.mongodb.morphia</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>ru.vyarus</groupId>
+                <artifactId>guice-validator</artifactId>
+                <version>1.2.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.inject</groupId>
+                        <artifactId>guice</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-csv</artifactId>
+                <version>1.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>0.1.53</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>4.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-assistedinject</artifactId>
+                <version>4.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-multibindings</artifactId>
+                <version>4.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.reflections</groupId>
+                <artifactId>reflections</artifactId>
+                <version>0.9.10</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.javassist</groupId>
+                        <artifactId>javassist</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.offbytwo.jenkins</groupId>
+                <artifactId>jenkins-client</artifactId>
+                <version>0.3.4</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-lang</groupId>
+                        <artifactId>commons-lang</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>xml-apis</groupId>
+                        <artifactId>xml-apis</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>1.4.01</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>2.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mindrot</groupId>
+                <artifactId>jbcrypt</artifactId>
+                <version>0.3m</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ro.fortsoft.pf4j</groupId>
+                <artifactId>pf4j</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ro.fortsoft.pf4j</groupId>
+                <artifactId>pf4j-update</artifactId>
+                <version>0.2.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.deftlabs</groupId>
+                <artifactId>mongo-java-distributed-lock</artifactId>
+                <version>0.1.7</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jooq</groupId>
+                <artifactId>joor</artifactId>
+                <version>0.9.5</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.ifesdjeen</groupId>
+                <artifactId>hashed-wheel-timer-core</artifactId>
+                <version>1.0.0-RC1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-jexl3</artifactId>
+                <version>3.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.jayway.jsonpath</groupId>
+                <artifactId>json-path</artifactId>
+                <version>2.2.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.modelmapper</groupId>
+                <artifactId>modelmapper</artifactId>
+                <version>0.7.5</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-email</artifactId>
+                <version>1.4</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.activation</groupId>
+                        <artifactId>activation</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.activation</groupId>
+                <artifactId>activation</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.smoketurner</groupId>
+                <artifactId>dropwizard-swagger</artifactId>
+                <version>1.0.0-1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.reinert</groupId>
+                <artifactId>jjschema</artifactId>
+                <version>0.9-SNAPSHOT</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>jsr311-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>fluent-hc</artifactId>
+                <version>4.5.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.dropwizard-bundles</groupId>
+                <artifactId>dropwizard-configurable-assets-bundle</artifactId>
+                <version>1.0.0-rc2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.dirkraft.dropwizard-file-assets</groupId>
+                <artifactId>dropwizard-file-assets</artifactId>
+                <version>0.0.2</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.palantir.versioninfo</groupId>
+                <artifactId>dropwizard-version-info</artifactId>
+                <version>0.6.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>de.danielbechler</groupId>
+                <artifactId>java-object-diff</artifactId>
+                <version>0.94</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.cache</groupId>
+                <artifactId>cache-api</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jsr107.ri</groupId>
+                <artifactId>cache-annotations-ri-guice</artifactId>
+                <version>1.0.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.inject</groupId>
+                        <artifactId>guice</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.hazelcast</groupId>
+                <artifactId>hazelcast</artifactId>
+                <version>3.4</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-elasticloadbalancing</artifactId>
+                <version>1.11.33</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-ec2</artifactId>
+                <version>1.11.33</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Test Dependencies -->
+            <dependency>
+                <groupId>io.dropwizard</groupId>
+                <artifactId>dropwizard-testing</artifactId>
+                <version>${dropwizard.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.assertj</groupId>
+                        <artifactId>assertj-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.mockito</groupId>
+                        <artifactId>mockito-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>1.10.19</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-core</artifactId>
+                <version>1.2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.web</groupId>
+                <artifactId>javax.el</artifactId>
+                <version>2.2.6</version>
+            </dependency>
+
+            <dependency>
+                <groupId>de.bwaldvogel</groupId>
+                <artifactId>mongo-java-server</artifactId>
+                <version>1.6.0</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>3.4.0</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>pl.pragmatists</groupId>
+                <artifactId>JUnitParams</artifactId>
+                <version>1.0.4</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+                <artifactId>jersey-test-framework-provider-inmemory</artifactId>
+                <version>2.23.1</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+                <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+                <version>2.23.1</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>net.javacrumbs.json-unit</groupId>
+                <artifactId>json-unit-fluent</artifactId>
+                <version>1.12.1</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>de.flapdoodle.embed</groupId>
+                <artifactId>de.flapdoodle.embed.mongo</artifactId>
+                <version>1.50.3</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.tomakehurst</groupId>
+                <artifactId>wiremock</artifactId>
+                <version>1.57</version>
+
+                <!-- Include everything below here if you have dependency conflicts -->
+                <classifier>standalone</classifier>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.mortbay.jetty</groupId>
+                        <artifactId>jetty</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.skyscreamer</groupId>
+                        <artifactId>jsonassert</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>xmlunit</groupId>
+                        <artifactId>xmlunit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.jayway.jsonpath</groupId>
+                        <artifactId>json-path</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>net.sf.jopt-simple</groupId>
+                        <artifactId>jopt-simple</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.openpojo</groupId>
+                <artifactId>openpojo</artifactId>
+                <version>0.8.3</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava-testlib</artifactId>
+                <version>18.0</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.icegreen</groupId>
+                <artifactId>greenmail</artifactId>
+                <version>1.5.0</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.mail</groupId>
+                        <artifactId>javax.mail</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-library</artifactId>
+                <version>1.3</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.shazam</groupId>
+                <artifactId>shazamcrest</artifactId>
+                <version>0.11</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk16</artifactId>
+                <version>1.46</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.10</version>
+            </dependency>
+            <dependency>
+                <groupId>org.quartz-scheduler</groupId>
+                <artifactId>quartz</artifactId>
+                <version>2.2.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.novemberain</groupId>
+                <artifactId>quartz-mongodb</artifactId>
+                <version>2.0.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.mongodb</groupId>
+                        <artifactId>mongo-java-driver</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>net.redhogs.cronparser</groupId>
+                <artifactId>cron-parser</artifactId>
+                <version>2.6</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-auth</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-assets</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-views-freemarker</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-views-mustache</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-metrics-graphite</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-http2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mortbay.jetty.alpn</groupId>
-            <artifactId>alpn-boot</artifactId>
-            <version>${alpnboot.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.newrelic.agent.java</groupId>
-            <artifactId>newrelic-agent</artifactId>
-            <version>${newrelic.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-runtime</artifactId>
-            <version>${atmosphere-version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-hazelcast</artifactId>
-            <version>${extensions-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.hazelcast</groupId>
-                    <artifactId>hazelcast</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.quartz-scheduler</groupId>
-            <artifactId>quartz</artifactId>
-            <version>2.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.novemberain</groupId>
-            <artifactId>quartz-mongodb</artifactId>
-            <version>2.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mongodb</groupId>
-                    <artifactId>mongo-java-driver</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>net.redhogs.cronparser</groupId>
-            <artifactId>cron-parser</artifactId>
-            <version>2.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
-            <version>9.3.9.v20160517</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-commons</artifactId>
-            <version>5.0.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>3.2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mongodb.morphia</groupId>
-            <artifactId>morphia</artifactId>
-            <version>1.2.1</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>mongo-java-driver</artifactId>
-                    <groupId>org.mongodb</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mongodb.morphia</groupId>
-            <artifactId>morphia-logging-slf4j</artifactId>
-            <version>1.2.0</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>morphia</artifactId>
-                    <groupId>org.mongodb.morphia</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>ru.vyarus</groupId>
-            <artifactId>guice-validator</artifactId>
-            <version>1.2.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.inject</groupId>
-                    <artifactId>guice</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-csv</artifactId>
-            <version>1.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.53</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>4.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-assistedinject</artifactId>
-            <version>4.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-multibindings</artifactId>
-            <version>4.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.9.10</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.javassist</groupId>
-                    <artifactId>javassist</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.offbytwo.jenkins</groupId>
-            <artifactId>jenkins-client</artifactId>
-            <version>0.3.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-lang</groupId>
-                    <artifactId>commons-lang</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xml-apis</groupId>
-                    <artifactId>xml-apis</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.4.01</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mindrot</groupId>
-            <artifactId>jbcrypt</artifactId>
-            <version>0.3m</version>
-        </dependency>
-
-        <dependency>
-            <groupId>ro.fortsoft.pf4j</groupId>
-            <artifactId>pf4j</artifactId>
-            <version>0.13.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.deftlabs</groupId>
-            <artifactId>mongo-java-distributed-lock</artifactId>
-            <version>0.1.7</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
-            <version>0.9.5</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.ifesdjeen</groupId>
-            <artifactId>hashed-wheel-timer-core</artifactId>
-            <version>1.0.0-RC1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-jexl3</artifactId>
-            <version>3.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <version>2.2.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.modelmapper</groupId>
-            <artifactId>modelmapper</artifactId>
-            <version>0.7.5</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-email</artifactId>
-            <version>1.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.activation</groupId>
-                    <artifactId>activation</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
-            <version>1.1.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.smoketurner</groupId>
-            <artifactId>dropwizard-swagger</artifactId>
-            <version>1.0.0-1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.reinert</groupId>
-            <artifactId>jjschema</artifactId>
-            <version>0.9-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>fluent-hc</artifactId>
-            <version>4.5.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.dropwizard-bundles</groupId>
-            <artifactId>dropwizard-configurable-assets-bundle</artifactId>
-            <version>1.0.0-rc2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.dirkraft.dropwizard-file-assets</groupId>
-            <artifactId>dropwizard-file-assets</artifactId>
-            <version>0.0.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.palantir.versioninfo</groupId>
-            <artifactId>dropwizard-version-info</artifactId>
-            <version>0.6.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.danielbechler</groupId>
-            <artifactId>java-object-diff</artifactId>
-            <version>0.94</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.cache</groupId>
-            <artifactId>cache-api</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jsr107.ri</groupId>
-            <artifactId>cache-annotations-ri-guice</artifactId>
-            <version>1.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.inject</groupId>
-                    <artifactId>guice</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
-            <version>3.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-elasticloadbalancing</artifactId>
-            <version>1.11.33</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-ec2</artifactId>
-            <version>1.11.33</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-testing</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.assertj</groupId>
-                    <artifactId>assertj-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.10.19</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sshd</groupId>
-            <artifactId>sshd-core</artifactId>
-            <version>1.2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.web</groupId>
-            <artifactId>javax.el</artifactId>
-            <version>2.2.6</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server</artifactId>
-            <version>1.6.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>3.4.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>pl.pragmatists</groupId>
-            <artifactId>JUnitParams</artifactId>
-            <version>1.0.4</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>junit</groupId>
-                    <artifactId>junit</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.json-unit</groupId>
-            <artifactId>json-unit-fluent</artifactId>
-            <version>1.12.1</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
-            <version>1.50.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <version>1.57</version>
-            <scope>test</scope>
-            <!-- Include everything below here if you have dependency conflicts -->
-            <classifier>standalone</classifier>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-annotations</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.skyscreamer</groupId>
-                    <artifactId>jsonassert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>xmlunit</groupId>
-                    <artifactId>xmlunit</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.jayway.jsonpath</groupId>
-                    <artifactId>json-path</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>net.sf.jopt-simple</groupId>
-                    <artifactId>jopt-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.openpojo</groupId>
-            <artifactId>openpojo</artifactId>
-            <version>0.8.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava-testlib</artifactId>
-            <version>18.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.icegreen</groupId>
-            <artifactId>greenmail</artifactId>
-            <version>1.5.0</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun.mail</groupId>
-                    <artifactId>javax.mail</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-library</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.shazam</groupId>
-            <artifactId>shazamcrest</artifactId>
-            <version>0.11</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
-            <version>1.46</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.10</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -663,23 +640,8 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.18.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>2.7</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>1.4.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -698,11 +660,26 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>2.4</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>2.6</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            </manifest>
+                        </archive>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -745,454 +722,176 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.18.1</version>
+                    <configuration>
+                        <skip>true</skip>
+                        <forkCount>4</forkCount>
+                        <reuseForks>true</reuseForks>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>unit-test</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>test</goal>
+                            </goals>
+                            <configuration>
+                                <skip>false</skip>
+                                <excludes>
+                                    <exclude>**/*IntegrationTest.java</exclude>
+                                    <exclude>**/IntegrationTest*.java</exclude>
+                                </excludes>
+                                <forkCount>4</forkCount>
+                                <reuseForks>true</reuseForks>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>com.syncleus.maven.plugins</groupId>
+                    <artifactId>maven-mongodb-plugin</artifactId>
+                    <version>1.1.1</version>
+                    <configuration>
+                        <randomPort>true</randomPort>
+                        <version>3.2.0</version>
+                        <logging>file</logging>
+                        <logFile>/tmp/mongo.log</logFile>
+                        <bindIp>127.0.0.1</bindIp>
+                        <syncDelay>0</syncDelay>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>start</id>
+                            <goals>
+                                <goal>start</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>stop</id>
+                            <goals>
+                                <goal>stop</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.18.1</version>
+                    <executions>
+                        <execution>
+                            <id>integration-test</id>
+                            <goals>
+                                <goal>integration-test</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>verify</id>
+                            <goals>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <includes>
+                            <include>**/IntegrationTest*.java</include>
+                            <include>**/*IntegrationTest.java</include>
+                        </includes>
+                        <argLine>-DmongoPort=${mongodb.port}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>1.4.1</version>
+                    <executions>
+                        <execution>
+                            <id>enforce</id>
+                            <configuration>
+                                <rules>
+                                    <DependencyConvergence/>
+                                </rules>
+                            </configuration>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.17</version>
+                    <executions>
+                        <execution>
+                            <id>check-style</id>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <phase>validate</phase>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <consoleOutput>true</consoleOutput>
+                        <logViolationsToConsole>true</logViolationsToConsole>
+                        <failOnViolation>true</failOnViolation>
+                        <failsOnError>true</failsOnError>
+                        <configLocation>do-not-use/google_checks.xml</configLocation>
+                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>6.17</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>software.wings</groupId>
+                            <artifactId>tools</artifactId>
+                            <version>0.0.1-SNAPSHOT</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.7.7.201606060606</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>3.0.3</version>
+                    <configuration>
+                        <threshold>High</threshold>
+                        <excludeFilterFile>do-not-use/findbugs-exclude.xml</excludeFilterFile>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>failing-on-high</id>
+                            <phase>process-test-classes</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>software.wings</groupId>
+                            <artifactId>tools</artifactId>
+                            <version>0.0.1-SNAPSHOT</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-pmd-plugin</artifactId>
+                    <version>3.6</version>
+                </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>sg.enixsoft</groupId>
-                <artifactId>capsule-maven-plugin</artifactId>
-                <version>1.3.0</version>
-                <configuration>
-                    <appClass>software.wings.app.WingsApplication</appClass>
-                    <type>fat</type>
-                    <manifest>
-                        <entry>
-                            <key>Boot-Class-Path-P</key>
-                            <value>alpn-boot-${alpnboot.version}.jar</value>
-                        </entry>
-                        <entry>
-                            <key>Min-Java-Version</key>
-                            <value>1.8.0</value>
-                        </entry>
-                        <entry>
-                            <key>Min-Update-Version</key>
-                            <value>8=91</value>
-                        </entry>
-                        <entry>
-                            <key>Java-Agents</key>
-                            <value>newrelic-agent-${newrelic.version}.jar</value>
-                        </entry>
-                        <entry>
-                            <key>Environment-Variables</key>
-                            <value>NEW_RELIC_LICENSE_KEY=b121ea34124754a7952717207b122be017f2ae76</value>
-                        </entry>
-                        <entry>
-                            <key>Args</key>
-                            <value>server $*</value>
-                        </entry>
-                    </manifest>
-                    <fileSets>
-                        <fileSet>
-                            <directory>${project.basedir}</directory>
-                            <includes>newrelic.yml</includes>
-                        </fileSet>
-                    </fileSets>
-                    <execPluginConfig>root</execPluginConfig>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>generate</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>create-metadata</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <attach>true</attach>
-                    <!--make it available for jar/war classpath resource -->
-                    <shortRevisionLength>7</shortRevisionLength>
-                    <properties>
-                        <productVersion>${project.version}-${buildNumber}-${timestamp}</productVersion>
-                    </properties>
-                    <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                    <forkCount>4</forkCount>
-                    <reuseForks>true</reuseForks>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>unit-test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <skip>false</skip>
-                            <excludes>
-                                <exclude>**/*IntegrationTest.java</exclude>
-                                <exclude>**/IntegrationTest*.java</exclude>
-                            </excludes>
-                            <forkCount>4</forkCount>
-                            <reuseForks>true</reuseForks>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.syncleus.maven.plugins</groupId>
-                <artifactId>maven-mongodb-plugin</artifactId>
-                <version>1.1.1</version>
-                <configuration>
-                    <randomPort>true</randomPort>
-                    <version>3.2.0</version>
-                    <logging>file</logging>
-                    <logFile>/tmp/mongo.log</logFile>
-                    <bindIp>127.0.0.1</bindIp>
-                    <syncDelay>0</syncDelay>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>start</id>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop</id>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>integration-test</id>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>verify</id>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <includes>
-                        <include>**/IntegrationTest*.java</include>
-                        <include>**/*IntegrationTest.java</include>
-                    </includes>
-                    <argLine>-DmongoPort=${mongodb.port}</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>enforce</id>
-                        <configuration>
-                            <rules>
-                                <DependencyConvergence/>
-                            </rules>
-                        </configuration>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.17</version>
-                <executions>
-                    <execution>
-                        <id>check-style</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <phase>validate</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <consoleOutput>true</consoleOutput>
-                    <logViolationsToConsole>true</logViolationsToConsole>
-                    <failOnViolation>true</failOnViolation>
-                    <failsOnError>true</failsOnError>
-                    <configLocation>${basedir}/codeStyle/google_checks.xml</configLocation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>6.17</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.7.201606060606</version>
-                <configuration>
-                    <excludes>
-                        <exclude>software/wings/service/intfc/*.class</exclude>
-                        <exclude>software/wings/beans/*.class</exclude>
-                        <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitInstanceError.class</exclude>
-                        <exclude>software/wings/sm/State.class</exclude>
-                        <exclude>software/wings/sm/Transition.class</exclude>
-                        <exclude>software/wings/sm/StateExecutionData.class</exclude>
-                        <exclude>software/wings/sm/StateEvent.class</exclude>
-                        <exclude>software/wings/sm/*$Builder.class</exclude>
-                        <exclude>software/wings/dl/MongoConfig.class</exclude>
-                        <exclude>software/wings/dl/DatastoreSet.class</exclude>
-                        <exclude>software/wings/app/WingsModule.class</exclude>
-                        <exclude>software/wings/app/WingsApplication.class</exclude>
-                        <exclude>software/wings/app/MainConfiguration.class</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>default-prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>default-report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>default-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <rule implementation="org.jacoco.maven.RuleConfiguration">
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit implementation="org.jacoco.report.check.Limit">
-                                            <counter>INSTRUCTION</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.63</minimum>
-                                        </limit>
-                                        <limit implementation="org.jacoco.report.check.Limit">
-                                            <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.47</minimum>
-                                        </limit>
-                                        <limit implementation="org.jacoco.report.check.Limit">
-                                            <counter>COMPLEXITY</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.50</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>3.0.3</version>
-                <configuration>
-                    <threshold>High</threshold>
-                    <excludeFilterFile>${basedir}/findbugs-exclude.xml</excludeFilterFile>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>failing-on-high</id>
-                        <phase>process-test-classes</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.6</version>
-            </plugin>
-            <plugin>
-                <inherited>false</inherited>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.8</version>
-                <executions>
-                    <execution>
-                        <id>test</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target name="deploy" description="deploy to a server via ssh">
-                                <echo message="Kill running java process..."/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="killall java; /home/ubuntu/waitForJavaShutdown.sh"
-                                         timeout="120000"/>
-                                <echo message="backup jar file"/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/portal-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/portal-0.0.1-SNAPSHOT-capsule-$(date +%F-%H:%M).jar"
-                                         timeout="120000"/>
-                                <echo message="backup config file"/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/config.yml $HOME/backup/config-$(date +%F-%H:%M).yml"
-                                         timeout="120000"/>
-                                <echo message="backup logs"/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/portal.log $HOME/backup/portal-$(date +%F-%H:%M).log"
-                                         timeout="120000"/>
-                                <echo message="copy jar"/>
-                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
-                                     host="${deployHost}"
-                                     username="${deployUsername}"
-                                     keyfile="${user.home}/.ssh/id_${deployHost}"
-                                     file="target/portal-0.0.1-SNAPSHOT-capsule.jar"
-                                     todir="${deployUsername}@${deployHost}:"/>
-                                <echo message="copy config.yml"/>
-                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
-                                     host="${deployHost}"
-                                     username="${deployUsername}"
-                                     keyfile="${user.home}/.ssh/id_${deployHost}"
-                                     file="config.yml"
-                                     todir="${deployUsername}@${deployHost}:"/>
-                                <echo message="configure port"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/port: 9090/port: 3456/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure keystore path"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/keyStorePath: keystore.jks/keyStorePath: \/home\/ubuntu\/keystore.jks/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure keystorePassword"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/keyStorePassword: password/keyStorePassword: W!ngs@123/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure certAlias"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/certAlias: selfsigned/certAlias: java/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure cordDomain"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/url: https:\/\/localhost:8000/url: https:\/\/${portalHost}/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="start server"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="NEW_RELIC_APP_NAME='${app.name}' nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
-                                         timeout="120000"/>
-                                <echo message="cleanup files"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="cd $HOME/backup; ls -tQ *.yml| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.jar| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.log| tail -n+4 | xargs --no-run-if-empty rm"
-                                         timeout="120000"/>
-                                <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
-                                    <classpath refid="maven.plugin.classpath"/>
-                                </taskdef>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>ant</groupId>
-                        <artifactId>ant-commons-net</artifactId>
-                        <version>1.6.5</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.apache.ant</groupId>
-                        <artifactId>ant-jsch</artifactId>
-                        <version>1.9.1</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-        </plugins>
     </build>
+
     <reporting>
         <plugins>
             <plugin>
@@ -1208,26 +907,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.7.7.201606060606</version>
-                <configuration>
-                    <excludes>
-                        <exclude>software/wings/service/intfc/*.class</exclude>
-                        <exclude>software/wings/beans/*.class</exclude>
-                        <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
-                        <exclude>software/wings/waitnotify/WaitInstanceError.class</exclude>
-                        <exclude>software/wings/sm/State.class</exclude>
-                        <exclude>software/wings/sm/Transition.class</exclude>
-                        <exclude>software/wings/sm/StateExecutionData.class</exclude>
-                        <exclude>software/wings/sm/StateEvent.class</exclude>
-                        <exclude>software/wings/sm/*$Builder.class</exclude>
-                        <exclude>software/wings/dl/MongoConfig.class</exclude>
-                        <exclude>software/wings/dl/DatastoreSet.class</exclude>
-                        <exclude>software/wings/app/WingsModule.class</exclude>
-                        <exclude>software/wings/app/WingsApplication.class</exclude>
-                        <exclude>software/wings/app/MainConfiguration.class</exclude>
-                    </excludes>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -1288,187 +967,4 @@
             </plugin>
         </plugins>
     </reporting>
-
-    <profiles>
-        <profile>
-            <id>build-ui</id>
-            <activation>
-                <property>
-                    <name>buildUI</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>exec-maven-plugin</artifactId>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <executions>
-                            <execution>
-                                <id>init submodules</id>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>git</executable>
-                                    <arguments>
-                                        <argument>submodule</argument>
-                                        <argument>init</argument>
-                                    </arguments>
-                                </configuration>
-                                <phase>generate-resources</phase>
-                            </execution>
-                            <execution>
-                                <id>fetch submodule</id>
-                                <goals>
-                                    <goal>exec</goal>
-                                </goals>
-                                <configuration>
-                                    <executable>git</executable>
-                                    <arguments>
-                                        <argument>submodule</argument>
-                                        <argument>update</argument>
-                                        <argument>--remote</argument>
-                                    </arguments>
-                                </configuration>
-                                <phase>generate-resources</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <version>1.0</version>
-                        <configuration>
-                            <workingDirectory>wingsui</workingDirectory>
-                            <nodeVersion>v6.2.2</nodeVersion>
-                            <npmVersion>3.9.5</npmVersion>
-                            <installDirectory>${user.home}/.node</installDirectory>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>install node and npm</id>
-                                <goals>
-                                    <goal>install-node-and-npm</goal>
-                                </goals>
-                                <phase>generate-resources</phase>
-                            </execution>
-                            <execution>
-                                <id>npm install</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>install</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>npm run build</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>run build</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>npm clean</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>run clean</arguments>
-                                </configuration>
-                                <phase>clean</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>deploy-int</id>
-            <activation>
-                <property>
-                    <name>env</name>
-                    <value>int</value>
-                </property>
-            </activation>
-            <properties>
-                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
-                <deployUsername>ubuntu</deployUsername>
-                <checkstyle.skip>true</checkstyle.skip>
-                <skipTests>true</skipTests>
-                <jacoco.skip>true</jacoco.skip>
-                <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
-                <portalHost>ci.wings.software</portalHost>
-                <app.name>CI Server</app.name>
-            </properties>
-        </profile>
-        <profile>
-            <id>deploy-demo</id>
-            <activation>
-                <property>
-                    <name>env</name>
-                    <value>demo</value>
-                </property>
-            </activation>
-            <properties>
-                <deployHost>ec2-52-45-103-102.compute-1.amazonaws.com</deployHost>
-                <deployUsername>ubuntu</deployUsername>
-                <checkstyle.skip>true</checkstyle.skip>
-                <skipTests>true</skipTests>
-                <jacoco.skip>true</jacoco.skip>
-                <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
-                <portalHost>demo.wings.software</portalHost>
-                <app.name>Demo Server</app.name>
-            </properties>
-        </profile>
-        <profile>
-            <id>migration</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.gmaven</groupId>
-                        <artifactId>groovy-maven-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.mongeez</groupId>
-                                <artifactId>mongeez</artifactId>
-                                <version>0.9.6</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-all</artifactId>
-                                <!-- any version of Groovy \>= 1.5.0 should work here -->
-                                <version>2.4.7</version>
-                                <scope>runtime</scope>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.mongodb</groupId>
-                                <artifactId>mongo-java-driver</artifactId>
-                                <version>3.2.0</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <source>
-                                import com.mongodb.Mongo;
-                                import org.mongeez.Mongeez;
-                                import java.io.File;
-                                import org.springframework.core.io.FileSystemResource;
-
-                                Mongeez mongeez = new Mongeez();
-                                mongeez.setFile(new FileSystemResource(new File("src/main/resources/migrations/mongeez.xml")));
-                                mongeez.setMongo(new Mongo(System.getProperty("mongoHost", "localhost"), Integer.parseInt(System.getProperty("mongoPort", "27017"))));
-                                mongeez.setDbName("wings");
-                                mongeez.process();
-                            </source>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
