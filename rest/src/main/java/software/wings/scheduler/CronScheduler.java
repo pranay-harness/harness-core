@@ -1,12 +1,7 @@
 package software.wings.scheduler;
 
 import com.google.inject.Injector;
-
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
+import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +11,10 @@ import software.wings.app.SchedulerConfig;
 import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
 
-import java.util.Date;
-import java.util.Properties;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.Date;
+import java.util.Properties;
 
 /**
  * Created by anubhaw on 10/21/16.
@@ -107,7 +102,7 @@ public class CronScheduler {
       try {
         return scheduler.deleteJob(new JobKey(jobName));
       } catch (SchedulerException ex) {
-        logger.error("Couldn't delete cron for artifact auto download " + ex);
+        logger.error("Couldn't delete cron job {} ", jobName);
       }
     }
     return false;
