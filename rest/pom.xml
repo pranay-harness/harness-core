@@ -563,7 +563,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/portal-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/portal-0.0.1-SNAPSHOT-capsule-$(date +%F-%H:%M).jar"
+                                         command="mkdir -p $HOME/backup; cp $HOME/rest-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/rest-0.0.1-SNAPSHOT-capsule-$(date +%F-%H:%M).jar"
                                          timeout="120000"/>
                                 <echo message="backup config file"/>
                                 <sshexec trust="true" failonerror="false"
@@ -633,7 +633,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="NEW_RELIC_APP_NAME='${app.name}' nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         command="NEW_RELIC_APP_NAME='${app.name}' nohup java -Dfile.encoding=UTF-8 -jar $HOME/rest-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000"/>
                                 <echo message="cleanup files"/>
                                 <sshexec trust="true" failonerror="true"
