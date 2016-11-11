@@ -380,13 +380,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     setUnset(ops, "description", orchestration.getDescription());
     setUnset(ops, "name", orchestration.getName());
 
-    EntityVersion entityVersion = entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW,
-        orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED);
+    EntityVersion entityVersion;
+    if (orchestration.getGraph() != null) {
+      entityVersion = entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW,
+          orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED);
+    } else {
+      entityVersion = entityVersionService.lastEntityVersion(
+          orchestration.getAppId(), EntityType.WORKFLOW, orchestration.getUuid());
+    }
     if (orchestration.getSetAsDefault()) {
       orchestration.setDefaultVersion(entityVersion.getVersion());
-      setUnset(ops, "defaultVersion", orchestration.getDefaultVersion());
     }
     setUnset(ops, "envIdVersionMap", orchestration.getEnvIdVersionMap());
+    setUnset(ops, "defaultVersion", orchestration.getDefaultVersion());
 
     wingsPersistence.update(wingsPersistence.createQuery(Orchestration.class)
                                 .field("appId")
