@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +15,9 @@ public class PipelineStageExecution {
   private ExecutionStatus status;
   private Long startTs;
   private Long endTs;
-  private Long estimatedTime = Long.valueOf(5 * 60 * 1000);
+  private Long estimatedTime;
   private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+  private StateExecutionData stateExecutionData;
 
   /**
    * Gets status.
@@ -144,6 +146,24 @@ public class PipelineStageExecution {
   }
 
   /**
+   * Gets state execution data.
+   *
+   * @return the state execution data
+   */
+  public StateExecutionData getStateExecutionData() {
+    return stateExecutionData;
+  }
+
+  /**
+   * Sets state execution data.
+   *
+   * @param stateExecutionData the state execution data
+   */
+  public void setStateExecutionData(StateExecutionData stateExecutionData) {
+    this.stateExecutionData = stateExecutionData;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -152,8 +172,9 @@ public class PipelineStageExecution {
     private ExecutionStatus status;
     private Long startTs;
     private Long endTs;
-    private Long estimatedTime = Long.valueOf(5 * 60 * 1000);
+    private Long estimatedTime;
     private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+    private StateExecutionData stateExecutionData;
 
     private Builder() {}
 
@@ -244,6 +265,17 @@ public class PipelineStageExecution {
     }
 
     /**
+     * With state execution data builder.
+     *
+     * @param stateExecutionData the state execution data
+     * @return the builder
+     */
+    public Builder withStateExecutionData(StateExecutionData stateExecutionData) {
+      this.stateExecutionData = stateExecutionData;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -256,7 +288,8 @@ public class PipelineStageExecution {
           .withStartTs(startTs)
           .withEndTs(endTs)
           .withEstimatedTime(estimatedTime)
-          .withWorkflowExecutions(workflowExecutions);
+          .withWorkflowExecutions(workflowExecutions)
+          .withStateExecutionData(stateExecutionData);
     }
 
     /**
@@ -273,6 +306,7 @@ public class PipelineStageExecution {
       pipelineStageExecution.setEndTs(endTs);
       pipelineStageExecution.setEstimatedTime(estimatedTime);
       pipelineStageExecution.setWorkflowExecutions(workflowExecutions);
+      pipelineStageExecution.setStateExecutionData(stateExecutionData);
       return pipelineStageExecution;
     }
   }

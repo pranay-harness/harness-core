@@ -31,7 +31,7 @@ public class PipelineExecution extends Base {
 
   private Long startTs;
   private Long endTs;
-  private Long estimatedTime = Long.valueOf(30 * 60 * 1000);
+  private Long estimatedTime;
 
   /**
    * Gets pipeline id.

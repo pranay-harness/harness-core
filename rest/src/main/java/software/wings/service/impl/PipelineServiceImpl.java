@@ -1,55 +1,35 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
-import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.ERROR;
-import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
-import static software.wings.sm.StateType.APPROVAL;
-import static software.wings.sm.StateType.ARTIFACT;
-import static software.wings.sm.StateType.ENV_STATE;
-import static software.wings.utils.Validator.notNullCheck;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
-import software.wings.beans.Application;
-import software.wings.beans.ErrorCodes;
-import software.wings.beans.ExecutionArgs;
-import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineExecution;
-import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.*;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
-import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachine;
+import software.wings.service.intfc.*;
+import software.wings.sm.*;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
+
+import static java.util.Arrays.asList;
+import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ExecutionStatus.*;
+import static software.wings.sm.StateType.*;
+import static software.wings.utils.Validator.notNullCheck;
 
 /**
  * Created by anubhaw on 10/26/16.
@@ -93,13 +73,20 @@ public class PipelineServiceImpl implements PipelineService {
                                        .withStatus(ExecutionStatus.QUEUED)
                                        .build());
       } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
-        stageExecutionDataList.add(aPipelineStageExecution()
-                                       .withStateType(stateExecutionInstance.getStateType())
-                                       .withStatus(stateExecutionInstance.getStatus())
-                                       .withStateName(stateExecutionInstance.getStateName())
-                                       .withStartTs(stateExecutionInstance.getStartTs())
-                                       .withEndTs(stateExecutionInstance.getEndTs())
-                                       .build());
+        PipelineStageExecution stageExecution = aPipelineStageExecution()
+                                                    .withStateType(stateExecutionInstance.getStateType())
+                                                    .withStatus(stateExecutionInstance.getStatus())
+                                                    .withStateName(stateExecutionInstance.getStateName())
+                                                    .withStartTs(stateExecutionInstance.getStartTs())
+                                                    .withEndTs(stateExecutionInstance.getEndTs())
+                                                    .build();
+        StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionMap().get(currState.getName());
+
+        if (stateExecutionData != null && stateExecutionData instanceof ApprovalStateExecutionData) {
+          stageExecution.setStateExecutionData(stateExecutionData);
+        }
+
+        stageExecutionDataList.add(stageExecution);
       } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
         PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                     .withStateType(currState.getStateType())
