@@ -5,16 +5,24 @@
 package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import com.google.common.collect.Lists;
 import com.google.inject.MembersInjector;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Map;
 import javax.inject.Inject;
@@ -37,6 +45,15 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    * The Injector.
    */
   @Inject MembersInjector<WorkflowStandardParams> injector;
+
+  @Mock SettingsService settingsService;
+
+  @Before
+  public void setup() {
+    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name()))
+        .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
+    on(appService).set("settingsService", settingsService);
+  }
 
   /**
    * Should get app.

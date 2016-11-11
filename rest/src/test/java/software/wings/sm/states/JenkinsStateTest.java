@@ -9,10 +9,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.sm.states.JenkinsState.JenkinsExecutionResponse.Builder.aJenkinsExecutionResponse;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -25,7 +23,6 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +35,7 @@ import software.wings.beans.Activity;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.FilePathAssertionEntry;
@@ -54,7 +51,6 @@ public class JenkinsStateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private JenkinsFactory jenkinsFactory;
-  @Mock private SettingsService settingsService;
   @Mock private ExecutorService executorService;
   @Mock private ActivityService activityService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
@@ -73,13 +69,12 @@ public class JenkinsStateTest {
     when(executionContext.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(activityService.save(any(Activity.class))).thenReturn(anActivity().withUuid(ACTIVITY_ID).build());
-    when(settingsService.get(GLOBAL_APP_ID, SETTING_ID))
-        .thenReturn(aSettingAttribute()
-                        .withValue(aJenkinsConfig()
-                                       .withJenkinsUrl("http://jenkins")
-                                       .withUsername("username")
-                                       .withPassword("password")
-                                       .build())
+
+    when(executionContext.getSettingValue(SETTING_ID, SettingVariableTypes.JENKINS.name()))
+        .thenReturn(aJenkinsConfig()
+                        .withJenkinsUrl("http://jenkins")
+                        .withUsername("username")
+                        .withPassword("password")
                         .build());
     when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);
     when(jenkins.getBuild(any(QueueReference.class))).thenReturn(build);
@@ -88,9 +83,6 @@ public class JenkinsStateTest {
     when(executionContext.renderExpression(anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
   }
-
-  @After
-  public void tearDown() throws Exception {}
 
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {

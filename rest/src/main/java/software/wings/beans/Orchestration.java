@@ -6,6 +6,8 @@ package software.wings.beans;
 
 import com.google.common.collect.Maps;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -27,7 +29,7 @@ public class Orchestration extends Workflow {
 
   private boolean targetToAllEnv;
 
-  @Transient private boolean setAsDefault;
+  @JsonIgnore @Transient private boolean setAsDefault;
 
   /**
    * Gets workflow type.
@@ -68,6 +70,7 @@ public class Orchestration extends Workflow {
    *
    * @return Value for property 'setAsDefault'.
    */
+  @JsonIgnore
   public boolean isSetAsDefault() {
     return setAsDefault;
   }
@@ -77,6 +80,7 @@ public class Orchestration extends Workflow {
    *
    * @param setAsDefault Value to set for property 'setAsDefault'.
    */
+  @JsonProperty
   public void setSetAsDefault(boolean setAsDefault) {
     this.setAsDefault = setAsDefault;
   }

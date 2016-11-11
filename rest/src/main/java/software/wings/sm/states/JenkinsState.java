@@ -6,7 +6,6 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.Joiner;
@@ -169,7 +168,7 @@ public class JenkinsState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    JenkinsConfig jenkinsConfig = (JenkinsConfig) settingsService.get(GLOBAL_APP_ID, jenkinsConfigId).getValue();
+    JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
 
     String evaluatedJobName;
     try {

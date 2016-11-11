@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastructureMappingRule;
@@ -18,6 +19,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingRule;
@@ -106,6 +108,20 @@ public class InfraIntegrationTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws IOException {
+    String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
+
+    settingsService.save(aSettingAttribute()
+                             .withIsPluginSetting(true)
+                             .withName("AppDynamics")
+                             .withAccountId(accountId)
+                             .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
+                                            .withControllerUrl("https://na774.saas.appdynamics.com/controller")
+                                            .withUsername("testuser")
+                                            .withAccountname("na774")
+                                            .withPassword("testuser123")
+                                            .build())
+                             .build());
+
     Application app = appService.save(anApplication().withName("AppA").build());
     List<Environment> environments = environmentService.getEnvByApp(app.getUuid());
     for (int i = 1; i < environments.size(); i++) {

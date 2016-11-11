@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
@@ -17,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -38,6 +40,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
 
 import java.io.BufferedWriter;
@@ -117,6 +120,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    * The Host service.
    */
   @Inject HostService hostService;
+
+  @Inject SettingsService settingsService;
   /**
    * The Template.
    */
@@ -172,6 +177,20 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         .asList(Application.class, Environment.class, Host.class, Infrastructure.class, Tag.class, ConfigFile.class,
             ServiceTemplate.class, Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
+
+    String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
+
+    settingsService.save(aSettingAttribute()
+                             .withIsPluginSetting(true)
+                             .withName("AppDynamics")
+                             .withAccountId(accountId)
+                             .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
+                                            .withControllerUrl("https://na774.saas.appdynamics.com/controller")
+                                            .withUsername("testuser")
+                                            .withAccountname("na774")
+                                            .withPassword("testuser123")
+                                            .build())
+                             .build());
 
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());

@@ -14,6 +14,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -21,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -42,6 +44,8 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
@@ -90,12 +94,20 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * The Service template service mock.
    */
   @Mock ServiceTemplateService serviceTemplateServiceMock;
+
+  @Mock SettingsService settingsService;
   /**
    * The Host service.
    */
   @Mock HostService hostService;
   @Inject private WingsPersistence wingsPersistence;
 
+  @Before
+  public void setup() {
+    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name()))
+        .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
+    on(appService).set("settingsService", settingsService);
+  }
   /**
    * Should return instances.
    */
