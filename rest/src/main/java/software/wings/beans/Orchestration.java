@@ -71,7 +71,7 @@ public class Orchestration extends Workflow {
    * @return Value for property 'setAsDefault'.
    */
   @JsonIgnore
-  public boolean isSetAsDefault() {
+  public boolean getSetAsDefault() {
     return setAsDefault;
   }
 
