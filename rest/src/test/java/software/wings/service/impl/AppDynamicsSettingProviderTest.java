@@ -20,11 +20,11 @@ public class AppDynamicsSettingProviderTest {
 
   @Mock private SettingsService settingsService;
 
-  @InjectMocks private AppDynamicsSettingProvider jenkinsSettingProvider = new AppDynamicsSettingProvider();
+  @InjectMocks private AppDynamicsSettingProvider appDynamicsSettingProvider = new AppDynamicsSettingProvider();
 
   @Test
-  public void shouldGetJenkinsSettingData() throws Exception {
-    jenkinsSettingProvider.getData(APP_ID);
+  public void shouldGetAppDynamicsSettingData() throws Exception {
+    appDynamicsSettingProvider.getData(APP_ID);
     verify(settingsService).getSettingAttributesByType(APP_ID, SettingVariableTypes.APP_DYNAMICS.name());
   }
 }
