@@ -353,7 +353,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateOrchestration() {
     Orchestration orchestration = createOrchestration();
     String uuid = orchestration.getUuid();
-    orchestration = workflowService.readOrchestration(appId, uuid);
+    orchestration = workflowService.readOrchestration(appId, uuid, null);
 
     assertThat(orchestration).isNotNull();
     assertThat(orchestration.getUuid()).isNotNull();
@@ -395,7 +395,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Orchestration orchestration = createOrchestration();
     String uuid = orchestration.getUuid();
     workflowService.deleteWorkflow(Orchestration.class, appId, uuid);
-    orchestration = workflowService.readOrchestration(appId, uuid);
+    orchestration = workflowService.readOrchestration(appId, uuid, null);
     assertThat(orchestration).isNull();
   }
 

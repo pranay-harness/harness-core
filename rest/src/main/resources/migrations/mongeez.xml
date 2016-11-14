@@ -8,4 +8,5 @@
     <file path="workflow-executions-environment-type-migration.js"/>
     <file path="workflow-migration.js"/>
     <file path="account-migration.js"/>
+    <file path="workflow-version-migration.js"/>
 </changeFiles>

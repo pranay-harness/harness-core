@@ -125,7 +125,7 @@ public interface WorkflowService {
    * @param orchestrationId the orchestration id
    * @return the orchestration
    */
-  Orchestration readOrchestration(@NotNull String appId, @NotNull String orchestrationId);
+  Orchestration readOrchestration(@NotNull String appId, @NotNull String orchestrationId, Integer version);
 
   /**
    * Update orchestration.

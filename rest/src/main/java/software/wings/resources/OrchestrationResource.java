@@ -41,7 +41,7 @@ public class OrchestrationResource {
   /**
    * Instantiates a new orchestration resource.
    *
-   * @param workflowService    the workflow service
+   * @param workflowService the workflow service
    */
   @Inject
   public OrchestrationResource(WorkflowService workflowService) {
@@ -71,9 +71,9 @@ public class OrchestrationResource {
    */
   @GET
   @Path("{orchestrationId}")
-  public RestResponse<Orchestration> read(
-      @QueryParam("appId") String appId, @PathParam("orchestrationId") String orchestrationId) {
-    return new RestResponse<>(workflowService.readOrchestration(appId, orchestrationId));
+  public RestResponse<Orchestration> read(@QueryParam("appId") String appId,
+      @PathParam("orchestrationId") String orchestrationId, @QueryParam("version") Integer version) {
+    return new RestResponse<>(workflowService.readOrchestration(appId, orchestrationId, version));
   }
 
   /**
