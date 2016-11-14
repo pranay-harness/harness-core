@@ -171,6 +171,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                               .withAppId(APP_ID)
                                               .withWorkflowExecutionId(PIPELINE_WORKFLOW_EXECUTION_ID)
                                               .withPipelineId(PIPELINE_ID)
+                                              .withPipeline(new Pipeline())
                                               .withStatus(RUNNING)
                                               .build();
     when(query.get()).thenReturn(pipelineExecution);
@@ -214,6 +215,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                               .withAppId(APP_ID)
                                               .withWorkflowExecutionId(PIPELINE_WORKFLOW_EXECUTION_ID)
                                               .withPipelineId(PIPELINE_ID)
+                                              .withPipeline(new Pipeline())
                                               .withStatus(RUNNING)
                                               .build();
     when(query.get()).thenReturn(pipelineExecution);
@@ -274,6 +276,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                               .withAppId(APP_ID)
                                               .withWorkflowExecutionId(PIPELINE_WORKFLOW_EXECUTION_ID)
                                               .withPipelineId(PIPELINE_ID)
+                                              .withPipeline(new Pipeline())
                                               .withStatus(RUNNING)
                                               .build();
     when(query.get()).thenReturn(pipelineExecution);
