@@ -10,7 +10,9 @@ import com.google.common.collect.Lists;
 
 import org.mongodb.morphia.annotations.Entity;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Class Pipeline.
@@ -20,6 +22,7 @@ import java.util.List;
 @Entity(value = "pipelines", noClassnameStored = true)
 public class Pipeline extends Workflow {
   private String cronSchedule;
+  private Map<String, Long> stateEtaMap = new HashMap<>();
 
   /**
    * Gets cron schedule.
@@ -37,6 +40,14 @@ public class Pipeline extends Workflow {
    */
   public void setCronSchedule(String cronSchedule) {
     this.cronSchedule = cronSchedule;
+  }
+
+  public Map<String, Long> getStateEtaMap() {
+    return stateEtaMap;
+  }
+
+  public void setStateEtaMap(Map<String, Long> stateEtaMap) {
+    this.stateEtaMap = stateEtaMap;
   }
 
   /**

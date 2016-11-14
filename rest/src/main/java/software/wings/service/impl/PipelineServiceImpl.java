@@ -1,40 +1,68 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
+import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.ERROR;
+import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.sm.StateType.APPROVAL;
+import static software.wings.sm.StateType.ARTIFACT;
+import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
-import software.wings.beans.*;
+import software.wings.beans.Application;
+import software.wings.beans.ErrorCodes;
+import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineExecution;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.*;
-import software.wings.sm.*;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachine;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.LongSummaryStatistics;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
-import static java.util.Arrays.asList;
-import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ExecutionStatus.*;
-import static software.wings.sm.StateType.*;
-import static software.wings.utils.Validator.notNullCheck;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 10/26/16.
  */
 public class PipelineServiceImpl implements PipelineService {
+  public static final List<ExecutionStatus> FINISHED_EXECUTION_STATUSES =
+      Arrays.asList(SUCCESS, FAILED, ERROR, ABORTED);
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
@@ -52,7 +80,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void refreshPipelineExecution(PipelineExecution pipelineExecution) {
-    if (Arrays.asList(SUCCESS, FAILED, ERROR, ABORTED).contains(pipelineExecution.getStatus())) {
+    if (FINISHED_EXECUTION_STATUSES.contains(pipelineExecution.getStatus())) {
       return;
     }
     StateMachine stateMachine =
@@ -67,11 +95,13 @@ public class PipelineServiceImpl implements PipelineService {
       StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(currState.getName());
 
       if (stateExecutionInstance == null) {
-        stageExecutionDataList.add(aPipelineStageExecution()
-                                       .withStateType(currState.getStateType())
-                                       .withStateName(currState.getName())
-                                       .withStatus(ExecutionStatus.QUEUED)
-                                       .build());
+        stageExecutionDataList.add(
+            aPipelineStageExecution()
+                .withStateType(currState.getStateType())
+                .withStateName(currState.getName())
+                .withStatus(ExecutionStatus.QUEUED)
+                .withEstimatedTime(pipelineExecution.getPipeline().getStateEtaMap().get(currState.getName()))
+                .build());
       } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
         PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                     .withStateType(stateExecutionInstance.getStateType())
@@ -124,10 +154,49 @@ public class PipelineServiceImpl implements PipelineService {
 
     try {
       wingsPersistence.merge(pipelineExecution);
+      executorService.submit(() -> updatePipelineEstimates(pipelineExecution));
     } catch (ConcurrentModificationException cex) {
       // do nothing as it gets refreshed in next fetch
       logger.error("Pipeline execution update failed " + cex); // TODO: add retry
     }
+  }
+
+  private void updatePipelineEstimates(PipelineExecution pipelineExecution) {
+    if (FINISHED_EXECUTION_STATUSES.contains(pipelineExecution.getStatus())) {
+      PageRequest pageRequest = aPageRequest()
+                                    .addFilter("appId", Operator.EQ, pipelineExecution.getAppId())
+                                    .addFilter("pipelineId", Operator.EQ, pipelineExecution.getPipelineId())
+                                    .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                    .addOrder("endTs", OrderType.DESC)
+                                    .withLimit("5")
+                                    .build();
+      List<PipelineExecution> pipelineExecutions = listPipelineExecutions(pageRequest).getResponse();
+
+      Map<String, LongSummaryStatistics> stateEstimatesSum =
+          pipelineExecutions.stream()
+              .flatMap(pe -> pe.getPipelineStageExecutions().stream())
+              .collect(Collectors.groupingBy(
+                  PipelineStageExecution::getStateName, Collectors.summarizingLong(this ::getEstimate)));
+
+      Map<String, Long> newEstimates = new HashMap<>();
+
+      stateEstimatesSum.keySet().forEach(s -> {
+        LongSummaryStatistics longSummaryStatistics = stateEstimatesSum.get(s);
+        if (longSummaryStatistics.getCount() != 0) {
+          newEstimates.put(s, longSummaryStatistics.getSum() / longSummaryStatistics.getCount());
+        }
+      });
+      wingsPersistence.update(pipelineExecution.getPipeline(),
+          wingsPersistence.createUpdateOperations(Pipeline.class).set("stateEtaMap", newEstimates));
+    }
+  }
+
+  private Long getEstimate(PipelineStageExecution pipelineStageExecution) {
+    if (pipelineStageExecution.getEndTs() != null && pipelineStageExecution.getStartTs() != null
+        && pipelineStageExecution.getEndTs() > pipelineStageExecution.getStartTs()) {
+      return pipelineStageExecution.getEndTs() - pipelineStageExecution.getStartTs();
+    }
+    return null;
   }
 
   private ImmutableMap<String, StateExecutionInstance> getStateExecutionInstanceMap(
