@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -355,14 +356,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (res != null && res.size() > 0) {
       for (Orchestration orchestration : res.getResponse()) {
         StateMachine stateMachine = null;
-        if (isNotBlank(envId)) {
-          stateMachine = readLatest(orchestration.getAppId(), orchestration.getUuid());
-        } else {
-          Integer version = Optional.ofNullable(orchestration.getEnvIdVersionMap().get(envId))
-                                .orElse(anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
-                                .getVersion();
-          stateMachine = read(orchestration.getAppId(), orchestration.getUuid(), version);
-        }
+        Integer version = Optional.ofNullable(orchestration.getEnvIdVersionMap().get(nullToEmpty(envId)))
+                              .orElse(anEntityVersion().withVersion(orchestration.getDefaultVersion()).build())
+                              .getVersion();
+        stateMachine = read(orchestration.getAppId(), orchestration.getUuid(), version);
+
         if (stateMachine != null) {
           orchestration.setGraph(stateMachine.getGraph());
         }
@@ -409,13 +407,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public Orchestration readOrchestration(String appId, String orchestrationId) {
+  public Orchestration readOrchestration(String appId, String orchestrationId, Integer version) {
     Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
 
     if (orchestration == null) {
       return orchestration;
     }
-    StateMachine stateMachine = readLatest(appId, orchestrationId);
+    StateMachine stateMachine =
+        read(appId, orchestrationId, version == null ? orchestration.getDefaultVersion() : version);
     if (stateMachine != null) {
       orchestration.setGraph(stateMachine.getGraph());
     }
