@@ -50,7 +50,7 @@ db.applications.find().forEach(function(app){
      defaultVersion = workflow.defaultVersion;
    }
    if(db.entityVersions.find({ entityType: "WORKFLOW", entityUuid: workflow._id, version: defaultVersion}).count() == 0) {
-     db.entityVersions.insert({ "_id" : guid_to_base64(guid(), false), "entityType" : "WORKFLOW", "entityName" : workflow.name, "changeType" : "CREATED", "entityUuid" : "iRj_N71ZSDG2UzhDjc_mpg", "version" : defaultVersion, "appId" : workflow.appId,  "createdAt" : NumberLong("1478646591138"),  "lastUpdatedAt" : NumberLong("1478646591138") });
+     db.entityVersions.insert({ "_id" : guid_to_base64(guid(), false), "entityType" : "WORKFLOW", "entityName" : workflow.name, "changeType" : "CREATED", "entityUuid" : workflow._id, "version" : defaultVersion, "appId" : workflow.appId,  "createdAt" : NumberLong("1478646591138"),  "lastUpdatedAt" : NumberLong("1478646591138") });
    }
  });
 });
