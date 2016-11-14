@@ -42,8 +42,15 @@ function guid_to_base64(g, le) {
 
 db.applications.find().forEach(function(app){
  db.orchestrations.find({ appId: app._id}).forEach(function(workflow) {
-   if(db.entityVersions.find({ entityType: "WORKFLOW", entityUuid: workflow._id, version: workflow.defaultVersion}).count() == 0) {
-     db.entityVersions.insert({ "_id" : guid_to_base64(guid(), false), "entityType" : "WORKFLOW", "entityName" : workflow.name, "changeType" : "CREATED", "entityUuid" : "iRj_N71ZSDG2UzhDjc_mpg", "version" : workflow.defaultVersion, "appId" : workflow.appId,  "createdAt" : NumberLong("1478646591138"),  "lastUpdatedAt" : NumberLong("1478646591138") });
+   var defaultVersion = 1;
+   if(!workflow.defaultVersion) {
+     db.orchestrations.update({ _id: workflow._id}, { "$set": { defaultVersion: 1}});
+     db.stateMachines.update({ originId: workflow._id}, { "$set": { originVersion: 1 }});
+   } else {
+     defaultVersion = workflow.defaultVersion;
+   }
+   if(db.entityVersions.find({ entityType: "WORKFLOW", entityUuid: workflow._id, version: defaultVersion}).count() == 0) {
+     db.entityVersions.insert({ "_id" : guid_to_base64(guid(), false), "entityType" : "WORKFLOW", "entityName" : workflow.name, "changeType" : "CREATED", "entityUuid" : "iRj_N71ZSDG2UzhDjc_mpg", "version" : defaultVersion, "appId" : workflow.appId,  "createdAt" : NumberLong("1478646591138"),  "lastUpdatedAt" : NumberLong("1478646591138") });
    }
  });
 });
