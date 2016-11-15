@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
@@ -28,11 +31,16 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
-public class Command implements CommandUnit {
+@Entity(value = "commands", noClassnameStored = true)
+public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore @JsonTypeId private CommandUnitType commandUnitType;
-  private ExecutionResult executionResult;
+  @SchemaIgnore private ExecutionResult executionResult;
   @SchemaIgnore private boolean artifactNeeded = false;
+
+  @SchemaIgnore private String serviceId;
+
+  @SchemaIgnore private String appContainerId;
 
   @Expand(dataProvider = ServiceResourceServiceImpl.class)
   @EnumData(enumDataProvider = ServiceResourceServiceImpl.class)
@@ -166,6 +174,42 @@ public class Command implements CommandUnit {
   }
 
   /**
+   * Getter for property 'serviceId'.
+   *
+   * @return Value for property 'serviceId'.
+   */
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  /**
+   * Setter for property 'serviceId'.
+   *
+   * @param serviceId Value to set for property 'serviceId'.
+   */
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
+  }
+
+  /**
+   * Getter for property 'appContainerId'.
+   *
+   * @return Value for property 'appContainerId'.
+   */
+  public String getAppContainerId() {
+    return appContainerId;
+  }
+
+  /**
+   * Setter for property 'appContainerId'.
+   *
+   * @param appContainerId Value to set for property 'appContainerId'.
+   */
+  public void setAppContainerId(String appContainerId) {
+    this.appContainerId = appContainerId;
+  }
+
+  /**
    * Transform graph.
    */
   public void transformGraph() {
@@ -211,6 +255,42 @@ public class Command implements CommandUnit {
 
   @Override
   public void setArtifactNeeded(boolean artifactNeeded) {}
+
+  @SchemaIgnore
+  @Override
+  public String getAppId() {
+    return super.getAppId();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getCreatedBy() {
+    return super.getCreatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getLastUpdatedBy() {
+    return super.getLastUpdatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getCreatedAt() {
+    return super.getCreatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getLastUpdatedAt() {
+    return super.getLastUpdatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getUuid() {
+    return super.getUuid();
+  }
 
   @Override
   public String toString() {
