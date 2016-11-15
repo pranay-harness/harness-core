@@ -366,6 +366,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
         if (stateMachine != null) {
           orchestration.setGraph(stateMachine.getGraph());
+          orchestration.getGraph().setVersion(stateMachine.getOriginVersion());
         }
       }
     }
@@ -420,6 +421,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         read(appId, orchestrationId, version == null ? orchestration.getDefaultVersion() : version);
     if (stateMachine != null) {
       orchestration.setGraph(stateMachine.getGraph());
+      orchestration.getGraph().setVersion(stateMachine.getOriginVersion());
     }
     return orchestration;
   }
