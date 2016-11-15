@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.infrastructure.Host;
 
 /**

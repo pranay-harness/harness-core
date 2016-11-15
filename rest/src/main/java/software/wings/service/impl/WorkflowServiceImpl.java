@@ -226,8 +226,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     // create initial version
-    entityVersionService.newEntityVersion(
-        workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid(), workflow.getName(), ChangeType.CREATED);
+    entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid(),
+        workflow.getName(), ChangeType.CREATED, workflow.getNotes());
 
     return workflow;
   }
@@ -252,15 +252,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
-    EntityVersion entityVersion = entityVersionService.newEntityVersion(
-        pipeline.getAppId(), EntityType.WORKFLOW, pipeline.getUuid(), pipeline.getName(), ChangeType.UPDATED);
+    EntityVersion entityVersion = entityVersionService.newEntityVersion(pipeline.getAppId(), EntityType.WORKFLOW,
+        pipeline.getUuid(), pipeline.getName(), ChangeType.UPDATED, pipeline.getNotes());
     pipeline.setDefaultVersion(entityVersion.getVersion());
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
     setUnset(ops, "description", pipeline.getDescription());
     setUnset(ops, "cronSchedule", pipeline.getCronSchedule());
     setUnset(ops, "name", pipeline.getName());
     setUnset(ops, "services", pipeline.getServices());
-    setUnset(ops, "defaultVersion", pipeline.getDefaultVersion());
+
+    if (pipeline.getSetAsDefault()) {
+      setUnset(ops, "defaultVersion", pipeline.getDefaultVersion());
+    }
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
                                 .field("appId")
@@ -381,7 +384,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     EntityVersion entityVersion;
     if (orchestration.getGraph() != null) {
       entityVersion = entityVersionService.newEntityVersion(orchestration.getAppId(), EntityType.WORKFLOW,
-          orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED);
+          orchestration.getUuid(), orchestration.getName(), ChangeType.UPDATED, orchestration.getNotes());
     } else {
       entityVersion = entityVersionService.lastEntityVersion(
           orchestration.getAppId(), EntityType.WORKFLOW, orchestration.getUuid());

@@ -33,7 +33,7 @@ import java.util.Properties;
  * Created by peeyushaggarwal on 7/26/16.
  */
 @JsonTypeName("INIT")
-public class InitCommandUnit extends CommandUnit {
+public class InitCommandUnit extends AbstractCommandUnit {
   /**
    * The constant INITIALIZE_UNIT.
    */

@@ -50,7 +50,7 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitCommandUnit;

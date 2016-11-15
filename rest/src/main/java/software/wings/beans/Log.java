@@ -5,7 +5,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 
 import java.util.Objects;
 import javax.validation.constraints.NotNull;

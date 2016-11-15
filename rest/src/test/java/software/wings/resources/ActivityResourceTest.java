@@ -32,7 +32,7 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -185,7 +185,7 @@ public class ActivityResourceTest {
             .get(new GenericType<RestResponse<List<ExecCommandUnit>>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(List.class);
     assertThat(restResponse.getResource().size()).isEqualTo(1);
-    assertThat(restResponse.getResource().get(0)).isInstanceOf(CommandUnit.class);
+    assertThat(restResponse.getResource().get(0)).isInstanceOf(AbstractCommandUnit.class);
     verify(ACTIVITY_SERVICE).getCommandUnits(APP_ID, ACTIVITY_ID);
   }
 

@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("SCP")
-public class ScpCommandUnit extends CommandUnit {
+public class ScpCommandUnit extends AbstractCommandUnit {
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
