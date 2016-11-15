@@ -33,7 +33,7 @@ import java.util.Objects;
  * Created by anubhaw on 5/25/16.
  */
 @JsonTypeName("EXEC")
-public class ExecCommandUnit extends CommandUnit {
+public class ExecCommandUnit extends AbstractCommandUnit {
   @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
   @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;

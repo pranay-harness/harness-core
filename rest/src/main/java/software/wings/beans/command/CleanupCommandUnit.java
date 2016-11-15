@@ -5,7 +5,7 @@ import java.io.File;
 /**
  * Created by peeyushaggarwal on 7/26/16.
  */
-public class CleanupCommandUnit extends CommandUnit {
+public class CleanupCommandUnit extends AbstractCommandUnit {
   /**
    * The constant CLEANUP_UNIT.
    */

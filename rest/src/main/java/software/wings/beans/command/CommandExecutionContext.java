@@ -10,7 +10,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.FileService.FileBucket;
 

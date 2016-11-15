@@ -25,7 +25,7 @@ import java.util.Objects;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("COPY_CONFIGS")
-public class CopyConfigCommandUnit extends CommandUnit {
+public class CopyConfigCommandUnit extends AbstractCommandUnit {
   @Attributes(title = "Destination Parent Path")
   @DefaultValue("$WINGS_RUNTIME_PATH")
   private String destinationParentPath;

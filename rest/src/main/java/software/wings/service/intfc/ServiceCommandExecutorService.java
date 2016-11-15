@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 
 /**
  * Created by anubhaw on 6/2/16.

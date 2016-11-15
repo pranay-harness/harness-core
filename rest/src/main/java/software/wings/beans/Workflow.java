@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -27,7 +29,10 @@ public class Workflow extends Base {
   private Integer defaultVersion;
 
   @Transient private Graph graph;
-  @Transient private boolean setDefault = true;
+
+  @JsonIgnore @Transient private boolean setAsDefault;
+
+  @JsonIgnore @Transient private String notes;
 
   /**
    * Gets name.
@@ -117,11 +122,43 @@ public class Workflow extends Base {
     this.graph = graph;
   }
 
-  public boolean isSetDefault() {
-    return setDefault;
+  /**
+   * Getter for property 'setAsDefault'.
+   *
+   * @return Value for property 'setAsDefault'.
+   */
+  @JsonIgnore
+  public boolean getSetAsDefault() {
+    return setAsDefault;
   }
 
-  public void setSetDefault(boolean setDefault) {
-    this.setDefault = setDefault;
+  /**
+   * Setter for property 'setAsDefault'.
+   *
+   * @param setAsDefault Value to set for property 'setAsDefault'.
+   */
+  @JsonProperty
+  public void setSetAsDefault(boolean setAsDefault) {
+    this.setAsDefault = setAsDefault;
+  }
+
+  /**
+   * Getter for property 'notes'.
+   *
+   * @return Value for property 'notes'.
+   */
+  @JsonIgnore
+  public String getNotes() {
+    return notes;
+  }
+
+  /**
+   * Setter for property 'notes'.
+   *
+   * @param notes Value to set for property 'notes'.
+   */
+  @JsonProperty
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 }

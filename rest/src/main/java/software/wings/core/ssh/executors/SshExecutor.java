@@ -1,7 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;

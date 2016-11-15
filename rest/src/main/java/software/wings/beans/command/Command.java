@@ -3,12 +3,14 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
@@ -26,7 +28,12 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
-public class Command extends CommandUnit {
+public class Command implements CommandUnit {
+  @SchemaIgnore private String name;
+  @SchemaIgnore @JsonTypeId private CommandUnitType commandUnitType;
+  private ExecutionResult executionResult;
+  @SchemaIgnore private boolean artifactNeeded = false;
+
   @Expand(dataProvider = ServiceResourceServiceImpl.class)
   @EnumData(enumDataProvider = ServiceResourceServiceImpl.class)
   @Attributes(title = "Name")
@@ -38,16 +45,46 @@ public class Command extends CommandUnit {
 
   @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
+  public Command() {
+    this.commandUnitType = CommandUnitType.COMMAND;
+  }
+
   /**
    * Instantiates a new command.
    */
-  public Command() {
-    super(CommandUnitType.COMMAND);
-  }
-
   @Override
   public ExecutionResult execute(CommandExecutionContext context) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public CommandUnitType getCommandUnitType() {
+    return commandUnitType;
+  }
+
+  @Override
+  public void setCommandUnitType(CommandUnitType commandUnitType) {
+    this.commandUnitType = commandUnitType;
+  }
+
+  @Override
+  public ExecutionResult getExecutionResult() {
+    return executionResult;
+  }
+
+  @Override
+  public void setExecutionResult(ExecutionResult executionResult) {
+    this.executionResult = executionResult;
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public void setName(String name) {
+    this.name = name;
   }
 
   /**
@@ -171,6 +208,9 @@ public class Command extends CommandUnit {
   public boolean isArtifactNeeded() {
     return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
   }
+
+  @Override
+  public void setArtifactNeeded(boolean artifactNeeded) {}
 
   @Override
   public String toString() {
