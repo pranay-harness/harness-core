@@ -223,6 +223,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(), graph, stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       workflow.setGraph(stateMachine.getGraph());
+      workflow.getGraph().setVersion(stateMachine.getOriginVersion());
     }
 
     // create initial version
@@ -243,6 +244,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       StateMachine stateMachine = new StateMachine(workflow, version, graph, stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       workflow.setGraph(stateMachine.getGraph());
+      workflow.getGraph().setVersion(stateMachine.getOriginVersion());
     }
     return workflow;
   }
