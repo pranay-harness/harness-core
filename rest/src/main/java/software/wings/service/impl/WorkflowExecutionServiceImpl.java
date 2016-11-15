@@ -29,7 +29,6 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
@@ -52,6 +51,7 @@ import software.wings.beans.StatusInstanceBreakdown;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -982,9 +982,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (!instance.getStateType().equals(StateType.REPEAT.name())) {
         continue;
       }
-      RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) instance.getStateExecutionData();
-      if (repeatStateExecutionData.getRepeatElementType() == contextElementType) {
-        return instance;
+      if ((instance.getStateExecutionData() instanceof RepeatStateExecutionData)) {
+        RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) instance.getStateExecutionData();
+        if (repeatStateExecutionData.getRepeatElementType() == contextElementType) {
+          return instance;
+        }
       }
     }
     return null;
