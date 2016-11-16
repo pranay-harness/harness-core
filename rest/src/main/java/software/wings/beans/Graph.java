@@ -14,6 +14,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -38,6 +39,8 @@ public class Graph {
   private List<Link> links = new ArrayList<>();
 
   @Transient private Optional<Node> originState = null;
+
+  @Transient @JsonIgnore private int version;
 
   /**
    * Gets graph name.
@@ -119,6 +122,26 @@ public class Graph {
   @JsonIgnore
   public Map<String, Node> getNodesMap() {
     return getNodes().stream().collect(toMap(Node::getId, identity()));
+  }
+
+  /**
+   * Getter for property 'version'.
+   *
+   * @return Value for property 'version'.
+   */
+  @JsonProperty
+  public int getVersion() {
+    return version;
+  }
+
+  /**
+   * Setter for property 'version'.
+   *
+   * @param version Value to set for property 'version'.
+   */
+  @JsonIgnore
+  public void setVersion(int version) {
+    this.version = version;
   }
 
   /**

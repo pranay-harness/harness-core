@@ -8,12 +8,17 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
+import software.wings.utils.ArtifactType;
+import software.wings.utils.ContainerFamily;
 import software.wings.utils.MapperUtils;
 
 import java.util.Arrays;
@@ -28,11 +33,18 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
-public class Command implements CommandUnit {
+@Entity(value = "commands")
+public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore @JsonTypeId private CommandUnitType commandUnitType;
-  private ExecutionResult executionResult;
+  @SchemaIgnore private ExecutionResult executionResult;
   @SchemaIgnore private boolean artifactNeeded = false;
+
+  @SchemaIgnore private String serviceId;
+
+  @SchemaIgnore private ContainerFamily containerFamily;
+
+  @SchemaIgnore private ArtifactType artifactType;
 
   @Expand(dataProvider = ServiceResourceServiceImpl.class)
   @EnumData(enumDataProvider = ServiceResourceServiceImpl.class)
@@ -166,6 +178,60 @@ public class Command implements CommandUnit {
   }
 
   /**
+   * Getter for property 'serviceId'.
+   *
+   * @return Value for property 'serviceId'.
+   */
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  /**
+   * Setter for property 'serviceId'.
+   *
+   * @param serviceId Value to set for property 'serviceId'.
+   */
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
+  }
+
+  /**
+   * Getter for property 'containerFamily'.
+   *
+   * @return Value for property 'containerFamily'.
+   */
+  public ContainerFamily getContainerFamily() {
+    return containerFamily;
+  }
+
+  /**
+   * Setter for property 'containerFamily'.
+   *
+   * @param containerFamily Value to set for property 'containerFamily'.
+   */
+  public void setContainerFamily(ContainerFamily containerFamily) {
+    this.containerFamily = containerFamily;
+  }
+
+  /**
+   * Getter for property 'artifactType'.
+   *
+   * @return Value for property 'artifactType'.
+   */
+  public ArtifactType getArtifactType() {
+    return artifactType;
+  }
+
+  /**
+   * Setter for property 'artifactType'.
+   *
+   * @param artifactType Value to set for property 'artifactType'.
+   */
+  public void setArtifactType(ArtifactType artifactType) {
+    this.artifactType = artifactType;
+  }
+
+  /**
    * Transform graph.
    */
   public void transformGraph() {
@@ -211,6 +277,42 @@ public class Command implements CommandUnit {
 
   @Override
   public void setArtifactNeeded(boolean artifactNeeded) {}
+
+  @SchemaIgnore
+  @Override
+  public String getAppId() {
+    return super.getAppId();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getCreatedBy() {
+    return super.getCreatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getLastUpdatedBy() {
+    return super.getLastUpdatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getCreatedAt() {
+    return super.getCreatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getLastUpdatedAt() {
+    return super.getLastUpdatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getUuid() {
+    return super.getUuid();
+  }
 
   @Override
   public String toString() {
