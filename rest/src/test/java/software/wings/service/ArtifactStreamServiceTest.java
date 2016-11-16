@@ -1,5 +1,22 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
+import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -10,6 +27,8 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.quartz.JobDetail;
+import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
@@ -23,18 +42,8 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
 
-import javax.inject.Inject;
 import java.util.concurrent.ExecutorService;
-
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
-import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
-import static software.wings.utils.WingsTestConstants.*;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 11/4/16.
@@ -59,6 +68,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
           .withSourceName("SOURCE_NAME")
           .withJenkinsSettingId(SETTING_ID)
           .withJobname("JOB")
+          .withAutoDownload(true)
           .withArtifactPathServices(asList(
               anArtifactPathServiceEntry().withArtifactPathRegex("*WAR").withServiceIds(asList(SERVICE_ID)).build()))
           .build();
@@ -102,6 +112,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     ArtifactStream artifactStream = artifactStreamService.create(jenkinsArtifactStream);
     assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
+    verify(jobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
     verify(wingsPersistence).save(any(ArtifactStream.class));
     verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
   }
@@ -118,6 +129,10 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDelete() {
+    jenkinsArtifactStream.setStreamActions(
+        asList(ArtifactStreamAction.Builder.anArtifactStreamAction().withWorkflowId(WORKFLOW_ID).build()));
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     artifactStreamService.delete(APP_ID, ARTIFACT_STREAM_ID);
     verify(wingsPersistence).delete(any(Query.class));
     verify(wingsPersistence).createQuery(any());
@@ -125,13 +140,15 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(ARTIFACT_STREAM_ID);
+    verify(jobScheduler).deleteJob("ARTIFACT_STREAM_CRON_GROUP", ARTIFACT_STREAM_ID);
+    verify(jobScheduler).deleteJob(ARTIFACT_STREAM_ID, WORKFLOW_ID);
   }
 
   @Test
   public void shouldAddStreamAction() {
     ArtifactStreamAction artifactStreamAction = anArtifactStreamAction()
                                                     .withCustomAction(true)
-                                                    .withCronExpression("*.war")
+                                                    .withCronExpression("* * * * ?")
                                                     .withWorkflowType(WorkflowType.ORCHESTRATION)
                                                     .withWorkflowId(WORKFLOW_ID)
                                                     .build();

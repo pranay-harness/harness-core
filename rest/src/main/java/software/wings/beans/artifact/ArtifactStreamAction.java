@@ -20,7 +20,6 @@ public class ArtifactStreamAction {
   @NotNull private boolean customAction = false;
   private String cronExpression;
   private String actionSummary;
-  private String jobId;
 
   /**
    * Gets workflow type.
@@ -112,43 +111,6 @@ public class ArtifactStreamAction {
     this.cronExpression = cronExpression;
   }
 
-  /**
-   * Gets job id.
-   *
-   * @return the job id
-   */
-  public String getJobId() {
-    return jobId;
-  }
-
-  /**
-   * Sets job id.
-   *
-   * @param jobId the job id
-   */
-  public void setJobId(String jobId) {
-    this.jobId = jobId;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(workflowType, workflowId, envId, customAction, cronExpression, jobId);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final ArtifactStreamAction other = (ArtifactStreamAction) obj;
-    return Objects.equals(this.workflowType, other.workflowType) && Objects.equals(this.workflowId, other.workflowId)
-        && Objects.equals(this.envId, other.envId) && Objects.equals(this.customAction, other.customAction)
-        && Objects.equals(this.cronExpression, other.cronExpression) && Objects.equals(this.jobId, other.jobId);
-  }
-
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -157,7 +119,6 @@ public class ArtifactStreamAction {
         .add("envId", envId)
         .add("customAction", customAction)
         .add("cronExpression", cronExpression)
-        .add("jobId", jobId)
         .toString();
   }
 
@@ -179,6 +140,26 @@ public class ArtifactStreamAction {
     this.actionSummary = actionSummary;
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(workflowType, workflowId, envId, customAction, cronExpression, actionSummary);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ArtifactStreamAction other = (ArtifactStreamAction) obj;
+    return Objects.equals(this.workflowType, other.workflowType) && Objects.equals(this.workflowId, other.workflowId)
+        && Objects.equals(this.envId, other.envId) && Objects.equals(this.customAction, other.customAction)
+        && Objects.equals(this.cronExpression, other.cronExpression)
+        && Objects.equals(this.actionSummary, other.actionSummary);
+  }
+
   /**
    * The type Builder.
    */
@@ -189,7 +170,6 @@ public class ArtifactStreamAction {
     private boolean customAction = false;
     private String cronExpression;
     private String actionSummary;
-    private String jobId;
 
     private Builder() {}
 
@@ -269,17 +249,6 @@ public class ArtifactStreamAction {
     }
 
     /**
-     * With job id builder.
-     *
-     * @param jobId the job id
-     * @return the builder
-     */
-    public Builder withJobId(String jobId) {
-      this.jobId = jobId;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -291,8 +260,7 @@ public class ArtifactStreamAction {
           .withEnvId(envId)
           .withCustomAction(customAction)
           .withCronExpression(cronExpression)
-          .withActionSummary(actionSummary)
-          .withJobId(jobId);
+          .withActionSummary(actionSummary);
     }
 
     /**
@@ -308,7 +276,6 @@ public class ArtifactStreamAction {
       artifactStreamAction.setCustomAction(customAction);
       artifactStreamAction.setCronExpression(cronExpression);
       artifactStreamAction.setActionSummary(actionSummary);
-      artifactStreamAction.setJobId(jobId);
       return artifactStreamAction;
     }
   }

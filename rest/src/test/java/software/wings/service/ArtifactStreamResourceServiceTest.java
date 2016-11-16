@@ -12,11 +12,14 @@ import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.rules.RealMongo;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 
 import java.util.Arrays;
@@ -40,7 +43,8 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
                                                            .build()))
           .build();
 
-  @Inject private ArtifactStreamService artifactStreamService;
+  @Mock private JobScheduler jobScheduler;
+  @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
   /**
    * setup for test.

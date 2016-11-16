@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
@@ -14,6 +16,7 @@ import net.redhogs.cronparser.Options;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
@@ -22,25 +25,35 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.ExecutionArgs;
+import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ArtifactCollectionJob;
+import software.wings.scheduler.ArtifactStreamActionJob;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.text.ParseException;
-import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -54,10 +67,14 @@ import javax.ws.rs.NotFoundException;
 @Singleton
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
+  public static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
   @Inject private JobScheduler jobScheduler;
+  @Inject private PipelineService pipelineService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private ArtifactService artifactService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -100,7 +117,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void addCronForAutoArtifactCollection(ArtifactStream artifactStream) {
     JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
-                        .withIdentity(artifactStream.getUuid())
+                        .withIdentity(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid())
                         .usingJobData("artifactStreamId", artifactStream.getUuid())
                         .usingJobData("appId", artifactStream.getAppId())
                         .build();
@@ -111,18 +128,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60 * 5).repeatForever())
             .build();
 
-    Date date = jobScheduler.scheduleJob(job, trigger);
-    if (date != null) {
-      wingsPersistence.updateField(
-          ArtifactStream.class, artifactStream.getUuid(), "autoDownloadJobName", job.getKey().getName());
-    }
-  }
-
-  private void deleteCronForAutoArtifactCollection(ArtifactStream artifactStream) {
-    boolean deleted = jobScheduler.deleteJob(artifactStream.getAutoDownloadJobName());
-    if (deleted) {
-      wingsPersistence.updateField(ArtifactStream.class, artifactStream.getUuid(), "autoDownloadJobName", "");
-    }
+    jobScheduler.scheduleJob(job, trigger);
   }
 
   @Override
@@ -135,7 +141,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     artifactStream = create(artifactStream);
     if (!artifactStream.isAutoDownload()) {
-      deleteCronForAutoArtifactCollection(savedArtifactStream);
+      jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, savedArtifactStream.getUuid());
     }
     return artifactStream;
   }
@@ -149,7 +155,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                   .field("appId")
                                                   .equal(appId));
     if (deleted) {
-      deleteCronForAutoArtifactCollection(artifactStream);
+      jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid());
+      artifactStream.getStreamActions().stream().forEach(
+          streamAction -> jobScheduler.deleteJob(artifactStreamId, streamAction.getWorkflowId()));
     }
     return deleted;
   }
@@ -165,6 +173,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+    if (artifactStreamAction.isCustomAction() && !isNullOrEmpty(artifactStreamAction.getCronExpression())) {
+      artifactStreamAction.setCronExpression("0 " + artifactStreamAction.getCronExpression());
+    }
+
     artifactStreamAction.setActionSummary(getActionSummary(appId, artifactStreamAction));
 
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
@@ -177,7 +189,30 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     UpdateOperations<ArtifactStream> operations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).add("streamActions", artifactStreamAction);
     UpdateResults update = wingsPersistence.update(query, operations);
+
+    if (artifactStreamAction.isCustomAction()) {
+      addCronForScheduledJobExecution(appId, streamId, artifactStreamAction);
+    }
     return get(appId, streamId);
+  }
+
+  private void addCronForScheduledJobExecution(
+      String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+    // Use ArtifactStream uuid as job group name and workflowId as job name
+
+    JobDetail job = JobBuilder.newJob(ArtifactStreamActionJob.class)
+                        .withIdentity(streamId, artifactStreamAction.getWorkflowId())
+                        .usingJobData("artifactStreamId", streamId)
+                        .usingJobData("appId", appId)
+                        .usingJobData("workflowId", artifactStreamAction.getWorkflowId())
+                        .build();
+
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(streamId, artifactStreamAction.getWorkflowId())
+                          .withSchedule(CronScheduleBuilder.cronSchedule(artifactStreamAction.getCronExpression()))
+                          .build();
+
+    jobScheduler.scheduleJob(job, trigger);
   }
 
   private String getActionSummary(String appId, ArtifactStreamAction artifactStreamAction) {
@@ -222,7 +257,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     UpdateOperations<ArtifactStream> operations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).removeAll("streamActions", streamAction);
 
-    wingsPersistence.update(query, operations);
+    UpdateResults update = wingsPersistence.update(query, operations);
+
+    jobScheduler.deleteJob(streamId, workflowId);
+
     return get(appId, streamId);
   }
 
@@ -233,35 +271,89 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public void triggerStreamActionAsync(Artifact artifact) {
-    executorService.execute(() -> triggerStreamAction(artifact));
+  public void triggerStreamActionPostArtifactCollectionAsync(Artifact artifact) {
+    executorService.execute(() -> triggerStreamActionPostArtifactCollection(artifact));
   }
 
-  private void triggerStreamAction(Artifact artifact) {
+  @Override
+  public void triggerScheduledStreamAction(String appId, String streamId, String workflowId) {
+    ArtifactStream artifactStream = get(appId, streamId);
+    ArtifactStreamAction artifactStreamAction =
+        artifactStream.getStreamActions()
+            .stream()
+            .filter(asa -> asa.isCustomAction() && asa.getWorkflowId().equals(workflowId))
+            .findFirst()
+            .orElse(null);
+
+    Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(appId, streamId);
+    int latestArtifactBuildNo = (latestArtifact != null && latestArtifact.getMetadata().get("buildNo") != null)
+        ? Integer.parseInt(latestArtifact.getMetadata().get("buildNo"))
+        : 0;
+
+    Artifact lastSuccessfullyDeployedArtifact = getLastSuccessfullyDeployedArtifact(appId, artifactStreamAction);
+    int lastDeployedArtifactBuildNo = (lastSuccessfullyDeployedArtifact != null
+                                          && lastSuccessfullyDeployedArtifact.getMetadata().get("buildNo") != null)
+        ? Integer.parseInt(lastSuccessfullyDeployedArtifact.getMetadata().get("buildNo"))
+        : 0;
+
+    logger.info("latest collected artifact build#{}, last successfully deployed artifact build#{}",
+        latestArtifactBuildNo, lastDeployedArtifactBuildNo);
+
+    if (latestArtifactBuildNo > lastDeployedArtifactBuildNo) {
+      logger.info("Trigger stream action with artifact build# {}", latestArtifactBuildNo);
+      triggerStreamAction(latestArtifact, artifactStreamAction);
+    }
+  }
+
+  private Artifact getLastSuccessfullyDeployedArtifact(String appId, ArtifactStreamAction artifactStreamAction) {
+    PageRequest pageRequest = Builder.aPageRequest()
+                                  .addFilter("appId", Operator.EQ, appId)
+                                  .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                  .addOrder("createdAt", OrderType.DESC)
+                                  .withLimit("1")
+                                  .build();
+
+    String artifactId = null;
+
+    if (artifactStreamAction.getWorkflowType().equals(PIPELINE)) {
+      pageRequest.addFilter("pipelineId", artifactStreamAction.getWorkflowId(), Operator.EQ);
+      List<PipelineExecution> response = pipelineService.listPipelineExecutions(pageRequest).getResponse();
+      if (response.size() == 1) {
+        artifactId = response.get(0).getArtifactId();
+      }
+    } else {
+      pageRequest.addFilter("workflowId", artifactStreamAction.getWorkflowId(), Operator.EQ);
+      pageRequest.addFilter("envId", artifactStreamAction.getEnvId(), Operator.EQ);
+      List<WorkflowExecution> response = workflowExecutionService.listExecutions(pageRequest, false).getResponse();
+      if (response.size() == 1) {
+        artifactId = response.get(0).getExecutionArgs().getArtifacts().get(0).getUuid();
+      }
+    }
+
+    return artifactId != null ? artifactService.get(appId, artifactId) : null;
+  }
+
+  private void triggerStreamActionPostArtifactCollection(Artifact artifact) {
     ArtifactStream artifactStream = get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("ArtifactStream", artifactStream);
-    artifactStream.getStreamActions().forEach(
-        artifactStreamAction -> triggerStreamAction(artifact, artifactStreamAction));
+    artifactStream.getStreamActions()
+        .stream()
+        .filter(streamAction -> !streamAction.isCustomAction())
+        .forEach(artifactStreamAction -> triggerStreamAction(artifact, artifactStreamAction));
   }
 
   private void triggerStreamAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
-    if (artifactStreamAction.isCustomAction()) {
-      return; // do nothing for scheduled actions
-    }
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(artifact));
+    executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
+    logger.info("Execute workflow of {} type with id {}", artifactStreamAction.getWorkflowType(),
+        artifactStreamAction.getWorkflowId());
 
     if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
-      triggerWorkflowAction(artifact, artifactStreamAction);
+      workflowExecutionService.triggerEnvExecution(artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
     } else {
-      triggerPipelineAction(artifact, artifactStreamAction);
+      pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
     }
-  }
-
-  private void triggerPipelineAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
-    logger.info("Execute pipeline jobs " + artifactStreamAction.getWorkflowId());
-  }
-
-  private void triggerWorkflowAction(Artifact artifact, ArtifactStreamAction artifactStreamAction) {
-    logger.info("Execute workflow jobs " + artifactStreamAction.getWorkflowId());
   }
 
   @Override

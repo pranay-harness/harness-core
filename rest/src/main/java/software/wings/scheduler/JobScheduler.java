@@ -1,7 +1,12 @@
 package software.wings.scheduler;
 
 import com.google.inject.Injector;
-import org.quartz.*;
+
+import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +17,10 @@ import software.wings.beans.ErrorCodes;
 import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.Date;
 import java.util.Properties;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 10/21/16.
@@ -103,15 +108,17 @@ public class JobScheduler {
   /**
    * Delete job boolean.
    *
+   *
+   * @param groupName
    * @param jobName the job name
    * @return the boolean
    */
-  public boolean deleteJob(String jobName) {
-    if (jobName != null) {
+  public boolean deleteJob(String groupName, String jobName) {
+    if (groupName != null && jobName != null) {
       try {
-        return scheduler.deleteJob(new JobKey(jobName));
+        return scheduler.deleteJob(new JobKey(groupName, jobName));
       } catch (SchedulerException ex) {
-        logger.error("Couldn't delete cron job {} ", jobName);
+        logger.error("Couldn't delete cron job [{} {}] ", groupName, jobName);
       }
     }
     return false;

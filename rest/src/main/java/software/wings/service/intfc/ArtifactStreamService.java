@@ -26,8 +26,8 @@ public interface ArtifactStreamService {
   /**
    * Get artifact stream.
    *
-   * @param appId the app id
-   * @param artifactStreamId    the id
+   * @param appId            the app id
+   * @param artifactStreamId the id
    * @return the artifact stream
    */
   ArtifactStream get(String appId, String artifactStreamId);
@@ -51,8 +51,8 @@ public interface ArtifactStreamService {
   /**
    * Delete.
    *
-   * @param appId the app id
-   * @param artifactStreamId    the id
+   * @param appId            the app id
+   * @param artifactStreamId the id
    * @return true, if successful
    */
   boolean delete(@NotEmpty String appId, @NotEmpty String artifactStreamId);
@@ -99,5 +99,14 @@ public interface ArtifactStreamService {
    *
    * @param artifact the artifact
    */
-  void triggerStreamActionAsync(Artifact artifact);
+  void triggerStreamActionPostArtifactCollectionAsync(Artifact artifact);
+
+  /**
+   * Trigger scheduled stream action.
+   *
+   * @param appId      the app id
+   * @param streamId   the stream id
+   * @param workflowId the workflow id
+   */
+  void triggerScheduledStreamAction(String appId, String streamId, String workflowId);
 }

@@ -208,7 +208,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public void collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
+  public Artifact collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
     JenkinsArtifactStream artifactStream = (JenkinsArtifactStream) artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("artifactStream", artifactStream);
     BuildDetails lastSuccessfulBuild =
@@ -233,12 +233,14 @@ public class ArtifactServiceImpl implements ArtifactService {
                 .withMetadata(ImmutableMap.of("buildNo", Integer.toString(lastSuccessfulBuild.getNumber())))
                 .withRevision(lastSuccessfulBuild.getRevision())
                 .build();
-        create(artifact);
+        return create(artifact);
       }
     }
+    return null;
   }
 
-  private Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId) {
+  @Override
+  public Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId) {
     return wingsPersistence.createQuery(Artifact.class)
         .field("appId")
         .equal(appId)
