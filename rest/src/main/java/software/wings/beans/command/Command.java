@@ -17,6 +17,8 @@ import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
+import software.wings.utils.ArtifactType;
+import software.wings.utils.ContainerFamily;
 import software.wings.utils.MapperUtils;
 
 import java.util.Arrays;
@@ -31,7 +33,7 @@ import javax.validation.constraints.NotNull;
  */
 @JsonTypeName("COMMAND")
 @Attributes(title = "Command")
-@Entity(value = "commands", noClassnameStored = true)
+@Entity(value = "commands")
 public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore @JsonTypeId private CommandUnitType commandUnitType;
@@ -40,7 +42,9 @@ public class Command extends Base implements CommandUnit {
 
   @SchemaIgnore private String serviceId;
 
-  @SchemaIgnore private String appContainerId;
+  @SchemaIgnore private ContainerFamily containerFamily;
+
+  @SchemaIgnore private ArtifactType artifactType;
 
   @Expand(dataProvider = ServiceResourceServiceImpl.class)
   @EnumData(enumDataProvider = ServiceResourceServiceImpl.class)
@@ -192,21 +196,39 @@ public class Command extends Base implements CommandUnit {
   }
 
   /**
-   * Getter for property 'appContainerId'.
+   * Getter for property 'containerFamily'.
    *
-   * @return Value for property 'appContainerId'.
+   * @return Value for property 'containerFamily'.
    */
-  public String getAppContainerId() {
-    return appContainerId;
+  public ContainerFamily getContainerFamily() {
+    return containerFamily;
   }
 
   /**
-   * Setter for property 'appContainerId'.
+   * Setter for property 'containerFamily'.
    *
-   * @param appContainerId Value to set for property 'appContainerId'.
+   * @param containerFamily Value to set for property 'containerFamily'.
    */
-  public void setAppContainerId(String appContainerId) {
-    this.appContainerId = appContainerId;
+  public void setContainerFamily(ContainerFamily containerFamily) {
+    this.containerFamily = containerFamily;
+  }
+
+  /**
+   * Getter for property 'artifactType'.
+   *
+   * @return Value for property 'artifactType'.
+   */
+  public ArtifactType getArtifactType() {
+    return artifactType;
+  }
+
+  /**
+   * Setter for property 'artifactType'.
+   *
+   * @param artifactType Value to set for property 'artifactType'.
+   */
+  public void setArtifactType(ArtifactType artifactType) {
+    this.artifactType = artifactType;
   }
 
   /**
