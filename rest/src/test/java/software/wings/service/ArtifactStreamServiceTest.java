@@ -13,6 +13,8 @@ import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenki
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -30,6 +32,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Environment;
+import software.wings.beans.Orchestration;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -40,7 +44,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -52,9 +58,11 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ExecutorService executorService;
-  @Mock private Query<ArtifactStream> query;
   @Mock private UpdateOperations<ArtifactStream> updateOperations;
   @Mock private JobScheduler jobScheduler;
+  @Mock private WorkflowService workflowService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private Query<ArtifactStream> query;
   @Mock private FieldEnd end;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
@@ -151,7 +159,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .withCronExpression("* * * * ?")
                                                     .withWorkflowType(WorkflowType.ORCHESTRATION)
                                                     .withWorkflowId(WORKFLOW_ID)
+                                                    .withEnvId(ENV_ID)
                                                     .build();
+    when(workflowService.readOrchestration(APP_ID, WORKFLOW_ID, null))
+        .thenReturn(Orchestration.Builder.anOrchestration().withName("NAME").build());
+    when(environmentService.get(APP_ID, ENV_ID, false))
+        .thenReturn(Environment.Builder.anEnvironment().withName(ENV_NAME).build());
     artifactStreamService.addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
     verify(wingsPersistence).createQuery(any());
     verify(query).field("appId");

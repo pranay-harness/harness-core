@@ -16,10 +16,13 @@ import javax.validation.constraints.NotNull;
 public class ArtifactStreamAction {
   @NotNull private WorkflowType workflowType;
   @NotEmpty private String workflowId;
+  private String workflowName;
   private String envId;
+  private String envName;
   @NotNull private boolean customAction = false;
   private String cronExpression;
-  private String actionSummary;
+  private String cronDescription;
+  private String actionSummary; // TODO:: remove once UI stops using it.
 
   /**
    * Gets workflow type.
@@ -111,17 +114,6 @@ public class ArtifactStreamAction {
     this.cronExpression = cronExpression;
   }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("workflowType", workflowType)
-        .add("workflowId", workflowId)
-        .add("envId", envId)
-        .add("customAction", customAction)
-        .add("cronExpression", cronExpression)
-        .toString();
-  }
-
   /**
    * Gets action summary.
    *
@@ -140,9 +132,64 @@ public class ArtifactStreamAction {
     this.actionSummary = actionSummary;
   }
 
+  /**
+   * Gets translated cron.
+   *
+   * @return the translated cron
+   */
+  public String getCronDescription() {
+    return cronDescription;
+  }
+
+  /**
+   * Sets translated cron.
+   *
+   * @param cronDescription the translated cron
+   */
+  public void setCronDescription(String cronDescription) {
+    this.cronDescription = cronDescription;
+  }
+
+  /**
+   * Gets workflow name.
+   *
+   * @return the workflow name
+   */
+  public String getWorkflowName() {
+    return workflowName;
+  }
+
+  /**
+   * Sets workflow name.
+   *
+   * @param workflowName the workflow name
+   */
+  public void setWorkflowName(String workflowName) {
+    this.workflowName = workflowName;
+  }
+
+  /**
+   * Gets env name.
+   *
+   * @return the env name
+   */
+  public String getEnvName() {
+    return envName;
+  }
+
+  /**
+   * Sets env name.
+   *
+   * @param envName the env name
+   */
+  public void setEnvName(String envName) {
+    this.envName = envName;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(workflowType, workflowId, envId, customAction, cronExpression, actionSummary);
+    return Objects.hash(workflowType, workflowId, workflowName, envId, envName, customAction, cronExpression,
+        cronDescription, actionSummary);
   }
 
   @Override
@@ -155,9 +202,26 @@ public class ArtifactStreamAction {
     }
     final ArtifactStreamAction other = (ArtifactStreamAction) obj;
     return Objects.equals(this.workflowType, other.workflowType) && Objects.equals(this.workflowId, other.workflowId)
-        && Objects.equals(this.envId, other.envId) && Objects.equals(this.customAction, other.customAction)
+        && Objects.equals(this.workflowName, other.workflowName) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.envName, other.envName) && Objects.equals(this.customAction, other.customAction)
         && Objects.equals(this.cronExpression, other.cronExpression)
+        && Objects.equals(this.cronDescription, other.cronDescription)
         && Objects.equals(this.actionSummary, other.actionSummary);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("workflowType", workflowType)
+        .add("workflowId", workflowId)
+        .add("workflowName", workflowName)
+        .add("envId", envId)
+        .add("envName", envName)
+        .add("customAction", customAction)
+        .add("cronExpression", cronExpression)
+        .add("cronDescription", cronDescription)
+        .add("actionSummary", actionSummary)
+        .toString();
   }
 
   /**
@@ -166,10 +230,13 @@ public class ArtifactStreamAction {
   public static final class Builder {
     private WorkflowType workflowType;
     private String workflowId;
+    private String workflowName;
     private String envId;
+    private String envName;
     private boolean customAction = false;
     private String cronExpression;
-    private String actionSummary;
+    private String cronDescription;
+    private String actionSummary; // TODO:: remove once UI stops using it.
 
     private Builder() {}
 
@@ -205,6 +272,17 @@ public class ArtifactStreamAction {
     }
 
     /**
+     * With workflow name builder.
+     *
+     * @param workflowName the workflow name
+     * @return the builder
+     */
+    public Builder withWorkflowName(String workflowName) {
+      this.workflowName = workflowName;
+      return this;
+    }
+
+    /**
      * With env id builder.
      *
      * @param envId the env id
@@ -212,6 +290,17 @@ public class ArtifactStreamAction {
      */
     public Builder withEnvId(String envId) {
       this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With env name builder.
+     *
+     * @param envName the env name
+     * @return the builder
+     */
+    public Builder withEnvName(String envName) {
+      this.envName = envName;
       return this;
     }
 
@@ -238,6 +327,17 @@ public class ArtifactStreamAction {
     }
 
     /**
+     * With cron description builder.
+     *
+     * @param cronDescription the cron description
+     * @return the builder
+     */
+    public Builder withCronDescription(String cronDescription) {
+      this.cronDescription = cronDescription;
+      return this;
+    }
+
+    /**
      * With action summary builder.
      *
      * @param actionSummary the action summary
@@ -257,9 +357,12 @@ public class ArtifactStreamAction {
       return anArtifactStreamAction()
           .withWorkflowType(workflowType)
           .withWorkflowId(workflowId)
+          .withWorkflowName(workflowName)
           .withEnvId(envId)
+          .withEnvName(envName)
           .withCustomAction(customAction)
           .withCronExpression(cronExpression)
+          .withCronDescription(cronDescription)
           .withActionSummary(actionSummary);
     }
 
@@ -272,9 +375,12 @@ public class ArtifactStreamAction {
       ArtifactStreamAction artifactStreamAction = new ArtifactStreamAction();
       artifactStreamAction.setWorkflowType(workflowType);
       artifactStreamAction.setWorkflowId(workflowId);
+      artifactStreamAction.setWorkflowName(workflowName);
       artifactStreamAction.setEnvId(envId);
+      artifactStreamAction.setEnvName(envName);
       artifactStreamAction.setCustomAction(customAction);
       artifactStreamAction.setCronExpression(cronExpression);
+      artifactStreamAction.setCronDescription(cronDescription);
       artifactStreamAction.setActionSummary(actionSummary);
       return artifactStreamAction;
     }

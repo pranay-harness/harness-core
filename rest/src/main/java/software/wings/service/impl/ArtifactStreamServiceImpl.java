@@ -25,10 +25,12 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -43,9 +45,11 @@ import software.wings.scheduler.ArtifactStreamActionJob;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Validator;
@@ -73,8 +77,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ExecutorService executorService;
   @Inject private JobScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
+  @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
+  @Inject private EnvironmentService environmentService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -175,9 +181,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
     if (artifactStreamAction.isCustomAction() && !isNullOrEmpty(artifactStreamAction.getCronExpression())) {
       artifactStreamAction.setCronExpression("0 " + artifactStreamAction.getCronExpression());
+      artifactStreamAction.setCronDescription(getCronDescription(artifactStreamAction.getCronExpression()));
     }
 
-    artifactStreamAction.setActionSummary(getActionSummary(appId, artifactStreamAction));
+    if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
+      Workflow workflow = workflowService.readOrchestration(appId, artifactStreamAction.getWorkflowId(), null);
+      artifactStreamAction.setWorkflowName(workflow.getName());
+      Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
+      artifactStreamAction.setEnvName(environment.getName());
+    } else {
+      Workflow workflow = workflowService.readPipeline(appId, artifactStreamAction.getWorkflowId());
+      artifactStreamAction.setWorkflowName(workflow.getName());
+    }
 
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)
                                       .field("appId")
@@ -194,6 +209,16 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       addCronForScheduledJobExecution(appId, streamId, artifactStreamAction);
     }
     return get(appId, streamId);
+  }
+
+  private String getCronDescription(String cronExpression) {
+    try {
+      return CronExpressionDescriptor.getDescription(
+          DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
+    } catch (ParseException e) {
+      logger.error("Error in translating corn expression " + cronExpression);
+      return cronExpression;
+    }
   }
 
   private void addCronForScheduledJobExecution(
@@ -213,24 +238,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);
-  }
-
-  private String getActionSummary(String appId, ArtifactStreamAction artifactStreamAction) {
-    return (artifactStreamAction.getWorkflowType().equals(PIPELINE) ? "Trigger pipeline at  " : "Trigger workflow at ")
-        + getCronDisplayString(artifactStreamAction);
-  }
-
-  private String getCronDisplayString(ArtifactStreamAction artifactStreamAction) {
-    if (!artifactStreamAction.isCustomAction()) {
-      return "every artifact collection";
-    }
-    try {
-      return CronExpressionDescriptor.getDescription(DescriptionTypeEnum.FULL, artifactStreamAction.getCronExpression(),
-          new Options(), I18nMessages.DEFAULT_LOCALE);
-    } catch (ParseException e) {
-      logger.error("Error in translating corn expression " + artifactStreamAction.getCronExpression());
-      return artifactStreamAction.getCronExpression();
-    }
   }
 
   @Override
