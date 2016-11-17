@@ -333,7 +333,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       pageRequest.addFilter("envId", artifactStreamAction.getEnvId(), Operator.EQ);
       List<WorkflowExecution> response = workflowExecutionService.listExecutions(pageRequest, false).getResponse();
       if (response.size() == 1) {
-        artifactId = response.get(0).getExecutionArgs().getArtifacts().get(0).getUuid();
+        artifactId = response.get(0).getExecutionArgs().getArtifactIdNames().keySet().stream().findFirst().orElse(null);
       }
     }
 
@@ -353,6 +353,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(artifact));
     executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
+    executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
+
     logger.info("Execute workflow of {} type with id {}", artifactStreamAction.getWorkflowType(),
         artifactStreamAction.getWorkflowId());
 
