@@ -297,7 +297,13 @@ public class PageRequest<T> {
             filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
           }
         } else {
-          filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+          if (Arrays.asList(Boolean.TYPE).contains(mappedClass.getMappedField(key).getType())) {
+            filters.add(aSearchFilter()
+                            .withField(key, Operator.IN, map.get(key).stream().map(Boolean::parseBoolean).toArray())
+                            .build());
+          } else {
+            filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+          }
         }
       }
     }
