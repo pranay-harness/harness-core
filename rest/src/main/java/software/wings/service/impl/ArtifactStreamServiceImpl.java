@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
+import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -354,6 +356,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     executionArgs.setArtifacts(asList(artifact));
     executionArgs.setOrchestrationId(artifactStreamAction.getWorkflowId());
     executionArgs.setWorkflowType(artifactStreamAction.getWorkflowType());
+    executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
 
     logger.info("Execute workflow of {} type with id {}", artifactStreamAction.getWorkflowType(),
         artifactStreamAction.getWorkflowId());
