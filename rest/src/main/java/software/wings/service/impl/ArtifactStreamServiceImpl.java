@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -192,7 +193,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
       artifactStreamAction.setEnvName(environment.getName());
     } else {
-      Workflow workflow = workflowService.readPipeline(appId, artifactStreamAction.getWorkflowId());
+      Pipeline workflow = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId()); // TODO::pipeline
       artifactStreamAction.setWorkflowName(workflow.getName());
     }
 

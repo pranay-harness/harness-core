@@ -7,7 +7,6 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.PauseAction.PauseActionBuilder.aPauseAction;
-import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
 import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
@@ -26,7 +25,6 @@ import software.wings.beans.Environment.Builder;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
-import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -143,140 +141,123 @@ public class WorkflowServiceTest extends WingsBaseTest {
     System.out.println("All Done!");
   }
 
-  /**
-   * Should create pipeline with graph.
-   */
-  @Test
-  public void shouldCreatePipelineWithGraph() {
-    createPipeline();
-  }
+  //  /**
+  //   * Should create pipeline with graph.
+  //   */
+  //  @Test
+  //  public void shouldCreatePipelineWithGraph() {
+  //    createPipeline();
+  //  }
 
-  /**
-   * Should list pipeline
-   */
-  @Test
-  public void shouldListPipeline() {
-    createPipelineNoGraph();
-    createPipeline();
-    createPipelineNoGraph();
-    createPipeline();
-    PageRequest<Pipeline> req = new PageRequest<>();
-    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
-    PageResponse<Pipeline> res = workflowService.listPipelines(req);
-    assertThat(res).isNotNull();
-    assertThat(res.getResponse()).isNotNull();
-    assertThat(res.size()).isEqualTo(4);
-  }
+  //  /**
+  //   * Should list pipeline
+  //   */
+  //  @Test
+  //  public void shouldListPipeline() {
+  //    createPipelineNoGraph();
+  //    createPipeline();
+  //    createPipelineNoGraph();
+  //    createPipeline();
+  //    PageRequest<Pipeline> req = new PageRequest<>();
+  //    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
+  //    PageResponse<Pipeline> res = workflowService.listPipelines(req);
+  //    assertThat(res).isNotNull();
+  //    assertThat(res.getResponse()).isNotNull();
+  //    assertThat(res.size()).isEqualTo(4);
+  //  }
 
-  /**
-   * Should read pipeline
-   */
-  @Test
-  public void shouldReadPipeline() {
-    Pipeline pipeline = createPipelineNoGraph();
-    Pipeline pipeline2 = workflowService.readPipeline(appId, pipeline.getUuid());
-    assertThat(pipeline2).isNotNull();
-    assertThat(pipeline2).isEqualToComparingFieldByField(pipeline);
-  }
+  //  /**
+  //   * Should read pipeline
+  //   */
+  //  @Test
+  //  public void shouldReadPipeline() {
+  //    Pipeline pipeline = createPipelineNoGraph();
+  //    Pipeline pipeline2 = workflowService.readPipeline(appId, pipeline.getUuid());
+  //    assertThat(pipeline2).isNotNull();
+  //    assertThat(pipeline2).isEqualToComparingFieldByField(pipeline);
+  //  }
 
-  /**
-   * Should update pipeline with no graph.
-   */
-  @Test
-  public void shouldUpdatePipelineWithNoGraph() {
-    Pipeline pipeline = createPipelineNoGraph();
-    Graph graph = createInitialGraph();
-    pipeline.setGraph(graph);
+  //  /**
+  //   * Should update pipeline with no graph.
+  //   */
+  //  @Test
+  //  public void shouldUpdatePipelineWithNoGraph() {
+  //    Pipeline pipeline = createPipelineNoGraph();
+  //    Graph graph = createInitialGraph();
+  //    pipeline.setGraph(graph);
+  //
+  //    updatePipeline(pipeline, 1);
+  //  }
 
-    updatePipeline(pipeline, 1);
-  }
+  //  /**
+  //   * Should update pipeline with graph.
+  //   */
+  //  @Test
+  //  public void shouldUpdatePipelineWithGraph() {
+  //    Pipeline pipeline = createPipeline();
+  //    updatePipeline(pipeline, 2);
+  //  }
 
-  /**
-   * Should update pipeline with graph.
-   */
-  @Test
-  public void shouldUpdatePipelineWithGraph() {
-    Pipeline pipeline = createPipeline();
-    updatePipeline(pipeline, 2);
-  }
-
-  /**
-   * Update pipeline.
-   *
-   * @param pipeline   the pipeline
-   * @param graphCount the graph count
-   */
-  public void updatePipeline(Pipeline pipeline, int graphCount) {
-    pipeline.setDescription("newDescription");
-    pipeline.setName("pipeline2");
-
-    List<Service> newServices = Lists.newArrayList(
-        wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("ui").build()),
-        wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("server").build()));
-    pipeline.setServices(newServices);
-
-    Graph graph = pipeline.getGraph();
-    graph.getNodes().add(aNode()
-                             .withId("n4")
-                             .withName("PROD")
-                             .withX(350)
-                             .withY(50)
-                             .addProperty("envId", "34567")
-                             .withType(StateType.ENV_STATE.name())
-                             .build());
-    graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build());
-
-    Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
-    assertThat(updatedPipeline)
-        .isNotNull()
-        .extracting(Pipeline::getUuid, Pipeline::getName, Pipeline::getDescription, Pipeline::getServices,
-            Pipeline::getDefaultVersion)
-        .containsExactly(pipeline.getUuid(), "pipeline2", "newDescription", newServices, 2);
-
-    PageRequest<StateMachine> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("originId");
-    filter.setFieldValues(pipeline.getUuid());
-    filter.setOp(Operator.EQ);
-    req.addFilter(filter);
-    PageResponse<StateMachine> res = workflowService.list(req);
-
-    assertThat(res).isNotNull().hasSize(graphCount);
-
-    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid());
-    assertThat(sm.getGraph()).isEqualTo(graph);
-  }
-
-  private Pipeline createPipeline() {
-    Graph graph = createInitialGraph();
-    Pipeline pipeline = aPipeline()
-                            .withAppId(appId)
-                            .withName("pipeline1")
-                            .withDescription("Sample Pipeline")
-                            .addServices("service1", "service2")
-                            .withGraph(graph)
-                            .build();
-
-    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
-    assertThat(pipeline).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
-
-    PageRequest<StateMachine> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("originId");
-    filter.setFieldValues(pipeline.getUuid());
-    filter.setOp(Operator.EQ);
-    req.addFilter(filter);
-    PageResponse<StateMachine> res = workflowService.list(req);
-
-    assertThat(res)
-        .isNotNull()
-        .hasSize(1)
-        .doesNotContainNull()
-        .extracting(StateMachine::getGraph)
-        .doesNotContainNull()
-        .containsExactly(graph);
-    return pipeline;
-  }
+  //  /**
+  //   * Update pipeline.
+  //   *
+  //   * @param pipeline   the pipeline
+  //   * @param graphCount the graph count
+  //   */
+  //  public void updatePipeline(Pipeline pipeline, int graphCount) {
+  //    pipeline.setDescription("newDescription");
+  //    pipeline.setName("pipeline2");
+  //
+  //    List<Service> newServices = Lists.newArrayList(wingsPersistence.saveAndGet(Service.class,
+  //    aService().withAppId(appId).withName("ui").build()),
+  //        wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("server").build()));
+  //    pipeline.setServices(newServices);
+  //
+  //    Graph graph = pipeline.getGraph();
+  //    graph.getNodes().add(aNode().withId("n4").withName("PROD").withX(350).withY(50).addProperty("envId",
+  //    "34567").withType(StateType.ENV_STATE.name()).build());
+  //    graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build());
+  //
+  //    Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
+  //    assertThat(updatedPipeline).isNotNull().extracting(Pipeline::getUuid, Pipeline::getName,
+  //    Pipeline::getDescription, Pipeline::getServices, Pipeline::getDefaultVersion)
+  //        .containsExactly(pipeline.getUuid(), "pipeline2", "newDescription", newServices, 2);
+  //
+  //    PageRequest<StateMachine> req = new PageRequest<>();
+  //    SearchFilter filter = new SearchFilter();
+  //    filter.setFieldName("originId");
+  //    filter.setFieldValues(pipeline.getUuid());
+  //    filter.setOp(Operator.EQ);
+  //    req.addFilter(filter);
+  //    PageResponse<StateMachine> res = workflowService.list(req);
+  //
+  //    assertThat(res).isNotNull().hasSize(graphCount);
+  //
+  //    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid());
+  //    assertThat(sm.getGraph()).isEqualTo(graph);
+  //
+  //  }
+  //
+  //  private Pipeline createPipeline() {
+  //    Graph graph = createInitialGraph();
+  //    Pipeline pipeline =
+  //        aPipeline().withAppId(appId).withName("pipeline1").withDescription("Sample
+  //        Pipeline").addServices("service1", "service2").withGraph(graph).build();
+  //
+  //    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
+  //    assertThat(pipeline).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
+  //
+  //    PageRequest<StateMachine> req = new PageRequest<>();
+  //    SearchFilter filter = new SearchFilter();
+  //    filter.setFieldName("originId");
+  //    filter.setFieldValues(pipeline.getUuid());
+  //    filter.setOp(Operator.EQ);
+  //    req.addFilter(filter);
+  //    PageResponse<StateMachine> res = workflowService.list(req);
+  //
+  //    assertThat(res).isNotNull().hasSize(1).doesNotContainNull().extracting(StateMachine::getGraph).doesNotContainNull().containsExactly(graph);
+  //    return pipeline;
+  //  }
 
   /**
    * @return
@@ -313,30 +294,30 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .build();
   }
 
-  private Pipeline createPipelineNoGraph() {
-    Pipeline pipeline = new Pipeline();
-    pipeline.setAppId(appId);
-    pipeline.setName("pipeline1");
-    pipeline.setDescription("Sample Pipeline");
-
-    pipeline.setServices(getServices());
-
-    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
-    assertThat(pipeline).isNotNull();
-    assertThat(pipeline.getUuid()).isNotNull();
-
-    PageRequest<StateMachine> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("originId");
-    filter.setFieldValues(pipeline.getUuid());
-    filter.setOp(Operator.EQ);
-    req.addFilter(filter);
-    PageResponse<StateMachine> res = workflowService.list(req);
-
-    assertThat(res).isNotNull().hasSize(0);
-
-    return pipeline;
-  }
+  //  private Pipeline createPipelineNoGraph() {
+  //    Pipeline pipeline = new Pipeline();
+  //    pipeline.setAppId(appId);
+  //    pipeline.setName("pipeline1");
+  //    pipeline.setDescription("Sample Pipeline");
+  //
+  //    pipeline.setServices(getServices());
+  //
+  //    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
+  //    assertThat(pipeline).isNotNull();
+  //    assertThat(pipeline.getUuid()).isNotNull();
+  //
+  //    PageRequest<StateMachine> req = new PageRequest<>();
+  //    SearchFilter filter = new SearchFilter();
+  //    filter.setFieldName("originId");
+  //    filter.setFieldValues(pipeline.getUuid());
+  //    filter.setOp(Operator.EQ);
+  //    req.addFilter(filter);
+  //    PageResponse<StateMachine> res = workflowService.list(req);
+  //
+  //    assertThat(res).isNotNull().hasSize(0);
+  //
+  //    return pipeline;
+  //  }
 
   /**
    * Should create orchestration.

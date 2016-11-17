@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -56,10 +57,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by anubhaw on 10/26/16.
  */
+@ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
   public static final List<ExecutionStatus> FINISHED_EXECUTION_STATUSES =
       Arrays.asList(SUCCESS, FAILED, ERROR, ABORTED);
@@ -215,6 +218,83 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public void refreshPipelineExecutionAsync(String appId, String workflowExecutionId) {
     executorService.submit(() -> refreshPipelineExecution(appId, workflowExecutionId));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
+    PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
+    if (res != null && res.size() > 0) {
+      for (Pipeline pipeline : res.getResponse()) {
+        //        StateMachine stateMachine = readLatest(pipeline.getAppId(), pipeline.getUuid());
+        //        if (stateMachine != null) {
+        //          pipeline.setGraph(stateMachine.getGraph());
+        //        }
+      }
+    }
+    return res;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Pipeline updatePipeline(Pipeline pipeline) {
+    // TODO::pipeline
+    //    EntityVersion entityVersion = entityVersionService
+    //        .newEntityVersion(pipeline.getAppId(), EntityType.WORKFLOW, pipeline.getUuid(), pipeline.getName(),
+    //        ChangeType.UPDATED, pipeline.getNotes());
+    //    pipeline.setDefaultVersion(entityVersion.getVersion());
+    //    UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
+    //    setUnset(ops, "description", pipeline.getDescription());
+    //    setUnset(ops, "cronSchedule", pipeline.getCronSchedule());
+    //    setUnset(ops, "name", pipeline.getName());
+    //    setUnset(ops, "services", pipeline.getServices());
+    //
+    //    if(pipeline.getSetAsDefault()) {
+    //      setUnset(ops, "defaultVersion", pipeline.getDefaultVersion());
+    //    }
+    //
+    //    wingsPersistence
+    //        .update(wingsPersistence.createQuery(Pipeline.class).field("appId").equal(pipeline.getAppId()).field(ID_KEY).equal(pipeline.getUuid()),
+    //        ops);
+    //
+    //    Graph graph = pipeline.getGraph();
+    //    pipeline = updateWorkflow(pipeline, pipeline.getDefaultVersion());
+    //    pipeline.setGraph(graph);
+    return pipeline;
+  }
+
+  @Override
+  public boolean deletePipeline(String appId, String pipelineId) {
+    boolean deleted = wingsPersistence.delete(
+        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).field(ID_KEY).equal(pipelineId));
+    // TODO::pipeline
+    //    if (deleted) {
+    //      workflowExecutionService.deleteByWorkflow(appId, workflowId);
+    //    }
+    return deleted;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Pipeline readPipeline(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    // TODO::pipeline
+    //    StateMachine stateMachine = workflowService.readLatest(appId, pipelineId);
+    //    if (stateMachine != null) {
+    //      pipeline.setGraph(stateMachine.getGraph());
+    //    }
+    return pipeline;
+  }
+
+  @Override
+  public Pipeline createPipeline(Pipeline pipeline) {
+    return wingsPersistence.saveAndGet(Pipeline.class, pipeline);
   }
 
   @Override

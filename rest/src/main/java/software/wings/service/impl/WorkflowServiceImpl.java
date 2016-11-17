@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -17,7 +16,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
-import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -30,7 +28,6 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
-import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -188,34 +185,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
-    PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
-    if (res != null && res.size() > 0) {
-      for (Pipeline pipeline : res.getResponse()) {
-        StateMachine stateMachine = readLatest(pipeline.getAppId(), pipeline.getUuid());
-        if (stateMachine != null) {
-          pipeline.setGraph(stateMachine.getGraph());
-        }
-      }
-    }
-    return res;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
-    if (cls == Pipeline.class && graph != null) {
-      try {
-        if (!graph.isLinear()) {
-          throw new WingsException(INVALID_PIPELINE);
-        }
-      } catch (Exception e) {
-        throw new WingsException(INVALID_PIPELINE, e);
-      }
-    }
+    // TODO:pipeline
+    //    if (cls == Pipeline.class && graph != null) {
+    //      try {
+    //        if (!graph.isLinear()) {
+    //          throw new WingsException(INVALID_PIPELINE);
+    //        }
+    //      } catch (Exception e) {
+    //        throw new WingsException(INVALID_PIPELINE, e);
+    //      }
+    //    }
 
     workflow.setDefaultVersion(1);
     workflow = wingsPersistence.saveAndGet(cls, workflow);
@@ -247,50 +228,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       workflow.getGraph().setVersion(stateMachine.getOriginVersion());
     }
     return workflow;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Pipeline updatePipeline(Pipeline pipeline) {
-    EntityVersion entityVersion = entityVersionService.newEntityVersion(pipeline.getAppId(), EntityType.WORKFLOW,
-        pipeline.getUuid(), pipeline.getName(), ChangeType.UPDATED, pipeline.getNotes());
-    pipeline.setDefaultVersion(entityVersion.getVersion());
-    UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
-    setUnset(ops, "description", pipeline.getDescription());
-    setUnset(ops, "cronSchedule", pipeline.getCronSchedule());
-    setUnset(ops, "name", pipeline.getName());
-    setUnset(ops, "services", pipeline.getServices());
-
-    if (pipeline.getSetAsDefault()) {
-      setUnset(ops, "defaultVersion", pipeline.getDefaultVersion());
-    }
-
-    wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
-                                .field("appId")
-                                .equal(pipeline.getAppId())
-                                .field(ID_KEY)
-                                .equal(pipeline.getUuid()),
-        ops);
-
-    Graph graph = pipeline.getGraph();
-    pipeline = updateWorkflow(pipeline, pipeline.getDefaultVersion());
-    pipeline.setGraph(graph);
-    return pipeline;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Pipeline readPipeline(String appId, String pipelineId) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    StateMachine stateMachine = readLatest(appId, pipelineId);
-    if (stateMachine != null) {
-      pipeline.setGraph(stateMachine.getGraph());
-    }
-    return pipeline;
   }
 
   /**
@@ -478,11 +415,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public void deleteWorkflowByApplication(String appId) {
-    List<Key<Pipeline>> pipelineKeys =
-        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList();
-    for (Key key : pipelineKeys) {
-      deleteWorkflow(Pipeline.class, appId, (String) key.getId());
-    }
+    // TODO:pipeline
+    //    List<Key<Pipeline>> pipelineKeys =
+    //    wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList(); for (Key key :
+    //    pipelineKeys) {
+    //      deleteWorkflow(Pipeline.class, appId, (String) key.getId());
+    //    }
 
     List<Key<Orchestration>> orchestrationKeys =
         wingsPersistence.createQuery(Orchestration.class).field("appId").equal(appId).asKeyList();

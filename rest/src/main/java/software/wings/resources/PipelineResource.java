@@ -12,6 +12,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
@@ -37,6 +38,7 @@ import javax.ws.rs.QueryParam;
 @Api("pipelines")
 @Path("/pipelines")
 @Produces("application/json")
+@PublicApi // TODO::pipeline
 public class PipelineResource {
   private WorkflowService workflowService;
   private PipelineService pipelineService;
@@ -44,8 +46,8 @@ public class PipelineResource {
   /**
    * Instantiates a new pipeline resource.
    *
-   * @param workflowService          the workflow service
-   * @param pipelineService          the pipeline service
+   * @param workflowService the workflow service
+   * @param pipelineService the pipeline service
    */
   @Inject
   public PipelineResource(WorkflowService workflowService, PipelineService pipelineService) {
@@ -63,7 +65,7 @@ public class PipelineResource {
   @GET
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
-    return new RestResponse<>(workflowService.listPipelines(pageRequest));
+    return new RestResponse<>(pipelineService.listPipelines(pageRequest));
   }
 
   /**
@@ -76,7 +78,7 @@ public class PipelineResource {
   @GET
   @Path("{pipelineId}")
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
-    return new RestResponse<>(workflowService.readPipeline(appId, pipelineId));
+    return new RestResponse<>(pipelineService.readPipeline(appId, pipelineId));
   }
 
   /**
@@ -89,7 +91,7 @@ public class PipelineResource {
   @POST
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
-    return new RestResponse<>(workflowService.createWorkflow(Pipeline.class, pipeline));
+    return new RestResponse<>(pipelineService.createPipeline(pipeline));
   }
 
   /**
@@ -106,7 +108,7 @@ public class PipelineResource {
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
-    return new RestResponse<>(workflowService.updatePipeline(pipeline));
+    return new RestResponse<>(pipelineService.updatePipeline(pipeline));
   }
 
   /**
@@ -121,7 +123,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
-    workflowService.deleteWorkflow(Pipeline.class, appId, pipelineId);
+    pipelineService.deletePipeline(appId, pipelineId);
     return new RestResponse();
   }
 
@@ -141,8 +143,9 @@ public class PipelineResource {
   /**
    * Trigger execution rest response.
    *
-   * @param appId      the app id
-   * @param pipelineId the pipeline id
+   * @param appId         the app id
+   * @param pipelineId    the pipeline id
+   * @param executionArgs the execution args
    * @return the rest response
    */
   @POST

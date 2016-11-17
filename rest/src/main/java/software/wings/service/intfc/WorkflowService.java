@@ -1,7 +1,6 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Orchestration;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.dl.PageRequest;
@@ -36,6 +35,7 @@ public interface WorkflowService {
    *
    * @param <T>      the generic type
    * @param workflow the workflow
+   * @param version  the version
    * @return the t
    */
   <T extends Workflow> T updateWorkflow(@Valid T workflow, Integer version);
@@ -50,31 +50,6 @@ public interface WorkflowService {
    * @return the boolean
    */
   <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId);
-
-  /**
-   * List pipelines.
-   *
-   * @param req the req
-   * @return the page response
-   */
-  PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> req);
-
-  /**
-   * Read pipeline.
-   *
-   * @param appId      the app id
-   * @param pipelineId the pipeline id
-   * @return the pipeline
-   */
-  Pipeline readPipeline(@NotNull String appId, @NotNull String pipelineId);
-
-  /**
-   * Update pipeline.
-   *
-   * @param pipeline the pipeline
-   * @return the pipeline
-   */
-  Pipeline updatePipeline(Pipeline pipeline);
 
   /**
    * Creates the.
@@ -114,6 +89,7 @@ public interface WorkflowService {
    * List orchestration.
    *
    * @param pageRequest the page request
+   * @param envId       the env id
    * @return the page response
    */
   PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest, String envId);
@@ -123,6 +99,7 @@ public interface WorkflowService {
    *
    * @param appId           the app id
    * @param orchestrationId the orchestration id
+   * @param version         the version
    * @return the orchestration
    */
   Orchestration readOrchestration(@NotNull String appId, @NotNull String orchestrationId, Integer version);
@@ -142,6 +119,7 @@ public interface WorkflowService {
    * @return the orchestration
    */
   Orchestration readLatestSimpleWorkflow(String appId);
+
   /**
    * Delete workflow by environment.
    *
@@ -156,8 +134,20 @@ public interface WorkflowService {
    */
   void deleteStateMachinesByApplication(String appId);
 
+  /**
+   * List workflow failure strategies list.
+   *
+   * @param appId the app id
+   * @return the list
+   */
   List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId);
 
+  /**
+   * List workflow failure strategies page response.
+   *
+   * @param pageRequest the page request
+   * @return the page response
+   */
   PageResponse<WorkflowFailureStrategy> listWorkflowFailureStrategies(PageRequest<WorkflowFailureStrategy> pageRequest);
 
   /**
@@ -168,9 +158,30 @@ public interface WorkflowService {
    */
   WorkflowFailureStrategy create(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
+  /**
+   * Update workflow failure strategy.
+   *
+   * @param workflowFailureStrategy the workflow failure strategy
+   * @return the workflow failure strategy
+   */
   WorkflowFailureStrategy update(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
+  /**
+   * Delete workflow failure strategy boolean.
+   *
+   * @param appId                     the app id
+   * @param workflowFailureStrategyId the workflow failure strategy id
+   * @return the boolean
+   */
   boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId);
 
+  /**
+   * Read for env state machine.
+   *
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param orchestrationId the orchestration id
+   * @return the state machine
+   */
   StateMachine readForEnv(String appId, String envId, String orchestrationId);
 }
