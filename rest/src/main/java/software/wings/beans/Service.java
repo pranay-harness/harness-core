@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -27,8 +27,8 @@ public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
-  private List<Command> commands = Lists.newArrayList();
-  private List<Command> oldCommands = Lists.newArrayList();
+
+  @Reference(idOnly = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
   @Version private long version;
 
@@ -95,39 +95,21 @@ public class Service extends Base {
   }
 
   /**
-   * Gets commands.
+   * Gets serviceCommands.
    *
-   * @return the commands
+   * @return the serviceCommands
    */
-  public List<Command> getCommands() {
-    return commands;
+  public List<ServiceCommand> getServiceCommands() {
+    return serviceCommands;
   }
 
   /**
-   * Sets commands.
+   * Sets serviceCommands.
    *
-   * @param commands the commands
+   * @param serviceCommands the serviceCommands
    */
-  public void setCommands(List<Command> commands) {
-    this.commands = commands;
-  }
-
-  /**
-   * Getter for property 'oldCommands'.
-   *
-   * @return Value for property 'oldCommands'.
-   */
-  public List<Command> getOldCommands() {
-    return oldCommands;
-  }
-
-  /**
-   * Setter for property 'oldCommands'.
-   *
-   * @param oldCommands Value to set for property 'oldCommands'.
-   */
-  public void setOldCommands(List<Command> oldCommands) {
-    this.oldCommands = oldCommands;
+  public void setServiceCommands(List<ServiceCommand> serviceCommands) {
+    this.serviceCommands = serviceCommands;
   }
 
   /**
@@ -244,8 +226,8 @@ public class Service extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(name, description, artifactType, commands, appContainer, configFiles, lastDeploymentActivity,
-              lastProdDeploymentActivity, oldCommands);
+        + Objects.hash(name, description, artifactType, serviceCommands, appContainer, configFiles,
+              lastDeploymentActivity, lastProdDeploymentActivity);
   }
 
   /**
@@ -264,11 +246,11 @@ public class Service extends Base {
     }
     final Service other = (Service) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.artifactType, other.artifactType) && Objects.equals(this.commands, other.commands)
+        && Objects.equals(this.artifactType, other.artifactType)
+        && Objects.equals(this.serviceCommands, other.serviceCommands)
         && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.lastDeploymentActivity, other.lastDeploymentActivity)
-        && Objects.equals(this.lastProdDeploymentActivity, other.lastProdDeploymentActivity)
-        && Objects.equals(this.oldCommands, oldCommands);
+        && Objects.equals(this.lastProdDeploymentActivity, other.lastProdDeploymentActivity);
   }
 
   /**
@@ -280,12 +262,11 @@ public class Service extends Base {
         .add("name", name)
         .add("description", description)
         .add("artifactType", artifactType)
-        .add("commands", commands)
+        .add("serviceCommands", serviceCommands)
         .add("appContainer", appContainer)
         .add("configFiles", configFiles)
         .add("lastDeploymentActivity", lastDeploymentActivity)
         .add("lastProdDeploymentActivity", lastProdDeploymentActivity)
-        .add("oldCommands", oldCommands)
         .toString();
   }
 
@@ -296,8 +277,7 @@ public class Service extends Base {
     private String name;
     private String description;
     private ArtifactType artifactType;
-    private List<Command> commands = Lists.newArrayList();
-    private List<Command> oldCommands = Lists.newArrayList();
+    private List<ServiceCommand> serviceCommands = Lists.newArrayList();
     private long version;
     private AppContainer appContainer;
     private List<ConfigFile> configFiles = Lists.newArrayList();
@@ -356,46 +336,24 @@ public class Service extends Base {
     }
 
     /**
-     * With commands builder.
+     * With serviceCommands builder.
      *
-     * @param commands the commands
+     * @param commands the serviceCommands
      * @return the builder
      */
-    public Builder withCommands(List<Command> commands) {
-      this.commands = commands;
+    public Builder withCommands(List<ServiceCommand> commands) {
+      this.serviceCommands = commands;
       return this;
     }
 
     /**
-     * Add commands builder.
+     * Add serviceCommands builder.
      *
-     * @param commands the commands
+     * @param commands the serviceCommands
      * @return the builder
      */
-    public Builder addCommands(Command... commands) {
-      this.commands.addAll(asList(commands));
-      return this;
-    }
-
-    /**
-     * Add old commands builder.
-     *
-     * @param oldCommands the old commands
-     * @return the builder
-     */
-    public Builder addOldCommands(Command... oldCommands) {
-      this.oldCommands.addAll(asList(oldCommands));
-      return this;
-    }
-
-    /**
-     * With old commands builder.
-     *
-     * @param oldCommands the old commands
-     * @return the builder
-     */
-    public Builder withOldCommands(List<Command> oldCommands) {
-      this.oldCommands = oldCommands;
+    public Builder addCommands(ServiceCommand... commands) {
+      this.serviceCommands.addAll(asList(commands));
       return this;
     }
 
@@ -541,8 +499,7 @@ public class Service extends Base {
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
-          .withCommands(Lists.newArrayList(commands))
-          .withOldCommands(Lists.newArrayList(oldCommands))
+          .withCommands(Lists.newArrayList(serviceCommands))
           .withVersion(version)
           .withAppContainer(appContainer)
           .withConfigFiles(Lists.newArrayList(configFiles))
@@ -567,8 +524,7 @@ public class Service extends Base {
       service.setName(name);
       service.setDescription(description);
       service.setArtifactType(artifactType);
-      service.setCommands(commands);
-      service.setOldCommands(oldCommands);
+      service.setServiceCommands(serviceCommands);
       service.setVersion(version);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);

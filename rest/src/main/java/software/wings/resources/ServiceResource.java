@@ -148,16 +148,17 @@ public class ServiceResource {
    *
    * @param appId        the app id
    * @param serviceId    the service id
-   * @param commandName  the command name
+   * @param commandId  the command name
    * @param commandGraph the command graph
    * @return the rest response
    */
   @PUT
   @Path("{serviceId}/commands/{commandName}")
   public RestResponse<Service> updateCommand(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName, Graph commandGraph) {
-    commandGraph.setGraphName(commandName);
-    return new RestResponse<>(serviceResourceService.updateCommand(appId, serviceId, commandGraph));
+      @PathParam("serviceId") String serviceId, @PathParam("commandId") String commandId, Graph commandGraph,
+      @QueryParam("setAsDefault") boolean setAsDefault) {
+    return new RestResponse<>(
+        serviceResourceService.updateCommand(appId, serviceId, commandId, commandGraph, setAsDefault));
   }
 
   /**

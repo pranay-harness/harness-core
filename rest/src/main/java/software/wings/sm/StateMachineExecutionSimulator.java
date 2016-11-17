@@ -403,8 +403,10 @@ public class StateMachineExecutionSimulator {
     ContextElement service = context.getContextElement(ContextElementType.SERVICE);
     Command command = commandMap.get(state.getName());
     if (command == null) {
-      command = serviceResourceService.getCommandByName(
-          context.getApp().getUuid(), service.getUuid(), ((CommandState) state).getCommandName());
+      command = serviceResourceService
+                    .getCommandByName(context.getApp().getUuid(), service.getUuid(), context.getEnv().getUuid(),
+                        ((CommandState) state).getCommandName())
+                    .getCommand();
       commandMap.put(state.getName(), command);
     }
     return command.isArtifactNeeded();

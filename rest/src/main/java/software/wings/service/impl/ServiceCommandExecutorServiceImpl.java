@@ -6,7 +6,6 @@ import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.F
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
@@ -64,8 +63,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
   private void prepareCommand(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     if (isNotEmpty(command.getReferenceId())) {
-      Command referedCommand = serviceResourceService.getCommandByName(
-          serviceInstance.getAppId(), context.getServiceTemplate().getServiceId(), command.getReferenceId());
+      Command referedCommand =
+          serviceResourceService
+              .getCommandByName(serviceInstance.getAppId(), context.getServiceTemplate().getServiceId(),
+                  context.getServiceTemplate().getEnvId(), command.getReferenceId())
+              .getCommand();
       if (referedCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }

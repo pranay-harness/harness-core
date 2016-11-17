@@ -209,7 +209,8 @@ public class CommandState extends State {
         e.printStackTrace();
       }
 
-      Command command = serviceResourceService.getCommandByName(appId, service.getUuid(), actualCommand);
+      Command command =
+          serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand).getCommand();
 
       if (command == null) {
         throw new StateExecutionException(

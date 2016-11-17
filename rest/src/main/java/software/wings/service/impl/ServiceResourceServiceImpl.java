@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
@@ -13,13 +12,13 @@ import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
 import com.google.common.collect.ImmutableMap;
 
-import com.mongodb.BasicDBObject;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
@@ -28,18 +27,23 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EventType;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -52,11 +56,9 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -79,6 +81,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private SetupService setupService;
   @Inject private NotificationService notificationService;
   @Inject private HistoryService historyService;
+  @Inject private EntityVersionService entityVersionService;
+  @Inject private CommandService commandService;
 
   /**
    * {@inheritDoc}
@@ -167,6 +171,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
     service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
     service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
+    service.getServiceCommands().forEach(serviceCommand
+        -> serviceCommand.setCommand(
+            commandService.getCommand(serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     return service;
   }
 
@@ -252,11 +259,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new IllegalArgumentException("Graph is not a pipeline");
     }
 
+    ServiceCommand serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class,
+        aServiceCommand()
+            .withAppId(appId)
+            .withServiceId(serviceId)
+            .withName(commandGraph.getGraphName())
+            .withDefaultVersion(1)
+            .build());
+    entityVersionService.newEntityVersion(
+        appId, EntityType.COMMAND, serviceCommand.getUuid(), commandGraph.getGraphName(), ChangeType.CREATED);
+
     Command command = aCommand().withGraph(commandGraph).build();
     command.transformGraph();
     command.setVersion(1L);
+    command.setOriginEntityId(serviceCommand.getUuid());
 
-    service.getCommands().add(command);
+    commandService.save(command);
+
+    service.getServiceCommands().add(serviceCommand);
 
     wingsPersistence.save(service);
     return get(appId, serviceId);
@@ -266,19 +286,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public Service deleteCommand(String appId, String serviceId, String commandName) {
+  public Service deleteCommand(String appId, String serviceId, String commandId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
     wingsPersistence.update(
         wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
-        wingsPersistence.createUpdateOperations(Service.class)
-            .removeAll("commands", new BasicDBObject("name", commandName)));
-
-    wingsPersistence.update(
-        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
-        wingsPersistence.createUpdateOperations(Service.class)
-            .removeAll("oldCommands", new BasicDBObject("name", commandName)));
+        wingsPersistence.createUpdateOperations(Service.class).removeAll("commands", commandId));
 
     return get(appId, serviceId);
   }
@@ -287,22 +301,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public Service updateCommand(String appId, String serviceId, Graph commandGraph) {
+  public Service updateCommand(
+      String appId, String serviceId, String commandId, Graph commandGraph, boolean setAsDefault) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
-    System.out.println(service);
     if (!commandGraph.isLinear()) {
       throw new IllegalArgumentException("Graph is not a pipeline");
     }
 
+    EntityVersion lastEntityVersion = entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, commandId);
     Command command = aCommand().withGraph(commandGraph).build();
     command.transformGraph();
-    Command oldCommand = service.getCommands()
-                             .stream()
-                             .filter(command1 -> StringUtils.equals(command1.getName(), command.getName()))
-                             .findFirst()
-                             .get();
+    command.setOriginEntityId(commandId);
+
+    Command oldCommand = commandService.getCommand(commandId, lastEntityVersion.getVersion());
 
     DiffNode commandUnitDiff =
         ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
@@ -318,16 +331,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           logger.debug("{} changed from [{}] to [{}]", node.getPath(), baseValue, workingValue);
         }
       });
-      command.setVersion(oldCommand.getVersion() + 1);
-      service.getCommands().remove(oldCommand);
-      service.getCommands().add(command);
-      service.getOldCommands().add(oldCommand);
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(
+          appId, EntityType.COMMAND, commandId, commandGraph.getGraphName(), ChangeType.UPDATED);
+      command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
+
+      commandService.save(command);
+
+      if (setAsDefault) {
+        wingsPersistence.update(wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(commandId),
+            wingsPersistence.createUpdateOperations(ServiceCommand.class)
+                .set("defaultVersion", entityVersion.getVersion()));
+      }
     } else if (graphDiff.isChanged()) {
       oldCommand.setGraph(command.getGraph());
-    }
-
-    if (commandUnitDiff.isChanged() || graphDiff.isChanged()) {
-      wingsPersistence.save(service);
+      commandService.update(oldCommand);
     }
 
     return get(appId, serviceId);
@@ -337,71 +354,46 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public Service changeCommandVersion(String appId, String serviceId, String commandName, long version) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    Validator.notNullCheck("service", service);
-
-    Command oldCommand = service.getCommands()
-                             .stream()
-                             .filter(command -> StringUtils.equals(command.getName(), commandName))
-                             .findFirst()
-                             .get();
-    Command newCommand =
-        service.getOldCommands()
-            .stream()
-            .filter(command -> StringUtils.equals(command.getName(), commandName) && command.getVersion() == version)
-            .findFirst()
-            .get();
-
-    if (!oldCommand.getVersion().equals(newCommand.getVersion())) {
-      service.getCommands().remove(oldCommand);
-      service.getCommands().add(newCommand);
-      service.getOldCommands().add(oldCommand);
-      service.getOldCommands().remove(newCommand);
-      wingsPersistence.save(service);
-    }
-
-    return get(appId, serviceId);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
-    Service service = get(appId, serviceId);
-    return service.getCommands()
-        .stream()
-        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
-        .findFirst()
-        .orElse(null);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public List<Command> getCommandVersions(
+  public ServiceCommand getCommandByName(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
     Service service = get(appId, serviceId);
-    return Stream.concat(service.getCommands().stream(), service.getOldCommands().stream())
+    return service.getServiceCommands()
+        .stream()
         .filter(command -> equalsIgnoreCase(commandName, command.getName()))
-        .sorted(Comparator.comparingLong(Command::getVersion).reversed())
-        .collect(toList());
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Override
+  public ServiceCommand getCommandByName(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String envId, @NotEmpty String commandName) {
+    Service service = get(appId, serviceId);
+    ServiceCommand serviceCommand = service.getServiceCommands()
+                                        .stream()
+                                        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+                                        .findFirst()
+                                        .orElse(null);
+    if (serviceCommand != null && serviceCommand.getEnvIdVersionMap().containsKey(envId)) {
+      serviceCommand.setCommand(commandService.getCommand(
+          serviceCommand.getUuid(), serviceCommand.getEnvIdVersionMap().get(envId).getVersion()));
+    }
+    return serviceCommand;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Command getCommandByNameAndVersion(
-      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, long version) {
+  public ServiceCommand getCommandByNameAndVersion(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, int version) {
     Service service = get(appId, serviceId);
-    return service.getCommands()
-        .stream()
-        .filter(command -> equalsIgnoreCase(commandName, command.getName()) && command.getVersion() == version)
-        .findFirst()
-        .orElse(null);
+    ServiceCommand command = service.getServiceCommands()
+                                 .stream()
+                                 .filter(serviceCommand -> equalsIgnoreCase(commandName, serviceCommand.getName()))
+                                 .findFirst()
+                                 .get();
+    command.setCommand(commandService.getCommand(command.getUuid(), version));
+    return command;
   }
 
   /**
@@ -415,13 +407,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Map<String, String> getData(String appId, String... params) {
     Service service = get(appId, params[0]);
-    if (isEmpty(service.getCommands())) {
+    if (isEmpty(service.getServiceCommands())) {
       return emptyMap();
     } else {
-      return service.getCommands()
+      return service.getServiceCommands()
           .stream()
           .filter(command -> !StringUtils.equals(command.getName(), params[1]))
-          .collect(toMap(Command::getName, Command::getName));
+          .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
     }
   }
 }

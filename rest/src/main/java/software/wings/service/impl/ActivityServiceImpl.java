@@ -101,8 +101,11 @@ public class ActivityServiceImpl implements ActivityService {
   public List<CommandUnit> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
     Command command =
-        serviceResourceService.getCommandByName(appId, activity.getServiceId(), activity.getCommandName());
-    List<CommandUnit> commandUnits = getFlattenCommandUnitList(appId, activity.getServiceId(), command);
+        serviceResourceService
+            .getCommandByName(appId, activity.getServiceId(), activity.getEnvironmentId(), activity.getCommandName())
+            .getCommand();
+    List<CommandUnit> commandUnits =
+        getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getEnvironmentId(), command);
     if (commandUnits != null && commandUnits.size() > 0) {
       commandUnits.add(0, new InitCommandUnit());
       commandUnits.add(new CleanupCommandUnit());
@@ -129,14 +132,15 @@ public class ActivityServiceImpl implements ActivityService {
    * @param command   the command
    * @return the flatten command unit list
    */
-  private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
+  private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, Command command) {
     Command executableCommand = command;
     if (executableCommand == null) {
       return new ArrayList<>();
     }
 
     if (isNotBlank(command.getReferenceId())) {
-      executableCommand = serviceResourceService.getCommandByName(appId, serviceId, command.getReferenceId());
+      executableCommand =
+          serviceResourceService.getCommandByName(appId, serviceId, envId, command.getReferenceId()).getCommand();
       if (executableCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }
@@ -146,7 +150,7 @@ public class ActivityServiceImpl implements ActivityService {
         .stream()
         .flatMap(commandUnit -> {
           if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-            return getFlattenCommandUnitList(appId, serviceId, (Command) commandUnit).stream();
+            return getFlattenCommandUnitList(appId, serviceId, envId, (Command) commandUnit).stream();
           } else {
             return Stream.of(commandUnit);
           }
