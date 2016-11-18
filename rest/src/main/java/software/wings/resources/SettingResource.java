@@ -75,6 +75,9 @@ public class SettingResource {
    */
   @POST
   public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable) {
+    if (isNullOrEmpty(appId)) {
+      appId = GLOBAL_APP_ID;
+    }
     variable.setAppId(appId);
     return new RestResponse<>(attributeService.save(variable));
   }
@@ -89,6 +92,9 @@ public class SettingResource {
   @GET
   @Path("{attrId}")
   public RestResponse<SettingAttribute> get(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
+    if (isNullOrEmpty(appId)) {
+      appId = GLOBAL_APP_ID;
+    }
     return new RestResponse<>(attributeService.get(appId, attrId));
   }
 
@@ -104,6 +110,9 @@ public class SettingResource {
   @Path("{attrId}")
   public RestResponse<SettingAttribute> update(
       @QueryParam("appId") String appId, @PathParam("attrId") String attrId, SettingAttribute variable) {
+    if (isNullOrEmpty(appId)) {
+      appId = GLOBAL_APP_ID;
+    }
     variable.setUuid(attrId);
     variable.setAppId(appId);
     return new RestResponse<>(attributeService.update(variable));
@@ -119,6 +128,9 @@ public class SettingResource {
   @DELETE
   @Path("{attrId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
+    if (isNullOrEmpty(appId)) {
+      appId = GLOBAL_APP_ID;
+    }
     attributeService.delete(appId, attrId);
     return new RestResponse();
   }
