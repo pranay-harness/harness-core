@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static com.sun.jmx.snmp.EnumRowStatus.active;
-
 import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
