@@ -56,9 +56,9 @@ public interface WorkflowExecutionService {
   /**
    * Trigger pipeline execution.
    *
-   * @param appId      the app id
-   * @param pipelineId the pipeline id
-   * @param executionArgs
+   * @param appId         the app id
+   * @param pipelineId    the pipeline id
+   * @param executionArgs the execution args
    * @return the workflow execution
    */
   WorkflowExecution triggerPipelineExecution(

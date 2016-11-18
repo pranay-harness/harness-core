@@ -68,6 +68,9 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
+  /**
+   * The constant FINISHED_EXECUTION_STATUSES.
+   */
   public static final List<ExecutionStatus> FINISHED_EXECUTION_STATUSES =
       Arrays.asList(SUCCESS, FAILED, ERROR, ABORTED);
   @Inject private WorkflowExecutionService workflowExecutionService;
