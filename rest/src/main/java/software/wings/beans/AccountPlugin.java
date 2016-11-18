@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.zafarkhaja.semver.Version;
 import software.wings.settings.SettingValue;
 
@@ -16,6 +17,7 @@ public class AccountPlugin implements WingsPlugin {
   private String displayName;
   private Class<? extends SettingValue> settingClass;
   private List<PluginCategory> pluginCategories;
+  @JsonIgnore private Object uiSchema;
   boolean isEnabled;
   private String accountId;
   private Version version;
@@ -131,6 +133,24 @@ public class AccountPlugin implements WingsPlugin {
     this.displayName = displayName;
   }
 
+  /**
+   * Getter for property 'uiSchema'.
+   *
+   * @return Value for property 'uiSchema'.
+   */
+  public Object getUiSchema() {
+    return uiSchema;
+  }
+
+  /**
+   * Setter for property 'uiSchema'.
+   *
+   * @param uiSchema Value to set for property 'uiSchema'.
+   */
+  public void setUiSchema(Object uiSchema) {
+    this.uiSchema = uiSchema;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(type, displayName, settingClass, pluginCategories, isEnabled, accountId, version);
@@ -172,6 +192,7 @@ public class AccountPlugin implements WingsPlugin {
     private String displayName;
     private Class<? extends SettingValue> settingClass;
     private List<PluginCategory> pluginCategories;
+    private Object uiSchema;
     private String accountId;
     private Version version;
 
@@ -201,6 +222,11 @@ public class AccountPlugin implements WingsPlugin {
       return this;
     }
 
+    public Builder withUiSchema(Object uiSchema) {
+      this.uiSchema = uiSchema;
+      return this;
+    }
+
     public Builder withIsEnabled(boolean isEnabled) {
       this.isEnabled = isEnabled;
       return this;
@@ -222,6 +248,7 @@ public class AccountPlugin implements WingsPlugin {
           .withDisplayName(displayName)
           .withSettingClass(settingClass)
           .withPluginCategories(pluginCategories)
+          .withUiSchema(uiSchema)
           .withIsEnabled(isEnabled)
           .withAccountId(accountId)
           .withVersion(version);
@@ -233,6 +260,7 @@ public class AccountPlugin implements WingsPlugin {
       accountPlugin.setDisplayName(displayName);
       accountPlugin.setSettingClass(settingClass);
       accountPlugin.setPluginCategories(pluginCategories);
+      accountPlugin.setUiSchema(uiSchema);
       accountPlugin.setAccountId(accountId);
       accountPlugin.setVersion(version);
       accountPlugin.isEnabled = this.isEnabled;
