@@ -3,6 +3,8 @@ package software.wings.helpers.ext.mail;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue;
@@ -104,6 +106,7 @@ public class SmtpConfig extends SettingValue {
    *
    * @return the password
    */
+  @JsonIgnore
   public String getPassword() {
     return password;
   }
@@ -113,6 +116,7 @@ public class SmtpConfig extends SettingValue {
    *
    * @param password the password
    */
+  @JsonProperty
   public void setPassword(String password) {
     this.password = password;
   }

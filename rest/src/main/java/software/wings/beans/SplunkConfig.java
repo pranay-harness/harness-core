@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue;
@@ -80,6 +82,7 @@ public class SplunkConfig extends SettingValue {
    *
    * @return the password
    */
+  @JsonIgnore
   public String getPassword() {
     return password;
   }
@@ -89,6 +92,7 @@ public class SplunkConfig extends SettingValue {
    *
    * @param password the password
    */
+  @JsonProperty
   public void setPassword(String password) {
     this.password = password;
   }
