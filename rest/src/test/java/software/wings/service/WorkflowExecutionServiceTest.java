@@ -94,7 +94,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(false);
-    when(serviceResourceServiceMock.getCommandByName(app.getUuid(), serviceId, "Start"))
+    when(serviceResourceServiceMock.getCommandByName(app.getUuid(), serviceId, env.getUuid(), "Start"))
         .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     RequiredExecutionArgs required =

@@ -168,7 +168,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(false);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "STOP"))
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "STOP"))
         .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build();
@@ -226,7 +226,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL"))
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
         .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build();
@@ -284,7 +284,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL"))
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
         .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
@@ -347,7 +347,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL"))
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
         .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     ApplicationHost applicationHost1 =

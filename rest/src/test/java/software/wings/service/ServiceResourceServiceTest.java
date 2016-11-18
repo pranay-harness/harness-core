@@ -4,20 +4,27 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -43,6 +50,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EventType;
 import software.wings.beans.Graph;
 import software.wings.beans.History;
@@ -53,6 +61,8 @@ import software.wings.beans.Service.Builder;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -60,12 +70,15 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
+import software.wings.stencils.Stencil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,12 +119,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private NotificationService notificationService;
   @Mock private HistoryService historyService;
   @Mock private SetupService setupService;
+  @Mock private EntityVersionService entityVersionService;
+  @Mock private CommandService commandService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
 
-  @Captor private ArgumentCaptor<Graph> graphArgumentCaptor = ArgumentCaptor.forClass(Graph.class);
+  @Captor
+  private ArgumentCaptor<ServiceCommand> serviceCommandArgumentCaptor = ArgumentCaptor.forClass(ServiceCommand.class);
 
   @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
 
@@ -158,11 +174,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     verify(wingsPersistence).saveAndGet(Service.class, service);
     verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
-    verify(spyServiceResourceService, times(3)).addCommand(eq(APP_ID), eq(SERVICE_ID), graphArgumentCaptor.capture());
+    verify(spyServiceResourceService, times(3))
+        .addCommand(eq(APP_ID), eq(SERVICE_ID), serviceCommandArgumentCaptor.capture());
     verify(notificationService).sendNotificationAsync(any(Notification.class));
-    List<Graph> allValues = graphArgumentCaptor.getAllValues();
+    List<ServiceCommand> allValues = serviceCommandArgumentCaptor.getAllValues();
     assertThat(
-        allValues.stream().filter(graph -> asList("Start", "Stop", "Install").contains(graph.getGraphName())).count())
+        allValues.stream()
+            .filter(
+                command -> asList("Start", "Stop", "Install").contains(command.getCommand().getGraph().getGraphName()))
+            .count())
         .isEqualTo(3);
     verify(historyService).createAsync(historyArgumentCaptor.capture());
     assertThat(historyArgumentCaptor.getValue())
@@ -267,157 +287,249 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   /**
    * Should add command state.
    */
-  /*
   @Test
   public void shouldAddCommand() {
-    when(wingsPersistence.addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"),
-  any(Command.class))).thenReturn(true);
+    when(wingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class))).thenAnswer(invocation -> {
+      ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+      command.setUuid(ID_KEY);
+      return command;
+    });
 
-    Graph commandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat").addProperty("command", "bin/startup.sh").build()) .build();
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("command", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
 
-    srs.addCommand(APP_ID, SERVICE_ID, commandGraph);
+    srs.addCommand(
+        APP_ID, SERVICE_ID, aServiceCommand().withCommand(aCommand().withGraph(commandGraph).build()).build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence).save(builder.but().addCommands(expectedCommand).build());
+    verify(wingsPersistence)
+        .save(builder.but()
+                  .addCommands(aServiceCommand()
+                                   .withAppId(APP_ID)
+                                   .withUuid(ID_KEY)
+                                   .withServiceId(SERVICE_ID)
+                                   .withDefaultVersion(1)
+                                   .withName("START")
+                                   .build())
+                  .build());
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
+    verify(wingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
+  }
 
   /**
    * Should update command.
    */
-  /*@Test
+  @Test
   public void shouldUpdateCommandWhenCommandChanged() {
-    Graph oldCommandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat").addProperty("commandString", "bin/startup.sh") .build()).build();
+    Graph oldCommandGraph = aGraph()
+                                .withGraphName("START")
+                                .addNodes(aNode()
+                                              .withId("1")
+                                              .withOrigin(true)
+                                              .withType("EXEC")
+                                              .addProperty("commandPath", "/home/xxx/tomcat")
+                                              .addProperty("commandString", "bin/startup.sh")
+                                              .build())
+                                .build();
 
     Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
 
-    when(wingsPersistence.get(Service.class, APP_ID,
-  SERVICE_ID)).thenReturn(builder.but().addCommands(oldCommand).build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand()
+                                         .withUuid(ID_KEY)
+                                         .withAppId(APP_ID)
+                                         .withServiceId(SERVICE_ID)
+                                         .withDefaultVersion(1)
+                                         .withCommand(oldCommand)
+                                         .build())
+                        .build());
 
-    Graph commandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat1").addProperty("commandString", "bin/startup.sh") .build()).build();
+    when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
+        .thenReturn(anEntityVersion().withVersion(2).build());
+
+    when(commandService.getCommand(ID_KEY, 1)).thenReturn(oldCommand);
+
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
+        .thenReturn(anEntityVersion().withVersion(1).build());
+
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat1")
+                                           .addProperty("commandString", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
-    srs.updateCommand(APP_ID, SERVICE_ID, commandGraph);
+    srs.updateCommand(APP_ID, SERVICE_ID,
+        aServiceCommand()
+            .withUuid(ID_KEY)
+            .withName("START")
+            .withCommand(aCommand().withGraph(commandGraph).build())
+            .build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
 
-    verify(wingsPersistence).save(builder.but().addCommands(expectedCommand).addOldCommands(oldCommand).build());
-
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
+  }
 
   /**
    * Should update command when command graph changed.
    */
-  /*@Test
+  @Test
   public void shouldUpdateCommandWhenCommandGraphChanged() {
-    Graph oldCommandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat").addProperty("commandString", "bin/startup.sh") .build()).build();
+    Graph oldCommandGraph = aGraph()
+                                .withGraphName("START")
+                                .addNodes(aNode()
+                                              .withId("1")
+                                              .withOrigin(true)
+                                              .withType("EXEC")
+                                              .addProperty("commandPath", "/home/xxx/tomcat")
+                                              .addProperty("commandString", "bin/startup.sh")
+                                              .build())
+                                .build();
 
     Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
 
-    when(wingsPersistence.get(Service.class, APP_ID,
-  SERVICE_ID)).thenReturn(builder.but().addCommands(oldCommand).build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand()
+                                         .withUuid(ID_KEY)
+                                         .withAppId(APP_ID)
+                                         .withServiceId(SERVICE_ID)
+                                         .withDefaultVersion(1)
+                                         .withCommand(oldCommand)
+                                         .build())
+                        .build());
 
-    Graph commandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").withX(1).withY(1).addProperty("commandPath",
-  "/home/xxx/tomcat") .addProperty("commandString", "bin/startup.sh").build()).build();
+    when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
+        .thenReturn(anEntityVersion().withVersion(2).build());
+
+    when(commandService.getCommand(ID_KEY, 1)).thenReturn(oldCommand);
+
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
+        .thenReturn(anEntityVersion().withVersion(1).build());
+
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .withX(1)
+                                           .withY(1)
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("commandString", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
-    srs.updateCommand(APP_ID, SERVICE_ID, commandGraph);
+    srs.updateCommand(APP_ID, SERVICE_ID,
+        aServiceCommand()
+            .withUuid(ID_KEY)
+            .withName("START")
+            .withCommand(aCommand().withGraph(commandGraph).build())
+            .build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
 
-    verify(wingsPersistence).save(builder.but().addCommands(expectedCommand).build());
-
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
+
+    verify(commandService).update(expectedCommand);
+  }
 
   /**
    * Should not update command nothing changed.
    */
-  /*@Test
+  @Test
   public void shouldNotUpdateCommandNothingChanged() {
-    Graph oldCommandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat").addProperty("commandString", "bin/startup.sh") .build()).build();
+    Graph oldCommandGraph = aGraph()
+                                .withGraphName("START")
+                                .addNodes(aNode()
+                                              .withId("1")
+                                              .withOrigin(true)
+                                              .withType("EXEC")
+                                              .addProperty("commandPath", "/home/xxx/tomcat")
+                                              .addProperty("commandString", "bin/startup.sh")
+                                              .build())
+                                .build();
 
     Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
 
-    when(wingsPersistence.get(Service.class, APP_ID,
-  SERVICE_ID)).thenReturn(builder.but().addCommands(oldCommand).build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand()
+                                         .withUuid(ID_KEY)
+                                         .withAppId(APP_ID)
+                                         .withServiceId(SERVICE_ID)
+                                         .withDefaultVersion(1)
+                                         .withCommand(oldCommand)
+                                         .build())
+                        .build());
 
-    Graph commandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat").addProperty("commandString", "bin/startup.sh") .build()).build();
+    when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
+        .thenReturn(anEntityVersion().withVersion(2).build());
 
-    Command expectedCommand = aCommand().withGraph(commandGraph).build();
-    expectedCommand.transformGraph();
-    expectedCommand.setVersion(2L);
+    when(commandService.getCommand(ID_KEY, 1)).thenReturn(oldCommand);
 
-    srs.updateCommand(APP_ID, SERVICE_ID, commandGraph);
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
+        .thenReturn(anEntityVersion().withVersion(1).build());
 
-    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-
-    verify(wingsPersistence, never()).save(builder.but().addCommands(expectedCommand).build());
-
-    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
-
-  /**
-   * Should change command version.
-   */
-  /*@Test
-  public void shouldChangeCommandVersion() {
-    Graph oldCommandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat").addProperty("commandString", "bin/startup.sh") .build()).build();
-
-    Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
-    oldCommand.transformGraph();
-    oldCommand.setVersion(1L);
-
-    Graph commandGraph = aGraph().withGraphName("START").addNodes(
-        aNode().withId("1").withOrigin(true).withType("EXEC").addProperty("commandPath",
-  "/home/xxx/tomcat1").addProperty("commandString", "bin/startup.sh") .build()).build();
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("commandString", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
     expectedCommand.setVersion(2L);
 
-    when(wingsPersistence.get(Service.class, APP_ID,
-  SERVICE_ID)).thenReturn(builder.but().addCommands(expectedCommand).addOldCommands(oldCommand).build());
-
-    srs.changeCommandVersion(APP_ID, SERVICE_ID, "START", 1);
+    srs.updateCommand(APP_ID, SERVICE_ID,
+        aServiceCommand()
+            .withUuid(ID_KEY)
+            .withName("START")
+            .withCommand(aCommand().withGraph(commandGraph).build())
+            .build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
 
-    verify(wingsPersistence).save(builder.but().addCommands(oldCommand).addOldCommands(expectedCommand).build());
+    verify(commandService, never()).save(any(Command.class));
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
+  }
 
   /**
    * Should delete command state.
@@ -427,41 +539,51 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     srs.deleteCommand(APP_ID, SERVICE_ID, "START");
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence, times(2)).createUpdateOperations(Service.class);
-    verify(wingsPersistence, times(2)).createQuery(Service.class);
-    verify(wingsPersistence, times(2)).update(any(Query.class), any());
+    verify(wingsPersistence, times(1)).createUpdateOperations(Service.class);
+    verify(wingsPersistence, times(1)).createQuery(Service.class);
+    verify(wingsPersistence, times(1)).update(any(Query.class), any());
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
   /**
    * Should get command stencils.
    */
-  /*@Test
+  @Test
   public void shouldGetCommandStencils() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(builder.but().addCommands(commandBuilder.build(),
-  commandBuilder.but().withName("START2").build()).build());
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand().withName("START").withCommand(commandBuilder.build()).build(),
+                            aServiceCommand()
+                                .withName("START2")
+                                .withCommand(commandBuilder.but().withName("START2").build())
+                                .build())
+                        .build());
 
     List<Stencil> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID, null);
 
-    assertThat(commandStencils).isNotNull().hasSize(CommandUnitType.values().length +
-  1).extracting(Stencil::getName).contains("START", "START2");
+    assertThat(commandStencils)
+        .isNotNull()
+        .hasSize(CommandUnitType.values().length + 1)
+        .extracting(Stencil::getName)
+        .contains("START", "START2");
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService, times(2)).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
+  }
 
   /**
    * Should get command by name.
    */
-  /*@Test
+  @Test
   public void shouldGetCommandByName() {
-    when(wingsPersistence.get(eq(Service.class), anyString(),
-  anyString())).thenReturn(builder.but().addCommands(commandBuilder.build()).build());
+    when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand().withName("START").withCommand(commandBuilder.build()).build())
+                        .build());
 
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, "START")).isNotNull();
 
     verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-  }*/
+  }
 }

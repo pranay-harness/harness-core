@@ -156,7 +156,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
-    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START"))
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withCommand(COMMAND).build());
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
@@ -215,7 +215,7 @@ public class CommandStateTest extends WingsBaseTest {
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
-    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, "START");
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
     verify(activityService).save(any(Activity.class));
@@ -283,7 +283,7 @@ public class CommandStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("artifacts", asList(artifact));
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
-    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START"))
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withCommand(command).build());
 
     when(serviceCommandExecutorService.execute(SERVICE_INSTANCE, command,
@@ -303,7 +303,7 @@ public class CommandStateTest extends WingsBaseTest {
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
-    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, "START");
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
 

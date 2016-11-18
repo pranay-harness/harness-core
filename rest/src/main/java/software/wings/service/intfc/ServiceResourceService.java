@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
@@ -74,20 +73,20 @@ public interface ServiceResourceService {
    *
    * @param appId        the app id
    * @param serviceId    the service id
-   * @param commandGraph the command graph
+   * @param serviceCommand the command graph
    * @return the service
    */
-  Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, Graph commandGraph);
+  Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand);
 
   /**
    * Update command service.
    *
    * @param appId        the app id
    * @param serviceId    the service id
-   * @param commandGraph the command graph
+   * @param serviceCommand the command graph
    * @return the service
    */
-  Service updateCommand(String appId, String serviceId, String commandId, Graph commandGraph, boolean setAsDefault);
+  Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand);
 
   /**
    * Delete command.

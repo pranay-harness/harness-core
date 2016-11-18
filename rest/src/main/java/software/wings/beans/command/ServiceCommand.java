@@ -1,5 +1,9 @@
 package software.wings.beans.command;
 
+import com.google.common.base.MoreObjects;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
@@ -7,6 +11,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityVersion;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 11/16/16.
@@ -19,6 +24,7 @@ public class ServiceCommand extends Base {
   private int defaultVersion;
 
   @Transient private Command command;
+  @Transient @JsonIgnore private boolean setAsDefault;
 
   /**
    * Getter for property 'name'.
@@ -108,6 +114,58 @@ public class ServiceCommand extends Base {
    */
   public void setCommand(Command command) {
     this.command = command;
+  }
+
+  /**
+   * Getter for property 'setAsDefault'.
+   *
+   * @return Value for property 'setAsDefault'.
+   */
+  @JsonIgnore
+  public boolean getSetAsDefault() {
+    return setAsDefault;
+  }
+
+  /**
+   * Setter for property 'setAsDefault'.
+   *
+   * @param setAsDefault Value to set for property 'setAsDefault'.
+   */
+  @JsonProperty
+  public void setSetAsDefault(boolean setAsDefault) {
+    this.setAsDefault = setAsDefault;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(name, serviceId, envIdVersionMap, defaultVersion);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final ServiceCommand other = (ServiceCommand) obj;
+    return Objects.equals(this.name, other.name) && Objects.equals(this.serviceId, other.serviceId)
+        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
+        && Objects.equals(this.defaultVersion, other.defaultVersion);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("name", name)
+        .add("serviceId", serviceId)
+        .add("envIdVersionMap", envIdVersionMap)
+        .add("defaultVersion", defaultVersion)
+        .toString();
   }
 
   public static final class Builder {
