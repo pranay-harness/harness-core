@@ -23,11 +23,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
+import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -174,7 +176,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return mapByScope;
   }
 
-  private Map<String, StateTypeDescriptor> stencilMap() {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Map<String, StateTypeDescriptor> stencilMap() {
     if (cachedStencilMap == null) {
       stencils(null);
     }
@@ -187,17 +193,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
-    // TODO:pipeline
-    //    if (cls == Pipeline.class && graph != null) {
-    //      try {
-    //        if (!graph.isLinear()) {
-    //          throw new WingsException(INVALID_PIPELINE);
-    //        }
-    //      } catch (Exception e) {
-    //        throw new WingsException(INVALID_PIPELINE, e);
-    //      }
-    //    }
-
     workflow.setDefaultVersion(1);
     workflow = wingsPersistence.saveAndGet(cls, workflow);
     if (graph != null) {
@@ -369,7 +364,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId) {
+  public <T extends Base> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId) {
     boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId));
     if (deleted) {
@@ -415,12 +410,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public void deleteWorkflowByApplication(String appId) {
-    // TODO:pipeline
-    //    List<Key<Pipeline>> pipelineKeys =
-    //    wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList(); for (Key key :
-    //    pipelineKeys) {
-    //      deleteWorkflow(Pipeline.class, appId, (String) key.getId());
-    //    }
+    List<Key<Pipeline>> pipelineKeys =
+        wingsPersistence.createQuery(Pipeline.class).field("appId").equal(appId).asKeyList();
+    for (Key key : pipelineKeys) {
+      deleteWorkflow(Pipeline.class, appId, (String) key.getId());
+    }
 
     List<Key<Orchestration>> orchestrationKeys =
         wingsPersistence.createQuery(Orchestration.class).field("appId").equal(appId).asKeyList();

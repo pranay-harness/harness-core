@@ -175,7 +175,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                               .withStatus(RUNNING)
                                               .build();
     when(query.get()).thenReturn(pipelineExecution);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
+    when(workflowExecutionService.getExecutionDetailsWithoutGraph(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(aWorkflowExecution().withStatus(RUNNING).build());
     pipelineService.refreshPipelineExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
@@ -219,7 +219,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                               .withStatus(RUNNING)
                                               .build();
     when(query.get()).thenReturn(pipelineExecution);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
+    when(workflowExecutionService.getExecutionDetailsWithoutGraph(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(aWorkflowExecution().withStatus(RUNNING).build());
     pipelineService.refreshPipelineExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
@@ -280,7 +280,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                               .withStatus(RUNNING)
                                               .build();
     when(query.get()).thenReturn(pipelineExecution);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
+    when(workflowExecutionService.getExecutionDetailsWithoutGraph(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID))
         .thenReturn(aWorkflowExecution().withStatus(SUCCESS).build());
     pipelineService.refreshPipelineExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 

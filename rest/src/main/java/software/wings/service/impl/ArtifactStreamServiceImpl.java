@@ -193,8 +193,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
       artifactStreamAction.setEnvName(environment.getName());
     } else {
-      Pipeline workflow = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId()); // TODO::pipeline
-      artifactStreamAction.setWorkflowName(workflow.getName());
+      Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId());
+      artifactStreamAction.setWorkflowName(pipeline.getName());
     }
 
     Query<ArtifactStream> query = wingsPersistence.createQuery(ArtifactStream.class)

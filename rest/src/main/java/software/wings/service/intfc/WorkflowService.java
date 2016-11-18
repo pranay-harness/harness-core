@@ -1,11 +1,13 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.Base;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
@@ -49,7 +51,7 @@ public interface WorkflowService {
    * @param workflowId the workflow id
    * @return the boolean
    */
-  <T extends Workflow> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId);
+  <T extends Base> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId);
 
   /**
    * Creates the.
@@ -184,4 +186,11 @@ public interface WorkflowService {
    * @return the state machine
    */
   StateMachine readForEnv(String appId, String envId, String orchestrationId);
+
+  /**
+   * Stencil map map.
+   *
+   * @return the map
+   */
+  public Map<String, StateTypeDescriptor> stencilMap();
 }

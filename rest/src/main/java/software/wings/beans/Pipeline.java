@@ -4,12 +4,15 @@
 
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -94,6 +97,38 @@ public class Pipeline extends Base {
    */
   public void setPipelineStages(List<PipelineStage> pipelineStages) {
     this.pipelineStages = pipelineStages;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(name, description, pipelineStages, stateEtaMap);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Pipeline other = (Pipeline) obj;
+    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.pipelineStages, other.pipelineStages)
+        && Objects.equals(this.stateEtaMap, other.stateEtaMap);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("name", name)
+        .add("description", description)
+        .add("pipelineStages", pipelineStages)
+        .add("stateEtaMap", stateEtaMap)
+        .toString();
   }
 
   /**

@@ -23,6 +23,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
@@ -95,6 +96,90 @@ public class StateMachine extends Base {
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateMachine transformation error");
+    }
+  }
+
+  public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
+    logger.info("Pipeline received for transformation {} " + pipeline.toString());
+    setAppId(pipeline.getAppId());
+    this.originId = pipeline.getUuid();
+    //    this.originVersion = originVersion;
+    //    this.graph = graph;
+    //    this.name = graph.getGraphName();
+    try {
+      transformPipeline(pipeline, stencilMap);
+    } catch (WingsException e) {
+      logger.error(e.getLocalizedMessage(), e);
+      throw e;
+    } catch (Exception e) {
+      logger.error(e.getLocalizedMessage(), e);
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateMachine transformation error");
+    }
+  }
+
+  private void transformPipeline(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
+    ensureValidatePipelineForTransformation(pipeline);
+
+    String originStateName = pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getName();
+
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+        .forEach(pipelineStageElement -> {
+
+          StateTypeDescriptor stateTypeDesc = stencilMap.get(pipelineStageElement.getType());
+
+          State state = stateTypeDesc.newInstance(pipelineStageElement.getName());
+
+          Map<String, Object> properties = pipelineStageElement.getProperties();
+
+          // populate properties
+          MapperUtils.mapObject(properties, state);
+
+          state.resolveProperties();
+
+          addState(state);
+        });
+
+    if (originStateName == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Origin state missing");
+    }
+
+    if (pipeline.getPipelineStages().size() > 1) {
+      Map<String, State> statesMap = getStatesMap();
+      for (int stageIdx = 0; stageIdx < pipeline.getPipelineStages().size() - 1; stageIdx++) {
+        String currentStateName =
+            pipeline.getPipelineStages().get(stageIdx).getPipelineStageElements().get(0).getName();
+        String nextStateName =
+            pipeline.getPipelineStages().get(stageIdx + 1).getPipelineStageElements().get(0).getName();
+
+        State stateFrom = statesMap.get(currentStateName);
+        State stateTo = statesMap.get(nextStateName);
+        addTransition(aTransition()
+                          .withFromState(stateFrom)
+                          .withTransitionType(TransitionType.SUCCESS)
+                          .withToState(stateTo)
+                          .build());
+      }
+    }
+    setInitialStateName(originStateName);
+    validate();
+    clearCache();
+  }
+
+  private void ensureValidatePipelineForTransformation(Pipeline pipeline) {
+    if (pipeline.getPipelineStages().size() == 0) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Pipeline must have one stage at least.");
+    }
+    Boolean moreThanOneEnvStateInOneStage =
+        pipeline.getPipelineStages()
+            .stream()
+            .map(pipelineStage -> pipelineStage.getPipelineStageElements().size() > 1)
+            .findFirst()
+            .orElse(false);
+    if (moreThanOneEnvStateInOneStage) {
+      throw new WingsException(
+          ErrorCodes.INVALID_REQUEST, "message", "Pipeline with more than one execution in one stage in not supported");
     }
   }
 
