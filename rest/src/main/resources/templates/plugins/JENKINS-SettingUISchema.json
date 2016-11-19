@@ -1,1 +1,5 @@
-{}
+{
+  "password": { "ui:widget": "password" },
+  "type": { "ui:widget": "hidden" },
+  "ui:order": [ "type", "jenkinsUrl", "username", "password" ]
+}
