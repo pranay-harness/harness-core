@@ -13,6 +13,11 @@ public class PipelineStage {
 
   /**
    * Instantiates a new Pipeline stage.
+   */
+  public PipelineStage() {}
+
+  /**
+   * Instantiates a new Pipeline stage.
    *
    * @param pipelineStageElements the pipeline stage elements
    */
@@ -45,6 +50,11 @@ public class PipelineStage {
     private String name;
     private String type;
     private Map<String, Object> properties = new HashMap<>();
+
+    /**
+     * Instantiates a new Pipeline stage element.
+     */
+    public PipelineStageElement() {}
 
     /**
      * Instantiates a new Pipeline stage element.
