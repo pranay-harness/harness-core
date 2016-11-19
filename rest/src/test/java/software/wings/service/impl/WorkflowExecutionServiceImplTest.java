@@ -18,9 +18,11 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.infrastructure.Infrastructure.Builder.anInfrastructure;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +55,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
@@ -105,6 +108,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
+
   @Mock @Inject private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
 
@@ -1212,76 +1216,105 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Ignore
   public void triggerPipeline() throws InterruptedException {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
-    String appId = app.getUuid();
-    Pipeline pipeline = createPipeline(appId);
-    triggerPipeline(appId, pipeline);
-  }
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    wingsPersistence.save(
+        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
-  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline) throws InterruptedException {
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution =
-        ((WorkflowExecutionServiceImpl) workflowExecutionService)
-            .triggerPipelineExecution(appId, pipeline.getUuid(), new ExecutionArgs(), callback);
-    workflowExecutionSignals.get(signalId).await();
+    Host host = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host").build());
 
-    assertThat(execution).isNotNull();
-    String executionId = execution.getUuid();
-    logger.debug("Pipeline executionId: {}", executionId);
-    assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
-    assertThat(execution)
-        .isNotNull()
-        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
-        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    ApplicationHost applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class,
+        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host).build());
 
-    return execution;
-  }
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withServiceId(service.getUuid())
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+    serviceTemplate.setService(service);
 
-  /**
-   * Should update pipeline with graph.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  @Ignore
-  public void shouldListPipelineExecutions() throws InterruptedException {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
-    String appId = app.getUuid();
-    Pipeline pipeline = createPipeline(appId);
-    WorkflowExecution workflowExecution = triggerPipeline(appId, pipeline);
-    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("appId");
-    filter.setFieldValues(appId);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
+    software.wings.beans.ServiceInstance.Builder builder =
+        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    filter = new SearchFilter();
-    filter.setFieldName("workflowType");
-    filter.setFieldValues(WorkflowType.PIPELINE);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
+    ServiceInstance inst = serviceInstanceService.save(builder.withHost(applicationHost).build());
 
-    PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(pageRequest, true);
-    assertThat(pageResponse).isNotNull().hasSize(1).doesNotContainNull();
-    WorkflowExecution workflowExecution2 = pageResponse.get(0);
-    assertThat(workflowExecution2)
-        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
-            WorkflowExecution::getWorkflowId)
-        .containsExactly(workflowExecution.getUuid(), appId, workflowExecution.getStateMachineId(), pipeline.getUuid());
-    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(workflowExecution2.getExecutionNode()).isNotNull();
-  }
+    Graph graph =
+        aGraph()
+            .addNodes(aNode()
+                          .withId("Repeat By Services")
+                          .withOrigin(true)
+                          .withName("Repeat By Services")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${services()}")
+                          .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("RepeatByInstances")
+                          .withName("RepeatByInstances")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${instances}")
+                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("svcRepeatWait")
+                          .withName("svcRepeatWait")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 1)
+                          .build())
+            .addNodes(aNode()
+                          .withId("instRepeatWait")
+                          .withName("instRepeatWait")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 1)
+                          .build())
+            .addNodes(aNode()
+                          .withId("instSuccessWait")
+                          .withName("instSuccessWait")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 1)
+                          .build())
+            .addLinks(
+                aLink().withId("l1").withFrom("Repeat By Services").withTo("svcRepeatWait").withType("repeat").build())
+            .addLinks(
+                aLink().withId("l2").withFrom("svcRepeatWait").withTo("RepeatByInstances").withType("success").build())
+            .addLinks(
+                aLink().withId("l3").withFrom("RepeatByInstances").withTo("instRepeatWait").withType("repeat").build())
+            .addLinks(aLink()
+                          .withId("l4")
+                          .withFrom("RepeatByInstances")
+                          .withTo("instSuccessWait")
+                          .withType("success")
+                          .build())
+            .build();
 
-  private Pipeline createPipeline(String appId) {
-    List<PipelineStage> pipelineStages = createPipelineStages();
+    Orchestration orchestration = anOrchestration()
+                                      .withAppId(app.getUuid())
+                                      .withName("workflow1")
+                                      .withDescription("Sample Workflow")
+                                      .withGraph(graph)
+                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .withTargetToAllEnv(true)
+                                      .build();
+    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+
+    PipelineStage stag1 = new PipelineStage(asList(new PipelineStageElement("DEV", StateType.ENV_STATE.name(),
+        ImmutableMap.of("envId", env.getUuid(), "workflowId", orchestration.getUuid()))));
+    PipelineStage stag2 = new PipelineStage(asList(
+        new PipelineStageElement("APPROVAL", StateType.APPROVAL.name(), ImmutableMap.of("envId", env.getUuid()))));
+    List<PipelineStage> pipelineStages = asList(stag1, stag2);
+
     Pipeline pipeline = aPipeline()
-                            .withAppId(appId)
+                            .withAppId(app.getUuid())
                             .withName("pipeline1")
                             .withDescription("Sample Pipeline")
                             .withPipelineStages(pipelineStages)
@@ -1300,52 +1333,40 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
-    assertThat(res.get(0).getTransitions()).hasSize(2);
-    return pipeline;
+    assertThat(res.get(0).getTransitions()).hasSize(1);
+
+    Artifact artifact = wingsPersistence.saveAndGet(Artifact.class,
+        anArtifact()
+            .withAppId(app.getUuid())
+            .withDisplayName(ARTIFACT_NAME)
+            .withServiceIds(asList(service.getUuid()))
+            .build());
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(artifact));
+
+    triggerPipeline(app.getUuid(), pipeline, executionArgs);
   }
 
-  private List<PipelineStage> createPipelineStages() {
-    PipelineStage stag1 = new PipelineStage(
-        asList(new PipelineStageElement("IT", StateType.ENV_STATE.name(), ImmutableMap.of("envId", "12345"))));
-    PipelineStage stag2 = new PipelineStage(
-        asList(new PipelineStageElement("QA", StateType.ENV_STATE.name(), ImmutableMap.of("envId", "23456"))));
-    PipelineStage stag3 = new PipelineStage(
-        asList(new PipelineStageElement("UAT", StateType.ENV_STATE.name(), ImmutableMap.of("envId", "34567"))));
-    return asList(stag1, stag2, stag3);
-  }
+  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, ExecutionArgs executionArgs)
+      throws InterruptedException {
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                      .triggerPipelineExecution(appId, pipeline.getUuid(), executionArgs, callback);
+    workflowExecutionSignals.get(signalId).await();
 
-  /**
-   * @return
-   */
-  private Graph createInitialGraph() {
-    return aGraph()
-        .addNodes(aNode()
-                      .withId("n1")
-                      .withName("IT")
-                      .withX(250)
-                      .withY(50)
-                      .withType(StateType.ENV_STATE.name())
-                      .addProperty("envId", "12345")
-                      .build())
-        .addNodes(aNode()
-                      .withId("n2")
-                      .withName("QA")
-                      .withX(300)
-                      .withY(50)
-                      .withType(StateType.ENV_STATE.name())
-                      .addProperty("envId", "23456")
-                      .build())
-        .addNodes(aNode()
-                      .withId("n3")
-                      .withName("UAT")
-                      .withX(300)
-                      .withY(50)
-                      .withType(StateType.ENV_STATE.name())
-                      .addProperty("envId", "34567")
-                      .build())
-        .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-        .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-        .build();
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Pipeline executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    return execution;
   }
 
   /**

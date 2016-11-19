@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.SortOrder;
@@ -7,15 +10,16 @@ import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.UserService;
-import software.wings.sm.*;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
-import javax.inject.Inject;
-
 import java.util.List;
-
-import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import javax.inject.Inject;
 
 /**
  * A Pause state to pause state machine execution.
@@ -43,10 +47,16 @@ public class ApprovalState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    List<User> response =
-        userService.list(PageRequest.Builder.aPageRequest().addOrder("createdAt", SortOrder.OrderType.ASC).build())
-            .getResponse();
-    User user = response.get(0).getPublicUser(); // TODO::remove and fetch actual approver
+    User user = null;
+    List<User> response = userService
+                              .list(PageRequest.Builder.aPageRequest()
+                                        .addOrder("createdAt", SortOrder.OrderType.ASC)
+                                        .withLimit("1")
+                                        .build())
+                              .getResponse();
+    if (response != null && response.size() == 1) {
+      user = response.get(0).getPublicUser(); // TODO::remove and fetch actual approver
+    }
 
     ApprovalStateExecutionData executionData = anApprovalStateExecutionData()
                                                    .withApprovedBy(user)

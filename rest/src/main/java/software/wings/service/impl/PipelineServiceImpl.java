@@ -90,7 +90,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void refreshPipelineExecution(PipelineExecution pipelineExecution) {
-    if (FINISHED_EXECUTION_STATUSES.contains(pipelineExecution.getStatus())) {
+    if (pipelineExecution == null || FINISHED_EXECUTION_STATUSES.contains(pipelineExecution.getStatus())) {
       return;
     }
     StateMachine stateMachine =

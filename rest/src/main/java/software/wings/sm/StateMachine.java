@@ -103,9 +103,6 @@ public class StateMachine extends Base {
     logger.info("Pipeline received for transformation {} " + pipeline.toString());
     setAppId(pipeline.getAppId());
     this.originId = pipeline.getUuid();
-    //    this.originVersion = originVersion;
-    //    this.graph = graph;
-    //    this.name = graph.getGraphName();
     try {
       transformPipeline(pipeline, stencilMap);
     } catch (WingsException e) {
