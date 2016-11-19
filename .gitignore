@@ -10,7 +10,6 @@ target
 .project
 dependency-reduced-pom.xml
 .checkstyle
-plugins
 wingsui
 access.log
 access*gz
