@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.beans.AccountPlugin;
 
 import java.util.List;
@@ -12,5 +11,5 @@ import java.util.Map;
 public interface PluginService {
   List<AccountPlugin> getInstalledPlugins(String accountId);
 
-  Map<String, JsonNode> getPluginSettingSchema(String accountId);
+  Map<String, Map<String, Object>> getPluginSettingSchema(String accountId);
 }

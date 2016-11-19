@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.annotations.Api;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.RestResponse;
@@ -46,7 +45,8 @@ public class PluginResource {
 
   @GET
   @Path("{accountId}/installed/settingschema")
-  public RestResponse<Map<String, JsonNode>> installedPluginSettingSchema(@PathParam("accountId") String accountId) {
+  public RestResponse<Map<String, Map<String, Object>>> installedPluginSettingSchema(
+      @PathParam("accountId") String accountId) {
     return aRestResponse().withResource(pluginService.getPluginSettingSchema(accountId)).build();
   }
 }
