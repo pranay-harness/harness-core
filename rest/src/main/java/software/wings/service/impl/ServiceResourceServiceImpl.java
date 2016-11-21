@@ -265,11 +265,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     serviceCommand.setAppId(appId);
     serviceCommand.setName(serviceCommand.getCommand().getGraph().getGraphName());
 
+    Command command = serviceCommand.getCommand();
+
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(
         appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceCommand.getName(), ChangeType.CREATED);
 
-    Command command = serviceCommand.getCommand();
     command.transformGraph();
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
