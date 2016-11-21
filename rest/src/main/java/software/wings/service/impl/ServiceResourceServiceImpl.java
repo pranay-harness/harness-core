@@ -93,6 +93,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     pageResponse.getResponse().forEach(service -> {
       service.setConfigFiles(
           configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid()));
+      service.getServiceCommands().forEach(serviceCommand
+          -> serviceCommand.setCommand(commandService.getCommand(
+              serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     });
     return pageResponse;
   }
@@ -174,7 +177,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
     service.getServiceCommands().forEach(serviceCommand
         -> serviceCommand.setCommand(
-            commandService.getCommand(serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+            commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     return service;
   }
 
@@ -274,6 +277,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.transformGraph();
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
+    command.setAppId(appId);
 
     commandService.save(command);
 
@@ -316,7 +320,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.transformGraph();
     command.setOriginEntityId(serviceCommand.getUuid());
 
-    Command oldCommand = commandService.getCommand(serviceCommand.getUuid(), lastEntityVersion.getVersion());
+    Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
 
     DiffNode commandUnitDiff =
         ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
@@ -377,7 +381,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                         .orElse(null);
     if (serviceCommand != null && serviceCommand.getEnvIdVersionMap().containsKey(envId)) {
       serviceCommand.setCommand(commandService.getCommand(
-          serviceCommand.getUuid(), serviceCommand.getEnvIdVersionMap().get(envId).getVersion()));
+          appId, serviceCommand.getUuid(), serviceCommand.getEnvIdVersionMap().get(envId).getVersion()));
     }
     return serviceCommand;
   }
@@ -394,7 +398,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                  .filter(serviceCommand -> equalsIgnoreCase(commandName, serviceCommand.getName()))
                                  .findFirst()
                                  .get();
-    command.setCommand(commandService.getCommand(command.getUuid(), version));
+    command.setCommand(commandService.getCommand(appId, command.getUuid(), version));
     return command;
   }
 

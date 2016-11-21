@@ -17,9 +17,10 @@ public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public Command getCommand(String originEntityId, int version) {
+  public Command getCommand(String appId, String originEntityId, int version) {
     return wingsPersistence.get(Command.class,
         aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", EQ, appId).build())
             .addFilter(aSearchFilter().withField("originEntityId", EQ, originEntityId).build())
             .addFilter(aSearchFilter().withField("version", EQ, version).build())
             .build());

@@ -361,7 +361,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
         .thenReturn(anEntityVersion().withVersion(2).build());
 
-    when(commandService.getCommand(ID_KEY, 1)).thenReturn(oldCommand);
+    when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
     when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
         .thenReturn(anEntityVersion().withVersion(1).build());
@@ -427,7 +427,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
         .thenReturn(anEntityVersion().withVersion(2).build());
 
-    when(commandService.getCommand(ID_KEY, 1)).thenReturn(oldCommand);
+    when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
     when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
         .thenReturn(anEntityVersion().withVersion(1).build());
@@ -497,7 +497,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
         .thenReturn(anEntityVersion().withVersion(2).build());
 
-    when(commandService.getCommand(ID_KEY, 1)).thenReturn(oldCommand);
+    when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
     when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
         .thenReturn(anEntityVersion().withVersion(1).build());
