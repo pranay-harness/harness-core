@@ -52,7 +52,7 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("defaultVersion") private int defaultVersion;
 
-  private Map<String, EntityVersion> envIdVersionMap;
+  @FormDataParam("envIdVersionMap") private Map<String, EntityVersion> envIdVersionMap;
 
   @Transient @FormDataParam("setAsDefault") private boolean setAsDefault;
 
