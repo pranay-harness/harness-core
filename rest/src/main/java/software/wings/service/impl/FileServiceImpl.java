@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -99,6 +100,11 @@ public class FileServiceImpl implements FileService {
         .collect(toList());
   }
 
+  @Override
+  public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
+    return null;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -156,12 +162,14 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
-  public boolean updateParentEntityId(String entityId, String fileId, FileBucket fileBucket) {
+  public boolean updateParentEntityIdAndVersion(String entityId, String fileId, int version, FileBucket fileBucket) {
     DBCollection collection = wingsPersistence.getDatastore().getDB().getCollection(fileBucket.getName() + ".files");
-    collection.createIndex(new BasicDBObject("metadata.entityId", 1), new BasicDBObject("background", true));
+    collection.createIndex(
+        new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
     return collection
                .update(new BasicDBObject("_id", new ObjectId(fileId)),
-                   new BasicDBObject("$set", new BasicDBObject("metadata.entityId", entityId)))
+                   new BasicDBObject(
+                       "$set", new BasicDBObject(of("metadata.entityId", entityId, "metadata.version", version))))
                .getN()
         > 0;
   }

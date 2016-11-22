@@ -74,5 +74,6 @@ public enum EntityType {
              * Application entity type.
              */
   APPLICATION,
-  COMMAND;
+  COMMAND,
+  CONFIG;
 }

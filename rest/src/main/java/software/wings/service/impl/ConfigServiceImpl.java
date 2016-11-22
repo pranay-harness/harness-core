@@ -16,6 +16,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.ApplicationHost;
@@ -24,6 +26,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -61,6 +64,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private EntityVersionService entityVersionService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -85,9 +89,13 @@ public class ConfigServiceImpl implements ConfigService {
 
     configFile.setEnvId(envId);
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
-    String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
+    configFile.setDefaultVersion(1);
     String id = wingsPersistence.save(configFile);
-    fileService.updateParentEntityId(id, fileId, CONFIGS);
+    entityVersionService.newEntityVersion(
+        configFile.getAppId(), EntityType.CONFIG, id, configFile.getFileName(), ChangeType.CREATED);
+
+    String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
+    fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
     return id;
   }
 
@@ -161,13 +169,10 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public File download(String appId, String configId, String version) {
+  public File download(String appId, String configId, int version) {
     ConfigFile configFile = get(appId, configId, false);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
-    String fileId = configFile.getFileUuid();
-    if (configFile.getVersions().contains(version)) {
-      fileId = version;
-    }
+    String fileId = fileService.getFileIdByVersion(configId, version, CONFIGS);
     fileService.download(fileId, file, CONFIGS);
     return file;
   }
@@ -208,7 +213,13 @@ public class ConfigServiceImpl implements ConfigService {
 
     if (uploadedInputStream != null) {
       String fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
-      fileService.updateParentEntityId(inputConfigFile.getUuid(), fileId, CONFIGS);
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
+          inputConfigFile.getUuid(), inputConfigFile.getFileName(), ChangeType.UPDATED);
+      fileService.updateParentEntityIdAndVersion(
+          inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
+      if (inputConfigFile.isSetAsDefault()) {
+        inputConfigFile.setDefaultVersion(entityVersion.getVersion());
+      }
       updateMap.put("fileUuid", inputConfigFile.getFileUuid());
       updateMap.put("checksum", inputConfigFile.getChecksum());
       updateMap.put("size", inputConfigFile.getSize());
@@ -217,11 +228,12 @@ public class ConfigServiceImpl implements ConfigService {
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
     }
-    wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
 
-    if (!oldFileId.equals(inputConfigFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
-      executorService.submit(() -> fileService.deleteFile(oldFileId, CONFIGS));
-    }
+    updateMap.put("defaultVersion", inputConfigFile.getDefaultVersion());
+    updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
+    updateMap.put("targetToAllEnv", inputConfigFile.isTargetToAllEnv());
+
+    wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
   }
 
   /**

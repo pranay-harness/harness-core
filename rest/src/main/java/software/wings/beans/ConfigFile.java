@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -43,6 +44,16 @@ public class ConfigFile extends BaseFile {
   @FormDataParam("parentConfigFileId") private String parentConfigFileId;
 
   @FormDataParam("relativeFilePath") private String relativeFilePath;
+
+  @FormDataParam("targetToAllEnv") private boolean targetToAllEnv;
+
+  @FormDataParam("defaultVersion") private int defaultVersion;
+
+  private Map<String, EntityVersion> envIdVersionMap;
+
+  @Transient @FormDataParam("setAsDefault") private boolean setAsDefault;
+
+  @Transient @FormDataParam("notes") private String notes;
 
   private String overridePath;
 
@@ -230,11 +241,65 @@ public class ConfigFile extends BaseFile {
     this.description = description;
   }
 
+  /**
+   * Getter for property 'targetToAllEnv'.
+   *
+   * @return Value for property 'targetToAllEnv'.
+   */
+  public boolean isTargetToAllEnv() {
+    return targetToAllEnv;
+  }
+
+  /**
+   * Setter for property 'targetToAllEnv'.
+   *
+   * @param targetToAllEnv Value to set for property 'targetToAllEnv'.
+   */
+  public void setTargetToAllEnv(boolean targetToAllEnv) {
+    this.targetToAllEnv = targetToAllEnv;
+  }
+
+  /**
+   * Getter for property 'defaultVersion'.
+   *
+   * @return Value for property 'defaultVersion'.
+   */
+  public int getDefaultVersion() {
+    return defaultVersion;
+  }
+
+  /**
+   * Setter for property 'defaultVersion'.
+   *
+   * @param defaultVersion Value to set for property 'defaultVersion'.
+   */
+  public void setDefaultVersion(int defaultVersion) {
+    this.defaultVersion = defaultVersion;
+  }
+
+  /**
+   * Getter for property 'envIdVersionMap'.
+   *
+   * @return Value for property 'envIdVersionMap'.
+   */
+  public Map<String, EntityVersion> getEnvIdVersionMap() {
+    return envIdVersionMap;
+  }
+
+  /**
+   * Setter for property 'envIdVersionMap'.
+   *
+   * @param envIdVersionMap Value to set for property 'envIdVersionMap'.
+   */
+  public void setEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
+    this.envIdVersionMap = envIdVersionMap;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
-              overridePath, versions, overriddenConfigFile);
+              targetToAllEnv, defaultVersion, envIdVersionMap, overridePath, versions, overriddenConfigFile);
   }
 
   @Override
@@ -254,6 +319,9 @@ public class ConfigFile extends BaseFile {
         && Objects.equals(this.description, other.description)
         && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
         && Objects.equals(this.relativeFilePath, other.relativeFilePath)
+        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv)
+        && Objects.equals(this.defaultVersion, other.defaultVersion)
+        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
         && Objects.equals(this.overridePath, other.overridePath) && Objects.equals(this.versions, other.versions)
         && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
   }
@@ -268,10 +336,21 @@ public class ConfigFile extends BaseFile {
         .add("description", description)
         .add("parentConfigFileId", parentConfigFileId)
         .add("relativeFilePath", relativeFilePath)
+        .add("targetToAllEnv", targetToAllEnv)
+        .add("defaultVersion", defaultVersion)
+        .add("envIdVersionMap", envIdVersionMap)
         .add("overridePath", overridePath)
         .add("versions", versions)
         .add("overriddenConfigFile", overriddenConfigFile)
         .toString();
+  }
+
+  public boolean isSetAsDefault() {
+    return setAsDefault;
+  }
+
+  public void setSetAsDefault(boolean setAsDefault) {
+    this.setAsDefault = setAsDefault;
   }
 
   /**
