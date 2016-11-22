@@ -88,6 +88,16 @@ public interface ConfigService {
    * @param entityId   the entity id
    * @return the config files for entity
    */
+  List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId);
+
+  /**
+   * Gets the config files for entity.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @param entityId   the entity id
+   * @return the config files for entity
+   */
   List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId);
 
   /**

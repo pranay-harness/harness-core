@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
+import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DefaultValue;
@@ -32,6 +33,8 @@ public class CopyConfigCommandUnit extends AbstractCommandUnit {
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
+  @Inject @Transient private transient FileServiceImpl fileService;
+
   /**
    * Instantiates a new Scp command unit.
    */
@@ -51,8 +54,10 @@ public class CopyConfigCommandUnit extends AbstractCommandUnit {
       for (ConfigFile configFile : configFiles) {
         File destFile = new File(configFile.getRelativeFilePath());
         String path = destinationParentPath + "/" + destFile.getParent();
-        result = context.copyGridFsFiles(path, FileBucket.CONFIGS,
-                     Collections.singletonList(Pair.of(configFile.getFileUuid(), destFile.getName())))
+        String fileId = fileService.getFileIdByVersion(configFile.getUuid(),
+            configFile.getVersionForEnv(context.getServiceInstance().getEnvId()), FileBucket.CONFIGS);
+        result = context.copyGridFsFiles(
+                     path, FileBucket.CONFIGS, Collections.singletonList(Pair.of(fileId, destFile.getName())))
                 == ExecutionResult.FAILURE
             ? ExecutionResult.FAILURE
             : ExecutionResult.SUCCESS;

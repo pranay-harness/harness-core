@@ -519,7 +519,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles =
-        configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
+        configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId);
 
     // flatten tag hierarchy and [tag -> tag] overrides
     logger.info("Flatten Tag hierarchy and getInfo config overrides");

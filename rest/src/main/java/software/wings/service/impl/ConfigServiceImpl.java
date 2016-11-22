@@ -18,6 +18,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.ApplicationHost;
@@ -71,10 +72,7 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public PageResponse<ConfigFile> list(PageRequest<ConfigFile> request) {
-    PageResponse<ConfigFile> pageResponse = wingsPersistence.query(ConfigFile.class, request);
-    pageResponse.getResponse().parallelStream().forEach(
-        configFile -> configFile.setVersions(fileService.getAllFileIds(configFile.getUuid(), CONFIGS)));
-    return pageResponse;
+    return wingsPersistence.query(ConfigFile.class, request);
   }
 
   /* (non-Javadoc)
@@ -137,8 +135,6 @@ public class ConfigServiceImpl implements ConfigService {
     if (configFile == null) {
       throw new WingsException(INVALID_ARGUMENT, "message", "ConfigFile not found");
     }
-
-    configFile.setVersions(fileService.getAllFileIds(configId, CONFIGS));
 
     if (withOverridePath) {
       configFile.setOverridePath(generateOverridePath(configFile));
@@ -286,15 +282,29 @@ public class ConfigServiceImpl implements ConfigService {
     }
   }
 
+  @Override
+  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
+    return list(aPageRequest()
+                    .addFilter("appId", Operator.EQ, appId)
+                    .addFilter("templateId", Operator.EQ, templateId)
+                    .addFilter("entityId", Operator.EQ, entityId)
+                    .build())
+        .getResponse();
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
    */
   @Override
-  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
+  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId) {
+    SearchFilter[] searchFilters = new SearchFilter[2];
+    searchFilters[0] = aSearchFilter().withField("targetToAllEnv", Operator.EQ, true).build();
+    searchFilters[1] = aSearchFilter().withField("envIdVersionMap." + envId, Operator.EXISTS, null).build();
     return list(aPageRequest()
-                    .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-                    .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
-                    .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
+                    .addFilter("appId", Operator.EQ, appId)
+                    .addFilter("templateId", Operator.EQ, templateId)
+                    .addFilter("entityId", Operator.EQ, entityId)
+                    .addFilter(aSearchFilter().withField(null, Operator.OR, searchFilters).build())
                     .build())
         .getResponse();
   }

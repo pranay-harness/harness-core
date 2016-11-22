@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
@@ -14,6 +16,7 @@ import software.wings.beans.EntityVersion;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 11/16/16.
@@ -190,6 +193,13 @@ public class ServiceCommand extends Base {
         .add("envIdVersionMap", envIdVersionMap)
         .add("defaultVersion", defaultVersion)
         .toString();
+  }
+
+  @JsonIgnore
+  public int getVersionForEnv(String envId) {
+    return Optional.ofNullable(envIdVersionMap.get(envId))
+        .orElse(anEntityVersion().withVersion(defaultVersion).build())
+        .getVersion();
   }
 
   public static final class Builder {
