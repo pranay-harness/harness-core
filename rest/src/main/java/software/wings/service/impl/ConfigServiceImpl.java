@@ -217,7 +217,6 @@ public class ConfigServiceImpl implements ConfigService {
           inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
       if (inputConfigFile.isSetAsDefault()) {
         inputConfigFile.setDefaultVersion(entityVersion.getVersion());
-        updateMap.put("defaultVersion", inputConfigFile.getDefaultVersion());
       }
       updateMap.put("fileUuid", inputConfigFile.getFileUuid());
       updateMap.put("checksum", inputConfigFile.getChecksum());
@@ -227,6 +226,8 @@ public class ConfigServiceImpl implements ConfigService {
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
     }
+
+    updateMap.put("defaultVersion", inputConfigFile.getDefaultVersion());
 
     if (inputConfigFile.getEnvIdVersionMap() != null) {
       updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
