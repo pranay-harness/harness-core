@@ -313,7 +313,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Orchestration updateOrchestration(Orchestration orchestration) {
     UpdateOperations<Orchestration> ops = wingsPersistence.createUpdateOperations(Orchestration.class);
-    s(ops, "description", orchestration.getDescription());
+    setUnset(ops, "description", orchestration.getDescription());
     setUnset(ops, "name", orchestration.getName());
 
     EntityVersion entityVersion;
