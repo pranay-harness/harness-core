@@ -52,7 +52,9 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("defaultVersion") private int defaultVersion;
 
-  @FormDataParam("envIdVersionMap") private Map<String, EntityVersion> envIdVersionMap;
+  private Map<String, EntityVersion> envIdVersionMap;
+
+  @JsonIgnore @FormDataParam("envIdVersionMapString") private String envIdVersionMapString;
 
   @Transient @FormDataParam("setAsDefault") private boolean setAsDefault;
 
@@ -348,6 +350,24 @@ public class ConfigFile extends BaseFile {
 
   public void setNotes(String notes) {
     this.notes = notes;
+  }
+
+  /**
+   * Getter for property 'envIdVersionMapString'.
+   *
+   * @return Value for property 'envIdVersionMapString'.
+   */
+  public String getEnvIdVersionMapString() {
+    return envIdVersionMapString;
+  }
+
+  /**
+   * Setter for property 'envIdVersionMapString'.
+   *
+   * @param envIdVersionMapString Value to set for property 'envIdVersionMapString'.
+   */
+  public void setEnvIdVersionMapString(String envIdVersionMapString) {
+    this.envIdVersionMapString = envIdVersionMapString;
   }
 
   /**

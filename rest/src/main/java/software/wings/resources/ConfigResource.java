@@ -6,20 +6,24 @@ import static software.wings.beans.EntityType.SERVICE;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.JsonUtils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -77,6 +81,13 @@ public class ConfigResource {
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setFileName(fileDetail.getFileName());
+    try {
+      Map<String, EntityVersion> envIdVersionMap =
+          JsonUtils.asObject(configFile.getEnvIdVersionMapString(), new TypeReference<Map<String, EntityVersion>>() {});
+      configFile.setEnvIdVersionMap(envIdVersionMap);
+    } catch (Exception e) {
+      // Ignore
+    }
     String fileId = configService.save(configFile,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
     return new RestResponse<>(fileId);
@@ -113,6 +124,13 @@ public class ConfigResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setAppId(appId);
     configFile.setUuid(configId);
+    try {
+      Map<String, EntityVersion> envIdVersionMap =
+          JsonUtils.asObject(configFile.getEnvIdVersionMapString(), new TypeReference<Map<String, EntityVersion>>() {});
+      configFile.setEnvIdVersionMap(envIdVersionMap);
+    } catch (Exception e) {
+      // Ignore
+    }
     if (fileDetail != null && fileDetail.getFileName() != null) {
       configFile.setFileName(fileDetail.getFileName());
     }
