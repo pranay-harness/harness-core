@@ -147,8 +147,9 @@ public class ConfigResource {
   @GET
   @Path("{configId}/download")
   @Encoded
-  public Response downloadConfig(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
-    File configFile = configService.download(appId, configId);
+  public Response downloadConfig(@QueryParam("appId") String appId, @PathParam("configId") String configId,
+      @QueryParam("version") Integer version) {
+    File configFile = configService.download(appId, configId, version);
     Response.ResponseBuilder response = Response.ok(configFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + configFile.getName());
     return response.build();

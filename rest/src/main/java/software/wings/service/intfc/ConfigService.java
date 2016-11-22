@@ -62,7 +62,7 @@ public interface ConfigService {
    * @param version  the version
    * @return the file
    */
-  File download(String appId, String configId, int version);
+  File download(String appId, String configId, Integer version);
 
   /**
    * Update.

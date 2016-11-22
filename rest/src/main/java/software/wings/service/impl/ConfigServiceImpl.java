@@ -169,10 +169,11 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public File download(String appId, String configId, int version) {
+  public File download(String appId, String configId, Integer version) {
     ConfigFile configFile = get(appId, configId, false);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
-    String fileId = fileService.getFileIdByVersion(configId, version, CONFIGS);
+    int fileVersion = (version == null) ? configFile.getDefaultVersion() : version;
+    String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
     fileService.download(fileId, file, CONFIGS);
     return file;
   }
