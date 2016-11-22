@@ -394,6 +394,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .withCommand(aCommand().withGraph(commandGraph).build())
             .build());
 
+    verify(wingsPersistence).createUpdateOperations(ServiceCommand.class);
+
+    verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
+
+    verify(wingsPersistence).createQuery(ServiceCommand.class);
+
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
@@ -466,6 +472,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .withName("START")
             .withCommand(aCommand().withGraph(commandGraph).build())
             .build());
+
+    verify(wingsPersistence).createUpdateOperations(ServiceCommand.class);
+
+    verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
+
+    verify(wingsPersistence).createQuery(ServiceCommand.class);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
 
@@ -541,6 +553,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+
+    verify(wingsPersistence).createUpdateOperations(ServiceCommand.class);
 
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
 
