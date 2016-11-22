@@ -77,6 +77,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                             .withEntityData(entityData)
                             .withEntityName(name)
                             .withChangeType(changeType)
+                            .withEntityParentUuid(parentUuid)
                             .build();
         EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid);
         if (lastEntityVersion == null) {

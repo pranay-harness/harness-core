@@ -271,10 +271,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     serviceCommand.setName(serviceCommand.getCommand().getGraph().getGraphName());
 
     Command command = serviceCommand.getCommand();
+    String notes = serviceCommand.getNotes();
 
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
-        serviceCommand.getName(), ChangeType.CREATED, serviceCommand.getNotes());
+        serviceCommand.getName(), ChangeType.CREATED, notes);
 
     command.transformGraph();
     command.setVersion(1L);
@@ -323,6 +324,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Command command = serviceCommand.getCommand();
     command.transformGraph();
     command.setOriginEntityId(serviceCommand.getUuid());
+    command.setUuid(null);
 
     Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
 
