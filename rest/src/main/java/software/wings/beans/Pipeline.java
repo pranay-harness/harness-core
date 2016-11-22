@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
 public class Pipeline extends Base {
   @NotNull private String name;
   private String description;
-  private List<PipelineStage> pipelineStages = new ArrayList<>();
+  @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
 
   /**

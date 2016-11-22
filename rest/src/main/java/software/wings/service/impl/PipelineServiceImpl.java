@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
@@ -28,6 +29,8 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -241,6 +244,7 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
+    validatePipeline(pipeline);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
     setUnset(ops, "description", pipeline.getDescription());
     setUnset(ops, "name", pipeline.getName());
@@ -278,10 +282,33 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline createPipeline(Pipeline pipeline) {
+    validatePipeline(pipeline);
     pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null);
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
     return pipeline;
+  }
+
+  private void validatePipeline(Pipeline pipeline) {
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().size() == 0) {
+        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Invalid pipeline stage");
+      }
+
+      if (pipelineStage.getPipelineStageElements().size() > 1) {
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+            "Pipeline with more than one execution in one stage in not supported");
+      }
+
+      for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
+        if (ENV_STATE.name().equals(stageElement.getType())
+            && (isNullOrEmpty((String) stageElement.getProperties().get("envId"))
+                   || isNullOrEmpty((String) stageElement.getProperties().get("workflowId")))) {
+          throw new WingsException(
+              ErrorCodes.INVALID_ARGUMENT, "args", "Workflow or Environment can not be null for Environment state");
+        }
+      }
+    }
   }
 
   @Override

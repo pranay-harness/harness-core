@@ -115,8 +115,6 @@ public class StateMachine extends Base {
   }
 
   private void transformPipeline(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    ensureValidatePipelineForTransformation(pipeline);
-
     String originStateName = pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).getName();
 
     pipeline.getPipelineStages()
@@ -162,22 +160,6 @@ public class StateMachine extends Base {
     setInitialStateName(originStateName);
     validate();
     clearCache();
-  }
-
-  private void ensureValidatePipelineForTransformation(Pipeline pipeline) {
-    if (pipeline.getPipelineStages().size() == 0) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Pipeline must have one stage at least.");
-    }
-    Boolean moreThanOneEnvStateInOneStage =
-        pipeline.getPipelineStages()
-            .stream()
-            .map(pipelineStage -> pipelineStage.getPipelineStageElements().size() > 1)
-            .findFirst()
-            .orElse(false);
-    if (moreThanOneEnvStateInOneStage) {
-      throw new WingsException(
-          ErrorCodes.INVALID_REQUEST, "message", "Pipeline with more than one execution in one stage in not supported");
-    }
   }
 
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
