@@ -79,7 +79,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                             .withChangeType(changeType)
                             .withEntityParentUuid(parentUuid)
                             .build();
-        EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid);
+        EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid, parentUuid);
         if (lastEntityVersion == null) {
           entityVersion.setVersion(EntityVersion.INITIAL_VERSION);
         } else {

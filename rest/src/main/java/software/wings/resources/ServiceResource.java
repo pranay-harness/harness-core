@@ -143,12 +143,21 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command));
   }
 
+  @GET
+  @Path("{serviceId}/commands/{commandName}")
+  public RestResponse<ServiceCommand> getCommand(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName,
+      @QueryParam("version") int version) {
+    return new RestResponse<>(
+        serviceResourceService.getCommandByNameAndVersion(appId, serviceId, commandName, version));
+  }
+
   /**
    * Update command.
    *
-   * @param appId        the app id
-   * @param serviceId    the service id
-   * @param command  serviceCommand
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param command   serviceCommand
    * @return the rest response
    */
   @PUT
