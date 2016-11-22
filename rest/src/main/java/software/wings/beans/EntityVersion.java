@@ -102,7 +102,7 @@ public class EntityVersion extends Base {
 
   public enum ChangeType { CREATED, UPDATED }
 
-  /*public static final class Builder {
+  public static final class Builder {
     private EntityType entityType;
     private String entityName;
     private ChangeType changeType;
@@ -117,8 +117,7 @@ public class EntityVersion extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
 
-    private Builder() {
-    }
+    private Builder() {}
 
     public static Builder anEntityVersion() {
       return new Builder();
@@ -190,10 +189,20 @@ public class EntityVersion extends Base {
     }
 
     public Builder but() {
-      return
-  anEntityVersion().withEntityType(entityType).withEntityName(entityName).withChangeType(changeType).withEntityUuid(entityUuid)
-          .withEntityParentUuid(entityParentUuid).withEntityData(entityData).withVersion(version).withUuid(uuid).withAppId(appId).withCreatedBy(createdBy)
-          .withCreatedAt(createdAt).withLastUpdatedBy(lastUpdatedBy).withLastUpdatedAt(lastUpdatedAt);
+      return anEntityVersion()
+          .withEntityType(entityType)
+          .withEntityName(entityName)
+          .withChangeType(changeType)
+          .withEntityUuid(entityUuid)
+          .withEntityParentUuid(entityParentUuid)
+          .withEntityData(entityData)
+          .withVersion(version)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     public EntityVersion build() {
@@ -213,5 +222,5 @@ public class EntityVersion extends Base {
       entityVersion.setLastUpdatedAt(lastUpdatedAt);
       return entityVersion;
     }
-  }*/
+  }
 }
