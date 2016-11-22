@@ -47,6 +47,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -347,6 +348,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
 
+    when(wingsPersistence.createUpdateOperations(ServiceCommand.class))
+        .thenReturn(datastore.createUpdateOperations(ServiceCommand.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(builder.but()
                         .addCommands(aServiceCommand()
@@ -358,12 +363,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                          .build())
                         .build());
 
-    when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.UPDATED, null))
         .thenReturn(anEntityVersion().withVersion(2).build());
 
     when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
-    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
         .thenReturn(anEntityVersion().withVersion(1).build());
 
     Graph commandGraph = aGraph()
@@ -413,6 +419,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
 
+    when(wingsPersistence.createUpdateOperations(ServiceCommand.class))
+        .thenReturn(datastore.createUpdateOperations(ServiceCommand.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(builder.but()
                         .addCommands(aServiceCommand()
@@ -424,12 +434,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                          .build())
                         .build());
 
-    when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.UPDATED, null))
         .thenReturn(anEntityVersion().withVersion(2).build());
 
     when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
-    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
         .thenReturn(anEntityVersion().withVersion(1).build());
 
     Graph commandGraph = aGraph()
@@ -483,6 +494,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
 
+    when(wingsPersistence.createUpdateOperations(ServiceCommand.class))
+        .thenReturn(datastore.createUpdateOperations(ServiceCommand.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(builder.but()
                         .addCommands(aServiceCommand()
@@ -494,12 +509,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                          .build())
                         .build());
 
-    when(entityVersionService.newEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, "START", ChangeType.UPDATED))
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.UPDATED, null))
         .thenReturn(anEntityVersion().withVersion(2).build());
 
     when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
-    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY))
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
         .thenReturn(anEntityVersion().withVersion(1).build());
 
     Graph commandGraph = aGraph()
@@ -525,6 +541,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+
+    verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
+
+    verify(wingsPersistence).createQuery(ServiceCommand.class);
 
     verify(commandService, never()).save(any(Command.class));
 

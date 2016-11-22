@@ -10,6 +10,7 @@ public class EntityVersion extends Base {
   private String entityName;
   private ChangeType changeType;
   private String entityUuid;
+  private String entityParentUuid;
   private String entityData;
   private Integer version;
 
@@ -43,6 +44,24 @@ public class EntityVersion extends Base {
 
   public void setEntityData(String entityData) {
     this.entityData = entityData;
+  }
+
+  /**
+   * Getter for property 'entityParentUuid'.
+   *
+   * @return Value for property 'entityParentUuid'.
+   */
+  public String getEntityParentUuid() {
+    return entityParentUuid;
+  }
+
+  /**
+   * Setter for property 'entityParentUuid'.
+   *
+   * @param entityParentUuid Value to set for property 'entityParentUuid'.
+   */
+  public void setEntityParentUuid(String entityParentUuid) {
+    this.entityParentUuid = entityParentUuid;
   }
 
   /**
@@ -88,6 +107,7 @@ public class EntityVersion extends Base {
     private String entityName;
     private ChangeType changeType;
     private String entityUuid;
+    private String entityParentUuid;
     private String entityData;
     private Integer version;
     private String uuid;
@@ -120,6 +140,11 @@ public class EntityVersion extends Base {
 
     public Builder withEntityUuid(String entityUuid) {
       this.entityUuid = entityUuid;
+      return this;
+    }
+
+    public Builder withEntityParentUuid(String entityParentUuid) {
+      this.entityParentUuid = entityParentUuid;
       return this;
     }
 
@@ -169,6 +194,7 @@ public class EntityVersion extends Base {
           .withEntityName(entityName)
           .withChangeType(changeType)
           .withEntityUuid(entityUuid)
+          .withEntityParentUuid(entityParentUuid)
           .withEntityData(entityData)
           .withVersion(version)
           .withUuid(uuid)
@@ -185,6 +211,7 @@ public class EntityVersion extends Base {
       entityVersion.setEntityName(entityName);
       entityVersion.setChangeType(changeType);
       entityVersion.setEntityUuid(entityUuid);
+      entityVersion.setEntityParentUuid(entityParentUuid);
       entityVersion.setEntityData(entityData);
       entityVersion.setVersion(version);
       entityVersion.setUuid(uuid);

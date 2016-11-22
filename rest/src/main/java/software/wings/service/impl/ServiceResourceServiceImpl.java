@@ -16,6 +16,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.common.NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -24,6 +25,7 @@ import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
@@ -271,8 +273,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Command command = serviceCommand.getCommand();
 
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
-    entityVersionService.newEntityVersion(
-        appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceCommand.getName(), ChangeType.CREATED);
+    entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
+        serviceCommand.getName(), ChangeType.CREATED, serviceCommand.getNotes());
 
     command.transformGraph();
     command.setVersion(1L);
@@ -310,12 +312,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
+    UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
+
     if (!serviceCommand.getCommand().getGraph().isLinear()) {
       throw new IllegalArgumentException("Graph is not a pipeline");
     }
 
     EntityVersion lastEntityVersion =
-        entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid());
+        entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
     Command command = serviceCommand.getCommand();
     command.transformGraph();
     command.setOriginEntityId(serviceCommand.getUuid());
@@ -336,22 +340,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           logger.debug("{} changed from [{}] to [{}]", node.getPath(), baseValue, workingValue);
         }
       });
-      EntityVersion entityVersion = entityVersionService.newEntityVersion(
-          appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceCommand.getName(), ChangeType.UPDATED);
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(appId, EntityType.COMMAND,
+          serviceCommand.getUuid(), serviceId, serviceCommand.getName(), ChangeType.UPDATED, serviceCommand.getNotes());
       command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
 
       commandService.save(command);
 
       if (serviceCommand.getSetAsDefault()) {
-        wingsPersistence.update(
-            wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(serviceCommand.getUuid()),
-            wingsPersistence.createUpdateOperations(ServiceCommand.class)
-                .set("defaultVersion", entityVersion.getVersion()));
+        serviceCommand.setDefaultVersion(entityVersion.getVersion());
       }
     } else if (graphDiff.isChanged()) {
       oldCommand.setGraph(command.getGraph());
       commandService.update(oldCommand);
     }
+
+    setUnset(updateOperation, "envIdVersionMap", serviceCommand.getDefaultVersion());
+    setUnset(updateOperation, "defaultVersion", serviceCommand.getEnvIdVersionMap());
+    wingsPersistence.update(
+        wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(serviceCommand.getUuid()),
+        updateOperation);
 
     return get(appId, serviceId);
   }

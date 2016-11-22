@@ -15,11 +15,16 @@ public interface EntityVersionService {
 
   EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid);
 
+  EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid);
+
   EntityVersion newEntityVersion(
       String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType);
 
   EntityVersion newEntityVersion(
       String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType, String entityData);
+
+  EntityVersion newEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid, String name,
+      ChangeType changeType, String entityData);
 
   void updateEntityData(String appId, String entityVersionUuid, String entityData);
 }

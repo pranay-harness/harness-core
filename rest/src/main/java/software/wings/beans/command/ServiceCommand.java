@@ -21,10 +21,12 @@ public class ServiceCommand extends Base {
   private String name;
   private String serviceId;
   private Map<String, EntityVersion> envIdVersionMap;
-  private int defaultVersion;
+  private Integer defaultVersion;
 
   @Transient private Command command;
   @Transient @JsonIgnore private boolean setAsDefault;
+
+  @Transient private String notes;
 
   /**
    * Getter for property 'name'.
@@ -85,7 +87,7 @@ public class ServiceCommand extends Base {
    *
    * @return Value for property 'defaultVersion'.
    */
-  public int getDefaultVersion() {
+  public Integer getDefaultVersion() {
     return defaultVersion;
   }
 
@@ -94,7 +96,7 @@ public class ServiceCommand extends Base {
    *
    * @param defaultVersion Value to set for property 'defaultVersion'.
    */
-  public void setDefaultVersion(int defaultVersion) {
+  public void setDefaultVersion(Integer defaultVersion) {
     this.defaultVersion = defaultVersion;
   }
 
@@ -134,6 +136,26 @@ public class ServiceCommand extends Base {
   @JsonProperty
   public void setSetAsDefault(boolean setAsDefault) {
     this.setAsDefault = setAsDefault;
+  }
+
+  /**
+   * Getter for property 'notes'.
+   *
+   * @return Value for property 'notes'.
+   */
+  @JsonIgnore
+  public String getNotes() {
+    return notes;
+  }
+
+  /**
+   * Setter for property 'notes'.
+   *
+   * @param notes Value to set for property 'notes'.
+   */
+  @JsonProperty
+  public void setNotes(String notes) {
+    this.notes = notes;
   }
 
   @Override
