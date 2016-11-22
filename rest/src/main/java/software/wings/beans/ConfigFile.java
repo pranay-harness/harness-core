@@ -353,6 +353,14 @@ public class ConfigFile extends BaseFile {
     this.setAsDefault = setAsDefault;
   }
 
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
+
   /**
    * The type Builder.
    */

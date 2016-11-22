@@ -385,7 +385,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                         .filter(command -> equalsIgnoreCase(commandName, command.getName()))
                                         .findFirst()
                                         .orElse(null);
-    if (serviceCommand != null && serviceCommand.getEnvIdVersionMap().containsKey(envId)) {
+    if (serviceCommand != null && serviceCommand.getEnvIdVersionMap().get(envId) != null) {
       serviceCommand.setCommand(commandService.getCommand(
           appId, serviceCommand.getUuid(), serviceCommand.getEnvIdVersionMap().get(envId).getVersion()));
     }

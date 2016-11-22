@@ -91,8 +91,8 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
     String id = wingsPersistence.save(configFile);
-    entityVersionService.newEntityVersion(
-        configFile.getAppId(), EntityType.CONFIG, id, configFile.getFileName(), ChangeType.CREATED);
+    entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
+        configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
 
     String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
     fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
@@ -214,7 +214,8 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       String fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
-          inputConfigFile.getUuid(), inputConfigFile.getFileName(), ChangeType.UPDATED);
+          inputConfigFile.getUuid(), inputConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
+          inputConfigFile.getNotes());
       fileService.updateParentEntityIdAndVersion(
           inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
       if (inputConfigFile.isSetAsDefault()) {
