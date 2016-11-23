@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import com.google.common.base.MoreObjects;
@@ -53,7 +54,7 @@ public class CopyConfigCommandUnit extends AbstractCommandUnit {
     if (!isEmpty(configFiles)) {
       for (ConfigFile configFile : configFiles) {
         File destFile = new File(configFile.getRelativeFilePath());
-        String path = destinationParentPath + "/" + destFile.getParent();
+        String path = destinationParentPath + "/" + (isNotBlank(destFile.getParent()) ? destFile.getParent() : "");
         String fileId = fileService.getFileIdByVersion(configFile.getUuid(),
             configFile.getVersionForEnv(context.getServiceInstance().getEnvId()), FileBucket.CONFIGS);
         result = context.copyGridFsFiles(

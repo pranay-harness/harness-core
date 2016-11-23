@@ -243,7 +243,7 @@ public class Command extends Base implements CommandUnit {
       CommandUnitType type = CommandUnitType.valueOf(node.getType().toUpperCase());
 
       CommandUnit commandUnit = type.newInstance("");
-      MapperUtils.mapObject(node.getProperties(), commandUnit);
+      MapperUtils.mapObject(node.getProperties(), type.getTypeClass().cast(commandUnit));
       commandUnit.setName(node.getName());
       commandUnits.add(commandUnit);
     }

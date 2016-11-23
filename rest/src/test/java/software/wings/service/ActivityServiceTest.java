@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Test;
@@ -135,7 +136,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetActivityCommandUnits() {
-    Activity activity = builder.but().build();
+    Activity activity = builder.but().withCommandNameVersionMap(ImmutableMap.of(COMMAND_NAME, 1)).build();
     String activityId = wingsPersistence.save(activity);
     Command command =
         aCommand()
@@ -143,7 +144,7 @@ public class ActivityServiceTest extends WingsBaseTest {
             .addCommandUnits(
                 anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build())
             .build();
-    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
+    when(serviceResourceService.getCommandByNameAndVersion(APP_ID, SERVICE_ID, COMMAND_NAME, 1))
         .thenReturn(aServiceCommand().withCommand(command).build());
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)
