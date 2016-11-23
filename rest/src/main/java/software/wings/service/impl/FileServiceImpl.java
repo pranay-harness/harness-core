@@ -102,7 +102,14 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
-    return null;
+    return fileBucketHelper.getOrCreateFileBucket(fileBucket)
+        .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("metadata.version", version)))
+        .limit(1)
+        .first()
+        .getId()
+        .asObjectId()
+        .getValue()
+        .toHexString();
   }
 
   /**
