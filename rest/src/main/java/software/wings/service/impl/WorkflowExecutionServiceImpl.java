@@ -52,7 +52,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -728,9 +728,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       if (StringUtils.isNotBlank(executionArgs.getCommandName())) {
-        Command command = serviceResourceService.getCommandByName(
-            appId, executionArgs.getServiceId(), executionArgs.getCommandName());
-        if (command.isArtifactNeeded()) {
+        ServiceCommand command = serviceResourceService.getCommandByName(
+            appId, executionArgs.getServiceId(), envId, executionArgs.getCommandName());
+        if (command.getCommand().isArtifactNeeded()) {
           requiredExecutionArgs.getEntityTypes().add(EntityType.ARTIFACT);
         }
       }

@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -21,6 +22,7 @@ public class Activity extends Base {
   @NotEmpty private String environmentName;
   @NotNull private EnvironmentType environmentType;
   @NotEmpty private String commandName;
+  private Map<String, Integer> commandNameVersionMap;
   private String commandType;
   private String serviceId;
   private String serviceName;
@@ -473,6 +475,14 @@ public class Activity extends Base {
     this.workflowType = workflowType;
   }
 
+  public Map<String, Integer> getCommandNameVersionMap() {
+    return commandNameVersionMap;
+  }
+
+  public void setCommandNameVersionMap(Map<String, Integer> commandNameVersionMap) {
+    this.commandNameVersionMap = commandNameVersionMap;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -559,9 +569,6 @@ public class Activity extends Base {
     Verification
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private Type type;
     private String applicationName;
@@ -569,6 +576,7 @@ public class Activity extends Base {
     private String environmentName;
     private EnvironmentType environmentType;
     private String commandName;
+    private Map<String, Integer> commandNameVersionMap;
     private String commandType;
     private String serviceId;
     private String serviceName;
@@ -579,367 +587,182 @@ public class Activity extends Base {
     private String workflowExecutionId;
     private String workflowExecutionName;
     private WorkflowType workflowType;
+    private String uuid;
     private String stateExecutionInstanceId;
+    private String appId;
+    private EmbeddedUser createdBy;
     private String stateExecutionInstanceName;
+    private long createdAt;
     private String artifactStreamId;
+    private EmbeddedUser lastUpdatedBy;
     private String artifactStreamName;
+    private long lastUpdatedAt;
     private boolean isPipeline;
     private String artifactId;
     private String artifactName;
     private ExecutionStatus status = ExecutionStatus.RUNNING;
-    private String uuid;
-    private String appId;
-    private EmbeddedUser createdBy;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
 
     private Builder() {}
 
-    /**
-     * An activity builder.
-     *
-     * @return the builder
-     */
     public static Builder anActivity() {
       return new Builder();
     }
 
-    /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
     public Builder withType(Type type) {
       this.type = type;
       return this;
     }
 
-    /**
-     * With application name builder.
-     *
-     * @param applicationName the application name
-     * @return the builder
-     */
     public Builder withApplicationName(String applicationName) {
       this.applicationName = applicationName;
       return this;
     }
 
-    /**
-     * With environment id builder.
-     *
-     * @param environmentId the environment id
-     * @return the builder
-     */
     public Builder withEnvironmentId(String environmentId) {
       this.environmentId = environmentId;
       return this;
     }
 
-    /**
-     * With environment name builder.
-     *
-     * @param environmentName the environment name
-     * @return the builder
-     */
     public Builder withEnvironmentName(String environmentName) {
       this.environmentName = environmentName;
       return this;
     }
 
-    /**
-     * With environment type builder.
-     *
-     * @param environmentType the environment type
-     * @return the builder
-     */
     public Builder withEnvironmentType(EnvironmentType environmentType) {
       this.environmentType = environmentType;
       return this;
     }
 
-    /**
-     * With command name builder.
-     *
-     * @param commandName the command name
-     * @return the builder
-     */
     public Builder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
     }
 
-    /**
-     * With command type builder.
-     *
-     * @param commandType the command type
-     * @return the builder
-     */
+    public Builder withCommandNameVersionMap(Map<String, Integer> commandNameVersionMap) {
+      this.commandNameVersionMap = commandNameVersionMap;
+      return this;
+    }
+
     public Builder withCommandType(String commandType) {
       this.commandType = commandType;
       return this;
     }
 
-    /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
-    /**
-     * With service name builder.
-     *
-     * @param serviceName the service name
-     * @return the builder
-     */
     public Builder withServiceName(String serviceName) {
       this.serviceName = serviceName;
       return this;
     }
 
-    /**
-     * With service template id builder.
-     *
-     * @param serviceTemplateId the service template id
-     * @return the builder
-     */
     public Builder withServiceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
-    /**
-     * With service template name builder.
-     *
-     * @param serviceTemplateName the service template name
-     * @return the builder
-     */
     public Builder withServiceTemplateName(String serviceTemplateName) {
       this.serviceTemplateName = serviceTemplateName;
       return this;
     }
 
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    /**
-     * With service instance id builder.
-     *
-     * @param serviceInstanceId the service instance id
-     * @return the builder
-     */
     public Builder withServiceInstanceId(String serviceInstanceId) {
       this.serviceInstanceId = serviceInstanceId;
       return this;
     }
 
-    /**
-     * With workflow execution id builder.
-     *
-     * @param workflowExecutionId the workflow execution id
-     * @return the builder
-     */
     public Builder withWorkflowExecutionId(String workflowExecutionId) {
       this.workflowExecutionId = workflowExecutionId;
       return this;
     }
 
-    /**
-     * With workflow execution name builder.
-     *
-     * @param workflowExecutionName the workflow execution name
-     * @return the builder
-     */
     public Builder withWorkflowExecutionName(String workflowExecutionName) {
       this.workflowExecutionName = workflowExecutionName;
       return this;
     }
 
-    /**
-     * With workflow type builder.
-     *
-     * @param workflowType the workflow type
-     * @return the builder
-     */
     public Builder withWorkflowType(WorkflowType workflowType) {
       this.workflowType = workflowType;
       return this;
     }
 
-    /**
-     * With state execution instance id builder.
-     *
-     * @param stateExecutionInstanceId the state execution instance id
-     * @return the builder
-     */
-    public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
-      this.stateExecutionInstanceId = stateExecutionInstanceId;
-      return this;
-    }
-
-    /**
-     * With state execution instance name builder.
-     *
-     * @param stateExecutionInstanceName the state execution instance name
-     * @return the builder
-     */
-    public Builder withStateExecutionInstanceName(String stateExecutionInstanceName) {
-      this.stateExecutionInstanceName = stateExecutionInstanceName;
-      return this;
-    }
-
-    /**
-     * With artifact source id builder.
-     *
-     * @param artifactStreamId the artifact stream id
-     * @return the builder
-     */
-    public Builder withArtifactStreamId(String artifactStreamId) {
-      this.artifactStreamId = artifactStreamId;
-      return this;
-    }
-
-    /**
-     * With artifact source name builder.
-     *
-     * @param artifactStreamName the artifact stream name
-     * @return the builder
-     */
-    public Builder withArtifactStreamName(String artifactStreamName) {
-      this.artifactStreamName = artifactStreamName;
-      return this;
-    }
-
-    /**
-     * With is pipeline builder.
-     *
-     * @param isPipeline the is pipeline
-     * @return the builder
-     */
-    public Builder withIsPipeline(boolean isPipeline) {
-      this.isPipeline = isPipeline;
-      return this;
-    }
-
-    /**
-     * With artifact id builder.
-     *
-     * @param artifactId the artifact id
-     * @return the builder
-     */
-    public Builder withArtifactId(String artifactId) {
-      this.artifactId = artifactId;
-      return this;
-    }
-
-    /**
-     * With artifact name builder.
-     *
-     * @param artifactName the artifact name
-     * @return the builder
-     */
-    public Builder withArtifactName(String artifactName) {
-      this.artifactName = artifactName;
-      return this;
-    }
-
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
-    public Builder withStatus(ExecutionStatus status) {
-      this.status = status;
-      return this;
-    }
-
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
+    public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
+      this.stateExecutionInstanceId = stateExecutionInstanceId;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
+    public Builder withStateExecutionInstanceName(String stateExecutionInstanceName) {
+      this.stateExecutionInstanceName = stateExecutionInstanceName;
+      return this;
+    }
+
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
+    public Builder withArtifactStreamId(String artifactStreamId) {
+      this.artifactStreamId = artifactStreamId;
+      return this;
+    }
+
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withArtifactStreamName(String artifactStreamName) {
+      this.artifactStreamName = artifactStreamName;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withIsPipeline(boolean isPipeline) {
+      this.isPipeline = isPipeline;
+      return this;
+    }
+
+    public Builder withArtifactId(String artifactId) {
+      this.artifactId = artifactId;
+      return this;
+    }
+
+    public Builder withArtifactName(String artifactName) {
+      this.artifactName = artifactName;
+      return this;
+    }
+
+    public Builder withStatus(ExecutionStatus status) {
+      this.status = status;
+      return this;
+    }
+
     public Builder but() {
       return anActivity()
           .withType(type)
@@ -948,6 +771,7 @@ public class Activity extends Base {
           .withEnvironmentName(environmentName)
           .withEnvironmentType(environmentType)
           .withCommandName(commandName)
+          .withCommandNameVersionMap(commandNameVersionMap)
           .withCommandType(commandType)
           .withServiceId(serviceId)
           .withServiceName(serviceName)
@@ -958,27 +782,22 @@ public class Activity extends Base {
           .withWorkflowExecutionId(workflowExecutionId)
           .withWorkflowExecutionName(workflowExecutionName)
           .withWorkflowType(workflowType)
+          .withUuid(uuid)
           .withStateExecutionInstanceId(stateExecutionInstanceId)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
           .withStateExecutionInstanceName(stateExecutionInstanceName)
+          .withCreatedAt(createdAt)
           .withArtifactStreamId(artifactStreamId)
+          .withLastUpdatedBy(lastUpdatedBy)
           .withArtifactStreamName(artifactStreamName)
+          .withLastUpdatedAt(lastUpdatedAt)
           .withIsPipeline(isPipeline)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
-          .withStatus(status)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withStatus(status);
     }
 
-    /**
-     * Build activity.
-     *
-     * @return the activity
-     */
     public Activity build() {
       Activity activity = new Activity();
       activity.setType(type);
@@ -987,6 +806,7 @@ public class Activity extends Base {
       activity.setEnvironmentName(environmentName);
       activity.setEnvironmentType(environmentType);
       activity.setCommandName(commandName);
+      activity.setCommandNameVersionMap(commandNameVersionMap);
       activity.setCommandType(commandType);
       activity.setServiceId(serviceId);
       activity.setServiceName(serviceName);
@@ -997,19 +817,19 @@ public class Activity extends Base {
       activity.setWorkflowExecutionId(workflowExecutionId);
       activity.setWorkflowExecutionName(workflowExecutionName);
       activity.setWorkflowType(workflowType);
+      activity.setUuid(uuid);
       activity.setStateExecutionInstanceId(stateExecutionInstanceId);
+      activity.setAppId(appId);
+      activity.setCreatedBy(createdBy);
       activity.setStateExecutionInstanceName(stateExecutionInstanceName);
+      activity.setCreatedAt(createdAt);
       activity.setArtifactStreamId(artifactStreamId);
+      activity.setLastUpdatedBy(lastUpdatedBy);
       activity.setArtifactStreamName(artifactStreamName);
+      activity.setLastUpdatedAt(lastUpdatedAt);
       activity.setArtifactId(artifactId);
       activity.setArtifactName(artifactName);
       activity.setStatus(status);
-      activity.setUuid(uuid);
-      activity.setAppId(appId);
-      activity.setCreatedBy(createdBy);
-      activity.setCreatedAt(createdAt);
-      activity.setLastUpdatedBy(lastUpdatedBy);
-      activity.setLastUpdatedAt(lastUpdatedAt);
       activity.isPipeline = this.isPipeline;
       return activity;
     }

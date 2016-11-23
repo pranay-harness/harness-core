@@ -4,9 +4,9 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
@@ -20,6 +20,7 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.List;
+import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -58,14 +59,19 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       return executionResult;
     } catch (Exception ex) {
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
+      ex.printStackTrace();
       throw ex;
     }
   }
 
   private void prepareCommand(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     if (isNotEmpty(command.getReferenceId())) {
-      Command referedCommand = serviceResourceService.getCommandByName(
-          serviceInstance.getAppId(), context.getServiceTemplate().getServiceId(), command.getReferenceId());
+      Command referedCommand = Optional
+                                   .ofNullable(serviceResourceService.getCommandByName(serviceInstance.getAppId(),
+                                       context.getServiceTemplate().getServiceId(),
+                                       context.getServiceTemplate().getEnvId(), command.getReferenceId()))
+                                   .orElse(aServiceCommand().build())
+                                   .getCommand();
       if (referedCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }

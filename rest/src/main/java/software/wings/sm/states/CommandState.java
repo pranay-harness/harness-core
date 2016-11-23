@@ -1,13 +1,14 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -36,10 +37,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
@@ -209,7 +211,8 @@ public class CommandState extends State {
         e.printStackTrace();
       }
 
-      Command command = serviceResourceService.getCommandByName(appId, service.getUuid(), actualCommand);
+      Command command =
+          serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand).getCommand();
 
       if (command == null) {
         throw new StateExecutionException(
@@ -240,7 +243,9 @@ public class CommandState extends State {
               .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
               .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
               .withCommandType(command.getCommandUnitType().name())
-              .withHostName(host.getHostName());
+              .withHostName(host.getHostName())
+              .withCommandNameVersionMap(service.getServiceCommands().stream().collect(toMap(ServiceCommand::getName,
+                  serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()))));
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");

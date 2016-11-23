@@ -18,7 +18,7 @@
 
             db.serviceTemplates.find().forEach(function(serviceTemplate) {
 
-            var serviceId = serviceTemplate.service;
+            var originEntityId = serviceTemplate.service;
 
             var hostIds = getValidatedReferenceIds(db.applicationHosts, serviceTemplate.hosts);
             var tagIds = getValidatedReferenceIds(db.tags, serviceTemplate.tags);
@@ -32,7 +32,7 @@
             leafTags : ""
             },
             $set : {
-            serviceId : serviceId,
+            originEntityId : originEntityId,
             tagIds : tagIds,
             hostIds : hostIds,
             leafTagIds : leafTagIds

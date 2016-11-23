@@ -32,6 +32,7 @@ import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -100,9 +101,12 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public List<CommandUnit> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
-    Command command =
-        serviceResourceService.getCommandByName(appId, activity.getServiceId(), activity.getCommandName());
-    List<CommandUnit> commandUnits = getFlattenCommandUnitList(appId, activity.getServiceId(), command);
+    Command command = serviceResourceService
+                          .getCommandByNameAndVersion(appId, activity.getServiceId(), activity.getCommandName(),
+                              activity.getCommandNameVersionMap().get(activity.getCommandName()))
+                          .getCommand();
+    List<CommandUnit> commandUnits =
+        getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getCommandNameVersionMap(), command);
     if (commandUnits != null && commandUnits.size() > 0) {
       commandUnits.add(0, new InitCommandUnit());
       commandUnits.add(new CleanupCommandUnit());
@@ -129,14 +133,18 @@ public class ActivityServiceImpl implements ActivityService {
    * @param command   the command
    * @return the flatten command unit list
    */
-  private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
+  private List<CommandUnit> getFlattenCommandUnitList(
+      String appId, String serviceId, Map<String, Integer> commandNameVersionMap, Command command) {
     Command executableCommand = command;
     if (executableCommand == null) {
       return new ArrayList<>();
     }
 
     if (isNotBlank(command.getReferenceId())) {
-      executableCommand = serviceResourceService.getCommandByName(appId, serviceId, command.getReferenceId());
+      executableCommand = serviceResourceService
+                              .getCommandByNameAndVersion(appId, serviceId, command.getReferenceId(),
+                                  commandNameVersionMap.get(command.getReferenceId()))
+                              .getCommand();
       if (executableCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }
@@ -146,7 +154,7 @@ public class ActivityServiceImpl implements ActivityService {
         .stream()
         .flatMap(commandUnit -> {
           if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-            return getFlattenCommandUnitList(appId, serviceId, (Command) commandUnit).stream();
+            return getFlattenCommandUnitList(appId, serviceId, commandNameVersionMap, (Command) commandUnit).stream();
           } else {
             return Stream.of(commandUnit);
           }

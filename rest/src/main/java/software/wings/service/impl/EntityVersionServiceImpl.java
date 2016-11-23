@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.mongodb.morphia.query.Query;
@@ -38,23 +40,31 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid) {
+    return lastEntityVersion(appId, entityType, entityUuid, null);
+  }
+
+  @Override
+  public EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid) {
     PageRequest<EntityVersionCollection> pageRequest = aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("entityType", Operator.EQ, entityType)
                                                            .addFilter("entityUuid", Operator.EQ, entityUuid)
                                                            .build();
+    if (isNotBlank(parentUuid)) {
+      pageRequest.addFilter(aSearchFilter().withField("entityParentUuid", Operator.EQ, parentUuid).build());
+    }
     return wingsPersistence.get(EntityVersionCollection.class, pageRequest);
   }
 
   @Override
   public EntityVersion newEntityVersion(
       String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType) {
-    return newEntityVersion(appId, entityType, entityUuid, name, changeType, null);
+    return newEntityVersion(appId, entityType, entityUuid, null, name, changeType, null);
   }
 
   @Override
-  public EntityVersion newEntityVersion(
-      String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType, String entityData) {
+  public EntityVersion newEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid,
+      String name, ChangeType changeType, String entityData) {
     EntityVersionCollection entityVersion = null;
     int i = 0;
     boolean done = false;
@@ -67,8 +77,9 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                             .withEntityData(entityData)
                             .withEntityName(name)
                             .withChangeType(changeType)
+                            .withEntityParentUuid(parentUuid)
                             .build();
-        EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid);
+        EntityVersion lastEntityVersion = lastEntityVersion(appId, entityType, entityUuid, parentUuid);
         if (lastEntityVersion == null) {
           entityVersion.setVersion(EntityVersion.INITIAL_VERSION);
         } else {
@@ -84,6 +95,12 @@ public class EntityVersionServiceImpl implements EntityVersionService {
     } while (!done && i < 3);
 
     return entityVersion;
+  }
+
+  @Override
+  public EntityVersion newEntityVersion(
+      String appId, EntityType entityType, String entityUuid, String name, ChangeType changeType, String entityData) {
+    return newEntityVersion(appId, entityType, entityUuid, null, name, changeType, entityData);
   }
 
   @Override

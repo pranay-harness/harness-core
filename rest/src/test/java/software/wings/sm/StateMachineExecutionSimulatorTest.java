@@ -19,6 +19,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -167,7 +168,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(false);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "STOP")).thenReturn(cmd);
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "STOP"))
+        .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build();
 
@@ -224,7 +226,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
+        .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build();
 
@@ -281,7 +284,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
+        .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ApplicationHost applicationHost1 =
@@ -343,7 +347,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
+        .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     ApplicationHost applicationHost1 =
         anApplicationHost().withHost(aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build()).build();

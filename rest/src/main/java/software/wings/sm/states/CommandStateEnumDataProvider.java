@@ -31,7 +31,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
             .getResponse();
 
     return services.stream()
-        .flatMap(service -> service.getCommands().stream())
+        .flatMap(service -> service.getServiceCommands().stream())
         .map(command -> command.getName())
         .distinct()
         .collect(toMap(Function.identity(), Function.identity()));

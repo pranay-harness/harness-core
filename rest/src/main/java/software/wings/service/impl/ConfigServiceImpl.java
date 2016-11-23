@@ -16,6 +16,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
+import software.wings.beans.EntityVersion;
+import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.ApplicationHost;
@@ -24,6 +27,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -61,16 +65,14 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private EntityVersionService entityVersionService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<ConfigFile> list(PageRequest<ConfigFile> request) {
-    PageResponse<ConfigFile> pageResponse = wingsPersistence.query(ConfigFile.class, request);
-    pageResponse.getResponse().parallelStream().forEach(
-        configFile -> configFile.setVersions(fileService.getAllFileIds(configFile.getUuid(), CONFIGS)));
-    return pageResponse;
+    return wingsPersistence.query(ConfigFile.class, request);
   }
 
   /* (non-Javadoc)
@@ -85,9 +87,13 @@ public class ConfigServiceImpl implements ConfigService {
 
     configFile.setEnvId(envId);
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
+    configFile.setDefaultVersion(1);
     String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
     String id = wingsPersistence.save(configFile);
-    fileService.updateParentEntityId(id, fileId, CONFIGS);
+    entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
+        configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
+
+    fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
     return id;
   }
 
@@ -130,8 +136,6 @@ public class ConfigServiceImpl implements ConfigService {
       throw new WingsException(INVALID_ARGUMENT, "message", "ConfigFile not found");
     }
 
-    configFile.setVersions(fileService.getAllFileIds(configId, CONFIGS));
-
     if (withOverridePath) {
       configFile.setOverridePath(generateOverridePath(configFile));
     }
@@ -161,13 +165,11 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public File download(String appId, String configId, String version) {
+  public File download(String appId, String configId, Integer version) {
     ConfigFile configFile = get(appId, configId, false);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
-    String fileId = configFile.getFileUuid();
-    if (configFile.getVersions().contains(version)) {
-      fileId = version;
-    }
+    int fileVersion = (version == null) ? configFile.getDefaultVersion() : version;
+    String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
     fileService.download(fileId, file, CONFIGS);
     return file;
   }
@@ -208,7 +210,14 @@ public class ConfigServiceImpl implements ConfigService {
 
     if (uploadedInputStream != null) {
       String fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
-      fileService.updateParentEntityId(inputConfigFile.getUuid(), fileId, CONFIGS);
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
+          inputConfigFile.getUuid(), savedConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
+          inputConfigFile.getNotes());
+      fileService.updateParentEntityIdAndVersion(
+          inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
+      if (inputConfigFile.isSetAsDefault()) {
+        inputConfigFile.setDefaultVersion(entityVersion.getVersion());
+      }
       updateMap.put("fileUuid", inputConfigFile.getFileUuid());
       updateMap.put("checksum", inputConfigFile.getChecksum());
       updateMap.put("size", inputConfigFile.getSize());
@@ -217,11 +226,14 @@ public class ConfigServiceImpl implements ConfigService {
     if (inputConfigFile.getDescription() != null) {
       updateMap.put("description", inputConfigFile.getDescription());
     }
-    wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
 
-    if (!oldFileId.equals(inputConfigFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
-      executorService.submit(() -> fileService.deleteFile(oldFileId, CONFIGS));
+    updateMap.put("defaultVersion", inputConfigFile.getDefaultVersion());
+
+    if (inputConfigFile.getEnvIdVersionMap() != null) {
+      updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
     }
+
+    wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
   }
 
   /**
@@ -272,15 +284,29 @@ public class ConfigServiceImpl implements ConfigService {
     }
   }
 
+  @Override
+  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
+    return list(aPageRequest()
+                    .addFilter("appId", Operator.EQ, appId)
+                    .addFilter("templateId", Operator.EQ, templateId)
+                    .addFilter("entityId", Operator.EQ, entityId)
+                    .build())
+        .getResponse();
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
    */
   @Override
-  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
+  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId) {
+    SearchFilter[] searchFilters = new SearchFilter[2];
+    searchFilters[0] = aSearchFilter().withField("targetToAllEnv", Operator.EQ, true).build();
+    searchFilters[1] = aSearchFilter().withField("envIdVersionMap." + envId, Operator.EXISTS, null).build();
     return list(aPageRequest()
-                    .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-                    .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
-                    .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
+                    .addFilter("appId", Operator.EQ, appId)
+                    .addFilter("templateId", Operator.EQ, templateId)
+                    .addFilter("entityId", Operator.EQ, entityId)
+                    .addFilter(aSearchFilter().withField(null, Operator.OR, searchFilters).build())
                     .build())
         .getResponse();
   }

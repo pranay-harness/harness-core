@@ -38,9 +38,10 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore @JsonTypeId private CommandUnitType commandUnitType;
   @SchemaIgnore private ExecutionResult executionResult;
+
   @SchemaIgnore private boolean artifactNeeded = false;
 
-  @SchemaIgnore private String serviceId;
+  @SchemaIgnore private String originEntityId;
 
   @SchemaIgnore private ContainerFamily containerFamily;
 
@@ -178,21 +179,21 @@ public class Command extends Base implements CommandUnit {
   }
 
   /**
-   * Getter for property 'serviceId'.
+   * Getter for property 'originEntityId'.
    *
-   * @return Value for property 'serviceId'.
+   * @return Value for property 'originEntityId'.
    */
-  public String getServiceId() {
-    return serviceId;
+  public String getOriginEntityId() {
+    return originEntityId;
   }
 
   /**
-   * Setter for property 'serviceId'.
+   * Setter for property 'originEntityId'.
    *
-   * @param serviceId Value to set for property 'serviceId'.
+   * @param originEntityId Value to set for property 'originEntityId'.
    */
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
+  public void setOriginEntityId(String originEntityId) {
+    this.originEntityId = originEntityId;
   }
 
   /**
@@ -242,7 +243,7 @@ public class Command extends Base implements CommandUnit {
       CommandUnitType type = CommandUnitType.valueOf(node.getType().toUpperCase());
 
       CommandUnit commandUnit = type.newInstance("");
-      MapperUtils.mapObject(node.getProperties(), commandUnit);
+      MapperUtils.mapObject(node.getProperties(), type.getTypeClass().cast(commandUnit));
       commandUnit.setName(node.getName());
       commandUnits.add(commandUnit);
     }

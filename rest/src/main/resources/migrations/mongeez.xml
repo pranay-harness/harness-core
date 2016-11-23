@@ -9,4 +9,6 @@
     <file path="workflow-migration.js"/>
     <file path="account-migration.js"/>
     <file path="workflow-version-migration.js"/>
+    <file path="config-version-migration.js"/>
+    <file path="command-version-migration.js"/>
 </changeFiles>

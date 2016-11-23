@@ -2,10 +2,9 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.stencils.Stencil;
@@ -74,20 +73,20 @@ public interface ServiceResourceService {
    *
    * @param appId        the app id
    * @param serviceId    the service id
-   * @param commandGraph the command graph
+   * @param serviceCommand the command graph
    * @return the service
    */
-  Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, Graph commandGraph);
+  Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand);
 
   /**
    * Update command service.
    *
    * @param appId        the app id
    * @param serviceId    the service id
-   * @param commandGraph the command graph
+   * @param serviceCommand the command graph
    * @return the service
    */
-  Service updateCommand(String appId, String serviceId, Graph commandGraph);
+  Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand);
 
   /**
    * Delete command.
@@ -100,17 +99,6 @@ public interface ServiceResourceService {
   Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
   /**
-   * Change command version service.
-   *
-   * @param appId       the app id
-   * @param serviceId   the service id
-   * @param commandName the command name
-   * @param version     the version
-   * @return the service
-   */
-  Service changeCommandVersion(String appId, String serviceId, String commandName, long version);
-
-  /**
    * Gets command by name.
    *
    * @param appId       the app id
@@ -118,18 +106,10 @@ public interface ServiceResourceService {
    * @param commandName the command name
    * @return the command by name
    */
-  Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+  ServiceCommand getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
-  /**
-   * Gets command versions.
-   *
-   * @param appId       the app id
-   * @param serviceId   the service id
-   * @param commandName the command name
-   * @return the command versions
-   */
-  List<Command> getCommandVersions(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
-
+  ServiceCommand getCommandByName(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String envId, @NotEmpty String commandName);
   /**
    * Gets command by name and version.
    *
@@ -139,8 +119,8 @@ public interface ServiceResourceService {
    * @param version     the version
    * @return the command by name and version
    */
-  Command getCommandByNameAndVersion(
-      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, long version);
+  ServiceCommand getCommandByNameAndVersion(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, int version);
 
   /**
    * Gets command stencils.

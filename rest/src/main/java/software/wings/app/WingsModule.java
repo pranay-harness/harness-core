@@ -31,6 +31,7 @@ import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProviderImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
+import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
@@ -73,6 +74,7 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EmailNotificationService;
@@ -176,6 +178,7 @@ public class WingsModule extends AbstractModule {
     bind(JobScheduler.class);
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
     bind(PluginService.class).to(PluginServiceImpl.class);
+    bind(CommandService.class).to(CommandServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()

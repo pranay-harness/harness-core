@@ -1,7 +1,11 @@
 package software.wings.beans;
 
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -12,8 +16,9 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.utils.validation.Create;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
@@ -44,9 +49,19 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("relativeFilePath") private String relativeFilePath;
 
-  private String overridePath;
+  @FormDataParam("targetToAllEnv") private boolean targetToAllEnv;
 
-  @Transient private List<String> versions;
+  @FormDataParam("defaultVersion") private int defaultVersion;
+
+  private Map<String, EntityVersion> envIdVersionMap;
+
+  @JsonIgnore @FormDataParam("envIdVersionMapString") private String envIdVersionMapString;
+
+  @Transient @FormDataParam("setAsDefault") private boolean setAsDefault;
+
+  @Transient @FormDataParam("notes") private String notes;
+
+  private String overridePath;
 
   @Transient private ConfigFile overriddenConfigFile;
 
@@ -177,24 +192,6 @@ public class ConfigFile extends BaseFile {
   }
 
   /**
-   * Gets versions.
-   *
-   * @return the versions
-   */
-  public List<String> getVersions() {
-    return versions;
-  }
-
-  /**
-   * Sets versions.
-   *
-   * @param versions the versions
-   */
-  public void setVersions(List<String> versions) {
-    this.versions = versions;
-  }
-
-  /**
    * Gets parent config file id.
    *
    * @return the parent config file id
@@ -230,11 +227,72 @@ public class ConfigFile extends BaseFile {
     this.description = description;
   }
 
+  /**
+   * Getter for property 'targetToAllEnv'.
+   *
+   * @return Value for property 'targetToAllEnv'.
+   */
+  public boolean isTargetToAllEnv() {
+    return targetToAllEnv;
+  }
+
+  /**
+   * Setter for property 'targetToAllEnv'.
+   *
+   * @param targetToAllEnv Value to set for property 'targetToAllEnv'.
+   */
+  public void setTargetToAllEnv(boolean targetToAllEnv) {
+    this.targetToAllEnv = targetToAllEnv;
+  }
+
+  /**
+   * Getter for property 'defaultVersion'.
+   *
+   * @return Value for property 'defaultVersion'.
+   */
+  public int getDefaultVersion() {
+    return defaultVersion;
+  }
+
+  /**
+   * Setter for property 'defaultVersion'.
+   *
+   * @param defaultVersion Value to set for property 'defaultVersion'.
+   */
+  public void setDefaultVersion(int defaultVersion) {
+    this.defaultVersion = defaultVersion;
+  }
+
+  /**
+   * Getter for property 'envIdVersionMap'.
+   *
+   * @return Value for property 'envIdVersionMap'.
+   */
+  public Map<String, EntityVersion> getEnvIdVersionMap() {
+    return envIdVersionMap;
+  }
+
+  /**
+   * Setter for property 'envIdVersionMap'.
+   *
+   * @param envIdVersionMap Value to set for property 'envIdVersionMap'.
+   */
+  public void setEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
+    this.envIdVersionMap = envIdVersionMap;
+  }
+
+  @JsonIgnore
+  public int getVersionForEnv(String envId) {
+    return Optional.ofNullable(envIdVersionMap.get(envId))
+        .orElse(anEntityVersion().withVersion(defaultVersion).build())
+        .getVersion();
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
-              overridePath, versions, overriddenConfigFile);
+              targetToAllEnv, defaultVersion, envIdVersionMap, overridePath, overriddenConfigFile);
   }
 
   @Override
@@ -254,7 +312,10 @@ public class ConfigFile extends BaseFile {
         && Objects.equals(this.description, other.description)
         && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
         && Objects.equals(this.relativeFilePath, other.relativeFilePath)
-        && Objects.equals(this.overridePath, other.overridePath) && Objects.equals(this.versions, other.versions)
+        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv)
+        && Objects.equals(this.defaultVersion, other.defaultVersion)
+        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
+        && Objects.equals(this.overridePath, other.overridePath)
         && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
   }
 
@@ -268,10 +329,48 @@ public class ConfigFile extends BaseFile {
         .add("description", description)
         .add("parentConfigFileId", parentConfigFileId)
         .add("relativeFilePath", relativeFilePath)
+        .add("targetToAllEnv", targetToAllEnv)
+        .add("defaultVersion", defaultVersion)
+        .add("envIdVersionMap", envIdVersionMap)
         .add("overridePath", overridePath)
-        .add("versions", versions)
         .add("overriddenConfigFile", overriddenConfigFile)
         .toString();
+  }
+
+  @JsonIgnore
+  public boolean isSetAsDefault() {
+    return setAsDefault;
+  }
+
+  @JsonProperty
+  public void setSetAsDefault(boolean setAsDefault) {
+    this.setAsDefault = setAsDefault;
+  }
+
+  public String getNotes() {
+    return notes;
+  }
+
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
+
+  /**
+   * Getter for property 'envIdVersionMapString'.
+   *
+   * @return Value for property 'envIdVersionMapString'.
+   */
+  public String getEnvIdVersionMapString() {
+    return envIdVersionMapString;
+  }
+
+  /**
+   * Setter for property 'envIdVersionMapString'.
+   *
+   * @param envIdVersionMapString Value to set for property 'envIdVersionMapString'.
+   */
+  public void setEnvIdVersionMapString(String envIdVersionMapString) {
+    this.envIdVersionMapString = envIdVersionMapString;
   }
 
   /**
@@ -286,7 +385,6 @@ public class ConfigFile extends BaseFile {
     private String parentConfigFileId;
     private String relativeFilePath;
     private String overridePath;
-    private List<String> versions;
     private ConfigFile overriddenConfigFile;
     private String name;
     private String fileUuid;
@@ -398,17 +496,6 @@ public class ConfigFile extends BaseFile {
      */
     public Builder withOverridePath(String overridePath) {
       this.overridePath = overridePath;
-      return this;
-    }
-
-    /**
-     * With versions builder.
-     *
-     * @param versions the versions
-     * @return the builder
-     */
-    public Builder withVersions(List<String> versions) {
-      this.versions = versions;
       return this;
     }
 
@@ -581,7 +668,6 @@ public class ConfigFile extends BaseFile {
           .withParentConfigFileId(parentConfigFileId)
           .withRelativeFilePath(relativeFilePath)
           .withOverridePath(overridePath)
-          .withVersions(versions)
           .withOverriddenConfigFile(overriddenConfigFile)
           .withName(name)
           .withFileUuid(fileUuid)
@@ -613,7 +699,6 @@ public class ConfigFile extends BaseFile {
       configFile.setParentConfigFileId(parentConfigFileId);
       configFile.setRelativeFilePath(relativeFilePath);
       configFile.setOverridePath(overridePath);
-      configFile.setVersions(versions);
       configFile.setOverriddenConfigFile(overriddenConfigFile);
       configFile.setName(name);
       configFile.setFileUuid(fileUuid);

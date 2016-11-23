@@ -33,8 +33,7 @@ public interface FileService {
    * @param fileBucket the file bucket
    * @return the boolean
    */
-  boolean updateParentEntityId(String entityId, String fileId, FileBucket fileBucket);
-
+  boolean updateParentEntityIdAndVersion(String entityId, String fileId, int version, FileBucket fileBucket);
   /**
    * Save file.
    *
@@ -98,6 +97,8 @@ public interface FileService {
    * @return the all file ids
    */
   List<String> getAllFileIds(String entityId, FileBucket fileBucket);
+
+  String getFileIdByVersion(String entityId, int version, FileBucket fileBucket);
 
   /**
    * Upload from stream string.

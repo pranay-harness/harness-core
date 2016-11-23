@@ -10,6 +10,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.google.common.collect.Sets;
@@ -93,7 +94,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(false);
-    when(serviceResourceServiceMock.getCommandByName(app.getUuid(), serviceId, "Start")).thenReturn(cmd);
+    when(serviceResourceServiceMock.getCommandByName(app.getUuid(), serviceId, env.getUuid(), "Start"))
+        .thenReturn(aServiceCommand().withCommand(cmd).build());
 
     RequiredExecutionArgs required =
         workflowExecutionService.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), executionArgs);

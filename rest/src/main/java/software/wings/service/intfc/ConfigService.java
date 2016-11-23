@@ -62,7 +62,7 @@ public interface ConfigService {
    * @param version  the version
    * @return the file
    */
-  File download(String appId, String configId, String version);
+  File download(String appId, String configId, Integer version);
 
   /**
    * Update.
@@ -79,6 +79,16 @@ public interface ConfigService {
    * @param configId the config id
    */
   void delete(@NotEmpty String appId, @NotEmpty String configId);
+
+  /**
+   * Gets the config files for entity.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @param entityId   the entity id
+   * @return the config files for entity
+   */
+  List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId);
 
   /**
    * Gets the config files for entity.

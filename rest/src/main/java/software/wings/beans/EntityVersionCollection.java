@@ -19,6 +19,7 @@ public class EntityVersionCollection extends EntityVersion {
     private String entityName;
     private ChangeType changeType;
     private String entityUuid;
+    private String entityParentUuid;
     private String entityData;
     private Integer version;
     private String uuid;
@@ -51,6 +52,11 @@ public class EntityVersionCollection extends EntityVersion {
 
     public Builder withEntityUuid(String entityUuid) {
       this.entityUuid = entityUuid;
+      return this;
+    }
+
+    public Builder withEntityParentUuid(String entityParentUuid) {
+      this.entityParentUuid = entityParentUuid;
       return this;
     }
 
@@ -100,6 +106,7 @@ public class EntityVersionCollection extends EntityVersion {
           .withEntityName(entityName)
           .withChangeType(changeType)
           .withEntityUuid(entityUuid)
+          .withEntityParentUuid(entityParentUuid)
           .withEntityData(entityData)
           .withVersion(version)
           .withUuid(uuid)
@@ -116,6 +123,7 @@ public class EntityVersionCollection extends EntityVersion {
       entityVersionCollection.setEntityName(entityName);
       entityVersionCollection.setChangeType(changeType);
       entityVersionCollection.setEntityUuid(entityUuid);
+      entityVersionCollection.setEntityParentUuid(entityParentUuid);
       entityVersionCollection.setEntityData(entityData);
       entityVersionCollection.setVersion(version);
       entityVersionCollection.setUuid(uuid);

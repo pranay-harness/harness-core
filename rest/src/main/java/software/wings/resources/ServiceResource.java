@@ -7,10 +7,10 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import software.wings.beans.Graph;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
@@ -139,25 +139,32 @@ public class ServiceResource {
   @Path("{serviceId}/commands")
   public RestResponse<Service> saveCommand(@ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
-      @ApiParam(name = "command", required = true) Graph command) {
+      @ApiParam(name = "command", required = true) ServiceCommand command) {
     return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command));
+  }
+
+  @GET
+  @Path("{serviceId}/commands/{commandName}")
+  public RestResponse<ServiceCommand> getCommand(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName,
+      @QueryParam("version") int version) {
+    return new RestResponse<>(
+        serviceResourceService.getCommandByNameAndVersion(appId, serviceId, commandName, version));
   }
 
   /**
    * Update command.
    *
-   * @param appId        the app id
-   * @param serviceId    the service id
-   * @param commandName  the command name
-   * @param commandGraph the command graph
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param command   serviceCommand
    * @return the rest response
    */
   @PUT
   @Path("{serviceId}/commands/{commandName}")
-  public RestResponse<Service> updateCommand(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName, Graph commandGraph) {
-    commandGraph.setGraphName(commandName);
-    return new RestResponse<>(serviceResourceService.updateCommand(appId, serviceId, commandGraph));
+  public RestResponse<Service> updateCommand(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ServiceCommand command) {
+    return new RestResponse<>(serviceResourceService.updateCommand(appId, serviceId, command));
   }
 
   /**
