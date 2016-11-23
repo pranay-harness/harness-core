@@ -59,6 +59,10 @@ public abstract class SettingValue implements ExtensionPoint {
            * Jenkins setting variable types.
            */
     JENKINS,
+    /**
+     * Bamboo setting variable types.
+     */
+    BAMBOO,
 
     /**
      * String setting variable types.

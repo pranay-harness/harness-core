@@ -193,9 +193,14 @@ public abstract class ArtifactStream extends Base {
     /**
      * Jenkins source type.
      */
-    JENKINS, /**
-              * Nexus source type.
-              */
+    JENKINS,
+    /**
+     * Bamboo source type.
+     */
+    BAMBOO,
+    /**
+     * Nexus source type.
+     */
     NEXUS, /**
             * Artifactory source type.
             */
