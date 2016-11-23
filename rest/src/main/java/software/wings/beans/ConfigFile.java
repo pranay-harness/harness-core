@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -53,7 +54,7 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("defaultVersion") private int defaultVersion;
 
-  private Map<String, EntityVersion> envIdVersionMap;
+  private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
 
   @JsonIgnore @FormDataParam("envIdVersionMapString") private String envIdVersionMapString;
 
