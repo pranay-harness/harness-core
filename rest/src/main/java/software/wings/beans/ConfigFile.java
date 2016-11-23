@@ -5,6 +5,7 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -336,10 +337,12 @@ public class ConfigFile extends BaseFile {
         .toString();
   }
 
+  @JsonIgnore
   public boolean isSetAsDefault() {
     return setAsDefault;
   }
 
+  @JsonProperty
   public void setSetAsDefault(boolean setAsDefault) {
     this.setAsDefault = setAsDefault;
   }

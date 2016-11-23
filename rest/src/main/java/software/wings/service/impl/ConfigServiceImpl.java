@@ -88,11 +88,11 @@ public class ConfigServiceImpl implements ConfigService {
     configFile.setEnvId(envId);
     configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     configFile.setDefaultVersion(1);
+    String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
     String id = wingsPersistence.save(configFile);
     entityVersionService.newEntityVersion(configFile.getAppId(), EntityType.CONFIG, configFile.getUuid(),
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
 
-    String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
     fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
     return id;
   }
@@ -232,8 +232,6 @@ public class ConfigServiceImpl implements ConfigService {
     if (inputConfigFile.getEnvIdVersionMap() != null) {
       updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
     }
-
-    updateMap.put("targetToAllEnv", inputConfigFile.isTargetToAllEnv());
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
   }
