@@ -211,7 +211,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       String fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
-          inputConfigFile.getUuid(), inputConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
+          inputConfigFile.getUuid(), savedConfigFile.getEntityId(), inputConfigFile.getFileName(), ChangeType.UPDATED,
           inputConfigFile.getNotes());
       fileService.updateParentEntityIdAndVersion(
           inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
