@@ -7,10 +7,6 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.ERROR;
-import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ARTIFACT;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -55,7 +51,6 @@ import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
@@ -71,11 +66,6 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
-  /**
-   * The constant FINISHED_EXECUTION_STATUSES.
-   */
-  public static final List<ExecutionStatus> FINISHED_EXECUTION_STATUSES =
-      Arrays.asList(SUCCESS, FAILED, ERROR, ABORTED);
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
@@ -93,7 +83,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void refreshPipelineExecution(PipelineExecution pipelineExecution) {
-    if (pipelineExecution == null || FINISHED_EXECUTION_STATUSES.contains(pipelineExecution.getStatus())) {
+    if (pipelineExecution == null || pipelineExecution.getStatus().isFinalStatus()) {
       return;
     }
     StateMachine stateMachine =
@@ -162,8 +152,15 @@ public class PipelineServiceImpl implements PipelineService {
     WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetailsWithoutGraph(
         pipelineExecution.getAppId(), pipelineExecution.getWorkflowExecutionId());
     pipelineExecution.setPipelineStageExecutions(stageExecutionDataList);
-    pipelineExecution.setEndTs(System.currentTimeMillis());
-    pipelineExecution.setStatus(executionDetails.getStatus());
+
+    boolean allStatesFinishedExecution = stateExecutionInstanceMap.values()
+                                             .stream()
+                                             .map(StateExecutionInstance::getStatus)
+                                             .anyMatch(ExecutionStatus::isFinalStatus);
+    if (allStatesFinishedExecution) { // do not change pipeExecution status from Running until all state finish
+      pipelineExecution.setStatus(executionDetails.getStatus());
+      pipelineExecution.setEndTs(executionDetails.getEndTs());
+    }
 
     try {
       wingsPersistence.merge(pipelineExecution);
@@ -175,7 +172,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void updatePipelineEstimates(PipelineExecution pipelineExecution) {
-    if (FINISHED_EXECUTION_STATUSES.contains(pipelineExecution.getStatus())) {
+    if (pipelineExecution.getStatus().isFinalStatus()) {
       PageRequest pageRequest = aPageRequest()
                                     .addFilter("appId", Operator.EQ, pipelineExecution.getAppId())
                                     .addFilter("pipelineId", Operator.EQ, pipelineExecution.getPipelineId())

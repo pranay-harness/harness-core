@@ -22,31 +22,48 @@ public enum ExecutionStatus {
   RUNNING, /**
             * Success execution status.
             */
-  SUCCESS, /**
-            * Aborting execution status.
-            */
+  SUCCESS(true), /**
+                  * Aborting execution status.
+                  */
   ABORTING, /**
              * Aborted execution status.
              */
-  ABORTED, /**
-            * Failed execution status.
-            */
-  FAILED, /**
-           * Queued execution status.
-           */
+  ABORTED(true), /**
+                  * Failed execution status.
+                  */
+  FAILED(true), /**
+                 * Queued execution status.
+                 */
   QUEUED, /**
            * Scheduled execution status.
            */
   SCHEDULED, /**
               * Error execution status.
               */
-  ERROR, /**
-          * Paused on error execution status.
-          */
+  ERROR(true), /**
+                * Paused on error execution status.
+                */
   PAUSED_ON_ERROR, /**
                     * Paused execution status.
                     */
   PAUSED;
+
+  private boolean finalStatus = false;
+
+  ExecutionStatus() {}
+
+  ExecutionStatus(boolean finalStatus) {
+    this.finalStatus = finalStatus;
+  }
+
+  /**
+   * Is final status boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isFinalStatus() {
+    return finalStatus;
+  }
 
   /**
    * The type Execution status data.
