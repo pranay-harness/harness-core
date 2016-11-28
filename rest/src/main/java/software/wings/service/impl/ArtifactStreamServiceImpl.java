@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -43,6 +44,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.ArtifactStreamActionJob;
 import software.wings.scheduler.JobScheduler;
@@ -75,6 +77,7 @@ import javax.ws.rs.NotFoundException;
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   public static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
+  public static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
@@ -182,9 +185,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream addStreamAction(String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
-    if (artifactStreamAction.isCustomAction() && !isNullOrEmpty(artifactStreamAction.getCronExpression())) {
-      artifactStreamAction.setCronExpression("0 " + artifactStreamAction.getCronExpression());
-      artifactStreamAction.setCronDescription(getCronDescription(artifactStreamAction.getCronExpression()));
+    String cronExpression = CRON_PREFIX + artifactStreamAction.getCronExpression();
+
+    if (artifactStreamAction.isCustomAction() && !isNullOrEmpty(cronExpression)) {
+      validateCronExpression(cronExpression);
+      artifactStreamAction.setCronDescription(getCronDescription(cronExpression));
     }
 
     if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
@@ -209,9 +214,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     UpdateResults update = wingsPersistence.update(query, operations);
 
     if (artifactStreamAction.isCustomAction()) {
-      addCronForScheduledJobExecution(appId, streamId, artifactStreamAction);
+      addCronForScheduledJobExecution(appId, streamId, artifactStreamAction, cronExpression);
     }
     return get(appId, streamId);
+  }
+
+  private void validateCronExpression(String cronExpression) {
+    try {
+      CronScheduleBuilder.cronSchedule(cronExpression);
+    } catch (Exception ex) {
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Invalid cron expression");
+    }
   }
 
   private String getCronDescription(String cronExpression) {
@@ -225,7 +238,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private void addCronForScheduledJobExecution(
-      String appId, String streamId, ArtifactStreamAction artifactStreamAction) {
+      String appId, String streamId, ArtifactStreamAction artifactStreamAction, String cronExpression) {
     // Use ArtifactStream uuid as job group name and workflowId as job name
 
     JobDetail job = JobBuilder.newJob(ArtifactStreamActionJob.class)
@@ -237,7 +250,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(streamId, artifactStreamAction.getWorkflowId())
-                          .withSchedule(CronScheduleBuilder.cronSchedule(artifactStreamAction.getCronExpression()))
+                          .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);
