@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -58,8 +59,10 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -141,7 +144,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service serviceToReturn = service;
     for (Graph command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withCommand(aCommand().withGraph(command).build()).build());
+          aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(command).build()).build());
     }
 
     return serviceToReturn;
@@ -385,9 +388,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                         .filter(command -> equalsIgnoreCase(commandName, command.getName()))
                                         .findFirst()
                                         .orElse(null);
-    if (serviceCommand != null && serviceCommand.getEnvIdVersionMap().get(envId) != null) {
-      serviceCommand.setCommand(commandService.getCommand(
-          appId, serviceCommand.getUuid(), serviceCommand.getEnvIdVersionMap().get(envId).getVersion()));
+    if (serviceCommand != null
+        && (serviceCommand.getEnvIdVersionMap().get(envId) != null || serviceCommand.isTargetToAllEnv())) {
+      serviceCommand.setCommand(commandService.getCommand(appId, serviceCommand.getUuid(),
+          Optional
+              .ofNullable(
+                  Optional.ofNullable(serviceCommand.getEnvIdVersionMap()).orElse(Collections.emptyMap()).get(envId))
+              .orElse(anEntityVersion().withVersion(serviceCommand.getDefaultVersion()).build())
+              .getVersion()));
+    } else {
+      return null;
     }
     return serviceCommand;
   }

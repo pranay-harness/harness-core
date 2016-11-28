@@ -277,4 +277,6 @@ public class WingsTestConstants {
    * The constant HOST_CONN_ATTR_KEY_ID.
    */
   public static final String HOST_CONN_ATTR_KEY_ID = "HOST_CONN_ATTR_KEY_ID";
+
+  public static final String ACCOUNT_ID = "ACCOUNT_ID";
 }
