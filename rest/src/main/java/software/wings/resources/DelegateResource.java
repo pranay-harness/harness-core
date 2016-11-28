@@ -26,7 +26,12 @@ import javax.ws.rs.QueryParam;
 @Path("/delegate")
 @Produces("application/json")
 public class DelegateResource {
-  @Inject private DelegateService delegateService;
+  private DelegateService delegateService;
+
+  @Inject
+  public DelegateResource(DelegateService delegateService) {
+    this.delegateService = delegateService;
+  }
 
   @GET
   public RestResponse<PageResponse<Delegate>> list(@BeanParam PageRequest<Delegate> pageRequest) {
