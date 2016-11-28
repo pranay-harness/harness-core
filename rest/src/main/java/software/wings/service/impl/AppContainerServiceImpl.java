@@ -8,6 +8,8 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
+import com.google.common.io.Files;
+
 import software.wings.beans.AppContainer;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -153,5 +155,13 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
       appContainer.setFileType(fileType);
       appContainer.setStackRootDirectory(fileType.getRoot(bufferedInputStream));
     });
+  }
+
+  @Override
+  public File download(String accountId, String appContainerId) {
+    AppContainer appContainer = get(GLOBAL_APP_ID, appContainerId);
+    File file = new File(Files.createTempDir(), appContainer.getFileName());
+    fileService.download(appContainer.getFileUuid(), file, PLATFORMS);
+    return file;
   }
 }
