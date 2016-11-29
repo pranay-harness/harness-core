@@ -11,4 +11,5 @@
     <file path="workflow-version-migration.js"/>
     <file path="config-version-migration.js"/>
     <file path="command-version-migration.js"/>
+    <file path="command-target-to-all-env-migration.js"/>
 </changeFiles>

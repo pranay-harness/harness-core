@@ -23,10 +23,10 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -157,7 +157,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
-        .thenReturn(aServiceCommand().withCommand(COMMAND).build());
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(COMMAND).build());
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
 
@@ -284,7 +284,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
-        .thenReturn(aServiceCommand().withCommand(command).build());
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
 
     when(serviceCommandExecutorService.execute(SERVICE_INSTANCE, command,
              aCommandExecutionContext()

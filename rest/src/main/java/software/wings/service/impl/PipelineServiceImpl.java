@@ -156,7 +156,7 @@ public class PipelineServiceImpl implements PipelineService {
     boolean allStatesFinishedExecution = stateExecutionInstanceMap.values()
                                              .stream()
                                              .map(StateExecutionInstance::getStatus)
-                                             .anyMatch(ExecutionStatus::isFinalStatus);
+                                             .allMatch(ExecutionStatus::isFinalStatus);
     if (allStatesFinishedExecution) { // do not change pipeExecution status from Running until all state finish
       pipelineExecution.setStatus(executionDetails.getStatus());
       pipelineExecution.setEndTs(executionDetails.getEndTs());

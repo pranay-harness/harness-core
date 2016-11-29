@@ -26,7 +26,9 @@ public class ServiceCommand extends Base {
   private String name;
   private String serviceId;
   @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
-  private Integer defaultVersion;
+  private Integer defaultVersion = 1;
+
+  private boolean targetToAllEnv;
 
   @Transient private Command command;
   @Transient @JsonIgnore private boolean setAsDefault;
@@ -163,9 +165,27 @@ public class ServiceCommand extends Base {
     this.notes = notes;
   }
 
+  /**
+   * Getter for property 'targetToAllEnv'.
+   *
+   * @return Value for property 'targetToAllEnv'.
+   */
+  public boolean isTargetToAllEnv() {
+    return targetToAllEnv;
+  }
+
+  /**
+   * Setter for property 'targetToAllEnv'.
+   *
+   * @param targetToAllEnv Value to set for property 'targetToAllEnv'.
+   */
+  public void setTargetToAllEnv(boolean targetToAllEnv) {
+    this.targetToAllEnv = targetToAllEnv;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, serviceId, envIdVersionMap, defaultVersion);
+    return 31 * super.hashCode() + Objects.hash(name, serviceId, envIdVersionMap, defaultVersion, targetToAllEnv);
   }
 
   @Override
@@ -182,7 +202,8 @@ public class ServiceCommand extends Base {
     final ServiceCommand other = (ServiceCommand) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.serviceId, other.serviceId)
         && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
-        && Objects.equals(this.defaultVersion, other.defaultVersion);
+        && Objects.equals(this.defaultVersion, other.defaultVersion)
+        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv);
   }
 
   @Override
@@ -192,21 +213,27 @@ public class ServiceCommand extends Base {
         .add("serviceId", serviceId)
         .add("envIdVersionMap", envIdVersionMap)
         .add("defaultVersion", defaultVersion)
+        .add("targetToAllEnv", targetToAllEnv)
         .toString();
   }
 
   @JsonIgnore
   public int getVersionForEnv(String envId) {
-    return Optional.ofNullable(envIdVersionMap.get(envId))
-        .orElse(anEntityVersion().withVersion(defaultVersion).build())
-        .getVersion();
+    if (targetToAllEnv || envIdVersionMap.get(envId) != null) {
+      return Optional.ofNullable(envIdVersionMap.get(envId))
+          .orElse(anEntityVersion().withVersion(defaultVersion).build())
+          .getVersion();
+    } else {
+      return 0;
+    }
   }
 
   public static final class Builder {
     private String name;
     private String serviceId;
-    private Map<String, EntityVersion> envIdVersionMap;
-    private int defaultVersion;
+    private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+    private Integer defaultVersion = 1;
+    private boolean targetToAllEnv;
     private Command command;
     private String uuid;
     private String appId;
@@ -236,8 +263,13 @@ public class ServiceCommand extends Base {
       return this;
     }
 
-    public Builder withDefaultVersion(int defaultVersion) {
+    public Builder withDefaultVersion(Integer defaultVersion) {
       this.defaultVersion = defaultVersion;
+      return this;
+    }
+
+    public Builder withTargetToAllEnv(boolean targetToAllEnv) {
+      this.targetToAllEnv = targetToAllEnv;
       return this;
     }
 
@@ -282,6 +314,7 @@ public class ServiceCommand extends Base {
           .withServiceId(serviceId)
           .withEnvIdVersionMap(envIdVersionMap)
           .withDefaultVersion(defaultVersion)
+          .withTargetToAllEnv(targetToAllEnv)
           .withCommand(command)
           .withUuid(uuid)
           .withAppId(appId)
@@ -304,6 +337,7 @@ public class ServiceCommand extends Base {
       serviceCommand.setCreatedAt(createdAt);
       serviceCommand.setLastUpdatedBy(lastUpdatedBy);
       serviceCommand.setLastUpdatedAt(lastUpdatedAt);
+      serviceCommand.targetToAllEnv = this.targetToAllEnv;
       return serviceCommand;
     }
   }

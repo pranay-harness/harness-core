@@ -145,7 +145,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                 anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build())
             .build();
     when(serviceResourceService.getCommandByNameAndVersion(APP_ID, SERVICE_ID, COMMAND_NAME, 1))
-        .thenReturn(aServiceCommand().withCommand(command).build());
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)
         .hasSize(3)

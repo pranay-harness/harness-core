@@ -244,8 +244,12 @@ public class CommandState extends State {
               .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
               .withCommandType(command.getCommandUnitType().name())
               .withHostName(host.getHostName())
-              .withCommandNameVersionMap(service.getServiceCommands().stream().collect(toMap(ServiceCommand::getName,
-                  serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()))));
+              .withCommandNameVersionMap(
+                  service.getServiceCommands()
+                      .stream()
+                      .filter(serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()) != 0)
+                      .collect(toMap(ServiceCommand::getName,
+                          serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()))));
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
