@@ -1,9 +1,9 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.artifact.ArtifactStream.SourceType.HTTP;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
+import static software.wings.beans.artifact.ArtifactStream.SourceType.HTTP;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.inject.Inject;
@@ -16,20 +16,22 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
-import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.beans.FileUploadSource;
 import software.wings.beans.RestResponse;
+import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -37,6 +39,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
 
 /**
  * Created by anubhaw on 5/4/16.
@@ -159,6 +162,17 @@ public class AppContainerResource {
       @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
     appContainerService.delete(appId, appContainerId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("{appContainerId}/download")
+  @Encoded
+  public Response download(
+      @QueryParam("accountId") String accountId, @PathParam("appContainerId") String appContainerId) {
+    File appContainerFile = appContainerService.download(accountId, appContainerId);
+    Response.ResponseBuilder response = Response.ok(appContainerFile, "application/x-unknown");
+    response.header("Content-Disposition", "attachment; filename=" + appContainerFile.getName());
+    return response.build();
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {

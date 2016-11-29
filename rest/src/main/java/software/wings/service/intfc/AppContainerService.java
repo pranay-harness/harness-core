@@ -9,6 +9,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.io.File;
 import java.io.InputStream;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -70,4 +71,6 @@ public interface AppContainerService {
    * @param appId the app id
    */
   void deleteByAppId(@NotEmpty String appId);
+
+  File download(String accountId, String appContainerId);
 }

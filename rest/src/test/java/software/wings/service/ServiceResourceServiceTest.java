@@ -28,6 +28,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
@@ -310,13 +311,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
 
-    srs.addCommand(
-        APP_ID, SERVICE_ID, aServiceCommand().withCommand(aCommand().withGraph(commandGraph).build()).build());
+    srs.addCommand(APP_ID, SERVICE_ID,
+        aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build());
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
         .save(builder.but()
                   .addCommands(aServiceCommand()
+                                   .withTargetToAllEnv(true)
                                    .withAppId(APP_ID)
                                    .withUuid(ID_KEY)
                                    .withServiceId(SERVICE_ID)
@@ -355,6 +357,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(builder.but()
                         .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(true)
                                          .withUuid(ID_KEY)
                                          .withAppId(APP_ID)
                                          .withServiceId(SERVICE_ID)
@@ -389,6 +392,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
+            .withTargetToAllEnv(true)
             .withUuid(ID_KEY)
             .withName("START")
             .withCommand(aCommand().withGraph(commandGraph).build())
@@ -432,6 +436,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(builder.but()
                         .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(true)
                                          .withUuid(ID_KEY)
                                          .withAppId(APP_ID)
                                          .withServiceId(SERVICE_ID)
@@ -468,6 +473,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
+            .withTargetToAllEnv(true)
             .withUuid(ID_KEY)
             .withName("START")
             .withCommand(aCommand().withGraph(commandGraph).build())
@@ -513,6 +519,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
         .thenReturn(builder.but()
                         .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(true)
                                          .withUuid(ID_KEY)
                                          .withAppId(APP_ID)
                                          .withServiceId(SERVICE_ID)
@@ -547,6 +554,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
+            .withTargetToAllEnv(true)
             .withUuid(ID_KEY)
             .withName("START")
             .withCommand(aCommand().withGraph(commandGraph).build())
@@ -586,8 +594,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldGetCommandStencils() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
         .thenReturn(builder.but()
-                        .addCommands(aServiceCommand().withName("START").withCommand(commandBuilder.build()).build(),
+                        .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(true)
+                                         .withName("START")
+                                         .withCommand(commandBuilder.build())
+                                         .build(),
                             aServiceCommand()
+                                .withTargetToAllEnv(true)
                                 .withName("START2")
                                 .withCommand(commandBuilder.but().withName("START2").build())
                                 .build())
@@ -612,10 +625,66 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldGetCommandByName() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
         .thenReturn(builder.but()
-                        .addCommands(aServiceCommand().withName("START").withCommand(commandBuilder.build()).build())
+                        .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(true)
+                                         .withName("START")
+                                         .withCommand(commandBuilder.build())
+                                         .build())
                         .build());
 
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, "START")).isNotNull();
+
+    verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldGetCommandByNameAndEnv() {
+    when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(true)
+                                         .withName("START")
+                                         .withCommand(commandBuilder.build())
+                                         .build())
+                        .build());
+
+    assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START")).isNotNull();
+
+    verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldGetCommandByNameAndEnvForSpecificEnv() {
+    when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
+        .thenReturn(
+            builder.but()
+                .addCommands(aServiceCommand()
+                                 .withEnvIdVersionMap(ImmutableMap.of(ENV_ID, anEntityVersion().withVersion(2).build()))
+                                 .withName("START")
+                                 .withCommand(commandBuilder.build())
+                                 .build())
+                .build());
+
+    assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START")).isNotNull();
+
+    verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldGetCommandByNameAndEnvForSpecificEnvNotTargetted() {
+    when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
+        .thenReturn(builder.but()
+                        .addCommands(aServiceCommand()
+                                         .withTargetToAllEnv(false)
+                                         .withName("START")
+                                         .withCommand(commandBuilder.build())
+                                         .build())
+                        .build());
+
+    assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START")).isNull();
 
     verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);

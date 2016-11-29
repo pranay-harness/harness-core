@@ -22,8 +22,8 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by peeyushaggarwal on 11/28/16.
  */
-@Api("delegate")
-@Path("/delegate")
+@Api("delegates")
+@Path("/delegates")
 @Produces("application/json")
 public class DelegateResource {
   private DelegateService delegateService;
@@ -39,14 +39,14 @@ public class DelegateResource {
   }
 
   @GET
-  @Path("{delegateId}")
+  @Path("{deletgateId}")
   public RestResponse<Delegate> get(
       @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateService.get(accountId, delegateId));
   }
 
   @DELETE
-  @Path("{delegateId}")
+  @Path("{deletgateId}")
   public RestResponse<Void> delete(
       @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     delegateService.delete(accountId, delegateId);
@@ -54,7 +54,7 @@ public class DelegateResource {
   }
 
   @PUT
-  @Path("{delegateId}")
+  @Path("{deletgateId}")
   public RestResponse<Delegate> update(@PathParam("deletgateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);

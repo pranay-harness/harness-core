@@ -6,7 +6,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
@@ -14,8 +13,9 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -46,10 +46,10 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -141,7 +141,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
-        .thenReturn(aServiceCommand().withCommand(command).build());
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
@@ -157,7 +157,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
              eq(aHost().withAppId(APP_ID).withUuid(HOST_ID).build()), any(AbstractCommandUnit.class), eq(context)))
         .thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
-        .thenReturn(aServiceCommand().withCommand(command).build());
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand, context));
   }
