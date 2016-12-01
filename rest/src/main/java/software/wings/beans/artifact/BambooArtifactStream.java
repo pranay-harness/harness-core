@@ -10,6 +10,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -27,7 +28,7 @@ public class BambooArtifactStream extends ArtifactStream {
   @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
 
   /**
-   * Instantiates a new Bamboo artifact stream.
+   * Instantiates a new BambooService artifact stream.
    */
   public BambooArtifactStream() {
     super(SourceType.BAMBOO);
@@ -39,6 +40,16 @@ public class BambooArtifactStream extends ArtifactStream {
     return artifactPathServices.stream()
         .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
         .collect(toSet());
+  }
+
+  @Override
+  public String getSettingId() {
+    return bambooSettingId;
+  }
+
+  @Override
+  public String getArtifactDisplayName(int buildNo) {
+    return String.format("%s_%s_%s", jobname, buildNo, dateFormat.format(new Date()));
   }
 
   /**

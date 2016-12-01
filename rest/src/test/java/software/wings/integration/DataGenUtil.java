@@ -374,7 +374,7 @@ private void createGlobalSettings() {
 
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
-                        .withName("Wings Bamboo")
+                        .withName("Wings BambooService")
                         .withIsPluginSetting(true)
                         .withAccountId(accountId)
                         .withValue(aJenkinsConfig()

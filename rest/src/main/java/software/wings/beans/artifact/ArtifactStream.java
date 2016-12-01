@@ -8,6 +8,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +35,8 @@ public abstract class ArtifactStream extends Base {
   private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
   @Transient private Artifact lastArtifact;
+
+  static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
   /**
    * Instantiates a new lastArtifact source.
@@ -76,6 +80,21 @@ public abstract class ArtifactStream extends Base {
    * @return the services
    */
   public abstract Set<String> getServiceIds();
+
+  /**
+   * Gets setting id.
+   *
+   * @return the setting id
+   */
+  public abstract String getSettingId();
+
+  /**
+   * Gets artifact display name.
+   *
+   * @param buildNo the build no
+   * @return the artifact display name
+   */
+  public abstract String getArtifactDisplayName(int buildNo);
 
   /**
    * Gets last artifact.
@@ -193,14 +212,12 @@ public abstract class ArtifactStream extends Base {
     /**
      * Jenkins source type.
      */
-    JENKINS,
-    /**
-     * Bamboo source type.
-     */
-    BAMBOO,
-    /**
-     * Nexus source type.
-     */
+    JENKINS, /**
+              * BambooService source type.
+              */
+    BAMBOO, /**
+             * Nexus source type.
+             */
     NEXUS, /**
             * Artifactory source type.
             */

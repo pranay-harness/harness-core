@@ -33,7 +33,7 @@ public class Artifact extends Base {
 
   @Indexed @NotEmpty private String displayName;
 
-  @Indexed @NotEmpty(groups = Create.class) private String revision;
+  @Indexed private String revision;
 
   private List<String> serviceIds = new ArrayList<>();
 

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -38,6 +39,16 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return artifactPathServices.stream()
         .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
         .collect(toSet());
+  }
+
+  @Override
+  public String getSettingId() {
+    return jenkinsSettingId;
+  }
+
+  @Override
+  public String getArtifactDisplayName(int buildNo) {
+    return String.format("%s_%s_%s", jobname, buildNo, dateFormat.format(new Date()));
   }
 
   /**

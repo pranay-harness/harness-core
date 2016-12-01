@@ -15,6 +15,8 @@ import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.bamboo.BambooService;
+import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -29,6 +31,8 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProviderImpl;
+import software.wings.service.impl.BambooArtifactCollectorServiceImpl;
+import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
@@ -73,6 +77,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CommandService;
@@ -182,6 +187,8 @@ public class WingsModule extends AbstractModule {
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
+    bind(BambooService.class).to(BambooServiceImpl.class);
+    bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()
@@ -191,6 +198,12 @@ public class WingsModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
     artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
         .to(JenkinsArtifactCollectorServiceImpl.class);
+    artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
+
+    MapBinder.newMapBinder(binder(), String.class, BuildSourceService.class);
+    artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
+        .to(JenkinsArtifactCollectorServiceImpl.class);
+    artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

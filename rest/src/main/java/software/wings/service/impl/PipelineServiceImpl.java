@@ -153,10 +153,9 @@ public class PipelineServiceImpl implements PipelineService {
         pipelineExecution.getAppId(), pipelineExecution.getWorkflowExecutionId());
     pipelineExecution.setPipelineStageExecutions(stageExecutionDataList);
 
-    boolean allStatesFinishedExecution = stateExecutionInstanceMap.values()
-                                             .stream()
-                                             .map(StateExecutionInstance::getStatus)
-                                             .allMatch(ExecutionStatus::isFinalStatus);
+    boolean allStatesFinishedExecution = stateExecutionInstanceMap.values().stream().allMatch(
+        stateExecutionInstance -> stateExecutionInstance.getStatus().isFinalStatus());
+
     if (allStatesFinishedExecution) { // do not change pipeExecution status from Running until all state finish
       pipelineExecution.setStatus(executionDetails.getStatus());
       pipelineExecution.setEndTs(executionDetails.getEndTs());

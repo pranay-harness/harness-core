@@ -20,7 +20,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
@@ -41,7 +40,6 @@ import software.wings.utils.validation.Update;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -209,10 +207,10 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
-    JenkinsArtifactStream artifactStream = (JenkinsArtifactStream) artifactStreamService.get(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("artifactStream", artifactStream);
     BuildDetails lastSuccessfulBuild =
-        buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getJenkinsSettingId());
+        buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
 
     if (lastSuccessfulBuild != null) {
       Artifact lastCollectedArtifact = fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
@@ -223,13 +221,11 @@ public class ArtifactServiceImpl implements ArtifactService {
         logger.info(
             "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
             buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);
-        String artifactDisplayName = String.format(
-            "%s_%s_%s", artifactStream.getJobname(), lastSuccessfulBuild.getNumber(), dateFormat.format(new Date()));
         Artifact artifact =
             anArtifact()
                 .withAppId(appId)
                 .withArtifactStreamId(artifactStreamId)
-                .withDisplayName(artifactDisplayName)
+                .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
                 .withMetadata(ImmutableMap.of("buildNo", Integer.toString(lastSuccessfulBuild.getNumber())))
                 .withRevision(lastSuccessfulBuild.getRevision())
                 .build();

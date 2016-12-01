@@ -47,6 +47,16 @@ public class FileUrlSource extends ArtifactStream {
     return Sets.newHashSet();
   }
 
+  @Override
+  public String getSettingId() {
+    return null;
+  }
+
+  @Override
+  public String getArtifactDisplayName(int buildNo) {
+    return null;
+  }
+
   /**
    * The type Builder.
    */

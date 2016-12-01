@@ -39,6 +39,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
+import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
@@ -100,6 +101,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private void populateStreamSpecificData(ArtifactStream artifactStream) {
     if (artifactStream instanceof JenkinsArtifactStream) {
       ((JenkinsArtifactStream) artifactStream)
+          .getArtifactPathServices()
+          .forEach(artifactPathServiceEntry
+              -> artifactPathServiceEntry.setServices(
+                  artifactPathServiceEntry.getServiceIds()
+                      .stream()
+                      .map(sid -> serviceResourceService.get(artifactStream.getAppId(), sid))
+                      .collect(Collectors.toList())));
+    } else if (artifactStream instanceof BambooArtifactStream) {
+      ((BambooArtifactStream) artifactStream)
           .getArtifactPathServices()
           .forEach(artifactPathServiceEntry
               -> artifactPathServiceEntry.setServices(

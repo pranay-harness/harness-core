@@ -15,12 +15,12 @@ import java.util.Objects;
  */
 @JsonTypeName("BAMBOO")
 public class BambooConfig extends SettingValue {
-  @Attributes(title = "Bamboo Url") @URL private String bamboosUrl;
+  @Attributes(title = "BambooService Url") @URL private String bambooUrl;
   @Attributes(title = "Username") @NotEmpty private String username;
   @Attributes(title = "Password") @NotEmpty private String password;
 
   /**
-   * Instantiates a new Bamboo config.
+   * Instantiates a new BambooService config.
    */
   public BambooConfig() {
     super(SettingVariableTypes.BAMBOO.name());
@@ -31,17 +31,17 @@ public class BambooConfig extends SettingValue {
    *
    * @return the bamboos url
    */
-  public String getBamboosUrl() {
-    return bamboosUrl;
+  public String getBambooUrl() {
+    return bambooUrl;
   }
 
   /**
    * Sets bamboos url.
    *
-   * @param bamboosUrl the bamboos url
+   * @param bambooUrl the bamboos url
    */
-  public void setBamboosUrl(String bamboosUrl) {
-    this.bamboosUrl = bamboosUrl;
+  public void setBambooUrl(String bambooUrl) {
+    this.bambooUrl = bambooUrl;
   }
 
   /**
@@ -82,7 +82,7 @@ public class BambooConfig extends SettingValue {
 
   @Override
   public int hashCode() {
-    return Objects.hash(bamboosUrl, username, password);
+    return Objects.hash(bambooUrl, username, password);
   }
 
   @Override
@@ -94,14 +94,14 @@ public class BambooConfig extends SettingValue {
       return false;
     }
     final BambooConfig other = (BambooConfig) obj;
-    return Objects.equals(this.bamboosUrl, other.bamboosUrl) && Objects.equals(this.username, other.username)
+    return Objects.equals(this.bambooUrl, other.bambooUrl) && Objects.equals(this.username, other.username)
         && Objects.equals(this.password, other.password);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("bamboosUrl", bamboosUrl)
+        .add("bambooUrl", bambooUrl)
         .add("username", username)
         .add("password", password)
         .toString();
@@ -177,7 +177,7 @@ public class BambooConfig extends SettingValue {
       BambooConfig bambooConfig = new BambooConfig();
       bambooConfig.setPassword(password);
       bambooConfig.setUsername(username);
-      bambooConfig.setBamboosUrl(bamboosUrl);
+      bambooConfig.setBambooUrl(bamboosUrl);
       return bambooConfig;
     }
   }

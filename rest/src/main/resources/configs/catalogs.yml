@@ -20,7 +20,9 @@ ARTIFACT_TYPE:
 
 ARTIFACT_SOURCE_TYPE:
     - name: JENKINS
-    - value: JENKINS
+      value: JENKINS
+    - name: BAMBOO
+      value: BAMBOO
 
 DEPLOYMENT_STRATEGY:
     - name: SERIAL
