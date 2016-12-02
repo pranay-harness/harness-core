@@ -3,6 +3,7 @@ package software.wings.service;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 /**
  * Created by anubhaw on 11/28/16.
  */
+@Ignore
 public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;

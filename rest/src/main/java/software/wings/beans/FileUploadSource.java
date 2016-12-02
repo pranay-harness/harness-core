@@ -22,21 +22,6 @@ public class FileUploadSource extends ArtifactStream {
     super(SourceType.FILE_UPLOAD);
   }
 
-  @Override
-  public Set<String> getServiceIds() {
-    return Sets.newHashSet();
-  }
-
-  @Override
-  public String getSettingId() {
-    return null;
-  }
-
-  @Override
-  public String getArtifactDisplayName(int buildNo) {
-    return null;
-  }
-
   /**
    * The type Builder.
    */

@@ -6,13 +6,12 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.FileMetadata;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.FileMetadata;
-import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ArtifactCollectorService;
@@ -46,17 +45,16 @@ public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorSer
    */
   @Override
   public List<ArtifactFile> collect(ArtifactStream artifactStream, Map<String, String> arguments) {
-    JenkinsArtifactStream jenkinsArtifactSource = (JenkinsArtifactStream) artifactStream;
     List<ArtifactFile> artifactFiles = Lists.newArrayList();
     InputStream in = null;
     try {
-      SettingAttribute settingAttribute = settingsService.get(jenkinsArtifactSource.getJenkinsSettingId());
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
       Jenkins jenkins = jenkinsFactory.create(
           jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-      for (ArtifactPathServiceEntry artifactPathServiceEntry : jenkinsArtifactSource.getArtifactPathServices()) {
-        Pair<String, InputStream> fileInfo = jenkins.downloadArtifact(jenkinsArtifactSource.getJobname(),
-            arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());
+      for (ArtifactPathServiceEntry artifactPathServiceEntry : artifactStream.getArtifactPathServices()) {
+        Pair<String, InputStream> fileInfo = jenkins.downloadArtifact(
+            artifactStream.getJobname(), arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());
         if (fileInfo == null) {
           throw new FileNotFoundException(
               "Unable to get artifact from jenkins for path " + artifactPathServiceEntry.getArtifactPathRegex());

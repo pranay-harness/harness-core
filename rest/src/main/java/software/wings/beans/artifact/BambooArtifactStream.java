@@ -1,159 +1,43 @@
 package software.wings.beans.artifact;
 
-import static java.util.stream.Collectors.toSet;
-
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import javax.validation.Valid;
 
 /**
  * Created by anubhaw on 11/22/16.
  */
 @JsonTypeName("BAMBOO")
 public class BambooArtifactStream extends ArtifactStream {
-  @NotEmpty private String bambooSettingId;
-
-  @NotEmpty private String jobname;
-
-  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-
   /**
-   * Instantiates a new BambooService artifact stream.
+   * Instantiates a new Bamboo artifact stream.
    */
   public BambooArtifactStream() {
     super(SourceType.BAMBOO);
-    super.setSourceName(jobname);
-  }
-
-  @Override
-  public Set<String> getServiceIds() {
-    return artifactPathServices.stream()
-        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
-        .collect(toSet());
-  }
-
-  @Override
-  public String getSettingId() {
-    return bambooSettingId;
-  }
-
-  @Override
-  public String getArtifactDisplayName(int buildNo) {
-    return String.format("%s_%s_%s", jobname, buildNo, dateFormat.format(new Date()));
-  }
-
-  /**
-   * Gets bamboo setting id.
-   *
-   * @return the bamboo setting id
-   */
-  public String getBambooSettingId() {
-    return bambooSettingId;
-  }
-
-  /**
-   * Sets bamboo setting id.
-   *
-   * @param bambooSettingId the bamboo setting id
-   */
-  public void setBambooSettingId(String bambooSettingId) {
-    this.bambooSettingId = bambooSettingId;
-  }
-
-  /**
-   * Gets jobname.
-   *
-   * @return the jobname
-   */
-  public String getJobname() {
-    return jobname;
-  }
-
-  /**
-   * Sets jobname.
-   *
-   * @param jobname the jobname
-   */
-  public void setJobname(String jobname) {
-    this.jobname = jobname;
-  }
-
-  /**
-   * Gets artifact path services.
-   *
-   * @return the artifact path services
-   */
-  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
-    return artifactPathServices;
-  }
-
-  /**
-   * Sets artifact path services.
-   *
-   * @param artifactPathServices the artifact path services
-   */
-  public void setArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-    this.artifactPathServices = artifactPathServices;
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(bambooSettingId, jobname, artifactPathServices);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final BambooArtifactStream other = (BambooArtifactStream) obj;
-    return Objects.equals(this.bambooSettingId, other.bambooSettingId) && Objects.equals(this.jobname, other.jobname)
-        && Objects.equals(this.artifactPathServices, other.artifactPathServices);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("bambooSettingId", bambooSettingId)
-        .add("jobname", jobname)
-        .add("artifactPathServices", artifactPathServices)
-        .toString();
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private String bambooSettingId;
+    private String sourceName;
+    private String settingId;
     private String jobname;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-    private String sourceName;
     private boolean autoDownload = false;
-    private boolean autoApproveForProduction = false;
-    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
-    private Artifact lastArtifact;
     private String uuid;
+    private boolean autoApproveForProduction = false;
     private String appId;
     private EmbeddedUser createdBy;
+    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private Artifact lastArtifact;
 
     private Builder() {}
 
@@ -167,13 +51,24 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With bamboo setting id builder.
+     * With source name builder.
      *
-     * @param bambooSettingId the bamboo setting id
+     * @param sourceName the source name
      * @return the builder
      */
-    public Builder withBambooSettingId(String bambooSettingId) {
-      this.bambooSettingId = bambooSettingId;
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
+      return this;
+    }
+
+    /**
+     * With setting id builder.
+     *
+     * @param settingId the setting id
+     * @return the builder
+     */
+    public Builder withSettingId(String settingId) {
+      this.settingId = settingId;
       return this;
     }
 
@@ -200,17 +95,6 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With source name builder.
-     *
-     * @param sourceName the source name
-     * @return the builder
-     */
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
-    }
-
-    /**
      * With auto download builder.
      *
      * @param autoDownload the auto download
@@ -222,39 +106,6 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With auto approve for production builder.
-     *
-     * @param autoApproveForProduction the auto approve for production
-     * @return the builder
-     */
-    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-      this.autoApproveForProduction = autoApproveForProduction;
-      return this;
-    }
-
-    /**
-     * With stream actions builder.
-     *
-     * @param streamActions the stream actions
-     * @return the builder
-     */
-    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
-      this.streamActions = streamActions;
-      return this;
-    }
-
-    /**
-     * With last artifact builder.
-     *
-     * @param lastArtifact the last artifact
-     * @return the builder
-     */
-    public Builder withLastArtifact(Artifact lastArtifact) {
-      this.lastArtifact = lastArtifact;
-      return this;
-    }
-
-    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -262,6 +113,17 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * With auto approve for production builder.
+     *
+     * @param autoApproveForProduction the auto approve for production
+     * @return the builder
+     */
+    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+      this.autoApproveForProduction = autoApproveForProduction;
       return this;
     }
 
@@ -284,6 +146,17 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
+      return this;
+    }
+
+    /**
+     * With stream actions builder.
+     *
+     * @param streamActions the stream actions
+     * @return the builder
+     */
+    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
+      this.streamActions = streamActions;
       return this;
     }
 
@@ -321,26 +194,37 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With last artifact builder.
+     *
+     * @param lastArtifact the last artifact
+     * @return the builder
+     */
+    public Builder withLastArtifact(Artifact lastArtifact) {
+      this.lastArtifact = lastArtifact;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return aBambooArtifactStream()
-          .withBambooSettingId(bambooSettingId)
+          .withSourceName(sourceName)
+          .withSettingId(settingId)
           .withJobname(jobname)
           .withArtifactPathServices(artifactPathServices)
-          .withSourceName(sourceName)
           .withAutoDownload(autoDownload)
-          .withAutoApproveForProduction(autoApproveForProduction)
-          .withStreamActions(streamActions)
-          .withLastArtifact(lastArtifact)
           .withUuid(uuid)
+          .withAutoApproveForProduction(autoApproveForProduction)
           .withAppId(appId)
           .withCreatedBy(createdBy)
+          .withStreamActions(streamActions)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withLastArtifact(lastArtifact);
     }
 
     /**
@@ -350,20 +234,20 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public BambooArtifactStream build() {
       BambooArtifactStream bambooArtifactStream = new BambooArtifactStream();
-      bambooArtifactStream.setBambooSettingId(bambooSettingId);
+      bambooArtifactStream.setSourceName(sourceName);
+      bambooArtifactStream.setSettingId(settingId);
       bambooArtifactStream.setJobname(jobname);
       bambooArtifactStream.setArtifactPathServices(artifactPathServices);
-      bambooArtifactStream.setSourceName(sourceName);
       bambooArtifactStream.setAutoDownload(autoDownload);
-      bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      bambooArtifactStream.setStreamActions(streamActions);
-      bambooArtifactStream.setLastArtifact(lastArtifact);
       bambooArtifactStream.setUuid(uuid);
+      bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       bambooArtifactStream.setAppId(appId);
       bambooArtifactStream.setCreatedBy(createdBy);
+      bambooArtifactStream.setStreamActions(streamActions);
       bambooArtifactStream.setCreatedAt(createdAt);
       bambooArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      bambooArtifactStream.setLastArtifact(lastArtifact);
       return bambooArtifactStream;
     }
   }

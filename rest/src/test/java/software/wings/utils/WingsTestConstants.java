@@ -71,6 +71,11 @@ public class WingsTestConstants {
   public static final String ARTIFACT_STREAM_NAME = "ARTIFACT_STREAM_NAME";
 
   /**
+   * The constant BUILD_JOB_NAME.
+   */
+  public static final String BUILD_JOB_NAME = "BUILD_JOB_NAME";
+
+  /**
    * The constant RELEASE_NAME.
    */
   public static final String RELEASE_NAME = "RELEASE_NAME";
@@ -278,5 +283,8 @@ public class WingsTestConstants {
    */
   public static final String HOST_CONN_ATTR_KEY_ID = "HOST_CONN_ATTR_KEY_ID";
 
+  /**
+   * The constant ACCOUNT_ID.
+   */
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
 }

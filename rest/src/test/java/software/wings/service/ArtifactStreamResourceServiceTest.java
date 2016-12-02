@@ -36,7 +36,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withSourceName("job1")
           .withJobname("job1")
-          .withJenkinsSettingId("JENKINS_SETTING_ID")
+          .withSettingId("JENKINS_SETTING_ID")
           .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
                                                            .withArtifactPathRegex("dist/svr-*.war")
                                                            .withServiceIds(Arrays.asList(SERVICE_ID))

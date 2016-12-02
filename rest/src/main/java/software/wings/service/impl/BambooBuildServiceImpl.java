@@ -11,7 +11,6 @@ import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BambooBuildService;
-import software.wings.service.intfc.SettingsService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +22,6 @@ import javax.inject.Inject;
  */
 public class BambooBuildServiceImpl implements BambooBuildService {
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private SettingsService settingsService;
   @Inject private BambooService bambooService;
 
   @Override

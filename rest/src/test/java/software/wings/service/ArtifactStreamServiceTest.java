@@ -74,7 +74,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withUuid(ARTIFACT_STREAM_ID)
           .withSourceName("SOURCE_NAME")
-          .withJenkinsSettingId(SETTING_ID)
+          .withSettingId(SETTING_ID)
           .withJobname("JOB")
           .withAutoDownload(true)
           .withArtifactPathServices(asList(

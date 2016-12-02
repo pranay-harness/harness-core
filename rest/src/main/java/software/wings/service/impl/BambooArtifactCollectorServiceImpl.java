@@ -12,7 +12,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.FileService;
@@ -35,20 +34,18 @@ public class BambooArtifactCollectorServiceImpl implements ArtifactCollectorServ
 
   @Override
   public List<ArtifactFile> collect(ArtifactStream artifactStream, Map<String, String> arguments) {
-    BambooArtifactStream bambooArtifactStream = (BambooArtifactStream) artifactStream;
     List<ArtifactFile> artifactFiles = Lists.newArrayList();
     InputStream in = null;
     try {
-      SettingAttribute settingAttribute = settingsService.get(bambooArtifactStream.getBambooSettingId());
+      SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
       BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
 
-      for (ArtifactPathServiceEntry artifactPathServiceEntry : bambooArtifactStream.getArtifactPathServices()) {
-        Pair<String, InputStream> fileInfo =
-            bambooService.downloadArtifact(bambooConfig, bambooArtifactStream.getJobname(), arguments.get(BUILD_NO),
-                artifactPathServiceEntry.getArtifactPathRegex());
+      for (ArtifactPathServiceEntry artifactPathServiceEntry : artifactStream.getArtifactPathServices()) {
+        Pair<String, InputStream> fileInfo = bambooService.downloadArtifact(bambooConfig, artifactStream.getJobname(),
+            arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());
         if (fileInfo == null) {
           throw new FileNotFoundException(
-              "Unable to get artifact from jenkins for path " + artifactPathServiceEntry.getArtifactPathRegex());
+              "Unable to get artifact from Bamboo for path " + artifactPathServiceEntry.getArtifactPathRegex());
         }
         in = fileInfo.getValue();
         FileMetadata fileMetadata = new FileMetadata();

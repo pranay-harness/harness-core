@@ -72,7 +72,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
                                                       .withUuid(ARTIFACT_STREAM_ID)
                                                       .withAppId(APP_ID)
-                                                      .withJenkinsSettingId("")
+                                                      .withSettingId("")
                                                       .withSourceName(ARTIFACT_STREAM_NAME)
                                                       .withJobname(ARTIFACT_STREAM_NAME)
                                                       .withArtifactPathServices(Lists.newArrayList())
