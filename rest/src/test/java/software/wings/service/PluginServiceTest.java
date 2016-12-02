@@ -9,6 +9,7 @@ import static software.wings.beans.PluginCategory.Verification;
 
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -26,7 +27,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(4)
+        .hasSize(5)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -35,6 +36,14 @@ public class PluginServiceTest {
                              .withType("JENKINS")
                              .withPluginCategories(asList(Verification, Artifact))
                              .build(),
+            anAccountPlugin()
+                .withSettingClass(BambooConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Bamboo")
+                .withType("BAMBOO")
+                .withPluginCategories(asList(Artifact))
+                .build(),
             anAccountPlugin()
                 .withSettingClass(AppDynamicsConfig.class)
                 .withAccountId(accountId)
@@ -66,7 +75,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(4)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "SMTP", "SPLUNK");
+        .hasSize(5)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SPLUNK");
   }
 }

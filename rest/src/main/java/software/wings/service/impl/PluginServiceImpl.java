@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.exception.WingsException;
@@ -46,6 +47,15 @@ public class PluginServiceImpl implements PluginService {
                                   .withPluginCategories(asList(Verification, Artifact))
                                   .withUiSchema(readUiSchema("JENKINS"))
                                   .build(),
+        anAccountPlugin()
+            .withSettingClass(BambooConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Bamboo")
+            .withType("BAMBOO")
+            .withPluginCategories(asList(Artifact))
+            .withUiSchema(readUiSchema("BAMBOO"))
+            .build(),
         anAccountPlugin()
             .withSettingClass(AppDynamicsConfig.class)
             .withAccountId(accountId)
