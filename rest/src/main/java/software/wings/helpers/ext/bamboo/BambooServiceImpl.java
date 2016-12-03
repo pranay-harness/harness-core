@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,7 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public List<String> getArtifactPath(BambooConfig bambooConfig, String jobName) {
-    return new ArrayList<>(); // TODO:: find a way to get artifact paths
+    return Arrays.asList("*"); // TODO:: find a way to get artifact paths
   }
 
   @Override
