@@ -46,7 +46,8 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public List<String> getJobKeys(BambooConfig bambooConfig) {
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).listProjectsWithJobDetails(Credentials.basic("admin", "admin"));
+        getBambooClient(bambooConfig)
+            .listProjectsWithJobDetails(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()));
     try {
       Response<JsonNode> response = request.execute();
       return extractJobKeyFromNestedProjectResponseJson(response);

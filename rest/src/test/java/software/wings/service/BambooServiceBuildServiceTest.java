@@ -24,11 +24,12 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;
 
-  private BambooConfig bambooConfig = Builder.aBambooConfig()
-                                          .withBamboosUrl("http://localhost:8085/rest/api/latest/")
-                                          .withUsername("admin")
-                                          .withPassword("admin")
-                                          .build();
+  private BambooConfig bambooConfig =
+      Builder.aBambooConfig()
+          .withBamboosUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/rest/api/latest/")
+          .withUsername("wingsbuild")
+          .withPassword("qwedsa123")
+          .build();
 
   @Test
   public void shouldFetchBambooSettings() {
