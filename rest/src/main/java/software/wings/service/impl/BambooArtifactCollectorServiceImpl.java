@@ -27,9 +27,15 @@ import javax.inject.Inject;
  * Created by anubhaw on 11/30/16.
  */
 public class BambooArtifactCollectorServiceImpl implements ArtifactCollectorService {
+  /**
+   * The Settings service.
+   */
   @Inject SettingsService settingsService;
   @Inject private FileService fileService;
   @Inject private BambooService bambooService;
+  /**
+   * The constant BUILD_NO.
+   */
   public static final String BUILD_NO = "buildNo";
 
   @Override

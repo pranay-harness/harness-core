@@ -2,6 +2,7 @@ package software.wings.helpers.ext.bamboo;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +16,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.ErrorCodes;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
@@ -22,11 +25,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 11/29/16.
@@ -61,7 +67,7 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String jobKey) {
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).lastSuccessfulBuild(Credentials.basic("admin", "admin"), jobKey);
+        getBambooClient(bambooConfig).lastSuccessfulBuild(getBasicAuthCredentials(bambooConfig), jobKey);
     try {
       Response<JsonNode> response = request.execute();
       JsonNode jsonNode = response.body().at("/results/result");
@@ -74,12 +80,16 @@ public class BambooServiceImpl implements BambooService {
     return null;
   }
 
+  public String getBasicAuthCredentials(BambooConfig bambooConfig) {
+    return Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword());
+  }
+
   @Override
   public List<BuildDetails> getBuildsForJob(BambooConfig bambooConfig, String jobKey, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetailsList = new ArrayList<>();
 
-    Call<JsonNode> request =
-        getBambooClient(bambooConfig).listBuildsForJob(Credentials.basic("admin", "admin"), jobKey, maxNumberOfBuilds);
+    Call<JsonNode> request = getBambooClient(bambooConfig)
+                                 .listBuildsForJob(getBasicAuthCredentials(bambooConfig), jobKey, maxNumberOfBuilds);
     try {
       Response<JsonNode> response = request.execute();
       JsonNode resultNode = response.body().at("/results/result");
@@ -95,16 +105,62 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<String> getArtifactPath(BambooConfig bambooConfig, String jobName) {
-    return Arrays.asList("*"); // TODO:: find a way to get artifact paths
+  public List<String> getArtifactPath(BambooConfig bambooConfig, String jobKey) {
+    BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, jobKey);
+    if (lastSuccessfulBuild != null) {
+      Map<String, String> buildArtifactsUrlMap =
+          getBuildArtifactsUrlMap(bambooConfig, jobKey, Integer.toString(lastSuccessfulBuild.getNumber()));
+      return getArtifactRelativePaths(buildArtifactsUrlMap.values());
+    }
+    return Arrays.asList();
+  }
+
+  private List<String> getArtifactRelativePaths(Collection<String> paths) {
+    return paths.stream().map(this ::extractRelativePath).filter(Objects::nonNull).collect(Collectors.toList());
+  }
+
+  private String extractRelativePath(String path) {
+    List<String> strings = Arrays.asList(path.split("/"));
+    int artifactIdx = strings.indexOf("artifact");
+    if (artifactIdx >= 0 && artifactIdx + 2 < strings.size()) {
+      artifactIdx += 2; // skip next path element jobShortId as well: "baseUrl/.../../artifact/jobShortId/{relativePath}
+      String relativePath = Joiner.on("/").join(strings.listIterator(artifactIdx));
+      return relativePath;
+    }
+    return null;
   }
 
   @Override
   public Pair<String, InputStream> downloadArtifact(
       BambooConfig bambooConfig, String jobKey, String buildNumber, String artifactPathRegex) {
-    Call<JsonNode> request =
-        getBambooClient(bambooConfig).getBuildArtifacts(Credentials.basic("admin", "admin"), jobKey, buildNumber);
+    Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, jobKey, buildNumber);
+    Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    Entry<String, String> artifactPath =
+        artifactPathMap.entrySet()
+            .stream()
+            .filter(entry
+                -> extractRelativePath(entry.getValue()) != null
+                    && pattern.matcher(extractRelativePath(entry.getValue())).matches())
+            .findFirst()
+            .orElse(null);
+    try {
+      return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
+    } catch (IOException ex) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact path " + ex);
+    }
+  }
 
+  /**
+   * Gets build artifacts url map.
+   *
+   * @param bambooConfig the bamboo config
+   * @param jobKey       the job key
+   * @param buildNumber  the build number
+   * @return the build artifacts url map
+   */
+  public Map<String, String> getBuildArtifactsUrlMap(BambooConfig bambooConfig, String jobKey, String buildNumber) {
+    Call<JsonNode> request =
+        getBambooClient(bambooConfig).getBuildArtifacts(getBasicAuthCredentials(bambooConfig), jobKey, buildNumber);
     Map<String, String> artifactPathMap = new HashMap<>();
     try {
       Response<JsonNode> response = request.execute();
@@ -118,17 +174,10 @@ public class BambooServiceImpl implements BambooService {
           }
         });
       }
-      Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-      Entry<String, String> artifactPath = artifactPathMap.entrySet()
-                                               .stream()
-                                               .filter(entry -> pattern.matcher(entry.getValue()).matches())
-                                               .findFirst()
-                                               .orElse(null);
-      return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
     } catch (IOException ex) {
       logger.error("Download artifact failed with exception " + ex.getStackTrace());
     }
-    return null;
+    return artifactPathMap;
   }
 
   private List<String> extractJobKeyFromNestedProjectResponseJson(Response<JsonNode> response) {
