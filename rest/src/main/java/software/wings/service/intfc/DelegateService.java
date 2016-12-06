@@ -13,4 +13,5 @@ public interface DelegateService {
   Delegate update(Delegate delegate);
   Delegate add(Delegate delegate);
   void delete(String accountId, String delegateId);
+  Delegate register(Delegate delegate);
 }

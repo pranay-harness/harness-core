@@ -19,8 +19,9 @@
         </dependency>
 
         <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
+            <groupId>software.wings</groupId>
+            <artifactId>serialization-utils</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
@@ -297,12 +298,16 @@
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>retrofit</artifactId>
-            <version>2.1.0</version>
         </dependency>
+
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>converter-jackson</artifactId>
-            <version>2.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -904,7 +909,8 @@
 
                                 Mongeez mongeez = new Mongeez();
                                 mongeez.setFile(new FileSystemResource(new File("src/main/resources/migrations/mongeez.xml")));
-                                mongeez.setMongo(new Mongo(System.getProperty("mongoHost", "localhost"), Integer.parseInt(System.getProperty("mongoPort", "27017"))));
+                                mongeez.setMongo(new Mongo(System.getProperty("mongoHost", "localhost"), Integer.parseInt(System.getProperty("mongoPort",
+                                "27017"))));
                                 mongeez.setDbName("wings");
                                 mongeez.process();
                             </source>

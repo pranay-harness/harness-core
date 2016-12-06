@@ -8,10 +8,14 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateService;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import javax.inject.Inject;
 
@@ -20,6 +24,7 @@ import javax.inject.Inject;
  */
 public class DelegateServiceImpl implements DelegateService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -60,5 +65,33 @@ public class DelegateServiceImpl implements DelegateService {
                                 .equal(accountId)
                                 .field(ID_KEY)
                                 .equal(delegateId));
+  }
+
+  @Override
+  public Delegate register(Delegate delegate) {
+    Delegate existingDelegate = wingsPersistence.get(Delegate.class,
+        aPageRequest()
+            .addFilter("ip", EQ, delegate.getIp())
+            .addFilter("hostName", EQ, delegate.getHostName())
+            .addFilter("accountId", EQ, delegate.getAccountId())
+            .build());
+
+    if (existingDelegate == null) {
+      return add(delegate);
+    } else {
+      delegate.setUuid(existingDelegate.getUuid());
+      delegate.setStatus(existingDelegate.getStatus() == Status.DISABLED ? Status.DISABLED : delegate.getStatus());
+      return update(delegate);
+    }
+  }
+
+  public void sendTaskWaitNotify(DelegateTask task) {
+    wingsPersistence.save(task);
+  }
+
+  public void processDelegateResponse(DelegateTaskResponse response) {
+    DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class, response.getAppId(), response.getTaskId());
+    String waitId = delegateTask.getWaitId();
+    waitNotifyEngine.notify(waitId, response.getResponse());
   }
 }

@@ -1,9 +1,13 @@
 package software.wings.service.impl;
 
+import org.apache.commons.codec.binary.Hex;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Valid;
@@ -36,7 +40,9 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account findOrCreate(String companyName) {
     return wingsPersistence.upsert(wingsPersistence.createQuery(Account.class).field("companyName").equal(companyName),
-        wingsPersistence.createUpdateOperations(Account.class).setOnInsert("companyName", companyName));
+        wingsPersistence.createUpdateOperations(Account.class)
+            .setOnInsert("companyName", companyName)
+            .setOnInsert("accountKey", generateAccountKey()));
   }
 
   @Override
@@ -50,5 +56,18 @@ public class AccountServiceImpl implements AccountService {
   public Account getByName(String companyName) {
     return wingsPersistence.executeGetOneQuery(
         wingsPersistence.createQuery(Account.class).field("companyName").equal(companyName));
+  }
+
+  private String generateAccountKey() {
+    KeyGenerator keyGen = null;
+    try {
+      keyGen = KeyGenerator.getInstance("AES");
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    }
+    keyGen.init(128);
+    SecretKey secretKey = keyGen.generateKey();
+    byte[] encoded = secretKey.getEncoded();
+    return Hex.encodeHexString(encoded);
   }
 }

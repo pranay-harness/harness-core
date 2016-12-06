@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import software.wings.utils.validation.Create;
 
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -14,6 +15,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
   @Indexed(unique = true) @NotNull private String companyName;
+
+  @NotNull(groups = Create.class) private String accountKey;
 
   /**
    * Getter for property 'companyName'.
@@ -33,9 +36,27 @@ public class Account extends Base {
     this.companyName = companyName;
   }
 
+  /**
+   * Getter for property 'accountKey'.
+   *
+   * @return Value for property 'accountKey'.
+   */
+  public String getAccountKey() {
+    return accountKey;
+  }
+
+  /**
+   * Setter for property 'accountKey'.
+   *
+   * @param accountKey Value to set for property 'accountKey'.
+   */
+  public void setAccountKey(String accountKey) {
+    this.accountKey = accountKey;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(companyName);
+    return 31 * super.hashCode() + Objects.hash(companyName, accountKey);
   }
 
   @Override
@@ -50,16 +71,17 @@ public class Account extends Base {
       return false;
     }
     final Account other = (Account) obj;
-    return Objects.equals(this.companyName, other.companyName);
+    return Objects.equals(this.companyName, other.companyName) && Objects.equals(this.accountKey, other.accountKey);
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("companyName", companyName).toString();
+    return MoreObjects.toStringHelper(this).add("companyName", companyName).add("accountKey", accountKey).toString();
   }
 
   public static final class Builder {
     private String companyName;
+    private String accountKey;
     private String uuid;
     private String appId = GLOBAL_APP_ID;
     private EmbeddedUser createdBy;
@@ -75,6 +97,11 @@ public class Account extends Base {
 
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
+      return this;
+    }
+
+    public Builder withAccountKey(String accountKey) {
+      this.accountKey = accountKey;
       return this;
     }
 
@@ -111,6 +138,7 @@ public class Account extends Base {
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
+          .withAccountKey(accountKey)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -122,6 +150,7 @@ public class Account extends Base {
     public Account build() {
       Account account = new Account();
       account.setCompanyName(companyName);
+      account.setAccountKey(accountKey);
       account.setUuid(uuid);
       account.setAppId(appId);
       account.setCreatedBy(createdBy);

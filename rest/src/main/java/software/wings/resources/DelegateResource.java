@@ -6,6 +6,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.DelegateService;
 
 import javax.inject.Inject;
@@ -53,6 +54,7 @@ public class DelegateResource {
     return new RestResponse<Void>();
   }
 
+  @PublicApi
   @PUT
   @Path("{deletgateId}")
   public RestResponse<Delegate> update(@PathParam("deletgateId") @NotEmpty String delegateId,
@@ -60,6 +62,14 @@ public class DelegateResource {
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
     return new RestResponse<>(delegateService.update(delegate));
+  }
+
+  @PublicApi
+  @POST
+  @Path("register")
+  public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
+    delegate.setAccountId(accountId);
+    return new RestResponse<>(delegateService.register(delegate));
   }
 
   @POST

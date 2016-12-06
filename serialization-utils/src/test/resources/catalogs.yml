@@ -1,0 +1,63 @@
+CARD_VIEW_SORT_BY:
+    - name: Most Recent
+      value: mostRecent
+    - name: Alphabetical Ascending
+      value: alphabeticalAscending
+    - name: Alphabetical Descending
+      value: alphabeticalDescending
+
+ARTIFACT_TYPE:
+    - name: JAR
+      value: JAR
+    - name: TAR
+      value: TAR
+    - name: WAR
+      value: WAR
+    - name: ZIP
+      value: ZIP
+    - name: OTHER
+      value: OTHER
+
+ARTIFACT_SOURCE_TYPE:
+    - name: JENKINS
+    - value: JENKINS
+
+DEPLOYMENT_STRATEGY:
+    - name: SERIAL
+      value: SERIAL
+    - name: PARALLEL
+      value: PARALLEL
+
+OS_TYPE:
+    - name: Linux - RHL
+      value: RHL
+    - name: Linux - DEB
+      value: DEB
+
+CONNECTION_TYPE:
+    - name: SSH
+      value: SSH
+    - name: VPN
+      value: VPN
+
+ACCESS_TYPE:
+    - name: SSH
+      value: SSH
+    - name: SSH_KEY
+      value: SSH_KEY
+    - name: SSH_USER_PASSWD
+      value: SSH_USER_PASSWD
+    - name: SSH_SU_APP_ACCOUNT
+      value: SSH_SU_APP_ACCOUNT
+    - name: SSH_SUDO_APP_ACCOUNT
+      value: SSH_SUDO_APP_ACCOUNT
+
+EXECUTION_TYPE:
+    - name: SSH
+      value: SSH
+
+CONTAINER_FAMILY:
+    - name: Tomcat
+      value: TOMCAT
+    - name: JBoss AS 7
+      value: JBOSS

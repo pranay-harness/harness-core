@@ -1,0 +1,56 @@
+package software.wings.delegate.app;
+
+/**
+ * Created by peeyushaggarwal on 11/29/16.
+ */
+public class DelegateConfiguration {
+  private String managerUrl;
+
+  private String accountId;
+
+  private String accountSecret;
+
+  private long heartbeatInterval;
+
+  /**
+   * Getter for property 'managerUrl'.
+   *
+   * @return Value for property 'managerUrl'.
+   */
+  public String getManagerUrl() {
+    return managerUrl;
+  }
+
+  /**
+   * Setter for property 'managerUrl'.
+   *
+   * @param managerUrl Value to set for property 'managerUrl'.
+   */
+  public void setManagerUrl(String managerUrl) {
+    this.managerUrl = managerUrl;
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
+  public String getAccountSecret() {
+    return accountSecret;
+  }
+
+  public void setAccountSecret(String accountSecret) {
+    this.accountSecret = accountSecret;
+  }
+
+  public long getHeartbeatInterval() {
+    return heartbeatInterval;
+  }
+
+  public void setHeartbeatInterval(long heartbeatInterval) {
+    this.heartbeatInterval = heartbeatInterval;
+  }
+}
