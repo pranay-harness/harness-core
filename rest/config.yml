@@ -29,6 +29,13 @@ mongo:
   port: 27017
   db: wings
 
+metrics:
+  reporters:
+  - type: graphite
+    host: carbon.hostedgraphite.com
+    port: 2003
+    prefix: b7eb9d0f-415f-4691-aff3-8228b31277b1
+
 portal:
   url: https://localhost:8000
   allowedDomains: wings.software
