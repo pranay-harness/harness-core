@@ -10,7 +10,7 @@ public class DelegateConfiguration {
 
   private String accountSecret;
 
-  private long heartbeatInterval;
+  private long heartbeatIntervalMs;
 
   /**
    * Getter for property 'managerUrl'.
@@ -46,11 +46,11 @@ public class DelegateConfiguration {
     this.accountSecret = accountSecret;
   }
 
-  public long getHeartbeatInterval() {
-    return heartbeatInterval;
+  public long getHeartbeatIntervalMs() {
+    return heartbeatIntervalMs;
   }
 
-  public void setHeartbeatInterval(long heartbeatInterval) {
-    this.heartbeatInterval = heartbeatInterval;
+  public void setHeartbeatIntervalMs(long heartbeatIntervalMs) {
+    this.heartbeatIntervalMs = heartbeatIntervalMs;
   }
 }
