@@ -511,7 +511,7 @@
                         <exclude>software/wings/app/WingsModule.class</exclude>
                         <exclude>software/wings/app/WingsApplication.class</exclude>
                         <exclude>software/wings/app/MainConfiguration.class</exclude>
-                        <exclude>software/wings/utils/RsyslogAppender.class</exclude>
+                        <exclude>software/wings/utils/RsyslogAppenderFactory.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -724,7 +724,7 @@
                         <exclude>software/wings/app/WingsModule.class</exclude>
                         <exclude>software/wings/app/WingsApplication.class</exclude>
                         <exclude>software/wings/app/MainConfiguration.class</exclude>
-                        <exclude>software/wings/utils/RsyslogAppender.class</exclude>
+                        <exclude>software/wings/utils/RsyslogAppenderFactory.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>
