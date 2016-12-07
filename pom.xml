@@ -431,6 +431,12 @@
                 <version>1.10</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.papertrailapp</groupId>
+                <artifactId>logback-syslog4j</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
             <!-- Test Dependencies -->
             <dependency>
                 <groupId>io.dropwizard</groupId>

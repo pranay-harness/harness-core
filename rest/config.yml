@@ -23,6 +23,11 @@ logging:
     - type: console
       threshold: INFO
       target: stdout
+    - type: rsyslog-tcp-ssl
+      threshold: INFO
+      host: logs5.papertrailapp.com
+      port: 13747
+      programName: manager-saas
 
 mongo:
   host: localhost

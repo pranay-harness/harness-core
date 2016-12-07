@@ -310,6 +310,11 @@
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.papertrailapp</groupId>
+            <artifactId>logback-syslog4j</artifactId>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -396,10 +401,12 @@
             <groupId>com.shazam</groupId>
             <artifactId>shazamcrest</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>
