@@ -17,6 +17,7 @@ public class Delegate {
   private String ip;
   private String hostName;
   private long lastHeartBeat;
+  private String version;
 
   /**
    * Getter for property 'accountId'.
@@ -126,6 +127,24 @@ public class Delegate {
     this.uuid = uuid;
   }
 
+  /**
+   * Getter for property 'version'.
+   *
+   * @return Value for property 'version'.
+   */
+  public String getVersion() {
+    return version;
+  }
+
+  /**
+   * Setter for property 'version'.
+   *
+   * @param version Value to set for property 'version'.
+   */
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
   public enum Status { ENABLED, DISABLED, DISCONNECTED, UPGRADING }
 
   public static final class Builder {
@@ -135,6 +154,7 @@ public class Delegate {
     private String ip;
     private String hostName;
     private long lastHeartBeat;
+    private String version;
 
     private Builder() {}
 
@@ -172,6 +192,11 @@ public class Delegate {
       return this;
     }
 
+    public Builder withVersion(String version) {
+      this.version = version;
+      return this;
+    }
+
     public Builder but() {
       return aDelegate()
           .withUuid(uuid)
@@ -179,17 +204,19 @@ public class Delegate {
           .withStatus(status)
           .withIp(ip)
           .withHostName(hostName)
-          .withLastHeartBeat(lastHeartBeat);
+          .withLastHeartBeat(lastHeartBeat)
+          .withVersion(version);
     }
 
     public Delegate build() {
       Delegate delegate = new Delegate();
+      delegate.setUuid(uuid);
       delegate.setAccountId(accountId);
       delegate.setStatus(status);
       delegate.setIp(ip);
       delegate.setHostName(hostName);
       delegate.setLastHeartBeat(lastHeartBeat);
-      delegate.uuid = this.uuid;
+      delegate.setVersion(version);
       return delegate;
     }
   }

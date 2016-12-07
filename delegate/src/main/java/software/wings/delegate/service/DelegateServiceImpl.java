@@ -60,6 +60,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
 
+      logger.info("Delegate started.");
       while (true) {
         // Loop for tasks.
         Thread.sleep(1000);

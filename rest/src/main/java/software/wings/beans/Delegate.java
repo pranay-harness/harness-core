@@ -13,6 +13,7 @@ public class Delegate extends Base {
   private String ip;
   private String hostName;
   private long lastHeartBeat;
+  private String version;
 
   /**
    * Getter for property 'accountId'.
@@ -104,14 +105,33 @@ public class Delegate extends Base {
     this.lastHeartBeat = lastHeartBeat;
   }
 
+  /**
+   * Getter for property 'version'.
+   *
+   * @return Value for property 'version'.
+   */
+  public String getVersion() {
+    return version;
+  }
+
+  /**
+   * Setter for property 'version'.
+   *
+   * @param version Value to set for property 'version'.
+   */
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
   public enum Status { ENABLED, DISABLED, DISCONNECTED, UPGRADING }
 
   public static final class Builder {
-    Status status;
     private String accountId;
+    private Status status;
     private String ip;
     private String hostName;
     private long lastHeartBeat;
+    private String version;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -147,6 +167,11 @@ public class Delegate extends Base {
 
     public Builder withLastHeartBeat(long lastHeartBeat) {
       this.lastHeartBeat = lastHeartBeat;
+      return this;
+    }
+
+    public Builder withVersion(String version) {
+      this.version = version;
       return this;
     }
 
@@ -187,6 +212,7 @@ public class Delegate extends Base {
           .withIp(ip)
           .withHostName(hostName)
           .withLastHeartBeat(lastHeartBeat)
+          .withVersion(version)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -202,6 +228,7 @@ public class Delegate extends Base {
       delegate.setIp(ip);
       delegate.setHostName(hostName);
       delegate.setLastHeartBeat(lastHeartBeat);
+      delegate.setVersion(version);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);
       delegate.setCreatedBy(createdBy);
