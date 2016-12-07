@@ -9,8 +9,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
-import software.wings.beans.DelegateTask;
-import software.wings.beans.DelegateTaskResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -84,14 +82,15 @@ public class DelegateServiceImpl implements DelegateService {
       return update(delegate);
     }
   }
+  /*
+    public void sendTaskWaitNotify(DelegateTask task) {
+      wingsPersistence.save(task);
+    }
 
-  public void sendTaskWaitNotify(DelegateTask task) {
-    wingsPersistence.save(task);
-  }
-
-  public void processDelegateResponse(DelegateTaskResponse response) {
-    DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class, response.getAppId(), response.getTaskId());
-    String waitId = delegateTask.getWaitId();
-    waitNotifyEngine.notify(waitId, response.getResponse());
-  }
+    public void processDelegateResponse(DelegateTaskResponse response) {
+      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class, response.getAppId(), response.getTaskId());
+      String waitId = delegateTask.getWaitId();
+      waitNotifyEngine.notify(waitId, response.getResponse());
+    }
+  */
 }

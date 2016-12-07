@@ -62,4 +62,19 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.delete(ACCOUNT_ID, id);
     assertThat(wingsPersistence.list(Delegate.class)).hasSize(0);
   }
+
+  @Test
+  public void shouldRegister() throws Exception {
+    // String id = wingsPersistence.save(BUILDER.but().build());
+    Delegate delegate = delegateService.register(BUILDER.but().build());
+    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
+  }
+
+  @Test
+  public void shouldRegisterExistingDelegate() throws Exception {
+    // String id = wingsPersistence.save(BUILDER.but().build());
+    Delegate delegate = delegateService.add(BUILDER.but().build());
+    delegateService.register(delegate);
+    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
+  }
 }
