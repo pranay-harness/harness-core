@@ -7,6 +7,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
@@ -33,6 +34,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
@@ -41,7 +43,9 @@ import javax.ws.rs.core.Response;
  *
  * @author Rishi
  */
-
+@Api("configs")
+@Path("/configs")
+@Produces("application/json")
 public class ConfigResource {
   @Inject private ConfigService configService;
   @Inject private MainConfiguration configuration;
