@@ -18,6 +18,7 @@ import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactState;
+import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
@@ -74,14 +75,19 @@ public enum StateType implements StateTypeDescriptor {
   HTTP(HttpState.class, StencilCategory.VERIFICATIONS, 1, ORCHESTRATION_STENCILS),
 
   /**
+   * App dynamics state type.
+   */
+  APP_DYNAMICS(AppDynamicsState.class, StencilCategory.VERIFICATIONS, 2, ORCHESTRATION_STENCILS),
+
+  /**
    * Splunk state type.
    */
   SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS, 3, ORCHESTRATION_STENCILS),
 
   /**
-   * App dynamics state type.
+   * Cloud watch state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, StencilCategory.VERIFICATIONS, 2, ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, StencilCategory.VERIFICATIONS, 4, ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
