@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
-import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
@@ -65,7 +64,7 @@ public enum ErrorCodes {
   /**
    * Access denied error codes.
    */
-  ACCESS_DENIED("ACCESS_DENIED", FORBIDDEN),
+  ACCESS_DENIED("ACCESS_DENIED", Status.FORBIDDEN),
 
   /**
    * Invalid credential error codes.

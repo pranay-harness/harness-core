@@ -2,9 +2,11 @@ package software.wings.delegate.service;
 
 import static software.wings.beans.Delegate.Builder.aDelegate;
 
-import retrofit2.Call;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.managerclient.ManagerClient;
 
@@ -18,6 +20,8 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class DelegateServiceImpl implements DelegateService {
+  private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
+
   @Inject private DelegateConfiguration delegateConfiguration;
 
   @Inject private ManagerClient managerClient;
@@ -32,28 +36,29 @@ public class DelegateServiceImpl implements DelegateService {
       String accountId = delegateConfiguration.getAccountId();
       Delegate.Builder builder = aDelegate().withIp(ip).withAccountId(accountId).withHostName(hostName);
 
-      System.out.println("Register delegate...");
-      Delegate delegate =
+      logger.info("Registering delegate....");
+      RestResponse<Delegate> delegateResponse =
           managerClient
               .registerDelegate(accountId,
                   builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build())
               .execute()
               .body();
 
-      builder.withUuid(delegate.getUuid()).withStatus(delegate.getStatus());
+      builder.withUuid(delegateResponse.getResource().getUuid()).withStatus(delegateResponse.getResource().getStatus());
+      logger.info("Delegate registered with id " + delegateResponse.getResource().getUuid());
 
-      System.out.println("Start heartbeat...");
+      logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
       scheduledExecutorService.scheduleAtFixedRate(() -> {
-        System.out.println("sending heartbeat...");
+        logger.debug("sending heartbeat..");
         try {
-          Call<Delegate> call = managerClient.sendHeartbeat(
-              delegate.getUuid(), accountId, builder.but().withLastHeartBeat(System.currentTimeMillis()).build());
-          System.out.println(call);
-          System.out.println(call.execute().code());
+          managerClient
+              .sendHeartbeat(delegateResponse.getResource().getUuid(), accountId,
+                  builder.but().withLastHeartBeat(System.currentTimeMillis()).build())
+              .execute();
         } catch (IOException e) {
-          e.printStackTrace();
+          logger.error("Exception while sending heartbeat ", e);
         }
-      }, 0, delegateConfiguration.getHeartbeatInterval(), TimeUnit.MILLISECONDS);
+      }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
 
       while (true) {
         // Loop for tasks.
@@ -61,7 +66,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("Exception while starting/running delegate ", e);
     }
   }
 }

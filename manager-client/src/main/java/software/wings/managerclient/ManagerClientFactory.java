@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -57,7 +58,7 @@ private OkHttpClient getUnsafeOkHttpClient() {
     // Create an ssl socket factory with our all-trusting manager
     final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-    OkHttpClient okHttpClient = new OkHttpClient.Builder()
+    OkHttpClient okHttpClient = new Builder()
                                     .connectionPool(new ConnectionPool())
                                     .retryOnConnectionFailure(true)
                                     .addInterceptor(new DelegateAuthInterceptor(accountId, accountSecret))

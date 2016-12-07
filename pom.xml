@@ -17,6 +17,7 @@
         <module>manager-client</module>
         <module>serialization-utils</module>
         <module>delegate</module>
+        <module>rest-utils</module>
     </modules>
 
     <scm>
@@ -446,6 +447,12 @@
                 <groupId>com.papertrailapp</groupId>
                 <artifactId>logback-syslog4j</artifactId>
                 <version>1.0.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>2.0.1</version>
             </dependency>
 
             <!-- Test Dependencies -->
