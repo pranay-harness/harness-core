@@ -66,22 +66,10 @@ import org.mongodb.morphia.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.AppContainer;
-import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.Application;
-import software.wings.beans.Base;
-import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
+import software.wings.beans.*;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.RestResponse;
-import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.User;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -377,8 +365,8 @@ private void createGlobalSettings() {
                         .withName("Wings BambooService")
                         .withIsPluginSetting(true)
                         .withAccountId(accountId)
-                        .withValue(aJenkinsConfig()
-                                       .withJenkinsUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/")
+                        .withValue(BambooConfig.Builder.aBambooConfig()
+                                       .withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/")
                                        .withUsername("wingsbuild")
                                        .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
                                        .build())
