@@ -4,6 +4,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -46,4 +47,12 @@ public interface JenkinsBuildService {
    * @return the last successful build
    */
   BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig);
+
+  /**
+   * Gets plans.
+   *
+   * @param jenkinsConfig the jenkins config
+   * @return the plans
+   */
+  Map<String, String> getPlans(JenkinsConfig jenkinsConfig);
 }

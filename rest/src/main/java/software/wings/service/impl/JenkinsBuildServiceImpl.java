@@ -9,10 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.JenkinsConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -21,8 +21,10 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -113,5 +115,15 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (IOException ex) {
       throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Error in fetching build from jenkins server");
     }
+  }
+
+  @Override
+  public Map<String, String> getPlans(JenkinsConfig jenkinsConfig) {
+    Set<String> jobs = getJobs(jenkinsConfig);
+    Map<String, String> jobKeyMap = new HashMap<>();
+    if (jobs != null) {
+      jobs.forEach(jobKey -> jobKeyMap.put(jobKey, jobKey));
+    }
+    return jobKeyMap;
   }
 }

@@ -49,7 +49,7 @@ public class BuildSourceResource {
    */
   @GET
   @Path("plans")
-  public RestResponse<Map<String, String>> getBambooPlans(@QueryParam("settingId") String settingId) {
+  public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getPlans(settingId));
   }
 

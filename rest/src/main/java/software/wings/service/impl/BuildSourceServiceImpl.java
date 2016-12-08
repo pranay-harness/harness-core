@@ -4,10 +4,8 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.ErrorCodes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
@@ -44,11 +42,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public Map<String, String> getPlans(@NotEmpty String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    if (!(settingAttribute.getValue() instanceof BambooConfig)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
-          "Unsupported operation for setting type " + settingAttribute.getValue().getType());
-    }
-    return bambooBuildService.getPlans((BambooConfig) settingAttribute.getValue());
+    return (settingAttribute.getValue() instanceof BambooConfig)
+        ? bambooBuildService.getPlans((BambooConfig) settingAttribute.getValue())
+        : jenkinsBuildService.getPlans((JenkinsConfig) settingAttribute.getValue());
   }
 
   @Override
