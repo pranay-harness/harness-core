@@ -33,12 +33,12 @@ public interface BambooRestClient {
    * Last successful build call.
    *
    * @param authorization the authorization
-   * @param jobKey        the job key
+   * @param planKey       the plan key
    * @return the call
    */
-  @GET("result/{jobKey}.json?authType=basic&buildState=Successful&max-result=1&expand=results.result")
+  @GET("result/{planKey}/latest.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
   Call<JsonNode> lastSuccessfulBuildForJob(
-      @Header("Authorization") String authorization, @Path("jobKey") String jobKey);
+      @Header("Authorization") String authorization, @Path("planKey") String planKey);
 
   /**
    * List builds for job call.
@@ -56,11 +56,11 @@ public interface BambooRestClient {
    * Gets build artifacts.
    *
    * @param authorization the authorization
-   * @param jobKey        the job key
+   * @param planKey       the plan key
    * @param buildNo       the build no
    * @return the build artifacts
    */
-  @GET("result/{jobKey}/{buildNo}.json?authType=basic&expand=artifacts")
+  @GET("result/{planKey}-{buildNo}.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
   Call<JsonNode> getBuildArtifacts(
-      @Header("Authorization") String authorization, @Path("jobKey") String jobKey, @Path("buildNo") String buildNo);
+      @Header("Authorization") String authorization, @Path("planKey") String planKey, @Path("buildNo") String buildNo);
 }

@@ -65,19 +65,16 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String jobKey) {
+  public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String planKey) {
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig), jobKey);
+        getBambooClient(bambooConfig).lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig), planKey);
     try {
       Response<JsonNode> response = request.execute();
-      JsonNode jsonNode = response.body().at("/results/result");
-      if (jsonNode != null && jsonNode.elements().hasNext()) {
-        JsonNode nextNode = jsonNode.elements().next();
-        return aBuildDetails()
-            .withNumber(nextNode.get("buildNumber").asInt())
-            .withRevision(nextNode.get("vcsRevisionKey").asText())
-            .build();
-      }
+      JsonNode jsonNode = response.body();
+      return aBuildDetails()
+          .withNumber(jsonNode.get("buildNumber").asInt())
+          .withRevision(jsonNode.get("vcsRevisionKey").asText())
+          .build();
     } catch (Exception ex) {
       logger.error("BambooService job keys fetch failed with exception " + ex);
     }
@@ -141,16 +138,13 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public List<String> getArtifactPath(BambooConfig bambooConfig, String planKey) {
-    List<String> jobKeys = getJobKeys(bambooConfig, planKey);
     List<String> artifactPaths = new ArrayList<>();
-    jobKeys.forEach(jobKey -> {
-      BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, jobKey);
-      if (lastSuccessfulBuild != null) {
-        Map<String, String> buildArtifactsUrlMap =
-            getBuildArtifactsUrlMap(bambooConfig, jobKey, Integer.toString(lastSuccessfulBuild.getNumber()));
-        artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
-      }
-    });
+    BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, planKey);
+    if (lastSuccessfulBuild != null) {
+      Map<String, String> buildArtifactsUrlMap =
+          getBuildArtifactsUrlMap(bambooConfig, planKey, Integer.toString(lastSuccessfulBuild.getNumber()));
+      artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
+    }
     return artifactPaths;
   }
 
@@ -193,23 +187,34 @@ public class BambooServiceImpl implements BambooService {
    * Gets build artifacts url map.
    *
    * @param bambooConfig the bamboo config
-   * @param jobKey       the job key
+   * @param planKey      the job key
    * @param buildNumber  the build number
    * @return the build artifacts url map
    */
-  public Map<String, String> getBuildArtifactsUrlMap(BambooConfig bambooConfig, String jobKey, String buildNumber) {
+  public Map<String, String> getBuildArtifactsUrlMap(BambooConfig bambooConfig, String planKey, String buildNumber) {
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).getBuildArtifacts(getBasicAuthCredentials(bambooConfig), jobKey, buildNumber);
+        getBambooClient(bambooConfig).getBuildArtifacts(getBasicAuthCredentials(bambooConfig), planKey, buildNumber);
     Map<String, String> artifactPathMap = new HashMap<>();
     try {
+      // stages.stage.results.result.artifacts.artifact
       Response<JsonNode> response = request.execute();
-      JsonNode artifactsNode = response.body().at("/artifacts/artifact");
-      if (artifactsNode != null) {
-        artifactsNode.elements().forEachRemaining(artifactNode -> {
-          JsonNode hrefNode = artifactNode.at("/link/href");
-          JsonNode nameNode = artifactNode.get("name");
-          if (hrefNode != null) {
-            artifactPathMap.put(nameNode.asText(), hrefNode.textValue());
+      JsonNode stageNodes = response.body().at("/stages/stage");
+      if (stageNodes != null) {
+        stageNodes.elements().forEachRemaining(stageNode -> {
+          JsonNode resultNodes = stageNode.at("/results/result");
+          if (resultNodes != null) {
+            resultNodes.elements().forEachRemaining(resultNode -> {
+              JsonNode artifactNodes = resultNode.at("/artifacts/artifact");
+              if (artifactNodes != null) {
+                artifactNodes.elements().forEachRemaining(artifactNode -> {
+                  JsonNode hrefNode = artifactNode.at("/link/href");
+                  JsonNode nameNode = artifactNode.get("name");
+                  if (hrefNode != null) {
+                    artifactPathMap.put(nameNode.asText(), hrefNode.textValue());
+                  }
+                });
+              }
+            });
           }
         });
       }
