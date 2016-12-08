@@ -14,6 +14,7 @@ import software.wings.service.intfc.BambooBuildService;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 
@@ -37,7 +38,12 @@ public class BambooBuildServiceImpl implements BambooBuildService {
 
   @Override
   public Set<String> getJobs(BambooConfig bambooConfig) {
-    return new HashSet<>(bambooService.getJobKeys(bambooConfig));
+    return bambooService.getPlanKeys(bambooConfig).keySet();
+  }
+
+  @Override
+  public Map<String, String> getPlans(BambooConfig bambooConfig) {
+    return bambooService.getPlanKeys(bambooConfig);
   }
 
   @Override

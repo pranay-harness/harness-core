@@ -10,6 +10,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BuildSourceService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,6 +39,18 @@ public class BuildSourceResource {
   @Path("jobs")
   public RestResponse<Set<String>> getJobs(@QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getJobs(settingId));
+  }
+
+  /**
+   * Gets bamboo plans.
+   *
+   * @param settingId the setting id
+   * @return the bamboo plans
+   */
+  @GET
+  @Path("plans")
+  public RestResponse<Map<String, String>> getBambooPlans(@QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getPlans(settingId));
   }
 
   /**

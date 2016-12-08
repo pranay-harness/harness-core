@@ -25,9 +25,8 @@ public class CloudWatchState extends State {
    * Instantiates a new state.
    *
    * @param name      the name
-   * @param stateType the state type
    */
-  public CloudWatchState(String name, String stateType) {
+  public CloudWatchState(String name) {
     super(name, StateType.CLOUD_WATCH.name());
   }
 

@@ -40,7 +40,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetJobs() {
-    System.out.println(bambooService.getJobKeys(bambooConfig));
+    System.out.println(bambooService.getPlanKeys(bambooConfig));
   }
 
   @Test

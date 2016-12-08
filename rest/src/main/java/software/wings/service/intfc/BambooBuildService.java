@@ -4,6 +4,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,6 +28,14 @@ public interface BambooBuildService {
    * @return the jobs
    */
   Set<String> getJobs(BambooConfig bambooConfig);
+
+  /**
+   * Gets plans.
+   *
+   * @param bambooConfig the bamboo config
+   * @return the plans
+   */
+  Map<String, String> getPlans(BambooConfig bambooConfig);
 
   /**
    * Gets artifact paths.

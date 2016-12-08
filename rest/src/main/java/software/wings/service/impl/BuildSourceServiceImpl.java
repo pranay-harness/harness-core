@@ -2,9 +2,12 @@ package software.wings.service.impl;
 
 import static software.wings.utils.Validator.notNullCheck;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
@@ -12,6 +15,7 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -34,6 +38,17 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     return (settingAttribute.getValue() instanceof BambooConfig)
         ? bambooBuildService.getJobs((BambooConfig) settingAttribute.getValue())
         : jenkinsBuildService.getJobs((JenkinsConfig) settingAttribute.getValue());
+  }
+
+  @Override
+  public Map<String, String> getPlans(@NotEmpty String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    notNullCheck("Setting", settingAttribute);
+    if (!(settingAttribute.getValue() instanceof BambooConfig)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+          "Unsupported operation for setting type " + settingAttribute.getValue().getType());
+    }
+    return bambooBuildService.getPlans((BambooConfig) settingAttribute.getValue());
   }
 
   @Override

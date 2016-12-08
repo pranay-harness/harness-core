@@ -51,10 +51,10 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<String> getJobKeys(BambooConfig bambooConfig) {
+  public List<String> getJobKeys(BambooConfig bambooConfig, String planKey) {
     Call<JsonNode> request =
         getBambooClient(bambooConfig)
-            .listProjectsWithJobDetails(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()));
+            .listPlanWithJobDetails(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()), planKey);
     try {
       Response<JsonNode> response = request.execute();
       return extractJobKeyFromNestedProjectResponseJson(response);
@@ -67,12 +67,16 @@ public class BambooServiceImpl implements BambooService {
   @Override
   public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String jobKey) {
     Call<JsonNode> request =
-        getBambooClient(bambooConfig).lastSuccessfulBuild(getBasicAuthCredentials(bambooConfig), jobKey);
+        getBambooClient(bambooConfig).lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig), jobKey);
     try {
       Response<JsonNode> response = request.execute();
       JsonNode jsonNode = response.body().at("/results/result");
       if (jsonNode != null && jsonNode.elements().hasNext()) {
-        return aBuildDetails().withNumber(jsonNode.elements().next().get("buildNumber").asInt()).build();
+        JsonNode nextNode = jsonNode.elements().next();
+        return aBuildDetails()
+            .withNumber(nextNode.get("buildNumber").asInt())
+            .withRevision(nextNode.get("vcsRevisionKey").asText())
+            .build();
       }
     } catch (Exception ex) {
       logger.error("BambooService job keys fetch failed with exception " + ex);
@@ -80,22 +84,53 @@ public class BambooServiceImpl implements BambooService {
     return null;
   }
 
+  /**
+   * Gets basic auth credentials.
+   *
+   * @param bambooConfig the bamboo config
+   * @return the basic auth credentials
+   */
   public String getBasicAuthCredentials(BambooConfig bambooConfig) {
     return Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword());
   }
 
   @Override
-  public List<BuildDetails> getBuildsForJob(BambooConfig bambooConfig, String jobKey, int maxNumberOfBuilds) {
+  public Map<String, String> getPlanKeys(BambooConfig bambooConfig) {
+    Call<JsonNode> request =
+        getBambooClient(bambooConfig)
+            .listProjectPlans(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()));
+    Map<String, String> planNameMap = new HashMap<>();
+
+    try {
+      Response<JsonNode> response = request.execute();
+      JsonNode planJsonNode = response.body().at("/plans/plan");
+      planJsonNode.elements().forEachRemaining(jsonNode -> {
+        String planKey = jsonNode.get("key").asText();
+        String planName = jsonNode.get("shortName").asText();
+        planNameMap.put(planKey, planName);
+      });
+    } catch (Exception ex) {
+      logger.error("Job keys fetch failed with exception " + ex);
+    }
+    return planNameMap;
+  }
+
+  @Override
+  public List<BuildDetails> getBuildsForJob(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetailsList = new ArrayList<>();
 
     Call<JsonNode> request = getBambooClient(bambooConfig)
-                                 .listBuildsForJob(getBasicAuthCredentials(bambooConfig), jobKey, maxNumberOfBuilds);
+                                 .listBuildsForJob(getBasicAuthCredentials(bambooConfig), planKey, maxNumberOfBuilds);
     try {
       Response<JsonNode> response = request.execute();
       JsonNode resultNode = response.body().at("/results/result");
       if (resultNode != null) {
         resultNode.elements().forEachRemaining(jsonNode -> {
-          buildDetailsList.add(aBuildDetails().withNumber(jsonNode.get("buildNumber").asInt()).build());
+          JsonNode nextNode = jsonNode.elements().next();
+          buildDetailsList.add(aBuildDetails()
+                                   .withNumber(nextNode.get("buildNumber").asInt())
+                                   .withRevision(nextNode.get("vcsRevisionKey").asText())
+                                   .build());
         });
       }
     } catch (Exception ex) {
@@ -105,14 +140,18 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<String> getArtifactPath(BambooConfig bambooConfig, String jobKey) {
-    BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, jobKey);
-    if (lastSuccessfulBuild != null) {
-      Map<String, String> buildArtifactsUrlMap =
-          getBuildArtifactsUrlMap(bambooConfig, jobKey, Integer.toString(lastSuccessfulBuild.getNumber()));
-      return getArtifactRelativePaths(buildArtifactsUrlMap.values());
-    }
-    return Arrays.asList();
+  public List<String> getArtifactPath(BambooConfig bambooConfig, String planKey) {
+    List<String> jobKeys = getJobKeys(bambooConfig, planKey);
+    List<String> artifactPaths = new ArrayList<>();
+    jobKeys.forEach(jobKey -> {
+      BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, jobKey);
+      if (lastSuccessfulBuild != null) {
+        Map<String, String> buildArtifactsUrlMap =
+            getBuildArtifactsUrlMap(bambooConfig, jobKey, Integer.toString(lastSuccessfulBuild.getNumber()));
+        artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
+      }
+    });
+    return artifactPaths;
   }
 
   private List<String> getArtifactRelativePaths(Collection<String> paths) {
@@ -132,8 +171,8 @@ public class BambooServiceImpl implements BambooService {
 
   @Override
   public Pair<String, InputStream> downloadArtifact(
-      BambooConfig bambooConfig, String jobKey, String buildNumber, String artifactPathRegex) {
-    Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, jobKey, buildNumber);
+      BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex) {
+    Map<String, String> artifactPathMap = getBuildArtifactsUrlMap(bambooConfig, planKey, buildNumber);
     Pattern pattern = Pattern.compile(artifactPathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
     Entry<String, String> artifactPath =
         artifactPathMap.entrySet()
@@ -182,22 +221,12 @@ public class BambooServiceImpl implements BambooService {
 
   private List<String> extractJobKeyFromNestedProjectResponseJson(Response<JsonNode> response) {
     List<String> jobKeys = new ArrayList<>();
-    JsonNode projects = response.body().at("/projects/project");
-    if (projects != null) {
-      projects.elements().forEachRemaining(projectNode -> {
-        JsonNode projectPlans = projectNode.at("/plans/plan");
-        if (projectPlans != null) {
-          projectPlans.elements().forEachRemaining(projectPlan -> {
-            JsonNode planStages = projectPlan.at("/stages/stage");
-            if (planStages != null) {
-              planStages.elements().forEachRemaining(planStage -> {
-                JsonNode stagePlans = planStage.at("/plans/plan");
-                if (stagePlans != null) {
-                  stagePlans.elements().forEachRemaining(stagePlan -> { jobKeys.add(stagePlan.get("key").asText()); });
-                }
-              });
-            }
-          });
+    JsonNode planStages = response.body().at("/stages/stage");
+    if (planStages != null) {
+      planStages.elements().forEachRemaining(planStage -> {
+        JsonNode stagePlans = planStage.at("/plans/plan");
+        if (stagePlans != null) {
+          stagePlans.elements().forEachRemaining(stagePlan -> { jobKeys.add(stagePlan.get("key").asText()); });
         }
       });
     }

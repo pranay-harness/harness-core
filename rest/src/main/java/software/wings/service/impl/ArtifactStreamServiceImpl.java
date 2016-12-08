@@ -79,6 +79,7 @@ import javax.ws.rs.NotFoundException;
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   public static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   public static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
+  public static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
@@ -144,11 +145,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                         .usingJobData("appId", artifactStream.getAppId())
                         .build();
 
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(artifactStream.getUuid())
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(60 * 5).repeatForever())
-            .build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(artifactStream.getUuid())
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                            .withIntervalInSeconds(ARTIFACT_STREAM_POLL_INTERVAL)
+                                            .repeatForever())
+                          .build();
 
     jobScheduler.scheduleJob(job, trigger);
   }

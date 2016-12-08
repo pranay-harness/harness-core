@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -17,6 +18,14 @@ public interface BuildSourceService {
    * @return the jobs
    */
   Set<String> getJobs(@NotEmpty String settingId);
+
+  /**
+   * Gets plans.
+   *
+   * @param settingId the setting id
+   * @return the plans
+   */
+  Map<String, String> getPlans(@NotEmpty String settingId);
 
   /**
    * Gets artifact paths.

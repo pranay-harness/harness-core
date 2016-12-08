@@ -1,6 +1,5 @@
 package software.wings.service;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -9,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.junit.Before;
@@ -63,10 +63,11 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldGetJobs() {
-    when(bambooService.getJobKeys(bambooConfig)).thenReturn(asList("JOB1", "JOB2"));
+  public void shouldGetPlans() {
+    when(bambooService.getPlanKeys(bambooConfig))
+        .thenReturn(ImmutableMap.of("PlanAKey", "PlanAName", "PlanBKey", "PlanBName"));
     Set<String> jobs = bambooBuildService.getJobs(bambooConfig);
-    assertThat(jobs).hasSize(2).containsExactly("JOB1", "JOB2");
+    assertThat(jobs).hasSize(2).containsExactlyInAnyOrder("PlanAKey", "PlanBKey");
   }
 
   @Test

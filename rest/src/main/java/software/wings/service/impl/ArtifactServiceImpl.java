@@ -40,6 +40,7 @@ import software.wings.utils.validation.Update;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -243,6 +244,8 @@ public class ArtifactServiceImpl implements ArtifactService {
         .field("artifactStreamId")
         .equal(artifactStreamId)
         .order("-createdAt")
+        .field("status")
+        .hasAnyOf(Arrays.asList(Status.READY, Status.APPROVED))
         .get();
   }
 }

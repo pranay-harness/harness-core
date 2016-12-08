@@ -15,10 +15,19 @@ public interface BambooRestClient {
    * List projects with job details call.
    *
    * @param authorization the authorization
+   * @param planKey       the plan key
    * @return the call
    */
-  @GET("project.json?authType=basic&expand=projects.project.plans.plan.stages.stage.plans.plan")
-  Call<JsonNode> listProjectsWithJobDetails(@Header("Authorization") String authorization);
+  @GET("plan/{planKey}.json?authType=basic&expand=stages.stage.plans.plan")
+  Call<JsonNode> listPlanWithJobDetails(@Header("Authorization") String authorization, @Path("planKey") String planKey);
+
+  /**
+   * List project plans call.
+   *
+   * @param authorization the authorization
+   * @return the call
+   */
+  @GET("plan.json?authType=basic") Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization);
 
   /**
    * Last successful build call.
@@ -27,20 +36,21 @@ public interface BambooRestClient {
    * @param jobKey        the job key
    * @return the call
    */
-  @GET("result/{jobKey}.json?authType=basic&buildState=Successful&max-result=1")
-  Call<JsonNode> lastSuccessfulBuild(@Header("Authorization") String authorization, @Path("jobKey") String jobKey);
+  @GET("result/{jobKey}.json?authType=basic&buildState=Successful&max-result=1&expand=results.result")
+  Call<JsonNode> lastSuccessfulBuildForJob(
+      @Header("Authorization") String authorization, @Path("jobKey") String jobKey);
 
   /**
    * List builds for job call.
    *
    * @param authorization the authorization
-   * @param jobKey        the job key
+   * @param planKey       the plan key
    * @param maxResult     the max result
    * @return the call
    */
-  @GET("result/{jobKey}.json?authType=basic&buildState=Successful")
-  Call<JsonNode> listBuildsForJob(
-      @Header("Authorization") String authorization, @Path("jobKey") String jobKey, @Query("max-result") int maxResult);
+  @GET("result/{planKey}.json?authType=basic&buildState=Successful&expand=results.result")
+  Call<JsonNode> listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
+      @Query("max-result") int maxResult);
 
   /**
    * Gets build artifacts.
