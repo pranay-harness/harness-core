@@ -3,16 +3,20 @@ package software.wings.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.beans.Tag.TagType.ENVIRONMENT;
 import static software.wings.beans.Tag.TagType.TAGGED_HOST;
+import static software.wings.beans.Tag.TagType.UNTAGGED_HOST;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.infrastructure.Infrastructure.Builder.anInfrastructure;
@@ -43,6 +47,7 @@ import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -124,6 +129,49 @@ public class TagServiceTest extends WingsBaseTest {
     when(query.get()).thenReturn(tag);
     tagService.update(tag);
     verify(wingsPersistence).updateFields(Tag.class, TAG_ID, of("name", TAG_NAME, "description", "TAG_DESCRIPTION"));
+  }
+
+  /**
+   * Should throw exception non existent tag update.
+   */
+  @Test
+  public void shouldThrowExceptionNonExistentTagUpdate() {
+    assertThatThrownBy(() -> tagService.update(getTagBuilder().withUuid("NON_EXISTENT_TAG_ID").build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_ARGUMENT.name());
+  }
+
+  /**
+   * Should throw exception if system tag updated.
+   */
+  @Test
+  public void shouldThrowExceptionIfSystemTagUpdated() {
+    when(query.get()).thenReturn(getTagBuilder().withTagType(ENVIRONMENT).build());
+    assertThatThrownBy(() -> tagService.update(getTagBuilder().withUuid(TAG_ID).build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+  }
+
+  /**
+   * Should throw exception when parent tag is null for non environment type tag.
+   */
+  @Test
+  public void shouldThrowExceptionWhenParentTagIsNullForNonEnvironmentTypeTag() {
+    assertThatThrownBy(() -> tagService.save("NON_EXISTENT_TAG_ID", getTagBuilder().withTagType(TAGGED_HOST).build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_ARGUMENT.name());
+  }
+
+  /**
+   * Should throw exception if child tag added to untagged host type tag.
+   */
+  @Test
+  public void shouldThrowExceptionIfChildTagAddedToUntaggedHostTypeTag() {
+    when(wingsPersistence.get(Tag.class, APP_ID, "UNTAGGED_HOST_TAG_ID"))
+        .thenReturn(aTag().withTagType(UNTAGGED_HOST).build());
+    assertThatThrownBy(() -> tagService.save("UNTAGGED_HOST_TAG_ID", getTagBuilder().withTagType(TAGGED_HOST).build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
   }
 
   /**

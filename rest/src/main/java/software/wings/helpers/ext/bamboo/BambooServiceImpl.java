@@ -76,7 +76,7 @@ public class BambooServiceImpl implements BambooService {
           .withRevision(jsonNode.get("vcsRevisionKey").asText())
           .build();
     } catch (Exception ex) {
-      logger.error("BambooService job keys fetch failed with exception " + ex);
+      logger.error("BambooService job keys fetch failed with exception " + ex.getStackTrace());
     }
     return null;
   }
@@ -107,7 +107,7 @@ public class BambooServiceImpl implements BambooService {
         planNameMap.put(planKey, planName);
       });
     } catch (Exception ex) {
-      logger.error("Job keys fetch failed with exception " + ex);
+      logger.error("Job keys fetch failed with exception " + ex.getStackTrace());
     }
     return planNameMap;
   }
@@ -131,7 +131,7 @@ public class BambooServiceImpl implements BambooService {
         });
       }
     } catch (Exception ex) {
-      logger.error("BambooService job keys fetch failed with exception " + ex);
+      logger.error("BambooService job keys fetch failed with exception " + ex.getStackTrace());
     }
     return buildDetailsList;
   }
@@ -179,7 +179,7 @@ public class BambooServiceImpl implements BambooService {
     try {
       return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
     } catch (IOException ex) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact path " + ex);
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
     }
   }
 
