@@ -13,14 +13,17 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.SplunkStateExecutionData;
+import software.wings.beans.TaskType;
 import software.wings.beans.SettingAttribute;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -49,7 +52,7 @@ public class SplunkState extends HttpState {
   }
 
   @Override
-  protected ExecutionResponse executeInternal(ExecutionContext context) {
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     String evaluatedQuery = context.renderExpression(query);
     logger.info("evaluatedQuery: {}", evaluatedQuery);
 
@@ -75,11 +78,24 @@ public class SplunkState extends HttpState {
         + Base64.encodeBase64URLSafeString(
               (splunkConfig.getUsername() + ":" + splunkConfig.getPassword()).getBytes(StandardCharsets.UTF_8)));
 
-    ExecutionResponse executionResponse = super.executeInternal(context);
+    ExecutionResponse executionResponse = super.executeInternal(context, activityId);
+
+    executionResponse.setStateExecutionData(
+        aSplunkStateExecutionData().withQuery(evaluatedQuery).withAssertionStatement(getAssertion()).build());
+
+    return executionResponse;
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
 
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
+
+    SplunkStateExecutionData splunkStateExecutionData = (SplunkStateExecutionData) context.getStateExecutionData();
+
     executionResponse.setStateExecutionData(aSplunkStateExecutionData()
-                                                .withQuery(evaluatedQuery)
+                                                .withQuery(splunkStateExecutionData.getQuery())
                                                 .withAssertionStatement(getAssertion())
                                                 .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
                                                 .withResponse(httpStateExecutionData.getHttpResponseBody())
@@ -134,6 +150,11 @@ public class SplunkState extends HttpState {
   @Override
   public String getAssertion() {
     return super.getAssertion();
+  }
+
+  @Override
+  protected TaskType getTaskType() {
+    return TaskType.SPLUNK;
   }
 
   private String toPostBody(Map<String, String> params) throws UnsupportedEncodingException {

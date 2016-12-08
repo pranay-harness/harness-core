@@ -6,7 +6,7 @@ import software.wings.waitnotify.NotifyResponseData;
  * Created by peeyushaggarwal on 12/5/16.
  */
 public class DelegateTaskResponse {
-  private String appId;
+  private String accountId;
   private String taskId;
   private NotifyResponseData response;
 
@@ -47,20 +47,59 @@ public class DelegateTaskResponse {
   }
 
   /**
-   * Getter for property 'appId'.
+   * Getter for property 'accountId'.
    *
-   * @return Value for property 'appId'.
+   * @return Value for property 'accountId'.
    */
-  public String getAppId() {
-    return appId;
+  public String getAccountId() {
+    return accountId;
   }
 
   /**
-   * Setter for property 'appId'.
+   * Setter for property 'accountId'.
    *
-   * @param appId Value to set for property 'appId'.
+   * @param accountId Value to set for property 'accountId'.
    */
-  public void setAppId(String appId) {
-    this.appId = appId;
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
+  public static final class Builder {
+    private String accountId;
+    private String taskId;
+    private NotifyResponseData response;
+
+    private Builder() {}
+
+    public static Builder aDelegateTaskResponse() {
+      return new Builder();
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withTaskId(String taskId) {
+      this.taskId = taskId;
+      return this;
+    }
+
+    public Builder withResponse(NotifyResponseData response) {
+      this.response = response;
+      return this;
+    }
+
+    public Builder but() {
+      return aDelegateTaskResponse().withAccountId(accountId).withTaskId(taskId).withResponse(response);
+    }
+
+    public DelegateTaskResponse build() {
+      DelegateTaskResponse delegateTaskResponse = new DelegateTaskResponse();
+      delegateTaskResponse.setAccountId(accountId);
+      delegateTaskResponse.setTaskId(taskId);
+      delegateTaskResponse.setResponse(response);
+      return delegateTaskResponse;
+    }
   }
 }

@@ -140,8 +140,6 @@ public class DelegateTask extends Base {
         .toString();
   }
 
-  public enum TaskType { HTTP, SPLUNK, APP_DYNAMICS }
-
   public static final class Builder {
     private TaskType taskType;
     private Object[] parameters;

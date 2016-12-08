@@ -69,7 +69,7 @@ public class AuditServiceTest extends WingsBaseTest {
   //    byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
   //    String fileId = auditService.create(header, RequestType.REQUEST, httpBody );
   //
-  //    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+  //    AuditHeader header2 = auditService.read(header.getAccountId(), header.getUuid());
   //    assertThat(header2).isNotNull();
   //    assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
   //    assertThat(header2.getRequestPayloadUuid()).isNotNull();

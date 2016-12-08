@@ -9,12 +9,15 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -23,6 +26,7 @@ import javax.inject.Inject;
 public class DelegateServiceImpl implements DelegateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private ExecutorService executorService;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -82,15 +86,30 @@ public class DelegateServiceImpl implements DelegateService {
       return update(delegate);
     }
   }
-  /*
-    public void sendTaskWaitNotify(DelegateTask task) {
-      wingsPersistence.save(task);
-    }
 
-    public void processDelegateResponse(DelegateTaskResponse response) {
-      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class, response.getAppId(), response.getTaskId());
-      String waitId = delegateTask.getWaitId();
-      waitNotifyEngine.notify(waitId, response.getResponse());
-    }
-  */
+  @Override
+  public void sendTaskWaitNotify(DelegateTask task) {
+    wingsPersistence.save(task);
+  }
+
+  @Override
+  public PageResponse<DelegateTask> getDelegateTasks(String delegateId) {
+    return wingsPersistence.query(DelegateTask.class, new PageRequest<>());
+  }
+
+  @Override
+  public void processDelegateResponse(DelegateTaskResponse response) {
+    DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
+        aPageRequest()
+            .addFilter("accountId", EQ, response.getAccountId())
+            .addFilter(ID_KEY, EQ, response.getTaskId())
+            .build());
+    String waitId = delegateTask.getWaitId();
+    waitNotifyEngine.notify(waitId, response.getResponse());
+    wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
+                                .field("accountId")
+                                .equal(response.getAccountId())
+                                .field(ID_KEY)
+                                .equal(response.getTaskId()));
+  }
 }

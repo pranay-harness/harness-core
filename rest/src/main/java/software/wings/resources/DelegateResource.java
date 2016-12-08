@@ -1,8 +1,12 @@
 package software.wings.resources;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -35,7 +39,10 @@ public class DelegateResource {
   }
 
   @GET
-  public RestResponse<PageResponse<Delegate>> list(@BeanParam PageRequest<Delegate> pageRequest) {
+  @ApiImplicitParams(
+      { @ApiImplicitParam(name = "accountId", required = true, dataType = "string", paramType = "query") })
+  public RestResponse<PageResponse<Delegate>>
+  list(@BeanParam PageRequest<Delegate> pageRequest) {
     return new RestResponse<>(delegateService.list(pageRequest));
   }
 
@@ -76,5 +83,21 @@ public class DelegateResource {
   public RestResponse<Delegate> add(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
     return new RestResponse<>(delegateService.add(delegate));
+  }
+
+  @PublicApi
+  @GET
+  @Path("{delegateId}/tasks")
+  public RestResponse<PageResponse<DelegateTask>> getTasks(
+      @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getDelegateTasks(delegateId));
+  }
+
+  @PublicApi
+  @POST
+  @Path("{delegateId}/tasks/{taskId}")
+  public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
+    delegateService.processDelegateResponse(delegateTaskResponse);
   }
 }

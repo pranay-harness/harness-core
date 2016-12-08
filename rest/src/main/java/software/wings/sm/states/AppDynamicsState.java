@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.TaskType;
 import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AppDynamicsSettingProvider;
@@ -18,10 +19,12 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -50,7 +53,7 @@ public class AppDynamicsState extends HttpState {
   }
 
   @Override
-  protected ExecutionResponse executeInternal(ExecutionContext context) {
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     AppDynamicsConfig appdConfig =
         (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
 
@@ -69,21 +72,42 @@ public class AppDynamicsState extends HttpState {
               String.format("%s@%s:%s", appdConfig.getUsername(), appdConfig.getAccountname(), appdConfig.getPassword())
                   .getBytes(StandardCharsets.UTF_8)));
 
-    ExecutionResponse executionResponse = super.executeInternal(context);
+    ExecutionResponse executionResponse = super.executeInternal(context, activityId);
 
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
     logger.info("Metric Data: {}", httpStateExecutionData.getHttpResponseBody());
+
+    executionResponse.setStateExecutionData(AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
+                                                .withAssertionStatement(getAssertion())
+                                                .withAppIdentifier(evaluatedAppName)
+                                                .withMetricPath(evaluatedMetricPath)
+                                                .build());
+
+    return executionResponse;
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
+
+    HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
+
+    AppDynamicsExecutionData appDynamicsExecutionData = (AppDynamicsExecutionData) context.getStateExecutionData();
 
     executionResponse.setStateExecutionData(AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
                                                 .withHttpResponseCode(httpStateExecutionData.getHttpResponseCode())
                                                 .withAssertionStatement(getAssertion())
                                                 .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
                                                 .withResponse(httpStateExecutionData.getHttpResponseBody())
-                                                .withAppIdentifier(evaluatedAppName)
-                                                .withMetricPath(evaluatedMetricPath)
+                                                .withAppIdentifier(appDynamicsExecutionData.getAppIdentifier())
+                                                .withMetricPath(appDynamicsExecutionData.getMetricPath())
                                                 .build());
 
     return executionResponse;
+  }
+
+  protected TaskType getTaskType() {
+    return TaskType.APP_DYNAMICS;
   }
 
   private String urlEncodeString(String queryString) {

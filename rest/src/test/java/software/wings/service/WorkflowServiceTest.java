@@ -296,7 +296,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   //  private Pipeline createPipelineNoGraph() {
   //    Pipeline pipeline = new Pipeline();
-  //    pipeline.setAppId(appId);
+  //    pipeline.setAccountId(appId);
   //    pipeline.setName("pipeline1");
   //    pipeline.setDescription("Sample Pipeline");
   //

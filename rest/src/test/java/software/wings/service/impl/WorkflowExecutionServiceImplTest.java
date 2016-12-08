@@ -1409,8 +1409,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
   //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-  //    workflowExecutionService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
-  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    workflowExecutionService.incrementInProgressCount(workflowExecution.getAccountId(), workflowExecution.getUuid(),
+  //    1); workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
   //  }
 
@@ -1424,7 +1424,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
   //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-  //    workflowExecutionService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+  //    workflowExecutionService.incrementSuccess(workflowExecution.getAccountId(), workflowExecution.getUuid(), 1);
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);
   //  }

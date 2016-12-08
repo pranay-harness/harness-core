@@ -1,9 +1,10 @@
 package software.wings.sm.states;
 
-import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
@@ -11,22 +12,6 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +21,9 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.TaskType;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -44,13 +31,12 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Http state which makes a call to http service.
@@ -72,6 +58,10 @@ public class HttpState extends State {
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
   @SchemaIgnore private int socketTimeoutMillis = 10000;
+  @Inject private DelegateService delegateService;
+
+  @Inject private ExecutorService executorService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Inject @Transient private transient ActivityService activityService;
 
@@ -90,9 +80,7 @@ public class HttpState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    ExecutionResponse response = executeInternal(context);
-    updateActivityStatus(
-        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), response.getExecutionStatus());
+    ExecutionResponse response = executeInternal(context, activityId);
     return response;
   }
 
@@ -235,8 +223,7 @@ public class HttpState extends State {
    * @param context the context
    * @return the execution response
    */
-  protected ExecutionResponse executeInternal(ExecutionContext context) {
-    String errorMessage = null;
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     String evaluatedUrl = context.renderExpression(url);
     logger.info("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = body;
@@ -251,107 +238,67 @@ public class HttpState extends State {
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
 
+    String finalEvaluatedBody = evaluatedBody;
+    String finalEvaluatedHeader = evaluatedHeader;
+
+    delegateService.sendTaskWaitNotify(
+        aDelegateTask()
+            .withTaskType(getTaskType())
+            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(new Object[] {method, evaluatedUrl, evaluatedBody, evaluatedHeader, socketTimeoutMillis})
+            .build());
+
     HttpStateExecutionData.Builder executionDataBuilder =
-        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(method).withAssertionStatement(assertion);
+        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(method);
 
-    SSLContextBuilder builder = new SSLContextBuilder();
-    try {
-      builder.loadTrustMaterial((x509Certificates, s) -> true);
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    } catch (KeyStoreException e) {
-      e.printStackTrace();
-    }
-    SSLConnectionSocketFactory sslsf = null;
-    try {
-      sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    } catch (KeyManagementException e) {
-      e.printStackTrace();
-    }
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(activityId))
+        .withStateExecutionData(executionDataBuilder.build())
+        .build();
+  }
 
-    RequestConfig.Builder requestBuilder = RequestConfig.custom();
-    requestBuilder = requestBuilder.setConnectTimeout(2000);
-    requestBuilder = requestBuilder.setSocketTimeout(socketTimeoutMillis);
+  protected TaskType getTaskType() {
+    return TaskType.HTTP;
+  }
 
-    CloseableHttpClient httpclient =
-        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    HttpStateExecutionData executionData = (HttpStateExecutionData) response.values().iterator().next();
+    String errorMessage = executionData.getErrorMsg();
+    executionData.setAssertionStatement(assertion);
 
-    HttpUriRequest httpUriRequest = null;
-
-    switch (toUpperCase(method)) {
-      case "GET": {
-        httpUriRequest = new HttpGet(evaluatedUrl);
-        break;
-      }
-      case "POST": {
-        HttpPost post = new HttpPost(evaluatedUrl);
-        if (evaluatedBody != null) {
-          post.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
-        }
-        httpUriRequest = post;
-        break;
-      }
-      case "PUT": {
-        HttpPut put = new HttpPut(evaluatedUrl);
-        if (evaluatedBody != null) {
-          put.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
-        }
-        httpUriRequest = put;
-        break;
-      }
-      case "DELETE": {
-        httpUriRequest = new HttpDelete(evaluatedUrl);
-        break;
-      }
-      case "HEAD": {
-        httpUriRequest = new HttpHead(evaluatedUrl);
-        break;
-      }
-    }
-
-    if (evaluatedHeader != null) {
-      for (String header : HEADERS_SPLITTER.split(evaluatedHeader)) {
-        List<String> headerPair = HEADER_SPLITTER.splitToList(header);
-
-        if (headerPair.size() == 2) {
-          httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
-        }
-      }
-    }
-
-    try {
-      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      executionDataBuilder.withHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
-      HttpEntity entity = httpResponse.getEntity();
-      executionDataBuilder.withHttpResponseBody(
-          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
-    } catch (IOException e) {
-      logger.error("Exception: ", e);
-      errorMessage = getMessage(e);
-      executionDataBuilder.withHttpResponseCode(500).withHttpResponseBody(getMessage(e));
-    }
-
-    HttpStateExecutionData executionData = executionDataBuilder.build();
     boolean status = false;
     try {
       status = (boolean) context.evaluateExpression(assertion, executionData);
       logger.info("assertion status: {}", status);
     } catch (Exception e) {
       errorMessage = getMessage(e);
+      executionData.setErrorMsg(errorMessage);
       logger.error("Error in httpStateAssertion", e);
       status = false;
     }
 
     ExecutionStatus executionStatus = status ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
-    ExecutionResponse response = new ExecutionResponse();
-    response.setExecutionStatus(executionStatus);
+    ExecutionResponse executionResponse = new ExecutionResponse();
+    executionResponse.setExecutionStatus(executionStatus);
 
     executionData.setAssertionStatus(executionStatus.name());
-    response.setStateExecutionData(executionData);
-    response.setErrorMessage(errorMessage);
-    return response;
+    executionResponse.setStateExecutionData(executionData);
+    executionResponse.setErrorMessage(errorMessage);
+
+    String activityId = null;
+
+    for (String key : response.keySet()) {
+      activityId = key;
+    }
+
+    updateActivityStatus(
+        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
+
+    return executionResponse;
   }
 
   /**

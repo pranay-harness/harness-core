@@ -14,7 +14,6 @@
         <module>rest</module>
         <module>tools</module>
         <module>api</module>
-        <module>manager-client</module>
         <module>serialization-utils</module>
         <module>delegate</module>
         <module>rest-utils</module>

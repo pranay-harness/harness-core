@@ -16,6 +16,7 @@ import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.XmlUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.Map;
@@ -26,7 +27,7 @@ import javax.xml.parsers.ParserConfigurationException;
  *
  * @author Rishi
  */
-public class HttpStateExecutionData extends StateExecutionData {
+public class HttpStateExecutionData extends StateExecutionData implements NotifyResponseData {
   private String httpUrl;
   private String httpMethod;
   private int httpResponseCode;
@@ -237,6 +238,7 @@ public class HttpStateExecutionData extends StateExecutionData {
     private Long startTs;
     private Long endTs;
     private ExecutionStatus status;
+    private String errorMsg;
     private String httpUrl;
     private String httpMethod;
     private int httpResponseCode;
@@ -246,136 +248,72 @@ public class HttpStateExecutionData extends StateExecutionData {
 
     private Builder() {}
 
-    /**
-     * A http state execution data builder.
-     *
-     * @return the builder
-     */
     public static Builder aHttpStateExecutionData() {
       return new Builder();
     }
 
-    /**
-     * With state name builder.
-     *
-     * @param stateName the state name
-     * @return the builder
-     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
-    /**
-     * With start ts builder.
-     *
-     * @param startTs the start ts
-     * @return the builder
-     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    /**
-     * With end ts builder.
-     *
-     * @param endTs the end ts
-     * @return the builder
-     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
-    /**
-     * With http url builder.
-     *
-     * @param httpUrl the http url
-     * @return the builder
-     */
+    public Builder withErrorMsg(String errorMsg) {
+      this.errorMsg = errorMsg;
+      return this;
+    }
+
     public Builder withHttpUrl(String httpUrl) {
       this.httpUrl = httpUrl;
       return this;
     }
 
-    /**
-     * With http method builder.
-     *
-     * @param httpMethod the http method
-     * @return the builder
-     */
     public Builder withHttpMethod(String httpMethod) {
       this.httpMethod = httpMethod;
       return this;
     }
 
-    /**
-     * With http response code builder.
-     *
-     * @param httpResponseCode the http response code
-     * @return the builder
-     */
     public Builder withHttpResponseCode(int httpResponseCode) {
       this.httpResponseCode = httpResponseCode;
       return this;
     }
 
-    /**
-     * With http response body builder.
-     *
-     * @param httpResponseBody the http response body
-     * @return the builder
-     */
     public Builder withHttpResponseBody(String httpResponseBody) {
       this.httpResponseBody = httpResponseBody;
       return this;
     }
 
-    /**
-     * With assertion statement builder.
-     *
-     * @param assertionStatement the assertion statement
-     * @return the builder
-     */
     public Builder withAssertionStatement(String assertionStatement) {
       this.assertionStatement = assertionStatement;
       return this;
     }
 
-    /**
-     * With assertion status builder.
-     *
-     * @param assertionStatus the assertion status
-     * @return the builder
-     */
     public Builder withAssertionStatus(String assertionStatus) {
       this.assertionStatus = assertionStatus;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aHttpStateExecutionData()
           .withStateName(stateName)
           .withStartTs(startTs)
           .withEndTs(endTs)
           .withStatus(status)
+          .withErrorMsg(errorMsg)
           .withHttpUrl(httpUrl)
           .withHttpMethod(httpMethod)
           .withHttpResponseCode(httpResponseCode)
@@ -384,17 +322,13 @@ public class HttpStateExecutionData extends StateExecutionData {
           .withAssertionStatus(assertionStatus);
     }
 
-    /**
-     * Build http state execution data.
-     *
-     * @return the http state execution data
-     */
     public HttpStateExecutionData build() {
       HttpStateExecutionData httpStateExecutionData = new HttpStateExecutionData();
       httpStateExecutionData.setStateName(stateName);
       httpStateExecutionData.setStartTs(startTs);
       httpStateExecutionData.setEndTs(endTs);
       httpStateExecutionData.setStatus(status);
+      httpStateExecutionData.setErrorMsg(errorMsg);
       httpStateExecutionData.setHttpUrl(httpUrl);
       httpStateExecutionData.setHttpMethod(httpMethod);
       httpStateExecutionData.setHttpResponseCode(httpResponseCode);

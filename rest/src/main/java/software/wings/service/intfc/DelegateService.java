@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -14,4 +16,10 @@ public interface DelegateService {
   Delegate add(Delegate delegate);
   void delete(String accountId, String delegateId);
   Delegate register(Delegate delegate);
+
+  void sendTaskWaitNotify(DelegateTask task);
+
+  PageResponse<DelegateTask> getDelegateTasks(String delegateId);
+
+  void processDelegateResponse(DelegateTaskResponse response);
 }

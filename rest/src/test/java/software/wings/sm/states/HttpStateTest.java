@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -31,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;
 
 import com.github.tomakehurst.wiremock.http.Fault;
@@ -43,16 +45,18 @@ import software.wings.WingsBaseTest;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.HttpState;
 
 import javax.inject.Inject;
 
@@ -91,6 +95,10 @@ public class HttpStateTest extends WingsBaseTest {
   @Mock private WorkflowStandardParams workflowStandardParams;
   @Mock private ActivityService activityService;
   @Inject private Injector injector;
+  @Mock private DelegateService delegateService;
+
+  private ExecutionResponse asyncExecutionResponse;
+
   private ExecutionContextImpl context;
 
   /**
@@ -132,9 +140,12 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withBody("<health><status>Enabled</status></health>")
                                              .withHeader("Content-Type", "text/xml")));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
+    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
+
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -174,8 +185,11 @@ public class HttpStateTest extends WingsBaseTest {
                     .build())
             .withUuid(SERVICE_INSTANCE_ID)
             .build());
-    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
+    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
@@ -213,9 +227,11 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withBody("<health><status>Enabled</status></health>")
                                              .withHeader("Content-Type", "text/xml")));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
+    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData()).isNotNull().isInstanceOf(HttpStateExecutionData.class);
     response.getStateExecutionData().setStatus(ExecutionStatus.SUCCESS);
     assertThat(response.getStateExecutionData().getExecutionSummary()).isNotNull();
@@ -239,8 +255,11 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "text/xml")
                                              .withFixedDelay(2000)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but().withSocketTimeoutMillis(1000)).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    ExecutionResponse response =
+        getHttpState(httpStateBuilder.but().withSocketTimeoutMillis(1000), context).execute(context);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -266,8 +285,10 @@ public class HttpStateTest extends WingsBaseTest {
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -293,8 +314,10 @@ public class HttpStateTest extends WingsBaseTest {
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -319,8 +342,10 @@ public class HttpStateTest extends WingsBaseTest {
                              .withHeader("Accept", equalTo("*/*"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 
-    ExecutionResponse response = getHttpState(httpStateBuilder.but()).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+    ExecutionResponse response = getHttpState(httpStateBuilder.but(), context).execute(context);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -343,8 +368,11 @@ public class HttpStateTest extends WingsBaseTest {
     context.pushContextElement(aHostElement().withHostName("www.google.com").build());
 
     ExecutionResponse response =
-        getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status")).execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
+        getHttpState(httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status"), context)
+            .execute(context);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(true);
+
+    response = asyncExecutionResponse;
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -360,9 +388,23 @@ public class HttpStateTest extends WingsBaseTest {
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
-  private HttpState getHttpState(HttpState.Builder builder) {
+  private HttpState getHttpState(HttpState.Builder builder, ExecutionContext context) {
     HttpState httpState = builder.build();
     on(httpState).set("activityService", activityService);
+    on(httpState).set("delegateService", delegateService);
+
+    doAnswer(invocation -> {
+      DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
+      task.getTaskType()
+          .getDelegateRunnableTask(task.getWaitId(), task.getParameters(),
+              o
+              -> asyncExecutionResponse = httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o)))
+          .run();
+      return null;
+    })
+        .when(delegateService)
+        .sendTaskWaitNotify(any(DelegateTask.class));
+
     return httpState;
   }
 }
