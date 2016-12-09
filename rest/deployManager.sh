@@ -1,4 +1,6 @@
-killall java; /home/ubuntu/waitForJavaShutdown.sh
+pkill -f "capsure.jar config.yml"
+/home/ubuntu/waitForJavaShutdown.sh "capsule.jar config.yml"
+
 mkdir -p $HOME/backup; cp $HOME/rest-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/rest-0.0.1-SNAPSHOT-capsule-$(date +%F-%H:%M).jar
 mkdir -p $HOME/backup; cp $HOME/config.yml $HOME/backup/config-$(date +%F-%H:%M).yml
 mkdir -p $HOME/backup; cp $HOME/portal.log $HOME/backup/portal-$(date +%F-%H:%M).log

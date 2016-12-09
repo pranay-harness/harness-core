@@ -46,5 +46,180 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>sg.enixsoft</groupId>
+                <artifactId>capsule-maven-plugin</artifactId>
+                <version>1.3.0</version>
+                <configuration>
+                    <appClass>software.wings.delegate.app.DelegateApplication</appClass>
+                    <type>fat</type>
+                    <manifest>
+                        <entry>
+                            <key>Boot-Class-Path-P</key>
+                            <value>alpn-boot-${alpnboot.version}.jar</value>
+                        </entry>
+                        <entry>
+                            <key>Min-Java-Version</key>
+                            <value>1.8.0</value>
+                        </entry>
+                        <entry>
+                            <key>Min-Update-Version</key>
+                            <value>8=91</value>
+                        </entry>
+                        <entry>
+                            <key>Java-Agents</key>
+                            <value>newrelic-agent-${newrelic.version}.jar</value>
+                        </entry>
+                        <entry>
+                            <key>Environment-Variables</key>
+                            <value>NEW_RELIC_LICENSE_KEY=b121ea34124754a7952717207b122be017f2ae76</value>
+                        </entry>
+                        <entry>
+                            <key>Args</key>
+                            <value>$*</value>
+                        </entry>
+                    </manifest>
+                    <fileSets>
+                        <fileSet>
+                            <directory>${project.basedir}</directory>
+                            <includes>newrelic.yml</includes>
+                        </fileSet>
+                    </fileSets>
+                    <execPluginConfig>root</execPluginConfig>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <inherited>false</inherited>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target name="deploy" description="deploy to a server via ssh">
+
+                                <echo message="Create staging directory..."/>
+                                <sshexec trust="true" failonerror="false"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="mkdir -p $HOME/staging"
+                                         timeout="120000"/>
+
+                                <echo message="copy jar"/>
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="target/delegate-0.0.1-SNAPSHOT-capsule.jar"
+                                     todir="${deployUsername}@${deployHost}:/home/ubuntu/staging/"/>
+
+                                <echo message="copy config.yml"/>
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="config-delegate.yml"
+                                     todir="${deployUsername}@${deployHost}:/home/ubuntu/staging/"/>
+
+                                <echo message="copy deployment script"/>
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="deployDelegate.sh"
+                                     todir="${deployUsername}@${deployHost}:"/>
+
+                                <echo message="run deploy"/>
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="chmod +x $HOME/deployDelegate.sh; $HOME/deployDelegate.sh ${accountId} ${accountSecret} ${managerHost} '${app.name}'"
+                                         timeout="120000"/>
+
+                                <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
+                                    <classpath refid="maven.plugin.classpath"/>
+                                </taskdef>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-commons-net</artifactId>
+                        <version>1.6.5</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-jsch</artifactId>
+                        <version>1.9.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>deploy-int</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>int</value>
+                </property>
+            </activation>
+            <properties>
+                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
+                <deployUsername>ubuntu</deployUsername>
+                <accountId>kmpySmUISimoRrJL6NL73w</accountId>
+                <accountSecret>2f6b0988b6fb3370073c3d0505baee59</accountSecret>
+                <checkstyle.skip>true</checkstyle.skip>
+                <skipTests>true</skipTests>
+                <jacoco.skip>true</jacoco.skip>
+                <findbugs.skip>true</findbugs.skip>
+                <embedmongo.skip>true</embedmongo.skip>
+                <managerHost>wingsci-api.wings.software</managerHost>
+                <app.name>CI Delegate</app.name>
+            </properties>
+        </profile>
+        <profile>
+            <id>deploy-demo</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>demo</value>
+                </property>
+            </activation>
+            <properties>
+                <deployHost>ec2-52-45-103-102.compute-1.amazonaws.com</deployHost>
+                <deployUsername>ubuntu</deployUsername>
+                <accountId>kmpySmUISimoRrJL6NL73w</accountId>
+                <accountSecret>2f6b0988b6fb3370073c3d0505baee59</accountSecret>
+                <checkstyle.skip>true</checkstyle.skip>
+                <skipTests>true</skipTests>
+                <jacoco.skip>true</jacoco.skip>
+                <findbugs.skip>true</findbugs.skip>
+                <embedmongo.skip>true</embedmongo.skip>
+                <managerHost>demo-api.wings.software</managerHost>
+                <app.name>Demo Delegate</app.name>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
