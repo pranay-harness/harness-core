@@ -53,7 +53,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetBuilds() {
-    System.out.println(bambooService.getBuildsForJob(bambooConfig, "TOD-TOD-JOB1", 50));
+    System.out.println(bambooService.getBuilds(bambooConfig, "TOD-TOD-JOB1", 50));
   }
 
   @Test

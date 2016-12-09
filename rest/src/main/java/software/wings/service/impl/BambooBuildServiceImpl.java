@@ -32,8 +32,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
     equalCheck(artifactStream.getSourceType(), SourceType.BAMBOO);
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);
-    return bambooService.getBuildsForJob(
-        bambooConfig, bambooArtifactStream.getJobname(), 50); // read 50 from some config
+    return bambooService.getBuilds(bambooConfig, bambooArtifactStream.getJobname(), 50); // read 50 from some config
   }
 
   @Override

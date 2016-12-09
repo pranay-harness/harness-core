@@ -45,7 +45,7 @@ public interface BambooService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds for job
    */
-  List<BuildDetails> getBuildsForJob(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds);
+  List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds);
 
   /**
    * Gets artifact path.

@@ -77,7 +77,7 @@ public class JenkinsImpl implements Jenkins {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.helpers.ext.jenkins.Jenkins#getBuildsForJob(java.lang.String, int)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#getBuilds(java.lang.String, int)
    */
   @Override
   public List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException {

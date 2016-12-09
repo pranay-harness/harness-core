@@ -113,7 +113,7 @@ public class BambooServiceImpl implements BambooService {
   }
 
   @Override
-  public List<BuildDetails> getBuildsForJob(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds) {
+  public List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetailsList = new ArrayList<>();
 
     Call<JsonNode> request = getBambooClient(bambooConfig)
