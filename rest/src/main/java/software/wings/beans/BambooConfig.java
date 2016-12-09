@@ -15,7 +15,7 @@ import java.util.Objects;
  */
 @JsonTypeName("BAMBOO")
 public class BambooConfig extends SettingValue {
-  @Attributes(title = "BambooService Url") @URL private String bambooUrl;
+  @Attributes(title = "Bamboo Url") @URL private String bambooUrl;
   @Attributes(title = "Username") @NotEmpty private String username;
   @Attributes(title = "Password") @NotEmpty private String password;
 
