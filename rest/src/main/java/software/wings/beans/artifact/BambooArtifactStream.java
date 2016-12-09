@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -18,6 +19,11 @@ public class BambooArtifactStream extends ArtifactStream {
    */
   public BambooArtifactStream() {
     super(SourceType.BAMBOO);
+  }
+
+  @Override
+  public String getArtifactDisplayName(int buildNo) {
+    return String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
   }
 
   /**

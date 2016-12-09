@@ -1,14 +1,11 @@
 package software.wings.beans;
 
-import com.google.common.collect.Sets;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by anubhaw on 4/13/16.
@@ -40,6 +37,11 @@ public class FileUrlSource extends ArtifactStream {
    */
   public void setUrl(String url) {
     this.url = url;
+  }
+
+  @Override
+  public String getArtifactDisplayName(int buildNo) {
+    return null;
   }
 
   /**

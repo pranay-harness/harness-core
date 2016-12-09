@@ -14,7 +14,6 @@ import software.wings.beans.Base;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -58,6 +57,11 @@ public abstract class ArtifactStream extends Base {
     this.sourceType = sourceType;
   }
 
+  /**
+   * Gets service ids.
+   *
+   * @return the service ids
+   */
   public Set<String> getServiceIds() {
     return artifactPathServices.stream()
         .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
@@ -70,78 +74,166 @@ public abstract class ArtifactStream extends Base {
    * @param buildNo the build no
    * @return the artifact display name
    */
-  public String getArtifactDisplayName(int buildNo) {
-    return String.format("%s_%s_%s", jobname, buildNo, dateFormat.format(new Date()));
-  }
+  public abstract String getArtifactDisplayName(int buildNo);
 
+  /**
+   * Gets source name.
+   *
+   * @return the source name
+   */
   public String getSourceName() {
     return sourceName;
   }
 
+  /**
+   * Sets source name.
+   *
+   * @param sourceName the source name
+   */
   public void setSourceName(String sourceName) {
     this.sourceName = sourceName;
   }
 
+  /**
+   * Gets source type.
+   *
+   * @return the source type
+   */
   public SourceType getSourceType() {
     return sourceType;
   }
 
+  /**
+   * Gets setting id.
+   *
+   * @return the setting id
+   */
   public String getSettingId() {
     return settingId;
   }
 
+  /**
+   * Sets setting id.
+   *
+   * @param settingId the setting id
+   */
   public void setSettingId(String settingId) {
     this.settingId = settingId;
   }
 
+  /**
+   * Gets jobname.
+   *
+   * @return the jobname
+   */
   public String getJobname() {
     return jobname;
   }
 
+  /**
+   * Sets jobname.
+   *
+   * @param jobname the jobname
+   */
   public void setJobname(String jobname) {
     this.jobname = jobname;
   }
 
+  /**
+   * Gets artifact path services.
+   *
+   * @return the artifact path services
+   */
   public List<ArtifactPathServiceEntry> getArtifactPathServices() {
     return artifactPathServices;
   }
 
+  /**
+   * Sets artifact path services.
+   *
+   * @param artifactPathServices the artifact path services
+   */
   public void setArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
     this.artifactPathServices = artifactPathServices;
   }
 
+  /**
+   * Is auto download boolean.
+   *
+   * @return the boolean
+   */
   public boolean isAutoDownload() {
     return autoDownload;
   }
 
+  /**
+   * Sets auto download.
+   *
+   * @param autoDownload the auto download
+   */
   public void setAutoDownload(boolean autoDownload) {
     this.autoDownload = autoDownload;
   }
 
+  /**
+   * Is auto approve for production boolean.
+   *
+   * @return the boolean
+   */
   public boolean isAutoApproveForProduction() {
     return autoApproveForProduction;
   }
 
+  /**
+   * Sets auto approve for production.
+   *
+   * @param autoApproveForProduction the auto approve for production
+   */
   public void setAutoApproveForProduction(boolean autoApproveForProduction) {
     this.autoApproveForProduction = autoApproveForProduction;
   }
 
+  /**
+   * Gets stream actions.
+   *
+   * @return the stream actions
+   */
   public List<ArtifactStreamAction> getStreamActions() {
     return streamActions;
   }
 
+  /**
+   * Sets stream actions.
+   *
+   * @param streamActions the stream actions
+   */
   public void setStreamActions(List<ArtifactStreamAction> streamActions) {
     this.streamActions = streamActions;
   }
 
+  /**
+   * Gets last artifact.
+   *
+   * @return the last artifact
+   */
   public Artifact getLastArtifact() {
     return lastArtifact;
   }
 
+  /**
+   * Sets last artifact.
+   *
+   * @param lastArtifact the last artifact
+   */
   public void setLastArtifact(Artifact lastArtifact) {
     this.lastArtifact = lastArtifact;
   }
 
+  /**
+   * Gets date format.
+   *
+   * @return the date format
+   */
   public static DateFormat getDateFormat() {
     return dateFormat;
   }

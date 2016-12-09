@@ -1,14 +1,11 @@
 package software.wings.beans;
 
-import com.google.common.collect.Sets;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * The Class FileUploadSource.
@@ -20,6 +17,11 @@ public class FileUploadSource extends ArtifactStream {
    */
   public FileUploadSource() {
     super(SourceType.FILE_UPLOAD);
+  }
+
+  @Override
+  public String getArtifactDisplayName(int buildNo) {
+    return null;
   }
 
   /**

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -18,6 +19,16 @@ public class JenkinsArtifactStream extends ArtifactStream {
    */
   public JenkinsArtifactStream() {
     super(SourceType.JENKINS);
+  }
+
+  /**
+   * Gets artifact display name.
+   *
+   * @param buildNo the build no
+   * @return the artifact display name
+   */
+  public String getArtifactDisplayName(int buildNo) {
+    return String.format("%s_%s_%s", getJobname(), buildNo, dateFormat.format(new Date()));
   }
 
   /**
