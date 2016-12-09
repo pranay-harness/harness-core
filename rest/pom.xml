@@ -585,97 +585,47 @@
                         </goals>
                         <configuration>
                             <target name="deploy" description="deploy to a server via ssh">
-                                <echo message="Kill running java process..."/>
+
+                                <echo message="Create staging directory..."/>
                                 <sshexec trust="true" failonerror="false"
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="killall java; /home/ubuntu/waitForJavaShutdown.sh"
+                                         command="mkdir -p $HOME/staging"
                                          timeout="120000"/>
-                                <echo message="backup jar file"/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/rest-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/rest-0.0.1-SNAPSHOT-capsule-$(date +%F-%H:%M).jar"
-                                         timeout="120000"/>
-                                <echo message="backup config file"/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/config.yml $HOME/backup/config-$(date +%F-%H:%M).yml"
-                                         timeout="120000"/>
-                                <echo message="backup logs"/>
-                                <sshexec trust="true" failonerror="false"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="mkdir -p $HOME/backup; cp $HOME/portal.log $HOME/backup/portal-$(date +%F-%H:%M).log"
-                                         timeout="120000"/>
+
                                 <echo message="copy jar"/>
                                 <scp trust="true" failonerror="true" verbose="off" sftp="true"
                                      host="${deployHost}"
                                      username="${deployUsername}"
                                      keyfile="${user.home}/.ssh/id_${deployHost}"
                                      file="target/rest-0.0.1-SNAPSHOT-capsule.jar"
-                                     todir="${deployUsername}@${deployHost}:"/>
+                                     todir="${deployUsername}@${deployHost}:/home/ubuntu/staging/"/>
+
                                 <echo message="copy config.yml"/>
                                 <scp trust="true" failonerror="true" verbose="off" sftp="true"
                                      host="${deployHost}"
                                      username="${deployUsername}"
                                      keyfile="${user.home}/.ssh/id_${deployHost}"
                                      file="config.yml"
+                                     todir="${deployUsername}@${deployHost}:/home/ubuntu/staging/"/>
+
+                                <echo message="copy deployment script"/>
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="deployManager.sh"
                                      todir="${deployUsername}@${deployHost}:"/>
-                                <echo message="configure port"/>
+
+                                <echo message="run deploy"/>
                                 <sshexec trust="true" failonerror="true"
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/port: 9090/port: 3456/' config.yml"
+                                         command="chmod +x $HOME/deployManager.sh; $HOME/deployManager.sh ${portalHost} '${app.name}'"
                                          timeout="120000"/>
-                                <echo message="configure keystore path"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/keyStorePath: keystore.jks/keyStorePath: \/home\/ubuntu\/keystore.jks/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure keystorePassword"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/keyStorePassword: password/keyStorePassword: W!ngs@123/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure certAlias"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/certAlias: selfsigned/certAlias: java/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="configure cordDomain"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/url: https:\/\/localhost:8000/url: https:\/\/${portalHost}/' config.yml"
-                                         timeout="120000"/>
-                                <echo message="start server"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="NEW_RELIC_APP_NAME='${app.name}' nohup java -Dfile.encoding=UTF-8 -jar $HOME/rest-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
-                                         timeout="120000"/>
-                                <echo message="cleanup files"/>
-                                <sshexec trust="true" failonerror="true"
-                                         host="${deployHost}"
-                                         username="${deployUsername}"
-                                         keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="cd $HOME/backup; ls -tQ *.yml| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.jar| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.log| tail -n+4 | xargs --no-run-if-empty rm"
-                                         timeout="120000"/>
+
                                 <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
                                     <classpath refid="maven.plugin.classpath"/>
                                 </taskdef>
