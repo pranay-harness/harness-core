@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.Objects;
+
 /**
  * Created by peeyushaggarwal on 12/5/16.
  */
@@ -62,6 +64,24 @@ public class DelegateTaskResponse {
    */
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(accountId, taskId, response);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final DelegateTaskResponse other = (DelegateTaskResponse) obj;
+    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.taskId, other.taskId)
+        && Objects.equals(this.response, other.response);
   }
 
   public static final class Builder {

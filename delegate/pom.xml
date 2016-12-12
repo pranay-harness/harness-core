@@ -69,24 +69,10 @@
                             <value>8=91</value>
                         </entry>
                         <entry>
-                            <key>Java-Agents</key>
-                            <value>newrelic-agent-${newrelic.version}.jar</value>
-                        </entry>
-                        <entry>
-                            <key>Environment-Variables</key>
-                            <value>NEW_RELIC_LICENSE_KEY=b121ea34124754a7952717207b122be017f2ae76</value>
-                        </entry>
-                        <entry>
                             <key>Args</key>
                             <value>$*</value>
                         </entry>
                     </manifest>
-                    <fileSets>
-                        <fileSet>
-                            <directory>${project.basedir}</directory>
-                            <includes>newrelic.yml</includes>
-                        </fileSet>
-                    </fileSets>
                     <execPluginConfig>root</execPluginConfig>
                 </configuration>
                 <executions>

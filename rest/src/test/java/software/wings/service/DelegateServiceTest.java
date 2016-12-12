@@ -2,6 +2,8 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
@@ -10,6 +12,11 @@ import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anEx
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import com.google.common.io.CharStreams;
+
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,10 +27,14 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import javax.inject.Inject;
 
 /**
@@ -37,6 +48,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withStatus(Status.ENABLED)
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
+  @Mock private AccountService accountService;
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -76,14 +88,12 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldRegister() throws Exception {
-    // String id = wingsPersistence.save(BUILDER.but().build());
     Delegate delegate = delegateService.register(BUILDER.but().build());
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
   }
 
   @Test
   public void shouldRegisterExistingDelegate() throws Exception {
-    // String id = wingsPersistence.save(BUILDER.but().build());
     Delegate delegate = delegateService.add(BUILDER.but().build());
     delegateService.register(delegate);
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
@@ -91,7 +101,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSaveDelegateTask() throws Exception {
-    // String id = wingsPersistence.save(BUILDER.but().build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -105,7 +114,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetDelegateTasks() throws Exception {
-    // String id = wingsPersistence.save(BUILDER.but().build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -119,7 +127,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProcessDelegateTaskResponse() throws Exception {
-    // String id = wingsPersistence.save(BUILDER.but().build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -137,5 +144,24 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateService.getDelegateTasks(UUIDGenerator.getUuid())).isEmpty();
     verify(waitNotifyEngine)
         .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+  }
+
+  @Test
+  public void shouldDownloadDelegate() throws Exception {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
+    try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
+      assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo("wings-delegate/");
+      ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file)
+          .extracting(ZipArchiveEntry::getName, ZipArchiveEntry::getUnixMode)
+          .containsExactly("wings-delegate/run.sh", 0);
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(zipArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateRun.sh"))));
+    }
   }
 }
