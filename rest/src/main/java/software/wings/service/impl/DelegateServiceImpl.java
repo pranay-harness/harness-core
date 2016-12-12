@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -22,9 +23,11 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.Event.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -53,6 +56,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private ExecutorService executorService;
   @Inject private AccountService accountService;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private EventEmitter eventEmitter;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -77,13 +81,18 @@ public class DelegateServiceImpl implements DelegateService {
                                 .field(ID_KEY)
                                 .equal(delegate.getUuid()),
         updateOperations);
+    eventEmitter.send(Channel.DELEGATES,
+        anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
     return get(delegate.getAccountId(), delegate.getUuid());
   }
 
   @Override
   public Delegate add(Delegate delegate) {
     delegate.setAppId(GLOBAL_APP_ID);
-    return wingsPersistence.saveAndGet(Delegate.class, delegate);
+    Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
+    eventEmitter.send(Channel.DELEGATES,
+        anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+    return delegate;
   }
 
   @Override

@@ -7,6 +7,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
+import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -24,9 +25,12 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.Event.Type;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionStatus;
@@ -49,6 +53,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
+  @Mock private EventEmitter eventEmitter;
+
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -71,12 +77,18 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setStatus(Status.DISABLED);
     delegateService.update(delegate);
     assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    verify(eventEmitter)
+        .send(Channel.DELEGATES,
+            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
   }
 
   @Test
   public void shouldAdd() throws Exception {
     Delegate delegate = delegateService.add(BUILDER.but().build());
     assertThat(wingsPersistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    verify(eventEmitter)
+        .send(Channel.DELEGATES,
+            anEvent().withOrgId(ACCOUNT_ID).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
   }
 
   @Test
