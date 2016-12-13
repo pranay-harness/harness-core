@@ -40,7 +40,7 @@ public class CloudWatchNamespaceDataProvider implements DataProvider {
       AmazonCloudWatchClient cloudWatchClient = new AmazonCloudWatchClient(awsCredentials);
       ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics();
       Map<String, String> namespaceMap = listMetricsResult.getMetrics().stream().collect(
-          Collectors.toMap(Metric::getMetricName, Metric::getNamespace, (key1, key2) -> key1));
+          Collectors.toMap(Metric::getNamespace, Metric::getNamespace, (key1, key2) -> key1));
       return namespaceMap;
     }
     return new HashMap<>();

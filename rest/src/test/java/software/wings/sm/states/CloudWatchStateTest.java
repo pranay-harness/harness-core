@@ -125,8 +125,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
     getMetricRequest.setPeriod(10 * 60);
     getMetricRequest.setStatistics(
         asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name()));
+    getMetricRequest.setExtendedStatistics(asList());
     List<Dimension> dimensions = new ArrayList<>();
-    //    dimensions.add(new Dimension().withName("InstanceId").withValue("i-ba17cb25"));
     getMetricRequest.setDimensions(dimensions);
 
     GetMetricStatisticsResult metricStatistics = cloudWatchClient.getMetricStatistics(getMetricRequest);

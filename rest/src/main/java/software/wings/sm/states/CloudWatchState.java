@@ -48,7 +48,9 @@ import software.wings.stencils.EnumData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -108,8 +110,8 @@ public class CloudWatchState extends State {
     getMetricRequest.setMetricName(metricName);
     List<String> statistics =
         new ArrayList<>(asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name()));
-    if (!Strings.isNullOrEmpty(percentile) && percentile.startsWith("p")) {
-      statistics.add(percentile);
+    if (!Strings.isNullOrEmpty(percentile)) {
+      getMetricRequest.setExtendedStatistics(asList(percentile));
     }
     getMetricRequest.setStatistics(statistics);
     getMetricRequest.setDimensions(dimensions);
@@ -137,7 +139,7 @@ public class CloudWatchState extends State {
     boolean status;
     String errorMsg = null;
     try {
-      status = (boolean) context.evaluateExpression(assertion, datapoint);
+      status = (boolean) context.evaluateExpression(assertion, prepareStateExecutionData(datapoint));
       logger.info("assertion status: {}", status);
     } catch (Exception e) {
       errorMsg = getMessage(e);
@@ -156,6 +158,19 @@ public class CloudWatchState extends State {
         .withStateExecutionData(stateExecutionData)
         .withErrorMessage(errorMsg)
         .build();
+  }
+
+  private Map<String, Object> prepareStateExecutionData(Datapoint datapoint) {
+    Map<String, Object> stateExecutionData = new HashMap<>();
+    if (datapoint.getExtendedStatistics() != null) {
+      stateExecutionData.putAll(datapoint.getExtendedStatistics());
+    }
+    stateExecutionData.put("sampleCount", datapoint.getSampleCount());
+    stateExecutionData.put("average", datapoint.getAverage());
+    stateExecutionData.put("sum", datapoint.getSum());
+    stateExecutionData.put("minimum", datapoint.getMinimum());
+    stateExecutionData.put("maximum", datapoint.getMaximum());
+    return stateExecutionData;
   }
 
   @SchemaIgnore
