@@ -37,7 +37,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
@@ -157,7 +156,7 @@ public class DelegateServiceImpl implements DelegateService {
     out.putArchiveEntry(new ZipArchiveEntry("wings-delegate/"));
     out.closeArchiveEntry();
     Account account = accountService.get(accountId);
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run), StandardCharsets.UTF_8)) {
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
       cfg.getTemplate("run.sh.ftl")
           .process(ImmutableMap.of("delegateDownloadLocation", "", "accountId", accountId, "accountSecret",
                        account.getAccountKey(), "managerHostAndPort", managerHost),
@@ -173,6 +172,7 @@ public class DelegateServiceImpl implements DelegateService {
     out.flush();
     out.closeArchiveEntry();
     out.close();
+    System.out.println(delegateFile.getAbsolutePath());
     return delegateFile;
   }
 }

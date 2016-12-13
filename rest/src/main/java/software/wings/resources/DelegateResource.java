@@ -101,12 +101,12 @@ public class DelegateResource {
 
   @GET
   @Path("download")
-  @Produces("application/zip")
+  @Produces("application/zip; charset=binary")
   public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId)
       throws IOException, TemplateException {
     File delegateFile = delegateService.download(request.getServerName() + ":" + request.getServerPort(), accountId);
     return Response.ok(delegateFile)
-        .encoding("zip")
+        .header("Content-Transfer-Encoding", "binary")
         .header("Content-Disposition", "attachment; filename=delegate.zip")
         .build();
   }
