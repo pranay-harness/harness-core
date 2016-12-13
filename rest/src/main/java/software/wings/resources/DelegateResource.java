@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import com.google.common.collect.ImmutableMap;
+
 import freemarker.template.TemplateException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -13,9 +15,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DownloadTokenService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
@@ -38,10 +42,12 @@ import javax.ws.rs.core.Response;
 @Produces("application/json")
 public class DelegateResource {
   private DelegateService delegateService;
+  private DownloadTokenService downloadTokenService;
 
   @Inject
-  public DelegateResource(DelegateService delegateService) {
+  public DelegateResource(DelegateService delegateService, DownloadTokenService downloadTokenService) {
     this.delegateService = delegateService;
+    this.downloadTokenService = downloadTokenService;
   }
 
   @GET
@@ -100,13 +106,26 @@ public class DelegateResource {
   }
 
   @GET
-  @Path("download")
-  @Produces("application/zip; charset=binary")
-  public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId)
+  @Path("downloadUrl")
+  public RestResponse<Map<String, String>> downloadUrl(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") String token)
       throws IOException, TemplateException {
+    return new RestResponse<>(ImmutableMap.of("downloadUrl",
+        request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+            + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
+            + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId)));
+  }
+
+  @PublicApi
+  @GET
+  @Path("download")
+  public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
+    downloadTokenService.validateDownloadToken("delegate." + accountId, token);
     File delegateFile = delegateService.download(request.getServerName() + ":" + request.getServerPort(), accountId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
+        .type("application/zip; charset=binary")
         .header("Content-Disposition", "attachment; filename=delegate.zip")
         .build();
   }
