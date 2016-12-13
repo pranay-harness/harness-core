@@ -1,4 +1,4 @@
-pkill -f "capsure.jar config.yml"
+pkill -f "capsule.jar config.yml"
 /home/ubuntu/waitForJavaShutdown.sh "capsule.jar config.yml"
 
 mkdir -p $HOME/backup; cp $HOME/rest-0.0.1-SNAPSHOT-capsule.jar $HOME/backup/rest-0.0.1-SNAPSHOT-capsule-$(date +%F-%H:%M).jar
