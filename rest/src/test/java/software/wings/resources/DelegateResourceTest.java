@@ -165,7 +165,7 @@ public class DelegateResourceTest {
   public void shouldReturnDelegateTasks() {
     DelegateTask task = aDelegateTask().build();
 
-    when(DELEGATE_SERVICE.getDelegateTasks(ID_KEY))
+    when(DELEGATE_SERVICE.getDelegateTasks(ACCOUNT_ID, ID_KEY))
         .thenReturn(aPageResponse().withTotal(1).withResponse(Lists.newArrayList(task)).build());
     RestResponse<PageResponse<DelegateTask>> restResponse =
         RESOURCES.client()
@@ -173,7 +173,7 @@ public class DelegateResourceTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<DelegateTask>>>() {});
 
-    verify(DELEGATE_SERVICE).getDelegateTasks(ID_KEY);
+    verify(DELEGATE_SERVICE).getDelegateTasks(ACCOUNT_ID, ID_KEY);
     assertThat(restResponse.getResource()).hasSize(1).containsExactly(task);
   }
 }

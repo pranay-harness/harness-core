@@ -96,7 +96,7 @@ public class DelegateResource {
   @Path("{delegateId}/tasks")
   public RestResponse<PageResponse<DelegateTask>> getTasks(
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.getDelegateTasks(delegateId));
+    return new RestResponse<>(delegateService.getDelegateTasks(accountId, delegateId));
   }
 
   @GET
