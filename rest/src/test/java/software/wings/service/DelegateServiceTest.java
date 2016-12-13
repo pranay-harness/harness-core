@@ -15,9 +15,12 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.io.CharStreams;
 
+import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -40,6 +43,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -172,9 +176,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo("wings-delegate/");
       ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly("wings-delegate/run.sh");
+      System.out.println(ToStringBuilder.reflectionToString(file.getExtraFields(true)));
       assertThat(file)
-          .extracting(ZipArchiveEntry::getName, ZipArchiveEntry::getUnixMode)
-          .containsExactly("wings-delegate/run.sh", 0);
+          .extracting(ZipArchiveEntry::getExtraFields)
+          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
+          .extracting(o -> ((AsiExtraField) o).getMode())
+          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
+
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(zipArchiveInputStream, buffer);
       assertThat(new String(buffer))
