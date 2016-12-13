@@ -162,14 +162,16 @@ public class CloudWatchState extends State {
 
   private Map<String, Object> prepareStateExecutionData(Datapoint datapoint) {
     Map<String, Object> stateExecutionData = new HashMap<>();
-    if (datapoint.getExtendedStatistics() != null) {
-      stateExecutionData.putAll(datapoint.getExtendedStatistics());
+    if (datapoint != null) {
+      if (datapoint.getExtendedStatistics() != null) {
+        stateExecutionData.putAll(datapoint.getExtendedStatistics());
+      }
+      stateExecutionData.put("sampleCount", datapoint.getSampleCount());
+      stateExecutionData.put("average", datapoint.getAverage());
+      stateExecutionData.put("sum", datapoint.getSum());
+      stateExecutionData.put("minimum", datapoint.getMinimum());
+      stateExecutionData.put("maximum", datapoint.getMaximum());
     }
-    stateExecutionData.put("sampleCount", datapoint.getSampleCount());
-    stateExecutionData.put("average", datapoint.getAverage());
-    stateExecutionData.put("sum", datapoint.getSum());
-    stateExecutionData.put("minimum", datapoint.getMinimum());
-    stateExecutionData.put("maximum", datapoint.getMaximum());
     return stateExecutionData;
   }
 

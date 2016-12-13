@@ -89,7 +89,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     cloudWatchState.setAssertion("ASSERTION");
     cloudWatchState.setNamespace("AWS/EC2");
     cloudWatchState.setMetricName("CPUUtilization");
-    cloudWatchState.setPercentile("p90.90");
+    cloudWatchState.setPercentile("p90");
 
     cloudWatchState.execute(context);
 
@@ -100,7 +100,8 @@ public class CloudWatchStateTest extends WingsBaseTest {
     assertThat(getMetricStatisticsRequest.getMetricName()).isEqualTo("CPUUtilization");
     assertThat(getMetricStatisticsRequest.getStatistics())
         .containsExactlyElementsOf(
-            asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name(), "p90.90"));
+            asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name()));
+    assertThat(getMetricStatisticsRequest.getExtendedStatistics()).containsExactly("p90");
   }
 
   @Test
