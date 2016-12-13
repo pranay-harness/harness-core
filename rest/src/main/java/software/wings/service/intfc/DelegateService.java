@@ -19,7 +19,7 @@ public interface DelegateService {
 
   void sendTaskWaitNotify(DelegateTask task);
 
-  PageResponse<DelegateTask> getDelegateTasks(String delegateId);
+  PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId);
 
   void processDelegateResponse(DelegateTaskResponse response);
 }

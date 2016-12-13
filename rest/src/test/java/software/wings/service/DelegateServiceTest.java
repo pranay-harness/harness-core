@@ -114,7 +114,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withParameters(new Object[] {})
                                     .build();
     wingsPersistence.save(delegateTask);
-    assertThat(delegateService.getDelegateTasks(UUIDGenerator.getUuid())).hasSize(1).containsExactly(delegateTask);
+    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid()))
+        .hasSize(1)
+        .containsExactly(delegateTask);
   }
 
   @Test
@@ -134,7 +136,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .withTaskId(delegateTask.getUuid())
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(delegateService.getDelegateTasks(UUIDGenerator.getUuid())).isEmpty();
+    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid())).isEmpty();
     verify(waitNotifyEngine)
         .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
   }
