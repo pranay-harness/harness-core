@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableMap;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
@@ -164,12 +165,16 @@ public class DelegateServiceImpl implements DelegateService {
     }
     run = new File(run.getAbsolutePath());
     ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, "wings-delegate/run.sh");
-    runZipArchiveEntry.setUnixMode(755);
+
+    runZipArchiveEntry.setUnixMode(0755);
+    AsiExtraField permissions = new AsiExtraField();
+    permissions.setMode(0755);
+    runZipArchiveEntry.addExtraField(permissions);
+
     out.putArchiveEntry(runZipArchiveEntry);
     try (FileInputStream fis = new FileInputStream(run)) {
       IOUtils.copy(fis, out);
     }
-    out.flush();
     out.closeArchiveEntry();
     out.close();
     System.out.println(delegateFile.getAbsolutePath());
