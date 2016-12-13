@@ -105,7 +105,7 @@ public class EnvState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().toArray()[0];
+    EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
     pipelineService.refreshPipelineExecutionAsync(
         ((ExecutionContextImpl) context).getApp().getUuid(), responseData.getWorkflowExecutionId());
     return anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();

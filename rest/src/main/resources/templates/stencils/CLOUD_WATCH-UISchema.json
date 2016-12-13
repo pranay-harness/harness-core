@@ -1,0 +1,6 @@
+{
+  "ui:order": ["awsCredentialsConfigId", "namespace", "metricName", "percentile", "dimensions", "timeDuration", "assertion"],
+  "dimensions": {
+    "classNames": "__2Col"
+  }
+}
