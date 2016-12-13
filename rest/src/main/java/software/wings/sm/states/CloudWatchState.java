@@ -19,7 +19,7 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.lang3.StringUtils;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +30,11 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -91,29 +91,27 @@ public class CloudWatchState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
 
-    AwsInfrastructureProviderConfig awsInfrastructureProviderConfig =
-        (AwsInfrastructureProviderConfig) settingsService
-            .getSettingAttributesByType(GLOBAL_APP_ID, SettingVariableTypes.AWS_CREDENTIALS.name())
-            .stream()
-            .filter(settingAttribute -> StringUtils.equals(settingAttribute.getUuid(), awsCredentialsConfigId))
-            .findFirst()
-            .map(settingAttribute -> settingAttribute.getValue())
-            .orElse(null);
-
-    if (awsInfrastructureProviderConfig == null) {
-      throw new StateExecutionException("AWS_CREDENTIALS setting not found");
+    SettingAttribute settingAttribute = settingsService.get(GLOBAL_APP_ID, awsCredentialsConfigId);
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsInfrastructureProviderConfig)) {
+      throw new StateExecutionException("AWS account setting not found");
     }
+    AwsInfrastructureProviderConfig awsInfrastructureProviderConfig =
+        (AwsInfrastructureProviderConfig) settingAttribute.getValue();
 
     BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
         awsInfrastructureProviderConfig.getAccessKey(), awsInfrastructureProviderConfig.getSecretKey());
-    AmazonCloudWatchClient cloudWatchClient = new AmazonCloudWatchClient(awsCredentials);
+    AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(awsCredentials);
 
     GetMetricStatisticsRequest getMetricRequest = new GetMetricStatisticsRequest();
 
     getMetricRequest.setNamespace(namespace);
     getMetricRequest.setMetricName(metricName);
-    getMetricRequest.setStatistics(
-        asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name()));
+    List<String> statistics =
+        new ArrayList<>(asList(SampleCount.name(), Average.name(), Sum.name(), Minimum.name(), Maximum.name()));
+    if (!Strings.isNullOrEmpty(percentile) && percentile.startsWith("p")) {
+      statistics.add(percentile);
+    }
+    getMetricRequest.setStatistics(statistics);
     getMetricRequest.setDimensions(dimensions);
     getMetricRequest.setPeriod(DEFAULT_AGGREGATION_PERIOD);
 
@@ -158,6 +156,11 @@ public class CloudWatchState extends State {
         .withStateExecutionData(stateExecutionData)
         .withErrorMessage(errorMsg)
         .build();
+  }
+
+  @SchemaIgnore
+  public AmazonCloudWatchClient getAmazonCloudWatchClient(BasicAWSCredentials awsCredentials) {
+    return new AmazonCloudWatchClient(awsCredentials);
   }
 
   /**
