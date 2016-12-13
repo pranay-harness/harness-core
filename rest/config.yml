@@ -41,6 +41,8 @@ metrics:
     port: 2003
     prefix: b7eb9d0f-415f-4691-aff3-8228b31277b1
 
+delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
+
 portal:
   url: https://localhost:8000
   allowedDomains: wings.software

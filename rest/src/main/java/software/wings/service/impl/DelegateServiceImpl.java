@@ -158,8 +158,8 @@ public class DelegateServiceImpl implements DelegateService {
     Account account = accountService.get(accountId);
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
       cfg.getTemplate("run.sh.ftl")
-          .process(ImmutableMap.of("delegateDownloadLocation", "", "accountId", accountId, "accountSecret",
-                       account.getAccountKey(), "managerHostAndPort", managerHost),
+          .process(ImmutableMap.of("delegateMetadataUrl", mainConfiguration.getDelegateMetadataUrl(), "accountId",
+                       accountId, "accountSecret", account.getAccountKey(), "managerHostAndPort", managerHost),
               fileWriter);
     }
     run = new File(run.getAbsolutePath());

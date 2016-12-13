@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
@@ -54,6 +55,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
   @Mock private EventEmitter eventEmitter;
+  @Mock private MainConfiguration mainConfiguration;
 
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
@@ -162,6 +164,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDownloadDelegate() throws Exception {
+    when(mainConfiguration.getDelegateMetadataUrl())
+        .thenReturn("https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);

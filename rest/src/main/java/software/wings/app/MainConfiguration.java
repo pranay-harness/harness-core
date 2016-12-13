@@ -44,6 +44,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
   @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
+  @JsonProperty("delegateMetadataUrl") private String delegateMetadataUrl;
 
   /**
    * Instantiates a new Main configuration.
@@ -187,6 +188,24 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    */
   public void setFileUploadLimits(FileUploadLimit fileUploadLimits) {
     this.fileUploadLimits = fileUploadLimits;
+  }
+
+  /**
+   * Getter for property 'delegateMetadataUrl'.
+   *
+   * @return Value for property 'delegateMetadataUrl'.
+   */
+  public String getDelegateMetadataUrl() {
+    return delegateMetadataUrl;
+  }
+
+  /**
+   * Setter for property 'delegateMetadataUrl'.
+   *
+   * @param delegateMetadataUrl Value to set for property 'delegateMetadataUrl'.
+   */
+  public void setDelegateMetadataUrl(String delegateMetadataUrl) {
+    this.delegateMetadataUrl = delegateMetadataUrl;
   }
 
   private ConnectorFactory getDefaultAdminConnectorFactory() {
