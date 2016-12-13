@@ -17,6 +17,7 @@
         <module>serialization-utils</module>
         <module>delegate</module>
         <module>rest-utils</module>
+        <module>dbmigrations</module>
     </modules>
 
     <scm>

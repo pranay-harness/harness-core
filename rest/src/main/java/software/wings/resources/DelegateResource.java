@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import freemarker.template.TemplateException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -13,7 +14,10 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.DelegateService;
 
+import java.io.File;
+import java.io.IOException;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -23,6 +27,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -91,6 +97,18 @@ public class DelegateResource {
   public RestResponse<PageResponse<DelegateTask>> getTasks(
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateService.getDelegateTasks(accountId, delegateId));
+  }
+
+  @GET
+  @Path("download")
+  @Produces("application/zip; charset=binary")
+  public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId)
+      throws IOException, TemplateException {
+    File delegateFile = delegateService.download(request.getServerName() + ":" + request.getServerPort(), accountId);
+    return Response.ok(delegateFile)
+        .header("Content-Transfer-Encoding", "binary")
+        .header("Content-Disposition", "attachment; filename=delegate.zip")
+        .build();
   }
 
   @PublicApi

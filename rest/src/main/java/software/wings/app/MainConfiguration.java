@@ -33,7 +33,9 @@ import java.util.Optional;
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
   private AssetsConfiguration assetsConfiguration =
-      AssetsConfiguration.builder().mimeTypes(of("js", "application/json; charset=UTF-8)")).build();
+      AssetsConfiguration.builder()
+          .mimeTypes(of("js", "application/json; charset=UTF-8", "zip", "application/zip"))
+          .build();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = new MongoConfig();
