@@ -30,4 +30,6 @@ public interface AuthService {
    */
   void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes,
       PageRequestType requestType);
+
+  void validateDelegateToken(String accountId, String tokenString);
 }

@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -15,6 +16,7 @@ import static software.wings.security.PermissionAttribute.Action.WRITE;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.ANY;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -23,6 +25,16 @@ import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.DirectEncrypter;
+import com.nimbusds.jwt.EncryptedJWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +52,16 @@ import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 
 /**
@@ -124,10 +144,12 @@ public class AuthServiceTest extends WingsBaseTest {
                                                                                    .build()))
                                                        .build();
   @Mock private GenericDbCache cache;
+  @Mock private AccountService accountService;
+
   @Inject @InjectMocks private AuthService authService;
   private Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
-
+  private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
   /**
    * Sets up.
    *
@@ -141,6 +163,8 @@ public class AuthServiceTest extends WingsBaseTest {
     when(cache.get(Environment.class, ENV_ID))
         .thenReturn(
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.OTHER).build());
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
   }
 
   /**
@@ -266,5 +290,80 @@ public class AuthServiceTest extends WingsBaseTest {
                                asList(new PermissionAttribute("ENVIRONMENT:WRITE", ENV)), PageRequestType.OTHER))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+  }
+
+  @Test
+  public void shouldValidateDelegateToken() {
+    authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken(accountKey));
+  }
+
+  @Test
+  public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
+    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID + "1", getDelegateToken(accountKey)))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+  }
+
+  @Test
+  public void shouldThrowThrowInavlidTokenForDelegate() {
+    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCodes.INVALID_TOKEN.name());
+  }
+
+  @Test
+  public void shouldThrowExceptionWhenUnableToDecryptToken() {
+    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCodes.INVALID_TOKEN.name());
+  }
+
+  private String getDelegateToken() {
+    KeyGenerator keyGen = null;
+    try {
+      keyGen = KeyGenerator.getInstance("AES");
+    } catch (NoSuchAlgorithmException e) {
+      throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
+    }
+    keyGen.init(128);
+    SecretKey secretKey = keyGen.generateKey();
+    byte[] encoded = secretKey.getEncoded();
+    return getDelegateToken(Hex.encodeHexString(encoded));
+  }
+
+  private String getDelegateToken(String accountSecret) {
+    JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
+                                 .issuer("localhost")
+                                 .subject(ACCOUNT_ID)
+                                 .audience("manager")
+                                 .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
+                                 .notBeforeTime(new Date())
+                                 .issueTime(new Date())
+                                 .jwtID(UUID.randomUUID().toString())
+                                 .build();
+
+    JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
+    EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
+    DirectEncrypter directEncrypter = null;
+    byte[] encodedKey = new byte[0];
+    try {
+      encodedKey = Hex.decodeHex(accountSecret.toCharArray());
+    } catch (DecoderException e) {
+      e.printStackTrace();
+    }
+    try {
+      directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
+    } catch (KeyLengthException e) {
+      e.printStackTrace();
+      return null;
+    }
+
+    try {
+      jwt.encrypt(directEncrypter);
+    } catch (JOSEException e) {
+      e.printStackTrace();
+      return null;
+    }
+    return jwt.serialize();
   }
 }

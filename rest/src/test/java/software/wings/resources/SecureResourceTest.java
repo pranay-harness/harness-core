@@ -5,6 +5,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -19,6 +20,7 @@ import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.ANY;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.RELEASE;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -27,6 +29,16 @@ import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.DirectEncrypter;
+import com.nimbusds.jwt.EncryptedJWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
@@ -48,11 +60,16 @@ import software.wings.exception.WingsException;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.utils.ResourceTestRule;
 
+import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
@@ -78,7 +95,9 @@ public class SecureResourceTest {
   private static AuditService auditService = mock(AuditService.class);
   private static AuditHelper auditHelper = mock(AuditHelper.class);
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
-  private static AuthService authService = new AuthServiceImpl(genericDbCache);
+  private static AccountService accountService = mock(AccountService.class);
+
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService);
 
   private static EnvironmentService environmentService = mock(EnvironmentService.class);
 
@@ -91,6 +110,8 @@ public class SecureResourceTest {
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder().addResource(new SecureResource()).addProvider(authRuleFilter).build();
+
+  private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 
   private final Role appAllResourceReadActionRole = aRole()
                                                         .withAppId(GLOBAL_APP_ID)
@@ -158,6 +179,8 @@ public class SecureResourceTest {
     when(genericDbCache.get(Environment.class, ENV_ID))
         .thenReturn(
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.OTHER).build());
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
   }
 
   /**
@@ -423,5 +446,51 @@ public class SecureResourceTest {
                        .post(ENTITY))
         .hasCauseInstanceOf(WingsException.class)
         .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
+  }
+
+  @Test
+  public void shouldValidateTokenForDelegate() {
+    RestResponse<String> response = resources.client()
+                                        .target("/secure-resources/delegateAuth?accountId=ACCOUNT_ID")
+                                        .request()
+                                        .header(HttpHeaders.AUTHORIZATION, "Delegate " + getDelegateToken(accountKey))
+                                        .get(new GenericType<RestResponse<String>>() {});
+    assertThat(response.getResource()).isEqualTo("test");
+  }
+
+  private String getDelegateToken(String accountSecret) {
+    JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
+                                 .issuer("localhost")
+                                 .subject(ACCOUNT_ID)
+                                 .audience("manager")
+                                 .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
+                                 .notBeforeTime(new Date())
+                                 .issueTime(new Date())
+                                 .jwtID(UUID.randomUUID().toString())
+                                 .build();
+
+    JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
+    EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
+    DirectEncrypter directEncrypter = null;
+    byte[] encodedKey = new byte[0];
+    try {
+      encodedKey = Hex.decodeHex(accountSecret.toCharArray());
+    } catch (DecoderException e) {
+      e.printStackTrace();
+    }
+    try {
+      directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
+    } catch (KeyLengthException e) {
+      e.printStackTrace();
+      return null;
+    }
+
+    try {
+      jwt.encrypt(directEncrypter);
+    } catch (JOSEException e) {
+      e.printStackTrace();
+      return null;
+    }
+    return jwt.serialize();
   }
 }

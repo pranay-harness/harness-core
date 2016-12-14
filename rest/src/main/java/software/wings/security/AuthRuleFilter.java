@@ -2,6 +2,8 @@ package software.wings.security;
 
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
@@ -14,6 +16,7 @@ import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AuditService;
@@ -72,6 +75,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
+
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+
+    if (isDelegateRequest(requestContext)) {
+      String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+      authService.validateDelegateToken(
+          accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
+      return; // do nothing
+    }
     String tokenString = extractToken(requestContext);
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
@@ -81,9 +94,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       UserThreadLocal.set(user);
     }
 
-    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
-    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
-
     String appId = getRequestParamFromContext("appId", pathParameters, queryParameters);
     String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
@@ -92,6 +102,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
     authService.authorize(appId, envId, user, requiredPermissionAttributes,
         (PageRequestType) requestContext.getProperty("pageRequestType"));
+  }
+
+  private boolean isDelegateRequest(ContainerRequestContext requestContext) {
+    return delegateAPI() && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate ");
   }
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
@@ -113,6 +127,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return resourceMethod.getAnnotation(AuthRule.class) == null && resourceClass.getAnnotation(AuthRule.class) == null
         && (resourceMethod.getAnnotation(PublicApi.class) != null
                || resourceClass.getAnnotation(PublicApi.class) != null);
+  }
+
+  private boolean delegateAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(AuthRule.class) == null && resourceClass.getAnnotation(AuthRule.class) == null
+        && (resourceMethod.getAnnotation(DelegateAuth.class) != null
+               || resourceClass.getAnnotation(DelegateAuth.class) != null);
   }
 
   private void setRequestAndResourceType(ContainerRequestContext requestContext, String appId) {

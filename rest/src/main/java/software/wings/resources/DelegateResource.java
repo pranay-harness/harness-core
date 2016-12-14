@@ -13,6 +13,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
@@ -73,7 +74,7 @@ public class DelegateResource {
     return new RestResponse<Void>();
   }
 
-  @PublicApi
+  @DelegateAuth
   @PUT
   @Path("{deletgateId}")
   public RestResponse<Delegate> update(@PathParam("deletgateId") @NotEmpty String delegateId,
@@ -83,7 +84,7 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.update(delegate));
   }
 
-  @PublicApi
+  @DelegateAuth
   @POST
   @Path("register")
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
@@ -97,7 +98,7 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.add(delegate));
   }
 
-  @PublicApi
+  @DelegateAuth
   @GET
   @Path("{delegateId}/tasks")
   public RestResponse<PageResponse<DelegateTask>> getTasks(
@@ -129,7 +130,7 @@ public class DelegateResource {
         .build();
   }
 
-  @PublicApi
+  @DelegateAuth
   @POST
   @Path("{delegateId}/tasks/{taskId}")
   public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,

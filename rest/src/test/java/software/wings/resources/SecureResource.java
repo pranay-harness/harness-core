@@ -5,6 +5,7 @@ import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.GET;
@@ -112,5 +113,12 @@ public class SecureResource {
   @AuthRule(value = "RELEASE:WRITE", scope = PermissionScope.ENV)
   public RestResponse<User> releaseResourceWriteActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
+  }
+
+  @GET
+  @Path("delegateAuth")
+  @DelegateAuth
+  public RestResponse<String> delegateAuth() {
+    return new RestResponse<>("test");
   }
 }

@@ -70,6 +70,6 @@ public class DelegateAuthInterceptor implements Interceptor {
     }
 
     Request request = chain.request();
-    return chain.proceed(request.newBuilder().header("Authorization", jwt.serialize()).build());
+    return chain.proceed(request.newBuilder().header("Authorization", "Delegate " + jwt.serialize()).build());
   }
 }
