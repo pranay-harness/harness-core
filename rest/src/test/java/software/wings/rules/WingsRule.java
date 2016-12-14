@@ -1,14 +1,19 @@
 package software.wings.rules;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import static org.mockito.Mockito.mock;
+import static software.wings.app.LoggingInitializer.initializeLogging;
+import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -35,7 +40,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.CurrentThreadExecutor;
-import software.wings.app.*;
+import software.wings.app.DatabaseModule;
+import software.wings.app.ExecutorModule;
+import software.wings.app.MainConfiguration;
+import software.wings.app.QueueModule;
+import software.wings.app.WingsModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
@@ -45,10 +54,6 @@ import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
 import java.lang.annotation.Annotation;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
@@ -56,10 +61,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Mockito.mock;
-import static software.wings.app.LoggingInitializer.initializeLogging;
-import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
 /**
  * Created by peeyushaggarwal on 4/5/16.
@@ -199,7 +204,13 @@ public class WingsRule implements MethodRule {
   protected void after() {
     // Clear caches.
     CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-    cacheManager.getCacheNames().forEach(s -> cacheManager.getCache(s).clear());
+    cacheManager.getCacheNames().forEach(s -> {
+      if ("downloadTokenCache".equals(s)) {
+        cacheManager.getCache(s, String.class, String.class).clear();
+      } else {
+        cacheManager.getCache(s).clear();
+      }
+    });
 
     try {
       log().info("Stopping executorService...");

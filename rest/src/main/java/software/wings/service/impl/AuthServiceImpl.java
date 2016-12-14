@@ -4,6 +4,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.ErrorCodes.ACCESS_DENIED;
+import static software.wings.beans.ErrorCodes.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCodes.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
@@ -11,6 +12,16 @@ import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
 import com.google.inject.Singleton;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEDecrypter;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.DirectDecrypter;
+import com.nimbusds.jwt.EncryptedJWT;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Permission;
@@ -23,9 +34,12 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 
+import java.text.ParseException;
 import java.util.List;
+import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 
 /**
@@ -33,16 +47,19 @@ import javax.inject.Inject;
  */
 @Singleton
 public class AuthServiceImpl implements AuthService {
+  private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
   private GenericDbCache dbCache;
 
+  private AccountService accountService;
   /**
    * Instantiates a new Auth service.
    *
    * @param dbCache the db cache
    */
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache) {
+  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService) {
     this.dbCache = dbCache;
+    this.accountService = accountService;
   }
 
   @Override
@@ -63,6 +80,44 @@ public class AuthServiceImpl implements AuthService {
       if (!authorizeAccessType(appId, envId, permissionAttribute, user.getRoles(), requestType)) {
         throw new WingsException(ACCESS_DENIED);
       }
+    }
+  }
+
+  @Override
+  public void validateDelegateToken(String accountId, String tokenString) {
+    Account account = accountService.get(accountId);
+    if (account == null) {
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    EncryptedJWT encryptedJWT = null;
+    try {
+      encryptedJWT = EncryptedJWT.parse(tokenString);
+    } catch (ParseException e) {
+      logger.error("Invalid token for delegate " + tokenString, e);
+      throw new WingsException(INVALID_TOKEN);
+    }
+
+    byte[] encodedKey = new byte[0];
+    try {
+      encodedKey = Hex.decodeHex(account.getAccountKey().toCharArray());
+    } catch (DecoderException e) {
+      logger.error("Invalid hex account key " + account.getAccountKey(), e);
+      throw new WingsException(DEFAULT_ERROR_CODE); // ShouldNotHappen
+    }
+
+    JWEDecrypter decrypter = null;
+    try {
+      decrypter = new DirectDecrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
+    } catch (KeyLengthException e) {
+      logger.error("Invalid account key " + account.getAccountKey(), e);
+      throw new WingsException(DEFAULT_ERROR_CODE);
+    }
+
+    try {
+      encryptedJWT.decrypt(decrypter);
+    } catch (JOSEException e) {
+      throw new WingsException(INVALID_TOKEN);
     }
   }
 

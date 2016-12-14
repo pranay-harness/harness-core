@@ -1,8 +1,12 @@
 package software.wings.service.impl;
 
 import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.ErrorCodes;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 
 import java.security.NoSuchAlgorithmException;
@@ -19,6 +23,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class AccountServiceImpl implements AccountService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -63,7 +69,8 @@ public class AccountServiceImpl implements AccountService {
     try {
       keyGen = KeyGenerator.getInstance("AES");
     } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
+      logger.error("Exception while generating account key ", e);
+      throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
     }
     keyGen.init(128);
     SecretKey secretKey = keyGen.generateKey();
