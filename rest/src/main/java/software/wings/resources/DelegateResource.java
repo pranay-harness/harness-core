@@ -108,8 +108,7 @@ public class DelegateResource {
   @GET
   @Path("downloadUrl")
   public RestResponse<Map<String, String>> downloadUrl(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") String token)
-      throws IOException, TemplateException {
+      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(ImmutableMap.of("downloadUrl",
         request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
             + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
