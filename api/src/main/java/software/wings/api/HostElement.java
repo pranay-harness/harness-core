@@ -20,6 +20,7 @@ import java.util.Map;
 public class HostElement implements ContextElement {
   private String uuid;
   private String hostName;
+  private String instanceId;
 
   @Override
   public String getName() {
@@ -71,7 +72,29 @@ public class HostElement implements ContextElement {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
+    return MoreObjects.toStringHelper(this)
+        .add("uuid", uuid)
+        .add("hostName", hostName)
+        .add("instanceId", instanceId)
+        .toString();
+  }
+
+  /**
+   * Gets instance id.
+   *
+   * @return the instance id
+   */
+  public String getInstanceId() {
+    return instanceId;
+  }
+
+  /**
+   * Sets instance id.
+   *
+   * @param instanceId the instance id
+   */
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
   }
 
   /**
@@ -80,6 +103,7 @@ public class HostElement implements ContextElement {
   public static final class Builder {
     private String uuid;
     private String hostName;
+    private String instanceId;
 
     private Builder() {}
 
@@ -115,12 +139,23 @@ public class HostElement implements ContextElement {
     }
 
     /**
+     * With instance id builder.
+     *
+     * @param instanceId the instance id
+     * @return the builder
+     */
+    public Builder withInstanceId(String instanceId) {
+      this.instanceId = instanceId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return aHostElement().withUuid(uuid).withHostName(hostName);
+      return aHostElement().withUuid(uuid).withHostName(hostName).withInstanceId(instanceId);
     }
 
     /**
@@ -132,6 +167,7 @@ public class HostElement implements ContextElement {
       HostElement hostElement = new HostElement();
       hostElement.setUuid(uuid);
       hostElement.setHostName(hostName);
+      hostElement.setInstanceId(instanceId);
       return hostElement;
     }
   }

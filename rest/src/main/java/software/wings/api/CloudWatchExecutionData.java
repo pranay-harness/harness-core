@@ -2,6 +2,9 @@ package software.wings.api;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Lists;
+
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import software.wings.sm.ExecutionStatus;
@@ -154,7 +157,10 @@ public class CloudWatchExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "statistics",
-        anExecutionDataValue().withValue(datapoint.toString()).withDisplayName("statistics").build());
+        anExecutionDataValue()
+            .withValue(datapoint == null ? null : datapoint.toString())
+            .withDisplayName("statistics")
+            .build());
     putNotNull(executionDetails, "assertionStatement",
         anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
     putNotNull(executionDetails, "assertionStatus",
@@ -172,9 +178,15 @@ public class CloudWatchExecutionData extends StateExecutionData {
     putNotNull(executionDetails, "percentile",
         anExecutionDataValue().withValue(percentile).withDisplayName("percentile").build());
     putNotNull(executionDetails, "dimensions",
-        anExecutionDataValue().withValue(dimensions).withDisplayName("dimensions").build());
+        anExecutionDataValue()
+            .withValue(dimensions == null ? null : Lists.transform(dimensions, Functions.toStringFunction()))
+            .withDisplayName("dimensions")
+            .build());
     putNotNull(executionDetails, "statistics",
-        anExecutionDataValue().withValue(datapoint.toString()).withDisplayName("statistics").build());
+        anExecutionDataValue()
+            .withValue(datapoint == null ? null : datapoint.toString())
+            .withDisplayName("statistics")
+            .build());
     putNotNull(executionDetails, "assertion",
         anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
     putNotNull(executionDetails, "assertionStatus",
