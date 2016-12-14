@@ -58,6 +58,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -100,6 +101,14 @@ public class CloudWatchState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
 
+    CloudWatchExecutionData stateExecutionData = Builder.aCloudWatchExecutionData()
+                                                     .withNamespace(namespace)
+                                                     .withMetricName(metricName)
+                                                     .withPercentile(percentile)
+                                                     .withDimensions(dimensions)
+                                                     .withAssertionStatement(assertion)
+                                                     .build();
+
     SettingAttribute settingAttribute = settingsService.get(GLOBAL_APP_ID, awsCredentialsConfigId);
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsInfrastructureProviderConfig)) {
       throw new StateExecutionException("AWS account setting not found");
@@ -118,7 +127,15 @@ public class CloudWatchState extends State {
     }
 
     if (dimensions != null) {
-      dimensions.forEach(dimension -> { dimension.setValue(context.renderExpression(dimension.getValue())); });
+      List<Dimension> evaluatedDimensions = dimensions.stream()
+                                                .map(dimension -> {
+                                                  Dimension d = new Dimension();
+                                                  d.setName(dimension.getName());
+                                                  d.setValue(context.renderExpression(dimension.getValue()));
+                                                  return d;
+                                                })
+                                                .collect(Collectors.toList());
+      stateExecutionData.setDimensions(evaluatedDimensions);
     }
 
     BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
@@ -135,7 +152,7 @@ public class CloudWatchState extends State {
       getMetricRequest.setExtendedStatistics(asList(percentile));
     }
     getMetricRequest.setStatistics(statistics);
-    getMetricRequest.setDimensions(dimensions);
+    getMetricRequest.setDimensions(stateExecutionData.getDimensions());
     getMetricRequest.setPeriod(DEFAULT_AGGREGATION_PERIOD);
 
     long startTimeOffset = Strings.isNullOrEmpty(timeDuration) ? DEFAULT_TIME_DURATION : Long.parseLong(timeDuration);
@@ -148,14 +165,7 @@ public class CloudWatchState extends State {
     Datapoint datapoint =
         metricStatistics.getDatapoints().stream().max(Comparator.comparing(Datapoint::getTimestamp)).orElse(null);
 
-    CloudWatchExecutionData stateExecutionData = Builder.aCloudWatchExecutionData()
-                                                     .withNamespace(namespace)
-                                                     .withMetricName(metricName)
-                                                     .withPercentile(percentile)
-                                                     .withDimensions(dimensions)
-                                                     .withDatapoint(datapoint)
-                                                     .withAssertionStatement(assertion)
-                                                     .build();
+    stateExecutionData.setDatapoint(datapoint);
 
     boolean status;
     String errorMsg = null;
