@@ -38,6 +38,7 @@ import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
@@ -84,6 +85,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DownloadTokenService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
@@ -189,6 +191,7 @@ public class WingsModule extends AbstractModule {
     bind(DelegateService.class).to(DelegateServiceImpl.class);
     bind(BambooService.class).to(BambooServiceImpl.class);
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
+    bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()
