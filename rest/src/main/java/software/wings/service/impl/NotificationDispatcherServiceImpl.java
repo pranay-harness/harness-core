@@ -9,6 +9,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailNotificationService<EmailData> emailNotificationService;
+  @Inject private NotificationService notificationService;
 
   @Override
   public void dispatchNotification(Notification notification) {

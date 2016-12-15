@@ -65,11 +65,8 @@ public class NotificationServiceImpl implements NotificationService {
       throw new WingsException(INVALID_REQUEST, "message", "Notification not actionable");
     }
     ActionableNotification actionableNotification = (ActionableNotification) notification;
-    if (!actionableNotification.getNotificationActions()
-             .stream()
-             .filter(notificationAction -> notificationAction.getType() == actionType)
-             .findFirst()
-             .isPresent()) {
+    if (actionableNotification.getNotificationActions().stream().noneMatch(
+            notificationAction -> notificationAction.getType() == actionType)) {
       throw new WingsException(INVALID_REQUEST, "message", "Action not supported for NotificationType");
     }
     injector.injectMembers(actionableNotification);
@@ -92,11 +89,12 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public void sendNotificationAsync(@Valid Notification notification) {
-    executorService.execute(() -> {
-      Application application = appService.get(notification.getAppId());
-      notification.setAccountId(application.getAccountId());
-      save(notification); // block for persistence
-      // TODO: async broadcast
-    });
+    executorService.execute(() -> sendNotification(notification));
+  }
+
+  private void sendNotification(Notification notification) {
+    Application application = appService.get(notification.getAppId());
+    notification.setAccountId(application.getAccountId());
+    Notification savedNotification = save(notification);
   }
 }
