@@ -5,6 +5,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.JenkinsState.FilePathAssertionEntry;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 10/24/16.
  */
-public class JenkinsExecutionData extends StateExecutionData {
+public class JenkinsExecutionData extends StateExecutionData implements NotifyResponseData {
   private String jobName;
   private String jobStatus;
   private String buildUrl;

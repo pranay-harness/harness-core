@@ -4,6 +4,8 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 
+import com.google.inject.Injector;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
@@ -11,6 +13,7 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
+import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.dl.PageResponse;
 import software.wings.managerclient.ManagerClient;
 
@@ -34,6 +37,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private ScheduledExecutorService scheduledExecutorService;
 
   @Inject private ExecutorService executorService;
+
+  @Inject private Injector injector;
 
   @Override
   public void run() {
@@ -73,24 +78,24 @@ public class DelegateServiceImpl implements DelegateService {
             managerClient.getTasks(delegateId, accountId).execute().body();
         if (isNotEmpty(delegateTasks.getResource())) {
           DelegateTask delegateTask = delegateTasks.getResource().get(0);
-          executorService
-              .submit(delegateTask.getTaskType().getDelegateRunnableTask(delegateTask.getUuid(),
-                  delegateTask.getParameters(),
-                  notifyResponseData -> {
-                    try {
-                      managerClient
-                          .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                              aDelegateTaskResponse()
-                                  .withTaskId(delegateTask.getUuid())
-                                  .withAccountId(accountId)
-                                  .withResponse(notifyResponseData)
-                                  .build())
-                          .execute();
-                    } catch (IOException e) {
-                      e.printStackTrace();
-                    }
-                  }))
-              .get();
+
+          DelegateRunnableTask delegateRunnableTask = delegateTask.getTaskType().getDelegateRunnableTask(
+              delegateTask.getUuid(), delegateTask.getParameters(), notifyResponseData -> {
+                try {
+                  managerClient
+                      .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                          aDelegateTaskResponse()
+                              .withTaskId(delegateTask.getUuid())
+                              .withAccountId(accountId)
+                              .withResponse(notifyResponseData)
+                              .build())
+                      .execute();
+                } catch (IOException e) {
+                  e.printStackTrace();
+                }
+              });
+          injector.injectMembers(delegateRunnableTask);
+          executorService.submit(delegateRunnableTask).get();
         } else {
           // Loop for tasks.
           Thread.sleep(1000);
