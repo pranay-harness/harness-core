@@ -21,6 +21,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -54,6 +55,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withAccountId(ACCOUNT_ID)
                                                       .withIp("127.0.0.1")
                                                       .withHostName("localhost")
+                                                      .withVersion("1.0.0")
                                                       .withStatus(Status.ENABLED)
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
@@ -63,6 +65,12 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
+
+  @Before
+  public void setUp() {
+    when(mainConfiguration.getDelegateMetadataUrl())
+        .thenReturn("https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
+  }
 
   @Test
   public void shouldList() throws Exception {
@@ -168,8 +176,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDownloadDelegate() throws Exception {
-    when(mainConfiguration.getDelegateMetadataUrl())
-        .thenReturn("https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
