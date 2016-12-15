@@ -35,6 +35,7 @@ import software.wings.service.impl.BambooArtifactCollectorServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
+import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
@@ -81,6 +82,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
@@ -192,6 +194,7 @@ public class WingsModule extends AbstractModule {
     bind(BambooService.class).to(BambooServiceImpl.class);
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
     bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
+    bind(CloudWatchService.class).to(CloudWatchServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()
