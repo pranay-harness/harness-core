@@ -1,26 +1,18 @@
 package software.wings.sm.states;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.apache.commons.collections.MapUtils.isEmpty;
 import static software.wings.api.JenkinsExecutionData.Builder.aJenkinsExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import com.offbytwo.jenkins.model.Artifact;
-import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.BuildResult;
-import com.offbytwo.jenkins.model.BuildWithDetails;
-import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -34,12 +26,11 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
-import software.wings.common.cache.ResponseCodeCache;
-import software.wings.exception.WingsException;
-import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.beans.TaskType;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -48,22 +39,16 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.states.JenkinsState.FilePathAssertionEntry.Status;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Misc;
 import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
@@ -71,6 +56,8 @@ import javax.xml.parsers.ParserConfigurationException;
  */
 public class JenkinsState extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
+
+  @Inject private DelegateService delegateService;
 
   @EnumData(enumDataProvider = JenkinsSettingProvider.class)
   @Attributes(title = "Jenkins Server")
@@ -168,6 +155,17 @@ public class JenkinsState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
+    ExecutionResponse response = executeInternal(context, activityId);
+    return response;
+  }
+
+  /**
+   * Execute internal execution response.
+   *
+   * @param context the context
+   * @return the execution response
+   */
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getSettingValue(jenkinsConfigId, StateType.JENKINS.name());
 
     String evaluatedJobName;
@@ -206,89 +204,18 @@ public class JenkinsState extends State {
       });
     }
 
+    delegateService.sendTaskWaitNotify(
+        aDelegateTask()
+            .withTaskType(getTaskType())
+            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+            .withWaitId(activityId)
+            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+            .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
+                jenkinsConfig.getPassword(), finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion})
+            .build());
+
     JenkinsExecutionData jenkinsExecutionData =
         aJenkinsExecutionData().withJobName(finalJobName).withJobParameters(evaluatedParameters).build();
-
-    final String finalActivityId = activityId;
-    executorService.execute(() -> {
-      JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
-      jenkinsExecutionResponse.setActivityId(activityId);
-      ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-      String errorMessage = null;
-      try {
-        Jenkins jenkins = jenkinsFactory.create(
-            jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-
-        QueueReference queueItem = jenkins.trigger(finalJobName, evaluatedParameters);
-
-        Build jenkinsBuild;
-        while ((jenkinsBuild = jenkins.getBuild(queueItem)) == null) {
-          Misc.quietSleep(1000);
-        }
-        BuildWithDetails jenkinsBuildWithDetails;
-        while ((jenkinsBuildWithDetails = jenkinsBuild.details()).isBuilding()) {
-          Misc.quietSleep((int) (Math.max(
-              5000, jenkinsBuildWithDetails.getDuration() - jenkinsBuildWithDetails.getEstimatedDuration())));
-        }
-        jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
-
-        BuildResult buildResult = jenkinsBuildWithDetails.getResult();
-        jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
-
-        if (buildResult == BuildResult.SUCCESS || buildResult == BuildResult.UNSTABLE) {
-          if (!isEmpty(evaluatedFilePathsForAssertion)) {
-            for (Entry<String, String> entry : evaluatedFilePathsForAssertion.entrySet()) {
-              String filePathForAssertion = entry.getKey();
-              String assertion = entry.getValue();
-
-              Pattern pattern =
-                  Pattern.compile(filePathForAssertion.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-              Optional<Artifact> artifactOptional =
-                  jenkinsBuildWithDetails.getArtifacts()
-                      .stream()
-                      .filter(artifact -> pattern.matcher(artifact.getRelativePath()).matches())
-                      .findFirst();
-              if (artifactOptional.isPresent()) {
-                String data = CharStreams.toString(
-                    new InputStreamReader(jenkinsBuildWithDetails.downloadArtifact(artifactOptional.get())));
-                FilePathAssertionEntry filePathAssertionEntry =
-                    new FilePathAssertionEntry(artifactOptional.get().getRelativePath(), assertion, data);
-                filePathAssertionEntry.setStatus(
-                    Boolean.TRUE.equals(context.evaluateExpression(assertion, filePathAssertionEntry)) ? Status.SUCCESS
-                                                                                                       : Status.FAILED);
-                jenkinsExecutionResponse.getFilePathAssertionMap().add(filePathAssertionEntry);
-              } else {
-                executionStatus = ExecutionStatus.FAILED;
-                jenkinsExecutionResponse.getFilePathAssertionMap().add(
-                    new FilePathAssertionEntry(filePathForAssertion, assertion, Status.NOT_FOUND));
-              }
-            }
-          }
-        } else {
-          executionStatus = ExecutionStatus.FAILED;
-        }
-      } catch (Exception e) {
-        logger.warn("Exception: ", e);
-        if (e instanceof WingsException) {
-          WingsException ex = (WingsException) e;
-          errorMessage =
-              Joiner.on(",").join(ex.getResponseMessageList()
-                                      .stream()
-                                      .map(responseMessage
-                                          -> ResponseCodeCache.getInstance()
-                                                 .getResponseMessage(responseMessage.getCode(), ex.getParams())
-                                                 .getMessage())
-                                      .collect(toList()));
-        } else {
-          errorMessage = e.getMessage();
-        }
-        executionStatus = executionStatus.FAILED;
-        jenkinsExecutionResponse.setErrorMessage(errorMessage);
-      }
-      jenkinsExecutionResponse.setExecutionStatus(executionStatus);
-      waitNotifyEngine.notify(finalActivityId, jenkinsExecutionResponse);
-    });
-
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(jenkinsExecutionData)
@@ -296,11 +223,16 @@ public class JenkinsState extends State {
         .build();
   }
 
+  protected TaskType getTaskType() {
+    return TaskType.JENKINS;
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    String activityId = response.keySet().iterator().next();
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
-    updateActivityStatus(jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(),
-        jenkinsExecutionResponse.getExecutionStatus());
+    updateActivityStatus(
+        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
     jenkinsExecutionData.setFilePathAssertionMap(jenkinsExecutionResponse.getFilePathAssertionMap());
     jenkinsExecutionData.setJobStatus(jenkinsExecutionResponse.getJenkinsResult());
@@ -355,7 +287,6 @@ public class JenkinsState extends State {
     private ExecutionStatus executionStatus;
     private String jenkinsResult;
     private String errorMessage;
-    private String activityId;
     private String jobUrl;
     private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
 
@@ -432,24 +363,6 @@ public class JenkinsState extends State {
     }
 
     /**
-     * Getter for property 'activityId'.
-     *
-     * @return Value for property 'activityId'.
-     */
-    public String getActivityId() {
-      return activityId;
-    }
-
-    /**
-     * Setter for property 'activityId'.
-     *
-     * @param activityId Value to set for property 'activityId'.
-     */
-    public void setActivityId(String activityId) {
-      this.activityId = activityId;
-    }
-
-    /**
      * Getter for property 'filePathAssertionMap'.
      *
      * @return Value for property 'filePathAssertionMap'.
@@ -471,7 +384,6 @@ public class JenkinsState extends State {
       private ExecutionStatus executionStatus;
       private String jenkinsResult;
       private String errorMessage;
-      private String activityId;
       private String jobUrl;
       private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
 
@@ -496,11 +408,6 @@ public class JenkinsState extends State {
         return this;
       }
 
-      public Builder withActivityId(String activityId) {
-        this.activityId = activityId;
-        return this;
-      }
-
       public Builder withJobUrl(String jobUrl) {
         this.jobUrl = jobUrl;
         return this;
@@ -516,7 +423,6 @@ public class JenkinsState extends State {
             .withExecutionStatus(executionStatus)
             .withJenkinsResult(jenkinsResult)
             .withErrorMessage(errorMessage)
-            .withActivityId(activityId)
             .withJobUrl(jobUrl)
             .withFilePathAssertionMap(filePathAssertionMap);
       }
@@ -526,7 +432,6 @@ public class JenkinsState extends State {
         jenkinsExecutionResponse.setExecutionStatus(executionStatus);
         jenkinsExecutionResponse.setJenkinsResult(jenkinsResult);
         jenkinsExecutionResponse.setErrorMessage(errorMessage);
-        jenkinsExecutionResponse.setActivityId(activityId);
         jenkinsExecutionResponse.setJobUrl(jobUrl);
         jenkinsExecutionResponse.setFilePathAssertionMap(filePathAssertionMap);
         return jenkinsExecutionResponse;

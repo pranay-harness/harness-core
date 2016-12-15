@@ -23,6 +23,7 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -195,16 +196,16 @@ public class CloudWatchState extends State {
     AmazonEC2Client amazonEC2Client =
         new AmazonEC2Client(new BasicAWSCredentials(config.getAccessKey(), config.getSecretKey()));
 
-    String instanceId = null;
+    String instanceId;
     DescribeInstancesResult describeInstancesResult =
         amazonEC2Client.describeInstances(new DescribeInstancesRequest().withFilters(
             new Filter().withName("private-dns-name").withValues(hostName + "*")));
     instanceId = describeInstancesResult.getReservations()
                      .stream()
                      .flatMap(reservation -> reservation.getInstances().stream())
-                     .map(instance -> instance.getInstanceId())
+                     .map(Instance::getInstanceId)
                      .findFirst()
-                     .orElse(instanceId);
+                     .orElse(null);
 
     if (isBlank(instanceId)) {
       describeInstancesResult = amazonEC2Client.describeInstances(
@@ -212,7 +213,7 @@ public class CloudWatchState extends State {
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
-                       .map(instance -> instance.getInstanceId())
+                       .map(Instance::getInstanceId)
                        .findFirst()
                        .orElse(instanceId);
     }
@@ -223,7 +224,7 @@ public class CloudWatchState extends State {
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
-                       .map(instance -> instance.getInstanceId())
+                       .map(Instance::getInstanceId)
                        .findFirst()
                        .orElse(instanceId);
     }
@@ -234,7 +235,7 @@ public class CloudWatchState extends State {
       instanceId = describeInstancesResult.getReservations()
                        .stream()
                        .flatMap(reservation -> reservation.getInstances().stream())
-                       .map(instance -> instance.getInstanceId())
+                       .map(Instance::getInstanceId)
                        .findFirst()
                        .orElse(instanceId);
     }

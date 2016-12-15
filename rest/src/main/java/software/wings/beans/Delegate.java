@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -14,6 +15,7 @@ public class Delegate extends Base {
   private String hostName;
   private long lastHeartBeat;
   private String version;
+  @Transient private boolean doUpgrade;
 
   /**
    * Getter for property 'accountId'.
@@ -121,6 +123,24 @@ public class Delegate extends Base {
    */
   public void setVersion(String version) {
     this.version = version;
+  }
+
+  /**
+   * Getter for property 'doUpgrade'.
+   *
+   * @return Value for property 'doUpgrade'.
+   */
+  public boolean isDoUpgrade() {
+    return doUpgrade;
+  }
+
+  /**
+   * Setter for property 'doUpgrade'.
+   *
+   * @param doUpgrade Value to set for property 'doUpgrade'.
+   */
+  public void setDoUpgrade(boolean doUpgrade) {
+    this.doUpgrade = doUpgrade;
   }
 
   public enum Status { ENABLED, DISABLED, DISCONNECTED, UPGRADING }

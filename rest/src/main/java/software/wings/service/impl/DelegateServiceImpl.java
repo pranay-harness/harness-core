@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -10,6 +11,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.github.zafarkhaja.semver.Version;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -17,7 +19,10 @@ import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.fluent.Request;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -51,6 +56,7 @@ public class DelegateServiceImpl implements DelegateService {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ExecutorService executorService;
@@ -83,7 +89,9 @@ public class DelegateServiceImpl implements DelegateService {
         updateOperations);
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
-    return get(delegate.getAccountId(), delegate.getUuid());
+    Delegate updatedDelegate = get(delegate.getAccountId(), delegate.getUuid());
+    updatedDelegate.setDoUpgrade(needsUpgrade(updatedDelegate.getVersion()));
+    return updatedDelegate;
   }
 
   @Override
@@ -177,7 +185,23 @@ public class DelegateServiceImpl implements DelegateService {
     }
     out.closeArchiveEntry();
     out.close();
-    System.out.println(delegateFile.getAbsolutePath());
     return delegateFile;
+  }
+
+  private boolean needsUpgrade(String version) {
+    String latestVersion = null;
+    try {
+      latestVersion = substringBefore(Request.Get(mainConfiguration.getDelegateMetadataUrl())
+                                          .connectTimeout(1000)
+                                          .socketTimeout(1000)
+                                          .execute()
+                                          .returnContent()
+                                          .asString(),
+          " ");
+    } catch (IOException e) {
+      logger.error("Unable to fetch delegate version information ", e);
+      latestVersion = "0.0.0";
+    }
+    return Version.valueOf(version).lessThan(Version.valueOf(latestVersion));
   }
 }
