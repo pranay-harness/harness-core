@@ -41,7 +41,8 @@ public class DelegateServiceImpl implements DelegateService {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
       String accountId = delegateConfiguration.getAccountId();
-      Delegate.Builder builder = aDelegate().withIp(ip).withAccountId(accountId).withHostName(hostName);
+      Delegate.Builder builder =
+          aDelegate().withIp(ip).withAccountId(accountId).withHostName(hostName).withVersion(getVersion());
 
       logger.info("Registering delegate....");
       RestResponse<Delegate> delegateResponse =
@@ -100,5 +101,9 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate ", e);
     }
+  }
+
+  private String getVersion() {
+    return System.getProperty("version", "1.0.0-DEV");
   }
 }

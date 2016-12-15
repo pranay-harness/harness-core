@@ -326,6 +326,11 @@
             <artifactId>logback-syslog4j</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.zafarkhaja</groupId>
+            <artifactId>java-semver</artifactId>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
