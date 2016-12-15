@@ -40,6 +40,7 @@
         <extensions-version>2.4.2</extensions-version>
         <alpnboot.version>8.1.8.v20160420</alpnboot.version>
         <newrelic.version>3.32.0</newrelic.version>
+        <aws.sdk.version>1.11.66</aws.sdk.version>
     </properties>
 
     <repositories>
@@ -381,7 +382,7 @@
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-elasticloadbalancing</artifactId>
-                <version>1.11.33</version>
+                <version>${aws.sdk.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -393,7 +394,7 @@
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-ec2</artifactId>
-                <version>1.11.33</version>
+                <version>${aws.sdk.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -405,7 +406,7 @@
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-cloudwatch</artifactId>
-                <version>1.11.33</version>
+                <version>${aws.sdk.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -453,6 +454,12 @@
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>javax.ws.rs-api</artifactId>
                 <version>2.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.zafarkhaja</groupId>
+                <artifactId>java-semver</artifactId>
+                <version>0.9.0</version>
             </dependency>
 
             <!-- Test Dependencies -->

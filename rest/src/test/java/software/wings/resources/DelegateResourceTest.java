@@ -28,12 +28,14 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
@@ -45,20 +47,22 @@ import javax.ws.rs.core.Response;
  */
 public class DelegateResourceTest {
   private static DelegateService DELEGATE_SERVICE = mock(DelegateService.class);
+  private static DownloadTokenService DOWNLOAD_TOKEN_SERVICE = mock(DownloadTokenService.class);
 
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new DelegateResource(DELEGATE_SERVICE))
-                                                       .addResource(new AbstractBinder() {
-                                                         @Override
-                                                         protected void configure() {
-                                                           bind(httpServletRequest).to(HttpServletRequest.class);
-                                                         }
-                                                       })
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .addResource(new DelegateResource(DELEGATE_SERVICE, DOWNLOAD_TOKEN_SERVICE))
+          .addResource(new AbstractBinder() {
+            @Override
+            protected void configure() {
+              bind(httpServletRequest).to(HttpServletRequest.class);
+            }
+          })
+          .addProvider(WingsExceptionMapper.class)
+          .build();
 
   @Test
   public void shouldListDelegates() throws Exception {
@@ -133,6 +137,21 @@ public class DelegateResourceTest {
   }
 
   @Test
+  public void shouldGetDownloadUrl() throws Exception {
+    when(httpServletRequest.getRequestURI()).thenReturn("/delegates/downloadUrl");
+    when(DOWNLOAD_TOKEN_SERVICE.createDownloadToken("delegate." + ACCOUNT_ID)).thenReturn("token");
+    RestResponse<Map<String, String>> restResponse = RESOURCES.client()
+                                                         .target("/delegates/downloadUrl?accountId=" + ACCOUNT_ID)
+                                                         .request()
+                                                         .get(new GenericType<RestResponse<Map<String, String>>>() {});
+
+    assertThat(restResponse.getResource())
+        .containsKey("downloadUrl")
+        .containsValue("null://null:0/delegates/download?accountId=ACCOUNT_ID&token=token");
+    verify(DOWNLOAD_TOKEN_SERVICE).createDownloadToken("delegate." + ACCOUNT_ID);
+  }
+
+  @Test
   public void shouldDownloadDelegate() throws Exception {
     File file = File.createTempFile("test", ".txt");
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
@@ -140,11 +159,13 @@ public class DelegateResourceTest {
     }
     when(DELEGATE_SERVICE.download(anyString(), anyString())).thenReturn(file);
     Response restResponse = RESOURCES.client()
-                                .target("/delegates/download?accountId=" + ACCOUNT_ID)
+                                .target("/delegates/download?accountId=" + ACCOUNT_ID + "&token=token")
                                 .request()
                                 .get(new GenericType<Response>() {});
 
     verify(DELEGATE_SERVICE).download(anyString(), anyString());
+    verify(DOWNLOAD_TOKEN_SERVICE).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
+
     assertThat(restResponse.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=delegate.zip");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity()).get(0)).isEqualTo("Test");
   }
