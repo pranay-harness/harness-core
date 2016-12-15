@@ -6,7 +6,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.CloudWatchService;
 
 import java.util.List;
@@ -24,7 +23,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Timed
 @ExceptionMetered
-@PublicApi
 public class CloudWatchResource {
   @Inject private CloudWatchService cloudWatchService;
 
