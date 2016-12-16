@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
@@ -8,6 +7,7 @@ import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
+import software.wings.service.AwsHelperService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.StateExecutionException;
@@ -21,11 +21,11 @@ import javax.inject.Inject;
  */
 public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private SettingsService settingsService;
+  @Inject private AwsHelperService awsHelperService;
 
   @Override
   public List<String> listNamespaces(String settingId) {
     AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(settingId);
-    ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics();
     return listMetricsResult.getMetrics().stream().map(Metric::getNamespace).distinct().collect(Collectors.toList());
   }
@@ -52,11 +52,6 @@ public class CloudWatchServiceImpl implements CloudWatchService {
         .collect(Collectors.toList());
   }
 
-  @Override
-  public List<String> listExtendedStatistics(String settingId, String metricName) {
-    return null;
-  }
-
   private AmazonCloudWatchClient getAmazonCloudWatchClient(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsInfrastructureProviderConfig)) {
@@ -64,8 +59,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     }
     AwsInfrastructureProviderConfig awsInfrastructureProviderConfig =
         (AwsInfrastructureProviderConfig) settingAttribute.getValue();
-    BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
+    return awsHelperService.getAwsCloudWatchClient(
         awsInfrastructureProviderConfig.getAccessKey(), awsInfrastructureProviderConfig.getSecretKey());
-    return new AmazonCloudWatchClient(awsCredentials);
   }
 }

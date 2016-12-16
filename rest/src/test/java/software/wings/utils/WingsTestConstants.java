@@ -287,4 +287,29 @@ public class WingsTestConstants {
    * The constant ACCOUNT_ID.
    */
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
+
+  /**
+   * The constant ACCESS_KEY.
+   */
+  public static final String ACCESS_KEY = "ACCESS_KEY";
+  /**
+   * The constant SECRET_KEY.
+   */
+  public static final String SECRET_KEY = "SECRET_KEY";
+  /**
+   * The constant ASSERTION.
+   */
+  public static final String ASSERTION = "ASSERTION";
+  /**
+   * The constant NAMESPACE.
+   */
+  public static final String NAMESPACE = "AWS/EC2";
+  /**
+   * The constant METRIC_NAME.
+   */
+  public static final String METRIC_NAME = "CPUUtilization";
+  /**
+   * The constant METRIC_DIMENSION.
+   */
+  public static final String METRIC_DIMENSION = "METRIC_DIMENSION";
 }

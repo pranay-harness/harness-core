@@ -318,7 +318,6 @@ public class User extends Base implements Principal {
         .add("token", token)
         .add("emailVerified", emailVerified)
         .add("statsFetchedOn", statsFetchedOn)
-        .add("publicUser", getPublicUser())
         .toString();
   }
 
