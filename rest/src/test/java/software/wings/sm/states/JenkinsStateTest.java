@@ -20,8 +20,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
-import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.BuildWithDetails;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,8 +31,6 @@ import org.mockito.junit.MockitoRule;
 import software.wings.CurrentThreadExecutor;
 import software.wings.beans.Activity;
 import software.wings.beans.DelegateTask;
-import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -52,14 +48,10 @@ import java.util.concurrent.ExecutorService;
 public class JenkinsStateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private JenkinsFactory jenkinsFactory;
   @Mock private ExecutorService executorService;
   @Mock private ActivityService activityService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private ExecutionContextImpl executionContext;
-  @Mock private Jenkins jenkins;
-  @Mock private Build build;
-  @Mock private BuildWithDetails buildWithDetails;
   @Mock private DelegateService delegateService;
 
   @InjectMocks private JenkinsState jenkinsState = new JenkinsState("jenkins");
