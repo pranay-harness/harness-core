@@ -25,7 +25,6 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   @Override
   public List<String> listNamespaces(String settingId) {
     AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(settingId);
-    ListMetricsRequest listMetricsRequest = new ListMetricsRequest();
     ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics();
     return listMetricsResult.getMetrics().stream().map(Metric::getNamespace).distinct().collect(Collectors.toList());
   }
