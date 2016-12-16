@@ -73,13 +73,9 @@ public class CloudWatchState extends State {
   @Attributes(required = true, title = "AWS account")
   private String awsCredentialsConfigId;
 
-  @EnumData(enumDataProvider = CloudWatchNamespaceDataProvider.class)
-  @Attributes(required = true, title = "Namespace")
-  private String namespace;
+  @Attributes(required = true, title = "Namespace") private String namespace;
 
-  @EnumData(enumDataProvider = CloudWatchMetricDataProvider.class)
-  @Attributes(required = true, title = "MetricName")
-  private String metricName;
+  @Attributes(required = true, title = "MetricName") private String metricName;
   @Attributes(title = "Percentile (pNN.NN)") private String percentile;
   @Attributes(title = "Dimensions") private List<Dimension> dimensions = new ArrayList<>();
   @Attributes(title = "Time duration (in minutes, default 10 minutes)") private java.lang.String timeDuration;

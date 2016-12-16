@@ -27,7 +27,6 @@ import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -66,10 +65,22 @@ import org.mongodb.morphia.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.*;
+import software.wings.beans.AppContainer;
+import software.wings.beans.Application;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.Base;
+import software.wings.beans.BastionConnectionAttributes;
+import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.RestResponse;
+import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.User;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -404,32 +415,18 @@ private void createGlobalSettings() {
           APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
 
-  getRequestWithAuthHeader(target).post(
-      Entity.entity(aSettingAttribute()
-                        .withIsPluginSetting(true)
-                        .withName("AppDynamics")
-                        .withAccountId(accountId)
-                        .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                                       .withControllerUrl("https://na774.saas.appdynamics.com/controller")
-                                       .withUsername("testuser")
-                                       .withAccountname("na774")
-                                       .withPassword("testuser123")
-                                       .build())
-                        .build(),
-          APPLICATION_JSON),
-      new GenericType<RestResponse<SettingAttribute>>() {});
+  /*
+  getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withIsPluginSetting(true).withName("AppDynamics").withAccountId(accountId)
+      .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig().withControllerUrl("https://na774.saas.appdynamics.com/controller").withUsername("testuser")
+          .withAccountname("na774").withPassword("testuser123").build()).build(), APPLICATION_JSON), new
+  GenericType<RestResponse<SettingAttribute>>() {
+  });
 
-  getRequestWithAuthHeader(target).post(
-      Entity.entity(aSettingAttribute()
-                        .withAccountId(accountId)
-                        .withName("AWS_CREDENTIALS")
-                        .withValue(anAwsInfrastructureProviderConfig()
-                                       .withSecretKey("AKIAI6IK4KYQQQEEWEVA")
-                                       .withSecretKey("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")
-                                       .build())
-                        .build(),
-          APPLICATION_JSON),
-      new GenericType<RestResponse<SettingAttribute>>() {});
+  getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
+      .withValue(anAwsInfrastructureProviderConfig().withSecretKey("AKIAI6IK4KYQQQEEWEVA").withSecretKey("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").build())
+      .build(), APPLICATION_JSON), new GenericType<RestResponse<SettingAttribute>>() {
+  });
+  */
 }
 
 private void createAppSettings(String appId) {
