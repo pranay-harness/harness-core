@@ -33,6 +33,11 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       return;
     }
 
+    dispatchNotification(notification, notificationRules);
+  }
+
+  @Override
+  public void dispatchNotification(Notification notification, List<NotificationRule> notificationRules) {
     // TODO: match the rule based on filter
 
     List<NotificationRule> matchingRules = notificationRules;

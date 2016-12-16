@@ -23,6 +23,7 @@ import software.wings.sm.states.CommandState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
+import software.wings.sm.states.GroupState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.LoadBalancerState;
@@ -50,14 +51,17 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
+  GROUP(GroupState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
+
+  /**
+   * Repeat state type.
+   */
+  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, ORCHESTRATION_STENCILS),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, StencilCategory.CONTROLS, 1, ORCHESTRATION_STENCILS),
-
-  // STATE_MACHINE(ORCHESTRATION_STENCILS),
+  FORK(ForkState.class, StencilCategory.CONTROLS, 2, ORCHESTRATION_STENCILS),
 
   /**
    * Wait state type.
