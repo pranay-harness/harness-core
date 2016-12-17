@@ -11,6 +11,13 @@
 
     <artifactId>api</artifactId>
 
+    <repositories>
+    <repository>
+        <id>localrepository</id>
+        <url>file://${basedir}/../repo</url>
+    </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>ro.fortsoft.pf4j</groupId>

@@ -57,10 +57,6 @@
             <url>http://palantir.bintray.com/releases</url>
         </repository>
         <repository>
-            <id>localrepository</id>
-            <url>file://${basedir}/repo</url>
-        </repository>
-        <repository>
             <id>sonatype-nexus-releases</id>
             <name>Sonatype Nexus releases</name>
             <url>http://oss.sonatype.org/content/repositories/releases</url>
