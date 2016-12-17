@@ -32,13 +32,4 @@ public interface CloudWatchService {
    * @return the list
    */
   List<String> listDimensions(String settingId, String namespace, String metricName);
-
-  /**
-   * List extended statistics list.
-   *
-   * @param settingId  the setting id
-   * @param metricName the metric name
-   * @return the list
-   */
-  List<String> listExtendedStatistics(String settingId, String metricName);
 }

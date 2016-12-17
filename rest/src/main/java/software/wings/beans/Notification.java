@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
@@ -176,5 +178,18 @@ public abstract class Notification extends Base {
      * Information notification type.
      */
     INFORMATION
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("environmentId", environmentId)
+        .add("entityId", entityId)
+        .add("entityType", entityType)
+        .add("accountId", accountId)
+        .add("notificationType", notificationType)
+        .add("complete", complete)
+        .add("actionable", actionable)
+        .toString();
   }
 }

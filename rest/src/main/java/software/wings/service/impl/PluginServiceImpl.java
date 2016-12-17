@@ -17,6 +17,7 @@ import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -82,6 +83,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("SMTP")
             .withPluginCategories(asList(Collaboration))
             .withUiSchema(readUiSchema("SMTP"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(SlackConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("SLACK")
+            .withType("SLACK")
+            .withPluginCategories(asList(Collaboration))
+            .withUiSchema(readUiSchema("SLACK"))
             .build());
   }
 

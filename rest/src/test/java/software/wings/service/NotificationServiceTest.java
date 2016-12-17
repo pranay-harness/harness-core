@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -39,6 +40,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 
 import javax.inject.Inject;
@@ -50,6 +52,7 @@ public class NotificationServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Injector injector;
   @Mock private AppService appService;
+  @Mock private NotificationDispatcherService notificationDispatcherService;
 
   @Inject @InjectMocks private NotificationService notificationService;
 
@@ -110,6 +113,7 @@ public class NotificationServiceTest extends WingsBaseTest {
         anInformationNotification().withAppId(APP_ID).withEnvironmentId(ENV_ID).withDisplayText("TEXT").build();
     notificationService.sendNotificationAsync(notification);
     verify(wingsPersistence).saveAndGet(Notification.class, notification);
+    verify(notificationDispatcherService).dispatchNotification(any());
     verifyNoMoreInteractions(wingsPersistence, injector);
   }
 

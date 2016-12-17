@@ -17,6 +17,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private Injector injector;
   @Inject private ExecutorService executorService;
   @Inject private AppService appService;
+  @Inject private NotificationDispatcherService notificationDispatcherService;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -65,11 +67,8 @@ public class NotificationServiceImpl implements NotificationService {
       throw new WingsException(INVALID_REQUEST, "message", "Notification not actionable");
     }
     ActionableNotification actionableNotification = (ActionableNotification) notification;
-    if (!actionableNotification.getNotificationActions()
-             .stream()
-             .filter(notificationAction -> notificationAction.getType() == actionType)
-             .findFirst()
-             .isPresent()) {
+    if (actionableNotification.getNotificationActions().stream().noneMatch(
+            notificationAction -> notificationAction.getType() == actionType)) {
       throw new WingsException(INVALID_REQUEST, "message", "Action not supported for NotificationType");
     }
     injector.injectMembers(actionableNotification);
@@ -77,7 +76,9 @@ public class NotificationServiceImpl implements NotificationService {
     if (actionCompleted) {
       markNotificationCompleted(appId, notificationId);
     }
-    return get(appId, notificationId);
+    Notification savedNotification = get(appId, notificationId);
+    notificationDispatcherService.dispatchNotification(savedNotification);
+    return savedNotification;
   }
 
   @Override
@@ -92,11 +93,13 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public void sendNotificationAsync(@Valid Notification notification) {
-    executorService.execute(() -> {
-      Application application = appService.get(notification.getAppId());
-      notification.setAccountId(application.getAccountId());
-      save(notification); // block for persistence
-      // TODO: async broadcast
-    });
+    executorService.execute(() -> sendNotification(notification));
+  }
+
+  private void sendNotification(Notification notification) {
+    Application application = appService.get(notification.getAppId());
+    notification.setAccountId(application.getAccountId());
+    Notification savedNotification = save(notification);
+    notificationDispatcherService.dispatchNotification(savedNotification);
   }
 }

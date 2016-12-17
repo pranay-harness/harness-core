@@ -6,7 +6,6 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Minimum;
 import static com.amazonaws.services.cloudwatch.model.Statistic.SampleCount;
 import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -19,11 +18,6 @@ import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -39,6 +33,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;
@@ -68,6 +63,7 @@ import javax.inject.Inject;
 public class CloudWatchState extends State {
   @Transient @Inject private SettingsService settingsService;
   @Transient @Inject private ActivityService activityService;
+  @Transient @Inject private AwsHelperService awsHelperService;
 
   @EnumData(enumDataProvider = AwsSettingProvider.class)
   @Attributes(required = true, title = "AWS account")
@@ -110,15 +106,15 @@ public class CloudWatchState extends State {
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsInfrastructureProviderConfig)) {
       throw new StateExecutionException("AWS account setting not found");
     }
-    AwsInfrastructureProviderConfig awsInfrastructureProviderConfig =
-        (AwsInfrastructureProviderConfig) settingAttribute.getValue();
+    AwsInfrastructureProviderConfig awsConfig = (AwsInfrastructureProviderConfig) settingAttribute.getValue();
 
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {
       HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
       String hostName = hostElement.getHostName();
       if (!Strings.isNullOrEmpty(hostName)) {
-        String awsInstanceId = getInstanceId(hostName, awsInfrastructureProviderConfig);
+        String awsInstanceId =
+            awsHelperService.getInstanceId(awsConfig.getAccessKey(), awsConfig.getSecretKey(), hostName);
         hostElement.setInstanceId(awsInstanceId);
       }
     }
@@ -135,9 +131,8 @@ public class CloudWatchState extends State {
       stateExecutionData.setDimensions(evaluatedDimensions);
     }
 
-    BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
-        awsInfrastructureProviderConfig.getAccessKey(), awsInfrastructureProviderConfig.getSecretKey());
-    AmazonCloudWatchClient cloudWatchClient = getAmazonCloudWatchClient(awsCredentials);
+    AmazonCloudWatchClient cloudWatchClient =
+        awsHelperService.getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     GetMetricStatisticsRequest getMetricRequest = new GetMetricStatisticsRequest();
 
@@ -186,56 +181,6 @@ public class CloudWatchState extends State {
         .withStateExecutionData(stateExecutionData)
         .withErrorMessage(errorMsg)
         .build();
-  }
-
-  private String getInstanceId(String hostName, AwsInfrastructureProviderConfig config) {
-    AmazonEC2Client amazonEC2Client =
-        new AmazonEC2Client(new BasicAWSCredentials(config.getAccessKey(), config.getSecretKey()));
-
-    String instanceId;
-    DescribeInstancesResult describeInstancesResult =
-        amazonEC2Client.describeInstances(new DescribeInstancesRequest().withFilters(
-            new Filter().withName("private-dns-name").withValues(hostName + "*")));
-    instanceId = describeInstancesResult.getReservations()
-                     .stream()
-                     .flatMap(reservation -> reservation.getInstances().stream())
-                     .map(Instance::getInstanceId)
-                     .findFirst()
-                     .orElse(null);
-
-    if (isBlank(instanceId)) {
-      describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("private-ip-address").withValues(hostName)));
-      instanceId = describeInstancesResult.getReservations()
-                       .stream()
-                       .flatMap(reservation -> reservation.getInstances().stream())
-                       .map(Instance::getInstanceId)
-                       .findFirst()
-                       .orElse(instanceId);
-    }
-
-    if (isBlank(instanceId)) {
-      describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("dns-name").withValues(hostName + "*")));
-      instanceId = describeInstancesResult.getReservations()
-                       .stream()
-                       .flatMap(reservation -> reservation.getInstances().stream())
-                       .map(Instance::getInstanceId)
-                       .findFirst()
-                       .orElse(instanceId);
-    }
-
-    if (isBlank(instanceId)) {
-      describeInstancesResult = amazonEC2Client.describeInstances(
-          new DescribeInstancesRequest().withFilters(new Filter().withName("ip-address").withValues(hostName)));
-      instanceId = describeInstancesResult.getReservations()
-                       .stream()
-                       .flatMap(reservation -> reservation.getInstances().stream())
-                       .map(Instance::getInstanceId)
-                       .findFirst()
-                       .orElse(instanceId);
-    }
-    return instanceId;
   }
 
   private Map<String, Object> prepareStateExecutionData(Datapoint datapoint) {

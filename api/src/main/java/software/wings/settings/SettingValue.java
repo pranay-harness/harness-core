@@ -58,10 +58,9 @@ public abstract class SettingValue implements ExtensionPoint {
     SMTP, /**
            * Jenkins setting variable types.
            */
-    JENKINS,
-    /**
-     * Bamboo setting variable types.
-     */
+    JENKINS, /**
+              * Bamboo setting variable types.
+              */
     BAMBOO,
 
     /**
@@ -87,6 +86,11 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Aws credentials setting variable types.
      */
-    AWS_CREDENTIALS
+    AWS_CREDENTIALS,
+
+    /**
+     * Slack setting variable types.
+     */
+    SLACK
   }
 }
