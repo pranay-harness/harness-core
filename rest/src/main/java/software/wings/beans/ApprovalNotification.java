@@ -21,7 +21,6 @@ import software.wings.service.intfc.ArtifactService;
 
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.HEAD;
 
 /**
  * Created by anubhaw on 7/25/16.

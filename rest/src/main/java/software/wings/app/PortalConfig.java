@@ -19,7 +19,7 @@ public class PortalConfig {
   private List<String> allowedDomains = Lists.newArrayList();
   @JsonProperty(defaultValue = "") private String companyName = "";
   @JsonProperty(defaultValue = "/register/verify") private String verificationUrl = "/register/verify";
-
+  @JsonProperty(defaultValue = "/app/%s/overview") private String applicationOverviewUrlPattern = "/app/%s/overview";
   @JsonProperty(defaultValue = "/app/%s/env/%s/execution/%s/detail")
   private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
 
@@ -126,6 +126,24 @@ public class PortalConfig {
   }
 
   /**
+   * Gets application overview url pattern.
+   *
+   * @return the application overview url pattern
+   */
+  public String getApplicationOverviewUrlPattern() {
+    return applicationOverviewUrlPattern;
+  }
+
+  /**
+   * Sets application overview url pattern.
+   *
+   * @param applicationOverviewUrlPattern the application overview url pattern
+   */
+  public void setApplicationOverviewUrlPattern(String applicationOverviewUrlPattern) {
+    this.applicationOverviewUrlPattern = applicationOverviewUrlPattern;
+  }
+
+  /**
    * The type Array converter.
    */
   public static class ArrayConverter extends StdConverter<List<String>, String> {
@@ -135,10 +153,20 @@ public class PortalConfig {
     }
   }
 
+  /**
+   * Gets execution url pattern.
+   *
+   * @return the execution url pattern
+   */
   public String getExecutionUrlPattern() {
     return executionUrlPattern;
   }
 
+  /**
+   * Sets execution url pattern.
+   *
+   * @param executionUrlPattern the execution url pattern
+   */
   public void setExecutionUrlPattern(String executionUrlPattern) {
     this.executionUrlPattern = executionUrlPattern;
   }

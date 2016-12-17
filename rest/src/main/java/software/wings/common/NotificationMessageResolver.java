@@ -32,11 +32,24 @@ public class NotificationMessageResolver {
    * The constant HOST_DELETE_NOTIFICATION.
    */
   public static final String HOST_DELETE_NOTIFICATION = "A host ${HOST_NAME} deleted from ${ENV_NAME} environment.";
+
+  /**
+   * The constant APPROVAL_NOTIFICATION.
+   */
+  public static final String SLACK_APPROVAL_NOTIFICATION =
+      "${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>";
+  /**
+   * The constant SLACK_APPROVAL_NOTIFICATION_STATUS.
+   */
+  public static final String SLACK_APPROVAL_NOTIFICATION_STATUS =
+      "${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}";
+
   /**
    * The constant DEPLOYMENT_COMPLETED_NOTIFICATION.
    */
   public static final String DEPLOYMENT_COMPLETED_NOTIFICATION =
       "${DATE} : Deployment {NAME} completed on ${HOST_COUNT} in ${ENV_NAME} environment.";
+
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
 
   /**

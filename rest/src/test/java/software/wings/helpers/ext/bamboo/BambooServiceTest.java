@@ -63,7 +63,7 @@ public class BambooServiceTest extends WingsBaseTest {
                 aResponse()
                     .withStatus(200)
                     .withBody(
-                        "{\"results\":{\"result\":[{\"plan\":{\"vcsRevisionKey\":\"REV_11\",\"buildNumber\":11}},{\"plan\":{\"vcsRevisionKey\":\"REV_12\",\"buildNumber\":12}}]}}")
+                        "{\"results\":{\"result\":[{\"vcsRevisionKey\":\"REV_11\",\"buildNumber\":11}, {\"vcsRevisionKey\":\"REV_12\",\"buildNumber\":12}]}}")
                     .withHeader("Content-Type", "application/json")));
     List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50);
     Assertions.assertThat(bamboo_plan_key)

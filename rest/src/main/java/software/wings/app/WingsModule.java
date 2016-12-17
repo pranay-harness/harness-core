@@ -64,6 +64,7 @@ import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.ServiceVariableServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.SetupServiceImpl;
+import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
@@ -112,6 +113,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
@@ -195,6 +197,7 @@ public class WingsModule extends AbstractModule {
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
     bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
     bind(CloudWatchService.class).to(CloudWatchServiceImpl.class);
+    bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()

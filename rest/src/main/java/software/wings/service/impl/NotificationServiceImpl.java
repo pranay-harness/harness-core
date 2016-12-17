@@ -17,6 +17,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private Injector injector;
   @Inject private ExecutorService executorService;
   @Inject private AppService appService;
+  @Inject private NotificationDispatcherService notificationDispatcherService;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -74,7 +76,9 @@ public class NotificationServiceImpl implements NotificationService {
     if (actionCompleted) {
       markNotificationCompleted(appId, notificationId);
     }
-    return get(appId, notificationId);
+    Notification savedNotification = get(appId, notificationId);
+    notificationDispatcherService.dispatchNotification(savedNotification);
+    return savedNotification;
   }
 
   @Override
@@ -96,5 +100,6 @@ public class NotificationServiceImpl implements NotificationService {
     Application application = appService.get(notification.getAppId());
     notification.setAccountId(application.getAccountId());
     Notification savedNotification = save(notification);
+    notificationDispatcherService.dispatchNotification(savedNotification);
   }
 }

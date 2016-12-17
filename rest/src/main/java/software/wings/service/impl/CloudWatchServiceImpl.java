@@ -7,7 +7,6 @@ import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
-import software.wings.service.AwsHelperService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.StateExecutionException;

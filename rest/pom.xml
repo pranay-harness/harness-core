@@ -423,6 +423,11 @@
             <artifactId>bcprov-jdk16</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.allbegray</groupId>
+            <artifactId>slack-api</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

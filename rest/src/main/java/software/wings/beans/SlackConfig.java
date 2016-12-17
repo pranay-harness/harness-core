@@ -9,7 +9,7 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("SLACK")
 public class SlackConfig extends SettingValue {
-  @Attributes(title = "Webhook Url") private String incomingWebhookUrl;
+  @Attributes(title = "Slack Webhook Url") private String outgoingWebhookUrl;
 
   /**
    * Instantiates a new setting value.
@@ -23,16 +23,16 @@ public class SlackConfig extends SettingValue {
    *
    * @return the incoming webhook url
    */
-  public String getIncomingWebhookUrl() {
-    return incomingWebhookUrl;
+  public String getOutgoingWebhookUrl() {
+    return outgoingWebhookUrl;
   }
 
   /**
    * Sets incoming webhook url.
    *
-   * @param incomingWebhookUrl the incoming webhook url
+   * @param outgoingWebhookUrl the incoming webhook url
    */
-  public void setIncomingWebhookUrl(String incomingWebhookUrl) {
-    this.incomingWebhookUrl = incomingWebhookUrl;
+  public void setOutgoingWebhookUrl(String outgoingWebhookUrl) {
+    this.outgoingWebhookUrl = outgoingWebhookUrl;
   }
 }

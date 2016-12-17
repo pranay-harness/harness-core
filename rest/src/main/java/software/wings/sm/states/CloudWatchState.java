@@ -33,7 +33,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
-import software.wings.service.AwsHelperService;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.SettingsService;

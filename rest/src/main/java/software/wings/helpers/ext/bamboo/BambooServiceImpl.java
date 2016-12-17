@@ -123,10 +123,9 @@ public class BambooServiceImpl implements BambooService {
       JsonNode resultNode = response.body().at("/results/result");
       if (resultNode != null) {
         resultNode.elements().forEachRemaining(jsonNode -> {
-          JsonNode nextNode = jsonNode.elements().next();
           buildDetailsList.add(aBuildDetails()
-                                   .withNumber(nextNode.get("buildNumber").asInt())
-                                   .withRevision(nextNode.get("vcsRevisionKey").asText())
+                                   .withNumber(jsonNode.get("buildNumber").asInt())
+                                   .withRevision(jsonNode.get("vcsRevisionKey").asText())
                                    .build());
         });
       }

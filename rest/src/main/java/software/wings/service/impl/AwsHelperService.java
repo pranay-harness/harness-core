@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 

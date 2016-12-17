@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 
