@@ -1,10 +1,13 @@
 package software.wings.managerclient;
 
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.beans.Delegate;
@@ -31,4 +34,9 @@ public interface ManagerClient {
   @POST("delegates/{delegateId}/tasks/{taskId}")
   Call<Void> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);
+
+  @Multipart
+  @POST("delegateFiles/{delegateId}/tasks/{taskId}")
+  Call<RestResponse<String>> uploadArtifact(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
+      @Query("accountId") String accountId, @Part MultipartBody.Part file);
 }
