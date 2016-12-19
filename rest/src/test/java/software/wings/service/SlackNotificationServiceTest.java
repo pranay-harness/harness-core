@@ -23,7 +23,6 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.SlackConfig;
 import software.wings.dl.PageRequest;
-import software.wings.rules.Integration;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -36,7 +35,6 @@ import javax.inject.Inject;
  * Created by anubhaw on 12/16/16.
  */
 
-@Integration
 public class SlackNotificationServiceTest extends WingsBaseTest {
   public static final String CHANNEL = "#channel";
   public static final String SENDER = "sender";
