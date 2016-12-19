@@ -66,6 +66,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
@@ -415,13 +416,22 @@ private void createGlobalSettings() {
           APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
 
-  /*
-  getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withIsPluginSetting(true).withName("AppDynamics").withAccountId(accountId)
-      .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig().withControllerUrl("https://na774.saas.appdynamics.com/controller").withUsername("testuser")
-          .withAccountname("na774").withPassword("testuser123").build()).build(), APPLICATION_JSON), new
-  GenericType<RestResponse<SettingAttribute>>() {
-  });
+  getRequestWithAuthHeader(target).post(
+      Entity.entity(aSettingAttribute()
+                        .withIsPluginSetting(true)
+                        .withName("AppDynamics")
+                        .withAccountId(accountId)
+                        .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
+                                       .withControllerUrl("https://na774.saas.appdynamics.com/controller")
+                                       .withUsername("testuser")
+                                       .withAccountname("na774")
+                                       .withPassword("testuser123")
+                                       .build())
+                        .build(),
+          APPLICATION_JSON),
+      new GenericType<RestResponse<SettingAttribute>>() {});
 
+  /*
   getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
       .withValue(anAwsInfrastructureProviderConfig().withSecretKey("AKIAI6IK4KYQQQEEWEVA").withSecretKey("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").build())
       .build(), APPLICATION_JSON), new GenericType<RestResponse<SettingAttribute>>() {
