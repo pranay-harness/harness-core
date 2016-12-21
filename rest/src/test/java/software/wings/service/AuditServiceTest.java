@@ -72,6 +72,8 @@ public class AuditServiceTest extends WingsBaseTest {
     byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
     String fileId = auditService.create(header, RequestType.REQUEST, new ByteArrayInputStream(httpBody));
 
+    header.setResponseStatusCode(200);
+    header.setResponseTime(System.currentTimeMillis());
     AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
     assertThat(header2).isNotNull();
     assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
@@ -130,6 +132,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @RealMongo
   public void shouldFinalize() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
