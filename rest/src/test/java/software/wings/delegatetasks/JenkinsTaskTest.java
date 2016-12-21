@@ -4,6 +4,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
@@ -42,8 +43,8 @@ public class JenkinsTaskTest {
   private Map<String, String> assertions = new HashMap<>();
 
   @InjectMocks
-  private JenkinsTask jenkinsTask =
-      (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask("id1", new Object[] {}, notifyResponseData -> {});
+  private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
+      "delid1", aDelegateTask().build(), notifyResponseData -> {});
 
   @Before
   public void setUp() throws Exception {

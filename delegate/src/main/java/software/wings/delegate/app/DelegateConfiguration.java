@@ -12,6 +12,8 @@ public class DelegateConfiguration {
 
   private long heartbeatIntervalMs;
 
+  private String localDiskPath;
+
   /**
    * Getter for property 'managerUrl'.
    *
@@ -52,5 +54,13 @@ public class DelegateConfiguration {
 
   public void setHeartbeatIntervalMs(long heartbeatIntervalMs) {
     this.heartbeatIntervalMs = heartbeatIntervalMs;
+  }
+
+  public String getLocalDiskPath() {
+    return localDiskPath;
+  }
+
+  public void setLocalDiskPath(String localDiskPath) {
+    this.localDiskPath = localDiskPath;
   }
 }

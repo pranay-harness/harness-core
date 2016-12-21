@@ -23,6 +23,7 @@ import static software.wings.sm.states.HttpState.Builder.aHttpState;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -396,7 +397,7 @@ public class HttpStateTest extends WingsBaseTest {
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
       task.getTaskType()
-          .getDelegateRunnableTask(task.getWaitId(), task.getParameters(),
+          .getDelegateRunnableTask(DELEGATE_ID, task,
               o
               -> asyncExecutionResponse = httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o)))
           .run();

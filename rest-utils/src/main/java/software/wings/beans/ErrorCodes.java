@@ -266,7 +266,8 @@ public enum ErrorCodes {
   /**
    * Retry failed error codes.
    */
-  RETRY_FAILED("RETRY_FAILED");
+  RETRY_FAILED("RETRY_FAILED"),
+  UNKNOWN_ARTIFACT_TYPE("UNKNOWN_ARTIFACT_TYPE");
 
   /**
    * The constant ARGS_NAME.

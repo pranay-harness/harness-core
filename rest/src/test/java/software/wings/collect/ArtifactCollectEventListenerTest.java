@@ -1,114 +1,107 @@
 package software.wings.collect;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.BambooConfig.Builder.aBambooConfig;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.BAMBOO_COLLECTION;
+import static software.wings.beans.TaskType.JENKINS_COLLECTION;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
+import static software.wings.beans.artifact.BambooArtifactStream.Builder.aBambooArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
+import static software.wings.utils.WingsTestConstants.JENKINS_URL;
+import static software.wings.utils.WingsTestConstants.JOB_NAME;
+import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
+
+import com.google.common.collect.Lists;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Verifier;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ApprovalNotification;
+import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.Status;
-import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.service.intfc.ArtifactCollectorService;
+import software.wings.service.impl.EventEmitter;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Collections;
-import java.util.Map;
 import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/11/16.
  */
 public class ArtifactCollectEventListenerTest extends WingsBaseTest {
-  /**
-   * The constant ARTIFACT_FILE.
-   */
-  public static final ArtifactFile ARTIFACT_FILE =
-      anArtifactFile().withAppId(APP_ID).withUuid("ARTIFACT_FILE_ID").build();
-
-  /**
-   * The constant ARTIFACT_STREAM_NAME.
-   */
-  private final ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactStream().withSourceName(ARTIFACT_STREAM_NAME).build();
+  private final Application APP = anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build();
 
   @InjectMocks @Inject private ArtifactCollectEventListener artifactCollectEventListener;
 
+  @Mock private AppService appService;
+
   @Mock private ArtifactService artifactService;
 
-  @Mock private Map<String, ArtifactCollectorService> collectorServiceMap;
+  @Mock private DelegateService delegateService;
 
-  @Mock private ArtifactCollectorService artifactCollectorService;
+  @Mock private WaitNotifyEngine waitNotifyEngine;
 
-  @Mock private NotificationService notificationService;
+  @Mock private SettingsService settingsService;
 
   @Mock private ArtifactStreamService artifactStreamService;
 
-  /**
-   * The Verifier.
-   */
-  @Rule
-  public Verifier verifier = new Verifier() {
-    @Override
-    protected void verify() throws Throwable {
-      verifyNoMoreInteractions(artifactService, collectorServiceMap, artifactCollectorService, notificationService);
-    }
-  };
+  @Mock private EventEmitter eventEmitter;
 
   /**
-   * Setup mocks.
+   * Setup mocks.ARTIFACT_SOURCE
    */
   @Before
   public void setupMocks() {
-    when(collectorServiceMap.get(anyString())).thenReturn(artifactCollectorService);
+    when(appService.get(APP_ID)).thenReturn(APP);
+  }
+
+  /**
+   * Should shouldSendTask
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void shouldSendJenkinsTask() throws Exception {
+    SettingAttribute SETTING_ATTRIBUTE =
+        aSettingAttribute()
+            .withValue(
+                aJenkinsConfig().withJenkinsUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
+            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
+
+    ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactStream()
+                                         .withSourceName(ARTIFACT_STREAM_NAME)
+                                         .withAppId(APP_ID)
+                                         .withSettingId(SETTING_ID)
+                                         .withJobname(JOB_NAME)
+                                         .withArtifactPathServices(Lists.newArrayList(
+                                             anArtifactPathServiceEntry().withArtifactPathRegex(ARTIFACT_PATH).build()))
+                                         .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
-  }
-
-  /**
-   * Should fail when artifact not available.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void shouldFailWhenArtifactNotAvailable() throws Exception {
-    artifactCollectEventListener.onMessage(
-        aCollectEvent()
-            .withArtifact(
-                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
-            .build());
-
-    verify(collectorServiceMap).get(anyString());
-    verify(artifactCollectorService).collect(ARTIFACT_SOURCE, Collections.emptyMap());
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.FAILED);
-  }
-
-  /**
-   * Should collect and update artifact.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void shouldCollectAndUpdateArtifact() throws Exception {
-    when(artifactCollectorService.collect(ARTIFACT_SOURCE, Collections.emptyMap()))
-        .thenReturn(Collections.singletonList(ARTIFACT_FILE));
 
     artifactCollectEventListener.onMessage(
         aCollectEvent()
@@ -116,13 +109,55 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                 anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
             .build());
 
-    verify(collectorServiceMap).get(anyString());
-    verify(artifactCollectorService).collect(ARTIFACT_SOURCE, Collections.emptyMap());
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).sendTaskWaitNotify(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("taskType", JENKINS_COLLECTION)
+        .hasFieldOrProperty("parameters");
+  }
+
+  /**
+   * Should shouldSendTask
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void shouldSendBambooTask() throws Exception {
+    SettingAttribute SETTING_ATTRIBUTE =
+        aSettingAttribute()
+            .withValue(
+                aBambooConfig().withBamboosUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
+            .build();
+    when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
+
+    ArtifactStream ARTIFACT_SOURCE = aBambooArtifactStream()
+                                         .withSourceName(ARTIFACT_STREAM_NAME)
+                                         .withAppId(APP_ID)
+                                         .withSettingId(SETTING_ID)
+                                         .withJobname(JOB_NAME)
+                                         .withArtifactPathServices(Lists.newArrayList(
+                                             anArtifactPathServiceEntry().withArtifactPathRegex(ARTIFACT_PATH).build()))
+                                         .build();
+
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
+
+    artifactCollectEventListener.onMessage(
+        aCollectEvent()
+            .withArtifact(
+                anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
-    verify(artifactService).addArtifactFile(ARTIFACT_ID, APP_ID, Collections.singletonList(ARTIFACT_FILE));
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.READY);
-    verify(notificationService).sendNotificationAsync(any(ApprovalNotification.class));
+
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).sendTaskWaitNotify(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("taskType", BAMBOO_COLLECTION)
+        .hasFieldOrProperty("parameters");
   }
 
   /**
@@ -132,9 +167,6 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
    */
   @Test
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
-    when(artifactCollectorService.collect(ARTIFACT_SOURCE, Collections.emptyMap()))
-        .thenReturn(Collections.singletonList(ARTIFACT_FILE));
-
     artifactCollectEventListener.onMessage(
         aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build()).build());
 

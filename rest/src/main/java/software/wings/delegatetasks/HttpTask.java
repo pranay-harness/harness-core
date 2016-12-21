@@ -25,6 +25,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.beans.DelegateTask;
 import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
@@ -45,8 +46,8 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  public HttpTask(String taskId, Object[] parameters, Consumer<HttpStateExecutionData> consumer) {
-    super(taskId, parameters, consumer);
+  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<HttpStateExecutionData> consumer) {
+    super(delegateId, delegateTask, consumer);
   }
 
   @Override
@@ -144,8 +145,8 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
   }
 
   public static final class Builder {
-    private String taskId;
-    private Object[] parameters;
+    private String delegateId;
+    private DelegateTask delegateTask;
     private Consumer<HttpStateExecutionData> consumer;
 
     private Builder() {}
@@ -154,13 +155,13 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
       return new Builder();
     }
 
-    public Builder withTaskId(String taskId) {
-      this.taskId = taskId;
+    public Builder withDelegateId(String delegateId) {
+      this.delegateId = delegateId;
       return this;
     }
 
-    public Builder withParameters(Object[] parameters) {
-      this.parameters = parameters;
+    public Builder withDelegateTask(DelegateTask delegateTask) {
+      this.delegateTask = delegateTask;
       return this;
     }
 
@@ -169,12 +170,8 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
       return this;
     }
 
-    public Builder but() {
-      return aHttpTask().withTaskId(taskId).withParameters(parameters).withConsumer(consumer);
-    }
-
     public HttpTask build() {
-      HttpTask httpTask = new HttpTask(taskId, parameters, consumer);
+      HttpTask httpTask = new HttpTask(delegateId, delegateTask, consumer);
       return httpTask;
     }
   }

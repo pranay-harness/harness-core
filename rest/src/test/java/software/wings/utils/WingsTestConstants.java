@@ -156,6 +156,11 @@ public class WingsTestConstants {
   /**
    * The constant ACTIVITY_ID.
    */
+  public static final String DELEGATE_ID = "DELEGATE_ID";
+
+  /**
+   * The constant ACTIVITY_ID.
+   */
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
 
   /**
@@ -187,6 +192,21 @@ public class WingsTestConstants {
    * The constant PIPELINE_WORKFLOW_EXECUTION_ID.
    */
   public static final String PIPELINE_WORKFLOW_EXECUTION_ID = "PIPELINE_WORKFLOW_EXECUTION_ID";
+
+  /**
+   * The constant JENKINS_URL.
+   */
+  public static final String JENKINS_URL = "JENKINS_URL";
+
+  /**
+   * The constant JOB_NAME.
+   */
+  public static final String JOB_NAME = "JOB_NAME";
+
+  /**
+   * The constant ARTIFACT_PATH.
+   */
+  public static final String ARTIFACT_PATH = "ARTIFACT_PATH";
 
   /**
    * The constant USER_NAME.

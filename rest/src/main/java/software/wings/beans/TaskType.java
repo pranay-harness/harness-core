@@ -1,10 +1,13 @@
 package software.wings.beans;
 
 import software.wings.api.HttpStateExecutionData;
+import software.wings.delegatetasks.BambooCollectionTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.HttpTask;
+import software.wings.delegatetasks.JenkinsCollectionTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
+import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -18,8 +21,8 @@ public enum TaskType {
 
     @Override
     public DelegateRunnableTask getDelegateRunnableTask(
-        String id, Object[] parameters, Consumer<? extends NotifyResponseData> consumer) {
-      return new HttpTask(id, parameters, (Consumer<HttpStateExecutionData>) consumer);
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new HttpTask(delegateId, delegateTask, (Consumer<HttpStateExecutionData>) consumer);
     }
   },
   SPLUNK {
@@ -27,8 +30,8 @@ public enum TaskType {
 
     @Override
     public DelegateRunnableTask getDelegateRunnableTask(
-        String id, Object[] parameters, Consumer<? extends NotifyResponseData> consumer) {
-      return new HttpTask(id, parameters, (Consumer<HttpStateExecutionData>) consumer);
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new HttpTask(delegateId, delegateTask, (Consumer<HttpStateExecutionData>) consumer);
     }
   },
   APP_DYNAMICS {
@@ -36,8 +39,8 @@ public enum TaskType {
 
     @Override
     public DelegateRunnableTask getDelegateRunnableTask(
-        String id, Object[] parameters, Consumer<? extends NotifyResponseData> consumer) {
-      return new HttpTask(id, parameters, (Consumer<HttpStateExecutionData>) consumer);
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new HttpTask(delegateId, delegateTask, (Consumer<HttpStateExecutionData>) consumer);
     }
   },
   JENKINS {
@@ -45,11 +48,29 @@ public enum TaskType {
 
     @Override
     public DelegateRunnableTask getDelegateRunnableTask(
-        String id, Object[] parameters, Consumer<? extends NotifyResponseData> consumer) {
-      return new JenkinsTask(id, parameters, (Consumer<JenkinsExecutionResponse>) consumer);
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new JenkinsTask(delegateId, delegateTask, (Consumer<JenkinsExecutionResponse>) consumer);
+    }
+  },
+  JENKINS_COLLECTION {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public DelegateRunnableTask getDelegateRunnableTask(
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new JenkinsCollectionTask(delegateId, delegateTask, (Consumer<ListNotifyResponseData>) consumer);
+    }
+  },
+  BAMBOO_COLLECTION {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public DelegateRunnableTask getDelegateRunnableTask(
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new BambooCollectionTask(delegateId, delegateTask, (Consumer<ListNotifyResponseData>) consumer);
     }
   };
 
   public abstract DelegateRunnableTask getDelegateRunnableTask(
-      String id, Object[] parameters, Consumer<? extends NotifyResponseData> consumer);
+      String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer);
 }

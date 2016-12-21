@@ -11,6 +11,7 @@ import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.DelegateTask;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -33,8 +34,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
   @Inject private ExpressionEvaluator evaluator;
   @Inject private JenkinsFactory jenkinsFactory;
 
-  public JenkinsTask(String taskId, Object[] parameters, Consumer<JenkinsExecutionResponse> consumer) {
-    super(taskId, parameters, consumer);
+  public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<JenkinsExecutionResponse> consumer) {
+    super(delegateId, delegateTask, consumer);
   }
 
   @Override

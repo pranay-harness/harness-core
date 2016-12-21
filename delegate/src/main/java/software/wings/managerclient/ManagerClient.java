@@ -37,6 +37,6 @@ public interface ManagerClient {
 
   @Multipart
   @POST("delegateFiles/{delegateId}/tasks/{taskId}")
-  Call<RestResponse<String>> uploadArtifact(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
+  Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Part MultipartBody.Part file);
 }

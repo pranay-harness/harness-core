@@ -79,9 +79,11 @@ public class DelegateServiceImpl implements DelegateService {
             managerClient.getTasks(delegateId, accountId).execute().body();
         if (isNotEmpty(delegateTasks.getResource())) {
           DelegateTask delegateTask = delegateTasks.getResource().get(0);
+          logger.info("DelegateTask received - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
+              delegateTask.getAccountId(), delegateTask.getTaskType());
 
-          DelegateRunnableTask delegateRunnableTask = delegateTask.getTaskType().getDelegateRunnableTask(
-              delegateTask.getUuid(), delegateTask.getParameters(), notifyResponseData -> {
+          DelegateRunnableTask delegateRunnableTask =
+              delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask, notifyResponseData -> {
                 try {
                   managerClient
                       .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
