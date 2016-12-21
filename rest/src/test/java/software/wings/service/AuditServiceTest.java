@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -12,9 +13,11 @@ import software.wings.beans.User;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AuditService;
 import software.wings.utils.JsonUtils;
 
+import java.io.ByteArrayInputStream;
 import javax.inject.Inject;
 
 /**
@@ -60,21 +63,20 @@ public class AuditServiceTest extends WingsBaseTest {
     return header;
   }
 
-  //  @Test
-  //  public void shouldCreateRequestPayload() throws Exception {
-  //
-  //    AuditHeader header = createAuditHeader();
-  //    assertThat(header.getRequestTime()).isNull();
-  //    assertThat(header.getRequestPayloadUuid()).isNull();
-  //    byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
-  //    String fileId = auditService.create(header, RequestType.REQUEST, httpBody );
-  //
-  //    AuditHeader header2 = auditService.read(header.getAccountId(), header.getUuid());
-  //    assertThat(header2).isNotNull();
-  //    assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
-  //    assertThat(header2.getRequestPayloadUuid()).isNotNull();
-  //
-  //  }
+  @Test
+  @RealMongo
+  public void shouldCreateRequestPayload() throws Exception {
+    AuditHeader header = createAuditHeader();
+    assertThat(header.getRequestTime()).isNull();
+    assertThat(header.getRequestPayloadUuid()).isNull();
+    byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
+    String fileId = auditService.create(header, RequestType.REQUEST, new ByteArrayInputStream(httpBody));
+
+    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+    assertThat(header2).isNotNull();
+    assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
+    assertThat(header2.getRequestPayloadUuid()).isNotNull();
+  }
 
   /**
    * Should list.
@@ -110,6 +112,7 @@ public class AuditServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
+  @RealMongo
   public void shouldUpdateUser() throws Exception {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
@@ -119,5 +122,22 @@ public class AuditServiceTest extends WingsBaseTest {
     AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
     assertThat(header2).isNotNull();
     assertThat(header2.getRemoteUser()).isEqualTo(user);
+  }
+
+  /**
+   * Should finalize.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void shouldFinalize() throws Exception {
+    AuditHeader header = createAuditHeader();
+    assertThat(header).isNotNull();
+    assertThat(header.getRemoteUser()).isNull();
+    byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
+    auditService.finalize(header, httpBody);
+    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+    assertThat(header2).isNotNull();
+    assertThat(header2.getResponsePayloadUuid()).isNotNull();
   }
 }
