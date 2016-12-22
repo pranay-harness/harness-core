@@ -138,9 +138,12 @@ public class AuditServiceTest extends WingsBaseTest {
     assertThat(header).isNotNull();
     assertThat(header.getRemoteUser()).isNull();
     byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
+    header.setResponseTime(System.currentTimeMillis());
+    header.setResponseStatusCode(200);
     auditService.finalize(header, httpBody);
     AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
     assertThat(header2).isNotNull();
     assertThat(header2.getResponsePayloadUuid()).isNotNull();
+    assertThat(header2.getResponseStatusCode()).isEqualTo(200);
   }
 }
