@@ -1,5 +1,6 @@
 package software.wings.settings;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import ro.fortsoft.pf4j.ExtensionPoint;
@@ -25,6 +26,7 @@ public abstract class SettingValue implements ExtensionPoint {
    *
    * @return the type
    */
+  @JsonIgnore
   public String getType() {
     return type;
   }
@@ -91,6 +93,11 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Slack setting variable types.
      */
-    SLACK
+    SLACK,
+
+    /**
+     * Kubernetes setting variable types.
+     */
+    KUBERNETES
   }
 }

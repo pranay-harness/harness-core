@@ -468,6 +468,18 @@
                 <version>v1.3.0.RELEASE</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-client</artifactId>
+                <version>1.4.27</version>
+            </dependency>
+
+                    <dependency>
+                        <groupId>com.google.apis</groupId>
+                        <artifactId>google-api-services-container</artifactId>
+                        <version>v1-rev9-1.22.0</version>
+                    </dependency>
+
             <!-- Test Dependencies -->
             <dependency>
                 <groupId>io.dropwizard</groupId>
