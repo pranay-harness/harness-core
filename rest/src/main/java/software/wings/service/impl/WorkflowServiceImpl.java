@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +30,18 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
+import software.wings.beans.WorkflowOuterSteps;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -495,4 +500,77 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId) {
     return wingsPersistence.delete(WorkflowFailureStrategy.class, appId, workflowFailureStrategyId);
   }
+
+  @Override
+  public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
+      PageRequest<OrchestrationWorkflow> pageRequest) {
+    return wingsPersistence.query(OrchestrationWorkflow.class, pageRequest);
+  }
+
+  @Override
+  public OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId) {
+    return wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationWorkflowId);
+  }
+
+  @Override
+  public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
+    return wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
+  }
+
+  @Override
+  public boolean deleteOrchestrationWorkflow(String appId, String orchestrationWorkflowId) {
+    return wingsPersistence.delete(OrchestrationWorkflow.class, appId, orchestrationWorkflowId);
+  }
+
+  @Override
+  public WorkflowOuterSteps updatePreDeployment(
+      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, workflowOuterSteps, "preDeploymentSteps");
+    return workflowOuterSteps;
+  }
+
+  @Override
+  public WorkflowOuterSteps updatePostDeployment(
+      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, workflowOuterSteps, "postDeploymentSteps");
+    return workflowOuterSteps;
+  }
+
+  private void updateOrchestrationWorkflowField(
+      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps, String postDeploymentSteps) {
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+            .set(postDeploymentSteps, workflowOuterSteps);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  @Override
+  public WorkflowPhase createWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    workflowPhase.setUuid(UUIDGenerator.getUuid());
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).add("workflowPhases", workflowPhase);
+
+    wingsPersistence.update(query, updateOps);
+
+    return workflowPhase;
+  }
+
+  @Override
+  public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    return null;
+  }
+
+  @Override
+  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {}
 }

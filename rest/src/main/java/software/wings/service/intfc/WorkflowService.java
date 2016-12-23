@@ -2,8 +2,11 @@ package software.wings.service.intfc;
 
 import software.wings.beans.Base;
 import software.wings.beans.Orchestration;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
+import software.wings.beans.WorkflowOuterSteps;
+import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
@@ -193,4 +196,24 @@ public interface WorkflowService {
    * @return the map
    */
   public Map<String, StateTypeDescriptor> stencilMap();
+
+  PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(PageRequest<OrchestrationWorkflow> pageRequest);
+
+  OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
+
+  OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow);
+
+  boolean deleteOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
+
+  WorkflowOuterSteps updatePreDeployment(
+      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps);
+
+  WorkflowOuterSteps updatePostDeployment(
+      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps);
+
+  WorkflowPhase createWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
+
+  WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
+
+  void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId);
 }
