@@ -15,21 +15,26 @@ public class OrchestrationWorkflow extends Base {
 
   @NotNull private String name;
 
-  private WorkflowOuterSteps preDeploymentSteps;
+  private WorkflowOuterSteps preDeploymentSteps = new WorkflowOuterSteps();
+  ;
 
   private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  private WorkflowOuterSteps postDeploymentSteps;
+  private WorkflowOuterSteps postDeploymentSteps = new WorkflowOuterSteps();
+  ;
 
-  private List<NotificationRule> notificationRules;
+  private List<NotificationRule> notificationRules = new ArrayList<>();
 
-  private List<FailureStrategy> failureStrategies;
+  private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  ;
 
-  private List<Variable> systemVariables;
+  private List<Variable> systemVariables = new ArrayList<>();
 
-  private List<Variable> userVariables;
+  private List<Variable> userVariables = new ArrayList<>();
+  ;
 
-  private List<Variable> derivedVariables;
+  private List<Variable> derivedVariables = new ArrayList<>();
+  ;
 
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
     return workflowOrchestrationType;
@@ -114,9 +119,10 @@ public class OrchestrationWorkflow extends Base {
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
     private String name;
-    private WorkflowOuterSteps preDeploymentSteps;
+    private WorkflowOuterSteps preDeploymentSteps = new WorkflowOuterSteps();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private WorkflowOuterSteps postDeploymentSteps;
+    private WorkflowOuterSteps postDeploymentSteps = new WorkflowOuterSteps();
+    ;
     private List<NotificationRule> notificationRules;
     private List<FailureStrategy> failureStrategies;
     private List<Variable> systemVariables;
