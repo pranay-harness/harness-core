@@ -23,4 +23,8 @@ public interface CatalogNames {
    * The constant ENVIRONMENT_TYPE.
    */
   String ENVIRONMENT_TYPE = "ENVIRONMENT_TYPE";
+
+  String WORKFLOW_ORCHESTRATION_TYPE = "WORKFLOW_ORCHESTRATION_TYPE";
+
+  String FAILURE_TYPE = "FAILURE_TYPE";
 }
