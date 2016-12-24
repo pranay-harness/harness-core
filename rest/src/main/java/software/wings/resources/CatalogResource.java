@@ -13,9 +13,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
-import software.wings.beans.FailureType;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.RestResponse;
-import software.wings.beans.WorkflowOrchestrationType;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -92,8 +91,6 @@ public class CatalogResource {
     if (catalogTypes == null || catalogTypes.size() == 0) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
       catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
-      catalogs.put(CatalogNames.WORKFLOW_ORCHESTRATION_TYPE, WorkflowOrchestrationType.values());
-      catalogs.put(CatalogNames.FAILURE_TYPE, FailureType.values());
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {

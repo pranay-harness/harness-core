@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,21 +15,17 @@ import javax.validation.constraints.Size;
 
 @Entity(value = "notificationRules", noClassnameStored = true)
 public class NotificationRule extends Base {
-  @NotNull private String ruleName;
+  private ExecutionStatus condition;
+
+  private ExecutionScope executionScope;
 
   @NotNull @Size(min = 1) private Map<String, Object> notificationFilters;
 
   @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
+  private int batchIntervalInSecs;
+
   private boolean active = true;
-
-  public String getRuleName() {
-    return ruleName;
-  }
-
-  public void setRuleName(String ruleName) {
-    this.ruleName = ruleName;
-  }
 
   public Map<String, Object> getNotificationFilters() {
     return notificationFilters;
@@ -55,9 +52,11 @@ public class NotificationRule extends Base {
   }
 
   public static final class NotificationRuleBuilder {
-    private String ruleName;
+    private ExecutionStatus condition;
+    private ExecutionScope executionScope;
     private Map<String, Object> notificationFilters;
     private List<NotificationGroup> notificationGroups = new ArrayList<>();
+    private int batchIntervalInSecs;
     private boolean active = true;
     private String uuid;
     private String appId;
@@ -72,8 +71,13 @@ public class NotificationRule extends Base {
       return new NotificationRuleBuilder();
     }
 
-    public NotificationRuleBuilder withRuleName(String ruleName) {
-      this.ruleName = ruleName;
+    public NotificationRuleBuilder withCondition(ExecutionStatus condition) {
+      this.condition = condition;
+      return this;
+    }
+
+    public NotificationRuleBuilder withExecutionScope(ExecutionScope executionScope) {
+      this.executionScope = executionScope;
       return this;
     }
 
@@ -84,6 +88,11 @@ public class NotificationRule extends Base {
 
     public NotificationRuleBuilder addNotificationGroups(NotificationGroup notificationGroup) {
       this.notificationGroups.add(notificationGroup);
+      return this;
+    }
+
+    public NotificationRuleBuilder withBatchIntervalInSecs(int batchIntervalInSecs) {
+      this.batchIntervalInSecs = batchIntervalInSecs;
       return this;
     }
 
@@ -124,7 +133,6 @@ public class NotificationRule extends Base {
 
     public NotificationRule build() {
       NotificationRule notificationRule = new NotificationRule();
-      notificationRule.setRuleName(ruleName);
       notificationRule.setNotificationFilters(notificationFilters);
       notificationRule.setNotificationGroups(notificationGroups);
       notificationRule.setActive(active);
@@ -134,6 +142,9 @@ public class NotificationRule extends Base {
       notificationRule.setCreatedAt(createdAt);
       notificationRule.setLastUpdatedBy(lastUpdatedBy);
       notificationRule.setLastUpdatedAt(lastUpdatedAt);
+      notificationRule.executionScope = this.executionScope;
+      notificationRule.batchIntervalInSecs = this.batchIntervalInSecs;
+      notificationRule.condition = this.condition;
       return notificationRule;
     }
   }

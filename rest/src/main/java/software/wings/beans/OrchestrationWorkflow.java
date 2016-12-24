@@ -31,10 +31,8 @@ public class OrchestrationWorkflow extends Base {
   private List<Variable> systemVariables = new ArrayList<>();
 
   private List<Variable> userVariables = new ArrayList<>();
-  ;
 
   private List<Variable> derivedVariables = new ArrayList<>();
-  ;
 
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
     return workflowOrchestrationType;
@@ -123,11 +121,16 @@ public class OrchestrationWorkflow extends Base {
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private WorkflowOuterSteps postDeploymentSteps = new WorkflowOuterSteps();
     ;
-    private List<NotificationRule> notificationRules;
-    private List<FailureStrategy> failureStrategies;
-    private List<Variable> systemVariables;
-    private List<Variable> userVariables;
-    private List<Variable> derivedVariables;
+    private List<NotificationRule> notificationRules = new ArrayList<>();
+    ;
+    private List<FailureStrategy> failureStrategies = new ArrayList<>();
+    ;
+    private List<Variable> systemVariables = new ArrayList<>();
+    ;
+    private List<Variable> userVariables = new ArrayList<>();
+    ;
+    private List<Variable> derivedVariables = new ArrayList<>();
+    ;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
