@@ -11,6 +11,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.AmazonECSClient;
 
 /**
  * Created by anubhaw on 12/15/16.
@@ -20,6 +21,10 @@ import com.amazonaws.services.ec2.model.Instance;
 public class AwsHelperService {
   public AmazonCloudWatchClient getAwsCloudWatchClient(String accessKey, String secretKey) {
     return new AmazonCloudWatchClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonECSClient getAmazonEcsClient(String accessKey, String secretKey) {
+    return new AmazonECSClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
   public String getInstanceId(String accessKey, String secretKey, String hostName) {
