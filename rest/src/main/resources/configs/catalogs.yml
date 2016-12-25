@@ -91,3 +91,14 @@ NOTIFICATION_CONDITION:
       value: FAILED
     - name: Paused
       value: PAUSED
+
+REPAIR_ACTION_CODE:
+    - name: Maanual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow Execution
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase Execution
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+
