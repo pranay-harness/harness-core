@@ -53,6 +53,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
+  public NotificationGroup readNotificationGroup(String appId, String notificationGroupId) {
+    return wingsPersistence.get(NotificationGroup.class, appId, notificationGroupId);
+  }
+
+  @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
     return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup);
   }
@@ -77,6 +82,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public PageResponse<NotificationRule> listNotificationRules(PageRequest<NotificationRule> pageRequest) {
     return wingsPersistence.query(NotificationRule.class, pageRequest);
+  }
+
+  @Override
+  public NotificationRule readNotificationRule(String appId, String notificationRuleId) {
+    return wingsPersistence.get(NotificationRule.class, appId, notificationRuleId);
   }
 
   @Override

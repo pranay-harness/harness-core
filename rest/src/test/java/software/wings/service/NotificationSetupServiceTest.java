@@ -97,6 +97,15 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
     assertThat(deleted).isTrue();
   }
 
+  @Test
+  public void shouldReadNotificationGroup() {
+    String appId = UUIDGenerator.getUuid();
+    NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
+    NotificationGroup notificationGroup2 =
+        notificationSetupService.readNotificationGroup(notificationGroup.getAppId(), notificationGroup.getUuid());
+    assertThat(notificationGroup2).isNotNull().isEqualToIgnoringGivenFields(notificationGroup);
+  }
+
   private NotificationGroup createAndAssertNotificationGroup(String appId) {
     NotificationGroup notificationGroup =
         aNotificationGroup()
@@ -149,6 +158,15 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldReadNotificationRule() {
+    String appId = UUIDGenerator.getUuid();
+    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
+    NotificationRule notificationRule2 =
+        notificationSetupService.readNotificationRule(notificationRule.getAppId(), notificationRule.getUuid());
+    assertThat(notificationRule2).isNotNull().isEqualToIgnoringGivenFields(notificationRule);
+  }
+
+  @Test
   public void shouldDeleteNotificationRule() {
     String appId = UUIDGenerator.getUuid();
     NotificationRule notificationRule = createAndAssertNotificationRule(appId);
@@ -160,7 +178,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   private NotificationRule createAndAssertNotificationRule(String appId) {
     NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
     NotificationRule notificationRule =
-        aNotificationRule().withAppId(appId).addNotificationGroups(notificationGroup).build();
+        aNotificationRule().withAppId(appId).addNotificationGroup(notificationGroup).build();
     NotificationRule created = notificationSetupService.createNotificationRule(notificationRule);
     assertThat(created)
         .isNotNull()

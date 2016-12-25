@@ -15,7 +15,7 @@ import javax.validation.constraints.Size;
 
 @Entity(value = "notificationRules", noClassnameStored = true)
 public class NotificationRule extends Base {
-  private ExecutionStatus condition;
+  private List<ExecutionStatus> conditions = new ArrayList<>();
 
   private ExecutionScope executionScope;
 
@@ -51,8 +51,32 @@ public class NotificationRule extends Base {
     this.active = active;
   }
 
+  public List<ExecutionStatus> getConditions() {
+    return conditions;
+  }
+
+  public void setConditions(List<ExecutionStatus> conditions) {
+    this.conditions = conditions;
+  }
+
+  public ExecutionScope getExecutionScope() {
+    return executionScope;
+  }
+
+  public void setExecutionScope(ExecutionScope executionScope) {
+    this.executionScope = executionScope;
+  }
+
+  public int getBatchIntervalInSecs() {
+    return batchIntervalInSecs;
+  }
+
+  public void setBatchIntervalInSecs(int batchIntervalInSecs) {
+    this.batchIntervalInSecs = batchIntervalInSecs;
+  }
+
   public static final class NotificationRuleBuilder {
-    private ExecutionStatus condition;
+    private List<ExecutionStatus> conditions = new ArrayList<>();
     private ExecutionScope executionScope;
     private Map<String, Object> notificationFilters;
     private List<NotificationGroup> notificationGroups = new ArrayList<>();
@@ -71,8 +95,8 @@ public class NotificationRule extends Base {
       return new NotificationRuleBuilder();
     }
 
-    public NotificationRuleBuilder withCondition(ExecutionStatus condition) {
-      this.condition = condition;
+    public NotificationRuleBuilder withConditions(List<ExecutionStatus> conditions) {
+      this.conditions = conditions;
       return this;
     }
 
@@ -86,7 +110,7 @@ public class NotificationRule extends Base {
       return this;
     }
 
-    public NotificationRuleBuilder addNotificationGroups(NotificationGroup notificationGroup) {
+    public NotificationRuleBuilder addNotificationGroup(NotificationGroup notificationGroup) {
       this.notificationGroups.add(notificationGroup);
       return this;
     }
@@ -133,8 +157,11 @@ public class NotificationRule extends Base {
 
     public NotificationRule build() {
       NotificationRule notificationRule = new NotificationRule();
+      notificationRule.setConditions(conditions);
+      notificationRule.setExecutionScope(executionScope);
       notificationRule.setNotificationFilters(notificationFilters);
       notificationRule.setNotificationGroups(notificationGroups);
+      notificationRule.setBatchIntervalInSecs(batchIntervalInSecs);
       notificationRule.setActive(active);
       notificationRule.setUuid(uuid);
       notificationRule.setAppId(appId);
@@ -142,9 +169,6 @@ public class NotificationRule extends Base {
       notificationRule.setCreatedAt(createdAt);
       notificationRule.setLastUpdatedBy(lastUpdatedBy);
       notificationRule.setLastUpdatedAt(lastUpdatedAt);
-      notificationRule.executionScope = this.executionScope;
-      notificationRule.batchIntervalInSecs = this.batchIntervalInSecs;
-      notificationRule.condition = this.condition;
       return notificationRule;
     }
   }
