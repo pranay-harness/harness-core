@@ -157,7 +157,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should throw dup error code.
+   * Should throw workflowType is null
    */
   @Test
   public void shouldThrowWorkflowNull() {
@@ -178,7 +178,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should throw dup error code.
+   * Should throw orchestrationId is null for an orchestrated execution.
    */
   @Test
   public void shouldThrowNullOrchestrationId() {
@@ -219,6 +219,40 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).containsEntry("message", "Invalid orchestrationId: " + orchestrationId);
+    }
+  }
+
+  /*
+   * Should throw Associated state machine not found
+   */
+  @Test
+  public void shouldThrowNoStateMachine() {
+    try {
+      ArrayList<Service> services = Lists.newArrayList(
+          wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("catalog").build()),
+          wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("content").build()));
+      Orchestration orchestration = anOrchestration()
+                                        .withAppId(appId)
+                                        .withName("workflow1")
+                                        .withDescription("Sample Workflow")
+                                        .withServices(services)
+                                        .withTargetToAllEnv(true)
+                                        .build();
+
+      orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+
+      Environment env =
+          wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+      executionArgs.setOrchestrationId(orchestration.getUuid());
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
     }
   }
 }
