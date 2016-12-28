@@ -68,7 +68,7 @@ public class WorkflowResource {
   @GET
   @Path("{orchestrationWorkflowId}")
   public RestResponse<OrchestrationWorkflow> read(@QueryParam("appId") String appId,
-      @PathParam("orchestrationId") String orchestrationWorkflowId, @QueryParam("version") Integer version) {
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @QueryParam("version") Integer version) {
     return new RestResponse<>(workflowService.readOrchestrationWorkflow(appId, orchestrationWorkflowId));
   }
 
