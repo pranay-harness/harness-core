@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.Verification;
 
@@ -15,6 +16,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SlackConfig;
@@ -92,6 +94,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("SLACK")
             .withPluginCategories(asList(Collaboration))
             .withUiSchema(readUiSchema("SLACK"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(AwsConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("AWS")
+            .withType("AWS")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("AWS"))
             .build());
   }
 

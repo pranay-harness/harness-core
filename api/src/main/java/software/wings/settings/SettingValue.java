@@ -91,6 +91,9 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Slack setting variable types.
      */
-    SLACK
+    SLACK, /**
+            * Aws setting variable types.
+            */
+    AWS
   }
 }

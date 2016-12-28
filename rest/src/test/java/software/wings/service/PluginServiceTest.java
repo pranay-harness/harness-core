@@ -4,11 +4,13 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.Verification;
 
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SlackConfig;
@@ -28,7 +30,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(6)
+        .hasSize(7)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -76,6 +78,14 @@ public class PluginServiceTest {
                 .withDisplayName("SLACK")
                 .withType("SLACK")
                 .withPluginCategories(asList(Collaboration))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(AwsConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("AWS")
+                .withType("AWS")
+                .withPluginCategories(asList(CloudProvider))
                 .build());
   }
 
@@ -84,7 +94,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(6)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK");
+        .hasSize(7)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS");
   }
 }
