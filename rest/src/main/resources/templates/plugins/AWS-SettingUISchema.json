@@ -1,0 +1,4 @@
+{
+  "secretKey": { "ui:widget": "password" },
+  "type": { "ui:widget": "hidden" }
+}

@@ -64,10 +64,10 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     List<NotificationRule> notificationRules = Lists.newArrayList(
         aNotificationRule()
             .withAppId(appId)
-            .addNotificationGroups(aNotificationGroup()
-                                       .withAppId(appId)
-                                       .addAddressesByChannelType(NotificationChannelType.EMAIL, toAddresses)
-                                       .build())
+            .addNotificationGroup(aNotificationGroup()
+                                      .withAppId(appId)
+                                      .addAddressesByChannelType(NotificationChannelType.EMAIL, toAddresses)
+                                      .build())
             .build());
     when(notificationSetupService.listNotificationRules(appId)).thenReturn(notificationRules);
 
@@ -95,10 +95,10 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
         .thenReturn(asList(
             aNotificationRule()
                 .withAppId(APP_ID)
-                .addNotificationGroups(aNotificationGroup()
-                                           .withAppId(APP_ID)
-                                           .addAddressesByChannelType(NotificationChannelType.SLACK, asList("#channel"))
-                                           .build())
+                .addNotificationGroup(aNotificationGroup()
+                                          .withAppId(APP_ID)
+                                          .addAddressesByChannelType(NotificationChannelType.SLACK, asList("#channel"))
+                                          .build())
                 .build()));
 
     SlackConfig slackConfig = new SlackConfig();

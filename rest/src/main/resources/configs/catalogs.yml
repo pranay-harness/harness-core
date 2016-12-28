@@ -63,3 +63,42 @@ CONTAINER_FAMILY:
       value: TOMCAT
     - name: JBoss AS 7
       value: JBOSS
+
+WORKFLOW_ORCHESTRATION_TYPE:
+    - name: Canary Deployment Workflow
+      value: CANARY
+    - name: Blue/Green Deployment Workflow
+      value: BLUE_GREEN
+
+FAILURE_TYPE:
+    - name: Connectivity Error
+      value: CONNECTIVITY
+    - name: Authentication Failure
+      value: AUTHENTICATION
+    - name: Application Error
+      value: APPLICATION_ERROR
+
+EXECUTION_SCOPE:
+    - name: Workflow
+      value: WORKFLOW
+    - name: Workflow Phase
+      value: WORKFLOW_PHASE
+
+NOTIFICATION_CONDITION:
+    - name: Success
+      value: SUCCESS
+    - name: Failure
+      value: FAILED
+    - name: Paused
+      value: PAUSED
+
+REPAIR_ACTION_CODE:
+    - name: Maanual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow Execution
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase Execution
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+

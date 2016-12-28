@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,6 +27,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
@@ -36,6 +38,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -151,5 +154,105 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     RequiredExecutionArgs required =
         workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
     assertThat(required).isNotNull().isEqualTo(requiredExecutionArgs);
+  }
+
+  /**
+   * Should throw workflowType is null
+   */
+  @Test
+  public void shouldThrowWorkflowNull() {
+    try {
+      String orchestrationId = UUIDGenerator.getUuid();
+
+      Environment env =
+          wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+      ExecutionArgs executionArgs = new ExecutionArgs();
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).containsEntry("message", "workflowType is null");
+    }
+  }
+
+  /**
+   * Should throw orchestrationId is null for an orchestrated execution.
+   */
+  @Test
+  public void shouldThrowNullOrchestrationId() {
+    try {
+      String orchestrationId = UUIDGenerator.getUuid();
+
+      Environment env =
+          wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams())
+          .containsEntry("message", "orchestrationId is null for an orchestrated execution");
+    }
+  }
+
+  /*
+   * Should throw invalid orchestration
+   */
+  @Test
+  public void shouldThrowInvalidOrchestration() {
+    String orchestrationId = UUIDGenerator.getUuid();
+    try {
+      Environment env =
+          wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+      executionArgs.setOrchestrationId(orchestrationId);
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).containsEntry("message", "Invalid orchestrationId: " + orchestrationId);
+    }
+  }
+
+  /*
+   * Should throw Associated state machine not found
+   */
+  @Test
+  public void shouldThrowNoStateMachine() {
+    try {
+      ArrayList<Service> services = Lists.newArrayList(
+          wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("catalog").build()),
+          wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("content").build()));
+      Orchestration orchestration = anOrchestration()
+                                        .withAppId(appId)
+                                        .withName("workflow1")
+                                        .withDescription("Sample Workflow")
+                                        .withServices(services)
+                                        .withTargetToAllEnv(true)
+                                        .build();
+
+      orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+
+      Environment env =
+          wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
+      executionArgs.setOrchestrationId(orchestration.getUuid());
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
+    }
   }
 }
