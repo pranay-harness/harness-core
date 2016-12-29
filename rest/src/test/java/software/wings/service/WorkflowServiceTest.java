@@ -1,14 +1,17 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.util.Lists.newArrayList;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
 import static software.wings.beans.PauseAction.PauseActionBuilder.aPauseAction;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
 import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
 import static software.wings.beans.WorkflowOuterSteps.WorkflowOuterStepsBuilder.aWorkflowOuterSteps;
@@ -16,7 +19,6 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -25,15 +27,17 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
+import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.WorkflowFailAction;
+import software.wings.beans.Variable;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowOrchestrationType;
 import software.wings.beans.WorkflowOuterSteps;
@@ -105,7 +109,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   public List<Service> getServices() {
     if (services == null) {
-      services = Lists.newArrayList(
+      services = newArrayList(
           wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("catalog").build()),
           wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("content").build()));
     }
@@ -561,14 +565,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                     .addFailureTypes(FailureType.CONNECTIVITY)
                                     .addFailureTypes(FailureType.AUTHENTICATION)
                                     .addRepairActions(aPauseAction().withTimeout(20).build())
-                                    .addRepairActions(new WorkflowFailAction())
                                     .build())
             .withWorkflowExecutionFilter(aWorkflowExecutionFilter().addWorkflowId("workflow1").addEnvId("env1").build())
             .build();
 
     WorkflowFailureStrategy created = workflowService.create(workflowFailureStrategy);
-    assertThat(created).isNotNull().hasFieldOrProperty("uuid").isEqualToComparingFieldByFieldRecursively(
-        workflowFailureStrategy);
+    assertThat(created).isNotNull().hasFieldOrProperty("uuid").isEqualToComparingFieldByField(workflowFailureStrategy);
     return created;
   }
 
@@ -665,5 +667,44 @@ public class WorkflowServiceTest extends WingsBaseTest {
         orchestrationWorkflow2.getWorkflowPhases().get(orchestrationWorkflow2.getWorkflowPhases().size() - 1);
     assertThat(workflowPhase2).isNotNull().hasFieldOrPropertyWithValue("name", "phase1");
     assertThat(workflowPhase2.getPhaseSteps()).isNotNull().hasSize(7);
+  }
+
+  @Test
+  public void shouldUpdateNotificationRules() {
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+
+    List<NotificationRule> notificationRules = newArrayList(aNotificationRule().build());
+    List<NotificationRule> updated = workflowService.updateNotificationRules(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), notificationRules);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
+  }
+
+  @Test
+  public void shouldUpdateFailureStrategies() {
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+
+    List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
+    List<FailureStrategy> updated = workflowService.updateFailureStrategies(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), failureStrategies);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("failureStrategies", failureStrategies);
+  }
+
+  @Test
+  public void shouldUpdateUserVariables() {
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+
+    List<Variable> userVariables = newArrayList(aVariable().build());
+    List<Variable> updated = workflowService.updateUserVariables(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), userVariables);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
   }
 }

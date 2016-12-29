@@ -28,6 +28,33 @@ public class FailureStrategy {
     this.repairActions = repairActions;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    FailureStrategy that = (FailureStrategy) o;
+
+    if (failureTypes != null ? !failureTypes.equals(that.failureTypes) : that.failureTypes != null)
+      return false;
+    return repairActions != null ? repairActions.equals(that.repairActions) : that.repairActions == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = failureTypes != null ? failureTypes.hashCode() : 0;
+    result = 31 * result + (repairActions != null ? repairActions.hashCode() : 0);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "FailureStrategy{"
+        + "failureTypes=" + failureTypes + ", repairActions=" + repairActions + '}';
+  }
+
   public static final class FailureStrategyBuilder {
     private List<FailureType> failureTypes = new ArrayList<>();
     private List<RepairAction> repairActions = new ArrayList<>();
