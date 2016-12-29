@@ -31,7 +31,9 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
+import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStepType;
@@ -39,6 +41,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowOuterSteps;
@@ -530,27 +533,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowOuterSteps updatePreDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, workflowOuterSteps, "preDeploymentSteps");
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "preDeploymentSteps", workflowOuterSteps);
     return workflowOuterSteps;
   }
 
   @Override
   public WorkflowOuterSteps updatePostDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, workflowOuterSteps, "postDeploymentSteps");
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "postDeploymentSteps", workflowOuterSteps);
     return workflowOuterSteps;
   }
 
   private void updateOrchestrationWorkflowField(
-      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps, String postDeploymentSteps) {
+      String appId, String orchestrationWorkflowId, String fieldName, Object fieldValue) {
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
     UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-            .set(postDeploymentSteps, workflowOuterSteps);
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set(fieldName, fieldValue);
 
     wingsPersistence.update(query, updateOps);
   }
@@ -639,5 +641,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhases", workflowPhases);
 
     wingsPersistence.update(query, updateOps);
+  }
+
+  @Override
+  public List<NotificationRule> updateNotificationRules(
+      String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "notificationRules", notificationRules);
+    return notificationRules;
+  }
+
+  @Override
+  public List<FailureStrategy> updateFailureStrategies(
+      String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "failureStrategies", failureStrategies);
+    return failureStrategies;
+  }
+
+  @Override
+  public List<Variable> updateUserVariables(
+      String appId, String orchestrationWorkflowId, List<Variable> userVariables) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "userVariables", userVariables);
+    return userVariables;
   }
 }
