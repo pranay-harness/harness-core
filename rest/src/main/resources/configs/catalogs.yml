@@ -102,3 +102,18 @@ REPAIR_ACTION_CODE:
     - name: Ignore
       value: IGNORE
 
+PHASE_STEP_TYPE:
+    - name: Provision Nodes
+      value: PROVISION_NODE
+    - name: Disable/Unpublish Services
+      value: DISABLE_SERVICE
+    - name: Deploy Services
+      value: DEPLOY_SERVICE
+    - name: Enable/Publish Services
+      value: ENABLE_SERVICE
+    - name: Verify Services
+      value: VERIFY_SERVICE
+    - name: Deprovision Nodes
+      value: DEPROVISION_NODE
+    - name: Wrap up
+      value: WRAP_UP

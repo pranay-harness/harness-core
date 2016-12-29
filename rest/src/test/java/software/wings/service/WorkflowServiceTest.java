@@ -660,7 +660,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow2.getWorkflowPhases())
         .isNotNull()
         .hasSize(orchestrationWorkflow1.getWorkflowPhases().size() + 1);
-    assertThat(orchestrationWorkflow2.getWorkflowPhases().get(orchestrationWorkflow2.getWorkflowPhases().size() - 1))
-        .isEqualToIgnoringGivenFields(workflowPhase, "uuid");
+
+    WorkflowPhase workflowPhase2 =
+        orchestrationWorkflow2.getWorkflowPhases().get(orchestrationWorkflow2.getWorkflowPhases().size() - 1);
+    assertThat(workflowPhase2).isNotNull().hasFieldOrPropertyWithValue("name", "phase1");
+    assertThat(workflowPhase2.getPhaseSteps()).isNotNull().hasSize(7);
   }
 }

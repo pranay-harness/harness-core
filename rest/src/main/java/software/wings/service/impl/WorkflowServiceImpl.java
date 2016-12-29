@@ -5,10 +5,12 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -28,9 +30,11 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
@@ -57,6 +61,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -558,6 +563,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
     workflowPhase.setUuid(UUIDGenerator.getUuid());
+
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.PROVISION_NODE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.DEPLOY_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.ENABLE_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.VERIFY_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.DISABLE_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.DEPROVISION_NODE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.WRAP_UP).build());
+
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).add("workflowPhases", workflowPhase);
 
@@ -568,9 +582,62 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
-    return null;
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    if (orchestrationWorkflow == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+    }
+    List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases == null || workflowPhases.isEmpty() || workflowPhase == null
+        || workflowPhase.getUuid() == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowPhase");
+    }
+
+    Map<String, WorkflowPhase> workflowMap = workflowPhases.stream().collect(toMap(WorkflowPhase::getUuid, identity()));
+
+    WorkflowPhase origWorkflowPhase = workflowMap.get(workflowPhase.getUuid());
+
+    MapperUtils.mapObject(workflowPhase, origWorkflowPhase);
+
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).add("workflowPhases", workflowPhase);
+
+    wingsPersistence.update(query, updateOps);
+
+    return origWorkflowPhase;
   }
 
   @Override
-  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {}
+  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    if (orchestrationWorkflow == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+    }
+    List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases == null || workflowPhases.isEmpty() || phaseId == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowPhase");
+    }
+
+    Map<String, WorkflowPhase> workflowMap = workflowPhases.stream().collect(toMap(WorkflowPhase::getUuid, identity()));
+
+    WorkflowPhase origWorkflowPhase = workflowMap.get(phaseId);
+
+    workflowPhases.remove(origWorkflowPhase);
+
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhases", workflowPhases);
+
+    wingsPersistence.update(query, updateOps);
+  }
 }

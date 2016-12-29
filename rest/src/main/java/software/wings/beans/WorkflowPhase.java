@@ -1,6 +1,8 @@
 package software.wings.beans;
 
+import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rishi on 12/21/16.
@@ -8,10 +10,12 @@ import java.util.List;
 public class WorkflowPhase {
   private String uuid;
   private String name;
-  private String serviceId;
-  private String computerProviderId;
-  private DeploymentType deploymentType;
+  private @NotNull String serviceId;
+  private @NotNull DeploymentType deploymentType;
+  private @NotNull String computerProviderId;
   private String deploymentMasterId;
+
+  private List<PhaseStep> phaseSteps = new ArrayList<>();
 
   public String getUuid() {
     return uuid;
@@ -20,8 +24,6 @@ public class WorkflowPhase {
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
-
-  private List<PhaseStep> phaseSteps;
 
   public String getName() {
     return name;
@@ -67,6 +69,10 @@ public class WorkflowPhase {
     return phaseSteps;
   }
 
+  public void addPhaseStep(PhaseStep phaseStep) {
+    this.phaseSteps.add(phaseStep);
+  }
+
   public void setPhaseSteps(List<PhaseStep> phaseSteps) {
     this.phaseSteps = phaseSteps;
   }
@@ -78,7 +84,7 @@ public class WorkflowPhase {
     private String computerProviderId;
     private DeploymentType deploymentType;
     private String deploymentMasterId;
-    private List<PhaseStep> phaseSteps;
+    private List<PhaseStep> phaseSteps = new ArrayList<>();
 
     private WorkflowPhaseBuilder() {}
 
