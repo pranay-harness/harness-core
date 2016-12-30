@@ -612,7 +612,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     OrchestrationWorkflow orchestrationWorkflow3 = createOrchestrationWorkflow();
 
     PageResponse<OrchestrationWorkflow> response = workflowService.listOrchestrationWorkflows(
-        aPageRequest().withLimit("2").addOrder("createdAt", OrderType.ASC).build(), previousExecutionsCount);
+        aPageRequest().withLimit("2").addOrder("createdAt", OrderType.ASC).build());
 
     assertThat(response).isNotNull().hasSize(2).extracting("uuid").containsExactly(
         orchestrationWorkflow1.getUuid(), orchestrationWorkflow2.getUuid());
