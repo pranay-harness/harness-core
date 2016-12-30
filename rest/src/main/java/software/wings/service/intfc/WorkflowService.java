@@ -202,6 +202,9 @@ public interface WorkflowService {
 
   PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(PageRequest<OrchestrationWorkflow> pageRequest);
 
+  PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
+      PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount);
+
   OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
 
   OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow);

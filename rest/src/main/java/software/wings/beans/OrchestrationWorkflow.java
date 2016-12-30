@@ -5,6 +5,7 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Graph.Builder;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
@@ -44,6 +45,8 @@ public class OrchestrationWorkflow extends Base {
   private List<Variable> userVariables = new ArrayList<>();
 
   private List<Variable> derivedVariables = new ArrayList<>();
+
+  @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
     return workflowOrchestrationType;
@@ -123,6 +126,14 @@ public class OrchestrationWorkflow extends Base {
 
   public void setDerivedVariables(List<Variable> derivedVariables) {
     this.derivedVariables = derivedVariables;
+  }
+
+  public List<WorkflowExecution> getWorkflowExecutions() {
+    return workflowExecutions;
+  }
+
+  public void setWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
+    this.workflowExecutions = workflowExecutions;
   }
 
   public Graph getGraph() {

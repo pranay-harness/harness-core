@@ -5,6 +5,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -13,6 +14,7 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -57,6 +59,7 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -512,7 +515,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
       PageRequest<OrchestrationWorkflow> pageRequest) {
-    return wingsPersistence.query(OrchestrationWorkflow.class, pageRequest);
+    return listOrchestrationWorkflows(pageRequest, 0);
+  }
+  @Override
+  public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
+      PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount) {
+    PageResponse<OrchestrationWorkflow> pageResponse = wingsPersistence.query(OrchestrationWorkflow.class, pageRequest);
+    if (previousExecutionsCount != null && previousExecutionsCount > 0 && pageResponse.size() > 0) {
+      // TODO - integrate the actual call
+
+      for (OrchestrationWorkflow orchestrationWorkflow : pageResponse) {
+        orchestrationWorkflow.setWorkflowExecutions(newArrayList(aWorkflowExecution()
+                                                                     .withStatus(ExecutionStatus.SUCCESS)
+                                                                     .withEnvName("Production")
+                                                                     .withStartTs(System.currentTimeMillis())
+                                                                     .withEndTs(System.currentTimeMillis() - 652)
+                                                                     .build(),
+            aWorkflowExecution()
+                .withStatus(ExecutionStatus.SUCCESS)
+                .withEnvName("Production")
+                .withStartTs(System.currentTimeMillis() - 200)
+                .withEndTs(System.currentTimeMillis() - 1123)
+                .build()));
+      }
+    }
+    return pageResponse;
   }
 
   @Override

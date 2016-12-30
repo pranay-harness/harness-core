@@ -57,9 +57,10 @@ public class WorkflowResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<OrchestrationWorkflow>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<OrchestrationWorkflow> pageRequest) {
-    return new RestResponse<>(workflowService.listOrchestrationWorkflows(pageRequest));
+  public RestResponse<PageResponse<OrchestrationWorkflow>> list(@QueryParam("appId") String appId,
+      @BeanParam PageRequest<OrchestrationWorkflow> pageRequest,
+      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
+    return new RestResponse<>(workflowService.listOrchestrationWorkflows(pageRequest, previousExecutionsCount));
   }
 
   /**
