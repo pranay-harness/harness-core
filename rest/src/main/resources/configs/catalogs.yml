@@ -117,3 +117,11 @@ PHASE_STEP_TYPE:
       value: DEPROVISION_NODE
     - name: Wrap up
       value: WRAP_UP
+
+DEPLOYMENT_TYPE:
+    - name: SSH
+      value: SSH
+    - name: Amazon EC2 Container
+      value: ECS
+    - name: Kubernetes
+      value: KUBERNETES
