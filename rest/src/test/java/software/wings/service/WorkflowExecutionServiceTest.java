@@ -255,4 +255,54 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
     }
   }
+
+  /**
+   * Should throw Null Service Id
+   */
+  @Test
+  public void shouldThrowNoServiceId() {
+    try {
+      Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+      Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setWorkflowType(WorkflowType.SIMPLE);
+
+      String commandName = "Start";
+      executionArgs.setCommandName(commandName);
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).containsEntry("message", "serviceId is null for a simple execution");
+    }
+  }
+
+  /**
+   * Should throw Null Service Id
+   */
+  @Test
+  public void shouldThrowNoInstances() {
+    try {
+      Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+      Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+      ExecutionArgs executionArgs = new ExecutionArgs();
+      executionArgs.setWorkflowType(WorkflowType.SIMPLE);
+      String serviceId = UUIDGenerator.getUuid();
+      executionArgs.setServiceId(serviceId);
+
+      String commandName = "Start";
+      executionArgs.setCommandName(commandName);
+
+      RequiredExecutionArgs required =
+          workflowExecutionService.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), executionArgs);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).containsEntry("message", "serviceInstances are empty for a simple execution");
+    }
+  }
 }
