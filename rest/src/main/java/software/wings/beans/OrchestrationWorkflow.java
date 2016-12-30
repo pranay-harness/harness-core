@@ -1,6 +1,11 @@
 package software.wings.beans;
 
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Node.Builder.aNode;
+
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Graph.Builder;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +16,9 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "orchWorkflows", noClassnameStored = true)
 public class OrchestrationWorkflow extends Base {
+  private static final String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
+  private static final String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
+
   private WorkflowOrchestrationType workflowOrchestrationType;
 
   @NotNull private String name;
@@ -113,6 +121,22 @@ public class OrchestrationWorkflow extends Base {
   public void setDerivedVariables(List<Variable> derivedVariables) {
     this.derivedVariables = derivedVariables;
   }
+
+  public Graph getGraph() {
+    Builder graphBuilder =
+        aGraph().addNodes(aNode().withName(PRE_DEPLOYMENT_STEPS).withType(StateType.GROUP.name()).build());
+
+    if (workflowPhases != null) {
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        graphBuilder.addNodes(aNode().withName(workflowPhase.getName()).withType(StateType.GROUP.name()).build());
+      }
+    }
+    graphBuilder.addNodes(aNode().withName(PRE_DEPLOYMENT_STEPS).withType(StateType.GROUP.name()).build());
+
+    return graphBuilder.build();
+  }
+
+  public void setGraph(Graph graph) {}
 
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
