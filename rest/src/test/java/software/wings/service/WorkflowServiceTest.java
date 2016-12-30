@@ -686,6 +686,36 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUpdateWorkflowPhase() {
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+
+    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull();
+    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
+
+    workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
+    workflowPhase2.setName("phase2-changed");
+
+    workflowService.updateWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow3).isNotNull();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
+    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
+  }
+
+  @Test
   public void shouldUpdateNotificationRules() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
