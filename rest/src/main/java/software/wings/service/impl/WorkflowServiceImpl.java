@@ -531,6 +531,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public OrchestrationWorkflow updateOrchestrationWorkflowBasic(
+      String appId, String orchestrationWorkflowId, OrchestrationWorkflow orchestrationWorkflow) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "name", orchestrationWorkflow.getName());
+    return orchestrationWorkflow;
+  }
+
+  @Override
   public WorkflowOuterSteps updatePreDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "preDeploymentSteps", workflowOuterSteps);

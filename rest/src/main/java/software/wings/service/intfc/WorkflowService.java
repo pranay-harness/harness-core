@@ -208,6 +208,9 @@ public interface WorkflowService {
 
   boolean deleteOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
 
+  OrchestrationWorkflow updateOrchestrationWorkflowBasic(
+      String appId, String orchestrationWorkflowId, OrchestrationWorkflow orchestrationWorkflow);
+
   WorkflowOuterSteps updatePreDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps);
 

@@ -110,6 +110,23 @@ public class WorkflowResource {
    *
    * @param appId           the app id
    * @param orchestrationWorkflowId the orchestration id
+   * @param orchestrationWorkflow   the orchestrationWorkflow
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/basic")
+  public RestResponse<OrchestrationWorkflow> updatePreDeployment(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId,
+      OrchestrationWorkflow orchestrationWorkflow) {
+    return new RestResponse<>(
+        workflowService.updateOrchestrationWorkflowBasic(appId, orchestrationWorkflowId, orchestrationWorkflow));
+  }
+
+  /**
+   * Update.
+   *
+   * @param appId           the app id
+   * @param orchestrationWorkflowId the orchestration id
    * @param workflowOuterSteps   the pre-deployment steps
    * @return the rest response
    */

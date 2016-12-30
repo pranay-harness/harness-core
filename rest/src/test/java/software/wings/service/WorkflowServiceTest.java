@@ -620,6 +620,22 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUpdateBasic() {
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    String name2 = "Name2";
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        anOrchestrationWorkflow().withAppId(APP_ID).withUuid(orchestrationWorkflow1.getUuid()).withName(name2).build();
+
+    workflowService.updateOrchestrationWorkflowBasic(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), orchestrationWorkflow2);
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("name", name2);
+  }
+
+  @Test
   public void shouldUpdatePreDeployment() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
