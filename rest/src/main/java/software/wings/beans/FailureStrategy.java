@@ -10,7 +10,8 @@ import javax.validation.constraints.Size;
  */
 public class FailureStrategy {
   @NotNull @Size(min = 1) private List<FailureType> failureTypes = new ArrayList<>();
-  @NotNull @Size(min = 1) private List<RepairAction> repairActions = new ArrayList<>();
+  private ExecutionScope executionScope;
+  private RepairActionCode repairActionCode;
 
   public List<FailureType> getFailureTypes() {
     return failureTypes;
@@ -20,12 +21,20 @@ public class FailureStrategy {
     this.failureTypes = failureTypes;
   }
 
-  public List<RepairAction> getRepairActions() {
-    return repairActions;
+  public ExecutionScope getExecutionScope() {
+    return executionScope;
   }
 
-  public void setRepairActions(List<RepairAction> repairActions) {
-    this.repairActions = repairActions;
+  public void setExecutionScope(ExecutionScope executionScope) {
+    this.executionScope = executionScope;
+  }
+
+  public RepairActionCode getRepairActionCode() {
+    return repairActionCode;
+  }
+
+  public void setRepairActionCode(RepairActionCode repairActionCode) {
+    this.repairActionCode = repairActionCode;
   }
 
   @Override
@@ -39,25 +48,23 @@ public class FailureStrategy {
 
     if (failureTypes != null ? !failureTypes.equals(that.failureTypes) : that.failureTypes != null)
       return false;
-    return repairActions != null ? repairActions.equals(that.repairActions) : that.repairActions == null;
+    if (executionScope != that.executionScope)
+      return false;
+    return repairActionCode == that.repairActionCode;
   }
 
   @Override
   public int hashCode() {
     int result = failureTypes != null ? failureTypes.hashCode() : 0;
-    result = 31 * result + (repairActions != null ? repairActions.hashCode() : 0);
+    result = 31 * result + (executionScope != null ? executionScope.hashCode() : 0);
+    result = 31 * result + (repairActionCode != null ? repairActionCode.hashCode() : 0);
     return result;
-  }
-
-  @Override
-  public String toString() {
-    return "FailureStrategy{"
-        + "failureTypes=" + failureTypes + ", repairActions=" + repairActions + '}';
   }
 
   public static final class FailureStrategyBuilder {
     private List<FailureType> failureTypes = new ArrayList<>();
-    private List<RepairAction> repairActions = new ArrayList<>();
+    private ExecutionScope executionScope;
+    private RepairActionCode repairActionCode;
 
     private FailureStrategyBuilder() {}
 
@@ -70,15 +77,21 @@ public class FailureStrategy {
       return this;
     }
 
-    public FailureStrategyBuilder addRepairActions(RepairAction repairAction) {
-      this.repairActions.add(repairAction);
+    public FailureStrategyBuilder withExecutionScope(ExecutionScope executionScope) {
+      this.executionScope = executionScope;
+      return this;
+    }
+
+    public FailureStrategyBuilder withRepairActionCode(RepairActionCode repairActionCode) {
+      this.repairActionCode = repairActionCode;
       return this;
     }
 
     public FailureStrategy build() {
       FailureStrategy failureStrategy = new FailureStrategy();
       failureStrategy.setFailureTypes(failureTypes);
-      failureStrategy.setRepairActions(repairActions);
+      failureStrategy.setExecutionScope(executionScope);
+      failureStrategy.setRepairActionCode(repairActionCode);
       return failureStrategy;
     }
   }

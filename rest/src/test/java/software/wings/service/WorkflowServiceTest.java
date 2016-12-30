@@ -9,7 +9,6 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
-import static software.wings.beans.PauseAction.PauseActionBuilder.aPauseAction;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
@@ -27,12 +26,14 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.RepairActionCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -564,7 +565,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .addFailureStrategy(aFailureStrategy()
                                     .addFailureTypes(FailureType.CONNECTIVITY)
                                     .addFailureTypes(FailureType.AUTHENTICATION)
-                                    .addRepairActions(aPauseAction().withTimeout(20).build())
+                                    .withExecutionScope(ExecutionScope.WORKFLOW)
+                                    .withRepairActionCode(RepairActionCode.ROLLBACK_WORKFLOW)
                                     .build())
             .withWorkflowExecutionFilter(aWorkflowExecutionFilter().addWorkflowId("workflow1").addEnvId("env1").build())
             .build();
