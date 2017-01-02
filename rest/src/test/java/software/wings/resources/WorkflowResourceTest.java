@@ -2,19 +2,30 @@ package software.wings.resources;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+
+import com.google.common.collect.Lists;
 
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import software.wings.WingsBaseTest;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.RestResponse;
 import software.wings.common.UUIDGenerator;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.client.Entity;
@@ -26,6 +37,8 @@ import javax.ws.rs.core.MediaType;
  */
 public class WorkflowResourceTest extends WingsBaseTest {
   private static final WorkflowService WORKFLOW_SERVICE = mock(WorkflowService.class);
+
+  @Captor private ArgumentCaptor<PageRequest<OrchestrationWorkflow>> pageRequestArgumentCaptor;
 
   /**
    * The constant RESOURCES.
@@ -59,6 +72,29 @@ public class WorkflowResourceTest extends WingsBaseTest {
 
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", orchestrationWorkflow2);
     verify(WORKFLOW_SERVICE).createOrchestrationWorkflow(ORCHESTRATION_WORKFLOW);
+  }
+
+  /**
+   * Should list workflows.
+   */
+  @Test
+  public void shouldListWorkflow() {
+    PageRequest<OrchestrationWorkflow> pageRequest = aPageRequest().build();
+    PageResponse<OrchestrationWorkflow> pageResponse =
+        aPageResponse().withResponse(Lists.newArrayList(ORCHESTRATION_WORKFLOW)).build();
+    when(WORKFLOW_SERVICE.listOrchestrationWorkflows(any(PageRequest.class), any(Integer.class)))
+        .thenReturn(pageResponse);
+
+    RestResponse<PageResponse<OrchestrationWorkflow>> restResponse =
+        RESOURCES.client()
+            .target(format("/workflows?appId=%s&previousExecutionsCount=2", APP_ID))
+            .request()
+            .get(new GenericType<RestResponse<PageResponse<OrchestrationWorkflow>>>() {});
+
+    log().info(JsonUtils.asJson(restResponse));
+    verify(WORKFLOW_SERVICE).listOrchestrationWorkflows(pageRequestArgumentCaptor.capture(), eq(2));
+    assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
+    assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);
   }
 
   /**
