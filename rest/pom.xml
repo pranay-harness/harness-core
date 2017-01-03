@@ -861,50 +861,5 @@
                 <app.name>Demo Server</app.name>
             </properties>
         </profile>
-        <profile>
-            <id>migration</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.gmaven</groupId>
-                        <artifactId>groovy-maven-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.mongeez</groupId>
-                                <artifactId>mongeez</artifactId>
-                                <version>0.9.6</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-all</artifactId>
-                                <!-- any version of Groovy \>= 1.5.0 should work here -->
-                                <version>2.4.7</version>
-                                <scope>runtime</scope>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.mongodb</groupId>
-                                <artifactId>mongo-java-driver</artifactId>
-                                <version>3.2.0</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <source>
-                                import com.mongodb.Mongo;
-                                import org.mongeez.Mongeez;
-                                import java.io.File;
-                                import org.springframework.core.io.FileSystemResource;
-
-                                Mongeez mongeez = new Mongeez();
-                                mongeez.setFile(new FileSystemResource(new File("src/main/resources/migrations/mongeez.xml")));
-                                mongeez.setMongo(new Mongo(System.getProperty("mongoHost", "localhost"), Integer.parseInt(System.getProperty("mongoPort",
-                                "27017"))));
-                                mongeez.setDbName("wings");
-                                mongeez.process();
-                            </source>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 </project>

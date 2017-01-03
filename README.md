@@ -22,5 +22,5 @@ Wings Project Setup instructions :
 6b) cd to wings directory and checkout UI project from repository: https://github.com/wings-software/wingsui
 6c) Run "mvn package -DbuildUI=true"
 
-7) to apply database migrations run:
-   "mvn -P migration groovy:execute"
+7) to apply database migrations run following command in dbmigrations folder:
+   "mvn clean compile exec:java"
