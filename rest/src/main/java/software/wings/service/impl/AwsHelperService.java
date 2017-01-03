@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.google.inject.Singleton;
 
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -25,6 +26,14 @@ public class AwsHelperService {
 
   public AmazonECSClient getAmazonEcsClient(String accessKey, String secretKey) {
     return new AmazonECSClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonEC2Client getAmazonEc2Client(String accessKey, String secretKey) {
+    return new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, String secretKey) {
+    return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
   public String getInstanceId(String accessKey, String secretKey, String hostName) {

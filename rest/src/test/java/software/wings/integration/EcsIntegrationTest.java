@@ -1,6 +1,17 @@
 package software.wings.integration;
 
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
+import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
+import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
+import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
+import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupResult;
+import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
+import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateClusterResult;
@@ -13,6 +24,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -76,6 +88,7 @@ public class EcsIntegrationTest {
         "essential": true
     }],
     "family": "tomcat"
+    }
 }
      */
 
@@ -131,5 +144,48 @@ public class EcsIntegrationTest {
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
     System.out.println(updateServiceResult);
+  }
+
+  @Test
+  public void shouldAddContainerInstance() {
+    AmazonEC2Client amazonEC2Client = new AmazonEC2Client(
+        new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
+    amazonEC2Client.setRegion(Region.getRegion(Regions.US_EAST_1));
+
+    RunInstancesRequest runInstancesRequest =
+        new RunInstancesRequest()
+            .withInstanceType("t2.small")
+            .withImageId("ami-6df8fe7a")
+            .withMinCount(1)
+            .withMaxCount(1)
+            .withIamInstanceProfile(new IamInstanceProfileSpecification().withArn(
+                "arn:aws:iam::830767422336:instance-profile/ecsInstanceRole"))
+            .withUserData(
+                Base64.encodeBase64String("#!/bin/bash\necho ECS_CLUSTER=demo >> /etc/ecs/ecs.config".getBytes()));
+
+    RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
+    System.out.println(runInstancesRequest.toString());
+  }
+
+  @Test
+  public void shouldScaleContainerInstanceCluster() {
+    AmazonAutoScalingClient amazonAutoScalingClient = new AmazonAutoScalingClient(
+        new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
+    UpdateAutoScalingGroupResult updateAutoScalingGroupResult = amazonAutoScalingClient.updateAutoScalingGroup(
+        new UpdateAutoScalingGroupRequest()
+            .withAutoScalingGroupName("EC2ContainerService-demo-EcsInstanceAsg-1TUMY9AGURFZC")
+            .withMaxSize(10));
+    System.out.println(updateAutoScalingGroupResult.toString());
+    SetDesiredCapacityResult setDesiredCapacityResult = amazonAutoScalingClient.setDesiredCapacity(
+        new SetDesiredCapacityRequest()
+            .withAutoScalingGroupName("EC2ContainerService-demo-EcsInstanceAsg-1TUMY9AGURFZC")
+            .withDesiredCapacity(5));
+    System.out.println(setDesiredCapacityResult.toString());
+  }
+
+  @Test
+  public void shouldWaitTillAllInstanceaAreReady() {
+    AmazonAutoScalingClient amazonAutoScalingClient = new AmazonAutoScalingClient(
+        new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
   }
 }

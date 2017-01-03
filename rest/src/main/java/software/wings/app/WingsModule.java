@@ -10,6 +10,10 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
 import software.wings.beans.artifact.ArtifactStream.SourceType;
+import software.wings.cloudprovider.ClusterService;
+import software.wings.cloudprovider.ClusterServiceImpl;
+import software.wings.cloudprovider.aws.EcsService;
+import software.wings.cloudprovider.aws.EcsServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.core.ssh.executors.SshExecutorFactory;
@@ -198,6 +202,8 @@ public class WingsModule extends AbstractModule {
     bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
     bind(CloudWatchService.class).to(CloudWatchServiceImpl.class);
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
+    bind(EcsService.class).to(EcsServiceImpl.class);
+    bind(ClusterService.class).to(ClusterServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()

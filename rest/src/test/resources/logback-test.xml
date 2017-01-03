@@ -12,13 +12,15 @@
     <logger name="org.mongodb.driver" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="org.mongodb.morphia" level="ERROR"/>
-    <logger name="org.apache.sshd" level="INFO"/>
-    <logger name="de.danielbechler" level="INFO"/>
-    <logger name="org.hibernate.validator" level="INFO"/>
-    <logger name="com.hazelcast" level="INFO"/>
+    <logger name="org.apache.sshd" level="ERROR"/>
+    <logger name="de.danielbechler" level="ERROR"/>
+    <logger name="org.hibernate.validator" level="ERROR"/>
+    <logger name="com.hazelcast" level="ERROR"/>
+    <logger name="ro.fortsoft" level="ERROR"/>
+    <logger name="software.wings.rules.WingsRule" level="ERROR"/>
 
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="stdout"/>
     </root>
 </configuration>
