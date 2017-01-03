@@ -14,6 +14,23 @@ public class PauseAction implements RepairAction {
     this.timeout = timeout;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    PauseAction that = (PauseAction) o;
+
+    return timeout == that.timeout;
+  }
+
+  @Override
+  public int hashCode() {
+    return (int) (timeout ^ (timeout >>> 32));
+  }
+
   public static final class PauseActionBuilder {
     private long timeout;
 

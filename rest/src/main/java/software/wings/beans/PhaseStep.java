@@ -35,4 +35,39 @@ public class PhaseStep {
   public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
     this.failureStrategies = failureStrategies;
   }
+
+  public static final class PhaseStepBuilder {
+    private PhaseStepType phaseStepType;
+    private List<Node> steps;
+    private List<FailureStrategy> failureStrategies;
+
+    private PhaseStepBuilder() {}
+
+    public static PhaseStepBuilder aPhaseStep() {
+      return new PhaseStepBuilder();
+    }
+
+    public PhaseStepBuilder withPhaseStepType(PhaseStepType phaseStepType) {
+      this.phaseStepType = phaseStepType;
+      return this;
+    }
+
+    public PhaseStepBuilder withSteps(List<Node> steps) {
+      this.steps = steps;
+      return this;
+    }
+
+    public PhaseStepBuilder withFailureStrategies(List<FailureStrategy> failureStrategies) {
+      this.failureStrategies = failureStrategies;
+      return this;
+    }
+
+    public PhaseStep build() {
+      PhaseStep phaseStep = new PhaseStep();
+      phaseStep.setPhaseStepType(phaseStepType);
+      phaseStep.setSteps(steps);
+      phaseStep.setFailureStrategies(failureStrategies);
+      return phaseStep;
+    }
+  }
 }

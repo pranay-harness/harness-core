@@ -5,12 +5,16 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -28,13 +32,18 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.ErrorCodes;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
+import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowOuterSteps;
@@ -50,6 +59,7 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -57,6 +67,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -504,7 +515,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
       PageRequest<OrchestrationWorkflow> pageRequest) {
-    return wingsPersistence.query(OrchestrationWorkflow.class, pageRequest);
+    return listOrchestrationWorkflows(pageRequest, 0);
+  }
+  @Override
+  public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
+      PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount) {
+    PageResponse<OrchestrationWorkflow> pageResponse = wingsPersistence.query(OrchestrationWorkflow.class, pageRequest);
+    if (previousExecutionsCount != null && previousExecutionsCount > 0 && pageResponse.size() > 0) {
+      // TODO - integrate the actual call
+
+      for (OrchestrationWorkflow orchestrationWorkflow : pageResponse) {
+        orchestrationWorkflow.setWorkflowExecutions(newArrayList(aWorkflowExecution()
+                                                                     .withStatus(ExecutionStatus.SUCCESS)
+                                                                     .withEnvName("Production")
+                                                                     .withStartTs(System.currentTimeMillis())
+                                                                     .withEndTs(System.currentTimeMillis() - 652)
+                                                                     .build(),
+            aWorkflowExecution()
+                .withStatus(ExecutionStatus.SUCCESS)
+                .withEnvName("Production")
+                .withStartTs(System.currentTimeMillis() - 200)
+                .withEndTs(System.currentTimeMillis() - 1123)
+                .build()));
+      }
+    }
+    return pageResponse;
   }
 
   @Override
@@ -523,29 +558,35 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public OrchestrationWorkflow updateOrchestrationWorkflowBasic(
+      String appId, String orchestrationWorkflowId, OrchestrationWorkflow orchestrationWorkflow) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "name", orchestrationWorkflow.getName());
+    return orchestrationWorkflow;
+  }
+
+  @Override
   public WorkflowOuterSteps updatePreDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, workflowOuterSteps, "preDeploymentSteps");
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "preDeploymentSteps", workflowOuterSteps);
     return workflowOuterSteps;
   }
 
   @Override
   public WorkflowOuterSteps updatePostDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, workflowOuterSteps, "postDeploymentSteps");
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "postDeploymentSteps", workflowOuterSteps);
     return workflowOuterSteps;
   }
 
   private void updateOrchestrationWorkflowField(
-      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps, String postDeploymentSteps) {
+      String appId, String orchestrationWorkflowId, String fieldName, Object fieldValue) {
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
     UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-            .set(postDeploymentSteps, workflowOuterSteps);
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set(fieldName, fieldValue);
 
     wingsPersistence.update(query, updateOps);
   }
@@ -558,6 +599,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
     workflowPhase.setUuid(UUIDGenerator.getUuid());
+
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.PROVISION_NODE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.DEPLOY_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.ENABLE_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.VERIFY_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.DISABLE_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.DEPROVISION_NODE).build());
+    workflowPhase.addPhaseStep(aPhaseStep().withPhaseStepType(PhaseStepType.WRAP_UP).build());
+
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).add("workflowPhases", workflowPhase);
 
@@ -568,9 +618,83 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
-    return null;
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    if (orchestrationWorkflow == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+    }
+    List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases == null || workflowPhases.isEmpty() || workflowPhase == null
+        || workflowPhase.getUuid() == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowPhase");
+    }
+
+    Map<String, WorkflowPhase> workflowMap = workflowPhases.stream().collect(toMap(WorkflowPhase::getUuid, identity()));
+
+    WorkflowPhase origWorkflowPhase = workflowMap.get(workflowPhase.getUuid());
+
+    MapperUtils.mapObject(workflowPhase, origWorkflowPhase);
+
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhases", workflowPhases);
+
+    wingsPersistence.update(query, updateOps);
+
+    return origWorkflowPhase;
   }
 
   @Override
-  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {}
+  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    if (orchestrationWorkflow == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+    }
+    List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases == null || workflowPhases.isEmpty() || phaseId == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowPhase");
+    }
+
+    Map<String, WorkflowPhase> workflowMap = workflowPhases.stream().collect(toMap(WorkflowPhase::getUuid, identity()));
+
+    WorkflowPhase origWorkflowPhase = workflowMap.get(phaseId);
+
+    workflowPhases.remove(origWorkflowPhase);
+
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhases", workflowPhases);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  @Override
+  public List<NotificationRule> updateNotificationRules(
+      String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "notificationRules", notificationRules);
+    return notificationRules;
+  }
+
+  @Override
+  public List<FailureStrategy> updateFailureStrategies(
+      String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "failureStrategies", failureStrategies);
+    return failureStrategies;
+  }
+
+  @Override
+  public List<Variable> updateUserVariables(
+      String appId, String orchestrationWorkflowId, List<Variable> userVariables) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "userVariables", userVariables);
+    return userVariables;
+  }
 }

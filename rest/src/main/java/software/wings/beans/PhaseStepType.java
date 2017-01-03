@@ -5,5 +5,10 @@ package software.wings.beans;
  */
 public enum PhaseStepType {
   PROVISION_NODE,
-  DEPLOY_SERVICE;
+  DISABLE_SERVICE,
+  DEPLOY_SERVICE,
+  ENABLE_SERVICE,
+  VERIFY_SERVICE,
+  DEPROVISION_NODE,
+  WRAP_UP;
 }

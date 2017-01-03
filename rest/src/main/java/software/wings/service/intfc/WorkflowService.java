@@ -1,8 +1,11 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Base;
+import software.wings.beans.FailureStrategy;
+import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowOuterSteps;
@@ -199,11 +202,17 @@ public interface WorkflowService {
 
   PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(PageRequest<OrchestrationWorkflow> pageRequest);
 
+  PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
+      PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount);
+
   OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
 
   OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow);
 
   boolean deleteOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
+
+  OrchestrationWorkflow updateOrchestrationWorkflowBasic(
+      String appId, String orchestrationWorkflowId, OrchestrationWorkflow orchestrationWorkflow);
 
   WorkflowOuterSteps updatePreDeployment(
       String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps);
@@ -216,4 +225,12 @@ public interface WorkflowService {
   WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
 
   void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId);
+
+  List<NotificationRule> updateNotificationRules(
+      String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules);
+
+  List<FailureStrategy> updateFailureStrategies(
+      String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies);
+
+  List<Variable> updateUserVariables(String appId, String orchestrationWorkflowId, List<Variable> userVariables);
 }

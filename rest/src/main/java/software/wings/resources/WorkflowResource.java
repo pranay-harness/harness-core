@@ -5,14 +5,18 @@
 package software.wings.resources;
 
 import io.swagger.annotations.Api;
+import software.wings.beans.FailureStrategy;
+import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Variable;
 import software.wings.beans.WorkflowOuterSteps;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -53,9 +57,10 @@ public class WorkflowResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<OrchestrationWorkflow>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<OrchestrationWorkflow> pageRequest) {
-    return new RestResponse<>(workflowService.listOrchestrationWorkflows(pageRequest));
+  public RestResponse<PageResponse<OrchestrationWorkflow>> list(@QueryParam("appId") String appId,
+      @BeanParam PageRequest<OrchestrationWorkflow> pageRequest,
+      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
+    return new RestResponse<>(workflowService.listOrchestrationWorkflows(pageRequest, previousExecutionsCount));
   }
 
   /**
@@ -68,7 +73,7 @@ public class WorkflowResource {
   @GET
   @Path("{orchestrationWorkflowId}")
   public RestResponse<OrchestrationWorkflow> read(@QueryParam("appId") String appId,
-      @PathParam("orchestrationId") String orchestrationWorkflowId, @QueryParam("version") Integer version) {
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @QueryParam("version") Integer version) {
     return new RestResponse<>(workflowService.readOrchestrationWorkflow(appId, orchestrationWorkflowId));
   }
 
@@ -99,6 +104,23 @@ public class WorkflowResource {
       @QueryParam("appId") String appId, @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId) {
     workflowService.deleteOrchestrationWorkflow(appId, orchestrationWorkflowId);
     return new RestResponse();
+  }
+
+  /**
+   * Update.
+   *
+   * @param appId           the app id
+   * @param orchestrationWorkflowId the orchestration id
+   * @param orchestrationWorkflow   the orchestrationWorkflow
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/basic")
+  public RestResponse<OrchestrationWorkflow> updatePreDeployment(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId,
+      OrchestrationWorkflow orchestrationWorkflow) {
+    return new RestResponse<>(
+        workflowService.updateOrchestrationWorkflowBasic(appId, orchestrationWorkflowId, orchestrationWorkflow));
   }
 
   /**
@@ -177,5 +199,52 @@ public class WorkflowResource {
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId) {
     workflowService.deleteWorkflowPhase(appId, orchestrationWorkflowId, phaseId);
     return new RestResponse();
+  }
+
+  /**
+   * Update.
+   *
+   * @param appId           the app id
+   * @param orchestrationWorkflowId the orchestration id
+   * @param notificationRules   the notificationRules
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/notification-rules")
+  public RestResponse<List<NotificationRule>> updateNotificationRules(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
+    return new RestResponse<>(
+        workflowService.updateNotificationRules(appId, orchestrationWorkflowId, notificationRules));
+  }
+
+  /**
+   * Update.
+   *
+   * @param appId           the app id
+   * @param orchestrationWorkflowId the orchestration id
+   * @param failureStrategies   the failureStrategies
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/failure-strategies")
+  public RestResponse<List<FailureStrategy>> updateFailureStrategies(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, List<FailureStrategy> failureStrategies) {
+    return new RestResponse<>(
+        workflowService.updateFailureStrategies(appId, orchestrationWorkflowId, failureStrategies));
+  }
+
+  /**
+   * Update.
+   *
+   * @param appId           the app id
+   * @param orchestrationWorkflowId the orchestration id
+   * @param userVariables   the user variables
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/user-variables")
+  public RestResponse<List<Variable>> updateUserVariables(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, List<Variable> userVariables) {
+    return new RestResponse<>(workflowService.updateUserVariables(appId, orchestrationWorkflowId, userVariables));
   }
 }
