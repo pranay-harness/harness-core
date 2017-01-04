@@ -7,6 +7,7 @@ import static software.wings.cloudprovider.AwsClusterConfiguration.Builder.anAws
 import com.google.inject.Inject;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
@@ -21,6 +22,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 12/29/16.
  */
+@Ignore
 public class ClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private ClusterService clusterService;
   @Inject private EcsService ecsService;

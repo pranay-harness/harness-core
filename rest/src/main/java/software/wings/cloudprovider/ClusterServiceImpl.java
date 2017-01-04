@@ -2,6 +2,7 @@ package software.wings.cloudprovider;
 
 import com.google.inject.Inject;
 
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
@@ -13,6 +14,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 12/29/16.
  */
+@Ignore
 public class ClusterServiceImpl implements ClusterService {
   @Inject private EcsService ecsService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -49,7 +51,7 @@ public class ClusterServiceImpl implements ClusterService {
 
   @Override
   public void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    ecsService.deleteService(cloudProviderSetting, serviceName);
+    ecsService.deleteService(cloudProviderSetting, clusterName, serviceName);
     logger.info("Successfully deleted service {}", serviceName);
   }
 }

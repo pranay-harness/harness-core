@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.aws;
 
+import static software.wings.beans.ErrorCodes.INIT_TIMEOUT;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -22,7 +24,6 @@ import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
-import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -45,8 +46,12 @@ import java.util.Map;
 @Singleton
 public class EcsServiceImpl implements EcsService {
   @Inject private AwsHelperService awsHelperService;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+  private static final int SLEEP_INTERVAL = 5 * 1000;
+  private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
 
   @Override
   public void provisionNodes(
@@ -69,19 +74,19 @@ public class EcsServiceImpl implements EcsService {
 
     AmazonECSClient amazonEcsClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    amazonEcsClient.createCluster(new CreateClusterRequest().withClusterName((String) params.get("clusterName")));
+    String clusterName = (String) params.get("clusterName");
+    amazonEcsClient.createCluster(new CreateClusterRequest().withClusterName(clusterName));
     logger.info("Successfully created empty cluster " + params.get("clusterName"));
-    Misc.quietSleep(2 * 1000); // TODO:: remove
-    logger.info("Creating autoscaling group for cluster...");
 
+    logger.info("Creating autoscaling group for cluster...");
     AmazonAutoScalingClient amazonAutoScalingClient =
         awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     Integer maxSize = (Integer) params.computeIfAbsent("maxSize", s -> 2 * clusterSize); // default 200%
     Integer minSize = (Integer) params.computeIfAbsent("minSize", s -> clusterSize / 2); // default 50%
-    String name = (String) params.get("autoScalingGroupName");
+    String autoScalingGroupName = (String) params.get("autoScalingGroupName");
     String vpcZoneIdentifiers = (String) params.get("vpcZoneIdentifiers");
-    List<String> availabilityZones = (List<String>) params.computeIfAbsent("availabilityZones", s -> null);
+    List<String> availabilityZones = (List<String>) params.get("availabilityZones");
 
     CreateAutoScalingGroupResult createAutoScalingGroupResult =
         amazonAutoScalingClient.createAutoScalingGroup(new CreateAutoScalingGroupRequest()
@@ -89,21 +94,38 @@ public class EcsServiceImpl implements EcsService {
                                                            .withDesiredCapacity(clusterSize)
                                                            .withMaxSize(maxSize)
                                                            .withMinSize(minSize)
-                                                           .withAutoScalingGroupName(name)
+                                                           .withAutoScalingGroupName(autoScalingGroupName)
                                                            .withAvailabilityZones(availabilityZones)
                                                            .withVPCZoneIdentifier(vpcZoneIdentifiers));
 
-    logger.info("Successfully created autoScalingGroup: {}", name);
-    Misc.quietSleep(2 * 1000); // TODO:: remove
+    logger.info("Successfully created autoScalingGroup: {}", autoScalingGroupName);
 
-    while (!allInstanceInReadyState(amazonAutoScalingClient, name, clusterSize)) {
-      Misc.quietSleep(5 * 1000);
-    }
+    waitForAllInstancesToBeReady(autoScalingGroupName, clusterSize, amazonAutoScalingClient);
+    waitForAllInstanceToRegisterWithCluster(clusterName, clusterSize, amazonEcsClient);
 
-    while (!allInstancesRegisteredWithCluster(amazonEcsClient, (String) params.get("clusterName"), clusterSize)) {
-      Misc.quietSleep(5 * 1000);
+    logger.info("All instances are ready for deployment");
+  }
+
+  private void waitForAllInstanceToRegisterWithCluster(
+      String clusterName, Integer clusterSize, AmazonECSClient amazonEcsClient) {
+    int retryCount = RETRY_COUNTER;
+    while (!allInstancesRegisteredWithCluster(amazonEcsClient, clusterName, clusterSize)) {
+      if (retryCount-- <= 0) {
+        throw new WingsException(INIT_TIMEOUT, "message", "All instances didn't registered with cluster");
+      }
+      Misc.quietSleep(SLEEP_INTERVAL);
     }
-    logger.info("All instaces are ready for deployment");
+  }
+
+  private void waitForAllInstancesToBeReady(
+      String autoscalingGroupName, Integer clusterSize, AmazonAutoScalingClient amazonAutoScalingClient) {
+    int retryCount = RETRY_COUNTER;
+    while (!allInstanceInReadyState(amazonAutoScalingClient, autoscalingGroupName, clusterSize)) {
+      if (retryCount-- <= 0) {
+        throw new WingsException(INIT_TIMEOUT, "message", "Not all instances ready to registered with cluster");
+      }
+      Misc.quietSleep(SLEEP_INTERVAL);
+    }
   }
 
   private boolean allInstancesRegisteredWithCluster(AmazonECSClient amazonEcsClient, String name, Integer clusterSize) {
@@ -130,19 +152,6 @@ public class EcsServiceImpl implements EcsService {
   }
 
   @Override
-  public void deprovisionNodes(
-      SettingAttribute connectorConfig, String autoScalingGroupName, Integer desiredClusterSize) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-    SetDesiredCapacityResult setDesiredCapacityResult =
-        amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
-                                                       .withAutoScalingGroupName(autoScalingGroupName)
-                                                       .withDesiredCapacity(desiredClusterSize));
-  }
-
-  @Override
   public String deployService(SettingAttribute connectorConfig, String serviceDefinition) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
@@ -156,11 +165,20 @@ public class EcsServiceImpl implements EcsService {
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult = amazonECSClient.createService(createServiceRequest);
 
-    while (!allDesiredTaskRuning(amazonECSClient, createServiceRequest)) {
-      Misc.quietSleep(5 * 1000);
-    }
+    waitForTasksToBeInRunningState(amazonECSClient, createServiceRequest);
 
     return createServiceResult.getService().getServiceArn();
+  }
+
+  private void waitForTasksToBeInRunningState(
+      AmazonECSClient amazonECSClient, CreateServiceRequest createServiceRequest) {
+    int retryCount = RETRY_COUNTER;
+    while (!allDesiredTaskRuning(amazonECSClient, createServiceRequest)) {
+      if (retryCount-- <= 0) {
+        throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
+      }
+      Misc.quietSleep(SLEEP_INTERVAL);
+    }
   }
 
   private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, CreateServiceRequest createServiceRequest) {
@@ -177,26 +195,12 @@ public class EcsServiceImpl implements EcsService {
   }
 
   @Override
-  public void rollingUpdateService(SettingAttribute connectorConfig, String serviceDefinition) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    UpdateServiceRequest updateServiceRequest = null;
-    try {
-      updateServiceRequest = mapper.readValue(serviceDefinition, UpdateServiceRequest.class);
-    } catch (IOException ex) {
-      ex.printStackTrace();
-    }
-    UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
-  }
-
-  @Override
-  public void deleteService(SettingAttribute connectorConfig, String serviceName) {
+  public void deleteService(SettingAttribute connectorConfig, String clusterName, String serviceName) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     DeleteServiceResult deleteServiceResult =
-        amazonECSClient.deleteService(new DeleteServiceRequest().withService(serviceName));
+        amazonECSClient.deleteService(new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
   }
 
   @Override
@@ -207,16 +211,6 @@ public class EcsServiceImpl implements EcsService {
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-    amazonECSClient.updateService(updateServiceRequest);
-  }
-
-  @Override
-  public void deprovisionTasks(SettingAttribute connectorConfig, String serviceName, Integer desiredCount) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
-    AmazonECSClient amazonECSClient =
-        awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    UpdateServiceRequest updateServiceRequest =
-        new UpdateServiceRequest().withService(serviceName).withDesiredCount(desiredCount);
     amazonECSClient.updateService(updateServiceRequest);
   }
 

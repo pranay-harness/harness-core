@@ -15,13 +15,4 @@ public interface EcsService extends ContainerService {
    * @param desiredCount    the desired count
    */
   void provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName, Integer desiredCount);
-
-  /**
-   * Deprovision tasks.
-   *
-   * @param connectorConfig the connector config
-   * @param serviceName     the service name
-   * @param desiredCount    the desired count
-   */
-  void deprovisionTasks(SettingAttribute connectorConfig, String serviceName, Integer desiredCount);
 }

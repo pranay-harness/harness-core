@@ -29,15 +29,6 @@ public interface ContainerService {
       SettingAttribute connectorConfig, Integer clusterSize, String launchConfigName, Map<String, Object> params);
 
   /**
-   * Deprovision nodes.
-   *
-   * @param connectorConfig      the connector config
-   * @param autoScalingGroupName the auto scaling group name
-   * @param clusterSize          the cluster size
-   */
-  void deprovisionNodes(SettingAttribute connectorConfig, String autoScalingGroupName, Integer clusterSize);
-
-  /**
    * Deploy service string.
    *
    * @param connectorConfig   the connector config
@@ -47,18 +38,10 @@ public interface ContainerService {
   String deployService(SettingAttribute connectorConfig, String serviceDefinition);
 
   /**
-   * Rolling update service.
-   *
-   * @param connectorConfig   the connector config
-   * @param serviceDefinition the service definition
-   */
-  void rollingUpdateService(SettingAttribute connectorConfig, String serviceDefinition);
-
-  /**
    * Delete service.
-   *
-   * @param connectorConfig the connector config
+   *  @param connectorConfig the connector config
+   * @param clusterName
    * @param serviceName     the service name
    */
-  void deleteService(SettingAttribute connectorConfig, String serviceName);
+  void deleteService(SettingAttribute connectorConfig, String clusterName, String serviceName);
 }

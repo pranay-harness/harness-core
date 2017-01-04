@@ -332,4 +332,22 @@ public class WingsTestConstants {
    * The constant METRIC_DIMENSION.
    */
   public static final String METRIC_DIMENSION = "METRIC_DIMENSION";
+
+  /**
+   * The constant CLUSTER_NAME.
+   */
+  public static final String CLUSTER_NAME = "CLUSTER_NAME";
+
+  /**
+   * The constant SERVICE_DEFINITION.
+   */
+  public static final String SERVICE_DEFINITION = "SERVICE_DEFINITION";
+  /**
+   * The constant LAUNCHER_TEMPLATE_NAME.
+   */
+  public static final String LAUNCHER_TEMPLATE_NAME = "LAUNCHER_TEMPLATE_NAME";
+  /**
+   * The constant AUTO_SCALING_GROUP_NAME.
+   */
+  public static final String AUTO_SCALING_GROUP_NAME = "AUTO_SCALING_GROUP_NAME";
 }
