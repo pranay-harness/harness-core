@@ -9,6 +9,7 @@
 
     <logger name="software.wings" level="INFO"/>
 
+
     <root level="INFO">
         <appender-ref ref="stdout"/>
     </root>

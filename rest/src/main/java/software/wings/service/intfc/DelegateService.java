@@ -15,10 +15,17 @@ import java.io.IOException;
  */
 public interface DelegateService {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
+
   Delegate get(String accountId, String delegateId);
+
   Delegate update(Delegate delegate);
+
+  Delegate checkForUpgrade(String accountId, String delegateId);
+
   Delegate add(Delegate delegate);
+
   void delete(String accountId, String delegateId);
+
   Delegate register(Delegate delegate);
 
   void sendTaskWaitNotify(DelegateTask task);

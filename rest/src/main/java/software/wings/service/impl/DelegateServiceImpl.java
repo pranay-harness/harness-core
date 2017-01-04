@@ -90,8 +90,33 @@ public class DelegateServiceImpl implements DelegateService {
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
     Delegate updatedDelegate = get(delegate.getAccountId(), delegate.getUuid());
-    updatedDelegate.setDoUpgrade(needsUpgrade(updatedDelegate.getVersion()));
     return updatedDelegate;
+  }
+
+  @Override
+  public Delegate checkForUpgrade(String accountId, String delegateId) {
+    Delegate delegate = get(accountId, delegateId);
+
+    String latestVersion = null;
+    try {
+      latestVersion = substringBefore(Request.Get(mainConfiguration.getDelegateMetadataUrl())
+                                          .connectTimeout(1000)
+                                          .socketTimeout(1000)
+                                          .execute()
+                                          .returnContent()
+                                          .asString(),
+          " ");
+    } catch (IOException e) {
+      logger.error("Unable to fetch delegate version information ", e);
+      latestVersion = "0.0.0";
+    }
+    boolean doUpgrade = Version.valueOf(delegate.getVersion()).lessThan(Version.valueOf(latestVersion));
+
+    delegate.setDoUpgrade(doUpgrade);
+    if (doUpgrade) {
+      delegate.setVersion(latestVersion);
+    }
+    return delegate;
   }
 
   @Override
@@ -186,22 +211,5 @@ public class DelegateServiceImpl implements DelegateService {
     out.closeArchiveEntry();
     out.close();
     return delegateFile;
-  }
-
-  private boolean needsUpgrade(String version) {
-    String latestVersion = null;
-    try {
-      latestVersion = substringBefore(Request.Get(mainConfiguration.getDelegateMetadataUrl())
-                                          .connectTimeout(1000)
-                                          .socketTimeout(1000)
-                                          .execute()
-                                          .returnContent()
-                                          .asString(),
-          " ");
-    } catch (IOException e) {
-      logger.error("Unable to fetch delegate version information ", e);
-      latestVersion = "0.0.0";
-    }
-    return Version.valueOf(version).lessThan(Version.valueOf(latestVersion));
   }
 }
