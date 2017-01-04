@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -12,6 +13,8 @@ import com.google.common.base.MoreObjects;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
 import software.wings.beans.SearchFilter;
@@ -290,6 +293,38 @@ public class WingsPersistenceTest extends WingsBaseTest {
     TestEntity entity2 = wingsPersistence.get(TestEntity.class, entity.getUuid());
     assertThat(entity2).isNotNull();
     assertThat(entity2.getMapField()).isEqualTo(map2);
+  }
+
+  /**
+   * Should update map entry
+   */
+  @Test
+  public void shouldUpdateMapEntry() {
+    TestEntity entity = new TestEntity();
+    entity.setFieldA("fieldA11");
+    Map<String, String> map = new HashMap<>();
+    map.put("abc", "123");
+    map.put("def", "123");
+    entity.setMapField(map);
+    wingsPersistence.save(entity);
+
+    TestEntity entity1 = wingsPersistence.get(TestEntity.class, entity.getUuid());
+
+    Query<TestEntity> query = wingsPersistence.createQuery(TestEntity.class).field(ID_KEY).equal(entity.getUuid());
+
+    UpdateOperations<TestEntity> operations = wingsPersistence.createUpdateOperations(TestEntity.class);
+    operations.set("mapField.abc", "1234");
+    operations.set("mapField.abcd", "2345");
+    operations.unset("mapField.def");
+
+    wingsPersistence.update(query, operations);
+    TestEntity entity2 = wingsPersistence.get(TestEntity.class, entity.getUuid());
+    assertThat(entity2).isNotNull();
+    assertThat(entity2.getMapField())
+        .isNotNull()
+        .containsEntry("abc", "1234")
+        .containsEntry("abcd", "2345")
+        .doesNotContainKeys("def");
   }
 
   /**

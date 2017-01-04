@@ -35,8 +35,8 @@ import java.util.Optional;
 public class Graph {
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
-
   private List<Link> links = new ArrayList<>();
+  private Map<String, Graph> subworkflows = new HashMap<>();
 
   @Transient private Optional<Node> originState = null;
 
@@ -142,6 +142,14 @@ public class Graph {
   @JsonIgnore
   public void setVersion(int version) {
     this.version = version;
+  }
+
+  public Map<String, Graph> getSubworkflows() {
+    return subworkflows;
+  }
+
+  public void setSubworkflows(Map<String, Graph> subworkflows) {
+    this.subworkflows = subworkflows;
   }
 
   /**
@@ -1170,6 +1178,7 @@ public class Graph {
     private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
     private List<Node> nodes = new ArrayList<>();
     private List<Link> links = new ArrayList<>();
+    private Map<String, Graph> subworkflows = new HashMap<>();
 
     private Builder() {}
 
@@ -1212,6 +1221,18 @@ public class Graph {
      */
     public Builder withNodes(List<Node> nodes) {
       this.nodes = nodes;
+      return this;
+    }
+
+    /**
+     * Adds the subworkflow.
+     *
+     * @param subworkflowName the subworkflowName
+     * @param subworkflow the subworkflow
+     * @return the builder
+     */
+    public Builder addSubworkflow(String subworkflowName, Graph subworkflow) {
+      this.subworkflows.put(subworkflowName, subworkflow);
       return this;
     }
 

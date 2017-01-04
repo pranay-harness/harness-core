@@ -10,7 +10,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Variable;
-import software.wings.beans.WorkflowOuterSteps;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -128,14 +128,14 @@ public class WorkflowResource {
    *
    * @param appId           the app id
    * @param orchestrationWorkflowId the orchestration id
-   * @param workflowOuterSteps   the pre-deployment steps
+   * @param phaseStep   the pre-deployment steps
    * @return the rest response
    */
   @PUT
   @Path("{orchestrationWorkflowId}/pre-deploy")
-  public RestResponse<WorkflowOuterSteps> updatePreDeployment(@QueryParam("appId") String appId,
-      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
-    return new RestResponse<>(workflowService.updatePreDeployment(appId, orchestrationWorkflowId, workflowOuterSteps));
+  public RestResponse<PhaseStep> updatePreDeployment(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, PhaseStep phaseStep) {
+    return new RestResponse<>(workflowService.updatePreDeployment(appId, orchestrationWorkflowId, phaseStep));
   }
 
   /**
@@ -143,14 +143,14 @@ public class WorkflowResource {
    *
    * @param appId           the app id
    * @param orchestrationWorkflowId the orchestration id
-   * @param workflowOuterSteps   the pre-deployment steps
+   * @param phaseStep   the pre-deployment steps
    * @return the rest response
    */
   @PUT
   @Path("{orchestrationWorkflowId}/post-deploy")
-  public RestResponse<WorkflowOuterSteps> updatePostDeployment(@QueryParam("appId") String appId,
-      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps) {
-    return new RestResponse<>(workflowService.updatePostDeployment(appId, orchestrationWorkflowId, workflowOuterSteps));
+  public RestResponse<PhaseStep> updatePostDeployment(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, PhaseStep phaseStep) {
+    return new RestResponse<>(workflowService.updatePostDeployment(appId, orchestrationWorkflowId, phaseStep));
   }
 
   /**

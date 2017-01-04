@@ -1,7 +1,5 @@
 package software.wings.common;
 
-import software.wings.beans.Workflow;
-
 /**
  * Common constants across application.
  *
@@ -91,4 +89,7 @@ public interface Constants {
    * The constant to represent all environment
    */
   String ALL_ENV = "__ALL_ENVIRONMENTS__";
+
+  String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
+  String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
 }

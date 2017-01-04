@@ -1,15 +1,7 @@
 package software.wings.beans;
 
-import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Graph.Node.Builder.aNode;
-
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Graph.Builder;
-import software.wings.common.UUIDGenerator;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,19 +12,16 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "orchWorkflows", noClassnameStored = true)
 public class OrchestrationWorkflow extends Base {
-  private static final String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
-  private static final String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
-
   private WorkflowOrchestrationType workflowOrchestrationType;
 
   @NotNull private String name;
 
-  private WorkflowOuterSteps preDeploymentSteps = new WorkflowOuterSteps();
+  private PhaseStep preDeploymentSteps = new PhaseStep();
   ;
 
   private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  private WorkflowOuterSteps postDeploymentSteps = new WorkflowOuterSteps();
+  private PhaseStep postDeploymentSteps = new PhaseStep();
   ;
 
   private List<NotificationRule> notificationRules = new ArrayList<>();
@@ -45,6 +34,8 @@ public class OrchestrationWorkflow extends Base {
   private List<Variable> userVariables = new ArrayList<>();
 
   private List<Variable> derivedVariables = new ArrayList<>();
+
+  private Graph graph;
 
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
@@ -64,11 +55,11 @@ public class OrchestrationWorkflow extends Base {
     this.name = name;
   }
 
-  public WorkflowOuterSteps getPreDeploymentSteps() {
+  public PhaseStep getPreDeploymentSteps() {
     return preDeploymentSteps;
   }
 
-  public void setPreDeploymentSteps(WorkflowOuterSteps preDeploymentSteps) {
+  public void setPreDeploymentSteps(PhaseStep preDeploymentSteps) {
     this.preDeploymentSteps = preDeploymentSteps;
   }
 
@@ -80,11 +71,11 @@ public class OrchestrationWorkflow extends Base {
     this.workflowPhases = workflowPhases;
   }
 
-  public WorkflowOuterSteps getPostDeploymentSteps() {
+  public PhaseStep getPostDeploymentSteps() {
     return postDeploymentSteps;
   }
 
-  public void setPostDeploymentSteps(WorkflowOuterSteps postDeploymentSteps) {
+  public void setPostDeploymentSteps(PhaseStep postDeploymentSteps) {
     this.postDeploymentSteps = postDeploymentSteps;
   }
 
@@ -137,45 +128,19 @@ public class OrchestrationWorkflow extends Base {
   }
 
   public Graph getGraph() {
-    String id1 = UUIDGenerator.getUuid();
-    String id2;
-    Builder graphBuilder =
-        aGraph().addNodes(aNode().withId(id1).withName(PRE_DEPLOYMENT_STEPS).withType(StateType.GROUP.name()).build());
-
-    if (workflowPhases != null) {
-      for (WorkflowPhase workflowPhase : workflowPhases) {
-        id2 = UUIDGenerator.getUuid();
-        graphBuilder.addNodes(
-            aNode().withId(id2).withName(workflowPhase.getName()).withType(StateType.GROUP.name()).build());
-        graphBuilder.addLinks(aLink()
-                                  .withId(UUIDGenerator.getUuid())
-                                  .withFrom(id1)
-                                  .withTo(id2)
-                                  .withType(ExecutionStatus.SUCCESS.name())
-                                  .build());
-        id1 = id2;
-      }
-    }
-    id2 = UUIDGenerator.getUuid();
-    graphBuilder.addNodes(aNode().withId(id2).withName(PRE_DEPLOYMENT_STEPS).withType(StateType.GROUP.name()).build());
-    graphBuilder.addLinks(aLink()
-                              .withId(UUIDGenerator.getUuid())
-                              .withFrom(id1)
-                              .withTo(id2)
-                              .withType(ExecutionStatus.SUCCESS.name())
-                              .build());
-
-    return graphBuilder.build();
+    return graph;
   }
 
-  public void setGraph(Graph graph) {}
+  public void setGraph(Graph graph) {
+    this.graph = graph;
+  }
 
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
     private String name;
-    private WorkflowOuterSteps preDeploymentSteps = new WorkflowOuterSteps();
+    private PhaseStep preDeploymentSteps = new PhaseStep();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private WorkflowOuterSteps postDeploymentSteps = new WorkflowOuterSteps();
+    private PhaseStep postDeploymentSteps = new PhaseStep();
     ;
     private List<NotificationRule> notificationRules = new ArrayList<>();
     ;
@@ -211,7 +176,7 @@ public class OrchestrationWorkflow extends Base {
       return this;
     }
 
-    public OrchestrationWorkflowBuilder withPreDeploymentSteps(WorkflowOuterSteps preDeploymentSteps) {
+    public OrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
       return this;
     }
@@ -221,7 +186,7 @@ public class OrchestrationWorkflow extends Base {
       return this;
     }
 
-    public OrchestrationWorkflowBuilder withPostDeploymentSteps(WorkflowOuterSteps postDeploymentSteps) {
+    public OrchestrationWorkflowBuilder withPostDeploymentSteps(PhaseStep postDeploymentSteps) {
       this.postDeploymentSteps = postDeploymentSteps;
       return this;
     }

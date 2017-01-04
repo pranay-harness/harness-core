@@ -9,11 +9,11 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
 import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
-import static software.wings.beans.WorkflowOuterSteps.WorkflowOuterStepsBuilder.aWorkflowOuterSteps;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -33,6 +33,8 @@ import software.wings.beans.Graph;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -41,7 +43,6 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Variable;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowOrchestrationType;
-import software.wings.beans.WorkflowOuterSteps;
 import software.wings.beans.WorkflowPhase;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
@@ -578,16 +579,18 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateOrchestrationWorkflow() {
-    createOrchestrationWorkflow();
+    OrchestrationWorkflow workflow = createOrchestrationWorkflow();
+    logger.info(JsonUtils.asJson(workflow));
   }
 
   public OrchestrationWorkflow createOrchestrationWorkflow() {
-    OrchestrationWorkflow orchestrationWorkflow = anOrchestrationWorkflow()
-                                                      .withAppId(APP_ID)
-                                                      .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-                                                      .withPreDeploymentSteps(aWorkflowOuterSteps().build())
-                                                      .withPostDeploymentSteps(aWorkflowOuterSteps().build())
-                                                      .build();
+    OrchestrationWorkflow orchestrationWorkflow =
+        anOrchestrationWorkflow()
+            .withAppId(APP_ID)
+            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
+            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .build();
 
     OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
     assertThat(orchestrationWorkflow2)
@@ -641,30 +644,26 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdatePreDeployment() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
-    WorkflowOuterSteps workflowOuterSteps = aWorkflowOuterSteps().withStepsInParallel(true).build();
-    WorkflowOuterSteps updated = workflowService.updatePreDeployment(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowOuterSteps);
+    PhaseStep phaseStep = aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep updated = workflowService.updatePreDeployment(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), phaseStep);
 
     OrchestrationWorkflow orchestrationWorkflow2 =
         workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2)
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("preDeploymentSteps", workflowOuterSteps);
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("preDeploymentSteps", phaseStep);
   }
 
   @Test
   public void shouldUpdatePostDeployment() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
-    WorkflowOuterSteps workflowOuterSteps = aWorkflowOuterSteps().withStepsInParallel(true).build();
-    WorkflowOuterSteps updated = workflowService.updatePostDeployment(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowOuterSteps);
+    PhaseStep phaseStep = aPhaseStep(PhaseStepType.POST_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep updated = workflowService.updatePostDeployment(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), phaseStep);
 
     OrchestrationWorkflow orchestrationWorkflow2 =
         workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2)
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("postDeploymentSteps", workflowOuterSteps);
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("postDeploymentSteps", phaseStep);
   }
 
   @Test

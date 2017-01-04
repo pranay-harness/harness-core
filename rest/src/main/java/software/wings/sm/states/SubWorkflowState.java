@@ -8,14 +8,14 @@ import software.wings.sm.StateType;
 /**
  * Created by rishi on 12/16/16.
  */
-public class GroupState extends State {
+public class SubWorkflowState extends State {
   /**
    * Instantiates a new repeat state.
    *
    * @param name the name
    */
-  public GroupState(String name) {
-    super(name, StateType.GROUP.name());
+  public SubWorkflowState(String name) {
+    super(name, StateType.SUB_WORKFLOW.name());
   }
 
   @Override

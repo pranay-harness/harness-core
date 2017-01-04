@@ -8,7 +8,7 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
-import software.wings.beans.WorkflowOuterSteps;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -214,11 +214,9 @@ public interface WorkflowService {
   OrchestrationWorkflow updateOrchestrationWorkflowBasic(
       String appId, String orchestrationWorkflowId, OrchestrationWorkflow orchestrationWorkflow);
 
-  WorkflowOuterSteps updatePreDeployment(
-      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps);
+  PhaseStep updatePreDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep);
 
-  WorkflowOuterSteps updatePostDeployment(
-      String appId, String orchestrationWorkflowId, WorkflowOuterSteps workflowOuterSteps);
+  PhaseStep updatePostDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep);
 
   WorkflowPhase createWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
 

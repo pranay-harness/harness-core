@@ -23,7 +23,7 @@ import software.wings.sm.states.CommandState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
-import software.wings.sm.states.GroupState;
+import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.LoadBalancerState;
@@ -51,7 +51,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Repeat state type.
    */
-  GROUP(GroupState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
+  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
 
   /**
    * Repeat state type.
