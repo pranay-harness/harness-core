@@ -69,6 +69,14 @@
                             <value>8=91</value>
                         </entry>
                         <entry>
+                            <key>Application-Version</key>
+                            <value>1.0.0.DEV</value>
+                        </entry>
+                        <entry>
+                            <key>System-Properties</key>
+                            <value>version=1.0.0.DEV</value>
+                        </entry>
+                        <entry>
                             <key>Args</key>
                             <value>$*</value>
                         </entry>

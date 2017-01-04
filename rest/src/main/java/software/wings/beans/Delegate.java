@@ -16,6 +16,7 @@ public class Delegate extends Base {
   private long lastHeartBeat;
   private String version;
   @Transient private boolean doUpgrade;
+  @Transient private String upgradeScript;
 
   /**
    * Getter for property 'accountId'.
@@ -141,6 +142,14 @@ public class Delegate extends Base {
    */
   public void setDoUpgrade(boolean doUpgrade) {
     this.doUpgrade = doUpgrade;
+  }
+
+  public String getUpgradeScript() {
+    return upgradeScript;
+  }
+
+  public void setUpgradeScript(String upgradeScript) {
+    this.upgradeScript = upgradeScript;
   }
 
   public enum Status { ENABLED, DISABLED, DISCONNECTED, UPGRADING }

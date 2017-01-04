@@ -137,4 +137,14 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
     delegateService.processDelegateResponse(delegateTaskResponse);
   }
+
+  @DelegateAuth
+  @GET
+  @Path("{deletgateId}/upgrade")
+  public RestResponse<Delegate> checkForUpgrade(@Context HttpServletRequest request,
+      @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId)
+      throws IOException, TemplateException {
+    return new RestResponse<>(delegateService.checkForUpgrade(
+        accountId, delegateId, request.getServerName() + ":" + request.getServerPort()));
+  }
 }

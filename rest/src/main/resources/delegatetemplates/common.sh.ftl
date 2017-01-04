@@ -39,29 +39,3 @@ then
   tar xzvf $JVM_TAR_FILENAME
   JRE_CHANGED=1
 fi
-
-if [ "$JRE_CHANGED" -eq "1" ]
-then
-  rm jre
-fi
-
-if [ ! -d  jre ]
-then
-  ln -s $JRE_DIR jre
-fi
-
-if [ ! -e delegate.jar ]
-then
-  DELEGATE_URL="$(echo https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')/$(curl https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | cut -d " " -f2)"
-  wget $DELEGATE_URL
-fi
-
-if [ ! -e config-delegate.yml ]
-then
-  echo "accountId: ACCOUNT_ID" > config-delegate.yml
-  echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
-  echo "managerUrl: https://https://localhost:9090/api/" >> config-delegate.yml
-  echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
-fi
-
-$JRE_BINARY -jar delegate.jar config-delegate.yml

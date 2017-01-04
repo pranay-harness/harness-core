@@ -266,8 +266,13 @@ public enum ErrorCodes {
   /**
    * Retry failed error codes.
    */
-  RETRY_FAILED("RETRY_FAILED"),
-  UNKNOWN_ARTIFACT_TYPE("UNKNOWN_ARTIFACT_TYPE");
+  RETRY_FAILED("RETRY_FAILED"), /**
+                                 * Unknown artifact type error codes.
+                                 */
+  UNKNOWN_ARTIFACT_TYPE("UNKNOWN_ARTIFACT_TYPE"), /**
+                                                   * Timeout error codes.
+                                                   */
+  INIT_TIMEOUT("INIT_TIMEOUT");
 
   /**
    * The constant ARGS_NAME.

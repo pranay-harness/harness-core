@@ -40,7 +40,7 @@
         <extensions-version>2.4.2</extensions-version>
         <alpnboot.version>8.1.8.v20160420</alpnboot.version>
         <newrelic.version>3.32.0</newrelic.version>
-        <aws.sdk.version>1.11.66</aws.sdk.version>
+        <aws.sdk.version>1.11.70</aws.sdk.version>
     </properties>
 
     <repositories>
@@ -393,7 +393,31 @@
 
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-ecs</artifactId>
+                <version>${aws.sdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-ec2</artifactId>
+                <version>${aws.sdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-autoscaling</artifactId>
                 <version>${aws.sdk.version}</version>
                 <exclusions>
                     <exclusion>
