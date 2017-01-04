@@ -2,6 +2,7 @@ package software.wings.common.thread;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,9 +37,9 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
    * @param unit            the unit
    * @param workQueue       the work queue
    */
-  public ScalingThreadPoolExecutor(
-      int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue workQueue) {
-    super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+  public ScalingThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
+      BlockingQueue workQueue, ThreadFactory threadFactory) {
+    super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
   }
 
   @Override

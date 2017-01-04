@@ -36,7 +36,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Http state which makes a call to http service.
@@ -58,9 +57,8 @@ public class HttpState extends State {
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
   @SchemaIgnore private int socketTimeoutMillis = 10000;
-  @Inject private DelegateService delegateService;
 
-  @Inject private ExecutorService executorService;
+  @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Inject @Transient private transient ActivityService activityService;
