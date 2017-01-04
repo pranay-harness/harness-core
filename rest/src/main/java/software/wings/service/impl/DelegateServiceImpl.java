@@ -43,6 +43,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
@@ -94,7 +95,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public Delegate checkForUpgrade(String accountId, String delegateId) {
+  public Delegate checkForUpgrade(String accountId, String delegateId, String managerHost)
+      throws IOException, TemplateException {
     Delegate delegate = get(accountId, delegateId);
 
     String latestVersion = null;
@@ -115,6 +117,13 @@ public class DelegateServiceImpl implements DelegateService {
     delegate.setDoUpgrade(doUpgrade);
     if (doUpgrade) {
       delegate.setVersion(latestVersion);
+      try (StringWriter stringWriter = new StringWriter()) {
+        cfg.getTemplate("upgrade.sh.ftl")
+            .process(ImmutableMap.of("delegateMetadataUrl", mainConfiguration.getDelegateMetadataUrl(), "accountId",
+                         accountId, "managerHostAndPort", managerHost),
+                stringWriter);
+        delegate.setUpgradeScript(stringWriter.toString());
+      }
     }
     return delegate;
   }

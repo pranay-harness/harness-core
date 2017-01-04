@@ -20,7 +20,8 @@ public interface DelegateService {
 
   Delegate update(Delegate delegate);
 
-  Delegate checkForUpgrade(String accountId, String delegateId);
+  Delegate checkForUpgrade(String accountId, String delegateId, String managerHost)
+      throws IOException, TemplateException;
 
   Delegate add(Delegate delegate);
 
