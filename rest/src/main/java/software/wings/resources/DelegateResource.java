@@ -137,4 +137,12 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
     delegateService.processDelegateResponse(delegateTaskResponse);
   }
+
+  @DelegateAuth
+  @GET
+  @Path("{deletgateId}/upgrade")
+  public RestResponse<Delegate> checkForUpgrade(
+      @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.checkForUpgrade(accountId, delegateId));
+  }
 }

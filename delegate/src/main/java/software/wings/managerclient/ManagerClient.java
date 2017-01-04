@@ -39,4 +39,8 @@ public interface ManagerClient {
   @POST("delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Part MultipartBody.Part file);
+
+  @GET("delegates/{delegateId}/upgrade")
+  Call<RestResponse<Delegate>> checkForUpgrade(
+      @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 }
