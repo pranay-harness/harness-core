@@ -318,6 +318,53 @@ public enum ArtifactType {
                       .build())
               .buildPipeline());
     }
+  },
+  DOCKER {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public List<Graph> getDefaultCommands() {
+      return asList(
+          aGraph()
+              .withGraphName("Start")
+              .addNodes(
+                  aNode()
+                      .withOrigin(true)
+                      .withX(50)
+                      .withY(50)
+                      .withId(UUIDGenerator.graphIdGenerator("node"))
+                      .withName("Setup Runtime Paths")
+                      .withType(SETUP_ENV.name())
+                      .addProperty("commandString",
+                          "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+                      .build(),
+                  aNode()
+                      .withOrigin(true)
+                      .withX(200)
+                      .withY(50)
+                      .withId(UUIDGenerator.graphIdGenerator("node"))
+                      .withType(EXEC.name())
+                      .withName("Run Container")
+                      .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                      .addProperty("commandString",
+                          "\ndocker login --username=\"$USER_NAME\" --password=\"$PASSWORD\"\ndocker run \"$IMAGE\" -w \"$WINGS_RUNTIME_PATH\" \ndocker logout")
+                      .build())
+              .buildPipeline(),
+
+          aGraph()
+              .withGraphName("Stop")
+              .addNodes(aNode()
+                            .withOrigin(true)
+                            .withX(350)
+                            .withY(50)
+                            .withId(UUIDGenerator.graphIdGenerator("node"))
+                            .withType(EXEC.name())
+                            .withName("Stop Container")
+                            .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                            .addProperty("commandString", "docker ps -a -q | xargs docker stop")
+                            .build())
+              .buildPipeline());
+    }
   }, /**
       * Other artifact type.
       */
