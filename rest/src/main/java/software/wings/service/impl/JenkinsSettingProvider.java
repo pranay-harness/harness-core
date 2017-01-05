@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -14,6 +15,7 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 10/25/16.
  */
+@Singleton
 public class JenkinsSettingProvider implements DataProvider {
   @Inject private SettingsService settingsService;
 

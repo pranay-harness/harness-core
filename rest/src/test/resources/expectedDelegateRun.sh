@@ -1,4 +1,39 @@
 #!/bin/bash
+
+vercomp () {
+    if [[ $1 == $2 ]]
+    then
+        echo "0"
+        return
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            echo "1"
+            return
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            echo "2"
+            return
+        fi
+    done
+    echo "0"
+}
+
 JRE_DIR=jre1.8.0_112
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
@@ -30,30 +65,28 @@ case "$OSTYPE" in
     ;;
 esac
 
-JRE_CHANGED=0
-
-if [ ! -d  $JRE_DIR ]
+if [ ! -d jre ]
 then
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
   tar xzvf $JVM_TAR_FILENAME
-  JRE_CHANGED=1
-fi
-
-if [ "$JRE_CHANGED" -eq "1" ]
-then
-  rm jre
-fi
-
-if [ ! -d  jre ]
-then
   ln -s $JRE_DIR jre
 fi
 
+REMOTE_HOST=$(echo https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')
+REMOTE_DELEGATE_METADATA=$(curl https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt --fail --silent --show-error)
+REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
+
 if [ ! -e delegate.jar ]
 then
-  DELEGATE_URL="$(echo https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')/$(curl https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | cut -d " " -f2)"
-  wget $DELEGATE_URL
+  wget $REMOTE_DELEGATE_URL -O delegate.jar
+else
+  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " ")
+  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
+  then
+    wget $REMOTE_DELEGATE_URL -O delegate.jar
+  fi
 fi
 
 if [ ! -e config-delegate.yml ]

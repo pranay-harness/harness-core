@@ -7,6 +7,7 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -296,6 +297,7 @@ public class ScpCommandUnit extends AbstractCommandUnit {
   /**
    * The type Scp command data provider.
    */
+  @Singleton
   public static class ScpCommandDataProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {

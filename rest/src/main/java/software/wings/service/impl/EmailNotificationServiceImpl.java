@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
@@ -21,6 +22,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 5/23/16.
  */
+@Singleton
 public class EmailNotificationServiceImpl implements EmailNotificationService<EmailData> {
   @Inject private Mailer mailer;
 
