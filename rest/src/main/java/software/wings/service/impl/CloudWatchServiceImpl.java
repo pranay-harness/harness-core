@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import com.google.inject.Singleton;
+
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
@@ -18,6 +20,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 12/14/16.
  */
+@Singleton
 public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;

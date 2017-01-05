@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.SourceType;
@@ -21,6 +23,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 11/22/16.
  */
+@Singleton
 public class BambooBuildServiceImpl implements BambooBuildService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BambooService bambooService;

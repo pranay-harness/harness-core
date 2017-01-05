@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -26,6 +27,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 11/30/16.
  */
+@Singleton
 public class BambooArtifactCollectorServiceImpl implements ArtifactCollectorService {
   /**
    * The Settings service.
