@@ -73,7 +73,6 @@ import software.wings.sm.TransitionType;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
-import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -555,6 +554,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
+    orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow));
+    return wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
+  }
+
+  private Graph generateMainGraph(OrchestrationWorkflow orchestrationWorkflow) {
     String id1 = getUuid();
     String id2;
     Builder graphBuilder = aGraph().addNodes(
@@ -577,9 +581,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         aNode().withId(id2).withName(Constants.POST_DEPLOYMENT_STEPS).withType(StateType.SUB_WORKFLOW.name()).build());
     graphBuilder.addLinks(
         aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
-
-    orchestrationWorkflow.setGraph(graphBuilder.build());
-    return wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
+    return graphBuilder.build();
   }
 
   @Override
@@ -599,7 +601,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Graph workflowOuterStepsGraph = transform(phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("preDeploymentSteps", phaseStep);
-    map.put("graph.subworkflows.preDeploymentSteps", workflowOuterStepsGraph);
+    map.put("graph.subworkflows." + Constants.PRE_DEPLOYMENT_STEPS, workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
     return phaseStep;
@@ -610,7 +612,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Graph workflowOuterStepsGraph = transform(phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("postDeploymentSteps", phaseStep);
-    map.put("graph.subworkflows.postDeploymentSteps", workflowOuterStepsGraph);
+    map.put("graph.subworkflows." + Constants.PRE_DEPLOYMENT_STEPS, workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
     return phaseStep;
@@ -675,6 +677,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase createWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    if (orchestrationWorkflow == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+    }
+
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
@@ -690,8 +698,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).build());
 
+    orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
+    orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
+
+    Graph graph = generateMainGraph(orchestrationWorkflow);
+
     UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).add("workflowPhases", workflowPhase);
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+            .add("workflowPhaseIds", workflowPhase.getUuid())
+            .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase)
+            .set("graph.nodes", graph.getNodes())
+            .set("graph.links", graph.getLinks());
 
     wingsPersistence.update(query, updateOps);
 
@@ -700,34 +717,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
-
-    if (orchestrationWorkflow == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
-    }
-    List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
-    if (workflowPhases == null || workflowPhases.isEmpty() || workflowPhase == null
-        || workflowPhase.getUuid() == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowPhase");
-    }
-
-    Map<String, WorkflowPhase> workflowMap = workflowPhases.stream().collect(toMap(WorkflowPhase::getUuid, identity()));
-
-    WorkflowPhase origWorkflowPhase = workflowMap.get(workflowPhase.getUuid());
-
-    MapperUtils.mapObject(workflowPhase, origWorkflowPhase);
-
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
     UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhases", workflowPhases);
-
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+            .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase);
     wingsPersistence.update(query, updateOps);
 
-    return origWorkflowPhase;
+    return workflowPhase;
   }
 
   @Override
