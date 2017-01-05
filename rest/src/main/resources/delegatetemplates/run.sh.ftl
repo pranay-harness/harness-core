@@ -32,4 +32,10 @@ then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
 fi
 
-$JRE_BINARY -jar delegate.jar config-delegate.yml
+
+if `pgrep -f "-Ddelegatesourcedir=$DIR"> /dev/null`
+then
+  echo "Delegate already running"
+else
+  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml &
+fi

@@ -63,19 +63,20 @@ public class DelegateServiceImpl implements DelegateService {
       Delegate.Builder builder =
           aDelegate().withIp(ip).withAccountId(accountId).withHostName(hostName).withVersion(getVersion());
 
-      String delegateId = registerDelegate(accountId, builder);
-
-      startHeartbeat(accountId, builder, delegateId);
-
-      logger.info("Delegate started.");
-
       if (upgrade) {
+        System.out.println("Delegate started.");
         LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
         String line = "";
         while (it.hasNext() && !StringUtils.startsWith(line, "StartTasks")) {
           line = it.nextLine();
         }
       }
+
+      String delegateId = registerDelegate(accountId, builder);
+
+      startHeartbeat(accountId, builder, delegateId);
+
+      logger.info("Delegate started.");
 
       startUpgradeCheck(accountId, delegateId, getVersion());
 

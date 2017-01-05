@@ -65,6 +65,14 @@ case "$OSTYPE" in
     ;;
 esac
 
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 if [ ! -d jre ]
 then
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
@@ -97,4 +105,10 @@ then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
 fi
 
-$JRE_BINARY -jar delegate.jar config-delegate.yml
+
+if `pgrep -f "-Ddelegatesourcedir=$DIR"> /dev/null`
+then
+  echo "Delegate already running"
+else
+  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml &
+fi
