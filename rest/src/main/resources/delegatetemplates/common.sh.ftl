@@ -1,4 +1,41 @@
 #!/bin/bash
+
+<#noparse>
+vercomp () {
+    if [[ $1 == $2 ]]
+    then
+        echo "0"
+        return
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            echo "1"
+            return
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            echo "2"
+            return
+        fi
+    done
+    echo "0"
+}
+</#noparse>
+
 JRE_DIR=jre1.8.0_112
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
@@ -11,7 +48,7 @@ case "$OSTYPE" in
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b16/jre-8u112-linux-x64.tar.gz
+    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz
     ;;
   bsd*)
     echo "freebsd not supported."
@@ -29,13 +66,3 @@ case "$OSTYPE" in
     echo "unknown: $OSTYPE"
     ;;
 esac
-
-JRE_CHANGED=0
-
-if [ ! -d  $JRE_DIR ]
-then
-  JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
-  tar xzvf $JVM_TAR_FILENAME
-  JRE_CHANGED=1
-fi

@@ -42,10 +42,21 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Setup env command unit type.
    */
-  SETUP_ENV(SetupEnvCommandUnit.class, "Setup Env", StencilCategory.SCRIPTS,
-      DEFAULT_DISPLAY_ORDER), /**
-                               * Process check command unit type.
-                               */
+  SETUP_ENV(SetupEnvCommandUnit.class, "Setup Env", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
+
+  /**
+   * The Docker run.
+   */
+  DOCKER_START(DockerStartCommandUnit.class, "Docker Start", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
+
+  /**
+   * The Docker stop.
+   */
+  DOCKER_STOP(DockerStopCommandUnit.class, "Docker Stop", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
+
+  /**
+   * Process check command unit type.
+   */
   PROCESS_CHECK_RUNNING(
       ProcessCheckRunningCommandUnit.class, "Process Running", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 

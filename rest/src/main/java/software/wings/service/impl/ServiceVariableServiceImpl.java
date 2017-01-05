@@ -8,6 +8,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EntityType;
@@ -28,6 +29,7 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
+@Singleton
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;

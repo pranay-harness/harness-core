@@ -20,7 +20,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -183,7 +182,6 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo("wings-delegate/");
       ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly("wings-delegate/run.sh");
-      System.out.println(ToStringBuilder.reflectionToString(file.getExtraFields(true)));
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))

@@ -4,6 +4,8 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.command.Command;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.CommandService;
@@ -13,6 +15,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 11/17/16.
  */
+@Singleton
 public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
 

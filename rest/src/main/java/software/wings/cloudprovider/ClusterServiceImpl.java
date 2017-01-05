@@ -1,8 +1,8 @@
 package software.wings.cloudprovider;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 12/29/16.
  */
-@Ignore
+@Singleton
 public class ClusterServiceImpl implements ClusterService {
   @Inject private EcsService ecsService;
   private final Logger logger = LoggerFactory.getLogger(getClass());

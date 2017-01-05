@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.inject.Singleton;
+
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.slf4j.Logger;
@@ -32,6 +34,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 5/13/16.
  */
+@Singleton
 public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   /**
    * The constant ARTIFACT_STREAM_ID.

@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -142,9 +143,9 @@ public class DelegateResource {
   @GET
   @Path("{deletgateId}/upgrade")
   public RestResponse<Delegate> checkForUpgrade(@Context HttpServletRequest request,
-      @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId)
-      throws IOException, TemplateException {
+      @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(delegateService.checkForUpgrade(
-        accountId, delegateId, request.getServerName() + ":" + request.getServerPort()));
+        accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
   }
 }

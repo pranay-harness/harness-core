@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.EntityType;
 import software.wings.beans.History;
 import software.wings.dl.PageRequest;
@@ -14,6 +16,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 6/20/16.
  */
+@Singleton
 public class HistoryServiceImpl implements HistoryService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;

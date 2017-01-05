@@ -5,7 +5,11 @@ import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
@@ -23,12 +27,14 @@ import java.net.InetAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
  */
+@Singleton
 public class DelegateServiceImpl implements DelegateService {
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
 
@@ -42,10 +48,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Inject private ExecutorService executorService;
 
+  @Inject private UpgradeService upgradeService;
+
   @Inject private Injector injector;
 
+  @Inject private SignalService signalService;
+
   @Override
-  public void run() {
+  public void run(boolean upgrade) {
     try {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
@@ -57,13 +67,22 @@ public class DelegateServiceImpl implements DelegateService {
 
       startHeartbeat(accountId, builder, delegateId);
 
-      startUpgradeCheck(accountId, delegateId);
-
       logger.info("Delegate started.");
 
-      runTaskLoop(accountId, delegateId);
+      if (upgrade) {
+        LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
+        String line = "";
+        while (it.hasNext() && !StringUtils.startsWith(line, "StartTasks")) {
+          line = it.nextLine();
+        }
+      }
 
-      return;
+      startUpgradeCheck(accountId, delegateId, getVersion());
+
+      while (!signalService.shouldStop()) {
+        runTaskLoop(accountId, delegateId);
+        signalService.paused();
+      }
 
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate ", e);
@@ -85,16 +104,20 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateResponse.getResource().getUuid();
   }
 
-  private void startUpgradeCheck(String accountId, String delegateId) {
+  private void startUpgradeCheck(String accountId, String delegateId, String version) {
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    upgradeExecutor.scheduleAtFixedRate(() -> {
-      logger.debug("checking for upgrade");
+    upgradeExecutor.scheduleWithFixedDelay(() -> {
+      logger.info("checking for upgrade");
       try {
-        RestResponse<Delegate> restResponse = managerClient.checkForUpgrade(delegateId, accountId).execute().body();
+        RestResponse<Delegate> restResponse =
+            managerClient.checkForUpgrade(version, delegateId, accountId).execute().body();
         if (restResponse.getResource().isDoUpgrade()) {
           logger.info("Upgrading delegate...");
+          upgradeService.doUpgrade(restResponse.getResource(), getVersion());
+        } else {
+          logger.info("delegate uptodate...");
         }
-      } catch (IOException e) {
+      } catch (IOException | InterruptedException | TimeoutException e) {
         logger.error("Exception while checking for upgrade ", e);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
@@ -116,7 +139,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void runTaskLoop(String accountId, String delegateId)
       throws IOException, InterruptedException, java.util.concurrent.ExecutionException {
-    while (true) {
+    while (signalService.shouldRun()) {
       RestResponse<PageResponse<DelegateTask>> delegateTasks = null;
       try {
         delegateTasks = managerClient.getTasks(delegateId, accountId).execute().body();

@@ -3,6 +3,8 @@ package software.wings.delegate.service;
 import static java.lang.System.currentTimeMillis;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import com.google.inject.Singleton;
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -24,6 +26,7 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 12/19/16.
  */
+@Singleton
 public class DelegateFileManagerImpl implements DelegateFileManager {
   @Inject private ManagerClient managerClient;
 

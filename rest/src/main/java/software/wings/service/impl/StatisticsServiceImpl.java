@@ -25,6 +25,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
@@ -80,6 +81,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 8/15/16.
  */
+@Singleton
 public class StatisticsServiceImpl implements StatisticsService {
   /**
    * The constant MILLIS_IN_A_DAY.

@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorCodes;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
@@ -15,6 +17,7 @@ import javax.cache.configuration.Configuration;
 /**
  * Created by peeyushaggarwal on 12/13/16.
  */
+@Singleton
 public class DownloadTokenServiceImpl implements DownloadTokenService {
   @Override
   public String createDownloadToken(String resource) {

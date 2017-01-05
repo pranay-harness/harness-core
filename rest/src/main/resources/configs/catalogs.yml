@@ -15,6 +15,8 @@ ARTIFACT_TYPE:
       value: WAR
     - name: ZIP
       value: ZIP
+    - name: DOCKER
+      value: DOCKER
     - name: OTHER
       value: OTHER
 
