@@ -4,6 +4,8 @@ import static software.wings.common.NotificationMessageResolver.SLACK_APPROVAL_N
 import static software.wings.common.NotificationMessageResolver.SLACK_APPROVAL_NOTIFICATION_STATUS;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -33,6 +35,7 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 10/30/16.
  */
+@Singleton
 public class NotificationDispatcherServiceImpl implements NotificationDispatcherService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 

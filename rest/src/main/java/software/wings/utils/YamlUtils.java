@@ -4,6 +4,8 @@
 
 package software.wings.utils;
 
+import com.google.inject.Singleton;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -18,6 +20,7 @@ import java.io.IOException;
  *
  * @author Rishi
  */
+@Singleton
 public class YamlUtils {
   private final ObjectMapper mapper;
 

@@ -4,6 +4,7 @@ import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -42,5 +43,5 @@ public interface ManagerClient {
 
   @GET("delegates/{delegateId}/upgrade")
   Call<RestResponse<Delegate>> checkForUpgrade(
-      @Path("delegateId") String delegateId, @Query("accountId") String accountId);
+      @Header("Version") String version, @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 }

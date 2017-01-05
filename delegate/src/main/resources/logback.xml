@@ -8,6 +8,8 @@
     </appender>
 
     <logger name="software.wings" level="INFO"/>
+    <logger name="org.zeroturnaround" level="DEBUG"/>
+
 
 
     <root level="INFO">

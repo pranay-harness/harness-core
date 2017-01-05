@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -21,6 +23,7 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 10/30/16.
  */
+@Singleton
 public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Inject private WingsPersistence wingsPersistence;
 

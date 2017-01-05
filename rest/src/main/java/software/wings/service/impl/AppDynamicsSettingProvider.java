@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toMap;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
@@ -14,6 +15,7 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 11/10/16.
  */
+@Singleton
 public class AppDynamicsSettingProvider implements DataProvider {
   @Inject private SettingsService settingsService;
 

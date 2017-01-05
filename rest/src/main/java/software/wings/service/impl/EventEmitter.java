@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.inject.Singleton;
+
 import org.atmosphere.cpr.MetaBroadcaster;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
@@ -13,6 +15,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
+@Singleton
 public class EventEmitter {
   private MetaBroadcaster metaBroadcaster;
   @Inject private AppService appService;

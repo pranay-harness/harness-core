@@ -10,6 +10,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
 import freemarker.cache.ClassTemplateLoader;
@@ -50,6 +51,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 11/28/16.
  */
+@Singleton
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
 
@@ -95,7 +97,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public Delegate checkForUpgrade(String accountId, String delegateId, String managerHost)
+  public Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
     Delegate delegate = get(accountId, delegateId);
 
@@ -112,7 +114,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Unable to fetch delegate version information ", e);
       latestVersion = "0.0.0";
     }
-    boolean doUpgrade = Version.valueOf(delegate.getVersion()).lessThan(Version.valueOf(latestVersion));
+    boolean doUpgrade = Version.valueOf(version).lessThan(Version.valueOf(latestVersion));
 
     delegate.setDoUpgrade(doUpgrade);
     if (doUpgrade) {

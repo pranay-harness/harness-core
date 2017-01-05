@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Before;
@@ -133,6 +134,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   /**
    * The type Test data provider.
    */
+  @Singleton
   public static class TestDataProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {
