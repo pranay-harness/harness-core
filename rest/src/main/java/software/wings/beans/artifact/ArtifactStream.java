@@ -25,11 +25,11 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Entity(value = "artifactStream")
 public abstract class ArtifactStream extends Base {
   @NotEmpty private String sourceName;
-  @NotNull private SourceType sourceType;
+  @NotNull private ArtifactStreamType artifactStreamType;
   @NotEmpty private String settingId;
   @NotEmpty private String jobname;
 
@@ -51,10 +51,10 @@ public abstract class ArtifactStream extends Base {
   /**
    * Instantiates a new lastArtifact source.
    *
-   * @param sourceType the source type
+   * @param artifactStreamType the source type
    */
-  public ArtifactStream(SourceType sourceType) {
-    this.sourceType = sourceType;
+  public ArtifactStream(ArtifactStreamType artifactStreamType) {
+    this.artifactStreamType = artifactStreamType;
   }
 
   /**
@@ -99,8 +99,8 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the source type
    */
-  public SourceType getSourceType() {
-    return sourceType;
+  public ArtifactStreamType getArtifactStreamType() {
+    return artifactStreamType;
   }
 
   /**
@@ -239,9 +239,9 @@ public abstract class ArtifactStream extends Base {
   }
 
   /**
-   * The Enum SourceType.
+   * The Enum ArtifactStreamType.
    */
-  public enum SourceType {
+  public enum ArtifactStreamType {
     /**
      * Jenkins source type.
      */
@@ -249,30 +249,15 @@ public abstract class ArtifactStream extends Base {
               * BambooService source type.
               */
     BAMBOO, /**
-             * Nexus source type.
+             * Docker source type.
              */
-    NEXUS, /**
-            * Artifactory source type.
-            */
-    ARTIFACTORY, /**
-                  * Svn source type.
-                  */
-    SVN, /**
-          * Git source type.
-          */
-    GIT, /**
-          * Http source type.
-          */
-    HTTP, /**
-           * File upload source type.
-           */
-    FILE_UPLOAD
+    DOCKER
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(sourceName, sourceType, settingId, jobname, artifactPathServices, autoDownload,
+        + Objects.hash(sourceName, artifactStreamType, settingId, jobname, artifactPathServices, autoDownload,
               autoApproveForProduction, streamActions, lastArtifact);
   }
 
@@ -288,7 +273,8 @@ public abstract class ArtifactStream extends Base {
       return false;
     }
     final ArtifactStream other = (ArtifactStream) obj;
-    return Objects.equals(this.sourceName, other.sourceName) && Objects.equals(this.sourceType, other.sourceType)
+    return Objects.equals(this.sourceName, other.sourceName)
+        && Objects.equals(this.artifactStreamType, other.artifactStreamType)
         && Objects.equals(this.settingId, other.settingId) && Objects.equals(this.jobname, other.jobname)
         && Objects.equals(this.artifactPathServices, other.artifactPathServices)
         && Objects.equals(this.autoDownload, other.autoDownload)
@@ -301,7 +287,7 @@ public abstract class ArtifactStream extends Base {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("sourceName", sourceName)
-        .add("sourceType", sourceType)
+        .add("artifactStreamType", artifactStreamType)
         .add("settingId", settingId)
         .add("jobname", jobname)
         .add("artifactPathServices", artifactPathServices)

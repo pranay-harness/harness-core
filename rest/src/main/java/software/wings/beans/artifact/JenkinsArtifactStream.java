@@ -18,7 +18,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * Instantiates a new jenkins artifact source.
    */
   public JenkinsArtifactStream() {
-    super(SourceType.JENKINS);
+    super(ArtifactStreamType.JENKINS);
   }
 
   /**
@@ -36,7 +36,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
    */
   public static final class Builder {
     private String sourceName;
-    private SourceType sourceType;
+    private ArtifactStreamType artifactStreamType;
     private String settingId;
     private String jobname;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
@@ -76,11 +76,11 @@ public class JenkinsArtifactStream extends ArtifactStream {
     /**
      * With source type builder.
      *
-     * @param sourceType the source type
+     * @param artifactStreamType the source type
      * @return the builder
      */
-    public Builder withSourceType(SourceType sourceType) {
-      this.sourceType = sourceType;
+    public Builder withSourceType(ArtifactStreamType artifactStreamType) {
+      this.artifactStreamType = artifactStreamType;
       return this;
     }
 
@@ -235,7 +235,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
     public Builder but() {
       return aJenkinsArtifactStream()
           .withSourceName(sourceName)
-          .withSourceType(sourceType)
+          .withSourceType(artifactStreamType)
           .withSettingId(settingId)
           .withJobname(jobname)
           .withArtifactPathServices(artifactPathServices)

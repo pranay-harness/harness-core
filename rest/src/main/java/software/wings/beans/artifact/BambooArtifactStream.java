@@ -18,7 +18,7 @@ public class BambooArtifactStream extends ArtifactStream {
    * Instantiates a new Bamboo artifact stream.
    */
   public BambooArtifactStream() {
-    super(SourceType.BAMBOO);
+    super(ArtifactStreamType.BAMBOO);
   }
 
   @Override

@@ -7,6 +7,7 @@ import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -109,4 +110,12 @@ public interface ArtifactStreamService {
    * @param workflowId the workflow id
    */
   void triggerScheduledStreamAction(String appId, String streamId, String workflowId);
+
+  /**
+   * Gets artifact stream schema.
+   *
+   * @param appId the app id
+   * @return the artifact stream schema
+   */
+  Map<String, Map<String, Object>> getArtifactStreamSchema(String appId);
 }

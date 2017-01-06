@@ -85,8 +85,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
     appContainer.setAppId(storedAppContainer.getAppId());
     appContainer.setUuid(storedAppContainer.getUuid());
     wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(),
-        of("name", appContainer.getName(), "description", appContainer.getDescription(), "source",
-            appContainer.getSource()));
+        of("name", appContainer.getName(), "description", appContainer.getDescription()));
     return get(appContainer.getAppId(), appContainer.getUuid());
   }
 
@@ -113,12 +112,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
   }
 
   private boolean newPlatformSoftwareBinaryUploaded(AppContainer storedAppContainer, AppContainer appContainer) {
-    if (storedAppContainer.getSource().equals(appContainer.getSource())) {
-      if (appContainer.getChecksum() != null && appContainer.getChecksum().equals(storedAppContainer.getChecksum())) {
-        return false;
-      }
-    }
-    return true;
+    return !(appContainer.getChecksum() != null && appContainer.getChecksum().equals(storedAppContainer.getChecksum()));
   }
 
   @Override

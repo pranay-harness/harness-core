@@ -2,8 +2,6 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
-import static software.wings.beans.artifact.ArtifactStream.SourceType.HTTP;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.inject.Inject;
@@ -16,9 +14,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
-import software.wings.beans.FileUploadSource;
 import software.wings.beans.RestResponse;
-import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppContainerService;
@@ -56,8 +52,9 @@ public class AppContainerResource {
   /**
    * List.
    *
-   * @param appId   the app id
-   * @param request the request
+   * @param appId     the app id
+   * @param accountId the account id
+   * @param request   the request
    * @return the rest response
    */
   @GET
@@ -83,8 +80,8 @@ public class AppContainerResource {
   /**
    * Upload platform.
    *
+   * @param accountId           the account id
    * @param appId               the app id
-   * @param sourceType          the source type
    * @param urlString           the url string
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
@@ -94,27 +91,24 @@ public class AppContainerResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
-      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
+      @QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(appId);
     appContainer.setFileName(fileDetail.getFileName());
     appContainer.setAccountId(accountId);
-    setSourceForAppContainer(sourceType, urlString, appContainer);
 
-    uploadedInputStream =
-        updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
-
+    uploadedInputStream = new BufferedInputStream(
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
     return new RestResponse<>(appContainerService.save(appContainer, uploadedInputStream, PLATFORMS));
   }
 
   /**
    * Update platform.
    *
+   * @param accountId           the account id
    * @param appId               the app id
    * @param appContainerId      the app container id
-   * @param sourceType          the source type
    * @param urlString           the url string
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
@@ -126,27 +120,16 @@ public class AppContainerResource {
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<AppContainer> updatePlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId,
-      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
-      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(appId);
     appContainer.setUuid(appContainerId);
     appContainer.setFileName(fileDetail.getFileName());
     appContainer.setAccountId(accountId);
-    setSourceForAppContainer(sourceType, urlString, appContainer);
-    uploadedInputStream =
-        updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
+    uploadedInputStream = new BufferedInputStream(
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
 
     return new RestResponse<>(appContainerService.update(appContainer, uploadedInputStream, PLATFORMS));
-  }
-
-  private void setSourceForAppContainer(
-      SourceType sourceType, String urlString, AppContainer appContainer) { // Fixme: use jsonSubType
-    if (sourceType.equals(HTTP)) {
-      appContainer.setSource(aFileUrlSource().withUrl(urlString).build());
-    } else {
-      appContainer.setSource(new FileUploadSource());
-    }
   }
 
   /**
@@ -164,6 +147,13 @@ public class AppContainerResource {
     return new RestResponse();
   }
 
+  /**
+   * Download response.
+   *
+   * @param accountId      the account id
+   * @param appContainerId the app container id
+   * @return the response
+   */
   @GET
   @Path("{appContainerId}/download")
   @Encoded
@@ -173,12 +163,5 @@ public class AppContainerResource {
     Response.ResponseBuilder response = Response.ok(appContainerFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + appContainerFile.getName());
     return response.build();
-  }
-
-  private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
-    return sourceType.equals(HTTP) ? new BufferedInputStream(BoundedInputStream.getBoundedStreamForUrl(
-                                         urlString, configuration.getFileUploadLimits().getAppContainerLimit()))
-                                   : new BufferedInputStream(new BoundedInputStream(
-                                         inputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
   }
 }

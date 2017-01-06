@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -222,5 +223,12 @@ public class ArtifactStreamResource {
     } catch (ParseException e) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Incorrect cron expression");
     }
+  }
+
+  @GET
+  @Path("schema")
+  public RestResponse<Map<String, Map<String, Object>>> installedPluginSettingSchema(
+      @QueryParam("appId") String appId) {
+    return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId)).build();
   }
 }

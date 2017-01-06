@@ -77,9 +77,9 @@ import javax.ws.rs.NotFoundException;
 @Singleton
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
-  public static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
-  public static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
-  public static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
+  private static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
+  private static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
+  private static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
@@ -180,7 +180,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                   .equal(appId));
     if (deleted) {
       jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid());
-      artifactStream.getStreamActions().stream().forEach(
+      artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(artifactStreamId, streamAction.getWorkflowId()));
     }
     return deleted;
@@ -338,6 +338,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       logger.info("Trigger stream action with artifact build# {}", latestArtifactBuildNo);
       triggerStreamAction(latestArtifact, artifactStreamAction);
     }
+  }
+
+  @Override
+  public Map<String, Map<String, Object>> getArtifactStreamSchema(String appId) {
+    return null;
   }
 
   private Artifact getLastSuccessfullyDeployedArtifact(String appId, ArtifactStreamAction artifactStreamAction) {

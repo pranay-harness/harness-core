@@ -9,7 +9,7 @@ import com.google.inject.multibindings.Multibinder;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
-import software.wings.beans.artifact.ArtifactStream.SourceType;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.cloudprovider.ClusterServiceImpl;
 import software.wings.cloudprovider.aws.EcsService;
@@ -211,14 +211,16 @@ public class WingsModule extends AbstractModule {
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
+    artifactCollectorServiceMapBinder.addBinding(ArtifactStreamType.JENKINS.name())
         .to(JenkinsArtifactCollectorServiceImpl.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
+    artifactCollectorServiceMapBinder.addBinding(ArtifactStreamType.BAMBOO.name())
+        .to(BambooArtifactCollectorServiceImpl.class);
 
     MapBinder.newMapBinder(binder(), String.class, BuildSourceService.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
+    artifactCollectorServiceMapBinder.addBinding(ArtifactStreamType.JENKINS.name())
         .to(JenkinsArtifactCollectorServiceImpl.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
+    artifactCollectorServiceMapBinder.addBinding(ArtifactStreamType.BAMBOO.name())
+        .to(BambooArtifactCollectorServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

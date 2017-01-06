@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.SourceType;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -32,7 +32,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, BambooConfig bambooConfig) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("artifactStream", artifactStream);
-    equalCheck(artifactStream.getSourceType(), SourceType.BAMBOO);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO);
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);
     return bambooService.getBuilds(bambooConfig, bambooArtifactStream.getJobname(), 50); // read 50 from some config
@@ -57,7 +57,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, BambooConfig bambooConfig) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("artifactStream", artifactStream);
-    equalCheck(artifactStream.getSourceType(), SourceType.BAMBOO);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO);
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);
     return bambooService.getLastSuccessfulBuild(bambooConfig, bambooArtifactStream.getJobname());

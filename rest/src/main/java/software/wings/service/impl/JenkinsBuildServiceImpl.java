@@ -13,7 +13,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.SourceType;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -60,7 +60,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   private List<BuildDetails> getBuildDetails(String artifactStreamId, String appId, JenkinsConfig jenkinsConfig) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("artifactStream", artifactStream);
-    equalCheck(artifactStream.getSourceType(), SourceType.JENKINS);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS);
 
     JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
 
@@ -107,7 +107,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("artifactStream", artifactStream);
-    equalCheck(artifactStream.getSourceType(), SourceType.JENKINS);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS);
 
     JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
 

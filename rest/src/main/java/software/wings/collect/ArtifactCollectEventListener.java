@@ -80,7 +80,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
   private DelegateTask createDelegateTask(
       String accountId, ArtifactStream artifactStream, Artifact artifact, String waitId) {
-    switch (artifactStream.getSourceType()) {
+    switch (artifactStream.getArtifactStreamType()) {
       case JENKINS: {
         SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
