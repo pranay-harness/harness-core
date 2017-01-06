@@ -58,7 +58,7 @@ public class UpgradeServiceImpl implements UpgradeService {
     try {
       PipedInputStream pipedInputStream = new PipedInputStream();
       process = new ProcessExecutor()
-                    .command("./upgrade.sh", version)
+                    .command("nohup", "./upgrade.sh", version)
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
                     .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
                     .redirectOutputAlsoTo(new PipedOutputStream(pipedInputStream))

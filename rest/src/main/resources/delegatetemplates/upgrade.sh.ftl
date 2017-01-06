@@ -34,4 +34,4 @@ then
   ln -s $JRE_DIR jre
 fi
 
-$JRE_BINARY -jar delegate.jar config-delegate.yml upgrade
+$JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml upgrade

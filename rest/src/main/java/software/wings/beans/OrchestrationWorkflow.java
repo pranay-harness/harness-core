@@ -4,7 +4,9 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -19,7 +21,11 @@ public class OrchestrationWorkflow extends Base {
   private PhaseStep preDeploymentSteps = new PhaseStep();
   ;
 
-  private List<WorkflowPhase> workflowPhases = new ArrayList<>();
+  private List<String> workflowPhaseIds = new ArrayList<>();
+
+  private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
+
+  @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
   private PhaseStep postDeploymentSteps = new PhaseStep();
   ;
@@ -64,11 +70,24 @@ public class OrchestrationWorkflow extends Base {
   }
 
   public List<WorkflowPhase> getWorkflowPhases() {
+    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    for (String workflowPhaseId : workflowPhaseIds) {
+      workflowPhases.add(workflowPhaseIdMap.get(workflowPhaseId));
+    }
     return workflowPhases;
   }
 
   public void setWorkflowPhases(List<WorkflowPhase> workflowPhases) {
     this.workflowPhases = workflowPhases;
+    if (workflowPhases != null) {
+      workflowPhaseIds = new ArrayList<>();
+      workflowPhaseIdMap = new HashMap<>();
+
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        workflowPhaseIds.add(workflowPhase.getUuid());
+        workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
+      }
+    }
   }
 
   public PhaseStep getPostDeploymentSteps() {
@@ -135,26 +154,38 @@ public class OrchestrationWorkflow extends Base {
     this.graph = graph;
   }
 
+  public List<String> getWorkflowPhaseIds() {
+    return workflowPhaseIds;
+  }
+
+  public void setWorkflowPhaseIds(List<String> workflowPhaseIds) {
+    this.workflowPhaseIds = workflowPhaseIds;
+  }
+
+  public Map<String, WorkflowPhase> getWorkflowPhaseIdMap() {
+    return workflowPhaseIdMap;
+  }
+
+  public void setWorkflowPhaseIdMap(Map<String, WorkflowPhase> workflowPhaseIdMap) {
+    this.workflowPhaseIdMap = workflowPhaseIdMap;
+  }
+
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
     private String name;
     private PhaseStep preDeploymentSteps = new PhaseStep();
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
     private PhaseStep postDeploymentSteps = new PhaseStep();
-    ;
     private List<NotificationRule> notificationRules = new ArrayList<>();
-    ;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
-    ;
     private List<Variable> systemVariables = new ArrayList<>();
-    ;
     private List<Variable> userVariables = new ArrayList<>();
-    ;
     private List<Variable> derivedVariables = new ArrayList<>();
-    ;
     private String uuid;
+    private Graph graph;
     private String appId;
     private EmbeddedUser createdBy;
+    private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
@@ -181,8 +212,8 @@ public class OrchestrationWorkflow extends Base {
       return this;
     }
 
-    public OrchestrationWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
-      this.workflowPhases = workflowPhases;
+    public OrchestrationWorkflowBuilder addWorkflowPhases(WorkflowPhase workflowPhase) {
+      this.workflowPhases.add(workflowPhase);
       return this;
     }
 
@@ -221,6 +252,11 @@ public class OrchestrationWorkflow extends Base {
       return this;
     }
 
+    public OrchestrationWorkflowBuilder withGraph(Graph graph) {
+      this.graph = graph;
+      return this;
+    }
+
     public OrchestrationWorkflowBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
@@ -228,6 +264,11 @@ public class OrchestrationWorkflow extends Base {
 
     public OrchestrationWorkflowBuilder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
+      return this;
+    }
+
+    public OrchestrationWorkflowBuilder withWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
+      this.workflowExecutions = workflowExecutions;
       return this;
     }
 
@@ -259,8 +300,10 @@ public class OrchestrationWorkflow extends Base {
       orchestrationWorkflow.setUserVariables(userVariables);
       orchestrationWorkflow.setDerivedVariables(derivedVariables);
       orchestrationWorkflow.setUuid(uuid);
+      orchestrationWorkflow.setGraph(graph);
       orchestrationWorkflow.setAppId(appId);
       orchestrationWorkflow.setCreatedBy(createdBy);
+      orchestrationWorkflow.setWorkflowExecutions(workflowExecutions);
       orchestrationWorkflow.setCreatedAt(createdAt);
       orchestrationWorkflow.setLastUpdatedBy(lastUpdatedBy);
       orchestrationWorkflow.setLastUpdatedAt(lastUpdatedAt);
