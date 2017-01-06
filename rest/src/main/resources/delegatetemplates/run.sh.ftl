@@ -33,7 +33,7 @@ then
 fi
 
 
-if `pgrep -f "-Ddelegatesourcedir=$DIR"> /dev/null`
+if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
   echo "Delegate already running"
 else

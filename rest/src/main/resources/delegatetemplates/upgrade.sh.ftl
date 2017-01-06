@@ -1,7 +1,5 @@
 <#include "common.sh.ftl">
 
-set -x
-
 REMOTE_HOST=$(echo ${delegateMetadataUrl} | awk -F/ '{print $3}')
 REMOTE_DELEGATE_METADATA=$(curl ${delegateMetadataUrl} --fail --silent --show-error)
 REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"

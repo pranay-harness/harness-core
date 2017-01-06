@@ -73,42 +73,26 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-if [ ! -d jre ]
-then
-  JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
-  tar xzvf $JVM_TAR_FILENAME
-  ln -s $JRE_DIR jre
-fi
-
-REMOTE_HOST=$(echo http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')
-REMOTE_DELEGATE_METADATA=$(curl http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt --fail --silent --show-error)
-REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
-REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
-
-if [ ! -e delegate.jar ]
-then
-  wget $REMOTE_DELEGATE_URL -O delegate.jar
-else
-  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " ")
-  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
-  then
-    wget $REMOTE_DELEGATE_URL -O delegate.jar
-  fi
-fi
-
-if [ ! -e config-delegate.yml ]
-then
-  echo "accountId: ACCOUNT_ID" > config-delegate.yml
-  echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
-  echo "managerUrl: https://https://localhost:9090/api/" >> config-delegate.yml
-  echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
-fi
-
-
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
-  echo "Delegate already running"
+  i=0
+  while [ "$i" -lt 30 ]
+  do
+    pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
+    pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null
+    rc=$?
+    if [ "$rc" -eq 0 ]
+    then
+      sleep 1
+      i=$((i+1))
+    else
+      echo "Delegate stopped."
+      exit 0
+    fi
+  done
+  echo "Unable to stop delegate in 30 seconds."
+  exit 1
 else
-  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml &
+  echo "Delegate not running."
+  exit 1
 fi
