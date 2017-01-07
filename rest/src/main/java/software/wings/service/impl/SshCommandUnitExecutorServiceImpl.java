@@ -16,6 +16,9 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.slf4j.Logger;
@@ -42,14 +45,10 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.TimeoutManager;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -64,16 +63,12 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    * The Log service.
    */
   protected LogService logService;
-  /**
-   * The Executor service.
-   */
-  @Inject ExecutorService executorService;
 
-  @Inject private TimeoutManager timeoutManager;
+  @Inject private TimeLimiter timeLimiter;
 
   @Inject private Injector injector;
 
-  @Inject private SettingsService settingsService;
+  @Inject(optional = true) private SettingsService settingsService;
 
   private SshExecutorFactory sshExecutorFactory;
 
@@ -111,95 +106,89 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
     ExecutionResult executionResult = FAILURE;
 
+    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
+    SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
+    executor.init(sshSessionConfig);
+
+    SshCommandExecutionContext sshCommandExecutionContext = new SshCommandExecutionContext(context);
+    sshCommandExecutionContext.setSshExecutor(executor);
+
+    injector.injectMembers(commandUnit);
+
     try {
-      SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
-      SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
-      executor.init(sshSessionConfig);
-
-      SshCommandExecutionContext sshCommandExecutionContext = new SshCommandExecutionContext(context);
-      sshCommandExecutionContext.setSshExecutor(executor);
-
-      injector.injectMembers(commandUnit);
-
-      Future<ExecutionResult> executionResultFuture =
-          executorService.submit(() -> commandUnit.execute(sshCommandExecutionContext));
-
-      try {
-        executionResult = executionResultFuture.get(
-            commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
-      } catch (InterruptedException | TimeoutException e) {
+      executionResult = timeLimiter.callWithTimeout(()
+                                                        -> commandUnit.execute(sshCommandExecutionContext),
+          commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS, true);
+    } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
+      logService.save(aLog()
+                          .withAppId(context.getAppId())
+                          .withActivityId(activityId)
+                          .withHostName(host.getHostName())
+                          .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                          .withLogLine("Command execution timed out")
+                          .withCommandUnitName(commandUnit.getName())
+                          .withExecutionResult(executionResult)
+                          .build());
+      throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof WingsException) {
+        WingsException ex = (WingsException) e.getCause();
+        String errorMessage =
+            Joiner.on(",").join(ex.getResponseMessageList()
+                                    .stream()
+                                    .map(responseMessage
+                                        -> ResponseCodeCache.getInstance()
+                                               .getResponseMessage(responseMessage.getCode(), ex.getParams())
+                                               .getMessage())
+                                    .collect(toList()));
+        logService.save(aLog()
+                            .withAppId(context.getAppId())
+                            .withActivityId(activityId)
+                            .withHostName(host.getHostName())
+                            .withCommandUnitName(commandUnit.getName())
+                            .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                            .withLogLine(errorMessage)
+                            .withExecutionResult(executionResult)
+                            .build());
+        throw(WingsException) e.getCause();
+      } else {
         logService.save(aLog()
                             .withAppId(context.getAppId())
                             .withActivityId(activityId)
                             .withHostName(host.getHostName())
                             .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                            .withLogLine("Command execution timed out")
+                            .withLogLine("Unknown Error " + e.getCause().getMessage())
                             .withCommandUnitName(commandUnit.getName())
                             .withExecutionResult(executionResult)
                             .build());
-        throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
-      } catch (ExecutionException e) {
-        if (e.getCause() instanceof WingsException) {
-          WingsException ex = (WingsException) e.getCause();
-          String errorMessage =
-              Joiner.on(",").join(ex.getResponseMessageList()
-                                      .stream()
-                                      .map(responseMessage
-                                          -> ResponseCodeCache.getInstance()
-                                                 .getResponseMessage(responseMessage.getCode(), ex.getParams())
-                                                 .getMessage())
-                                      .collect(toList()));
-          logService.save(aLog()
-                              .withAppId(context.getAppId())
-                              .withActivityId(activityId)
-                              .withHostName(host.getHostName())
-                              .withCommandUnitName(commandUnit.getName())
-                              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                              .withLogLine(errorMessage)
-                              .withExecutionResult(executionResult)
-                              .build());
-          throw(WingsException) e.getCause();
-        } else {
-          logService.save(aLog()
-                              .withAppId(context.getAppId())
-                              .withActivityId(activityId)
-                              .withHostName(host.getHostName())
-                              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                              .withLogLine("Unknown Error " + e.getCause().getMessage())
-                              .withCommandUnitName(commandUnit.getName())
-                              .withExecutionResult(executionResult)
-                              .build());
 
-          throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", e);
-        }
+        throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", e);
       }
-
+    } catch (Exception e) {
       logService.save(aLog()
                           .withAppId(context.getAppId())
                           .withActivityId(activityId)
                           .withHostName(host.getHostName())
                           .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                          .withLogLine("Command execution finished with status " + executionResult)
+                          .withLogLine("Command execution failed")
                           .withCommandUnitName(commandUnit.getName())
                           .withExecutionResult(executionResult)
                           .build());
-
-      commandUnit.setExecutionResult(executionResult);
-      return executionResult;
-
-    } catch (Exception ex) {
-      logger.error("Command execution failed with error " + ex);
-      logService.save(aLog()
-                          .withAppId(context.getAppId())
-                          .withActivityId(activityId)
-                          .withHostName(host.getHostName())
-                          .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                          .withLogLine("Command execution finished with status " + executionResult)
-                          .withCommandUnitName(commandUnit.getName())
-                          .withExecutionResult(executionResult)
-                          .build());
-      throw ex;
+      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
     }
+
+    logService.save(aLog()
+                        .withAppId(context.getAppId())
+                        .withActivityId(activityId)
+                        .withHostName(host.getHostName())
+                        .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                        .withLogLine("Command execution finished with status " + executionResult)
+                        .withCommandUnitName(commandUnit.getName())
+                        .withExecutionResult(executionResult)
+                        .build());
+
+    commandUnit.setExecutionResult(executionResult);
+    return executionResult;
   }
 
   private SshSessionConfig getSshSessionConfig(Host host, CommandExecutionContext context, CommandUnit commandUnit) {

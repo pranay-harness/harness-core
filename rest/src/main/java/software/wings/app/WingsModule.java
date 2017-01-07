@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -224,5 +226,6 @@ public class WingsModule extends AbstractModule {
 
     Multibinder<LoadBalancer> loadBalancerMultibinder = Multibinder.newSetBinder(binder(), LoadBalancer.class);
     loadBalancerMultibinder.addBinding().to(ElasticLoadBalancer.class);
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
   }
 }

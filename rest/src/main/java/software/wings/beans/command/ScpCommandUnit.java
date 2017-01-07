@@ -6,18 +6,15 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -37,8 +34,6 @@ public class ScpCommandUnit extends AbstractCommandUnit {
   private ScpFileCategory fileCategory;
 
   @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
-
-  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
   /**
    * Instantiates a new Scp command unit.
