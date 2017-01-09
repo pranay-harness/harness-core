@@ -21,6 +21,7 @@ public class PhaseStep {
 
   public PhaseStep(PhaseStepType phaseStepType) {
     this.phaseStepType = phaseStepType;
+    this.uuid = UUIDGenerator.getUuid();
   }
 
   public String getUuid() {
