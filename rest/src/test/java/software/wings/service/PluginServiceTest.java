@@ -12,6 +12,7 @@ import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -30,7 +31,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(7)
+        .hasSize(8)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -45,6 +46,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Bamboo")
                 .withType("BAMBOO")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(DockerConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Docker Registry")
+                .withType("DOCKER_REGISTRY")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -94,7 +103,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(7)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS");
+        .hasSize(8)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "DOCKER_REGISTRY");
   }
 }

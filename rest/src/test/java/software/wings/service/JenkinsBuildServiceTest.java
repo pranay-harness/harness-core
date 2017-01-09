@@ -65,10 +65,10 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   public void setupMocks() throws IOException {
     when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);
     when(jenkins.getBuildsForJob(anyString(), anyInt()))
-        .thenReturn(Lists.newArrayList(aBuildDetails().withNumber(67).withRevision("1bfdd117").build(),
-            aBuildDetails().withNumber(65).withRevision("1bfdd117").build(),
-            aBuildDetails().withNumber(64).withRevision("1bfdd117").build(),
-            aBuildDetails().withNumber(63).withRevision("1bfdd117").build()));
+        .thenReturn(Lists.newArrayList(aBuildDetails().withNumber("67").withRevision("1bfdd117").build(),
+            aBuildDetails().withNumber("65").withRevision("1bfdd117").build(),
+            aBuildDetails().withNumber("64").withRevision("1bfdd117").build(),
+            aBuildDetails().withNumber("63").withRevision("1bfdd117").build()));
     JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
                                                       .withUuid(ARTIFACT_STREAM_ID)
                                                       .withAppId(APP_ID)
@@ -124,7 +124,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     assertThat(jenkinsBuildService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, jenkinsConfig))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
+        .containsExactly(
+            tuple("67", "1bfdd117"), tuple("65", "1bfdd117"), tuple("64", "1bfdd117"), tuple("63", "1bfdd117"));
   }
 
   /**

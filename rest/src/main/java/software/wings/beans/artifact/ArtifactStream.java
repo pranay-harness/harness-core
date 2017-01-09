@@ -73,7 +73,7 @@ public abstract class ArtifactStream extends Base {
    * @param buildNo the build no
    * @return the artifact display name
    */
-  public abstract String getArtifactDisplayName(int buildNo);
+  public abstract String getArtifactDisplayName(String buildNo);
 
   /**
    * Gets source name.

@@ -25,7 +25,7 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(int buildNo) {
+  public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
   }
 

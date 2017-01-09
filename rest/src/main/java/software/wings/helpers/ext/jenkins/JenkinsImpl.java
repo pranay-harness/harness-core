@@ -102,7 +102,7 @@ public class JenkinsImpl implements Jenkins {
                 && isNotEmpty(build.getArtifacts()))
         .map(buildWithDetails
             -> aBuildDetails()
-                   .withNumber(buildWithDetails.getNumber())
+                   .withNumber(String.valueOf(buildWithDetails.getNumber()))
                    .withRevision(extractRevision(buildWithDetails))
                    .build())
         .collect(toList());
@@ -122,7 +122,7 @@ public class JenkinsImpl implements Jenkins {
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
     return aBuildDetails()
-        .withNumber(buildWithDetails.getNumber())
+        .withNumber(String.valueOf(buildWithDetails.getNumber()))
         .withRevision(extractRevision(buildWithDetails))
         .build();
   }

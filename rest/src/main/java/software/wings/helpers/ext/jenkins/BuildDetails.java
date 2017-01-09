@@ -1,13 +1,14 @@
 package software.wings.helpers.ext.jenkins;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+
+import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 5/12/16.
  */
 public class BuildDetails {
-  private int number;
+  private String number;
   private String revision;
 
   /**
@@ -15,7 +16,7 @@ public class BuildDetails {
    *
    * @return the number
    */
-  public int getNumber() {
+  public String getNumber() {
     return number;
   }
 
@@ -24,7 +25,7 @@ public class BuildDetails {
    *
    * @param number the number
    */
-  public void setNumber(int number) {
+  public void setNumber(String number) {
     this.number = number;
   }
 
@@ -46,48 +47,39 @@ public class BuildDetails {
     this.revision = revision;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    BuildDetails that = (BuildDetails) o;
-    return number == that.number && Objects.equal(revision, that.revision);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
   @Override
   public int hashCode() {
-    return Objects.hashCode(number, revision);
+    return Objects.hash(number, revision);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final BuildDetails other = (BuildDetails) obj;
+    return Objects.equals(this.number, other.number) && Objects.equals(this.revision, other.revision);
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("number", number).add("revision", revision).toString();
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
-    private int number;
+    private String number;
     private String revision;
 
     private Builder() {}
 
     /**
-     * A build details.
+     * A build details builder.
      *
      * @return the builder
      */
@@ -96,18 +88,18 @@ public class BuildDetails {
     }
 
     /**
-     * With number.
+     * With number builder.
      *
      * @param number the number
      * @return the builder
      */
-    public Builder withNumber(int number) {
+    public Builder withNumber(String number) {
       this.number = number;
       return this;
     }
 
     /**
-     * With revision.
+     * With revision builder.
      *
      * @param revision the revision
      * @return the builder
@@ -118,7 +110,7 @@ public class BuildDetails {
     }
 
     /**
-     * But.
+     * But builder.
      *
      * @return the builder
      */
@@ -127,9 +119,9 @@ public class BuildDetails {
     }
 
     /**
-     * Builds the.
+     * Build build details.
      *
-     * @return the builds the details
+     * @return the build details
      */
     public BuildDetails build() {
       BuildDetails buildDetails = new BuildDetails();

@@ -218,18 +218,18 @@ public class ArtifactServiceImpl implements ArtifactService {
       int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
           ? Integer.parseInt(lastCollectedArtifact.getMetadata().get("buildNo"))
           : 0;
-      if (lastSuccessfulBuild.getNumber() > buildNo) {
+      // TODO: fix it for Docker
+      if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
         logger.info(
             "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
             buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);
-        Artifact artifact =
-            anArtifact()
-                .withAppId(appId)
-                .withArtifactStreamId(artifactStreamId)
-                .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
-                .withMetadata(ImmutableMap.of("buildNo", Integer.toString(lastSuccessfulBuild.getNumber())))
-                .withRevision(lastSuccessfulBuild.getRevision())
-                .build();
+        Artifact artifact = anArtifact()
+                                .withAppId(appId)
+                                .withArtifactStreamId(artifactStreamId)
+                                .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
+                                .withMetadata(ImmutableMap.of("buildNo", lastSuccessfulBuild.getNumber()))
+                                .withRevision(lastSuccessfulBuild.getRevision())
+                                .build();
         return create(artifact);
       }
     }

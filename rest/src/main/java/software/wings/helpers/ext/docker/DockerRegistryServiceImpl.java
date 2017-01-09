@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.docker;
 
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+
 import com.google.inject.Singleton;
 
 import okhttp3.Credentials;
@@ -56,7 +58,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   private List<BuildDetails> processBuildResponse(DockerImageTagResponse dockerImageTagResponse) {
-    return dockerImageTagResponse.getTags().stream().map(s -> new DockerBuildDetails(s)).collect(Collectors.toList());
+    return dockerImageTagResponse.getTags()
+        .stream()
+        .map(s -> aBuildDetails().withNumber(s).build())
+        .collect(Collectors.toList());
   }
 
   @Override

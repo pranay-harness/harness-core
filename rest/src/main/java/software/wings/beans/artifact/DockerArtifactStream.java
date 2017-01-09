@@ -21,7 +21,7 @@ public class DockerArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String getArtifactDisplayName(int buildNo) {
+  public String getArtifactDisplayName(String buildNo) {
     return null;
   }
 }

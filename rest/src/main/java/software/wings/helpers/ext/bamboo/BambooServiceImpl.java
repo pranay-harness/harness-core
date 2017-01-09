@@ -72,7 +72,7 @@ public class BambooServiceImpl implements BambooService {
       Response<JsonNode> response = request.execute();
       JsonNode jsonNode = response.body();
       return aBuildDetails()
-          .withNumber(jsonNode.get("buildNumber").asInt())
+          .withNumber(jsonNode.get("buildNumber").asText())
           .withRevision(jsonNode.get("vcsRevisionKey").asText())
           .build();
     } catch (Exception ex) {
@@ -124,7 +124,7 @@ public class BambooServiceImpl implements BambooService {
       if (resultNode != null) {
         resultNode.elements().forEachRemaining(jsonNode -> {
           buildDetailsList.add(aBuildDetails()
-                                   .withNumber(jsonNode.get("buildNumber").asInt())
+                                   .withNumber(jsonNode.get("buildNumber").asText())
                                    .withRevision(jsonNode.get("vcsRevisionKey").asText())
                                    .build());
         });
@@ -141,7 +141,7 @@ public class BambooServiceImpl implements BambooService {
     BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, planKey);
     if (lastSuccessfulBuild != null) {
       Map<String, String> buildArtifactsUrlMap =
-          getBuildArtifactsUrlMap(bambooConfig, planKey, Integer.toString(lastSuccessfulBuild.getNumber()));
+          getBuildArtifactsUrlMap(bambooConfig, planKey, lastSuccessfulBuild.getNumber());
       artifactPaths.addAll(getArtifactRelativePaths(buildArtifactsUrlMap.values()));
     }
     return artifactPaths;

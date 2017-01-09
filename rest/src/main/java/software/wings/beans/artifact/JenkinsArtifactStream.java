@@ -30,7 +30,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * @param buildNo the build no
    * @return the artifact display name
    */
-  public String getArtifactDisplayName(int buildNo) {
+  public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getJobname(), buildNo, dateFormat.format(new Date()));
   }
 
