@@ -60,7 +60,9 @@ public class WorkflowResource {
   public RestResponse<PageResponse<OrchestrationWorkflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<OrchestrationWorkflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
-    return new RestResponse<>(workflowService.listOrchestrationWorkflows(pageRequest, previousExecutionsCount));
+    PageResponse<OrchestrationWorkflow> workflows =
+        workflowService.listOrchestrationWorkflows(pageRequest, previousExecutionsCount);
+    return new RestResponse<>(workflows);
   }
 
   /**
