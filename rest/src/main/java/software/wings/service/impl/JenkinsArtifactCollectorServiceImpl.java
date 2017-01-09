@@ -13,6 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ArtifactCollectorService;
@@ -55,8 +56,9 @@ public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorSer
       Jenkins jenkins = jenkinsFactory.create(
           jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
       for (ArtifactPathServiceEntry artifactPathServiceEntry : artifactStream.getArtifactPathServices()) {
-        Pair<String, InputStream> fileInfo = jenkins.downloadArtifact(
-            artifactStream.getJobname(), arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());
+        Pair<String, InputStream> fileInfo =
+            jenkins.downloadArtifact(((JenkinsArtifactStream) artifactStream).getJobname(), arguments.get(BUILD_NO),
+                artifactPathServiceEntry.getArtifactPathRegex());
         if (fileInfo == null) {
           throw new FileNotFoundException(
               "Unable to get artifact from jenkins for path " + artifactPathServiceEntry.getArtifactPathRegex());

@@ -94,6 +94,9 @@ public abstract class SettingValue implements ExtensionPoint {
     SLACK, /**
             * Aws setting variable types.
             */
-    AWS
+    AWS, /**
+          * Docket registry setting variable types.
+          */
+    DOCKER
   }
 }

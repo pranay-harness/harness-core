@@ -492,6 +492,12 @@
                 <version>v1.3.0.RELEASE</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java</artifactId>
+                <version>3.0.6</version>
+            </dependency>
+
             <!-- Test Dependencies -->
             <dependency>
                 <groupId>io.dropwizard</groupId>

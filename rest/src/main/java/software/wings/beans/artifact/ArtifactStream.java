@@ -31,7 +31,6 @@ public abstract class ArtifactStream extends Base {
   @NotEmpty private String sourceName;
   @NotNull private ArtifactStreamType artifactStreamType;
   @NotEmpty private String settingId;
-  @NotEmpty private String jobname;
 
   @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
 
@@ -119,24 +118,6 @@ public abstract class ArtifactStream extends Base {
    */
   public void setSettingId(String settingId) {
     this.settingId = settingId;
-  }
-
-  /**
-   * Gets jobname.
-   *
-   * @return the jobname
-   */
-  public String getJobname() {
-    return jobname;
-  }
-
-  /**
-   * Sets jobname.
-   *
-   * @param jobname the jobname
-   */
-  public void setJobname(String jobname) {
-    this.jobname = jobname;
   }
 
   /**
@@ -255,9 +236,23 @@ public abstract class ArtifactStream extends Base {
   }
 
   @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("sourceName", sourceName)
+        .add("artifactStreamType", artifactStreamType)
+        .add("settingId", settingId)
+        .add("artifactPathServices", artifactPathServices)
+        .add("autoDownload", autoDownload)
+        .add("autoApproveForProduction", autoApproveForProduction)
+        .add("streamActions", streamActions)
+        .add("lastArtifact", lastArtifact)
+        .toString();
+  }
+
+  @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(sourceName, artifactStreamType, settingId, jobname, artifactPathServices, autoDownload,
+        + Objects.hash(sourceName, artifactStreamType, settingId, artifactPathServices, autoDownload,
               autoApproveForProduction, streamActions, lastArtifact);
   }
 
@@ -275,26 +270,11 @@ public abstract class ArtifactStream extends Base {
     final ArtifactStream other = (ArtifactStream) obj;
     return Objects.equals(this.sourceName, other.sourceName)
         && Objects.equals(this.artifactStreamType, other.artifactStreamType)
-        && Objects.equals(this.settingId, other.settingId) && Objects.equals(this.jobname, other.jobname)
+        && Objects.equals(this.settingId, other.settingId)
         && Objects.equals(this.artifactPathServices, other.artifactPathServices)
         && Objects.equals(this.autoDownload, other.autoDownload)
         && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
         && Objects.equals(this.streamActions, other.streamActions)
         && Objects.equals(this.lastArtifact, other.lastArtifact);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("sourceName", sourceName)
-        .add("artifactStreamType", artifactStreamType)
-        .add("settingId", settingId)
-        .add("jobname", jobname)
-        .add("artifactPathServices", artifactPathServices)
-        .add("autoDownload", autoDownload)
-        .add("autoApproveForProduction", autoApproveForProduction)
-        .add("streamActions", streamActions)
-        .add("lastArtifact", lastArtifact)
-        .toString();
   }
 }

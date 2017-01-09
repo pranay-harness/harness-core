@@ -13,6 +13,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.FileService;
@@ -49,8 +50,9 @@ public class BambooArtifactCollectorServiceImpl implements ArtifactCollectorServ
       BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
 
       for (ArtifactPathServiceEntry artifactPathServiceEntry : artifactStream.getArtifactPathServices()) {
-        Pair<String, InputStream> fileInfo = bambooService.downloadArtifact(bambooConfig, artifactStream.getJobname(),
-            arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());
+        Pair<String, InputStream> fileInfo =
+            bambooService.downloadArtifact(bambooConfig, ((BambooArtifactStream) artifactStream).getJobname(),
+                arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());
         if (fileInfo == null) {
           throw new FileNotFoundException(
               "Unable to get artifact from Bamboo for path " + artifactPathServiceEntry.getArtifactPathRegex());

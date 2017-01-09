@@ -17,6 +17,8 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.exception.WingsException;
@@ -82,9 +84,10 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       String accountId, ArtifactStream artifactStream, Artifact artifact, String waitId) {
     switch (artifactStream.getArtifactStreamType()) {
       case JENKINS: {
-        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(jenkinsArtifactStream.getSettingId());
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
-        List<String> artifactPaths = artifactStream.getArtifactPathServices()
+        List<String> artifactPaths = jenkinsArtifactStream.getArtifactPathServices()
                                          .stream()
                                          .map(ArtifactPathServiceEntry::getArtifactPathRegex)
                                          .collect(toList());
@@ -92,16 +95,17 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
         return aDelegateTask()
             .withTaskType(TaskType.JENKINS_COLLECTION)
             .withAccountId(accountId)
-            .withAppId(artifactStream.getAppId())
+            .withAppId(jenkinsArtifactStream.getAppId())
             .withWaitId(waitId)
             .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
-                jenkinsConfig.getPassword(), artifactStream.getJobname(), artifactPaths, artifact.getMetadata()})
+                jenkinsConfig.getPassword(), jenkinsArtifactStream.getJobname(), artifactPaths, artifact.getMetadata()})
             .build();
       }
       case BAMBOO: {
-        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        BambooArtifactStream bambooArtifactStream = (BambooArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(bambooArtifactStream.getSettingId());
         BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
-        List<String> artifactPaths = artifactStream.getArtifactPathServices()
+        List<String> artifactPaths = bambooArtifactStream.getArtifactPathServices()
                                          .stream()
                                          .map(ArtifactPathServiceEntry::getArtifactPathRegex)
                                          .collect(toList());
@@ -109,10 +113,10 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
         return aDelegateTask()
             .withTaskType(TaskType.BAMBOO_COLLECTION)
             .withAccountId(accountId)
-            .withAppId(artifactStream.getAppId())
+            .withAppId(bambooArtifactStream.getAppId())
             .withWaitId(waitId)
             .withParameters(new Object[] {bambooConfig.getBambooUrl(), bambooConfig.getUsername(),
-                bambooConfig.getPassword(), artifactStream.getJobname(), artifactPaths, artifact.getMetadata()})
+                bambooConfig.getPassword(), bambooArtifactStream.getJobname(), artifactPaths, artifact.getMetadata()})
             .build();
       }
 

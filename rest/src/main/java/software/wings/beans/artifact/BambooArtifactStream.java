@@ -3,6 +3,7 @@ package software.wings.beans.artifact;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.List;
  */
 @JsonTypeName("BAMBOO")
 public class BambooArtifactStream extends ArtifactStream {
+  @NotEmpty private String jobname;
+
   /**
    * Instantiates a new Bamboo artifact stream.
    */
@@ -24,6 +27,24 @@ public class BambooArtifactStream extends ArtifactStream {
   @Override
   public String getArtifactDisplayName(int buildNo) {
     return String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
+  }
+
+  /**
+   * Gets jobname.
+   *
+   * @return the jobname
+   */
+  public String getJobname() {
+    return jobname;
+  }
+
+  /**
+   * Sets jobname.
+   *
+   * @param jobname the jobname
+   */
+  public void setJobname(String jobname) {
+    this.jobname = jobname;
   }
 
   /**

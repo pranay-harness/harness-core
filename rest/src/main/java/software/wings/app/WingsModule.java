@@ -21,6 +21,8 @@ import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
+import software.wings.helpers.ext.docker.DockerRegistryService;
+import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -43,6 +45,7 @@ import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
@@ -92,6 +95,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
@@ -204,6 +208,8 @@ public class WingsModule extends AbstractModule {
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(EcsService.class).to(EcsServiceImpl.class);
     bind(ClusterService.class).to(ClusterServiceImpl.class);
+    bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);
+    bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()

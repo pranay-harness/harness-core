@@ -9,6 +9,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
 
@@ -27,6 +28,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private JenkinsBuildService jenkinsBuildService;
   @Inject private BambooBuildService bambooBuildService;
+  @Inject private DockerBuildService dockerBuildService;
   @Inject private SettingsService settingsService;
 
   @Override
