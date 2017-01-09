@@ -196,6 +196,7 @@ public class DelegateServiceImpl implements DelegateService {
   public File download(String managerHost, String accountId) throws IOException, TemplateException {
     File delegateFile = File.createTempFile("delegate", ".zip");
     File run = File.createTempFile("run", ".sh");
+    File stop = File.createTempFile("stop", ".sh");
 
     ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
     out.putArchiveEntry(new ZipArchiveEntry("wings-delegate/"));
@@ -220,6 +221,22 @@ public class DelegateServiceImpl implements DelegateService {
       IOUtils.copy(fis, out);
     }
     out.closeArchiveEntry();
+
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
+      cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
+    }
+    run = new File(run.getAbsolutePath());
+    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(run, "wings-delegate/stop.sh");
+    stopZipArchiveEntry.setUnixMode(0755);
+    permissions = new AsiExtraField();
+    permissions.setMode(0755);
+    stopZipArchiveEntry.addExtraField(permissions);
+    out.putArchiveEntry(stopZipArchiveEntry);
+    try (FileInputStream fis = new FileInputStream(stop)) {
+      IOUtils.copy(fis, out);
+    }
+    out.closeArchiveEntry();
+
     out.close();
     return delegateFile;
   }

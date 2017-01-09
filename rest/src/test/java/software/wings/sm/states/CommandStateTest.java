@@ -27,6 +27,7 @@ import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.E
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -35,6 +36,8 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
+import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -58,6 +61,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
@@ -127,6 +131,9 @@ public class CommandStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
+  private AbstractCommandUnit commandUnit =
+      anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
+  private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
 
   @Inject private ExecutorService executorService;
 
@@ -153,6 +160,8 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws Exception {
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
@@ -341,5 +350,46 @@ public class CommandStateTest extends WingsBaseTest {
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
+  }
+
+  /**
+   * Should throw exception for unknown command.
+   */
+  @Test
+  public void shouldFailWhenNestedCommandNotFound() {
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
+        .thenReturn(aServiceCommand()
+                        .withTargetToAllEnv(true)
+                        .withCommand(aCommand().withName("NESTED_CMD").withReferenceId("NON_EXISTENT_COMMAND").build())
+                        .build());
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "NON_EXISTENT_COMMAND");
+
+    verify(activityService).save(any(Activity.class));
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
+
+    verify(context, times(3)).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context, times(3)).getWorkflowExecutionId();
+    verify(context, times(1)).getWorkflowExecutionName();
+    verify(context, times(1)).getWorkflowType();
+    verify(context, times(1)).getStateExecutionInstanceId();
+    verify(context, times(1)).getStateExecutionInstanceName();
+    verify(context).getServiceVariables();
+
+    verify(context, times(4)).renderExpression(anyString());
+
+    verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+
+    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowExecutionService).incrementFailed(eq(APP_ID), anyString(), eq(1));
+
+    verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
+        activityService, settingsService, workflowExecutionService, artifactStreamService);
   }
 }

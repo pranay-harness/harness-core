@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logFile.log</file>
+        <file>delegate.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>delegate.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 30 days' worth of history capped at 3GB total size -->
             <maxHistory>30</maxHistory>
@@ -28,10 +28,7 @@
     <logger name="software.wings" level="INFO"/>
     <logger name="org.zeroturnaround" level="DEBUG"/>
 
-
-
     <root level="INFO">
-        <appender-ref ref="stdout"/>
         <appender-ref ref="file"/>
     </root>
 </configuration>

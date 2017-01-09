@@ -6,9 +6,11 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -41,6 +43,8 @@ import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.common.cache.ResponseCodeCache;
@@ -288,6 +292,7 @@ public class CommandState extends State {
       executionDataBuilder.withActivityId(activityId);
 
       String finalActivityId = activityId;
+      expandCommand(serviceInstance, command, service.getUuid(), envId);
       executorService.execute(() -> {
         ExecutionResult executionResult = ExecutionResult.SUCCESS;
         String errorMessage = null;
@@ -428,6 +433,26 @@ public class CommandState extends State {
       // ignore
     }
     return settingValue;
+  }
+
+  private void expandCommand(ServiceInstance serviceInstance, Command command, String serviceId, String envId) {
+    if (isNotEmpty(command.getReferenceId())) {
+      Command referedCommand = Optional
+                                   .ofNullable(serviceResourceService.getCommandByName(
+                                       serviceInstance.getAppId(), serviceId, envId, command.getReferenceId()))
+                                   .orElse(aServiceCommand().build())
+                                   .getCommand();
+      if (referedCommand == null) {
+        throw new WingsException(COMMAND_DOES_NOT_EXIST);
+      }
+      command.setCommandUnits(referedCommand.getCommandUnits());
+    }
+
+    for (CommandUnit commandUnit : command.getCommandUnits()) {
+      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+        expandCommand(serviceInstance, (Command) commandUnit, serviceId, envId);
+      }
+    }
   }
 
   @Override
