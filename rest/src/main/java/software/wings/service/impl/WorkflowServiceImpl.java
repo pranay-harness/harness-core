@@ -646,6 +646,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
             .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase);
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase);
+    for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
+      updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
+    }
     wingsPersistence.update(query, updateOps);
 
     return workflowPhase;
