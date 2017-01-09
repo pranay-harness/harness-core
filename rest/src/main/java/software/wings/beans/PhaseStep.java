@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import software.wings.beans.Graph.Node;
+import software.wings.common.UUIDGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,10 +10,37 @@ import java.util.List;
  * Created by rishi on 12/21/16.
  */
 public class PhaseStep {
+  private String uuid;
+  private String name;
   private PhaseStepType phaseStepType;
   private List<Node> steps = new ArrayList<>();
   private boolean stepsInParallel;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
+
+  public PhaseStep() {}
+
+  public PhaseStep(PhaseStepType phaseStepType) {
+    this.phaseStepType = phaseStepType;
+  }
+
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
+  public String getName() {
+    if (name == null && phaseStepType != null) {
+      return phaseStepType.name();
+    }
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
 
   public PhaseStepType getPhaseStepType() {
     return phaseStepType;
@@ -53,21 +81,27 @@ public class PhaseStep {
     if (o == null || getClass() != o.getClass())
       return false;
 
-    PhaseStep that = (PhaseStep) o;
+    PhaseStep phaseStep = (PhaseStep) o;
 
-    if (stepsInParallel != that.stepsInParallel)
+    if (stepsInParallel != phaseStep.stepsInParallel)
       return false;
-    if (phaseStepType != that.phaseStepType)
+    if (uuid != null ? !uuid.equals(phaseStep.uuid) : phaseStep.uuid != null)
       return false;
-    if (steps != null ? !steps.equals(that.steps) : that.steps != null)
+    if (name != null ? !name.equals(phaseStep.name) : phaseStep.name != null)
       return false;
-    return failureStrategies != null ? failureStrategies.equals(that.failureStrategies)
-                                     : that.failureStrategies == null;
+    if (phaseStepType != phaseStep.phaseStepType)
+      return false;
+    if (steps != null ? !steps.equals(phaseStep.steps) : phaseStep.steps != null)
+      return false;
+    return failureStrategies != null ? failureStrategies.equals(phaseStep.failureStrategies)
+                                     : phaseStep.failureStrategies == null;
   }
 
   @Override
   public int hashCode() {
-    int result = phaseStepType != null ? phaseStepType.hashCode() : 0;
+    int result = uuid != null ? uuid.hashCode() : 0;
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (phaseStepType != null ? phaseStepType.hashCode() : 0);
     result = 31 * result + (steps != null ? steps.hashCode() : 0);
     result = 31 * result + (stepsInParallel ? 1 : 0);
     result = 31 * result + (failureStrategies != null ? failureStrategies.hashCode() : 0);
@@ -75,6 +109,8 @@ public class PhaseStep {
   }
 
   public static final class PhaseStepBuilder {
+    private String uuid;
+    private String name;
     private PhaseStepType phaseStepType;
     private List<Node> steps = new ArrayList<>();
     private boolean stepsInParallel;
@@ -85,7 +121,18 @@ public class PhaseStep {
     public static PhaseStepBuilder aPhaseStep(PhaseStepType phaseStepType) {
       PhaseStepBuilder phaseStepBuilder = new PhaseStepBuilder();
       phaseStepBuilder.phaseStepType = phaseStepType;
+      phaseStepBuilder.uuid = UUIDGenerator.getUuid();
       return phaseStepBuilder;
+    }
+
+    public PhaseStepBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public PhaseStepBuilder withName(String name) {
+      this.name = name;
+      return this;
     }
 
     public PhaseStepBuilder withPhaseStepType(PhaseStepType phaseStepType) {
@@ -110,6 +157,8 @@ public class PhaseStep {
 
     public PhaseStep build() {
       PhaseStep phaseStep = new PhaseStep();
+      phaseStep.setUuid(uuid);
+      phaseStep.setName(name);
       phaseStep.setPhaseStepType(phaseStepType);
       phaseStep.setSteps(steps);
       phaseStep.setStepsInParallel(stepsInParallel);
