@@ -754,6 +754,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(graph.getNodes().get(1).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
     assertThat(graph.getNodes().get(2).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
     assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+    logger.info("Graph Nodes: {}", graph.getNodes());
+    assertThat(graph.getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow3.getPreDeploymentSteps().getUuid(),
+            orchestrationWorkflow3.getWorkflowPhaseIds().get(0), orchestrationWorkflow3.getWorkflowPhaseIds().get(1),
+            orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
   }
 
   @Test

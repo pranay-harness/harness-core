@@ -575,7 +575,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Graph workflowOuterStepsGraph = generateGraph(phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("preDeploymentSteps", phaseStep);
-    map.put("graph.subworkflows." + Constants.PRE_DEPLOYMENT_STEPS, workflowOuterStepsGraph);
+    map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
     return phaseStep;
@@ -586,7 +586,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Graph workflowOuterStepsGraph = generateGraph(phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("postDeploymentSteps", phaseStep);
-    map.put("graph.subworkflows." + Constants.POST_DEPLOYMENT_STEPS, workflowOuterStepsGraph);
+    map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
     return phaseStep;
@@ -708,26 +708,38 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private Graph generateMainGraph(OrchestrationWorkflow orchestrationWorkflow) {
     String id1 = orchestrationWorkflow.getPreDeploymentSteps().getUuid();
     String id2;
-    Builder graphBuilder = aGraph().addNodes(
-        aNode().withId(id1).withName(Constants.PRE_DEPLOYMENT_STEPS).withType(StateType.SUB_WORKFLOW.name()).build());
+    Builder graphBuilder = aGraph()
+                               .addNodes(aNode()
+                                             .withId(id1)
+                                             .withName(Constants.PRE_DEPLOYMENT_STEPS)
+                                             .withType(StateType.SUB_WORKFLOW.name())
+                                             .build())
+                               .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps()));
 
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
 
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();
-        graphBuilder.addNodes(
-            aNode().withId(id2).withName(workflowPhase.getName()).withType(StateType.SUB_WORKFLOW.name()).build());
-        graphBuilder.addLinks(
-            aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+        graphBuilder
+            .addNodes(
+                aNode().withId(id2).withName(workflowPhase.getName()).withType(StateType.SUB_WORKFLOW.name()).build())
+            .addLinks(
+                aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
+            .addSubworkflows(generateGraph(workflowPhase));
         id1 = id2;
       }
     }
     id2 = orchestrationWorkflow.getPostDeploymentSteps().getUuid();
-    graphBuilder.addNodes(
-        aNode().withId(id2).withName(Constants.POST_DEPLOYMENT_STEPS).withType(StateType.SUB_WORKFLOW.name()).build());
-    graphBuilder.addLinks(
-        aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+    graphBuilder
+        .addNodes(aNode()
+                      .withId(id2)
+                      .withName(Constants.POST_DEPLOYMENT_STEPS)
+                      .withType(StateType.SUB_WORKFLOW.name())
+                      .build())
+        .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
+        .addSubworkflow(id2, generateGraph(orchestrationWorkflow.getPostDeploymentSteps()));
+
     return graphBuilder.build();
   }
 

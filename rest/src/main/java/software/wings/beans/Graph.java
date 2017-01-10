@@ -1227,6 +1227,17 @@ public class Graph {
     /**
      * Adds the subworkflow.
      *
+     * @param subworkflows subworkflows
+     * @return the builder
+     */
+    public Builder addSubworkflows(Map<String, Graph> subworkflows) {
+      this.subworkflows.putAll(subworkflows);
+      return this;
+    }
+
+    /**
+     * Adds the subworkflow.
+     *
      * @param subworkflowName the subworkflowName
      * @param subworkflow the subworkflow
      * @return the builder
@@ -1277,6 +1288,7 @@ public class Graph {
       graph.setGraphName(graphName);
       graph.setNodes(nodes);
       graph.setLinks(links);
+      graph.setSubworkflows(subworkflows);
       return graph;
     }
 
