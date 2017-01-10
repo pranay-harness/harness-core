@@ -94,6 +94,9 @@ public abstract class SettingValue implements ExtensionPoint {
     SLACK, /**
             * Aws setting variable types.
             */
-    AWS
+    AWS, /**
+          * Physical data center setting variable types.
+          */
+    PHYSICAL_DATA_CENTER
   }
 }

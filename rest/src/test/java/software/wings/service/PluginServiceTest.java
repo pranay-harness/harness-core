@@ -13,6 +13,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.PhysicalDataCenter;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -30,7 +31,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(7)
+        .hasSize(8)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -86,6 +87,14 @@ public class PluginServiceTest {
                 .withDisplayName("AWS")
                 .withType("AWS")
                 .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(PhysicalDataCenter.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Physical Data Center")
+                .withType("PHYSICAL_DATA_CENTER")
+                .withPluginCategories(asList(CloudProvider))
                 .build());
   }
 
@@ -94,7 +103,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(7)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS");
+        .hasSize(8)
+        .containsOnlyKeys(
+            "APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER");
   }
 }
