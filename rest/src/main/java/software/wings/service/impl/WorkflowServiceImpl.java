@@ -745,7 +745,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<String, Graph> generateGraph(WorkflowPhase workflowPhase) {
     Map<String, Graph> graphs = new HashMap<>();
-    Builder graphBuilder = aGraph();
+    Builder graphBuilder = aGraph().withGraphName(workflowPhase.getName());
 
     String id1 = null;
     String id2;
@@ -770,7 +770,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private Graph generateGraph(PhaseStep phaseStep) {
-    Builder graphBuilder = aGraph();
+    Builder graphBuilder = aGraph().withGraphName(phaseStep.getName());
     if (phaseStep == null || phaseStep.getSteps() == null || phaseStep.getSteps().isEmpty()) {
       return graphBuilder.build();
     }
