@@ -65,9 +65,9 @@ public class PluginServiceImpl implements PluginService {
             .withAccountId(accountId)
             .withIsEnabled(true)
             .withDisplayName("Docker Registry")
-            .withType("DOCKER_REGISTRY")
+            .withType("DOCKER")
             .withPluginCategories(asList(Artifact))
-            .withUiSchema(readUiSchema("DOCKER_REGISTRY"))
+            .withUiSchema(readUiSchema("DOCKER"))
             .build(),
         anAccountPlugin()
             .withSettingClass(AppDynamicsConfig.class)

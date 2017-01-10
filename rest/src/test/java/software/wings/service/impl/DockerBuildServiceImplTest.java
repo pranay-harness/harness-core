@@ -49,7 +49,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
                                     .withUsername("anubhaw")
                                     .withPassword("anubhaw@Dhub")
                                     .build();
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "anubhaw/my-docker-whale", 5);
+    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
     System.out.println(builds);
   }
 }

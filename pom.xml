@@ -497,6 +497,11 @@
                 <artifactId>docker-java</artifactId>
                 <version>3.0.6</version>
             </dependency>
+            <dependency>
+                <groupId>net.jodah</groupId>
+                <artifactId>expiringmap</artifactId>
+                <version>0.5.7</version>
+            </dependency>
 
             <!-- Test Dependencies -->
             <dependency>

@@ -2,11 +2,9 @@ package software.wings.service.impl;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import org.mongodb.morphia.query.Query;
@@ -26,7 +24,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -206,37 +203,6 @@ public class ArtifactServiceImpl implements ArtifactService {
         .forEach(artifact -> delete(appId, artifact.getUuid()));
   }
 
-  @Override
-  public Artifact collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    Validator.notNullCheck("artifactStream", artifactStream);
-    BuildDetails lastSuccessfulBuild =
-        buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-
-    if (lastSuccessfulBuild != null) {
-      Artifact lastCollectedArtifact = fetchLatestArtifactForArtifactStream(appId, artifactStreamId);
-      int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
-          ? Integer.parseInt(lastCollectedArtifact.getMetadata().get("buildNo"))
-          : 0;
-      // TODO: fix it for Docker
-      if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
-        logger.info(
-            "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
-            buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);
-        Artifact artifact = anArtifact()
-                                .withAppId(appId)
-                                .withArtifactStreamId(artifactStreamId)
-                                .withDisplayName(artifactStream.getArtifactDisplayName(lastSuccessfulBuild.getNumber()))
-                                .withMetadata(ImmutableMap.of("buildNo", lastSuccessfulBuild.getNumber()))
-                                .withRevision(lastSuccessfulBuild.getRevision())
-                                .build();
-        return create(artifact);
-      }
-    }
-    return null;
-  }
-
-  @Override
   public Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId) {
     return wingsPersistence.createQuery(Artifact.class)
         .field("appId")

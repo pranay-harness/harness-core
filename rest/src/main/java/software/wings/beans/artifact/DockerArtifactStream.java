@@ -11,17 +11,25 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("BAMBOO")
 public class DockerArtifactStream extends ArtifactStream {
   @NotEmpty private String imageName;
-  private String command;
 
   /**
    * Instantiates a new Docker artifact stream.
    */
   public DockerArtifactStream() {
     super(DOCKER);
+    super.setAutoApproveForProduction(true);
   }
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
     return null;
+  }
+
+  public String getImageName() {
+    return imageName;
+  }
+
+  public void setImageName(String imageName) {
+    this.imageName = imageName;
   }
 }
