@@ -717,6 +717,52 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldHaveGraph() {
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+
+    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull();
+    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
+
+    workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
+    workflowPhase2.setName("phase2-changed");
+    workflowPhase2.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).build());
+
+    workflowService.updateWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow3).isNotNull();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
+    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
+
+    Graph graph = orchestrationWorkflow3.getGraph();
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(4).doesNotContainNull();
+    assertThat(graph.getLinks()).isNotNull().hasSize(3).doesNotContainNull();
+    assertThat(graph.getNodes().get(0).getId()).isEqualTo(orchestrationWorkflow3.getPreDeploymentSteps().getUuid());
+    assertThat(graph.getNodes().get(1).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
+    assertThat(graph.getNodes().get(2).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
+    assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+    logger.info("Graph Nodes: {}", graph.getNodes());
+    assertThat(graph.getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow3.getPreDeploymentSteps().getUuid(),
+            orchestrationWorkflow3.getWorkflowPhaseIds().get(0), orchestrationWorkflow3.getWorkflowPhaseIds().get(1),
+            orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+  }
+
+  @Test
   public void shouldUpdateNotificationRules() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
