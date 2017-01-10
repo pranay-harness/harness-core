@@ -95,8 +95,14 @@ public abstract class SettingValue implements ExtensionPoint {
             * Aws setting variable types.
             */
     AWS, /**
-          * Physical data center setting variable types.
+          * Ecs setting variable types.
           */
+    ECS, /**
+          * Kubernetes setting variable types.
+          */
+    KUBERNETES, /**
+                 * Physical data center setting variable types.
+                 */
     PHYSICAL_DATA_CENTER
   }
 }

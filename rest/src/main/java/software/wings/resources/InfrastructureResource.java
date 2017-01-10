@@ -13,8 +13,10 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.InfrastructureService;
 
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -35,6 +37,7 @@ import javax.ws.rs.QueryParam;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
+@PublicApi // TODO:: remove
 public class InfrastructureResource {
   @Inject private InfrastructureService infrastructureService;
 
@@ -83,6 +86,7 @@ public class InfrastructureResource {
    * @return the rest response
    */
   @DELETE
+  @Path("{infraId}")
   public RestResponse delete(@PathParam("infraId") String infraId) {
     infrastructureService.delete(infraId);
     return new RestResponse();
@@ -93,5 +97,11 @@ public class InfrastructureResource {
   public RestResponse sync(@PathParam("infraId") String infraId) {
     infrastructureService.sync(infraId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("stencils")
+  public RestResponse<Map<String, Map<String, Object>>> infrastructureMappingSchema(@QueryParam("appId") String appId) {
+    return new RestResponse<>(infrastructureService.getInfraMappingStencils(appId));
   }
 }
