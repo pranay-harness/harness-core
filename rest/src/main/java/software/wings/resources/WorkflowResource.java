@@ -205,7 +205,7 @@ public class WorkflowResource {
   }
 
   /**
-   * Updates the phase.
+   * Updates the GraphNode.
    *
    * @param appId         the app id
    * @param orchestrationWorkflowId the orchestration id
@@ -215,7 +215,7 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/nodes/{nodeId}")
-  public RestResponse<Node> create(@QueryParam("appId") String appId,
+  public RestResponse<Node> updateGraphNode(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId,
       @QueryParam("subworkflowId") String subworkflowId, @PathParam("nodeId") String nodeId, Node node) {
     node.setId(nodeId);
