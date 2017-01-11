@@ -156,7 +156,7 @@ public class ConfigResource {
   }
 
   /**
-   * Export logs response.
+   * Export configFile.
    *
    * @param appId    the app id
    * @param configId the config id

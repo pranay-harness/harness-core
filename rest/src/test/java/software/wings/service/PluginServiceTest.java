@@ -13,7 +13,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.PhysicalDataCenter;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -89,7 +89,7 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
-                .withSettingClass(PhysicalDataCenter.class)
+                .withSettingClass(PhysicalDataCenterConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
                 .withDisplayName("Physical Data Center")

@@ -350,4 +350,9 @@ public class WingsTestConstants {
    * The constant AUTO_SCALING_GROUP_NAME.
    */
   public static final String AUTO_SCALING_GROUP_NAME = "AUTO_SCALING_GROUP_NAME";
+
+  /**
+   * The constant INFRA_MAPPING_ID.
+   */
+  public static final String INFRA_MAPPING_ID = "INFRA_MAPPING_ID";
 }

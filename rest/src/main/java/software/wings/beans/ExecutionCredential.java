@@ -4,19 +4,17 @@
 
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 
 /**
  * The type Execution credential.
  *
  * @author Rishi
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "executionType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "executionType", include = As.EXISTING_PROPERTY)
 public abstract class ExecutionCredential {
-  @JsonTypeId private ExecutionType executionType;
-
-  ;
+  private ExecutionType executionType;
 
   /**
    * Instantiates a new Execution credential.

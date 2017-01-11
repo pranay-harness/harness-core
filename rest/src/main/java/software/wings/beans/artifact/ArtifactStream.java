@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -25,28 +26,22 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType", include = As.EXISTING_PROPERTY)
 @Entity(value = "artifactStream")
 public abstract class ArtifactStream extends Base {
-  @NotEmpty private String sourceName;
-  @NotNull private SourceType sourceType;
-  @NotEmpty private String settingId;
-  @NotEmpty private String jobname;
-
-  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-
-  private boolean autoDownload = false;
-
-  private boolean autoApproveForProduction = false;
-
-  private List<ArtifactStreamAction> streamActions = new ArrayList<>();
-
-  @Transient private Artifact lastArtifact;
-
   /**
    * The Date format.
    */
   static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+  @NotEmpty private String sourceName;
+  @NotNull private SourceType sourceType;
+  @NotEmpty private String settingId;
+  @NotEmpty private String jobname;
+  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
+  private boolean autoDownload = false;
+  private boolean autoApproveForProduction = false;
+  private List<ArtifactStreamAction> streamActions = new ArrayList<>();
+  @Transient private Artifact lastArtifact;
 
   /**
    * Instantiates a new lastArtifact source.
@@ -55,6 +50,15 @@ public abstract class ArtifactStream extends Base {
    */
   public ArtifactStream(SourceType sourceType) {
     this.sourceType = sourceType;
+  }
+
+  /**
+   * Gets date format.
+   *
+   * @return the date format
+   */
+  public static DateFormat getDateFormat() {
+    return dateFormat;
   }
 
   /**
@@ -67,6 +71,8 @@ public abstract class ArtifactStream extends Base {
         .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
         .collect(toSet());
   }
+
+  public void setServiceIds(Set<String> serviceIds) {}
 
   /**
    * Gets artifact display name.
@@ -229,46 +235,6 @@ public abstract class ArtifactStream extends Base {
     this.lastArtifact = lastArtifact;
   }
 
-  /**
-   * Gets date format.
-   *
-   * @return the date format
-   */
-  public static DateFormat getDateFormat() {
-    return dateFormat;
-  }
-
-  /**
-   * The Enum SourceType.
-   */
-  public enum SourceType {
-    /**
-     * Jenkins source type.
-     */
-    JENKINS, /**
-              * BambooService source type.
-              */
-    BAMBOO, /**
-             * Nexus source type.
-             */
-    NEXUS, /**
-            * Artifactory source type.
-            */
-    ARTIFACTORY, /**
-                  * Svn source type.
-                  */
-    SVN, /**
-          * Git source type.
-          */
-    GIT, /**
-          * Http source type.
-          */
-    HTTP, /**
-           * File upload source type.
-           */
-    FILE_UPLOAD
-  }
-
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -310,5 +276,36 @@ public abstract class ArtifactStream extends Base {
         .add("streamActions", streamActions)
         .add("lastArtifact", lastArtifact)
         .toString();
+  }
+
+  /**
+   * The Enum SourceType.
+   */
+  public enum SourceType {
+    /**
+     * Jenkins source type.
+     */
+    JENKINS, /**
+              * BambooService source type.
+              */
+    BAMBOO, /**
+             * Nexus source type.
+             */
+    NEXUS, /**
+            * Artifactory source type.
+            */
+    ARTIFACTORY, /**
+                  * Svn source type.
+                  */
+    SVN, /**
+          * Git source type.
+          */
+    GIT, /**
+          * Http source type.
+          */
+    HTTP, /**
+           * File upload source type.
+           */
+    FILE_UPLOAD
   }
 }

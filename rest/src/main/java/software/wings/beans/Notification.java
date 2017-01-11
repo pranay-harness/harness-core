@@ -2,8 +2,8 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -14,14 +14,14 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 7/22/16.
  */
 @Entity(value = "notifications")
-@JsonTypeInfo(use = Id.NAME, property = "notificationType")
+@JsonTypeInfo(use = Id.NAME, property = "notificationType", include = As.EXISTING_PROPERTY)
 public abstract class Notification extends Base {
   private String environmentId;
   private String entityId;
   private EntityType entityType;
   private String accountId;
 
-  @JsonTypeId @NotNull private NotificationType notificationType;
+  @NotNull private NotificationType notificationType;
   @Indexed @NotNull private boolean complete = true;
   @Indexed @NotNull private boolean actionable = false;
 

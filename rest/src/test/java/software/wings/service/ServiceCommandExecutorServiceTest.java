@@ -11,7 +11,6 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
@@ -19,7 +18,6 @@ import static software.wings.beans.infrastructure.ApplicationHost.Builder.anAppl
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -46,11 +44,10 @@ import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
+import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.utils.WingsTestConstants;
-
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 6/7/16.
@@ -63,7 +60,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   /**
    * The Cmd executor service.
    */
-  @Inject @InjectMocks private ServiceCommandExecutorService cmdExecutorService;
+  @InjectMocks private ServiceCommandExecutorService cmdExecutorService = new ServiceCommandExecutorServiceImpl();
 
   private SettingAttribute hostConnAttrPwd =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
@@ -88,7 +85,6 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   private CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
                                                 .withAppId(APP_ID)
                                                 .withActivityId(ACTIVITY_ID)
-                                                .withArtifact(anArtifact().withUuid(ARTIFACT_ID).build())
                                                 .withRuntimePath(RUNTIME_PATH)
                                                 .withExecutionCredential(credential)
                                                 .withServiceTemplate(serviceTemplate)
@@ -101,7 +97,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteCommandForServiceInstance() {
     when(commandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
-    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, context);
+    ExecutionResult executionResult = cmdExecutorService.execute(command, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
@@ -112,7 +108,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").addCommandUnits(command).build();
     when(commandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
-    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, context);
+    ExecutionResult executionResult = cmdExecutorService.execute(nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 }

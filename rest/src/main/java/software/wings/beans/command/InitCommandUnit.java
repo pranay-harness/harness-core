@@ -7,7 +7,6 @@ import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -16,7 +15,6 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.service.intfc.ServiceResourceService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,10 +35,8 @@ public class InitCommandUnit extends AbstractCommandUnit {
   /**
    * The constant INITIALIZE_UNIT.
    */
-  public static final String INITIALIZE_UNIT = "Initialize";
-  @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
-
-  @JsonIgnore @Transient @Inject private ServiceResourceService serviceResourceService;
+  public static final transient String INITIALIZE_UNIT = "Initialize";
+  private static final Configuration cfg = new Configuration(VERSION_2_3_23);
 
   @JsonIgnore @SchemaIgnore @Transient private Command command;
 
@@ -73,8 +69,8 @@ public class InitCommandUnit extends AbstractCommandUnit {
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
-    if (context.getArtifact() != null && !isEmpty(context.getArtifact().getArtifactFiles())) {
-      envVariables.put("ARTIFACT_FILE_NAME", context.getArtifact().getArtifactFiles().get(0).getName());
+    if (!isEmpty(context.getArtifactFiles())) {
+      envVariables.put("ARTIFACT_FILE_NAME", context.getArtifactFiles().get(0).getName());
     }
 
     launcherScriptFileName = "wingslauncher" + activityId + ".sh";

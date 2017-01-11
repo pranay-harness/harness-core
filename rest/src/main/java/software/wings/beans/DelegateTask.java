@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.utils.JsonUtils;
 
 import java.util.Objects;
 
@@ -10,9 +11,10 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 12/5/16.
  */
 @Entity(value = "delegateTasks", noClassnameStored = true)
+//@Converters(ObjectArrayConverter.class)
 public class DelegateTask extends Base {
   private TaskType taskType;
-  private Object[] parameters;
+  private String parameters;
   private String tag;
   private String accountId;
   private String waitId;
@@ -40,7 +42,7 @@ public class DelegateTask extends Base {
    *
    * @return Value for property 'parameters'.
    */
-  public Object[] getParameters() {
+  public String getParameters() {
     return parameters;
   }
 
@@ -49,7 +51,7 @@ public class DelegateTask extends Base {
    *
    * @param parameters Value to set for property 'parameters'.
    */
-  public void setParameters(Object[] parameters) {
+  public void setParameters(String parameters) {
     this.parameters = parameters;
   }
 
@@ -142,7 +144,7 @@ public class DelegateTask extends Base {
 
   public static final class Builder {
     private TaskType taskType;
-    private Object[] parameters;
+    private String parameters;
     private String tag;
     private String accountId;
     private String waitId;
@@ -165,6 +167,11 @@ public class DelegateTask extends Base {
     }
 
     public Builder withParameters(Object[] parameters) {
+      this.parameters = JsonUtils.asJson(parameters, JsonUtils.mapperForCloning);
+      return this;
+    }
+
+    public Builder withParameters(String parameters) {
       this.parameters = parameters;
       return this;
     }

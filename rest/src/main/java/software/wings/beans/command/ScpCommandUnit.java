@@ -49,8 +49,7 @@ public class ScpCommandUnit extends AbstractCommandUnit {
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
-        context.getArtifact().getArtifactFiles().forEach(
-            artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+        context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
         break;
       case APPLICATION_STACK:
         fileBucket = FileBucket.PLATFORMS;

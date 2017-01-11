@@ -846,7 +846,6 @@
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>ci.wings.software</portalHost>
                 <app.name>CI Server</app.name>
             </properties>
@@ -866,7 +865,6 @@
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>demo.wings.software</portalHost>
                 <app.name>Demo Server</app.name>
             </properties>
