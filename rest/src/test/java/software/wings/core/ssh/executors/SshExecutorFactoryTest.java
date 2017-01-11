@@ -12,31 +12,28 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
-import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.LogService;
-
-import javax.inject.Inject;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
 
 /**
  * Created by anubhaw on 5/18/16.
  */
 @RunWith(JUnitParamsRunner.class)
-public class SshExecutorFactoryTest extends WingsBaseTest {
+public class SshExecutorFactoryTest {
   /**
    * The File service.
    */
-  @Mock FileService fileService;
+  @Mock DelegateFileManager fileService;
   /**
    * The Log service.
    */
-  @Mock LogService logService;
+  @Mock DelegateLogService logService;
 
   /**
    * The Ssh executor factory.
    */
-  @Inject @InjectMocks private SshExecutorFactory sshExecutorFactory;
+  @InjectMocks private SshExecutorFactory sshExecutorFactory = new SshExecutorFactory();
 
   /**
    * Params object [ ].

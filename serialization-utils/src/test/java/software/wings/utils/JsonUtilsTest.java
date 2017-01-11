@@ -2,9 +2,10 @@ package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
@@ -85,6 +86,33 @@ public class JsonUtilsTest {
         .containsExactly(BaseType.B);
   }
 
+  @Test
+  public void shouldUseClassNameWhenUsingMapperForCloning() {
+    BaseA baseA = new BaseA();
+    String jsona = JsonUtils.asJson(new Object[] {baseA}, JsonUtils.mapperForCloning);
+
+    JsonFluentAssert.assertThatJson(jsona).isEqualTo(
+        "[[\"software.wings.utils.JsonUtilsTest$BaseA\",{\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}]]");
+
+    BaseB baseB = new BaseB();
+    String jsonb = JsonUtils.asJson(new Object[] {baseB}, JsonUtils.mapperForCloning);
+
+    JsonFluentAssert.assertThatJson(jsonb).isEqualTo(
+        "[[\"software.wings.utils.JsonUtilsTest$BaseB\",{\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}]]");
+
+    assertThat(JsonUtils.asObject(jsona, new TypeReference<Object[]>() {}, JsonUtils.mapperForCloning))
+        .hasSize(1)
+        .hasOnlyElementsOfType(BaseA.class)
+        .extracting(o -> ((Base) o).getBaseType())
+        .containsExactly(BaseType.A);
+
+    assertThat(JsonUtils.asObject(jsonb, new TypeReference<Object[]>() {}, JsonUtils.mapperForCloning))
+        .hasSize(1)
+        .hasOnlyElementsOfType(BaseB.class)
+        .extracting(o -> ((Base) o).getBaseType())
+        .containsExactly(BaseType.B);
+  }
+
   /**
    * Should generate json schema.
    */
@@ -99,9 +127,9 @@ public class JsonUtilsTest {
   /**
    * The Class Base.
    */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "baseType")
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "baseType", include = As.EXISTING_PROPERTY)
   public static class Base {
-    @JsonTypeId private BaseType baseType;
+    private BaseType baseType;
 
     @SchemaIgnore private String x;
 

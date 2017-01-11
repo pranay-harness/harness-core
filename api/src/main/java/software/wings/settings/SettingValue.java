@@ -1,15 +1,15 @@
 package software.wings.settings;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import ro.fortsoft.pf4j.ExtensionPoint;
 
 /**
  * Created by anubhaw on 5/16/16.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 public abstract class SettingValue implements ExtensionPoint {
-  @JsonTypeId private String type;
+  private String type;
 
   /**
    * Instantiates a new setting value.

@@ -16,6 +16,7 @@ import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
 import static software.wings.beans.ErrorCodes.UNREACHABLE_HOST;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
@@ -27,7 +28,6 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,10 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.delegatetasks.DelegateFile;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.service.intfc.LogService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,24 +88,24 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   /**
    * The Log service.
    */
-  protected LogService logService;
+  protected DelegateLogService logService;
   /**
    * The File service.
    */
-  protected FileService fileService;
+  protected DelegateFileManager delegateFileManager;
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
 
   /**
    * Instantiates a new abstract ssh executor.
    *
-   * @param fileService the file service
+   * @param delegateFileManager the file service
    * @param logService  the log service
    */
   @Inject
-  public AbstractSshExecutor(FileService fileService, LogService logService) {
+  public AbstractSshExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService) {
     this.logService = logService;
-    this.fileService = fileService;
+    this.delegateFileManager = delegateFileManager;
   }
 
   /**
@@ -217,15 +218,19 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                 new FileProvider() {
                   @Override
                   public Pair<String, Long> getInfo() throws IOException {
-                    GridFSFile gridFSFile = fileService.getGridFsFile(fileNamesId.getKey(), fileBucket);
+                    DelegateFile delegateFile =
+                        delegateFileManager.getMetaInfo(fileBucket, fileNamesId.getKey(), config.getAccountId());
                     return ImmutablePair.of(
-                        isBlank(fileNamesId.getRight()) ? gridFSFile.getFilename() : fileNamesId.getRight(),
-                        gridFSFile.getLength());
+                        isBlank(fileNamesId.getRight()) ? delegateFile.getFileName() : fileNamesId.getRight(),
+                        delegateFile.getLength());
                   }
 
                   @Override
                   public void downloadToStream(OutputStream outputStream) throws IOException {
-                    fileService.downloadToStream(fileNamesId.getKey(), outputStream, fileBucket);
+                    try (InputStream inputStream = delegateFileManager.downloadByFileId(
+                             fileBucket, fileNamesId.getKey(), config.getAccountId())) {
+                      IOUtils.copy(inputStream, outputStream);
+                    }
                   }
                 }))
         .filter(executionResult -> executionResult == ExecutionResult.FAILURE)
@@ -294,14 +299,28 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   private void saveExecutionLog(String line) {
     logger.info(line);
-    logService.save(aLog()
-                        .withAppId(config.getAppId())
-                        .withActivityId(config.getExecutionId())
-                        .withHostName(config.getHost())
-                        .withLogLevel(INFO)
-                        .withCommandUnitName(config.getCommandUnitName())
-                        .withLogLine(line)
-                        .build());
+    logService.save(config.getAccountId(),
+        aLog()
+            .withAppId(config.getAppId())
+            .withActivityId(config.getExecutionId())
+            .withHostName(config.getHost())
+            .withLogLevel(INFO)
+            .withCommandUnitName(config.getCommandUnitName())
+            .withLogLine(line)
+            .build());
+  }
+
+  private void saveExecutionLogError(String line) {
+    logger.error(line);
+    logService.save(config.getAccountId(),
+        aLog()
+            .withAppId(config.getAppId())
+            .withActivityId(config.getExecutionId())
+            .withHostName(config.getHost())
+            .withLogLevel(ERROR)
+            .withCommandUnitName(config.getCommandUnitName())
+            .withLogLine(line)
+            .build());
   }
 
   private boolean textEndsAtNewLineChar(String text, String lastLine) {
@@ -407,8 +426,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       channel.connect();
 
       if (checkAck(in) != 0) {
-        logger.error("SCP connection initiation failed");
-        saveExecutionLog("SCP connection initiation failed");
+        saveExecutionLogError("SCP connection initiation failed");
         return FAILURE;
       } else {
         saveExecutionLog(format("Connection to %s established", config.getHost()));
@@ -420,7 +438,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       out.write(command.getBytes(UTF_8));
       out.flush();
       if (checkAck(in) != 0) {
-        saveExecutionLog("SCP connection initiation failed");
+        saveExecutionLogError("SCP connection initiation failed");
         return executionResult;
       }
       saveExecutionLog("Begin file transfer " + fileInfo.getKey() + " to " + config.getHost() + ":" + remoteFilePath);
@@ -429,8 +447,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       out.flush();
 
       if (checkAck(in) != 0) {
-        saveExecutionLog("File transfer failed");
-        logger.error("File transfer failed");
+        saveExecutionLogError("File transfer failed");
         return executionResult;
       }
       executionResult = SUCCESS;
@@ -439,13 +456,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       channel.disconnect();
     } catch (IOException | JSchException ex) {
       if (ex instanceof FileNotFoundException) {
-        logger.error("file could not be found");
-        saveExecutionLog("File not found");
+        saveExecutionLogError("File not found");
       } else if (ex instanceof JSchException) {
         logger.error("Command execution failed with error ", ex);
-        saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
+        saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
       } else {
-        throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS);
+        throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS, ex);
       }
       return executionResult;
     } finally {

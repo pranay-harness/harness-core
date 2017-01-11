@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import static software.wings.beans.BambooConfig.Builder.aBambooConfig;
-import static software.wings.delegatetasks.DelegateFile.DelegateFileBuilder.aDelegateFile;
+import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
