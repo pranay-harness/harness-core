@@ -11,28 +11,18 @@ import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
 import static software.wings.common.NotificationMessageResolver.ADD_INFRA_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.ECS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Resources;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Base;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.InfrastructureMappingRule.Rule;
-import software.wings.beans.KubernetesInfrastructureMapping;
-import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
@@ -52,11 +42,8 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
-import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -81,9 +68,6 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   @Inject private SettingsService settingsService;
   @Inject private NotificationService notificationService;
   @Inject private EnvironmentService environmentService;
-
-  private static final String stencilsPath = "/templates/inframapping/";
-  private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -325,42 +309,5 @@ public class InfrastructureServiceImpl implements InfrastructureService {
 
   private Map<String, String> getHostAttributes(Host host) {
     return ImmutableMap.of("HOST_NAME", host.getHostName());
-  }
-
-  @Override
-  public Map<String, Map<String, Object>> getInfraMappingStencils(String appId) {
-    // TODO:: dynamically read
-    Map<String, Map<String, Object>> infraStencils = new HashMap<>();
-    infraStencils.put(PHYSICAL_DATA_CENTER.name(),
-        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(PhysicalInfrastructureMapping.class), "uiSchema",
-            readUiSchema("PHYSICAL_DATA_CENTER")));
-    infraStencils.put(AWS.name(),
-        ImmutableMap.of(
-            "jsonSchema", JsonUtils.jsonSchema(AwsInfrastructureMapping.class), "uiSchema", readUiSchema("AWS")));
-    infraStencils.put(ECS.name(),
-        ImmutableMap.of(
-            "jsonSchema", JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema", readUiSchema("ECS")));
-    infraStencils.put(KUBERNETES.name(),
-        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(KubernetesInfrastructureMapping.class), "uiSchema",
-            readUiSchema("KUBERNETES")));
-    return infraStencils;
-  }
-
-  private Object readUiSchema(String type) {
-    try {
-      return readResource(stencilsPath + type + uiSchemaSuffix);
-    } catch (Exception e) {
-      return new HashMap<String, Object>();
-    }
-  }
-
-  private Object readResource(String file) {
-    try {
-      URL url = this.getClass().getResource(file);
-      String json = Resources.toString(url, Charsets.UTF_8);
-      return JsonUtils.asObject(json, HashMap.class);
-    } catch (Exception exception) {
-      throw new WingsException("Error in reasing ui schema - " + file, exception);
-    }
   }
 }

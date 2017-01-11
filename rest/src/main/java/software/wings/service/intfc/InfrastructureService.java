@@ -7,7 +7,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 
-import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -91,12 +90,4 @@ public interface InfrastructureService {
    * @param infraId the infra id
    */
   void sync(String infraId);
-
-  /**
-   * Gets infra mapping stencils.
-   *
-   * @param appId the app id
-   * @return the infra mapping stencils
-   */
-  Map<String, Map<String, Object>> getInfraMappingStencils(String appId);
 }

@@ -11,6 +11,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -68,5 +69,11 @@ public class InfrastructureMappingResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
     infrastructureMappingService.delete(appId, infraMappingId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("stencils")
+  public RestResponse<Map<String, Map<String, Object>>> infrastructureMappingSchema(@QueryParam("appId") String appId) {
+    return new RestResponse<>(infrastructureMappingService.getInfraMappingStencils(appId));
   }
 }
