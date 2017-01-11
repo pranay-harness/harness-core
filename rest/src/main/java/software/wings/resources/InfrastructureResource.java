@@ -36,7 +36,6 @@ import javax.ws.rs.QueryParam;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
-@PublicApi // TODO:: remove
 public class InfrastructureResource {
   @Inject private InfrastructureService infrastructureService;
 

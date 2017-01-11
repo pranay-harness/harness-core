@@ -9,6 +9,7 @@ import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.Before;
@@ -40,22 +41,24 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
   private SettingAttribute computeProviderSetting =
-      aSettingAttribute().withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig().build()).build();
+      aSettingAttribute()
+          .withUuid(SETTING_ID)
+          .withValue(PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig().build())
+          .build();
 
   @Before
   public void setUp() throws Exception {}
 
   @Test
   public void shouldList() {
-    PhysicalInfrastructureMapping physicalInfrastructureMapping =
-        aPhysicalInfrastructureMapping()
-            .withAccessType(AccessType.USER_PASSWORD)
-            .withConnectionType(ConnectionType.SSH)
-            .withComputeProviderSettingId(computeProviderSetting)
-            .withAppId(APP_ID)
-            .withEnvId(ENV_ID)
-            .withServiceTemplateId(TEMPLATE_ID)
-            .build();
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withAccessType(AccessType.USER_PASSWORD)
+                                                                      .withConnectionType(ConnectionType.SSH)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
 
     PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
     PageResponse pageResponse = aPageResponse().withResponse(Arrays.asList(physicalInfrastructureMapping)).build();
@@ -68,20 +71,19 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSave() {
-    PhysicalInfrastructureMapping physicalInfrastructureMapping =
-        aPhysicalInfrastructureMapping()
-            .withAccessType(AccessType.USER_PASSWORD)
-            .withConnectionType(ConnectionType.SSH)
-            .withComputeProviderSettingId(computeProviderSetting)
-            .withAppId(APP_ID)
-            .withEnvId(ENV_ID)
-            .withServiceTemplateId(TEMPLATE_ID)
-            .build();
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withAccessType(AccessType.USER_PASSWORD)
+                                                                      .withConnectionType(ConnectionType.SSH)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
     PhysicalInfrastructureMapping savedPhysicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
             .withAccessType(AccessType.USER_PASSWORD)
             .withConnectionType(ConnectionType.SSH)
-            .withComputeProviderSettingId(computeProviderSetting)
+            .withComputeProviderSettingId(SETTING_ID)
             .withUuid(WingsTestConstants.INFRA_MAPPING_ID)
             .withAppId(APP_ID)
             .withEnvId(ENV_ID)
@@ -100,16 +102,15 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGet() {
-    PhysicalInfrastructureMapping physicalInfrastructureMapping =
-        aPhysicalInfrastructureMapping()
-            .withAccessType(AccessType.USER_PASSWORD)
-            .withConnectionType(ConnectionType.SSH)
-            .withComputeProviderSettingId(computeProviderSetting)
-            .withUuid(INFRA_MAPPING_ID)
-            .withAppId(APP_ID)
-            .withEnvId(ENV_ID)
-            .withServiceTemplateId(TEMPLATE_ID)
-            .build();
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
+                                                                      .withAccessType(AccessType.USER_PASSWORD)
+                                                                      .withConnectionType(ConnectionType.SSH)
+                                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                                      .withUuid(INFRA_MAPPING_ID)
+                                                                      .withAppId(APP_ID)
+                                                                      .withEnvId(ENV_ID)
+                                                                      .withServiceTemplateId(TEMPLATE_ID)
+                                                                      .build();
 
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);

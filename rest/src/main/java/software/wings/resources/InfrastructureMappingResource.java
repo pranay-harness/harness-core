@@ -9,6 +9,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.Map;
@@ -26,12 +27,13 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 1/10/17.
  */
-@Api("infrastructure-mapping")
-@Path("/infrastructure-mapping")
+@Api("infrastructure-mappings")
+@Path("infrastructure-mappings")
 @Timed
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
+@PublicApi // TODO:: remove
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
 

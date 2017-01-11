@@ -40,7 +40,7 @@ public class KubernetesInfrastructureMapping extends InfrastructureMapping {
    */
   public static final class Builder {
     private String clusterName;
-    private SettingAttribute computeProviderSettingId;
+    private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
     private String computeProviderType;
@@ -79,7 +79,7 @@ public class KubernetesInfrastructureMapping extends InfrastructureMapping {
      * @param computeProviderSettingId the compute provider setting id
      * @return the builder
      */
-    public Builder withComputeProviderSettingId(SettingAttribute computeProviderSettingId) {
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
       this.computeProviderSettingId = computeProviderSettingId;
       return this;
     }

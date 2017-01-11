@@ -82,7 +82,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    * The type Builder.
    */
   public static final class Builder {
-    private SettingAttribute computeProviderSettingId;
+    private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
     private String computeProviderType;
@@ -113,7 +113,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      * @param computeProviderSettingId the compute provider setting id
      * @return the builder
      */
-    public Builder withComputeProviderSettingId(SettingAttribute computeProviderSettingId) {
+    public Builder withComputeProviderSettingId(String computeProviderSettingId) {
       this.computeProviderSettingId = computeProviderSettingId;
       return this;
     }

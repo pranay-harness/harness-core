@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Entity;
 
 /**
@@ -9,7 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "computeProviderType")
 @Entity(value = "infrastructureMapping")
 public abstract class InfrastructureMapping extends Base {
-  private SettingAttribute computeProviderSettingId;
+  private String computeProviderSettingId;
   private String envId;
   private String serviceTemplateId;
   private String computeProviderType;
@@ -28,6 +29,7 @@ public abstract class InfrastructureMapping extends Base {
    *
    * @return the env id
    */
+  @SchemaIgnore
   public String getEnvId() {
     return envId;
   }
@@ -46,6 +48,7 @@ public abstract class InfrastructureMapping extends Base {
    *
    * @return the service template id
    */
+  @SchemaIgnore
   public String getServiceTemplateId() {
     return serviceTemplateId;
   }
@@ -82,7 +85,8 @@ public abstract class InfrastructureMapping extends Base {
    *
    * @return the compute provider setting id
    */
-  public SettingAttribute getComputeProviderSettingId() {
+  @SchemaIgnore
+  public String getComputeProviderSettingId() {
     return computeProviderSettingId;
   }
 
@@ -91,7 +95,43 @@ public abstract class InfrastructureMapping extends Base {
    *
    * @param computeProviderSettingId the compute provider setting id
    */
-  public void setComputeProviderSettingId(SettingAttribute computeProviderSettingId) {
+  public void setComputeProviderSettingId(String computeProviderSettingId) {
     this.computeProviderSettingId = computeProviderSettingId;
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getAppId() {
+    return super.getAppId();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getCreatedBy() {
+    return super.getCreatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getLastUpdatedBy() {
+    return super.getLastUpdatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getCreatedAt() {
+    return super.getCreatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getLastUpdatedAt() {
+    return super.getLastUpdatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getUuid() {
+    return super.getUuid();
   }
 }
