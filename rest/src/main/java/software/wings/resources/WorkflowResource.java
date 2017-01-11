@@ -6,6 +6,7 @@ package software.wings.resources;
 
 import io.swagger.annotations.Api;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.RestResponse;
@@ -201,6 +202,24 @@ public class WorkflowResource {
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId) {
     workflowService.deleteWorkflowPhase(appId, orchestrationWorkflowId, phaseId);
     return new RestResponse();
+  }
+
+  /**
+   * Updates the phase.
+   *
+   * @param appId         the app id
+   * @param orchestrationWorkflowId the orchestration id
+   * @param nodeId the nodeId
+   * @param node the node
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/nodes/{nodeId}")
+  public RestResponse<Node> create(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId,
+      @QueryParam("subworkflowId") String subworkflowId, @PathParam("nodeId") String nodeId, Node node) {
+    node.setId(nodeId);
+    return new RestResponse<>(workflowService.updateGraphNode(appId, orchestrationWorkflowId, subworkflowId, node));
   }
 
   /**

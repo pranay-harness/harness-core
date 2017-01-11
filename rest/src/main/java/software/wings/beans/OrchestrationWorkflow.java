@@ -19,7 +19,6 @@ public class OrchestrationWorkflow extends Base {
   @NotNull private String name;
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
-  ;
 
   private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -28,12 +27,10 @@ public class OrchestrationWorkflow extends Base {
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
   private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
-  ;
 
   private List<NotificationRule> notificationRules = new ArrayList<>();
 
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
-  ;
 
   private List<Variable> systemVariables = new ArrayList<>();
 

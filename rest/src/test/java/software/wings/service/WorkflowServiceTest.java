@@ -30,6 +30,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
@@ -714,6 +715,67 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow3).isNotNull();
     assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
     assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
+  }
+
+  @Test
+  public void shouldUpdateNode() {
+    OrchestrationWorkflow orchestrationWorkflow =
+        anOrchestrationWorkflow()
+            .withAppId(APP_ID)
+            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
+            .withPreDeploymentSteps(
+                aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
+                    .addStep(aNode().withType("HTTP").addProperty("URL", "http://www.google.com").build())
+                    .build())
+            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .build();
+
+    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("graph")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps");
+
+    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow2.getPreDeploymentSteps().getUuid())
+        .containsKeys(orchestrationWorkflow2.getPostDeploymentSteps().getUuid());
+
+    Graph graph = orchestrationWorkflow2.getGraph().getSubworkflows().get(
+        orchestrationWorkflow2.getPreDeploymentSteps().getUuid());
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(1);
+    Node node = graph.getNodes().get(0);
+    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
+    assertThat(node.getProperties()).isNotNull().hasSize(1).containsKey("URL").containsValue("http://www.google.com");
+    node.getProperties().put("URL", "http://www.yahoo.com");
+
+    workflowService.updateGraphNode(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(),
+        orchestrationWorkflow2.getPreDeploymentSteps().getUuid(), node);
+
+    orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("graph")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps");
+
+    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow2.getPreDeploymentSteps().getUuid())
+        .containsKeys(orchestrationWorkflow2.getPostDeploymentSteps().getUuid());
+
+    graph = orchestrationWorkflow2.getGraph().getSubworkflows().get(
+        orchestrationWorkflow2.getPreDeploymentSteps().getUuid());
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(1);
+    node = graph.getNodes().get(0);
+    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
+    assertThat(node.getProperties()).isNotNull().hasSize(1).containsKey("URL").containsValue("http://www.yahoo.com");
   }
 
   @Test

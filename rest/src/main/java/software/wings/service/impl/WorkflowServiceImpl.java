@@ -7,6 +7,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -530,6 +531,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       // TODO - integrate the actual call
 
       for (OrchestrationWorkflow orchestrationWorkflow : pageResponse) {
+        populatePhaseSteps(orchestrationWorkflow);
         orchestrationWorkflow.setWorkflowExecutions(newArrayList(aWorkflowExecution()
                                                                      .withStatus(ExecutionStatus.SUCCESS)
                                                                      .withEnvName("Production")
@@ -549,7 +551,22 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId) {
-    return wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationWorkflowId);
+    OrchestrationWorkflow orchestrationWorkflow =
+        wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationWorkflowId);
+    populatePhaseSteps(orchestrationWorkflow);
+    return orchestrationWorkflow;
+  }
+
+  private void populatePhaseSteps(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow == null) {
+      return;
+    }
+    populatePhaseSteps(orchestrationWorkflow.getPreDeploymentSteps(), orchestrationWorkflow.getGraph());
+    orchestrationWorkflow.getWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+      workflowPhase.getPhaseSteps().forEach(
+          phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
+    });
+    populatePhaseSteps(orchestrationWorkflow.getPostDeploymentSteps(), orchestrationWorkflow.getGraph());
   }
 
   @Override
@@ -685,6 +702,37 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public Node updateGraphNode(String appId, String orchestrationWorkflowId, String subworkflowId, Node node) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(subworkflowId);
+
+    boolean found = false;
+    for (int i = 0; i < graph.getNodes().size(); i++) {
+      Node childNode = graph.getNodes().get(i);
+      if (childNode.getId().equals(node.getId())) {
+        graph.getNodes().remove(i);
+        graph.getNodes().add(i, node);
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                               .field("appId")
+                                               .equal(appId)
+                                               .field(ID_KEY)
+                                               .equal(orchestrationWorkflowId);
+      UpdateOperations<OrchestrationWorkflow> updateOps =
+          wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+              .set("graph.subworkflows." + subworkflowId, graph);
+      wingsPersistence.update(query, updateOps);
+
+      return node;
+    }
+    return null;
+  }
+
+  @Override
   public List<NotificationRule> updateNotificationRules(
       String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "notificationRules", notificationRules);
@@ -703,6 +751,35 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, String orchestrationWorkflowId, List<Variable> userVariables) {
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "userVariables", userVariables);
     return userVariables;
+  }
+
+  private void populatePhaseStepIds(PhaseStep phaseStep) {
+    if (phaseStep == null || phaseStep.getSteps() == null) {
+      logger.error("Incorrect arguments to populate phaseStepIds: {}", phaseStep);
+      return;
+    }
+    phaseStep.setStepsIds(phaseStep.getSteps().stream().map(Node::getId).collect(toList()));
+  }
+
+  private void populatePhaseSteps(PhaseStep phaseStep, Graph graph) {
+    if (phaseStep == null || phaseStep.getUuid() == null || graph == null || graph.getSubworkflows() == null
+        || graph.getSubworkflows().get(phaseStep.getUuid()) == null) {
+      logger.error("Incorrect arguments to populate phaseStep: {}, graph: {}", phaseStep, graph);
+      return;
+    }
+    if (phaseStep.getStepsIds() == null || phaseStep.getStepsIds().isEmpty()) {
+      logger.info("Empty stepList for the phaseStep: {}", phaseStep);
+      return;
+    }
+
+    Graph subWorkflowGraph = graph.getSubworkflows().get(phaseStep.getUuid());
+    if (subWorkflowGraph == null) {
+      logger.info("No subworkflow found for the phaseStep: {}", phaseStep);
+      return;
+    }
+
+    Map<String, Node> nodesMap = subWorkflowGraph.getNodesMap();
+    phaseStep.setSteps(phaseStep.getStepsIds().stream().map(stepId -> nodesMap.get(stepId)).collect(toList()));
   }
 
   private Graph generateMainGraph(OrchestrationWorkflow orchestrationWorkflow) {
@@ -812,6 +889,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         id1 = id2;
       }
     }
+    populatePhaseStepIds(phaseStep);
     return graphBuilder.build();
   }
 
