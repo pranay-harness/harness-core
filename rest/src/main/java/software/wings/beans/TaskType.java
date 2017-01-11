@@ -1,7 +1,9 @@
 package software.wings.beans;
 
 import software.wings.api.HttpStateExecutionData;
+import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.delegatetasks.BambooCollectionTask;
+import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsCollectionTask;
@@ -68,6 +70,15 @@ public enum TaskType {
     public DelegateRunnableTask getDelegateRunnableTask(
         String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
       return new BambooCollectionTask(delegateId, delegateTask, (Consumer<ListNotifyResponseData>) consumer);
+    }
+  },
+  COMMAND {
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public DelegateRunnableTask getDelegateRunnableTask(
+        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+      return new CommandTask(delegateId, delegateTask, (Consumer<ExecutionResultData>) consumer);
     }
   };
 

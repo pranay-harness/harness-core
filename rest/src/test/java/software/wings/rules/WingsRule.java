@@ -125,29 +125,20 @@ public class WingsRule implements MethodRule {
     initializeLogging();
 
     MongoClient mongoClient;
-    if (annotations.stream().filter(annotation -> Integration.class.isInstance(annotation)).findFirst().isPresent()) {
-      try {
-        port = Integer.parseInt(System.getProperty("mongoPort", "27017"));
-      } catch (NumberFormatException ex) {
-        port = 27017;
-      }
+    if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
+      int port = Network.getFreeServerPort();
+      IMongodConfig mongodConfig = new MongodConfigBuilder()
+                                       .version(Main.V3_2)
+                                       .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
+                                       .build();
+      mongodExecutable = starter.prepare(mongodConfig);
+      mongodExecutable.start();
       mongoClient = new MongoClient("localhost", port);
     } else {
-      if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
-        int port = Network.getFreeServerPort();
-        IMongodConfig mongodConfig = new MongodConfigBuilder()
-                                         .version(Main.V3_2)
-                                         .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
-                                         .build();
-        mongodExecutable = starter.prepare(mongodConfig);
-        mongodExecutable.start();
-        mongoClient = new MongoClient("localhost", port);
-      } else {
-        mongoServer = new MongoServer(new MemoryBackend());
-        mongoServer.bind("localhost", port);
-        InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-        mongoClient = new MongoClient(new ServerAddress(serverAddress));
-      }
+      mongoServer = new MongoServer(new MemoryBackend());
+      mongoServer.bind("localhost", port);
+      InetSocketAddress serverAddress = mongoServer.getLocalAddress();
+      mongoClient = new MongoClient(new ServerAddress(serverAddress));
     }
 
     Morphia morphia = new Morphia();

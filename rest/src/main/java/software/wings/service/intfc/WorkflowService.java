@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.Base;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
@@ -231,4 +232,7 @@ public interface WorkflowService {
       String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies);
 
   List<Variable> updateUserVariables(String appId, String orchestrationWorkflowId, List<Variable> userVariables);
+
+  Node updateGraphNode(
+      @NotNull String appId, @NotNull String orchestrationWorkflowId, @NotNull String subworkflowId, Node node);
 }

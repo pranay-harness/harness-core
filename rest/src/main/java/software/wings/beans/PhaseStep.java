@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Graph.Node;
 import software.wings.common.UUIDGenerator;
 
@@ -13,7 +15,8 @@ public class PhaseStep {
   private String uuid;
   private String name;
   private PhaseStepType phaseStepType;
-  private List<Node> steps = new ArrayList<>();
+  @JsonIgnore private List<String> stepsIds = new ArrayList<>();
+  @Transient private List<Node> steps = new ArrayList<>();
   private boolean stepsInParallel;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
@@ -73,6 +76,14 @@ public class PhaseStep {
 
   public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
     this.failureStrategies = failureStrategies;
+  }
+
+  public List<String> getStepsIds() {
+    return stepsIds;
+  }
+
+  public void setStepsIds(List<String> stepsIds) {
+    this.stepsIds = stepsIds;
   }
 
   @Override

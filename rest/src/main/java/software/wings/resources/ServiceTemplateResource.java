@@ -7,12 +7,14 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -190,5 +192,14 @@ public class ServiceTemplateResource {
   public RestResponse<List<ConfigFile>> overrideFiles(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
     return new RestResponse<>(serviceTemplateService.getOverrideFiles(appId, envId, templateId));
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("{templateId}/compute-files")
+  public RestResponse<List<ConfigFile>> computeFiles(@PathParam("templateId") String templateId,
+      @QueryParam("envId") @NotEmpty String envId, @QueryParam("appId") @NotEmpty String appId,
+      @QueryParam("hostName") @NotEmpty String hostName, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId).get(hostName));
   }
 }

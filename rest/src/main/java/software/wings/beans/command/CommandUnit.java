@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.template.TemplateException;
@@ -14,7 +15,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 11/14/16.
  */
-@JsonTypeInfo(use = Id.NAME, property = "commandUnitType")
+@JsonTypeInfo(use = Id.NAME, property = "commandUnitType", include = As.EXISTING_PROPERTY)
 public interface CommandUnit {
   /**
    * Prepare list.
