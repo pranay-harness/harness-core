@@ -52,6 +52,7 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HistoryServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
+import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.InfrastructureServiceImpl;
 import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
@@ -101,6 +102,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.JenkinsBuildService;
@@ -206,6 +208,7 @@ public class WingsModule extends AbstractModule {
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(EcsService.class).to(EcsServiceImpl.class);
     bind(ClusterService.class).to(ClusterServiceImpl.class);
+    bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
 
     Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
         .addBinding()
