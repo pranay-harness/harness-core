@@ -44,32 +44,36 @@ public class InfrastructureMappingResource {
   }
 
   @POST
-  public RestResponse<InfrastructureMapping> save(
-      @QueryParam("appId") String appId, InfrastructureMapping infrastructureMapping) {
+  public RestResponse<InfrastructureMapping> save(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      InfrastructureMapping infrastructureMapping) {
     infrastructureMapping.setAppId(appId);
+    infrastructureMapping.setEnvId(envId);
     return new RestResponse<>(infrastructureMappingService.save(infrastructureMapping));
   }
 
   @GET
   @Path("{infraMappingId}")
-  public RestResponse<InfrastructureMapping> get(
-      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
-    return new RestResponse<>(infrastructureMappingService.get(appId, infraMappingId));
+  public RestResponse<InfrastructureMapping> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.get(appId, envId, infraMappingId));
   }
 
   @PUT
   @Path("{infraMappingId}")
   public RestResponse<InfrastructureMapping> update(@QueryParam("appId") String appId,
-      @PathParam("infraMappingId") String infraMappingId, InfrastructureMapping infrastructureMapping) {
+      @QueryParam("envId") String envId, @PathParam("infraMappingId") String infraMappingId,
+      InfrastructureMapping infrastructureMapping) {
     infrastructureMapping.setAppId(appId);
+    infrastructureMapping.setEnvId(envId);
     infrastructureMapping.setUuid(infraMappingId);
     return new RestResponse<>(infrastructureMappingService.update(infrastructureMapping));
   }
 
   @DELETE
   @Path("{infraMappingId}")
-  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
-    infrastructureMappingService.delete(appId, infraMappingId);
+  public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @PathParam("infraMappingId") String infraMappingId) {
+    infrastructureMappingService.delete(appId, envId, infraMappingId);
     return new RestResponse();
   }
 

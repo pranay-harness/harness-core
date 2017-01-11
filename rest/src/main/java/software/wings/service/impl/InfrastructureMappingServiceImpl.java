@@ -52,7 +52,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public InfrastructureMapping get(String appId, String infraMappingId) {
+  public InfrastructureMapping get(String appId, String envId, String infraMappingId) {
     return wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
   }
 
@@ -62,7 +62,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public void delete(String appId, String infraMappingId) {
+  public void delete(String appId, String envId, String infraMappingId) {
     wingsPersistence.delete(InfrastructureMapping.class, appId, infraMappingId);
   }
 

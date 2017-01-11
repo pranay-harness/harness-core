@@ -115,7 +115,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
 
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(APP_ID, ENV_ID, INFRA_MAPPING_ID);
     assertThat(infrastructureMapping.getUuid()).isEqualTo(INFRA_MAPPING_ID);
     verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
   }
@@ -126,7 +126,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDelete() {
-    infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID);
+    infrastructureMappingService.delete(APP_ID, ENV_ID, INFRA_MAPPING_ID);
     verify(wingsPersistence).delete(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
   }
 }

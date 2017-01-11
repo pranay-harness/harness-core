@@ -34,10 +34,11 @@ public interface InfrastructureMappingService {
    * Get infrastructure mapping.
    *
    * @param appId          the app id
-   * @param infraMappingId the infra mapping id
+   * @param envId          the env id
+   * @param infraMappingId the infra mapping id  @return the infrastructure mapping
    * @return the infrastructure mapping
    */
-  InfrastructureMapping get(String appId, String infraMappingId);
+  InfrastructureMapping get(String appId, String envId, String infraMappingId);
 
   /**
    * Update.
@@ -51,9 +52,10 @@ public interface InfrastructureMappingService {
    * Delete.
    *
    * @param appId          the app id
+   * @param envId          the env id
    * @param infraMappingId the infra mapping id
    */
-  void delete(String appId, String infraMappingId);
+  void delete(String appId, String envId, String infraMappingId);
 
   /**
    * Gets infra mapping stencils.
