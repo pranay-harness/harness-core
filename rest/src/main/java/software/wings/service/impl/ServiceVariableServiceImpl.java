@@ -47,7 +47,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
-    if (!Arrays.asList(SERVICE, EntityType.TAG, EntityType.SERVICE_TEMPLATE, EntityType.HOST)
+    if (!Arrays.asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.SERVICE_TEMPLATE, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
       throw new WingsException(
           INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceVariable.getEntityType());

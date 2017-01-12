@@ -20,7 +20,6 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +41,6 @@ public class Host extends Base {
   @FormDataParam("hostConnAttr") @NotNull private String hostConnAttr;
 
   @FormDataParam("bastionConnAttr") private String bastionConnAttr;
-
-  @FormDataParam("configTag") @Transient private Tag configTag;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
@@ -127,24 +124,6 @@ public class Host extends Base {
   }
 
   /**
-   * Gets config tag.
-   *
-   * @return the config tag
-   */
-  public Tag getConfigTag() {
-    return configTag;
-  }
-
-  /**
-   * Sets config tag.
-   *
-   * @param configTag the config tag
-   */
-  public void setConfigTag(Tag configTag) {
-    this.configTag = configTag;
-  }
-
-  /**
    * Gets config files.
    *
    * @return the config files
@@ -224,7 +203,6 @@ public class Host extends Base {
         .add("osType", osType)
         .add("hostConnAttr", hostConnAttr)
         .add("bastionConnAttr", bastionConnAttr)
-        .add("configTag", configTag)
         .add("configFiles", configFiles)
         .add("hostNames", hostNames)
         .add("serviceTemplates", serviceTemplates)
@@ -234,8 +212,8 @@ public class Host extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles, hostNames,
-              serviceTemplates);
+        + Objects.hash(
+              infraId, hostName, osType, hostConnAttr, bastionConnAttr, configFiles, hostNames, serviceTemplates);
   }
 
   @Override
@@ -253,8 +231,7 @@ public class Host extends Base {
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
         && Objects.equals(this.osType, other.osType) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
         && Objects.equals(this.bastionConnAttr, other.bastionConnAttr)
-        && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles)
-        && Objects.equals(this.hostNames, other.hostNames)
+        && Objects.equals(this.configFiles, other.configFiles) && Objects.equals(this.hostNames, other.hostNames)
         && Objects.equals(this.serviceTemplates, other.serviceTemplates);
   }
 
@@ -267,7 +244,6 @@ public class Host extends Base {
     private String osType;
     private String hostConnAttr;
     private String bastionConnAttr;
-    private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private List<String> hostNames; // to support bulk add host API
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
@@ -351,17 +327,6 @@ public class Host extends Base {
 
     public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr.getUuid();
-      return this;
-    }
-
-    /**
-     * With config tag builder.
-     *
-     * @param configTag the config tag
-     * @return the builder
-     */
-    public Builder withConfigTag(Tag configTag) {
-      this.configTag = configTag;
       return this;
     }
 
@@ -486,7 +451,6 @@ public class Host extends Base {
           .withOsType(osType)
           .withHostConnAttr(hostConnAttr)
           .withBastionConnAttr(bastionConnAttr)
-          .withConfigTag(configTag)
           .withConfigFiles(configFiles)
           .withHostNames(hostNames)
           .withServiceTemplates(serviceTemplates)
@@ -510,7 +474,6 @@ public class Host extends Base {
       host.setOsType(osType);
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
-      host.setConfigTag(configTag);
       host.setConfigFiles(configFiles);
       host.setHostNames(hostNames);
       host.setServiceTemplates(serviceTemplates);

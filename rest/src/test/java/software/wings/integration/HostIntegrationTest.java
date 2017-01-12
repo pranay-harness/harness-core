@@ -22,7 +22,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
@@ -114,7 +113,7 @@ public class HostIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() throws IOException {
     // DB cleanup
-    asList(Application.class, Environment.class, Host.class, Infrastructure.class, Tag.class, ConfigFile.class,
+    asList(Application.class, Environment.class, Host.class, Infrastructure.class, ConfigFile.class,
         ServiceTemplate.class, Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 

@@ -2,13 +2,9 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.EntityType.HOST;
-import static software.wings.beans.EntityType.TAG;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -17,19 +13,16 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import org.eclipse.jetty.util.ArrayQueue;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -41,7 +34,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.TagService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -50,15 +42,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Queue;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -69,7 +58,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private TagService tagService;
   @Inject private ConfigService configService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -88,10 +76,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     if (withDetails) {
       pageResponse.getResponse().forEach(template -> {
-        if (template.getTags().size() != 0) {
-          template.setTaggedHosts(hostService.getHostsByTags(
-              template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
-        }
         template.setConfigFiles(getOverrideFiles(template));
         template.setServiceVariables(getOverrideServiceVariables(template));
       });
@@ -125,10 +109,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
 
     if (withDetails) {
-      if (serviceTemplate.getTags().size() != 0) {
-        serviceTemplate.setTaggedHosts(
-            hostService.getHostsByTags(appId, envId, new ArrayList<>(serviceTemplate.getLeafTags())));
-      }
       serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
       serviceTemplate.setServiceVariables(getOverrideServiceVariables(serviceTemplate));
     }
@@ -143,26 +123,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (serviceTemplate.getServiceId() != null) {
       serviceTemplate.setService(
           serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId()));
-    }
-    if (serviceTemplate.getTagIds().size() > 0) {
-      serviceTemplate.setTags(tagService
-                                  .list(aPageRequest()
-                                            .addFilter("appId", EQ, serviceTemplate.getAppId())
-                                            .addFilter(ID_KEY, IN, serviceTemplate.getTagIds().toArray())
-                                            .build(),
-                                      false)
-                                  .getResponse());
-    }
-
-    if (serviceTemplate.getLeafTagIds().size() > 0) {
-      List<Tag> tags = tagService
-                           .list(aPageRequest()
-                                     .addFilter("appId", EQ, serviceTemplate.getAppId())
-                                     .addFilter(ID_KEY, IN, serviceTemplate.getLeafTagIds().toArray())
-                                     .build(),
-                               false)
-                           .getResponse();
-      serviceTemplate.setLeafTags(tags.stream().collect(Collectors.toSet()));
     }
 
     if (serviceTemplate.getHostIds().size() > 0) {
@@ -280,10 +240,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
 
-    if (serviceTemplate.getMappedBy().equals(TAG)) {
-      serviceTemplate = updateTags(appId, envId, serviceTemplateId, asList()); // remove existing tags
-      serviceTemplate.setMappedBy(EntityType.HOST);
-    }
     return updateTemplateAndServiceInstance(serviceTemplate, hosts);
   }
 
@@ -299,37 +255,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "hostIds",
             hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList())));
     return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceTemplateService#updateTags(java.lang.String, java.lang.String,
-   * java.util.List)
-   */
-  @Override
-  public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
-    List<Tag> newTags = tagIds.stream().map(tagId -> tagService.get(appId, envId, tagId, true)).collect(toList());
-    Set<Tag> newLeafTags =
-        newTags.stream().map(tag -> tagService.getLeafTagInSubTree(tag)).flatMap(List::stream).collect(toSet());
-
-    List<ApplicationHost> newHostsToBeMapped =
-        hostService.getHostsByTags(appId, envId, newLeafTags.stream().collect(toList()));
-
-    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
-    if (serviceTemplate.getMappedBy().equals(HOST)) {
-      serviceTemplate = updateHosts(appId, envId, serviceTemplateId, emptyList()); // remove existing host mapping
-      serviceTemplate.setMappedBy(TAG);
-    }
-
-    List<ApplicationHost> existingMappedHosts =
-        hostService.getHostsByTags(appId, envId, serviceTemplate.getLeafTags().stream().collect(toList()));
-
-    updateServiceInstances(serviceTemplate, newHostsToBeMapped, existingMappedHosts);
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId,
-        ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "tagIds",
-            newTags.stream().map(Tag::getUuid).collect(Collectors.toList()), "leafTagIds",
-            newLeafTags.stream().map(Tag::getUuid).collect(Collectors.toList())));
-
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
   private void updateServiceInstances(
@@ -351,42 +276,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     serviceInstanceService.updateInstanceMappings(serviceTemplate, addHostsList, deleteHostList);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceTemplateService#getTaggedHosts(java.lang.String,
-   * software.wings.dl.PageRequest)
-   */
-  @Override
-  public PageResponse<ApplicationHost> getTaggedHosts(
-      String appId, String envId, String templateId, PageRequest<ApplicationHost> pageRequest) {
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, templateId);
-    List<String> tagIds = serviceTemplate.getTags().stream().map(Tag::getUuid).collect(Collectors.toList());
-    pageRequest.addFilter("configTag", tagIds, IN);
-    return hostService.list(pageRequest);
-  }
-
   @Override
   public void deleteHostFromTemplates(ApplicationHost host) {
     deleteDirectlyMappedHosts(host);
-    deleteHostsMappedByTags(host);
-  }
-
-  @Override
-  public List<ServiceTemplate> getTemplatesByLeafTag(
-      @NotNull String tagId, @NotNull String appId, @NotNull String envId) {
-    return wingsPersistence.createQuery(ServiceTemplate.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("leafTagIds")
-        .equal(tagId)
-        .asList();
-  }
-
-  private void deleteHostsMappedByTags(ApplicationHost host) {
-    getTemplatesByLeafTag(host.getConfigTagId(), host.getAppId(), host.getEnvId())
-        .forEach(
-            serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }
 
   private void deleteDirectlyMappedHosts(ApplicationHost host) {
@@ -397,20 +289,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                                  .equal(host.getUuid())
                                                  .asList();
     deleteHostFromATemplate(host, serviceTemplates);
-  }
-
-  @Override
-  public List<ServiceTemplate> getTemplateByMappedTags(List<Tag> tags) {
-    if (tags.size() == 0) {
-      return new ArrayList<>();
-    }
-    return tags.stream().map(this ::getTemplatesByMappedTags).flatMap(List::stream).distinct().collect(toList());
-  }
-
-  @Override
-  public void addLeafTag(ServiceTemplate template, Tag tag) {
-    wingsPersistence.update(
-        template, wingsPersistence.createUpdateOperations(ServiceTemplate.class).add("leafTagIds", tag));
   }
 
   /* (non-Javadoc)
@@ -465,7 +343,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         -> save(aServiceTemplate()
                     .withAppId(service.getAppId())
                     .withEnvId(env.getUuid())
-                    .withService(service)
+                    .withServiceId(service.getUuid())
                     .withName(service.getName())
                     .build()));
   }
@@ -477,21 +355,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         -> save(aServiceTemplate()
                     .withAppId(service.getAppId())
                     .withEnvId(environment.getUuid())
-                    .withService(service)
+                    .withServiceId(service.getUuid())
                     .withName(service.getName())
                     .withDefaultServiceTemplate(true)
                     .build()));
-  }
-
-  private List<ServiceTemplate> getTemplatesByMappedTags(Tag tag) {
-    return wingsPersistence.createQuery(ServiceTemplate.class)
-        .field("appId")
-        .equal(tag.getAppId())
-        .field("envId")
-        .equal(tag.getEnvId())
-        .field("tagIds")
-        .equal(tag.getUuid())
-        .asList();
   }
 
   private void deleteHostFromATemplate(ApplicationHost host, List<ServiceTemplate> serviceTemplates) {
@@ -519,29 +386,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId);
 
-    // flatten tag hierarchy and [tag -> tag] overrides
-    logger.info("Flatten Tag hierarchy and getInfo config overrides");
-    List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
-
-    // service->tag override
-    logger.info("Apply tag override on tags");
-    for (Tag tag : leafTagNodes) {
-      tag.setConfigFiles(overrideConfigFiles(serviceConfigFiles, tag.getConfigFiles()));
-    }
-
     // Tag -> Host override
     logger.info("Apply host overrides");
     Map<String, List<ConfigFile>> computedHostConfigs = new HashMap<>();
 
-    logger.info("Apply host overrides for tagged hosts");
-    for (Tag tag : leafTagNodes) {
-      List<ApplicationHost> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-      for (ApplicationHost host : taggedHosts) {
-        computedHostConfigs.put(host.getHostName(),
-            overrideConfigFiles(
-                tag.getConfigFiles(), configService.getConfigFilesForEntity(appId, templateId, host.getUuid())));
-      }
-    }
     return computedHostConfigs;
   }
 
@@ -560,29 +408,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceVariable> serviceConfigFiles =
         serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
 
-    // flatten tag hierarchy and [tag -> tag] overrides
-    logger.info("Flatten Tag hierarchy and getInfo config overrides");
-    List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
-
-    // service->tag override
-    logger.info("Apply tag override on tags");
-    for (Tag tag : leafTagNodes) {
-      tag.setServiceVariables(overrideServiceSettings(serviceConfigFiles, tag.getServiceVariables()));
-    }
-
-    // Tag -> Host override
-    logger.info("Apply host overrides");
     Map<String, List<ServiceVariable>> computedHostConfigs = new HashMap<>();
 
-    logger.info("Apply host overrides for tagged hosts");
-    for (Tag tag : leafTagNodes) {
-      List<ApplicationHost> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-      for (ApplicationHost host : taggedHosts) {
-        computedHostConfigs.put(host.getUuid(),
-            overrideServiceSettings(tag.getServiceVariables(),
-                serviceVariableService.getServiceVariablesForEntity(appId, templateId, host.getUuid())));
-      }
-    }
     return computedHostConfigs;
   }
 
@@ -620,62 +447,5 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     logger.info("Config files after overrides [{}]", existingFiles.toString());
     return existingFiles;
-  }
-
-  private List<Tag> applyOverrideAndGetLeafTags(ServiceTemplate serviceTemplate) {
-    List<Tag> leafTagNodes = new ArrayList<>();
-    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
-    if (rootTag == null) {
-      return leafTagNodes;
-    }
-    rootTag.getConfigFiles().addAll(configService.getConfigFilesForEntity(
-        serviceTemplate.getAppId(), serviceTemplate.getUuid(), rootTag.getUuid()));
-
-    Queue<Tag> queue = new ArrayQueue<>();
-    queue.add(rootTag);
-
-    while (!queue.isEmpty()) {
-      Tag parentTag = queue.poll();
-      if (parentTag.getChildren().size() == 0) {
-        leafTagNodes.add(parentTag);
-      } else {
-        for (Tag child : parentTag.getChildren()) {
-          child.getConfigFiles().addAll(configService.getConfigFilesForEntity(
-              serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
-          child.setConfigFiles(overrideConfigFiles(parentTag.getConfigFiles(), child.getConfigFiles()));
-          queue.add(child);
-        }
-      }
-    }
-    return leafTagNodes;
-  }
-
-  private List<Tag> applyOverrideAndGetLeafTagsWithServiceSettings(ServiceTemplate serviceTemplate) {
-    List<Tag> leafTagNodes = new ArrayList<>();
-    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
-    if (rootTag == null) {
-      return leafTagNodes;
-    }
-    rootTag.getServiceVariables().addAll(serviceVariableService.getServiceVariablesForEntity(
-        serviceTemplate.getAppId(), serviceTemplate.getUuid(), rootTag.getUuid()));
-
-    Queue<Tag> queue = new ArrayQueue<>();
-    queue.add(rootTag);
-
-    while (!queue.isEmpty()) {
-      Tag parentTag = queue.poll();
-      if (parentTag.getChildren().size() == 0) {
-        leafTagNodes.add(parentTag);
-      } else {
-        for (Tag child : parentTag.getChildren()) {
-          child.getServiceVariables().addAll(serviceVariableService.getServiceVariablesForEntity(
-              serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
-          child.setServiceVariables(
-              overrideServiceSettings(parentTag.getServiceVariables(), child.getServiceVariables()));
-          queue.add(child);
-        }
-      }
-    }
-    return leafTagNodes;
   }
 }

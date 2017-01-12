@@ -297,7 +297,7 @@ public class InfrastructureServiceImpl implements InfrastructureService {
                                         .withHostName(host.getHostName())
                                         .withHost(host)
                                         .build();
-          hostService.saveApplicationHost(appHost, tagId);
+          hostService.saveApplicationHost(appHost);
           // TODO: add notification
         });
   }

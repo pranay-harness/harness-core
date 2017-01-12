@@ -405,7 +405,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
                                                                       .withEnvId(env.getUuid())
-                                                                      .withService(service)
+                                                                      .withServiceId(service.getUuid())
                                                                       .withName("TEMPLATE_NAME")
                                                                       .withDescription("TEMPLATE_DESCRIPTION")
                                                                       .build());

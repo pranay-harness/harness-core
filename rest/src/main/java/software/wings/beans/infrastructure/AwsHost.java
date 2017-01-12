@@ -4,7 +4,6 @@ import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,21 +37,20 @@ public class AwsHost extends Host {
    */
   public static final class Builder {
     private Instance instance;
+    private String uuid;
+    private String appId;
     private String infraId;
     private String hostName;
+    private EmbeddedUser createdBy;
     private String osType;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
     private String hostConnAttr;
+    private long lastUpdatedAt;
     private String bastionConnAttr;
-    private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private List<String> hostNames; // to support bulk add host API
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
-    private String uuid;
-    private String appId;
-    private EmbeddedUser createdBy;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
 
     private Builder() {}
 
@@ -73,6 +71,28 @@ public class AwsHost extends Host {
      */
     public Builder withInstance(Instance instance) {
       this.instance = instance;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -99,6 +119,17 @@ public class AwsHost extends Host {
     }
 
     /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    /**
      * With os type builder.
      *
      * @param osType the os type
@@ -106,6 +137,28 @@ public class AwsHost extends Host {
      */
     public Builder withOsType(String osType) {
       this.osType = osType;
+      return this;
+    }
+
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
@@ -121,6 +174,17 @@ public class AwsHost extends Host {
     }
 
     /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    /**
      * With bastion conn attr builder.
      *
      * @param bastionConnAttr the bastion conn attr
@@ -128,17 +192,6 @@ public class AwsHost extends Host {
      */
     public Builder withBastionConnAttr(String bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
-      return this;
-    }
-
-    /**
-     * With config tag builder.
-     *
-     * @param configTag the config tag
-     * @return the builder
-     */
-    public Builder withConfigTag(Tag configTag) {
-      this.configTag = configTag;
       return this;
     }
 
@@ -176,72 +229,6 @@ public class AwsHost extends Host {
     }
 
     /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -249,21 +236,20 @@ public class AwsHost extends Host {
     public Builder but() {
       return anAwsHost()
           .withInstance(instance)
-          .withInfraId(infraId)
-          .withHostName(hostName)
-          .withOsType(osType)
-          .withHostConnAttr(hostConnAttr)
-          .withBastionConnAttr(bastionConnAttr)
-          .withConfigTag(configTag)
-          .withConfigFiles(configFiles)
-          .withHostNames(hostNames)
-          .withServiceTemplates(serviceTemplates)
           .withUuid(uuid)
           .withAppId(appId)
+          .withInfraId(infraId)
+          .withHostName(hostName)
           .withCreatedBy(createdBy)
+          .withOsType(osType)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withHostConnAttr(hostConnAttr)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withBastionConnAttr(bastionConnAttr)
+          .withConfigFiles(configFiles)
+          .withHostNames(hostNames)
+          .withServiceTemplates(serviceTemplates);
     }
 
     /**
@@ -274,21 +260,20 @@ public class AwsHost extends Host {
     public AwsHost build() {
       AwsHost awsHost = new AwsHost();
       awsHost.setInstance(instance);
+      awsHost.setUuid(uuid);
+      awsHost.setAppId(appId);
       awsHost.setInfraId(infraId);
       awsHost.setHostName(hostName);
+      awsHost.setCreatedBy(createdBy);
       awsHost.setOsType(osType);
+      awsHost.setCreatedAt(createdAt);
+      awsHost.setLastUpdatedBy(lastUpdatedBy);
       awsHost.setHostConnAttr(hostConnAttr);
+      awsHost.setLastUpdatedAt(lastUpdatedAt);
       awsHost.setBastionConnAttr(bastionConnAttr);
-      awsHost.setConfigTag(configTag);
       awsHost.setConfigFiles(configFiles);
       awsHost.setHostNames(hostNames);
       awsHost.setServiceTemplates(serviceTemplates);
-      awsHost.setUuid(uuid);
-      awsHost.setAppId(appId);
-      awsHost.setCreatedBy(createdBy);
-      awsHost.setCreatedAt(createdAt);
-      awsHost.setLastUpdatedBy(lastUpdatedBy);
-      awsHost.setLastUpdatedAt(lastUpdatedAt);
       return awsHost;
     }
   }

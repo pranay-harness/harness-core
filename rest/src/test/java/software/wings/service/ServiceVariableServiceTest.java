@@ -15,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
-import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -52,8 +51,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                                               .withAppId(APP_ID)
                                                               .withEnvId(ENV_ID)
                                                               .withUuid(SERVICE_VARIABLE_ID)
-                                                              .withEntityType(EntityType.TAG)
-                                                              .withEntityId(TAG_ID)
+                                                              .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                                              .withEntityId(TEMPLATE_ID)
                                                               .withTemplateId(TEMPLATE_ID)
                                                               .withName(SERVICE_VARIABLE_NAME)
                                                               .withType(TEXT)
@@ -133,7 +132,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                                            .withEnvId(ENV_ID)
                                                            .withUuid(SERVICE_VARIABLE_ID)
                                                            .withEntityType(EntityType.APPLICATION)
-                                                           .withEntityId(TAG_ID)
+                                                           .withEntityId(TEMPLATE_ID)
                                                            .withTemplateId(TEMPLATE_ID)
                                                            .withType(TEXT)
                                                            .withValue("8080")
@@ -180,8 +179,11 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdate() {
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID))
-        .thenReturn(
-            aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).withEntityType(EntityType.TAG).build());
+        .thenReturn(aServiceVariable()
+                        .withAppId(APP_ID)
+                        .withUuid(SERVICE_VARIABLE_ID)
+                        .withEntityType(EntityType.SERVICE_TEMPLATE)
+                        .build());
     serviceVariableService.update(SERVICE_VARIABLE);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("value", "8080", "type", TEXT));

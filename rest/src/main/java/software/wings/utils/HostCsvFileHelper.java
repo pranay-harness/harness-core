@@ -14,11 +14,9 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.TagService;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,7 +38,6 @@ public class HostCsvFileHelper {
   private final Object[] CSVHeader = {
       "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
   @Inject private SettingsService attributeService;
-  @Inject private TagService tagService;
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   public List<Host> parseHosts(String infraId, String appId, String envId, BoundedInputStream inputStream) {
@@ -57,7 +54,6 @@ public class HostCsvFileHelper {
             attributeService.getByName(appId, record.get("BASTION_HOST_CONNECTION_ATTRIBUTES"));
         String tagsString = record.get("TAGS");
         List<String> tagNames = tagsString != null && tagsString.length() > 0 ? asList(tagsString.split(",")) : null;
-        List<Tag> tags = tagService.getTagsByName(appId, envId, tagNames);
 
         hosts.add(aHost()
                       .withAppId(appId)
@@ -65,7 +61,6 @@ public class HostCsvFileHelper {
                       .withHostName(hostName)
                       .withHostConnAttr(hostConnectionAttrs)
                       .withBastionConnAttr(bastionHostAttrs)
-                      .withConfigTag(tags.get(0))
                       .build());
       }
     } catch (IOException ex) {
@@ -96,7 +91,6 @@ public class HostCsvFileHelper {
         row.add(host.getHostName());
         /*row.add(host.getHostConnAttr() != null ? host.getHostConnAttr().getName() : null);
         row.add(host.getBastionConnAttr() != null ? host.getBastionConnAttr().getName() : null);*/
-        row.add(host.getConfigTag().getName());
         try {
           csvPrinter.printRecord(row);
         } catch (IOException e) {

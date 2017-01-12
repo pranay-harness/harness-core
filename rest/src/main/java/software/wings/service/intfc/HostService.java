@@ -3,7 +3,6 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
@@ -97,32 +96,6 @@ public interface HostService {
       @NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> hostUuids);
 
   /**
-   * Gets the hosts by tags.
-   *
-   * @param appId the app id
-   * @param envId the env id
-   * @param tags  the tags
-   * @return the hosts by tags
-   */
-  List<ApplicationHost> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
-
-  /**
-   * Sets tag.
-   *
-   * @param host the host
-   * @param tag  the tag
-   */
-  void setTag(@NotNull ApplicationHost host, @NotNull Tag tag);
-
-  /**
-   * Remove tag from host.
-   *
-   * @param host the host
-   * @param tag  the tag
-   */
-  void removeTagFromHost(@NotNull ApplicationHost host, @NotNull Tag tag);
-
-  /**
    * Gets hosts by env.
    *
    * @param appId the app id
@@ -171,10 +144,9 @@ public interface HostService {
    * Save application host application host.
    *
    * @param appHost the app host
-   * @param tagId   the tag id
    * @return the application host
    */
-  ApplicationHost saveApplicationHost(ApplicationHost appHost, String tagId);
+  ApplicationHost saveApplicationHost(ApplicationHost appHost);
 
   /**
    * Exist boolean.

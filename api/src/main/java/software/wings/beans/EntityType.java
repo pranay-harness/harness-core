@@ -18,11 +18,8 @@ public enum EntityType {
             * Environment entity type.
             */
   ENVIRONMENT, /**
-                * Tag entity type.
+                * Host entity type.
                 */
-  TAG, /**
-        * Host entity type.
-        */
   HOST, /**
          * Release entity type.
          */

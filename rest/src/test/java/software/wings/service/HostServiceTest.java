@@ -19,7 +19,6 @@ import static software.wings.beans.HostConnectionCredential.HostConnectionCreden
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.ApplicationHostUsage.Builder.anApplicationHostUsage;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -32,7 +31,6 @@ import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
-import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
@@ -55,8 +53,6 @@ import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Tag;
-import software.wings.beans.Tag.TagType;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
@@ -71,12 +67,10 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.TagService;
 import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -88,7 +82,6 @@ public class HostServiceTest extends WingsBaseTest {
   @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
-  @Mock private TagService tagService;
   @Mock private EnvironmentService environmentService;
   @Mock private NotificationService notificationService;
   @Mock private AppService appService;
@@ -191,9 +184,6 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldUpdateHost() {
     Host host = hostBuilder.withUuid(HOST_ID).build();
     when(applicationHostQuery.get()).thenReturn(appHostBuilder.withHost(host).build());
-    when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID))
-        .thenReturn(
-            aTag().withUuid(TAG_ID).withAppId(APP_ID).withEnvId(ENV_ID).withTagType(TagType.UNTAGGED_HOST).build());
     ApplicationHost savedHost = hostService.update(ENV_ID, host);
     verify(wingsPersistence).updateFields(Host.class, HOST_ID, ImmutableMap.of("hostConnAttr", HOST_CONN_ATTR_ID));
     assertThat(savedHost).isNotNull();
@@ -246,27 +236,6 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should get hosts by tags.
-   */
-  @Test
-  public void shouldGetHostsByTags() {
-    List<Tag> tags = asList(aTag().withUuid(TAG_ID).build());
-    when(applicationHostQuery.asList()).thenReturn(asList(appHostBuilder.withUuid(HOST_ID).build()));
-
-    List<ApplicationHost> hosts = hostService.getHostsByTags(APP_ID, ENV_ID, tags);
-
-    verify(applicationHostQuery).asList();
-    verify(applicationHostQuery).field("appId");
-    verify(applicationHostQueryEnd).equal(APP_ID);
-    verify(applicationHostQuery).field("envId");
-    verify(applicationHostQueryEnd).equal(ENV_ID);
-    verify(applicationHostQuery).field("configTag");
-    verify(applicationHostQueryEnd).hasAnyOf(tags.stream().map(Tag::getUuid).collect(Collectors.toList()));
-    assertThat(hosts.get(0)).isInstanceOf(ApplicationHost.class);
-    assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
-  }
-
-  /**
    * Should get hosts by host ids.
    */
   @Test
@@ -290,7 +259,6 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldBulkSave() {
-    Tag tag = aTag().withUuid(TAG_ID).build();
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).build();
     SettingAttribute hostConnAttr = aSettingAttribute()
                                         .withUuid(HOST_CONN_ATTR_ID)
@@ -302,7 +270,6 @@ public class HostServiceTest extends WingsBaseTest {
                            .withInfraId(INFRA_ID)
                            .withHostNames(asList(HOST_NAME))
                            .withHostConnAttr(hostConnAttr)
-                           .withConfigTag(tag)
                            .withServiceTemplates(asList(serviceTemplate))
                            .withServiceTemplates(asList(serviceTemplate))
                            .build();
@@ -325,7 +292,6 @@ public class HostServiceTest extends WingsBaseTest {
                                                  .withEnvId(ENV_ID)
                                                  .withInfraId(INFRA_ID)
                                                  .withHostName(HOST_NAME)
-                                                 .withConfigTag(tag)
                                                  .withHost(hostPostSave)
                                                  .build();
     ApplicationHost applicationHostPostSave = ApplicationHost.Builder.anApplicationHost()
@@ -334,13 +300,11 @@ public class HostServiceTest extends WingsBaseTest {
                                                   .withEnvId(ENV_ID)
                                                   .withInfraId(INFRA_ID)
                                                   .withHostName(HOST_NAME)
-                                                  .withConfigTag(tag)
                                                   .withHost(hostPostSave)
                                                   .build();
 
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
-    when(tagService.get(APP_ID, ENV_ID, TAG_ID, true)).thenReturn(tag);
     when(wingsPersistence.saveAndGet(Host.class, hostPreSave)).thenReturn(hostPostSave);
     when(wingsPersistence.saveAndGet(ApplicationHost.class, applicationHostPreSave))
         .thenReturn(applicationHostPostSave);
@@ -357,48 +321,8 @@ public class HostServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Host.class, hostPreSave);
     verify(wingsPersistence).saveAndGet(ApplicationHost.class, applicationHostPreSave);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
-    verify(tagService).get(APP_ID, ENV_ID, TAG_ID, true);
     verify(serviceTemplateService).addHosts(serviceTemplate, asList(applicationHostPostSave));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
-  }
-
-  /**
-   * Should remove tag from host.
-   */
-  @Test
-  public void shouldRemoveTagFromHost() {
-    Tag tag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
-    Tag defaultTag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
-    ApplicationHost applicationHost = appHostBuilder.withUuid(HOST_ID)
-                                          .withConfigTag(aTag().withUuid("TAG_ID_2").withRootTagId("TAG_ID_1").build())
-                                          .build();
-    when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID)).thenReturn(defaultTag);
-    when(updateOperations.set("configTag", tag)).thenReturn(updateOperations);
-    when(tagService.get(APP_ID, ENV_ID, "TAG_ID_2", false))
-        .thenReturn(aTag().withUuid("TAG_ID_2").withRootTagId("TAG_ID_1").build());
-    hostService.removeTagFromHost(applicationHost, tag);
-    verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
-    verify(updateOperations).set("configTag", defaultTag.getUuid());
-  }
-
-  /**
-   * Should set tags.
-   */
-  @Test
-  public void shouldSetTags() {
-    ApplicationHost host = anApplicationHost()
-                               .withAppId(APP_ID)
-                               .withEnvId(ENV_ID)
-                               .withUuid(HOST_ID)
-                               .withHost(hostBuilder.withUuid(HOST_ID).build())
-                               .build();
-
-    Tag tag = aTag().withUuid(TAG_ID).build();
-    when(updateOperations.set("configTag", tag.getUuid())).thenReturn(updateOperations);
-    hostService.setTag(host, tag);
-    verify(wingsPersistence).update(host, updateOperations);
-    verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
-    verify(updateOperations).set("configTag", tag.getUuid());
   }
 
   @Test

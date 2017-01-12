@@ -113,7 +113,7 @@ public class CommandStateTest extends WingsBaseTest {
   private static final Command COMMAND = aCommand().build();
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
-      aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build();
+      aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
   private static final ApplicationHost HOST =
       anApplicationHost()
           .withUuid(HOST_ID)
@@ -205,7 +205,7 @@ public class CommandStateTest extends WingsBaseTest {
                         .build());
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
     when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
-    ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build();
+    ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
     serviceTemplate.setService(SERVICE);
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);

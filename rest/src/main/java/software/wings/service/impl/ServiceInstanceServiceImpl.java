@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -17,13 +16,11 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.service.intfc.TagService;
 
 import java.util.List;
 import java.util.Set;
@@ -40,7 +37,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private TagService tagService;
 
   @Override
   public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
@@ -97,11 +93,6 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
               .withHost(host)
               .build();
       try {
-        if (isNotBlank(host.getConfigTagId())) {
-          Tag tag =
-              tagService.get(serviceInstance.getAppId(), serviceInstance.getEnvId(), host.getConfigTagId(), false);
-          serviceInstance.setTagName(tag.getName());
-        }
         wingsPersistence.save(serviceInstance);
       } catch (DuplicateKeyException ex) {
         logger.warn("Reinserting an existing service instance ignore");

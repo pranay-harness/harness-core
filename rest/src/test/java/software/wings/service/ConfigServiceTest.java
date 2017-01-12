@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.apache.commons.io.IOUtils;
@@ -45,7 +44,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.TagService;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +67,6 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private FileService fileService;
-  @Mock private TagService tagService;
   @Mock private HostService hostService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -132,13 +129,13 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldSave() {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
         .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
-    when(tagService.exist(APP_ID, TAG_ID)).thenReturn(true);
+    when(serviceTemplateService.exist(APP_ID, TEMPLATE_ID)).thenReturn(true);
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
                                 .withEnvId(ENV_ID)
                                 .withUuid(FILE_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
+                                .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                .withEntityId(TEMPLATE_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName("NAME")
                                 .withRelativeFilePath("PATH/" + FILE_NAME)
@@ -188,8 +185,8 @@ public class ConfigServiceTest extends WingsBaseTest {
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
+                                .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                .withEntityId(TEMPLATE_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
                                 .withFileName(FILE_NAME)
@@ -217,8 +214,8 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withAppId(APP_ID)
                                 .withEnvId(ENV_ID)
                                 .withUuid(FILE_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
+                                .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                .withEntityId(TEMPLATE_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
                                 .withRelativeFilePath("PATH")
@@ -244,8 +241,8 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withAppId(APP_ID)
                                 .withEnvId(ENV_ID)
                                 .withUuid(FILE_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
+                                .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                .withEntityId(TEMPLATE_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
@@ -286,8 +283,8 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldGetConfigFilesForEntity() {
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
+                                .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                .withEntityId(TEMPLATE_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
                                 .withFileName(FILE_NAME)
@@ -319,8 +316,8 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withAppId(APP_ID)
                                 .withEnvId(ENV_ID)
                                 .withUuid(FILE_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
+                                .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                .withEntityId(TEMPLATE_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
                                 .withRelativeFilePath("PATH")

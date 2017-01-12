@@ -5,7 +5,6 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
-import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -21,7 +20,6 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -32,7 +30,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.TagService;
 import software.wings.utils.Validator;
 
 import java.io.File;
@@ -61,7 +58,6 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
-  @Inject private TagService tagService;
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -101,8 +97,6 @@ public class ConfigServiceImpl implements ConfigService {
     boolean entityExist;
     if (EntityType.SERVICE.equals(entityType)) {
       entityExist = serviceResourceService.exist(appId, entityId);
-    } else if (EntityType.TAG.equals(entityType) || EntityType.ENVIRONMENT.equals(entityType)) {
-      entityExist = tagService.exist(appId, entityId);
     } else if (EntityType.HOST.equals(entityType)) {
       entityExist = hostService.exist(appId, entityId);
     } else if (EntityType.SERVICE_TEMPLATE.equals(entityType)) {
@@ -169,24 +163,6 @@ public class ConfigServiceImpl implements ConfigService {
     String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
     fileService.download(fileId, file, CONFIGS);
     return file;
-  }
-
-  private String generateOverridePath(ConfigFile configFile) {
-    switch (configFile.getEntityType()) {
-      case SERVICE:
-        return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
-      case TAG:
-      case ENVIRONMENT:
-        return tagService.getTagHierarchyPathString(
-            configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId());
-      case HOST:
-        ApplicationHost host = hostService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId());
-        String tagHierarchyPathString =
-            tagService.getTagHierarchyPathString(host.getAppId(), host.getEnvId(), host.getConfigTagId());
-        return tagHierarchyPathString + "/" + host.getHostName();
-      default:
-        throw new WingsException(UNKNOWN_ERROR, "message", "Unknown entity type encountered");
-    }
   }
 
   /* (non-Javadoc)
