@@ -36,7 +36,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.BuildService;
 
 import java.io.IOException;
 import javax.inject.Inject;
@@ -54,7 +54,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   @Mock private ArtifactStreamService artifactStreamService;
 
-  @InjectMocks @Inject private JenkinsBuildService jenkinsBuildService;
+  @InjectMocks @Inject private BuildService<JenkinsConfig> jenkinsBuildService;
 
   /**
    * setups all mocks for test.

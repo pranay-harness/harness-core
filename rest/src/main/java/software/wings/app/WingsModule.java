@@ -11,6 +11,8 @@ import com.google.inject.multibindings.Multibinder;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.cloudprovider.ClusterServiceImpl;
@@ -84,7 +86,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.BambooBuildService;
+import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CloudWatchService;
@@ -101,7 +103,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
-import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
@@ -122,6 +123,7 @@ import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ExpressionProcessorFactory;
 
 /**
@@ -169,7 +171,6 @@ public class WingsModule extends AbstractModule {
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
-    bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(new TypeLiteral<EmailNotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
@@ -194,7 +195,6 @@ public class WingsModule extends AbstractModule {
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
     bind(BambooService.class).to(BambooServiceImpl.class);
-    bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
     bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
     bind(CloudWatchService.class).to(CloudWatchServiceImpl.class);
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
@@ -212,10 +212,13 @@ public class WingsModule extends AbstractModule {
         .to(JenkinsArtifactCollectorServiceImpl.class);
     artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
 
-    MapBinder.newMapBinder(binder(), String.class, BuildSourceService.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
-        .to(JenkinsArtifactCollectorServiceImpl.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
+    MapBinder<Class<? extends SettingValue>, BuildService> buildServiceMapBinder = MapBinder.newMapBinder(
+        binder(), new TypeLiteral<Class<? extends SettingValue>>() {}, new TypeLiteral<BuildService>() {});
+    buildServiceMapBinder.addBinding(JenkinsConfig.class).to(JenkinsBuildServiceImpl.class);
+    buildServiceMapBinder.addBinding(BambooConfig.class).to(BambooBuildServiceImpl.class);
+
+    bind(new TypeLiteral<BuildService<JenkinsConfig>>() {}).to(JenkinsBuildServiceImpl.class);
+    bind(new TypeLiteral<BuildService<BambooConfig>>() {}).to(BambooBuildServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
