@@ -5,10 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -36,15 +33,12 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.Validator;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -124,15 +118,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       serviceTemplate.setService(
           serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId()));
     }
-
-    if (serviceTemplate.getHostIds().size() > 0) {
-      serviceTemplate.setHosts(hostService
-                                   .list(aPageRequest()
-                                             .addFilter("appId", EQ, serviceTemplate.getAppId())
-                                             .addFilter(ID_KEY, IN, serviceTemplate.getHostIds().toArray())
-                                             .build())
-                                   .getResponse());
-    }
   }
 
   @Override
@@ -141,13 +126,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Validator.notNullCheck("ServiceTemplate", serviceTemplate);
     setReferences(serviceTemplate);
     return serviceTemplate;
-  }
-
-  @Override
-  public ServiceTemplate addHosts(ServiceTemplate template, List<ApplicationHost> hosts) {
-    List<ApplicationHost> allHosts =
-        Stream.concat(hosts.stream(), template.getHosts().stream()).distinct().collect(Collectors.toList());
-    return updateTemplateAndServiceInstance(template, allHosts);
   }
 
   @Override
@@ -225,55 +203,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     });
     return overrideServiceVariables;
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceTemplateService#updateHosts(java.lang.String, java.lang.String,
-   * java.util.List)
-   */
-  @Override
-  public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
-    List<ApplicationHost> hosts = hostIds.stream()
-                                      .map(hostId -> hostService.get(appId, envId, hostId))
-                                      .filter(Objects::nonNull)
-                                      .collect(toList());
-
-    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
-
-    return updateTemplateAndServiceInstance(serviceTemplate, hosts);
-  }
-
-  private ServiceTemplate updateTemplateAndServiceInstance(
-      ServiceTemplate serviceTemplate, List<ApplicationHost> hosts) {
-    List<ApplicationHost> alreadyMappedHosts = serviceTemplate.getHosts();
-    updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
-    List<String> hostIds = new ArrayList<>();
-    if (hosts != null) {
-      hostIds.addAll(hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
-    }
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
-        ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "hostIds",
-            hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList())));
-    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true);
-  }
-
-  private void updateServiceInstances(
-      ServiceTemplate serviceTemplate, List<ApplicationHost> newHosts, List<ApplicationHost> existingHosts) {
-    List<ApplicationHost> addHostsList = new ArrayList<>();
-    List<ApplicationHost> deleteHostList = new ArrayList<>();
-
-    newHosts.forEach(host -> {
-      if (!existingHosts.contains(host)) {
-        addHostsList.add(host);
-      }
-    });
-
-    existingHosts.forEach(host -> {
-      if (!newHosts.contains(host)) {
-        deleteHostList.add(host);
-      }
-    });
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, addHostsList, deleteHostList);
   }
 
   @Override

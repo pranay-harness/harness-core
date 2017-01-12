@@ -207,7 +207,6 @@ public class HostServiceTest extends WingsBaseTest {
     verify(applicationHostQuery).field(ID_KEY);
     verify(applicationHostQueryEnd).equal(HOST_ID);
     verify(wingsPersistence).delete(host);
-    verify(serviceTemplateService).deleteHostFromTemplates(host);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
@@ -232,7 +231,6 @@ public class HostServiceTest extends WingsBaseTest {
     verify(applicationHostQuery).field("infraId");
     verify(applicationHostQueryEnd).equal(INFRA_ID);
     verify(wingsPersistence).delete(host);
-    verify(serviceTemplateService).deleteHostFromTemplates(host);
   }
 
   /**
@@ -320,8 +318,6 @@ public class HostServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).saveAndGet(Host.class, hostPreSave);
     verify(wingsPersistence).saveAndGet(ApplicationHost.class, applicationHostPreSave);
-    verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
-    verify(serviceTemplateService).addHosts(serviceTemplate, asList(applicationHostPostSave));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 

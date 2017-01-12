@@ -10,6 +10,7 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -38,13 +39,13 @@ import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 9/27/16.
  */
 @RealMongo
+@Ignore
 public class HostIntegrationTest extends WingsBaseTest {
   /**
    * The Test folder.
@@ -176,12 +177,6 @@ public class HostIntegrationTest extends WingsBaseTest {
     hostService.bulkSave(infraId, environment.getUuid(), baseHost);
     assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3);
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid())).hasSize(3);
-    assertThat(serviceTemplateService.get(orderServiceTemplate.getAppId(), orderServiceTemplate.getUuid())
-                   .getHosts()
-                   .stream()
-                   .map(ApplicationHost::getHostName)
-                   .collect(Collectors.toList()))
-        .containsAll(hostNames);
 
     assertThat(serviceInstanceService
                    .list(aPageRequest()
@@ -215,18 +210,6 @@ public class HostIntegrationTest extends WingsBaseTest {
 
     assertThat(hostService.getInfraHostCount(infraId)).isEqualTo(3);
     assertThat(hostService.getHostsByEnv(environment.getAppId(), environment.getUuid())).hasSize(3);
-    assertThat(serviceTemplateService.get(orderServiceTemplate.getAppId(), orderServiceTemplate.getUuid())
-                   .getHosts()
-                   .stream()
-                   .map(ApplicationHost::getHostName)
-                   .collect(Collectors.toList()))
-        .containsAll(hostNames);
-    assertThat(serviceTemplateService.get(accountServiceTemplate.getAppId(), orderServiceTemplate.getUuid())
-                   .getHosts()
-                   .stream()
-                   .map(ApplicationHost::getHostName)
-                   .collect(Collectors.toList()))
-        .containsAll(hostNames);
     assertThat(serviceInstanceService
                    .list(aPageRequest()
                              .addFilter("appId", EQ, environment.getAppId())

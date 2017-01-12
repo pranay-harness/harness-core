@@ -11,7 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.DelegateAuth;
@@ -126,22 +125,6 @@ public class ServiceTemplateResource {
       @PathParam("templateId") String serviceTemplateId) {
     serviceTemplateService.delete(appId, envId, serviceTemplateId);
     return new RestResponse();
-  }
-
-  /**
-   * Map hosts.
-   *
-   * @param envId             the env id
-   * @param appId             the app id
-   * @param serviceTemplateId the service template id
-   * @param hostIds           the host ids
-   * @return the rest response
-   */
-  @PUT
-  @Path("{templateId}/map-hosts")
-  public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
-      @PathParam("templateId") String serviceTemplateId, List<String> hostIds) {
-    return new RestResponse<>(serviceTemplateService.updateHosts(appId, envId, serviceTemplateId, hostIds));
   }
 
   @DelegateAuth

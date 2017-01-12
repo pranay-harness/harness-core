@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.History.Builder.aHistory;
@@ -127,7 +126,6 @@ public class HostServiceImpl implements HostService {
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(host.getAppId(), host.getServiceTemplates());
     ApplicationHost appHost = get(applicationHost.getAppId(), applicationHost.getEnvId(), host.getUuid());
-    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, asList(appHost)));
     return appHost;
   }
 
@@ -141,13 +139,8 @@ public class HostServiceImpl implements HostService {
                                 .filter(hostName -> !isNullOrEmpty(hostName))
                                 .map(String::trim)
                                 .collect(Collectors.toSet());
-    List<ServiceTemplate> serviceTemplates =
-        validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
     Infrastructure infrastructure = infraService.get(infraId);
-
     List<ApplicationHost> applicationHosts = saveApplicationHosts(envId, baseHost, hostNames, infrastructure);
-
-    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, applicationHosts));
 
     notificationService.sendNotificationAsync(
         anInformationNotification()

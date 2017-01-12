@@ -84,8 +84,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                                 .withEnvId(ENV_ID)
                                                 .withServiceId(SERVICE_ID)
                                                 .withName(TEMPLATE_NAME)
-                                                .withDescription(TEMPLATE_DESCRIPTION)
-                                                .withMappedBy(EntityType.HOST);
+                                                .withDescription(TEMPLATE_DESCRIPTION);
 
   /**
    * Sets up.
@@ -111,18 +110,16 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ApplicationHost host = ApplicationHost.Builder.anApplicationHost().withUuid(HOST_ID).build();
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageResponse.setResponse(asList(builder.but().withServiceId(SERVICE_ID).withHostIds(asList(HOST_ID)).build()));
+    pageResponse.setResponse(asList(builder.but().withServiceId(SERVICE_ID).build()));
 
     when(wingsPersistence.query(ServiceTemplate.class, pageRequest)).thenReturn(pageResponse);
     when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(asList(host)).build());
 
     PageResponse<ServiceTemplate> templatePageResponse = templateService.list(pageRequest, true);
 
-    ServiceTemplate expectedServiceTemplate =
-        builder.but().withServiceId(SERVICE_ID).withHostIds(asList(HOST_ID)).build();
+    ServiceTemplate expectedServiceTemplate = builder.but().withServiceId(SERVICE_ID).build();
     expectedServiceTemplate.setService(
         aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
-    expectedServiceTemplate.setHosts(asList(host));
 
     assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
     assertThat(pageResponse.getResponse().get(0)).isEqualTo(expectedServiceTemplate);
@@ -249,82 +246,6 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(query).field("serviceId");
     verify(end).equal(SERVICE_ID);
     verify(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
-  }
-
-  /**
-   * Should add hosts.
-   */
-  @Test
-  public void shouldAddHosts() {
-    ApplicationHost host = anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build();
-    when(hostService.get(APP_ID, ENV_ID, HOST_ID)).thenReturn(host);
-    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.but().build());
-
-    templateService.updateHosts(APP_ID, ENV_ID, TEMPLATE_ID, asList(HOST_ID));
-    verify(wingsPersistence)
-        .updateFields(
-            ServiceTemplate.class, TEMPLATE_ID, of("mappedBy", EntityType.HOST, "hostIds", asList(host.getUuid())));
-    ServiceTemplate template = builder.but().build();
-    template.setService(aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
-    verify(serviceInstanceService)
-        .updateInstanceMappings(template,
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()), asList());
-  }
-
-  /**
-   * Should delete hosts.
-   */
-  @Test
-  public void shouldDeleteHosts() {
-    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
-        .thenReturn(builder.withHostIds(asList(HOST_ID)).build());
-    when(hostService.list(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()))
-                .build());
-
-    templateService.updateHosts(APP_ID, ENV_ID, TEMPLATE_ID, asList());
-    verify(wingsPersistence)
-        .updateFields(ServiceTemplate.class, TEMPLATE_ID, of("mappedBy", EntityType.HOST, "hostIds", asList()));
-    ServiceTemplate template = builder.but().build();
-    template.setService(aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
-    template.setHosts(asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()));
-    verify(serviceInstanceService)
-        .updateInstanceMappings(template, asList(),
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()));
-  }
-
-  /**
-   * Should add and delete hosts.
-   */
-  @Test
-  public void shouldAddAndDeleteHosts() {
-    when(hostService.get(APP_ID, ENV_ID, "NEW_HOST_ID"))
-        .thenReturn(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build());
-    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
-        .thenReturn(builder.but().withHostIds(asList("EXISTING_HOST_ID")).build());
-
-    when(hostService.list(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(
-                    anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("EXISTING_HOST_ID").build()))
-                .build());
-
-    ServiceTemplate template = builder.but().withHostIds(asList("EXISTING_HOST_ID")).build();
-    template.setService(aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
-    template.setHosts(
-        asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("EXISTING_HOST_ID").build()));
-
-    templateService.updateHosts(APP_ID, ENV_ID, TEMPLATE_ID, asList("NEW_HOST_ID"));
-    verify(wingsPersistence)
-        .updateFields(
-            ServiceTemplate.class, TEMPLATE_ID, of("mappedBy", EntityType.HOST, "hostIds", asList("NEW_HOST_ID")));
-    verify(serviceInstanceService)
-        .updateInstanceMappings(template,
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build()),
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("EXISTING_HOST_ID").build()));
   }
 
   /**

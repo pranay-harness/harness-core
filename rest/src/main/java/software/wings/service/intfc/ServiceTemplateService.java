@@ -108,18 +108,6 @@ public interface ServiceTemplateService {
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
 
   /**
-   * Update hosts.
-   *
-   * @param appId             the app id
-   * @param envId             the env id
-   * @param serviceTemplateId the service template id
-   * @param hostIds           the host ids
-   * @return the service template
-   */
-  ServiceTemplate updateHosts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId,
-      @NotNull List<String> hostIds);
-
-  /**
    * Delete host from templates.
    *
    * @param host the host
@@ -155,15 +143,6 @@ public interface ServiceTemplateService {
    * @param service the service
    */
   void createDefaultTemplatesByService(Service service);
-
-  /**
-   * Add hosts.
-   *
-   * @param template the template
-   * @param hosts    the hosts
-   * @return the service template
-   */
-  ServiceTemplate addHosts(ServiceTemplate template, List<ApplicationHost> hosts);
 
   /**
    * Gets template ref keys by service.

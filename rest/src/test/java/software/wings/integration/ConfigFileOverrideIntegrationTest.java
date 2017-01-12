@@ -175,7 +175,6 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
 
     // add hosts and tags to template
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
-    templateService.updateHosts(app.getUuid(), template.getEnvId(), template.getUuid(), selectedHosts);
   }
 
   /**
