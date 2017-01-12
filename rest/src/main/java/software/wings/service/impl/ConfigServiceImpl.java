@@ -105,6 +105,8 @@ public class ConfigServiceImpl implements ConfigService {
       entityExist = tagService.exist(appId, entityId);
     } else if (EntityType.HOST.equals(entityType)) {
       entityExist = hostService.exist(appId, entityId);
+    } else if (EntityType.SERVICE_TEMPLATE.equals(entityType)) {
+      entityExist = serviceTemplateService.exist(appId, entityId);
     } else {
       throw new WingsException(INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + entityType);
     }
@@ -130,14 +132,10 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#get(java.lang.String)
    */
   @Override
-  public ConfigFile get(String appId, String configId, boolean withOverridePath) {
+  public ConfigFile get(String appId, String configId) {
     ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
     if (configFile == null) {
       throw new WingsException(INVALID_ARGUMENT, "message", "ConfigFile not found");
-    }
-
-    if (withOverridePath) {
-      configFile.setOverridePath(generateOverridePath(configFile));
     }
     return configFile;
   }
@@ -152,13 +150,12 @@ public class ConfigServiceImpl implements ConfigService {
                                        .field("templateId")
                                        .equal(serviceTemplate.getUuid())
                                        .asList();
-    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile)));
     return configFiles;
   }
 
   @Override
   public File download(String appId, String configId) {
-    ConfigFile configFile = get(appId, configId, false);
+    ConfigFile configFile = get(appId, configId);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     return file;
@@ -166,7 +163,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public File download(String appId, String configId, Integer version) {
-    ConfigFile configFile = get(appId, configId, false);
+    ConfigFile configFile = get(appId, configId);
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     int fileVersion = (version == null) ? configFile.getDefaultVersion() : version;
     String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
@@ -197,7 +194,7 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void update(ConfigFile inputConfigFile, InputStream uploadedInputStream) {
-    ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid(), false);
+    ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
     Validator.notNullCheck("Configuration file", savedConfigFile);
 
     if (savedConfigFile.getEntityType().equals(SERVICE)
@@ -231,6 +228,11 @@ public class ConfigServiceImpl implements ConfigService {
 
     if (inputConfigFile.getEnvIdVersionMap() != null) {
       updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
+    }
+
+    updateMap.put("configOverrideType", inputConfigFile.getConfigOverrideType());
+    if (inputConfigFile.getConfigOverrideExpression() != null) {
+      updateMap.put("configOverrideExpression", inputConfigFile.getConfigOverrideExpression());
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);

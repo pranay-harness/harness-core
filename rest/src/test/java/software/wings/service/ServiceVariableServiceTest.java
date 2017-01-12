@@ -3,19 +3,22 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
+import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -29,7 +32,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -53,7 +55,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                                               .withEntityType(EntityType.TAG)
                                                               .withEntityId(TAG_ID)
                                                               .withTemplateId(TEMPLATE_ID)
-                                                              .withType(Type.TEXT)
+                                                              .withName(SERVICE_VARIABLE_NAME)
+                                                              .withType(TEXT)
                                                               .withValue("8080")
                                                               .build();
   /**
@@ -132,7 +135,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                                            .withEntityType(EntityType.APPLICATION)
                                                            .withEntityId(TAG_ID)
                                                            .withTemplateId(TEMPLATE_ID)
-                                                           .withType(Type.TEXT)
+                                                           .withType(TEXT)
                                                            .withValue("8080")
                                                            .build()));
   }
@@ -176,10 +179,12 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdate() {
-    when(wingsPersistence.saveAndGet(ServiceVariable.class, SERVICE_VARIABLE)).thenReturn(SERVICE_VARIABLE);
+    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID))
+        .thenReturn(
+            aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).withEntityType(EntityType.TAG).build());
     serviceVariableService.update(SERVICE_VARIABLE);
-
-    verify(wingsPersistence).saveAndGet(eq(ServiceVariable.class), eq(SERVICE_VARIABLE));
+    verify(wingsPersistence)
+        .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("value", "8080", "type", TEXT));
   }
 
   /**

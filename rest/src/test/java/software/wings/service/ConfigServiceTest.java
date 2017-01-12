@@ -174,7 +174,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldGet() {
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID))
         .thenReturn(aConfigFile().withAppId(APP_ID).withUuid(FILE_ID).build());
-    ConfigFile configFile = configService.get(APP_ID, FILE_ID, false);
+    ConfigFile configFile = configService.get(APP_ID, FILE_ID);
     verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
     assertThat(configFile.getUuid()).isEqualTo(FILE_ID);
   }
@@ -260,7 +260,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(FILE_ID), argumentCaptor.capture());
 
     Map<String, Object> updateMap = argumentCaptor.getValue();
-    assertThat(updateMap.size()).isEqualTo(6);
+    assertThat(updateMap.size()).isEqualTo(7);
     assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
     assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
     assertThat(updateMap.get("size")).isEqualTo(100L);

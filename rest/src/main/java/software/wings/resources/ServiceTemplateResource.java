@@ -179,21 +179,6 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
   }
 
-  /**
-   * Override files rest response.
-   *
-   * @param envId      the env id
-   * @param appId      the app id
-   * @param templateId the template id
-   * @return the rest response
-   */
-  @GET
-  @Path("{templateId}/override-files")
-  public RestResponse<List<ConfigFile>> overrideFiles(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
-    return new RestResponse<>(serviceTemplateService.getOverrideFiles(appId, envId, templateId));
-  }
-
   @DelegateAuth
   @GET
   @Path("{templateId}/compute-files")

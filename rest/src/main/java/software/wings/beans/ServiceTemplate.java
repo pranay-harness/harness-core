@@ -43,6 +43,7 @@ public class ServiceTemplate extends Base {
   @Transient private Set<Tag> leafTags = new HashSet<>();
   @Transient private List<ApplicationHost> taggedHosts = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
+  @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
 
   /**
@@ -363,6 +364,14 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.hosts, other.hosts) && Objects.equals(this.leafTags, other.leafTags)
         && Objects.equals(this.taggedHosts, other.taggedHosts) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
+  }
+
+  public List<ServiceVariable> getServiceVariables() {
+    return serviceVariables;
+  }
+
+  public void setServiceVariables(List<ServiceVariable> serviceVariables) {
+    this.serviceVariables = serviceVariables;
   }
 
   /**

@@ -103,7 +103,7 @@ public class ConfigResource {
   @GET
   @Path("{configId}")
   public RestResponse<ConfigFile> get(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
-    return new RestResponse<>(configService.get(appId, configId, false));
+    return new RestResponse<>(configService.get(appId, configId));
   }
 
   /**

@@ -10,6 +10,7 @@ package software.wings.beans;
  * @author Rishi
  */
 public enum EntityType {
+
   /**
    * Service entity type.
    */
@@ -73,7 +74,14 @@ public enum EntityType {
   INSTANCE, /**
              * Application entity type.
              */
-  APPLICATION,
-  COMMAND,
-  CONFIG;
+  APPLICATION, /**
+                * Command entity type.
+                */
+  COMMAND, /**
+            * Config entity type.
+            */
+  CONFIG, /**
+           * Service template entity type.
+           */
+  SERVICE_TEMPLATE
 }

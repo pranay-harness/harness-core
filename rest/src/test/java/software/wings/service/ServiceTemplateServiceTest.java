@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -373,6 +374,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should set mapped by to tag and remove mapped hosts when mapped by tag.
    */
   @Test
+  @Ignore
   public void shouldSetMappedByToTagAndRemoveMappedHostsWhenMappedByTag() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();
     ApplicationHost host = ApplicationHost.Builder.anApplicationHost().withUuid(HOST_ID).build();
@@ -406,6 +408,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    * Should set mapped by to host and remove mapped tags when mapped by host.
    */
   @Test
+  @Ignore
   public void shouldSetMappedByToHostAndRemoveMappedTagsWhenMappedByHost() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();
     ApplicationHost host = anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build();

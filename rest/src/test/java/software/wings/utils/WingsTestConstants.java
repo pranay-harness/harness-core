@@ -289,6 +289,11 @@ public class WingsTestConstants {
   public static final String SERVICE_VARIABLE_ID = "SERVICE_VARIABLE_ID";
 
   /**
+   * The constant SERVICE_VARIABLE_NAME.
+   */
+  public static final String SERVICE_VARIABLE_NAME = "SERVICE_VARIABLE_NAME";
+
+  /**
    * The constant HOST_CONN_ATTR_ID.
    */
   public static final String HOST_CONN_ATTR_ID = "HOST_CONN_ATTR_ID";

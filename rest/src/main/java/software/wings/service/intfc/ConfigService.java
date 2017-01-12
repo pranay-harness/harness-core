@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/25/16.
@@ -49,10 +48,9 @@ public interface ConfigService {
    *
    * @param appId            the app id
    * @param configId         the config id
-   * @param withOverridePath the with override path
    * @return the config file
    */
-  ConfigFile get(@NotEmpty String appId, @NotEmpty String configId, @NotNull boolean withOverridePath);
+  ConfigFile get(@NotEmpty String appId, @NotEmpty String configId);
 
   /**
    * Download file.

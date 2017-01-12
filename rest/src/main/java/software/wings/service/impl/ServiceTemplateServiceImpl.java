@@ -3,13 +3,10 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.HOST;
 import static software.wings.beans.EntityType.TAG;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -53,7 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -97,6 +93,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
               template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
         }
         template.setConfigFiles(getOverrideFiles(template));
+        template.setServiceVariables(getOverrideServiceVariables(template));
       });
     }
     return pageResponse;
@@ -133,6 +130,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
             hostService.getHostsByTags(appId, envId, new ArrayList<>(serviceTemplate.getLeafTags())));
       }
       serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
+      serviceTemplate.setServiceVariables(getOverrideServiceVariables(serviceTemplate));
     }
     return serviceTemplate;
   }
@@ -206,12 +204,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false);
-    return getOverrideFiles(serviceTemplate);
-  }
-
-  @Override
   public void updateDefaultServiceTemplateName(
       String appId, String serviceId, String oldServiceName, String newServiceName) {
     Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
@@ -228,45 +220,51 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     wingsPersistence.update(query, updateOperations);
   }
 
+  @Override
+  public boolean exist(String appId, String templateId) {
+    return wingsPersistence.createQuery(ServiceTemplate.class)
+               .field("appId")
+               .equal(appId)
+               .field(ID_KEY)
+               .equal(templateId)
+               .getKey()
+        != null;
+  }
+
   private List<ConfigFile> getOverrideFiles(ServiceTemplate template) {
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
     List<ConfigFile> overrideConfigFiles =
         configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template);
 
-    ImmutableMap<String, ConfigFile> serviceConfigFilesMap =
-        Maps.uniqueIndex(serviceConfigFiles, ConfigFile::getRelativeFilePath);
-    Map<String, List<ConfigFile>> overridePathMap =
-        overrideConfigFiles.stream().collect(groupingBy(ConfigFile::getOverridePath));
+    ImmutableMap<String, ConfigFile> serviceConfigFilesMap = Maps.uniqueIndex(serviceConfigFiles, ConfigFile::getUuid);
 
-    overrideConfigFiles.stream()
-        .filter(configFile -> asList(TAG, HOST, ENVIRONMENT).contains(configFile.getEntityType()))
-        .forEach(configFile -> {
-          String path = configFile.getOverridePath();
-          while (!isNullOrEmpty(path)) {
-            String parentPath = substringBeforeLast(path, "/");
-
-            if (overridePathMap.containsKey(parentPath) && !parentPath.equals(path)) {
-              Optional<ConfigFile> parentFile =
-                  overridePathMap.get(parentPath)
-                      .stream()
-                      .filter(parentConfigFile
-                          -> parentConfigFile.getRelativeFilePath().equals(configFile.getRelativeFilePath()))
-                      .findFirst();
-              if (parentFile.isPresent()) {
-                configFile.setOverriddenConfigFile(parentFile.get());
-                break;
-              }
-            } else if (path.equals(
-                           parentPath)) { // no more parent path possible. override must be on service config file
-              configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getRelativeFilePath()));
-              break;
-            }
-            path = parentPath;
-          }
-        });
-
+    overrideConfigFiles.forEach(configFile -> {
+      if (configFile.getParentConfigFileId() != null
+          && serviceConfigFilesMap.containsKey(configFile.getParentConfigFileId())) {
+        configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getParentConfigFileId()));
+      }
+    });
     return overrideConfigFiles;
+  }
+
+  private List<ServiceVariable> getOverrideServiceVariables(ServiceTemplate template) {
+    List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
+        template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
+    List<ServiceVariable> overrideServiceVariables =
+        serviceVariableService.getServiceVariablesByTemplate(template.getAppId(), template.getEnvId(), template);
+
+    ImmutableMap<String, ServiceVariable> serviceVariablesMap =
+        Maps.uniqueIndex(serviceVariables, ServiceVariable::getUuid);
+
+    overrideServiceVariables.forEach(serviceVariable -> {
+      if (serviceVariable.getParentServiceVariableId() != null
+          && serviceVariablesMap.containsKey(serviceVariable.getParentServiceVariableId())) {
+        serviceVariable.setOverriddenServiceVariable(
+            serviceVariablesMap.get(serviceVariable.getParentServiceVariableId()));
+      }
+    });
+    return overrideServiceVariables;
   }
 
   /* (non-Javadoc)

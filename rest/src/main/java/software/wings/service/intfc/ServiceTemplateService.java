@@ -155,6 +155,8 @@ public interface ServiceTemplateService {
    * Gets templates by leaf tag.
    *
    * @param tagId the tagId
+   * @param appId the app id
+   * @param envId the env id
    * @return the templates by leaf tag
    */
   List<ServiceTemplate> getTemplatesByLeafTag(@NotNull String tagId, @NotNull String appId, @NotNull String envId);
@@ -225,16 +227,6 @@ public interface ServiceTemplateService {
   List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId);
 
   /**
-   * Gets override files.
-   *
-   * @param appId      the app id
-   * @param envId      the env id
-   * @param templateId the template id
-   * @return the override files
-   */
-  List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId);
-
-  /**
    * Update default service template name.
    *
    * @param appId          the app id
@@ -243,4 +235,13 @@ public interface ServiceTemplateService {
    * @param newServiceName the new service name
    */
   void updateDefaultServiceTemplateName(String appId, String serviceId, String oldServiceName, String newServiceName);
+
+  /**
+   * Exist boolean.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @return the boolean
+   */
+  boolean exist(String appId, String templateId);
 }
