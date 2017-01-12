@@ -57,10 +57,9 @@ public class HostCsvFileHelper {
 
         hosts.add(aHost()
                       .withAppId(appId)
-                      .withInfraId(infraId)
                       .withHostName(hostName)
-                      .withHostConnAttr(hostConnectionAttrs)
-                      .withBastionConnAttr(bastionHostAttrs)
+                      .withHostConnAttr(hostConnectionAttrs.getUuid())
+                      .withBastionConnAttr(bastionHostAttrs.getUuid())
                       .build());
       }
     } catch (IOException ex) {

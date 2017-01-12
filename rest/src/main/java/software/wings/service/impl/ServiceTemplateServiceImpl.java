@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -20,13 +19,11 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -55,7 +52,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ConfigService configService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceInstanceService serviceInstanceService;
-  @Inject private HostService hostService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
@@ -205,21 +201,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return overrideServiceVariables;
   }
 
-  @Override
-  public void deleteHostFromTemplates(ApplicationHost host) {
-    deleteDirectlyMappedHosts(host);
-  }
-
-  private void deleteDirectlyMappedHosts(ApplicationHost host) {
-    List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
-                                                 .field("appId")
-                                                 .equal(host.getAppId())
-                                                 .field("hostIds")
-                                                 .equal(host.getUuid())
-                                                 .asList();
-    deleteHostFromATemplate(host, serviceTemplates);
-  }
-
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#delete(java.lang.String, java.lang.String,
    * java.lang.String)
@@ -288,16 +269,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                     .withName(service.getName())
                     .withDefaultServiceTemplate(true)
                     .build()));
-  }
-
-  private void deleteHostFromATemplate(ApplicationHost host, List<ServiceTemplate> serviceTemplates) {
-    if (serviceTemplates != null) {
-      serviceTemplates.forEach(serviceTemplate -> {
-        wingsPersistence.deleteFromList(
-            ServiceTemplate.class, host.getAppId(), serviceTemplate.getUuid(), "hostIds", host.getUuid());
-        serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host));
-      });
-    }
   }
 
   /* (non-Javadoc)

@@ -6,7 +6,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastructureMappingRule;
 import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.CONTAINS;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
 import static software.wings.common.NotificationMessageResolver.ADD_INFRA_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -24,8 +24,6 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.InfrastructureMappingRule.Rule;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.ApplicationHost;
-import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.HostUsage;
 import software.wings.beans.infrastructure.Infrastructure;
@@ -94,12 +92,12 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   private HostUsage getInfrastructureHostUsage(Infrastructure infrastructure) {
     int totalCount = hostService.getInfraHostCount(infrastructure.getUuid());
     int unmappedHostCount = totalCount - hostService.getMappedInfraHostCount(infrastructure.getUuid());
-    List<ApplicationHostUsage> applicationHostUsages =
+    List<HostUsage> applicationHostUsages =
         hostService.getInfrastructureHostUsageByApplication(infrastructure.getUuid());
     return aHostUsage()
         .withTotalCount(totalCount)
         .withUnmappedHostCount(unmappedHostCount)
-        .withApplicationHosts(applicationHostUsages)
+        .withHosts(applicationHostUsages)
         .build();
   }
 
@@ -209,7 +207,6 @@ public class InfrastructureServiceImpl implements InfrastructureService {
 
     newProviderHosts.forEach(host -> {
       host.setHostConnAttr(connectionAttributes.getUuid());
-      host.setInfraId(infrastructure.getUuid());
       Host savedHost = wingsPersistence.saveAndGet(Host.class, host);
       applyApplicableMappingRules(infrastructure, savedHost);
     });
@@ -280,24 +277,22 @@ public class InfrastructureServiceImpl implements InfrastructureService {
       List<Application> applications = getApplicableApplications(mappingRule);
       applications.stream()
           .filter(Objects::nonNull)
-          .forEach(application
-              -> addApplicationHost(application.getAppId(), mappingRule.getEnvId(), mappingRule.getTagId(), host));
+          .forEach(
+              application -> addHost(application.getAppId(), mappingRule.getEnvId(), mappingRule.getTagId(), host));
     }
   }
 
-  public void addApplicationHost(String appId, String envId, String tagId, Host host) {
+  public void addHost(String appId, String envId, String tagId, Host host) {
     List<Environment> environments = environmentService.getEnvByApp(appId);
     environments.stream()
         .filter(environment -> envId == null || envId.equals(environment.getUuid()))
         .forEach(environment -> {
-          ApplicationHost appHost = anApplicationHost()
-                                        .withAppId(environment.getAppId())
-                                        .withEnvId(environment.getUuid())
-                                        .withInfraId(host.getInfraId())
-                                        .withHostName(host.getHostName())
-                                        .withHost(host)
-                                        .build();
-          hostService.saveApplicationHost(appHost);
+          Host appHost = aHost()
+                             .withAppId(environment.getAppId())
+                             .withEnvId(environment.getUuid())
+                             .withHostName(host.getHostName())
+                             .build();
+          hostService.saveHost(appHost);
           // TODO: add notification
         });
   }

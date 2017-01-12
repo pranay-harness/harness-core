@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Property;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
@@ -593,7 +593,7 @@ public class ServiceInstance extends Base {
      * @param host the host
      * @return the builder
      */
-    public Builder withHost(ApplicationHost host) {
+    public Builder withHost(Host host) {
       this.hostId = host.getUuid();
       this.hostName = host.getHostName();
       // this.tagName = host.getConfigTagId() != null ? host.getConfigTagId().getName() : null;

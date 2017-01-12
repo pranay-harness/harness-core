@@ -16,7 +16,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -47,7 +46,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -76,7 +74,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
       aServiceInstance()
           .withAppId(APP_ID)
           .withEnvId(ENV_ID)
-          .withHost(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build())
+          .withHost(aHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build())
           .withServiceTemplate(serviceTemplate)
           .withArtifactStreamName(ARTIFACT_STREAM_NAME)
           .withArtifactStreamId(ARTIFACT_STREAM_ID)
@@ -246,16 +244,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateHostInstanceMapping() {
-    Host newHost = aHost().withUuid("NEW_HOST_ID").build();
-    Host deletedHost = aHost().withUuid("DELETED_HOST_ID").build();
-    List<ApplicationHost> newHostList = asList(
-        anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").withHost(newHost).build());
-    List<ApplicationHost> deletedHosts = asList(anApplicationHost()
-                                                    .withAppId(APP_ID)
-                                                    .withEnvId(ENV_ID)
-                                                    .withUuid("DELETED_HOST_ID")
-                                                    .withHost(deletedHost)
-                                                    .build());
+    List<Host> newHostList = asList(aHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build());
+    List<Host> deletedHosts = asList(aHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("DELETED_HOST_ID").build());
     ServiceTemplate serviceTemplate = aServiceTemplate()
                                           .withAppId(APP_ID)
                                           .withEnvId(ENV_ID)

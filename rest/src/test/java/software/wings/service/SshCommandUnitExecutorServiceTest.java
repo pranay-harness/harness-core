@@ -32,7 +32,6 @@ import static software.wings.utils.WingsTestConstants.FILE_PATH;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
-import static software.wings.utils.WingsTestConstants.INFRA_ID;
 import static software.wings.utils.WingsTestConstants.SSH_KEY;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
@@ -128,7 +127,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @InjectMocks
   private CommandUnitExecutorService sshCommandUnitExecutorService = new SshCommandUnitExecutorServiceImpl();
 
-  private Builder builder = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME);
+  private Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME);
   private CommandExecutionContext.Builder commandExecutionContextBuider =
       aCommandExecutionContext()
           .withAppId(APP_ID)
@@ -156,7 +155,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreatePasswordBasedSshConfig() {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
@@ -179,7 +178,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateKeyBasedSshConfig() {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_KEY).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_KEY.getUuid()).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
@@ -203,7 +202,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateBastionHostBasedSshConfig() {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withBastionConnAttr(BASTION_HOST_ATTR).build();
+    Host host =
+        builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).withBastionConnAttr(BASTION_HOST_ATTR.getUuid()).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
@@ -234,7 +234,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteExecCommand() {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
@@ -246,7 +246,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteCopyCommand() {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     ScpCommandUnit commandUnit = aScpCommandUnit()
                                      .withCommandUnitType(CommandUnitType.SCP)
                                      .withDestinationDirectoryPath(FILE_PATH)
@@ -268,7 +268,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteInitCommand() throws IOException {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitCommandUnit commandUnit = new InitCommandUnit();
     Command command =
         aCommand()
@@ -312,7 +312,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
-    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
     InitCommandUnit commandUnit = new InitCommandUnit();
     Command command =
         aCommand()

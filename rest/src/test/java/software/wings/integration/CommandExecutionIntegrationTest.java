@@ -41,7 +41,6 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
@@ -63,10 +62,12 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final String PASSWORD = "Wings@123";
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
-  private static final Host HOST =
-      aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(HOST_CONN_ATTR_PWD).build();
-  public static final ApplicationHost APPLICATION_HOST =
-      ApplicationHost.Builder.anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withHost(HOST).build();
+  private static final Host HOST = aHost()
+                                       .withAppId(APP_ID)
+                                       .withEnvId(ENV_ID)
+                                       .withHostName(HOST_NAME)
+                                       .withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid())
+                                       .build();
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(SERVICE).build();
@@ -76,7 +77,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   public static final ServiceInstance SERVICE_INSTANCE = aServiceInstance()
                                                              .withAppId(APP_ID)
                                                              .withEnvId(ENV_ID)
-                                                             .withHost(APPLICATION_HOST)
+                                                             .withHost(HOST)
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
   /**

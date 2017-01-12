@@ -16,7 +16,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -72,8 +72,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateInstanceMappings(
-      ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts) {
+  public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
     Query<ServiceInstance> deleteQuery =
         wingsPersistence.createQuery(ServiceInstance.class)
             .field("appId")
@@ -81,7 +80,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
             .field("serviceTemplate")
             .equal(template.getUuid())
             .field("host")
-            .hasAnyOf(deletedHosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
+            .hasAnyOf(deletedHosts.stream().map(Host::getUuid).collect(Collectors.toList()));
     wingsPersistence.delete(deleteQuery);
 
     addedHosts.forEach(host -> {

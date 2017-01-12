@@ -15,7 +15,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -75,7 +74,7 @@ public class HostResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<ApplicationHost>> list(@BeanParam PageRequest<ApplicationHost> pageRequest) {
+  public RestResponse<PageResponse<Host>> list(@BeanParam PageRequest<Host> pageRequest) {
     return new RestResponse<>(hostService.list(pageRequest));
   }
 
@@ -89,7 +88,7 @@ public class HostResource {
    */
   @GET
   @Path("{hostId}")
-  public RestResponse<ApplicationHost> get(
+  public RestResponse<Host> get(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     return new RestResponse<>(hostService.get(appId, envId, hostId));
   }
@@ -117,24 +116,19 @@ public class HostResource {
   /**
    * Update.
    *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @param envId   the env id
-   * @param hostId  the host id
-   * @param host    the host
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
+   * @param host   the host
    * @return the rest response
    */
   @PUT
   @Path("{hostId}")
-  public RestResponse<ApplicationHost> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
-    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
-      infraId = infraService.getDefaultInfrastructureId();
-    }
+  public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @PathParam("hostId") String hostId, Host host) {
     host.setUuid(hostId);
-    host.setInfraId(infraId);
     host.setAppId(appId);
-    return new RestResponse<ApplicationHost>(hostService.update(envId, host));
+    return new RestResponse<Host>(hostService.update(envId, host));
   }
 
   /**

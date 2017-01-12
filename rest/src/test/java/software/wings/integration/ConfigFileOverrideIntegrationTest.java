@@ -26,7 +26,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
@@ -124,7 +123,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
    * The Hosts.
    */
-  List<ApplicationHost> hosts;
+  List<Host> hosts;
 
   /**
    * Sets the up.
@@ -222,14 +221,13 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         entityId);
   }
 
-  private List<ApplicationHost> importAndGetHosts(String appId, String envId, String infraId) {
+  private List<Host> importAndGetHosts(String appId, String envId, String infraId) {
     SettingAttribute settingAttribute =
         wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
     Host baseHost = aHost()
                         .withAppId(appId)
-                        .withInfraId(infraId)
-                        .withHostConnAttr(settingAttribute)
-                        .withBastionConnAttr(settingAttribute)
+                        .withHostConnAttr(settingAttribute.getUuid())
+                        .withBastionConnAttr(settingAttribute.getUuid())
                         .build();
     //    int numOfHostsImported =
     //        hostService.importHosts(baseHost, new BoundedInputStream(new
@@ -238,10 +236,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     for (int i = 1; i <= 10; i++) {
       hostNames.add(String.format("host%s.app.com", i));
     }
-    baseHost.setHostNames(hostNames);
+    // TODO:: HOST refactoring
+    // baseHost.setHostNames(hostNames);
     hostService.bulkSave(infraId, envId, baseHost);
     //    log().info("{} host imported", numOfHostsImported);
-    PageRequest<ApplicationHost> pageRequest = new PageRequest<>();
+    PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infraId, EQ);
     return hostService.list(pageRequest).getResponse();
   }

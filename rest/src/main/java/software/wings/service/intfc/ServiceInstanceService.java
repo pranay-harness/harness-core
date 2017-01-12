@@ -6,7 +6,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -62,8 +62,7 @@ public interface ServiceInstanceService {
    * @param addedHosts   the added hosts
    * @param deletedHosts the deleted hosts
    */
-  void updateInstanceMappings(
-      @NotNull ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts);
+  void updateInstanceMappings(@NotNull ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
 
   /**
    * Delete by env.

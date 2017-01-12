@@ -25,7 +25,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -99,7 +99,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return the instance element
    */
   static InstanceElement convertToInstanceElement(
-      ServiceInstance instance, ApplicationHost host, ServiceTemplate serviceTemplate) {
+      ServiceInstance instance, Host host, ServiceTemplate serviceTemplate) {
     InstanceElement element = new InstanceElement();
     MapperUtils.mapObject(instance, element);
     element.setHostElement(HostExpressionProcessor.convertToHostElement(host));
@@ -254,7 +254,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     for (ServiceInstance instance : instances) {
       ServiceTemplate serviceTemplate =
           serviceTemplateService.get(instance.getAppId(), instance.getServiceTemplateId());
-      ApplicationHost host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
+      Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
       elements.add(convertToInstanceElement(instance, host, serviceTemplate));
     }
 

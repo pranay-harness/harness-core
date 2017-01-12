@@ -3,9 +3,8 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.infrastructure.ApplicationHost;
-import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.HostUsage;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
@@ -26,7 +25,7 @@ public interface HostService {
    * @param req the req
    * @return the page response
    */
-  PageResponse<ApplicationHost> list(PageRequest<ApplicationHost> req);
+  PageResponse<Host> list(PageRequest<Host> req);
 
   /**
    * Gets the.
@@ -36,7 +35,7 @@ public interface HostService {
    * @param hostId the host id
    * @return the host
    */
-  ApplicationHost get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
+  Host get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Update.
@@ -45,7 +44,7 @@ public interface HostService {
    * @param host  the host
    * @return the host
    */
-  @ValidationGroups(Update.class) ApplicationHost update(String envId, @Valid Host host);
+  @ValidationGroups(Update.class) Host update(String envId, @Valid Host host);
 
   /**
    * Delete.
@@ -92,8 +91,7 @@ public interface HostService {
    * @param hostUuids the host uuids
    * @return the hosts by id
    */
-  List<ApplicationHost> getHostsByHostIds(
-      @NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> hostUuids);
+  List<Host> getHostsByHostIds(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> hostUuids);
 
   /**
    * Gets hosts by env.
@@ -102,7 +100,7 @@ public interface HostService {
    * @param envId the env id
    * @return the hosts by env
    */
-  List<ApplicationHost> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
+  List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Gets host by env.
@@ -112,7 +110,7 @@ public interface HostService {
    * @param hostId the host id
    * @return the host by env
    */
-  ApplicationHost getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
+  Host getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Bulk save.
@@ -138,7 +136,7 @@ public interface HostService {
    * @param uuid the uuid
    * @return the host usage by application for infrastructure
    */
-  List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String uuid);
+  List<HostUsage> getInfrastructureHostUsageByApplication(String uuid);
 
   /**
    * Save application host application host.
@@ -146,7 +144,7 @@ public interface HostService {
    * @param appHost the app host
    * @return the application host
    */
-  ApplicationHost saveApplicationHost(ApplicationHost appHost);
+  Host saveHost(Host appHost);
 
   /**
    * Exist boolean.

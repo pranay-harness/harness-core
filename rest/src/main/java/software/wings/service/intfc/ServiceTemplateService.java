@@ -8,7 +8,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -17,7 +16,6 @@ import software.wings.utils.validation.Update;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/4/16.
@@ -106,13 +104,6 @@ public interface ServiceTemplateService {
    * @return the service template
    */
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
-
-  /**
-   * Delete host from templates.
-   *
-   * @param host the host
-   */
-  void deleteHostFromTemplates(@NotNull ApplicationHost host);
 
   /**
    * Delete by env.

@@ -6,9 +6,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -33,9 +31,8 @@ import software.wings.beans.EventType;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.ApplicationHost;
-import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.HostUsage;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -60,7 +57,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -88,21 +84,21 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<ApplicationHost> list(PageRequest<ApplicationHost> req) {
-    return wingsPersistence.query(ApplicationHost.class, req);
+  public PageResponse<Host> list(PageRequest<Host> req) {
+    return wingsPersistence.query(Host.class, req);
   }
 
   @Override
-  public ApplicationHost get(String appId, String envId, String hostId) {
-    ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
-                                          .field(ID_KEY)
-                                          .equal(hostId)
-                                          .field("envId")
-                                          .equal(envId)
-                                          .field("appId")
-                                          .equal(appId)
-                                          .get();
-    notNullCheck("ApplicationHost", applicationHost);
+  public Host get(String appId, String envId, String hostId) {
+    Host applicationHost = wingsPersistence.createQuery(Host.class)
+                               .field(ID_KEY)
+                               .equal(hostId)
+                               .field("envId")
+                               .equal(envId)
+                               .field("appId")
+                               .equal(appId)
+                               .get();
+    notNullCheck("Host", applicationHost);
     return applicationHost;
   }
 
@@ -110,10 +106,10 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#update(software.wings.beans.infrastructure.Host)
    */
   @Override
-  public ApplicationHost update(String envId, Host host) {
-    ApplicationHost applicationHost = get(host.getAppId(), envId, host.getUuid());
+  public Host update(String envId, Host host) {
+    Host savedHost = get(host.getAppId(), envId, host.getUuid());
 
-    if (applicationHost == null || applicationHost.getHost() == null) {
+    if (savedHost == null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Host doesn't exist");
     }
 
@@ -121,11 +117,9 @@ public class HostServiceImpl implements HostService {
     if (host.getBastionConnAttr() != null) {
       builder.put("bastionConnAttr", host.getBastionConnAttr());
     }
-    wingsPersistence.updateFields(Host.class, applicationHost.getHost().getUuid(), builder.build());
+    wingsPersistence.updateFields(Host.class, savedHost.getUuid(), builder.build());
 
-    List<ServiceTemplate> serviceTemplates =
-        validateAndFetchServiceTemplate(host.getAppId(), host.getServiceTemplates());
-    ApplicationHost appHost = get(applicationHost.getAppId(), applicationHost.getEnvId(), host.getUuid());
+    Host appHost = get(savedHost.getAppId(), savedHost.getEnvId(), host.getUuid());
     return appHost;
   }
 
@@ -134,33 +128,23 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public ResponseMessage bulkSave(String infraId, String envId, Host baseHost) {
-    Set<String> hostNames = baseHost.getHostNames()
-                                .stream()
-                                .filter(hostName -> !isNullOrEmpty(hostName))
-                                .map(String::trim)
-                                .collect(Collectors.toSet());
-    Infrastructure infrastructure = infraService.get(infraId);
-    List<ApplicationHost> applicationHosts = saveApplicationHosts(envId, baseHost, hostNames, infrastructure);
+    /*
+    Set<String> hostNames = baseHost.getHostNames().stream().filter(hostName ->
+    !isNullOrEmpty(hostName)).map(String::trim).collect(Collectors.toSet()); Infrastructure infrastructure =
+    infraService.get(infraId); List<Host> applicationHosts = saveHosts(envId, baseHost, hostNames, infrastructure);
 
-    notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(baseHost.getAppId())
-            .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
-                ImmutableMap.of("COUNT", Integer.toString(hostNames.size()), "ENV_NAME",
-                    environmentService.get(baseHost.getAppId(), envId, false).getName())))
-            .build());
-    // TODO: history entry for bulk save
+    notificationService.sendNotificationAsync(anInformationNotification().withAppId(baseHost.getAppId()).withDisplayText(
+        getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
+            ImmutableMap.of("COUNT", Integer.toString(hostNames.size()), "ENV_NAME",
+    environmentService.get(baseHost.getAppId(), envId, false).getName()))) .build());
+    //TODO: history entry for bulk save
+    */
 
     return aResponseMessage().build();
   }
 
   private Host getOrCreateInfraHost(Host baseHost) {
-    Host host = wingsPersistence.createQuery(Host.class)
-                    .field("hostName")
-                    .equal(baseHost.getHostName())
-                    .field("infraId")
-                    .equal(baseHost.getInfraId())
-                    .get();
+    Host host = wingsPersistence.createQuery(Host.class).field("hostName").equal(baseHost.getHostName()).get();
     if (host == null) {
       SettingAttribute bastionConnAttr = validateAndFetchBastionHostConnectionReference(baseHost.getBastionConnAttr());
       if (bastionConnAttr != null) {
@@ -171,42 +155,35 @@ public class HostServiceImpl implements HostService {
     return host;
   }
 
-  private List<ApplicationHost> saveApplicationHosts(
-      String envId, Host baseHost, Set<String> hostNames, Infrastructure infrastructure) {
-    List<ApplicationHost> applicationHosts = new ArrayList<>();
+  private List<Host> saveHosts(String envId, Host baseHost, Set<String> hostNames, Infrastructure infrastructure) {
+    List<Host> applicationHosts = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
       Host host = aHost()
                       .withHostName(hostName)
                       .withAppId(infrastructure.getAppId())
-                      .withInfraId(infrastructure.getUuid())
                       .withHostConnAttr(baseHost.getHostConnAttr())
                       .build();
       host = getOrCreateInfraHost(host);
-      ApplicationHost applicationHost = saveApplicationHost(anApplicationHost()
-                                                                .withAppId(baseHost.getAppId())
-                                                                .withEnvId(envId)
-                                                                .withInfraId(host.getInfraId())
-                                                                .withHostName(host.getHostName())
-                                                                .withHost(host)
-                                                                .build());
+      Host applicationHost =
+          saveHost(aHost().withAppId(baseHost.getAppId()).withEnvId(envId).withHostName(host.getHostName()).build());
       applicationHosts.add(applicationHost);
     });
     return applicationHosts;
   }
 
   @Override
-  public ApplicationHost saveApplicationHost(ApplicationHost appHost) {
-    ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
-                                          .field("hostName")
-                                          .equal(appHost.getHostName())
-                                          .field("appId")
-                                          .equal(appHost.getAppId())
-                                          .field("envId")
-                                          .equal(appHost.getEnvId())
-                                          .get();
+  public Host saveHost(Host appHost) {
+    Host applicationHost = wingsPersistence.createQuery(Host.class)
+                               .field("hostName")
+                               .equal(appHost.getHostName())
+                               .field("appId")
+                               .equal(appHost.getAppId())
+                               .field("envId")
+                               .equal(appHost.getEnvId())
+                               .get();
     if (applicationHost == null) {
-      applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class, appHost);
+      applicationHost = wingsPersistence.saveAndGet(Host.class, appHost);
     }
     return applicationHost;
   }
@@ -219,13 +196,13 @@ public class HostServiceImpl implements HostService {
   @Override
   public int getMappedInfraHostCount(String infraId) {
     return wingsPersistence.getDatastore()
-        .getCollection(ApplicationHost.class)
+        .getCollection(Host.class)
         .distinct("hostName", new BasicDBObject("infraId", infraId))
         .size();
   }
 
   @Override
-  public List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String infraId) {
+  public List<HostUsage> getInfrastructureHostUsageByApplication(String infraId) {
     List<Application> apps =
         appService
             .list(aPageRequest().withLimit(PageRequest.UNLIMITED).withOffset("0").addFieldsIncluded("name").build(),
@@ -233,30 +210,23 @@ public class HostServiceImpl implements HostService {
             .getResponse();
     ImmutableMap<String, Application> applicationsById = Maps.uniqueIndex(apps, Application::getUuid);
 
-    Query<ApplicationHost> query = wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infraId);
+    Query<Host> query = wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId);
 
-    Iterator<ApplicationHostUsage> hostUsageIterator =
-        wingsPersistence.getDatastore()
-            .createAggregation(ApplicationHost.class)
-            .match(query)
-            .group("appId", Group.grouping("count", new Accumulator("$sum", 1)))
-            .aggregate(ApplicationHostUsage.class);
+    Iterator<HostUsage> hostUsageIterator = wingsPersistence.getDatastore()
+                                                .createAggregation(Host.class)
+                                                .match(query)
+                                                .group("appId", Group.grouping("count", new Accumulator("$sum", 1)))
+                                                .aggregate(HostUsage.class);
 
-    List<ApplicationHostUsage> hostUsageList = IteratorUtils.toList(hostUsageIterator);
-    hostUsageList.stream()
-        .filter(hostUsage -> applicationsById.get(hostUsage.getAppId()) != null)
-        .forEach(hostUsage -> hostUsage.setAppName(applicationsById.get(hostUsage.getAppId()).getName()));
+    List<HostUsage> hostUsageList = IteratorUtils.toList(hostUsageIterator);
+    //    hostUsageList.stream().filter(hostUsage -> applicationsById.get(hostUsage()) != null)
+    //        .forEach(hostUsage -> hostUsage.setAppName(applicationsById.get(hostUsage.getAppId()).getName()));
     return hostUsageList;
   }
 
   @Override
   public boolean exist(String appId, String hostId) {
-    return wingsPersistence.createQuery(ApplicationHost.class)
-               .field(ID_KEY)
-               .equal(hostId)
-               .field("appId")
-               .equal(appId)
-               .getKey()
+    return wingsPersistence.createQuery(Host.class).field(ID_KEY).equal(hostId).field("appId").equal(appId).getKey()
         != null;
   }
 
@@ -274,8 +244,8 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getHostsByHostIds(java.lang.String, java.util.List)
    */
   @Override
-  public List<ApplicationHost> getHostsByHostIds(String appId, String envId, List<String> hostUuids) {
-    return wingsPersistence.createQuery(ApplicationHost.class)
+  public List<Host> getHostsByHostIds(String appId, String envId, List<String> hostUuids) {
+    return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
         .field("envId")
@@ -286,18 +256,13 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public List<ApplicationHost> getHostsByEnv(String appId, String envId) {
-    return wingsPersistence.createQuery(ApplicationHost.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .asList();
+  public List<Host> getHostsByEnv(String appId, String envId) {
+    return wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("envId").equal(envId).asList();
   }
 
   @Override
-  public ApplicationHost getHostByEnv(String appId, String envId, String hostId) {
-    return wingsPersistence.createQuery(ApplicationHost.class)
+  public Host getHostByEnv(String appId, String envId, String hostId) {
+    return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
         .field("envId")
@@ -319,7 +284,7 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void delete(String appId, String envId, String hostId) {
-    ApplicationHost applicationHost = get(appId, envId, hostId);
+    Host applicationHost = get(appId, envId, hostId);
     if (delete(applicationHost)) {
       Environment environment = environmentService.get(applicationHost.getAppId(), applicationHost.getEnvId(), false);
       notificationService.sendNotificationAsync(
@@ -341,11 +306,10 @@ public class HostServiceImpl implements HostService {
     }
   }
 
-  private boolean delete(ApplicationHost applicationHost) {
+  private boolean delete(Host applicationHost) {
     if (applicationHost != null) {
       boolean delete = wingsPersistence.delete(applicationHost);
       if (delete) {
-        serviceTemplateService.deleteHostFromTemplates(applicationHost);
         executorService.submit(
             () -> configService.deleteByEntityId(applicationHost.getAppId(), applicationHost.getUuid()));
       }
@@ -356,12 +320,12 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void deleteByInfra(String infraId) {
-    wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infraId).asList().forEach(this ::delete);
+    wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).asList().forEach(this ::delete);
   }
 
   @Override
   public void deleteByEnvironment(String appId, String envId) {
-    wingsPersistence.createQuery(ApplicationHost.class)
+    wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
         .field("envId")

@@ -26,7 +26,6 @@ import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.InfrastructureMappingRule.Rule;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
@@ -149,12 +148,11 @@ public class InfraIntegrationTest extends WingsBaseTest {
                                         .build();
     Infrastructure savedInfra = infrastructureService.save(infrastructure);
 
-    Host baseHost =
-        aHost().withAppId(GLOBAL_APP_ID).withInfraId(savedInfra.getUuid()).withHostName("aws.host1").build();
+    Host baseHost = aHost().withAppId(GLOBAL_APP_ID).withHostName("aws.host1").build();
     Host host = wingsPersistence.saveAndGet(Host.class, baseHost);
 
     infrastructureService.applyApplicableMappingRules(infrastructure, host);
-    List<ApplicationHost> appHosts =
+    List<Host> appHosts =
         hostService.list(PageRequest.Builder.aPageRequest().addFilter("appId", EQ, environment.getAppId()).build())
             .getResponse();
     assertThat(appHosts).hasSize(1);
@@ -203,8 +201,8 @@ public class InfraIntegrationTest extends WingsBaseTest {
     infrastructureService.sync(savedInfra.getUuid());
 
     List<Host> hosts = wingsPersistence.createQuery(Host.class).asList();
-    List<ApplicationHost> applicationHosts =
-        wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infrastructure.getUuid()).asList();
+    List<Host> applicationHosts =
+        wingsPersistence.createQuery(Host.class).field("infraId").equal(infrastructure.getUuid()).asList();
     int count = (int) wingsPersistence.createQuery(Environment.class).countAll();
 
     Assertions.assertThat(hosts.size()).isEqualTo(19);

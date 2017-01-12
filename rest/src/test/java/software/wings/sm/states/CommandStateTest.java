@@ -30,7 +30,6 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -69,7 +68,7 @@ import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -114,12 +113,8 @@ public class CommandStateTest extends WingsBaseTest {
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
-  private static final ApplicationHost HOST =
-      anApplicationHost()
-          .withUuid(HOST_ID)
-          .withHostName(HOST_NAME)
-          .withHost(aHost().withHostConnAttr("1").withBastionConnAttr("1").build())
-          .build();
+  private static final Host HOST =
+      aHost().withUuid(HOST_ID).withHostName(HOST_NAME).withHostConnAttr("1").withBastionConnAttr("1").build();
   private static final ServiceInstance SERVICE_INSTANCE = aServiceInstance()
                                                               .withUuid(SERVICE_INSTANCE_ID)
                                                               .withAppId(APP_ID)
@@ -252,7 +247,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withExecutionCredential(null)
                                .withActivityId(ACTIVITY_ID)
                                .withEnvId(ENV_ID)
-                               .withHost(HOST.getHost())
+                               .withHost(HOST)
                                .withServiceTemplate(SERVICE_TEMPLATE)
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
@@ -349,7 +344,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withActivityId(ACTIVITY_ID)
                                .withEnvId(ENV_ID)
                                .withArtifactFiles(artifact.getArtifactFiles())
-                               .withHost(HOST.getHost())
+                               .withHost(HOST)
                                .withServiceTemplate(SERVICE_TEMPLATE)
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)

@@ -15,7 +15,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -96,11 +95,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
-    anApplicationHost()
-        .withAppId(appId)
-        .withEnvId(env.getUuid())
-        .withHost(aHost().withHostName("host1").build())
-        .build();
+    aHost().withAppId(appId).withEnvId(env.getUuid()).withHostName("host1").build();
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
 
@@ -111,37 +106,37 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
 
     ServiceInstance instance1 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid1").withHostName("host1").build())
+                                    .withHost(aHost().withUuid("huuid1").withHostName("host1").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance2 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid2").withHostName("host2").build())
+                                    .withHost(aHost().withUuid("huuid2").withHostName("host2").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance3 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid3").withHostName("host3").build())
+                                    .withHost(aHost().withUuid("huuid3").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance4 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid4").withHostName("host3").build())
+                                    .withHost(aHost().withUuid("huuid4").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance5 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid5").withHostName("host3").build())
+                                    .withHost(aHost().withUuid("huuid5").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance6 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid6").withHostName("host3").build())
+                                    .withHost(aHost().withUuid("huuid6").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance7 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withUuid("huuid7").withHostName("host3").build())
+                                    .withHost(aHost().withUuid("huuid7").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     List<ServiceInstance> instances =
@@ -160,8 +155,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
-               .thenReturn(
-                   anApplicationHost().withUuid(instance.getHostId()).withHostName(instance.getHostName()).build()));
+               .thenReturn(aHost().withUuid(instance.getHostId()).withHostName(instance.getHostName()).build()));
 
     List<PartitionElement> partitions = processor.partitions("2", "30 %", "50 %");
     assertThat(partitions).isNotNull().hasSize(3).doesNotContainNull();

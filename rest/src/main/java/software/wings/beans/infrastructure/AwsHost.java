@@ -1,12 +1,7 @@
 package software.wings.beans.infrastructure;
 
 import com.amazonaws.services.ec2.model.Instance;
-import software.wings.beans.ConfigFile;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.ServiceTemplate;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -37,20 +32,19 @@ public class AwsHost extends Host {
    */
   public static final class Builder {
     private Instance instance;
+    private String envId;
+    private String serviceTemplateId;
+    private String infraMappingId;
+    private String computeProviderId;
+    private String hostName;
+    private String hostConnAttr;
+    private String bastionConnAttr;
     private String uuid;
     private String appId;
-    private String infraId;
-    private String hostName;
     private EmbeddedUser createdBy;
-    private String osType;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
-    private String hostConnAttr;
     private long lastUpdatedAt;
-    private String bastionConnAttr;
-    private List<ConfigFile> configFiles = new ArrayList<>();
-    private List<String> hostNames; // to support bulk add host API
-    private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
 
     private Builder() {}
 
@@ -71,6 +65,83 @@ public class AwsHost extends Host {
      */
     public Builder withInstance(Instance instance) {
       this.instance = instance;
+      return this;
+    }
+
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With service template id builder.
+     *
+     * @param serviceTemplateId the service template id
+     * @return the builder
+     */
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    /**
+     * With infra mapping id builder.
+     *
+     * @param infraMappingId the infra mapping id
+     * @return the builder
+     */
+    public Builder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    /**
+     * With compute provider id builder.
+     *
+     * @param computeProviderId the compute provider id
+     * @return the builder
+     */
+    public Builder withComputeProviderId(String computeProviderId) {
+      this.computeProviderId = computeProviderId;
+      return this;
+    }
+
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With host conn attr builder.
+     *
+     * @param hostConnAttr the host conn attr
+     * @return the builder
+     */
+    public Builder withHostConnAttr(String hostConnAttr) {
+      this.hostConnAttr = hostConnAttr;
+      return this;
+    }
+
+    /**
+     * With bastion conn attr builder.
+     *
+     * @param bastionConnAttr the bastion conn attr
+     * @return the builder
+     */
+    public Builder withBastionConnAttr(String bastionConnAttr) {
+      this.bastionConnAttr = bastionConnAttr;
       return this;
     }
 
@@ -97,28 +168,6 @@ public class AwsHost extends Host {
     }
 
     /**
-     * With infra id builder.
-     *
-     * @param infraId the infra id
-     * @return the builder
-     */
-    public Builder withInfraId(String infraId) {
-      this.infraId = infraId;
-      return this;
-    }
-
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
-    public Builder withHostName(String hostName) {
-      this.hostName = hostName;
-      return this;
-    }
-
-    /**
      * With created by builder.
      *
      * @param createdBy the created by
@@ -126,17 +175,6 @@ public class AwsHost extends Host {
      */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
-     * With os type builder.
-     *
-     * @param osType the os type
-     * @return the builder
-     */
-    public Builder withOsType(String osType) {
-      this.osType = osType;
       return this;
     }
 
@@ -163,17 +201,6 @@ public class AwsHost extends Host {
     }
 
     /**
-     * With host conn attr builder.
-     *
-     * @param hostConnAttr the host conn attr
-     * @return the builder
-     */
-    public Builder withHostConnAttr(String hostConnAttr) {
-      this.hostConnAttr = hostConnAttr;
-      return this;
-    }
-
-    /**
      * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
@@ -185,50 +212,6 @@ public class AwsHost extends Host {
     }
 
     /**
-     * With bastion conn attr builder.
-     *
-     * @param bastionConnAttr the bastion conn attr
-     * @return the builder
-     */
-    public Builder withBastionConnAttr(String bastionConnAttr) {
-      this.bastionConnAttr = bastionConnAttr;
-      return this;
-    }
-
-    /**
-     * With config files builder.
-     *
-     * @param configFiles the config files
-     * @return the builder
-     */
-    public Builder withConfigFiles(List<ConfigFile> configFiles) {
-      this.configFiles = configFiles;
-      return this;
-    }
-
-    /**
-     * With host names builder.
-     *
-     * @param hostNames the host names
-     * @return the builder
-     */
-    public Builder withHostNames(List<String> hostNames) {
-      this.hostNames = hostNames;
-      return this;
-    }
-
-    /**
-     * With service templates builder.
-     *
-     * @param serviceTemplates the service templates
-     * @return the builder
-     */
-    public Builder withServiceTemplates(List<ServiceTemplate> serviceTemplates) {
-      this.serviceTemplates = serviceTemplates;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -236,20 +219,19 @@ public class AwsHost extends Host {
     public Builder but() {
       return anAwsHost()
           .withInstance(instance)
+          .withEnvId(envId)
+          .withServiceTemplateId(serviceTemplateId)
+          .withInfraMappingId(infraMappingId)
+          .withComputeProviderId(computeProviderId)
+          .withHostName(hostName)
+          .withHostConnAttr(hostConnAttr)
+          .withBastionConnAttr(bastionConnAttr)
           .withUuid(uuid)
           .withAppId(appId)
-          .withInfraId(infraId)
-          .withHostName(hostName)
           .withCreatedBy(createdBy)
-          .withOsType(osType)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withHostConnAttr(hostConnAttr)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withBastionConnAttr(bastionConnAttr)
-          .withConfigFiles(configFiles)
-          .withHostNames(hostNames)
-          .withServiceTemplates(serviceTemplates);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -260,20 +242,19 @@ public class AwsHost extends Host {
     public AwsHost build() {
       AwsHost awsHost = new AwsHost();
       awsHost.setInstance(instance);
+      awsHost.setEnvId(envId);
+      awsHost.setServiceTemplateId(serviceTemplateId);
+      awsHost.setInfraMappingId(infraMappingId);
+      awsHost.setComputeProviderId(computeProviderId);
+      awsHost.setHostName(hostName);
+      awsHost.setHostConnAttr(hostConnAttr);
+      awsHost.setBastionConnAttr(bastionConnAttr);
       awsHost.setUuid(uuid);
       awsHost.setAppId(appId);
-      awsHost.setInfraId(infraId);
-      awsHost.setHostName(hostName);
       awsHost.setCreatedBy(createdBy);
-      awsHost.setOsType(osType);
       awsHost.setCreatedAt(createdAt);
       awsHost.setLastUpdatedBy(lastUpdatedBy);
-      awsHost.setHostConnAttr(hostConnAttr);
       awsHost.setLastUpdatedAt(lastUpdatedAt);
-      awsHost.setBastionConnAttr(bastionConnAttr);
-      awsHost.setConfigFiles(configFiles);
-      awsHost.setHostNames(hostNames);
-      awsHost.setServiceTemplates(serviceTemplates);
       return awsHost;
     }
   }

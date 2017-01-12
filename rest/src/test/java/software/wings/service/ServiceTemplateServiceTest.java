@@ -14,7 +14,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -40,7 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -107,7 +107,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldListSavedServiceTemplates() {
     PageResponse<ServiceTemplate> pageResponse = new PageResponse<>();
-    ApplicationHost host = ApplicationHost.Builder.anApplicationHost().withUuid(HOST_ID).build();
+    Host host = Host.Builder.aHost().withUuid(HOST_ID).build();
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(builder.but().withServiceId(SERVICE_ID).build()));

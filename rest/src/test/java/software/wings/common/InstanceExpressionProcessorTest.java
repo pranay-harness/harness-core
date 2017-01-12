@@ -15,8 +15,7 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
-import static software.wings.utils.WingsTestConstants.INFRA_ID;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
@@ -35,7 +34,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -124,17 +123,17 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withHostName("host1").build())
+                                    .withHost(aHost().withHostName("host1").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
     ServiceInstance instance2 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withHostName("host2").build())
+                                    .withHost(aHost().withHostName("host2").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
     ServiceInstance instance3 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withHostName("host3").build())
+                                    .withHost(aHost().withHostName("host3").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
 
@@ -146,13 +145,13 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
-               .thenReturn(anApplicationHost().withHostName(instance.getHostName()).build()));
+               .thenReturn(aHost().withHostName(instance.getHostName()).build()));
     SERVICE_TEMPLATE.setService(aService().withAppId(app.getAppId()).withUuid(SERVICE_ID).build());
     when(serviceTemplateServiceMock.get(anyString(), anyString())).thenReturn(SERVICE_TEMPLATE);
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
-               .thenReturn(anApplicationHost().withHostName(instance.getHostName()).build()));
+               .thenReturn(aHost().withHostName(instance.getHostName()).build()));
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
@@ -349,7 +348,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
-                                    .withHost(anApplicationHost().withHostName("host1").build())
+                                    .withHost(aHost().withHostName("host1").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
     List<ServiceInstance> instances = Lists.newArrayList(instance1);
@@ -369,7 +368,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
-               .thenReturn(anApplicationHost().withHostName(instance.getHostName()).build()));
+               .thenReturn(aHost().withHostName(instance.getHostName()).build()));
 
     List<InstanceElement> elements = processor.list();
     assertThat(elements).isNotNull();
@@ -392,13 +391,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
-    ApplicationHost applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host1")
-            .build());
+    Host applicationHost = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withAppId(app.getAppId()).withUuid(UUIDGenerator.getUuid()).withName("svc1").build());
@@ -433,7 +427,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     on(processor).set("hostService", hostService);
 
     when(hostService.getHostByEnv(anyString(), anyString(), eq(instance1.getHostId())))
-        .thenReturn(anApplicationHost().withHostName(instance1.getHostName()).build());
+        .thenReturn(aHost().withHostName(instance1.getHostName()).build());
 
     String expr = "${instances}";
     List<InstanceElement> elements = (List<InstanceElement>) context.evaluateExpression(expr);
