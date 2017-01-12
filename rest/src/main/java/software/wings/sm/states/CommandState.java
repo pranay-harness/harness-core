@@ -301,13 +301,13 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).build();
 
-      delegateService.sendTaskWaitNotify(aDelegateTask()
-                                             .withAccountId(application.getAccountId())
-                                             .withAppId(appId)
-                                             .withTaskType(TaskType.COMMAND)
-                                             .withWaitId(activityId)
-                                             .withParameters(new Object[] {command, commandExecutionContext})
-                                             .build());
+      delegateService.queueTask(aDelegateTask()
+                                    .withAccountId(application.getAccountId())
+                                    .withAppId(appId)
+                                    .withTaskType(TaskType.COMMAND)
+                                    .withWaitId(activityId)
+                                    .withParameters(new Object[] {command, commandExecutionContext})
+                                    .build());
 
     } catch (Exception e) {
       logger.error("Exception in command execution: ", e);

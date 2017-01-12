@@ -204,7 +204,7 @@ public class JenkinsState extends State {
       });
     }
 
-    delegateService.sendTaskWaitNotify(
+    delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())

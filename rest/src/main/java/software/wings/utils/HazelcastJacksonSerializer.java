@@ -18,8 +18,6 @@ import java.util.HashMap;
 public class HazelcastJacksonSerializer<T> implements ByteArraySerializer<T> {
   @Override
   public byte[] write(T object) throws IOException {
-    System.out.println(JsonUtils.asJson(
-        Maps.newHashMap(ImmutableMap.builder().put("data", object).build()), JsonUtils.mapperForCloning));
     return JsonUtils
         .asJson(Maps.newHashMap(ImmutableMap.builder().put("data", object).build()), JsonUtils.mapperForCloning)
         .getBytes(StandardCharsets.UTF_8);

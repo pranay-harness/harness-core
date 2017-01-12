@@ -239,7 +239,7 @@ public class HttpState extends State {
     String finalEvaluatedBody = evaluatedBody;
     String finalEvaluatedHeader = evaluatedHeader;
 
-    delegateService.sendTaskWaitNotify(
+    delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())

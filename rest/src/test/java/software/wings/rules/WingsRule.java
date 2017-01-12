@@ -14,6 +14,7 @@ import com.google.inject.name.Names;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -30,16 +31,17 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.jsr107.ri.annotations.guice.module.CacheAnnotationsModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.mockito.internal.util.MockUtil;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.CurrentThreadExecutor;
+import software.wings.app.CacheModule;
 import software.wings.app.DatabaseModule;
 import software.wings.app.ExecutorModule;
 import software.wings.app.MainConfiguration;
@@ -99,7 +101,7 @@ public class WingsRule implements MethodRule {
         try {
           statement.evaluate();
         } finally {
-          WingsRule.this.after();
+          WingsRule.this.after(annotations);
         }
       }
     };
@@ -164,9 +166,9 @@ public class WingsRule implements MethodRule {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    System.setProperty("hazelcast.jcache.provider.type", "server");
+    HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
-    injector = Guice.createInjector(new CacheAnnotationsModule(), new CacheAnnotationsModule(),
+    List<AbstractModule> modules = Lists.newArrayList(
         new AbstractModule() {
           @Override
           protected void configure() {
@@ -175,6 +177,33 @@ public class WingsRule implements MethodRule {
         },
         new ValidationModule(validatorFactory), new DatabaseModule(datastore, datastore, distributedLockSvc),
         new WingsModule(configuration), new ExecutorModule(executorService), new QueueModule(datastore));
+
+    if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
+      System.setProperty("hazelcast.jcache.provider.type", "server");
+      CacheModule cacheModule = new CacheModule();
+      modules.add(0, cacheModule);
+      hazelcastInstance = cacheModule.getHazelcastInstance();
+    }
+
+    if (annotations.stream()
+            .filter(annotation -> Hazelcast.class.isInstance(annotation) || Cache.class.isInstance(annotation))
+            .findFirst()
+            .isPresent()) {
+      if (new MockUtil().isMock(hazelcastInstance)) {
+        hazelcastInstance = com.hazelcast.core.Hazelcast.newHazelcastInstance();
+      }
+    }
+
+    HazelcastInstance finalHazelcastInstance = hazelcastInstance;
+
+    modules.add(0, new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(HazelcastInstance.class).toInstance(finalHazelcastInstance);
+      }
+    });
+
+    injector = Guice.createInjector(modules);
 
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
@@ -192,16 +221,21 @@ public class WingsRule implements MethodRule {
   /**
    * After.
    */
-  protected void after() {
+  protected void after(List<Annotation> annotations) {
     // Clear caches.
-    CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-    cacheManager.getCacheNames().forEach(s -> {
-      if ("downloadTokenCache".equals(s)) {
-        cacheManager.getCache(s, String.class, String.class).clear();
-      } else {
-        cacheManager.getCache(s).clear();
-      }
-    });
+    if (annotations.stream()
+            .filter(annotation -> Hazelcast.class.isInstance(annotation) || Cache.class.isInstance(annotation))
+            .findFirst()
+            .isPresent()) {
+      CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
+      cacheManager.getCacheNames().forEach(s -> {
+        if ("downloadTokenCache".equals(s)) {
+          cacheManager.getCache(s, String.class, String.class).clear();
+        } else {
+          cacheManager.getCache(s).clear();
+        }
+      });
+    }
 
     try {
       log().info("Stopping executorService...");

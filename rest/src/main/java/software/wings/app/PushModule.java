@@ -2,12 +2,14 @@ package software.wings.app;
 
 import com.google.inject.AbstractModule;
 
+import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.setup.Environment;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.DefaultMetaBroadcaster;
 import org.atmosphere.cpr.MetaBroadcaster;
 import software.wings.service.impl.EventEmitter;
+import software.wings.utils.HazelcastBroadcaster;
 
 import javax.servlet.ServletRegistration.Dynamic;
 
@@ -23,13 +25,16 @@ public class PushModule extends AbstractModule {
    *
    * @param environment the environment
    */
-  public PushModule(Environment environment) {
+  public PushModule(Environment environment, HazelcastInstance hazelcastInstance) {
     atmosphereServlet = new AtmosphereServlet();
 
     atmosphereServlet.framework()
         .addInitParameter(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
         .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true");
 
+    atmosphereServlet.framework().setDefaultBroadcasterClassName(HazelcastBroadcaster.class.getName());
+
+    HazelcastBroadcaster.HAZELCAST_INSTANCE = hazelcastInstance;
     Dynamic dynamic = environment.servlets().addServlet("UIPushServlet", atmosphereServlet);
     dynamic.setAsyncSupported(true);
     dynamic.setLoadOnStartup(0);
