@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -13,6 +14,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ITopic;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -31,12 +34,14 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Event.Type;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.File;
@@ -45,6 +50,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
@@ -66,6 +72,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AccountService accountService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
+  @Inject private HazelcastInstance hazelcastInstance;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -167,8 +174,24 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void sendTaskWaitNotify(DelegateTask task) {
+  public void queueTask(DelegateTask task) {
     wingsPersistence.save(task);
+  }
+
+  @Override
+  public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+    String topicName = UUIDGenerator.getUuid();
+    task.setTopicName(UUIDGenerator.getUuid());
+    ITopic<T> topic = hazelcastInstance.getTopic(topicName);
+    CountDownLatch latchForResponse = new CountDownLatch(1);
+    final T[] response = (T[]) new Object[1];
+    topic.addMessageListener(message -> {
+      response[0] = message.getMessageObject();
+      latchForResponse.countDown();
+    });
+    wingsPersistence.save(task);
+    latchForResponse.await();
+    return response[0];
   }
 
   @Override
@@ -183,8 +206,15 @@ public class DelegateServiceImpl implements DelegateService {
             .addFilter("accountId", EQ, response.getAccountId())
             .addFilter(ID_KEY, EQ, response.getTaskId())
             .build());
-    String waitId = delegateTask.getWaitId();
-    waitNotifyEngine.notify(waitId, response.getResponse());
+    if (isNotBlank(delegateTask.getWaitId())) {
+      String waitId = delegateTask.getWaitId();
+      waitNotifyEngine.notify(waitId, response.getResponse());
+    } else {
+      String topicName = delegateTask.getTopicName();
+      // do the haze
+      ITopic<NotifyResponseData> topic = hazelcastInstance.getTopic(topicName);
+      topic.publish(response.getResponse());
+    }
     wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                 .field("accountId")
                                 .equal(response.getAccountId())

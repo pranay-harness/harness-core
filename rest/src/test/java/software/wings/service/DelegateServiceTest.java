@@ -134,7 +134,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
                                     .build();
-    delegateService.sendTaskWaitNotify(delegateTask);
+    delegateService.queueTask(delegateTask);
     assertThat(wingsPersistence.get(DelegateTask.class, aPageRequest().build())).isEqualTo(delegateTask);
   }
 

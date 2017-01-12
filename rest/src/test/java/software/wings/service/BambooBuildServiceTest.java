@@ -21,7 +21,7 @@ import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.BambooBuildService;
+import software.wings.service.intfc.BuildService;
 
 import java.util.List;
 import java.util.Set;
@@ -33,7 +33,8 @@ import javax.inject.Inject;
 public class BambooBuildServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private BambooService bambooService;
-  @Inject @InjectMocks private BambooBuildService bambooBuildService;
+
+  @Inject @InjectMocks private BuildService<BambooConfig> bambooBuildService;
 
   private static final BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
                                                        .withBamboosUrl("http://bamboo")

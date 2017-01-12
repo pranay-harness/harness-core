@@ -3,7 +3,6 @@ package software.wings.app;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
 
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
@@ -120,42 +119,12 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
   private class AtmosphereModule extends AbstractModule {
     @Override
     protected void configure() {
-      bind(BroadcasterFactory.class).toProvider(new Provider<BroadcasterFactory>() {
-        @Override
-        public BroadcasterFactory get() {
-          return config.getBroadcasterFactory();
-        }
-      });
-      bind(AtmosphereFramework.class).toProvider(new Provider<AtmosphereFramework>() {
-        @Override
-        public AtmosphereFramework get() {
-          return config.framework();
-        }
-      });
-      bind(AtmosphereResourceFactory.class).toProvider(new Provider<AtmosphereResourceFactory>() {
-        @Override
-        public AtmosphereResourceFactory get() {
-          return config.resourcesFactory();
-        }
-      });
-      bind(MetaBroadcaster.class).toProvider(new Provider<MetaBroadcaster>() {
-        @Override
-        public MetaBroadcaster get() {
-          return config.metaBroadcaster();
-        }
-      });
-      bind(AtmosphereResourceSessionFactory.class).toProvider(new Provider<AtmosphereResourceSessionFactory>() {
-        @Override
-        public AtmosphereResourceSessionFactory get() {
-          return config.sessionFactory();
-        }
-      });
-      bind(AtmosphereConfig.class).toProvider(new Provider<AtmosphereConfig>() {
-        @Override
-        public AtmosphereConfig get() {
-          return config;
-        }
-      });
+      bind(BroadcasterFactory.class).toProvider(() -> config.getBroadcasterFactory());
+      bind(AtmosphereFramework.class).toProvider(() -> config.framework());
+      bind(AtmosphereResourceFactory.class).toProvider(() -> config.resourcesFactory());
+      bind(MetaBroadcaster.class).toProvider(() -> config.metaBroadcaster());
+      bind(AtmosphereResourceSessionFactory.class).toProvider(() -> config.sessionFactory());
+      bind(AtmosphereConfig.class).toProvider(() -> config);
     }
   }
 }

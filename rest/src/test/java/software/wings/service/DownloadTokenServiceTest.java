@@ -18,6 +18,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 12/13/16.
  */
+@software.wings.rules.Cache
 public class DownloadTokenServiceTest extends WingsBaseTest {
   private Cache<String, String> cache =
       Optional.ofNullable(Caching.getCache("downloadTokenCache", String.class, String.class))

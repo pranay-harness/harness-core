@@ -68,7 +68,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
       waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getAppId(), artifact.getUuid()), waitId);
-      delegateService.sendTaskWaitNotify(delegateTask);
+      delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);

@@ -12,7 +12,7 @@ import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.BambooBuildService;
+import software.wings.service.intfc.BuildService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +24,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 11/22/16.
  */
 @Singleton
-public class BambooBuildServiceImpl implements BambooBuildService {
+public class BambooBuildServiceImpl implements BuildService<BambooConfig> {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BambooService bambooService;
 

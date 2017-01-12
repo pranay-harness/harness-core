@@ -3,6 +3,7 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -10,6 +11,7 @@ import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.hazelcast.core.HazelcastInstance;
 import com.palantir.versioninfo.VersionInfoBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -29,7 +31,6 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.jsr107.ri.annotations.guice.module.CacheAnnotationsModule;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,12 +123,19 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    PushModule module = new PushModule(environment);
-    Injector injector = Guice.createInjector(new CacheAnnotationsModule(), module,
+    CacheModule cacheModule = new CacheModule();
+    PushModule pushModule = new PushModule(environment, cacheModule.getHazelcastInstance());
+    Injector injector = Guice.createInjector(cacheModule, pushModule,
+        new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
+          }
+        },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
         new QueueModule(databaseModule.getPrimaryDatastore()));
 
-    module.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
+    pushModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerResources(environment, injector);
 

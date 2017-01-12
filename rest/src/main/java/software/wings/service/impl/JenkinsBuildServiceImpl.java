@@ -20,7 +20,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.BuildService;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -35,7 +35,7 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/13/16.
  */
 @Singleton
-public class JenkinsBuildServiceImpl implements JenkinsBuildService {
+public class JenkinsBuildServiceImpl implements BuildService<JenkinsConfig> {
   /**
    * The constant ARTIFACT_STREAM_ID.
    */

@@ -238,26 +238,26 @@ public class CommandStateTest extends WingsBaseTest {
     SERVICE_TEMPLATE.setService(SERVICE);
 
     verify(delegateService)
-        .sendTaskWaitNotify(aDelegateTask()
-                                .withAppId(APP_ID)
-                                .withAccountId(ACCOUNT_ID)
-                                .withTaskType(TaskType.COMMAND)
-                                .withWaitId(ACTIVITY_ID)
-                                .withParameters(new Object[] {COMMAND,
-                                    aCommandExecutionContext()
-                                        .withAppId(APP_ID)
-                                        .withBackupPath(BACKUP_PATH)
-                                        .withRuntimePath(RUNTIME_PATH)
-                                        .withStagingPath(STAGING_PATH)
-                                        .withExecutionCredential(null)
-                                        .withActivityId(ACTIVITY_ID)
-                                        .withEnvId(ENV_ID)
-                                        .withHost(HOST.getHost())
-                                        .withServiceTemplate(SERVICE_TEMPLATE)
-                                        .withServiceVariables(Collections.emptyMap())
-                                        .withAccountId(ACCOUNT_ID)
-                                        .build()})
-                                .build());
+        .queueTask(aDelegateTask()
+                       .withAppId(APP_ID)
+                       .withAccountId(ACCOUNT_ID)
+                       .withTaskType(TaskType.COMMAND)
+                       .withWaitId(ACTIVITY_ID)
+                       .withParameters(new Object[] {COMMAND,
+                           aCommandExecutionContext()
+                               .withAppId(APP_ID)
+                               .withBackupPath(BACKUP_PATH)
+                               .withRuntimePath(RUNTIME_PATH)
+                               .withStagingPath(STAGING_PATH)
+                               .withExecutionCredential(null)
+                               .withActivityId(ACTIVITY_ID)
+                               .withEnvId(ENV_ID)
+                               .withHost(HOST.getHost())
+                               .withServiceTemplate(SERVICE_TEMPLATE)
+                               .withServiceVariables(Collections.emptyMap())
+                               .withAccountId(ACCOUNT_ID)
+                               .build()})
+                       .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
@@ -334,27 +334,27 @@ public class CommandStateTest extends WingsBaseTest {
     SERVICE_TEMPLATE.setService(SERVICE);
 
     verify(delegateService)
-        .sendTaskWaitNotify(aDelegateTask()
-                                .withAppId(APP_ID)
-                                .withAccountId(ACCOUNT_ID)
-                                .withTaskType(TaskType.COMMAND)
-                                .withWaitId(ACTIVITY_ID)
-                                .withParameters(new Object[] {command,
-                                    aCommandExecutionContext()
-                                        .withAppId(APP_ID)
-                                        .withBackupPath(BACKUP_PATH)
-                                        .withRuntimePath(RUNTIME_PATH)
-                                        .withStagingPath(STAGING_PATH)
-                                        .withExecutionCredential(null)
-                                        .withActivityId(ACTIVITY_ID)
-                                        .withEnvId(ENV_ID)
-                                        .withArtifactFiles(artifact.getArtifactFiles())
-                                        .withHost(HOST.getHost())
-                                        .withServiceTemplate(SERVICE_TEMPLATE)
-                                        .withServiceVariables(Collections.emptyMap())
-                                        .withAccountId(ACCOUNT_ID)
-                                        .build()})
-                                .build());
+        .queueTask(aDelegateTask()
+                       .withAppId(APP_ID)
+                       .withAccountId(ACCOUNT_ID)
+                       .withTaskType(TaskType.COMMAND)
+                       .withWaitId(ACTIVITY_ID)
+                       .withParameters(new Object[] {command,
+                           aCommandExecutionContext()
+                               .withAppId(APP_ID)
+                               .withBackupPath(BACKUP_PATH)
+                               .withRuntimePath(RUNTIME_PATH)
+                               .withStagingPath(STAGING_PATH)
+                               .withExecutionCredential(null)
+                               .withActivityId(ACTIVITY_ID)
+                               .withEnvId(ENV_ID)
+                               .withArtifactFiles(artifact.getArtifactFiles())
+                               .withHost(HOST.getHost())
+                               .withServiceTemplate(SERVICE_TEMPLATE)
+                               .withServiceVariables(Collections.emptyMap())
+                               .withAccountId(ACCOUNT_ID)
+                               .build()})
+                       .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);

@@ -11,13 +11,13 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 12/5/16.
  */
 @Entity(value = "delegateTasks", noClassnameStored = true)
-//@Converters(ObjectArrayConverter.class)
 public class DelegateTask extends Base {
   private TaskType taskType;
   private String parameters;
   private String tag;
   private String accountId;
   private String waitId;
+  private String topicName;
 
   /**
    * Getter for property 'taskType'.
@@ -109,9 +109,27 @@ public class DelegateTask extends Base {
     this.waitId = waitId;
   }
 
+  /**
+   * Getter for property 'topicName'.
+   *
+   * @return Value for property 'topicName'.
+   */
+  public String getTopicName() {
+    return topicName;
+  }
+
+  /**
+   * Setter for property 'topicName'.
+   *
+   * @param topicName Value to set for property 'topicName'.
+   */
+  public void setTopicName(String topicName) {
+    this.topicName = topicName;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(taskType, parameters, tag, accountId, waitId);
+    return 31 * super.hashCode() + Objects.hash(taskType, parameters, tag, accountId, waitId, topicName);
   }
 
   @Override
@@ -126,9 +144,9 @@ public class DelegateTask extends Base {
       return false;
     }
     final DelegateTask other = (DelegateTask) obj;
-    return Objects.equals(this.taskType, other.taskType) && Objects.deepEquals(this.parameters, other.parameters)
+    return Objects.equals(this.taskType, other.taskType) && Objects.equals(this.parameters, other.parameters)
         && Objects.equals(this.tag, other.tag) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.waitId, other.waitId);
+        && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.topicName, other.topicName);
   }
 
   @Override
@@ -139,6 +157,7 @@ public class DelegateTask extends Base {
         .add("tag", tag)
         .add("accountId", accountId)
         .add("waitId", waitId)
+        .add("topicName", topicName)
         .toString();
   }
 
@@ -148,6 +167,7 @@ public class DelegateTask extends Base {
     private String tag;
     private String accountId;
     private String waitId;
+    private String topicName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -191,6 +211,11 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    public Builder withTopicName(String topicName) {
+      this.topicName = topicName;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
@@ -228,6 +253,7 @@ public class DelegateTask extends Base {
           .withTag(tag)
           .withAccountId(accountId)
           .withWaitId(waitId)
+          .withTopicName(topicName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -243,6 +269,7 @@ public class DelegateTask extends Base {
       delegateTask.setTag(tag);
       delegateTask.setAccountId(accountId);
       delegateTask.setWaitId(waitId);
+      delegateTask.setTopicName(topicName);
       delegateTask.setUuid(uuid);
       delegateTask.setAppId(appId);
       delegateTask.setCreatedBy(createdBy);
