@@ -19,5 +19,8 @@ public enum StateTypeScope {
   ORCHESTRATION_STENCILS, /**
                            * Command stencils state type scope.
                            */
-  COMMAND_STENCILS;
+  COMMAND_STENCILS, /**
+                     * None stencils state type scope.
+                     */
+  NONE;
 }

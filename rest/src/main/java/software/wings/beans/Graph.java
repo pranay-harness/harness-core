@@ -337,7 +337,7 @@ public class Graph {
    * The Class Node.
    */
   public static class Node {
-    private String id;
+    private String id = UUIDGenerator.getUuid();
     private String name;
     private String type;
     private String status;
@@ -768,7 +768,7 @@ public class Graph {
      * The Class Builder.
      */
     public static final class Builder {
-      private String id;
+      private String id = UUIDGenerator.getUuid();
       private String name;
       private String type;
       private String status;

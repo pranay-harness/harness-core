@@ -1,9 +1,12 @@
 package software.wings.beans;
 
+import static software.wings.beans.Graph.Node.Builder.aNode;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Graph.Node;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +15,7 @@ import java.util.List;
  * Created by rishi on 12/21/16.
  */
 public class PhaseStep {
-  private String uuid;
+  private String uuid = UUIDGenerator.getUuid();
   private String name;
   private PhaseStepType phaseStepType;
   @JsonIgnore private List<String> stepsIds = new ArrayList<>();
@@ -36,9 +39,6 @@ public class PhaseStep {
   }
 
   public String getName() {
-    if (name == null && phaseStepType != null) {
-      return phaseStepType.name();
-    }
     return name;
   }
 
@@ -52,6 +52,9 @@ public class PhaseStep {
 
   public void setPhaseStepType(PhaseStepType phaseStepType) {
     this.phaseStepType = phaseStepType;
+    if (name == null) {
+      name = phaseStepType.name();
+    }
   }
 
   public List<Node> getSteps() {
@@ -84,6 +87,16 @@ public class PhaseStep {
 
   public void setStepsIds(List<String> stepsIds) {
     this.stepsIds = stepsIds;
+  }
+
+  public Node generatePhaseStepNode() {
+    return aNode()
+        .withId(uuid)
+        .withName(name)
+        .withType(StateType.PHASE_STEP.name())
+        .addProperty("stepsInParallel", stepsInParallel)
+        .addProperty("failureStrategies", failureStrategies)
+        .build();
   }
 
   @Override
@@ -121,7 +134,7 @@ public class PhaseStep {
   }
 
   public static final class PhaseStepBuilder {
-    private String uuid;
+    private String uuid = UUIDGenerator.getUuid();
     private String name;
     private PhaseStepType phaseStepType;
     private List<Node> steps = new ArrayList<>();

@@ -4,8 +4,11 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
+import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.stencils.StencilCategory.CLOUD;
+import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -18,18 +21,24 @@ import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactState;
+import software.wings.sm.states.AwsAutoScaleProvisionState;
+import software.wings.sm.states.AwsNodeProvisionState;
+import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
+import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
-import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.LoadBalancerState;
 import software.wings.sm.states.PauseState;
+import software.wings.sm.states.PhaseStepSubWorkflow;
+import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SplunkState;
+import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -49,7 +58,7 @@ import java.util.List;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StateType implements StateTypeDescriptor {
   /**
-   * Repeat state type.
+   * Subworkflow state type.
    */
   SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
 
@@ -76,22 +85,22 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, StencilCategory.VERIFICATIONS, 1, ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, VERIFICATIONS, 1, ORCHESTRATION_STENCILS),
 
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, StencilCategory.VERIFICATIONS, 2, ORCHESTRATION_STENCILS),
+  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, ORCHESTRATION_STENCILS),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS, 3, ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 3, ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, StencilCategory.VERIFICATIONS, 4, ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
@@ -126,7 +135,37 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Jenkins state type.
    */
-  JENKINS(JenkinsState.class, StencilCategory.VERIFICATIONS, ORCHESTRATION_STENCILS);
+  JENKINS(JenkinsState.class, VERIFICATIONS, ORCHESTRATION_STENCILS),
+
+  /**
+   * AWS Node Provision state.
+   */
+  AWS_NODE_PROVISION(AwsNodeProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  /**
+   * AWS Node Select state.
+   */
+  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  /**
+   * AWS Node Provision state.
+   */
+  AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  /**
+   * Phase state type.
+   */
+  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  /**
+   * Phase state type.
+   */
+  PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
+
+  /**
+   * Phase state type.
+   */
+  PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

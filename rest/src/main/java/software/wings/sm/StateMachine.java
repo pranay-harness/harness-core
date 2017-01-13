@@ -23,6 +23,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.common.WingsExpressionProcessorFactory;
@@ -72,6 +73,29 @@ public class StateMachine extends Base {
    * Instantiates a new state machine.
    */
   public StateMachine() {}
+
+  /**
+   * Instantiates a new state machine.
+   *
+   * @param orchestrationWorkflow   the workflow
+   * @param stencilMap the stencil map
+   */
+  public StateMachine(OrchestrationWorkflow orchestrationWorkflow, Map<String, StateTypeDescriptor> stencilMap) {
+    logger.info("graph received for transform: {}", orchestrationWorkflow.getGraph());
+    setAppId(orchestrationWorkflow.getAppId());
+    this.originId = orchestrationWorkflow.getUuid();
+    this.graph = orchestrationWorkflow.getGraph();
+    this.name = graph.getGraphName();
+    try {
+      transform(stencilMap);
+    } catch (WingsException e) {
+      logger.error(e.getLocalizedMessage(), e);
+      throw e;
+    } catch (Exception e) {
+      logger.error(e.getLocalizedMessage(), e);
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateMachine transformation error");
+    }
+  }
 
   /**
    * Instantiates a new state machine.
