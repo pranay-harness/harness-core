@@ -15,7 +15,6 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.infrastructure.AwsInfrastructureProviderConfig.Builder.anAwsInfrastructureProviderConfig;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -41,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.ActivityService;
@@ -76,8 +76,7 @@ public class CloudWatchStateTest extends WingsBaseTest {
     when(settingsService.get(Base.GLOBAL_APP_ID, SETTING_ID))
         .thenReturn(
             aSettingAttribute()
-                .withValue(
-                    anAwsInfrastructureProviderConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
+                .withValue(AwsConfig.Builder.anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build())
                 .build());
     when(awsHelperService.getAwsCloudWatchClient(ACCESS_KEY, SECRET_KEY)).thenReturn(amazonCloudWatchClient);
     when(amazonCloudWatchClient.getMetricStatistics(any(GetMetricStatisticsRequest.class)))

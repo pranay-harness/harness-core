@@ -22,11 +22,13 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
@@ -36,6 +38,13 @@ import javax.validation.Valid;
 @Singleton
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   @Inject private WingsPersistence wingsPersistence;
+  private final Set<InfrastructureProvider> infrastructureProviders;
+
+  @Inject
+  public InfrastructureMappingServiceImpl(Set<InfrastructureProvider> infrastructureProviders) {
+    this.infrastructureProviders = infrastructureProviders;
+  }
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static final String stencilsPath = "/templates/inframapping/";

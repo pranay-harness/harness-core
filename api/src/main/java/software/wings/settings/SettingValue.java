@@ -84,11 +84,6 @@ public abstract class SettingValue implements ExtensionPoint {
     ELB,
 
     /**
-     * Aws credentials setting variable types.
-     */
-    AWS_CREDENTIALS,
-
-    /**
      * Slack setting variable types.
      */
     SLACK, /**

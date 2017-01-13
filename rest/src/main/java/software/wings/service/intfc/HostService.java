@@ -4,13 +4,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.HostUsage;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.validation.Update;
 
-import java.io.File;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -56,22 +54,6 @@ public interface HostService {
   void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
-   * Delete by infra.
-   *
-   * @param infraId the infra id
-   */
-  void deleteByInfra(String infraId);
-
-  /**
-   * Export hosts.
-   *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @return the file
-   */
-  File exportHosts(@NotEmpty String appId, @NotEmpty String infraId);
-
-  /**
    * Import hosts.
    *
    * @param infraId            the infra id
@@ -115,28 +97,11 @@ public interface HostService {
   /**
    * Bulk save.
    *
-   * @param infraId  the env id
    * @param envId    the env id
    * @param baseHost the base host  @return the response message
    * @return the response message
    */
-  ResponseMessage bulkSave(String infraId, String envId, Host baseHost);
-
-  /**
-   * Gets host count by infrastructure.
-   *
-   * @param infraId the infra id
-   * @return the host count by infrastructure
-   */
-  int getInfraHostCount(String infraId);
-
-  /**
-   * Gets host usage by application for infrastructure.
-   *
-   * @param uuid the uuid
-   * @return the host usage by application for infrastructure
-   */
-  List<HostUsage> getInfrastructureHostUsageByApplication(String uuid);
+  ResponseMessage bulkSave(String envId, Host baseHost);
 
   /**
    * Save application host application host.
@@ -154,14 +119,6 @@ public interface HostService {
    * @return the boolean
    */
   boolean exist(String appId, String hostId);
-
-  /**
-   * Gets mapped infra host count.
-   *
-   * @param infraId the infra id
-   * @return the mapped infra host count
-   */
-  int getMappedInfraHostCount(String infraId);
 
   /**
    * Delete by environment.

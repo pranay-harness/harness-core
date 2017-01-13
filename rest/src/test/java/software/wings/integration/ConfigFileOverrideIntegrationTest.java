@@ -6,7 +6,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -160,9 +159,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
       environmentService.delete(app.getUuid(), environments.get(i).getUuid());
     }
     Environment environment = environments.get(0);
-    String infraId = infrastructureService.getInfraByEnvId(environment.getAppId(), environment.getUuid()).getUuid();
 
-    hosts = importAndGetHosts(app.getUuid(), environment.getUuid(), infraId); // FIXME split
+    hosts = importAndGetHosts(app.getUuid(), environment.getUuid()); // FIXME split
 
     template = templateService.save(aServiceTemplate()
                                         .withAppId(app.getUuid())
@@ -221,7 +219,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         entityId);
   }
 
-  private List<Host> importAndGetHosts(String appId, String envId, String infraId) {
+  private List<Host> importAndGetHosts(String appId, String envId) {
     SettingAttribute settingAttribute =
         wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
     Host baseHost = aHost()
@@ -238,10 +236,10 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     }
     // TODO:: HOST refactoring
     // baseHost.setHostNames(hostNames);
-    hostService.bulkSave(infraId, envId, baseHost);
+    //    hostService.bulkSave(infraId, envId, baseHost);
     //    log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("infraId", infraId, EQ);
+    //    pageRequest.addFilter("infraId", infraId, EQ);
     return hostService.list(pageRequest).getResponse();
   }
 

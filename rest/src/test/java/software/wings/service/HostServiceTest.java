@@ -16,15 +16,12 @@ import static software.wings.beans.HostConnectionCredential.HostConnectionCreden
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.beans.infrastructure.Infrastructure.Builder.anInfrastructure;
-import static software.wings.beans.infrastructure.Infrastructure.InfrastructureType.STATIC;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
-import static software.wings.utils.WingsTestConstants.INFRA_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -99,9 +96,6 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(anInfrastructure().withType(STATIC).withUuid(INFRA_ID).build());
-
     when(wingsPersistence.createUpdateOperations(Host.class)).thenReturn(updateOperations);
 
     when(wingsPersistence.createQuery(Host.class)).thenReturn(hostQuery);
@@ -185,23 +179,6 @@ public class HostServiceTest extends WingsBaseTest {
     verify(hostQueryEnd).equal(HOST_ID);
     verify(wingsPersistence).delete(host);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
-  }
-
-  /**
-   * Should delete by infra.
-   */
-  @Test
-  public void shouldDeleteByInfra() {
-    Host host = aHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHostName(HOST_NAME).build();
-    when(hostQuery.asList()).thenReturn(asList(host));
-    when(wingsPersistence.delete(any(Host.class))).thenReturn(true);
-    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
-    hostService.deleteByInfra(INFRA_ID);
-
-    verify(hostQuery).asList();
-    verify(hostQuery).field("infraId");
-    verify(hostQueryEnd).equal(INFRA_ID);
-    verify(wingsPersistence).delete(host);
   }
 
   /**

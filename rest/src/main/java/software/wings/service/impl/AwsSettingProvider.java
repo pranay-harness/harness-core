@@ -21,7 +21,7 @@ public class AwsSettingProvider implements DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.AWS_CREDENTIALS.name())
+    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.AWS.name())
         .stream()
         .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
   }

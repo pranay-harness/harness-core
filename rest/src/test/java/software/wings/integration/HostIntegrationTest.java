@@ -149,8 +149,6 @@ public class HostIntegrationTest extends WingsBaseTest {
             .get(0)
             .getId());
 
-    infraId = infrastructureService.getDefaultInfrastructureId();
-
     settingAttribute =
         wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(app.getUuid()).build());
   }

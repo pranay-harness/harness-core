@@ -23,7 +23,6 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("name") }, options = @IndexOptions(unique = true)))
 public class Infrastructure extends Base {
   private String name;
-  private InfrastructureType type;
   private String infrastructureConfigId;
   private List<InfrastructureMappingRule> infrastructureMappingRules = new ArrayList<>();
   @Transient private HostUsage hostUsage;
@@ -33,15 +32,6 @@ public class Infrastructure extends Base {
    */
   public Infrastructure() {
     setAppId(GLOBAL_APP_ID);
-  }
-
-  /**
-   * Gets infra type.
-   *
-   * @return the infra type
-   */
-  public InfrastructureType getType() {
-    return type;
   }
 
   /**
@@ -116,38 +106,9 @@ public class Infrastructure extends Base {
     this.infrastructureConfigId = infrastructureConfigId;
   }
 
-  /**
-   * Sets type.
-   *
-   * @param type the type
-   */
-  public void setType(InfrastructureType type) {
-    this.type = type;
-  }
-
-  /**
-   * The Enum InfrastructureType.
-   */
-  public enum InfrastructureType {
-    /**
-     * Static infra type.
-     */
-    STATIC, /**
-             * Aws infra type.
-             */
-    AWS, /**
-          * Azure infra type.
-          */
-    AZURE, /**
-            * Container infra type.
-            */
-    CONTAINER
-  }
-
   @Override
   public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(name, type, infrastructureMappingRules, hostUsage, infrastructureConfigId);
+    return 31 * super.hashCode() + Objects.hash(name, infrastructureMappingRules, hostUsage, infrastructureConfigId);
   }
 
   @Override
@@ -162,7 +123,7 @@ public class Infrastructure extends Base {
       return false;
     }
     final Infrastructure other = (Infrastructure) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.type, other.type)
+    return Objects.equals(this.name, other.name)
         && Objects.equals(this.infrastructureMappingRules, other.infrastructureMappingRules)
         && Objects.equals(this.hostUsage, other.hostUsage)
         && Objects.equals(this.infrastructureConfigId, other.infrastructureConfigId);
@@ -172,7 +133,6 @@ public class Infrastructure extends Base {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("name", name)
-        .add("type", type)
         .add("infrastructureMappingRules", infrastructureMappingRules)
         .add("hostUsage", hostUsage)
         .add("infrastructureConfigId", infrastructureConfigId)
@@ -184,7 +144,6 @@ public class Infrastructure extends Base {
    */
   public static final class Builder {
     private String name;
-    private InfrastructureType type;
     private List<InfrastructureMappingRule> infrastructureMappingRules = new ArrayList<>();
     private HostUsage hostUsage;
     private String infrastructureConfigId;
@@ -214,17 +173,6 @@ public class Infrastructure extends Base {
      */
     public Builder withName(String name) {
       this.name = name;
-      return this;
-    }
-
-    /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
-    public Builder withType(InfrastructureType type) {
-      this.type = type;
       return this;
     }
 
@@ -335,7 +283,6 @@ public class Infrastructure extends Base {
     public Builder but() {
       return anInfrastructure()
           .withName(name)
-          .withType(type)
           .withInfrastructureMappingRules(infrastructureMappingRules)
           .withHostUsage(hostUsage)
           .withInfrastructureConfigId(infrastructureConfigId)
@@ -355,7 +302,6 @@ public class Infrastructure extends Base {
     public Infrastructure build() {
       Infrastructure infrastructure = new Infrastructure();
       infrastructure.setName(name);
-      infrastructure.setType(type);
       infrastructure.setInfrastructureMappingRules(infrastructureMappingRules);
       infrastructure.setHostUsage(hostUsage);
       infrastructure.setInfrastructureConfigId(infrastructureConfigId);

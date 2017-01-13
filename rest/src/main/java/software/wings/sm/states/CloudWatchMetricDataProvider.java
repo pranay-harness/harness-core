@@ -7,9 +7,9 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
@@ -30,11 +30,10 @@ public class CloudWatchMetricDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
     List<SettingAttribute> settingAttributesByType =
-        settingsService.getSettingAttributesByType(Base.GLOBAL_APP_ID, SettingVariableTypes.AWS_CREDENTIALS.name());
+        settingsService.getSettingAttributesByType(Base.GLOBAL_APP_ID, SettingVariableTypes.AWS.name());
     if (settingAttributesByType != null && settingAttributesByType.size() > 0) {
       SettingAttribute settingAttribute = settingAttributesByType.get(0);
-      AwsInfrastructureProviderConfig awsInfrastructureProviderConfig =
-          (AwsInfrastructureProviderConfig) settingAttribute.getValue();
+      AwsConfig awsInfrastructureProviderConfig = (AwsConfig) settingAttribute.getValue();
       BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
           awsInfrastructureProviderConfig.getAccessKey(), awsInfrastructureProviderConfig.getSecretKey());
       AmazonCloudWatchClient cloudWatchClient = new AmazonCloudWatchClient(awsCredentials);

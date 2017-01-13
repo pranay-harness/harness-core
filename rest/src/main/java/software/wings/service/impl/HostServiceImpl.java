@@ -9,20 +9,12 @@ import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
-import com.mongodb.BasicDBObject;
-import org.apache.commons.collections.IteratorUtils;
-import org.mongodb.morphia.aggregation.Accumulator;
-import org.mongodb.morphia.aggregation.Group;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -32,27 +24,22 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.HostUsage;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -71,14 +58,12 @@ public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private InfrastructureService infraService;
   @Inject private SettingsService settingsService;
   @Inject private NotificationService notificationService;
   @Inject private EnvironmentService environmentService;
   @Inject private HistoryService historyService;
   @Inject private ConfigService configService;
   @Inject private ExecutorService executorService;
-  @Inject private AppService appService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -127,7 +112,7 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.infrastructure.Host, java.util.List)
    */
   @Override
-  public ResponseMessage bulkSave(String infraId, String envId, Host baseHost) {
+  public ResponseMessage bulkSave(String envId, Host baseHost) {
     /*
     Set<String> hostNames = baseHost.getHostNames().stream().filter(hostName ->
     !isNullOrEmpty(hostName)).map(String::trim).collect(Collectors.toSet()); Infrastructure infrastructure =
@@ -189,42 +174,6 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public int getInfraHostCount(String infraId) {
-    return (int) wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).countAll();
-  }
-
-  @Override
-  public int getMappedInfraHostCount(String infraId) {
-    return wingsPersistence.getDatastore()
-        .getCollection(Host.class)
-        .distinct("hostName", new BasicDBObject("infraId", infraId))
-        .size();
-  }
-
-  @Override
-  public List<HostUsage> getInfrastructureHostUsageByApplication(String infraId) {
-    List<Application> apps =
-        appService
-            .list(aPageRequest().withLimit(PageRequest.UNLIMITED).withOffset("0").addFieldsIncluded("name").build(),
-                false, 0, 0)
-            .getResponse();
-    ImmutableMap<String, Application> applicationsById = Maps.uniqueIndex(apps, Application::getUuid);
-
-    Query<Host> query = wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId);
-
-    Iterator<HostUsage> hostUsageIterator = wingsPersistence.getDatastore()
-                                                .createAggregation(Host.class)
-                                                .match(query)
-                                                .group("appId", Group.grouping("count", new Accumulator("$sum", 1)))
-                                                .aggregate(HostUsage.class);
-
-    List<HostUsage> hostUsageList = IteratorUtils.toList(hostUsageIterator);
-    //    hostUsageList.stream().filter(hostUsage -> applicationsById.get(hostUsage()) != null)
-    //        .forEach(hostUsage -> hostUsage.setAppName(applicationsById.get(hostUsage.getAppId()).getName()));
-    return hostUsageList;
-  }
-
-  @Override
   public boolean exist(String appId, String hostId) {
     return wingsPersistence.createQuery(Host.class).field(ID_KEY).equal(hostId).field("appId").equal(appId).getKey()
         != null;
@@ -237,7 +186,7 @@ public class HostServiceImpl implements HostService {
   @Override
   public int importHosts(String appId, String envId, String infraId, BoundedInputStream inputStream) {
     List<Host> hosts = csvFileHelper.parseHosts(infraId, appId, envId, inputStream);
-    return (int) hosts.stream().map(host -> bulkSave(infraId, envId, host)).filter(Objects::nonNull).count();
+    return (int) hosts.stream().map(host -> bulkSave(envId, host)).filter(Objects::nonNull).count();
   }
 
   /* (non-Javadoc)
@@ -270,16 +219,6 @@ public class HostServiceImpl implements HostService {
         .field(ID_KEY)
         .equal(hostId)
         .get();
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#exportHosts(java.lang.String, java.lang.String)
-   */
-  @Override
-  public File exportHosts(String appId, String infraId) {
-    // TODO:: INFRA:
-    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).asList();
-    return csvFileHelper.createHostsFile(hosts);
   }
 
   @Override
@@ -316,11 +255,6 @@ public class HostServiceImpl implements HostService {
       return delete;
     }
     return false;
-  }
-
-  @Override
-  public void deleteByInfra(String infraId) {
-    wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).asList().forEach(this ::delete);
   }
 
   @Override

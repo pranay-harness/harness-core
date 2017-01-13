@@ -37,7 +37,7 @@ import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
-import software.wings.service.impl.AwsInfrastructureProviderImpl;
+import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.BambooArtifactCollectorServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
@@ -199,9 +199,7 @@ public class WingsModule extends AbstractModule {
     bind(ClusterService.class).to(ClusterServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
 
-    Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
-        .addBinding()
-        .to(AwsInfrastructureProviderImpl.class);
+    Multibinder.newSetBinder(binder(), InfrastructureProvider.class).addBinding().to(AwsInfrastructureProvider.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
