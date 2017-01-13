@@ -40,11 +40,14 @@ public enum StencilCategory {
                      * Copy stencil category.
                      */
   COPY, /**
-         * Others stencil category.
+         * Cloud stencil category.
          */
   CLOUD(3), /**
-             * Others stencil category.
+             * Subworkflow stencil category.
              */
+  SUB_WORKFLOW(100), /**
+                      * Others stencil category.
+                      */
   OTHERS(10);
 
   private String displayName;

@@ -572,6 +572,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
     orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow));
+    for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
+      generateNewWorkflowPhaseSteps(workflowPhase);
+      orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
+    }
     return wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
   }
 
@@ -622,16 +626,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
-    workflowPhase.setUuid(getUuid());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE).build());
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).build());
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).build());
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE).build());
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).build());
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).build());
-
+    generateNewWorkflowPhaseSteps(workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
 
@@ -651,6 +647,27 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     wingsPersistence.update(query, updateOps);
 
     return workflowPhase;
+  }
+
+  private void generateNewWorkflowPhaseSteps(WorkflowPhase workflowPhase) {
+    // For DC only - for other types it has to be customized
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE)
+                                   .addStep(aNode().withType(StateType.DC_NODE_SELECT.name()).withOrigin(true).build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE).build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).build());
+
+    // Not needed for DC
+    // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).build());
   }
 
   @Override
@@ -786,11 +803,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String id1 = orchestrationWorkflow.getPreDeploymentSteps().getUuid();
     String id2;
     Builder graphBuilder = aGraph()
-                               .addNodes(aNode()
-                                             .withId(id1)
-                                             .withName(Constants.PRE_DEPLOYMENT_STEPS)
-                                             .withType(StateType.SUB_WORKFLOW.name())
-                                             .build())
+                               .addNodes(orchestrationWorkflow.getPreDeploymentSteps().generatePhaseStepNode())
                                .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps()));
 
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
@@ -798,9 +811,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();
-        graphBuilder
-            .addNodes(
-                aNode().withId(id2).withName(workflowPhase.getName()).withType(StateType.SUB_WORKFLOW.name()).build())
+        graphBuilder.addNodes(workflowPhase.generatePhaseNode())
             .addLinks(
                 aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
             .addSubworkflows(generateGraph(workflowPhase));
@@ -808,12 +819,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     id2 = orchestrationWorkflow.getPostDeploymentSteps().getUuid();
-    graphBuilder
-        .addNodes(aNode()
-                      .withId(id2)
-                      .withName(Constants.POST_DEPLOYMENT_STEPS)
-                      .withType(StateType.SUB_WORKFLOW.name())
-                      .build())
+    graphBuilder.addNodes(orchestrationWorkflow.getPostDeploymentSteps().generatePhaseStepNode())
         .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
         .addSubworkflow(id2, generateGraph(orchestrationWorkflow.getPostDeploymentSteps()));
 
@@ -829,7 +835,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Node node;
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
       id2 = phaseStep.getUuid();
-      node = aNode().withId(id2).withName(phaseStep.getName()).withType(StateType.SUB_WORKFLOW.name()).build();
+      node = aNode().withId(id2).withName(phaseStep.getName()).withType(StateType.PHASE_STEP.name()).build();
       graphBuilder.addNodes(node);
       if (id1 == null) {
         node.setOrigin(true);
@@ -852,13 +858,28 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return graphBuilder.build();
     }
 
+    Node originNode = null;
+    Node repeatNode = null;
+    if (phaseStep.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE
+        || phaseStep.getPhaseStepType() == PhaseStepType.DISABLE_SERVICE
+        || phaseStep.getPhaseStepType() == PhaseStepType.ENABLE_SERVICE
+        || phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE) {
+      // TODO - only meant for physical DC
+      // introduce repeat node
+
+      repeatNode = aNode()
+                       .withType(StateType.REPEAT.name())
+                       .withName(phaseStep.getName() + "-REPEAT")
+                       .addProperty("executionStrategy", "PARALLEL")
+                       .addProperty("repeatElementExpression", "${instances}")
+                       .build();
+
+      graphBuilder.addNodes(repeatNode);
+    }
+
     if (phaseStep.isStepsInParallel()) {
-      Node forkNode = aNode()
-                          .withId(getUuid())
-                          .withType(StateType.FORK.name())
-                          .withName(StateType.FORK.name())
-                          .withOrigin(true)
-                          .build();
+      Node forkNode =
+          aNode().withId(getUuid()).withType(StateType.FORK.name()).withName(phaseStep.getName() + "-FORK").build();
       for (Node step : phaseStep.getSteps()) {
         if (step.getId() == null) {
           step.setId(getUuid());
@@ -871,17 +892,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                   .withType(TransitionType.FORK.name())
                                   .build());
       }
+      if (originNode == null) {
+        originNode = forkNode;
+      }
     } else {
       String id1 = null;
       String id2;
       for (Node step : phaseStep.getSteps()) {
-        if (step.getId() == null) {
-          step.setId(getUuid());
-        }
         id2 = step.getId();
         graphBuilder.addNodes(step);
-        if (id1 == null) {
-          step.setOrigin(true);
+        if (id1 == null && originNode == null) {
+          originNode = step;
         } else {
           graphBuilder.addLinks(
               aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
@@ -889,6 +910,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         id1 = id2;
       }
     }
+    if (repeatNode == null) {
+      originNode.setOrigin(true);
+    } else {
+      repeatNode.setOrigin(true);
+      graphBuilder.addLinks(aLink()
+                                .withId(getUuid())
+                                .withFrom(repeatNode.getId())
+                                .withTo(originNode.getId())
+                                .withType(TransitionType.REPEAT.name())
+                                .build());
+    }
+
     populatePhaseStepIds(phaseStep);
     return graphBuilder.build();
   }

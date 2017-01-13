@@ -1,5 +1,11 @@
 package software.wings.beans;
 
+import static software.wings.beans.Graph.Node.Builder.aNode;
+
+import software.wings.beans.Graph.Node;
+import software.wings.common.UUIDGenerator;
+import software.wings.sm.StateType;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -8,7 +14,7 @@ import javax.validation.constraints.NotNull;
  * Created by rishi on 12/21/16.
  */
 public class WorkflowPhase {
-  private String uuid;
+  private String uuid = UUIDGenerator.getUuid();
   private String name;
   private @NotNull String serviceId;
   private @NotNull DeploymentType deploymentType;
@@ -77,8 +83,20 @@ public class WorkflowPhase {
     this.phaseSteps = phaseSteps;
   }
 
+  public Node generatePhaseNode() {
+    return aNode()
+        .withId(uuid)
+        .withName(name)
+        .withType(StateType.PHASE.name())
+        .addProperty("serviceId", serviceId)
+        .addProperty("deploymentType", deploymentType)
+        .addProperty("computerProviderId", computerProviderId)
+        .addProperty("deploymentMasterId", deploymentMasterId)
+        .build();
+  }
+
   public static final class WorkflowPhaseBuilder {
-    private String uuid;
+    private String uuid = UUIDGenerator.getUuid();
     private String name;
     private String serviceId;
     private String computerProviderId;
@@ -122,8 +140,8 @@ public class WorkflowPhase {
       return this;
     }
 
-    public WorkflowPhaseBuilder withPhaseSteps(List<PhaseStep> phaseSteps) {
-      this.phaseSteps = phaseSteps;
+    public WorkflowPhaseBuilder addPhaseStep(PhaseStep phaseStep) {
+      this.phaseSteps.add(phaseStep);
       return this;
     }
 
