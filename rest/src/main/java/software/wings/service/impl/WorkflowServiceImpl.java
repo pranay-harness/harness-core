@@ -869,7 +869,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       repeatNode = aNode()
                        .withType(StateType.REPEAT.name())
-                       .withName(phaseStep.getName() + "-REPEAT")
+                       .withName("All Instances")
                        .addProperty("executionStrategy", "PARALLEL")
                        .addProperty("repeatElementExpression", "${instances}")
                        .build();
