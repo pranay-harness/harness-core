@@ -576,7 +576,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseSteps(workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
     }
-    return wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
+    orchestrationWorkflow = wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
+    if (orchestrationWorkflow.getGraph() != null) {
+      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
+      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    }
+
+    return orchestrationWorkflow;
   }
 
   @Override
@@ -599,6 +605,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
+
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    if (orchestrationWorkflow.getGraph() != null) {
+      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
+      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    }
+
     return phaseStep;
   }
 
@@ -610,6 +623,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
+
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    if (orchestrationWorkflow.getGraph() != null) {
+      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
+      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    }
     return phaseStep;
   }
 
@@ -646,28 +665,37 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     wingsPersistence.update(query, updateOps);
 
+    orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    if (orchestrationWorkflow.getGraph() != null) {
+      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
+      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    }
+
     return workflowPhase;
   }
 
   private void generateNewWorkflowPhaseSteps(WorkflowPhase workflowPhase) {
     // For DC only - for other types it has to be customized
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE)
-                                   .addStep(aNode().withType(StateType.DC_NODE_SELECT.name()).withOrigin(true).build())
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PhaseStepType.PROVISION_NODE)
+            .withName("Provision Nodes")
+            .addStep(
+                aNode().withType(StateType.DC_NODE_SELECT.name()).withName("Select Nodes").withOrigin(true).build())
+            .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).withName("Disable Service").build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).withName("Deploy Service").build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE).withName("Verify Service").build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).build());
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).withName("Enable Service").build());
 
     // Not needed for DC
     // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).build());
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
   }
 
   @Override
@@ -802,8 +830,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private Graph generateMainGraph(OrchestrationWorkflow orchestrationWorkflow) {
     String id1 = orchestrationWorkflow.getPreDeploymentSteps().getUuid();
     String id2;
+    Node preDeploymentNode = orchestrationWorkflow.getPreDeploymentSteps().generatePhaseStepNode();
+    preDeploymentNode.setOrigin(true);
     Builder graphBuilder = aGraph()
-                               .addNodes(orchestrationWorkflow.getPreDeploymentSteps().generatePhaseStepNode())
+                               .addNodes(preDeploymentNode)
                                .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps()));
 
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
@@ -835,7 +865,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Node node;
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
       id2 = phaseStep.getUuid();
-      node = aNode().withId(id2).withName(phaseStep.getName()).withType(StateType.PHASE_STEP.name()).build();
+      node = phaseStep.generatePhaseStepNode();
       graphBuilder.addNodes(node);
       if (id1 == null) {
         node.setOrigin(true);
@@ -869,7 +899,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       repeatNode = aNode()
                        .withType(StateType.REPEAT.name())
-                       .withName(phaseStep.getName() + "-REPEAT")
+                       .withName("All Instances")
                        .addProperty("executionStrategy", "PARALLEL")
                        .addProperty("repeatElementExpression", "${instances}")
                        .build();

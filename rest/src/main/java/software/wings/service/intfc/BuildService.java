@@ -4,7 +4,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.
@@ -26,7 +25,7 @@ public interface BuildService<T> {
    * @param jenkinsConfig the jenkins setting id
    * @return the jobs
    */
-  Set<String> getJobs(T jenkinsConfig);
+  List<String> getJobs(T jenkinsConfig);
 
   /**
    * Gets artifact paths.
@@ -35,7 +34,7 @@ public interface BuildService<T> {
    * @param config the jenkins config
    * @return the artifact paths
    */
-  Set<String> getArtifactPaths(String jobName, T config);
+  List<String> getArtifactPaths(String jobName, T config);
 
   /**
    * Gets last successful build.

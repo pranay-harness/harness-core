@@ -28,7 +28,7 @@ public class Workflow extends Base {
 
   private Integer defaultVersion;
 
-  @Transient private Graph graph;
+  private Graph graph;
 
   @JsonIgnore @Transient private boolean setAsDefault;
 

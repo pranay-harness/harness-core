@@ -51,6 +51,7 @@ public ManagerClient get() {
   Retrofit retrofit = new Retrofit.Builder()
                           .baseUrl(baseUrl)
                           .client(getUnsafeOkHttpClient())
+                          .addConverterFactory(new KryoConverterFactory())
                           .addConverterFactory(JacksonConverterFactory.create(new ObjectMapper()))
                           .build();
   return retrofit.create(ManagerClient.class);
@@ -80,9 +81,10 @@ private OkHttpClient getUnsafeOkHttpClient() {
               Response response = chain.proceed(request);
 
               long t2 = System.nanoTime();
-              logger.debug(String.format("Received response for %s in %.1fms%n%s", response.request().url(),
-                  (t2 - t1) / 1e6d, response.headers()));
-
+              if (response.code() == 400) {
+                logger.info(String.format("Received response for %s in %.1fms%n%s\n%s\n", response.request().url(),
+                    (t2 - t1) / 1e6d, response.headers(), response.body().string()));
+              }
               return response;
 
             })

@@ -21,6 +21,7 @@ import java.util.Map;
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 public class StateExecutionInstance extends Base {
   private String stateMachineId;
+  private String childStateMachineId;
   private String stateName;
   private String stateType;
   private ContextElement contextElement;
@@ -158,6 +159,14 @@ public class StateExecutionInstance extends Base {
    */
   public void setNotifyId(String notifyId) {
     this.notifyId = notifyId;
+  }
+
+  public String getChildStateMachineId() {
+    return childStateMachineId;
+  }
+
+  public void setChildStateMachineId(String childStateMachineId) {
+    this.childStateMachineId = childStateMachineId;
   }
 
   /**
@@ -437,6 +446,7 @@ public class StateExecutionInstance extends Base {
    */
   public static final class Builder {
     private String stateMachineId;
+    private String childStateMachineId;
     private String stateName;
     private String stateType;
     private ContextElement contextElement;
@@ -477,9 +487,14 @@ public class StateExecutionInstance extends Base {
     /**
      * With state machine id builder.
      *
-     * @param stateMachineId the state machine id
+     * @param childStateMachineId the state machine id
      * @return the builder
      */
+    public Builder withChildStateMachineId(String childStateMachineId) {
+      this.childStateMachineId = childStateMachineId;
+      return this;
+    }
+
     public Builder withStateMachineId(String stateMachineId) {
       this.stateMachineId = stateMachineId;
       return this;
@@ -803,6 +818,7 @@ public class StateExecutionInstance extends Base {
     public StateExecutionInstance build() {
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
       stateExecutionInstance.setStateMachineId(stateMachineId);
+      stateExecutionInstance.setChildStateMachineId(childStateMachineId);
       stateExecutionInstance.setStateName(stateName);
       stateExecutionInstance.setStateType(stateType);
       stateExecutionInstance.setContextElement(contextElement);

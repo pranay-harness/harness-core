@@ -186,6 +186,8 @@ public abstract class AbstractCommandUnit implements CommandUnit {
 
       private String errorMessage;
 
+      public ExecutionResultData() {}
+
       /**
        * Gets result.
        *

@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -99,6 +100,7 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.add(delegate));
   }
 
+  @Produces("application/x-kryo")
   @DelegateAuth
   @GET
   @Path("{delegateId}/tasks")
@@ -134,6 +136,7 @@ public class DelegateResource {
   @DelegateAuth
   @POST
   @Path("{delegateId}/tasks/{taskId}")
+  @Consumes("application/x-kryo")
   public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
     delegateService.processDelegateResponse(delegateTaskResponse);

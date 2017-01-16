@@ -290,6 +290,8 @@ public class JenkinsState extends State {
     private String jobUrl;
     private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
 
+    public JenkinsExecutionResponse() {}
+
     /**
      * Getter for property 'jobUrl'.
      *

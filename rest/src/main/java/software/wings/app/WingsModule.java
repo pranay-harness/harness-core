@@ -13,7 +13,6 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.artifact.ArtifactStream.SourceType;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.cloudprovider.ClusterServiceImpl;
 import software.wings.cloudprovider.aws.EcsService;
@@ -22,8 +21,6 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.bamboo.BambooService;
-import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -38,7 +35,6 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProvider;
-import software.wings.service.impl.BambooArtifactCollectorServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
@@ -55,7 +51,6 @@ import software.wings.service.impl.HistoryServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.InfrastructureServiceImpl;
-import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
@@ -81,11 +76,11 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.CatalogService;
@@ -103,6 +98,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
+import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
@@ -193,7 +189,7 @@ public class WingsModule extends AbstractModule {
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
-    bind(BambooService.class).to(BambooServiceImpl.class);
+    // bind(BambooService.class).to(BambooServiceImpl.class);
     bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
     bind(CloudWatchService.class).to(CloudWatchServiceImpl.class);
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
@@ -207,21 +203,12 @@ public class WingsModule extends AbstractModule {
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(StaticInfrastructureProvider.class);
 
-    MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
-        .to(JenkinsArtifactCollectorServiceImpl.class);
-    artifactCollectorServiceMapBinder.addBinding(SourceType.BAMBOO.name()).to(BambooArtifactCollectorServiceImpl.class);
+    MapBinder<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMapBinder =
+        MapBinder.newMapBinder(binder(), new TypeLiteral<Class<? extends SettingValue>>() {},
+            new TypeLiteral<Class<? extends BuildService>>() {});
 
-    MapBinder<Class<? extends SettingValue>, BuildService> buildServiceMapBinder = MapBinder.newMapBinder(
-        binder(), new TypeLiteral<Class<? extends SettingValue>>() {}, new TypeLiteral<BuildService>() {});
-    buildServiceMapBinder.addBinding(JenkinsConfig.class).to(JenkinsBuildServiceImpl.class);
-    buildServiceMapBinder.addBinding(BambooConfig.class).to(BambooBuildServiceImpl.class);
-
-    bind(new TypeLiteral<BuildService<JenkinsConfig>>() {}).to(JenkinsBuildServiceImpl.class);
-    bind(new TypeLiteral<BuildService<BambooConfig>>() {}).to(BambooBuildServiceImpl.class);
-
-    install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
+    buildServiceMapBinder.addBinding(JenkinsConfig.class).toInstance(JenkinsBuildService.class);
+    buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
 
     Multibinder<LoadBalancer> loadBalancerMultibinder = Multibinder.newSetBinder(binder(), LoadBalancer.class);
     loadBalancerMultibinder.addBinding().to(ElasticLoadBalancer.class);

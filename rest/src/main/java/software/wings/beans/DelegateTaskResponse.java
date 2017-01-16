@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Objects;
@@ -11,6 +13,8 @@ public class DelegateTaskResponse {
   private String accountId;
   private String taskId;
   private NotifyResponseData response;
+
+  public DelegateTaskResponse() {}
 
   /**
    * Getter for property 'taskId'.
@@ -82,6 +86,15 @@ public class DelegateTaskResponse {
     final DelegateTaskResponse other = (DelegateTaskResponse) obj;
     return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.taskId, other.taskId)
         && Objects.equals(this.response, other.response);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("accountId", accountId)
+        .add("taskId", taskId)
+        .add("response", response)
+        .toString();
   }
 
   public static final class Builder {

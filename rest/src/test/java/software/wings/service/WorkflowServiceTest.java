@@ -728,7 +728,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
             .withPreDeploymentSteps(
                 aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
-                    .addStep(aNode().withType("HTTP").addProperty("URL", "http://www.google.com").build())
+                    .addStep(
+                        aNode().withType("HTTP").withName("http").addProperty("URL", "http://www.google.com").build())
                     .build())
             .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
             .build();

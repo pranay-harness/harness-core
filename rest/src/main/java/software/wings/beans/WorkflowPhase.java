@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 
 import software.wings.beans.Graph.Node;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.StateType;
 
@@ -92,6 +93,7 @@ public class WorkflowPhase {
         .addProperty("deploymentType", deploymentType)
         .addProperty("computerProviderId", computerProviderId)
         .addProperty("deploymentMasterId", deploymentMasterId)
+        .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
   }
 

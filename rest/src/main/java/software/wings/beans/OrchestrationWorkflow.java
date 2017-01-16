@@ -7,16 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by rishi on 12/21/16.
  */
 @Entity(value = "orchWorkflows", noClassnameStored = true)
-public class OrchestrationWorkflow extends Base {
+public class OrchestrationWorkflow extends Workflow {
   private WorkflowOrchestrationType workflowOrchestrationType;
-
-  @NotNull private String name;
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
 
@@ -38,8 +35,6 @@ public class OrchestrationWorkflow extends Base {
 
   private List<Variable> derivedVariables = new ArrayList<>();
 
-  private Graph graph;
-
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
@@ -48,14 +43,6 @@ public class OrchestrationWorkflow extends Base {
 
   public void setWorkflowOrchestrationType(WorkflowOrchestrationType workflowOrchestrationType) {
     this.workflowOrchestrationType = workflowOrchestrationType;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public PhaseStep getPreDeploymentSteps() {
@@ -141,14 +128,6 @@ public class OrchestrationWorkflow extends Base {
 
   public void setWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
     this.workflowExecutions = workflowExecutions;
-  }
-
-  public Graph getGraph() {
-    return graph;
-  }
-
-  public void setGraph(Graph graph) {
-    this.graph = graph;
   }
 
   public List<String> getWorkflowPhaseIds() {
