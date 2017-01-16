@@ -127,7 +127,7 @@ public class StateMachineExecutionSimulator {
     PageRequest<ServiceInstance> pageRequest = aPageRequest()
                                                    .addFilter("appId", Operator.EQ, appId)
                                                    .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
-                                                   .addFieldsIncluded("uuid", "host")
+                                                   .addFieldsIncluded("uuid", "hostId")
                                                    .build();
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);

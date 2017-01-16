@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.collect.ImmutableMap;
@@ -17,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -72,7 +75,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         template.setConfigFiles(getOverrideFiles(template));
         template.setServiceVariables(getOverrideServiceVariables(template));
         PageRequest<InfrastructureMapping> infraPageRequest = new PageRequest<>();
-        infraPageRequest.setFilters(pageRequest.getFilters());
+        List<SearchFilter> filters = pageRequest.getFilters();
+        filters.add(aSearchFilter().withField("serviceTemplateId", Operator.EQ, template.getUuid()).build());
+        infraPageRequest.setFilters(filters);
         template.setInfrastructureMappings(infrastructureMappingService.list(infraPageRequest));
       });
     }
