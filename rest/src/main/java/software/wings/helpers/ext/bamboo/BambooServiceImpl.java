@@ -59,7 +59,7 @@ public class BambooServiceImpl implements BambooService {
       Response<JsonNode> response = request.execute();
       return extractJobKeyFromNestedProjectResponseJson(response);
     } catch (Exception ex) {
-      logger.error("Job keys fetch failed with exception " + ex);
+      logger.error("Job keys fetch failed with exception ", ex);
       return new ArrayList<>();
     }
   }
@@ -107,7 +107,7 @@ public class BambooServiceImpl implements BambooService {
         planNameMap.put(planKey, planName);
       });
     } catch (Exception ex) {
-      logger.error("Job keys fetch failed with exception " + ex.getStackTrace());
+      logger.error("Job keys fetch failed with exception ", ex);
     }
     return planNameMap;
   }
@@ -130,7 +130,7 @@ public class BambooServiceImpl implements BambooService {
         });
       }
     } catch (Exception ex) {
-      logger.error("BambooService job keys fetch failed with exception " + ex.getStackTrace());
+      logger.error("BambooService job keys fetch failed with exception ", ex);
     }
     return buildDetailsList;
   }
@@ -218,7 +218,7 @@ public class BambooServiceImpl implements BambooService {
         });
       }
     } catch (IOException ex) {
-      logger.error("Download artifact failed with exception " + ex.getStackTrace());
+      logger.error("Download artifact failed with exception ", ex);
     }
     return artifactPathMap;
   }

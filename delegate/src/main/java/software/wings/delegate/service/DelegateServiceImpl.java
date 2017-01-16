@@ -156,6 +156,8 @@ public class DelegateServiceImpl implements DelegateService {
         }
       } catch (Exception e) {
         logger.warn("Error while fetching tasks from manager: ", e);
+        Thread.sleep(1000);
+        continue;
       }
       if (isNotEmpty(delegateTasks.getResource())) {
         DelegateTask delegateTask = delegateTasks.getResource().get(0);
