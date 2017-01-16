@@ -1,8 +1,6 @@
 package software.wings.sm.states;
 
 import software.wings.beans.FailureStrategy;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
@@ -19,14 +17,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
-
-  @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    return null;
-  }
-
-  @Override
-  public void handleAbortEvent(ExecutionContext context) {}
 
   public boolean isStepsInParallel() {
     return stepsInParallel;

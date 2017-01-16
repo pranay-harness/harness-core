@@ -1,8 +1,6 @@
 package software.wings.sm.states;
 
 import software.wings.beans.DeploymentType;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
@@ -23,14 +21,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   // Only relevant for custom kubernetes environment
   private String deploymentMasterId;
-
-  @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    return null;
-  }
-
-  @Override
-  public void handleAbortEvent(ExecutionContext context) {}
 
   public String getServiceId() {
     return serviceId;
