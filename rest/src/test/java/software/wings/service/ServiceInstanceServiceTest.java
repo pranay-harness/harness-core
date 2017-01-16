@@ -252,7 +252,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                                           .withUuid(TEMPLATE_ID)
                                           .withService(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build())
                                           .build();
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, newHostList, deletedHosts);
+    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, newHostList, deletedHosts);
     verify(wingsPersistence).delete(isA(Query.class));
     verify(query).field("appId");
     verify(end).equal(APP_ID);

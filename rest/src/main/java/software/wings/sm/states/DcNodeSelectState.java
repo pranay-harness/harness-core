@@ -1,20 +1,22 @@
 package software.wings.sm.states;
 
+import com.google.common.collect.ImmutableMap;
+
+import software.wings.beans.ServiceInstance;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by rishi on 1/12/17.
  */
 public class DcNodeSelectState extends State {
-  public DcNodeSelectState(String name) {
-    super(name, StateType.DC_NODE_SELECT.name());
-  }
-
   private String serviceId;
   private String computeProviderId;
   private boolean random;
@@ -22,9 +24,21 @@ public class DcNodeSelectState extends State {
   private List<String> instanceIds;
   private List<String> excludeInstanceIds;
 
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+
+  public DcNodeSelectState(String name) {
+    super(name, StateType.DC_NODE_SELECT.name());
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    // It should return list of InstanceIds
+    String appId = ((ExecutionContextImpl) context).getApp().getUuid();
+    String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
+
+    List<ServiceInstance> serviceInstances =
+        infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
+            ImmutableMap.of("random", random, "randomInstanceCount", randomInstanceCount, "instanceIds", instanceIds,
+                "excludeInstanceIds", excludeInstanceIds));
     return null;
   }
 

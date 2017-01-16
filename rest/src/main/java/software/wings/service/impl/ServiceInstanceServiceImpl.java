@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -71,7 +72,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<String> deletedHosts) {
+  public void updateInstanceMappings(
+      ServiceTemplate template, InfrastructureMapping infraMapping, List<Host> addedHosts, List<String> deletedHosts) {
     Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
                                              .field("appId")
                                              .equal(template.getAppId())
@@ -88,6 +90,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
               .withEnvId(template.getEnvId()) // Fixme: do it one by one and ignore unique constraints failure
               .withServiceTemplate(template)
               .withHost(host)
+              .withInfraMappingId(infraMapping.getUuid())
+              .withInfraMappingType(infraMapping.getComputeProviderType())
               .build();
       try {
         wingsPersistence.save(serviceInstance);

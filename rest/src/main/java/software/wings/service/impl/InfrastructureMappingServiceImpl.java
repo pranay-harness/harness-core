@@ -17,11 +17,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -104,7 +107,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                   })
                                   .collect(Collectors.toList());
 
-      serviceInstanceService.updateInstanceMappings(serviceTemplate, savedHosts, removedHosts);
+      serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, removedHosts);
       ((PhysicalInfrastructureMapping) infraMapping).setHostnames(distinctHostNames);
     }
     return wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
@@ -154,6 +157,35 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(KubernetesInfrastructureMapping.class), "uiSchema",
             readUiSchema("KUBERNETES")));
     return infraStencils;
+  }
+
+  @Override
+  public List<ServiceInstance> selectServiceInstances(
+      String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams) {
+    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                      .field("appId")
+                                                      .equal(appId)
+                                                      .field("envId")
+                                                      .equal(envId)
+                                                      .field("serviceId")
+                                                      .equal(serviceId)
+                                                      .field("computeProviderId")
+                                                      .equal(computeProviderId)
+                                                      .get();
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
+    if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      // TODO:: utilize selection param for advance filtering
+      return serviceInstanceService
+          .list(PageRequest.Builder.aPageRequest()
+                    .addFilter("appId", Operator.EQ, appId)
+                    .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
+                    .build())
+          .getResponse();
+    } else {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+          "Only PhysicalInfrastructureMapping type is supported for instance selection");
+    }
   }
 
   private Object readUiSchema(String type) {

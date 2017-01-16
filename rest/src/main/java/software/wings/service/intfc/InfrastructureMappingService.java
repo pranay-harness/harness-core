@@ -2,11 +2,13 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ServiceInstance;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 
@@ -64,4 +66,17 @@ public interface InfrastructureMappingService {
    * @return the infra mapping stencils
    */
   Map<String, Map<String, Object>> getInfraMappingStencils(String appId);
+
+  /**
+   * List service instances list.
+   *
+   * @param appId             the app id
+   * @param serviceId         the service id
+   * @param envId             the env id
+   * @param computeProviderId the compute provider id
+   * @param selectionParams   the selection params   @return the list
+   * @return the list
+   */
+  List<ServiceInstance> selectServiceInstances(
+      String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams);
 }
