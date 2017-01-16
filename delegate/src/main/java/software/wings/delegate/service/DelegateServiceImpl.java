@@ -149,8 +149,8 @@ public class DelegateServiceImpl implements DelegateService {
         if (response.isSuccessful()) {
           delegateTasks = response.body();
         } else {
-          logger.warn(
-              "Error while fetching tasks from manager: [ code: {}, body: {} ]", response.code(), response.errorBody());
+          logger.warn("Error while fetching tasks from manager: [ code: {}, body: {} ]", response.code(),
+              response.errorBody().string());
           Thread.sleep(1000);
           continue;
         }
