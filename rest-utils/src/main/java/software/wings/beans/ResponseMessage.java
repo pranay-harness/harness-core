@@ -2,10 +2,12 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import java.io.Serializable;
+
 /**
  * The Class ResponseMessage.
  */
-public class ResponseMessage {
+public class ResponseMessage implements Serializable {
   private ErrorCodes code;
   private ResponseTypeEnum errorType;
   private String message;
