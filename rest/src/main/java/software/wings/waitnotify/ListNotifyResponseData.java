@@ -9,6 +9,8 @@ import java.util.List;
 public class ListNotifyResponseData implements NotifyResponseData {
   private List data = new ArrayList();
 
+  public ListNotifyResponseData() {}
+
   /**
    * Gets data.
    *

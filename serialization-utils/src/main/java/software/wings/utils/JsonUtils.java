@@ -43,6 +43,7 @@ public class JsonUtils {
   public static final ObjectMapper mapperForCloning;
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
+  public static final ObjectMapper mapperForInternalUse;
 
   static {
     // json-path initialization
@@ -77,6 +78,12 @@ public class JsonUtils {
     mapperForCloning.setSerializationInclusion(Include.NON_NULL);
     mapperForCloning.enableDefaultTyping();
     mapperForCloning.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
+
+    mapperForInternalUse = new ObjectMapper();
+    mapperForInternalUse.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapperForInternalUse.setSerializationInclusion(Include.NON_NULL);
+    mapperForInternalUse.enableDefaultTyping();
+    mapperForInternalUse.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
   }
 
   /**

@@ -6,6 +6,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -35,10 +36,14 @@ public interface ManagerClient {
   Call<RestResponse<Delegate>> sendHeartbeat(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId, @Body Delegate delegate);
 
+  @Headers({"Accept: application/x-kryo"})
+  @KryoResponse
   @GET("delegates/{delegateId}/tasks")
   Call<RestResponse<PageResponse<DelegateTask>>> getTasks(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
+  @Headers({"Content-Type: application/x-kryo"})
+  @KryoRequest
   @POST("delegates/{delegateId}/tasks/{taskId}")
   Call<Void> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);

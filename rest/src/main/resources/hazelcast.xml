@@ -255,7 +255,9 @@
     <serialization>
         <portable-version>0</portable-version>
         <serializers>
-            <global-serializer>software.wings.utils.HazelcastJacksonSerializer</global-serializer>
+            <global-serializer>
+                info.jerrinot.subzero.Serializer
+            </global-serializer>
         </serializers>
     </serialization>
 
