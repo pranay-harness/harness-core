@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("appId")
-                           , @Field("envId"), @Field("host"), @Field("serviceTemplate") },
+                           , @Field("envId"), @Field("hostName"), @Field("serviceTemplate") },
     options = @IndexOptions(unique = true)))
 public class ServiceInstance extends Base {
   @Indexed private String envId;
@@ -33,11 +33,9 @@ public class ServiceInstance extends Base {
 
   @Indexed private String serviceName;
 
-  @Property("host") private String hostId;
+  private String hostId;
 
   @Indexed private String hostName;
-
-  @Indexed private String tagName;
 
   private String artifactStreamId;
   @Indexed private String artifactStreamName;
@@ -379,24 +377,6 @@ public class ServiceInstance extends Base {
   }
 
   /**
-   * Getter for property 'tagName'.
-   *
-   * @return Value for property 'tagName'.
-   */
-  public String getTagName() {
-    return tagName;
-  }
-
-  /**
-   * Setter for property 'tagName'.
-   *
-   * @param tagName Value to set for property 'tagName'.
-   */
-  public void setTagName(String tagName) {
-    this.tagName = tagName;
-  }
-
-  /**
    * Getter for property 'serviceId'.
    *
    * @return Value for property 'serviceId'.
@@ -445,7 +425,7 @@ public class ServiceInstance extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName, tagName,
+        + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName,
               artifactStreamId, artifactStreamName, artifactId, artifactName, artifactDeployedOn,
               artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId, lastActivityStatus,
               lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
@@ -467,7 +447,7 @@ public class ServiceInstance extends Base {
         && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
         && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
         && Objects.equals(this.hostId, other.hostId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.tagName, other.tagName) && Objects.equals(this.artifactStreamId, other.artifactStreamId)
+        && Objects.equals(this.artifactStreamId, other.artifactStreamId)
         && Objects.equals(this.artifactStreamName, other.artifactStreamName)
         && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.artifactDeployedOn, other.artifactDeployedOn)
@@ -490,7 +470,6 @@ public class ServiceInstance extends Base {
         .add("serviceName", serviceName)
         .add("hostId", hostId)
         .add("hostName", hostName)
-        .add("tagName", tagName)
         .add("artifactStreamId", artifactStreamId)
         .add("artifactStreamName", artifactStreamName)
         .add("artifactId", artifactId)
@@ -519,7 +498,6 @@ public class ServiceInstance extends Base {
     private String serviceName;
     private String hostId;
     private String hostName;
-    private String tagName;
     private String artifactStreamId;
     private String artifactStreamName;
     private String artifactId;
@@ -634,17 +612,6 @@ public class ServiceInstance extends Base {
      */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
-      return this;
-    }
-
-    /**
-     * With tag name builder.
-     *
-     * @param tagName the tag name
-     * @return the builder
-     */
-    public Builder withTagName(String tagName) {
-      this.tagName = tagName;
       return this;
     }
 
@@ -871,7 +838,6 @@ public class ServiceInstance extends Base {
           .withServiceName(serviceName)
           .withHostId(hostId)
           .withHostName(hostName)
-          .withTagName(tagName)
           .withArtifactStreamId(artifactStreamId)
           .withArtifactStreamName(artifactStreamName)
           .withArtifactId(artifactId)
@@ -927,7 +893,6 @@ public class ServiceInstance extends Base {
       serviceInstance.setServiceName(serviceName);
       serviceInstance.setHostId(hostId);
       serviceInstance.setHostName(hostName);
-      serviceInstance.setTagName(tagName);
       serviceInstance.setArtifactStreamId(artifactStreamId);
       serviceInstance.setArtifactStreamName(artifactStreamName);
       serviceInstance.setArtifactId(artifactId);

@@ -23,7 +23,7 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public Host saveHost(SettingAttribute computeProviderSetting, Host host) {
+  public Host saveHost(Host host) {
     return hostService.saveHost(host);
   }
 }

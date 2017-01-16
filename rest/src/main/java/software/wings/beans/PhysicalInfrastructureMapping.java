@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
@@ -14,8 +12,7 @@ import java.util.List;
 @JsonTypeName("PHYSICAL_DATA_CENTER")
 public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Host Names") private List<String> hostnames;
-  @Attributes(title = "Connection Type") private ConnectionType connectionType;
-  @Attributes(title = "Access Type") private AccessType accessType;
+  @Attributes(title = "Connection Type") private String hostConnectionAttrs;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -43,39 +40,21 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   }
 
   /**
-   * Gets connection type.
+   * Gets host connection attrs.
    *
-   * @return the connection type
+   * @return the host connection attrs
    */
-  public ConnectionType getConnectionType() {
-    return connectionType;
+  public String getHostConnectionAttrs() {
+    return hostConnectionAttrs;
   }
 
   /**
-   * Sets connection type.
+   * Sets host connection attrs.
    *
-   * @param connectionType the connection type
+   * @param hostConnectionAttrs the host connection attrs
    */
-  public void setConnectionType(ConnectionType connectionType) {
-    this.connectionType = connectionType;
-  }
-
-  /**
-   * Gets access type.
-   *
-   * @return the access type
-   */
-  public AccessType getAccessType() {
-    return accessType;
-  }
-
-  /**
-   * Sets access type.
-   *
-   * @param accessType the access type
-   */
-  public void setAccessType(AccessType accessType) {
-    this.accessType = accessType;
+  public void setHostConnectionAttrs(String hostConnectionAttrs) {
+    this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
   /**
@@ -83,12 +62,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    */
   public static final class Builder {
     private String computeProviderSettingId;
+    private List<String> hostnames;
     private String envId;
     private String serviceTemplateId;
+    private String hostConnectionAttrs;
     private String computeProviderType;
-    private List<String> hostnames;
-    private ConnectionType connectionType;
-    private AccessType accessType;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -119,6 +97,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With hostnames builder.
+     *
+     * @param hostnames the hostnames
+     * @return the builder
+     */
+    public Builder withHostnames(List<String> hostnames) {
+      this.hostnames = hostnames;
+      return this;
+    }
+
+    /**
      * With env id builder.
      *
      * @param envId the env id
@@ -141,6 +130,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With host connection attrs builder.
+     *
+     * @param hostConnectionAttrs the host connection attrs
+     * @return the builder
+     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    /**
      * With compute provider type builder.
      *
      * @param computeProviderType the compute provider type
@@ -148,39 +148,6 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withComputeProviderType(String computeProviderType) {
       this.computeProviderType = computeProviderType;
-      return this;
-    }
-
-    /**
-     * With hostnames builder.
-     *
-     * @param hostnames the hostnames
-     * @return the builder
-     */
-    public Builder withHostnames(List<String> hostnames) {
-      this.hostnames = hostnames;
-      return this;
-    }
-
-    /**
-     * With connection type builder.
-     *
-     * @param connectionType the connection type
-     * @return the builder
-     */
-    public Builder withConnectionType(ConnectionType connectionType) {
-      this.connectionType = connectionType;
-      return this;
-    }
-
-    /**
-     * With access type builder.
-     *
-     * @param accessType the access type
-     * @return the builder
-     */
-    public Builder withAccessType(AccessType accessType) {
-      this.accessType = accessType;
       return this;
     }
 
@@ -258,12 +225,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     public Builder but() {
       return aPhysicalInfrastructureMapping()
           .withComputeProviderSettingId(computeProviderSettingId)
+          .withHostnames(hostnames)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withHostConnectionAttrs(hostConnectionAttrs)
           .withComputeProviderType(computeProviderType)
-          .withHostnames(hostnames)
-          .withConnectionType(connectionType)
-          .withAccessType(accessType)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -280,12 +246,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     public PhysicalInfrastructureMapping build() {
       PhysicalInfrastructureMapping physicalInfrastructureMapping = new PhysicalInfrastructureMapping();
       physicalInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      physicalInfrastructureMapping.setHostnames(hostnames);
       physicalInfrastructureMapping.setEnvId(envId);
       physicalInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
-      physicalInfrastructureMapping.setHostnames(hostnames);
-      physicalInfrastructureMapping.setConnectionType(connectionType);
-      physicalInfrastructureMapping.setAccessType(accessType);
       physicalInfrastructureMapping.setUuid(uuid);
       physicalInfrastructureMapping.setAppId(appId);
       physicalInfrastructureMapping.setCreatedBy(createdBy);

@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -24,6 +25,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -55,6 +57,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
@@ -68,6 +71,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       pageResponse.getResponse().forEach(template -> {
         template.setConfigFiles(getOverrideFiles(template));
         template.setServiceVariables(getOverrideServiceVariables(template));
+        PageRequest<InfrastructureMapping> infraPageRequest = new PageRequest<>();
+        infraPageRequest.setFilters(pageRequest.getFilters());
+        template.setInfrastructureMappings(infrastructureMappingService.list(infraPageRequest));
       });
     }
     return pageResponse;

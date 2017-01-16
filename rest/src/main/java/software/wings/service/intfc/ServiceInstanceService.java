@@ -57,12 +57,11 @@ public interface ServiceInstanceService {
 
   /**
    * Update host mappings.
-   *
-   * @param template     the template
+   *  @param template     the template
    * @param addedHosts   the added hosts
    * @param deletedHosts the deleted hosts
    */
-  void updateInstanceMappings(@NotNull ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
+  void updateInstanceMappings(@NotNull ServiceTemplate template, List<Host> addedHosts, List<String> deletedHosts);
 
   /**
    * Delete by env.

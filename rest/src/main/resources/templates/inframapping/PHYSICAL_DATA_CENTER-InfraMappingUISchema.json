@@ -1,5 +1,5 @@
 {
   "computeProviderType": { "ui:widget": "hidden" },
   "hostnames": { "ui:widget": "hostNamesWidget" },
-  "ui:order": [ "*" , "computeProviderType", "hostnames", "connectionType",  "accessType"]
+  "ui:order": [ "*" , "computeProviderType", "hostnames", "hostConnectionAttrs"]
 }

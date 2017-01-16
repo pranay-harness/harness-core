@@ -24,7 +24,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -72,15 +71,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
-    Query<ServiceInstance> deleteQuery =
-        wingsPersistence.createQuery(ServiceInstance.class)
-            .field("appId")
-            .equal(template.getAppId())
-            .field("serviceTemplate")
-            .equal(template.getUuid())
-            .field("host")
-            .hasAnyOf(deletedHosts.stream().map(Host::getUuid).collect(Collectors.toList()));
+  public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<String> deletedHosts) {
+    Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
+                                             .field("appId")
+                                             .equal(template.getAppId())
+                                             .field("serviceTemplate")
+                                             .equal(template.getUuid())
+                                             .field("hostName")
+                                             .hasAnyOf(deletedHosts);
     wingsPersistence.delete(deleteQuery);
 
     addedHosts.forEach(host -> {

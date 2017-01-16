@@ -72,6 +72,7 @@ import software.wings.service.impl.ServiceVariableServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.SetupServiceImpl;
 import software.wings.service.impl.SlackNotificationServiceImpl;
+import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
@@ -122,6 +123,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
 
 /**
@@ -199,7 +201,11 @@ public class WingsModule extends AbstractModule {
     bind(ClusterService.class).to(ClusterServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
 
-    Multibinder.newSetBinder(binder(), InfrastructureProvider.class).addBinding().to(AwsInfrastructureProvider.class);
+    MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
+    infrastructureProviderMapBinder.addBinding(SettingVariableTypes.AWS.name()).to(AwsInfrastructureProvider.class);
+    infrastructureProviderMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+        .to(StaticInfrastructureProvider.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

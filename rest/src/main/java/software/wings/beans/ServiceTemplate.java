@@ -29,6 +29,7 @@ public class ServiceTemplate extends Base {
   @Transient private Service service;
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
+  @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
 
   /**
@@ -213,6 +214,14 @@ public class ServiceTemplate extends Base {
         .add("serviceVariables", serviceVariables)
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .toString();
+  }
+
+  public List<InfrastructureMapping> getInfrastructureMappings() {
+    return infrastructureMappings;
+  }
+
+  public void setInfrastructureMappings(List<InfrastructureMapping> infrastructureMappings) {
+    this.infrastructureMappings = infrastructureMappings;
   }
 
   /**

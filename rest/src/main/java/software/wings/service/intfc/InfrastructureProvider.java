@@ -7,8 +7,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 
-import java.util.List;
-
 /**
  * Created by anubhaw on 10/4/16.
  */
@@ -28,7 +26,7 @@ public interface InfrastructureProvider {
    * @return the host
    */
   default Host
-    saveHost(SettingAttribute computeProviderSetting, Host host) {
+    saveHost(Host host) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Operation not supported");
     }
 }
