@@ -52,6 +52,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -190,7 +191,7 @@ public class DelegateServiceImpl implements DelegateService {
       latchForResponse.countDown();
     });
     wingsPersistence.save(task);
-    latchForResponse.await();
+    latchForResponse.await(30000, TimeUnit.MILLISECONDS);
     return (T) response[0];
   }
 

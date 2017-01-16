@@ -12,6 +12,7 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import retrofit2.Response;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
@@ -143,9 +144,18 @@ public class DelegateServiceImpl implements DelegateService {
     while (signalService.shouldRun()) {
       RestResponse<PageResponse<DelegateTask>> delegateTasks = null;
       try {
-        delegateTasks = managerClient.getTasks(delegateId, accountId).execute().body();
+        Response<RestResponse<PageResponse<DelegateTask>>> response =
+            managerClient.getTasks(delegateId, accountId).execute();
+        if (response.isSuccessful()) {
+          delegateTasks = response.body();
+        } else {
+          logger.warn(
+              "Error while fetching tasks from manager: [ code: {}, body: {} ]", response.code(), response.errorBody());
+          Thread.sleep(1000);
+          continue;
+        }
       } catch (Exception e) {
-        e.printStackTrace();
+        logger.warn("Error while fetching tasks from manager: ", e);
       }
       if (isNotEmpty(delegateTasks.getResource())) {
         DelegateTask delegateTask = delegateTasks.getResource().get(0);
