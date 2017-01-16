@@ -63,6 +63,8 @@ public class StateMachine extends Base {
 
   private List<Transition> transitions = Lists.newArrayList();
 
+  private Map<String, StateMachine> childStateMachines = new HashMap<>();
+
   private String initialStateName;
 
   @Transient private transient Map<String, State> cachedStatesMap = null;
@@ -81,11 +83,28 @@ public class StateMachine extends Base {
    * @param stencilMap the stencil map
    */
   public StateMachine(OrchestrationWorkflow orchestrationWorkflow, Map<String, StateTypeDescriptor> stencilMap) {
-    logger.info("graph received for transform: {}", orchestrationWorkflow.getGraph());
+    this(orchestrationWorkflow, stencilMap, orchestrationWorkflow.getGraph());
+
+    Map<String, Graph> subworkflows = orchestrationWorkflow.getGraph().getSubworkflows();
+    if (subworkflows != null) {
+      for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
+        Graph childGraph = entry.getValue();
+        if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
+          continue;
+        }
+        childStateMachines.put(entry.getKey(), new StateMachine(orchestrationWorkflow, stencilMap, childGraph));
+      }
+    }
     setAppId(orchestrationWorkflow.getAppId());
     this.originId = orchestrationWorkflow.getUuid();
-    this.graph = orchestrationWorkflow.getGraph();
+  }
+
+  private StateMachine(
+      OrchestrationWorkflow orchestrationWorkflow, Map<String, StateTypeDescriptor> stencilMap, Graph graph) {
+    logger.info("graph received for transform: {}", orchestrationWorkflow.getGraph());
+    this.graph = graph;
     this.name = graph.getGraphName();
+
     try {
       transform(stencilMap);
     } catch (WingsException e) {
@@ -246,6 +265,7 @@ public class StateMachine extends Base {
       }
       setInitialStateName(originStateName);
       validate();
+
       addRepeatersBasedOnStateRequiredContextElement();
       clearCache();
     } catch (IllegalArgumentException e) {
@@ -563,12 +583,31 @@ public class StateMachine extends Base {
    * @param stateName name of state to lookup for.
    * @return state object if found or null.
    */
-  public State getState(String stateName) {
+  private State getState(String stateName) {
     Map<String, State> statesMap = getStatesMap();
     if (statesMap == null) {
       return null;
     }
     return statesMap.get(stateName);
+  }
+
+  /**
+   * Get state based on name.
+   *
+   * @param childStateMachineId childStateMachineId.
+   * @param stateName name of state to lookup for.
+   * @return state object if found or null.
+   */
+  public State getState(String childStateMachineId, String stateName) {
+    if (childStateMachineId == null) {
+      return getState(stateName);
+    } else {
+      StateMachine sm = childStateMachines.get(childStateMachineId);
+      if (sm == null) {
+        return null;
+      }
+      return sm.getState(stateName);
+    }
   }
 
   /**
@@ -746,6 +785,14 @@ public class StateMachine extends Base {
 
   public void setOriginVersion(Integer originVersion) {
     this.originVersion = originVersion;
+  }
+
+  public Map<String, StateMachine> getChildStateMachines() {
+    return childStateMachines;
+  }
+
+  public void setChildStateMachines(Map<String, StateMachine> childStateMachines) {
+    this.childStateMachines = childStateMachines;
   }
 
   /**

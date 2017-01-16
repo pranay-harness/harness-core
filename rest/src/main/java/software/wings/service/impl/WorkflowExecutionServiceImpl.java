@@ -34,11 +34,9 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.History;
 import software.wings.beans.InstanceStatusSummary;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
@@ -752,18 +750,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
       entityType = EntityType.SIMPLE_DEPLOYMENT;
     }
-
-    History history = History.Builder.aHistory()
-                          .withAppId(workflowExecution.getAppId())
-                          .withEventType(EventType.CREATED)
-                          .withEntityType(entityType)
-                          .withEntityId(workflowExecution.getUuid())
-                          .withEntityName(workflowExecution.getName())
-                          .withEntityNewValue(workflowExecution)
-                          .withShortDescription(workflowExecution.getName() + " started")
-                          .withTitle(workflowExecution.getName() + " started")
-                          .build();
-    historyService.createAsync(history);
+    //
+    //    History history =
+    //    History.Builder.aHistory().withAppId(workflowExecution.getAppId()).withEventType(EventType.CREATED).withEntityType(entityType)
+    //        .withEntityId(workflowExecution.getUuid()).withEntityName(workflowExecution.getName()).withEntityNewValue(workflowExecution)
+    //        .withShortDescription(workflowExecution.getName() + " started").withTitle(workflowExecution.getName() + "
+    //        started").build();
+    //    historyService.createAsync(history);
   }
 
   @Override

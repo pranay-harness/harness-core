@@ -5,6 +5,7 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Graph.Node;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.StateType;
 
@@ -96,6 +97,7 @@ public class PhaseStep {
         .withType(StateType.PHASE_STEP.name())
         .addProperty("stepsInParallel", stepsInParallel)
         .addProperty("failureStrategies", failureStrategies)
+        .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
   }
 

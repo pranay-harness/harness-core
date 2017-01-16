@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import software.wings.beans.DeploymentType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
@@ -13,7 +12,7 @@ import java.util.List;
 /**
  * Created by rishi on 1/12/17.
  */
-public class PhaseSubWorkflow extends State {
+public class PhaseSubWorkflow extends SubWorkflowState {
   public PhaseSubWorkflow(String name) {
     super(name, StateType.PHASE.name());
   }
