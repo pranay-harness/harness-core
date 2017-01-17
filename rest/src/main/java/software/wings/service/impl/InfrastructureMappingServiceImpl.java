@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -138,8 +136,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     JsonNode physicalJsonSchema = JsonUtils.jsonSchema(PhysicalInfrastructureMapping.class);
     List<SettingAttribute> settingAttributes =
         settingsService.getSettingAttributesByType(appId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
-    Map<AccessType, String> data = settingAttributes.stream().collect(
-        Collectors.toMap(sa -> ((HostConnectionAttributes) sa.getValue()).getAccessType(), SettingAttribute::getName));
+
+    Map<String, String> data =
+        settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
     ObjectNode jsonSchemaField = ((ObjectNode) physicalJsonSchema.get("properties").get("hostConnectionAttrs"));
     jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
     jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));

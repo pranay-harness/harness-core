@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(fields = { @Field("infraMappingId")
+@Indexes(@Index(fields = { @Field("serviceTemplateId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base {
   @NotEmpty private String envId;

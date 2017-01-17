@@ -12,6 +12,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -28,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_TYPE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -252,7 +254,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                                           .withUuid(TEMPLATE_ID)
                                           .withService(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build())
                                           .build();
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, newHostList, deletedHosts);
+    serviceInstanceService.updateInstanceMappings(serviceTemplate,
+        aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build(), newHostList, deletedHosts);
     verify(wingsPersistence).delete(isA(Query.class));
     verify(query).field("appId");
     verify(end).equal(APP_ID);
