@@ -38,7 +38,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InstanceStatusSummary;
-import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
@@ -350,12 +349,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    StateMachine stateMachine = workflowService.readForEnv(appId, envId, orchestrationId);
+    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
 
-    Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
+    OrchestrationWorkflow orchestration = wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationId);
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
