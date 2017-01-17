@@ -30,6 +30,7 @@ public class StateExecutionInstance extends Base {
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
+  private Map<String, Object> params = new HashMap<>();
 
   private StateMachineExecutionCallback callback;
 
@@ -428,6 +429,14 @@ public class StateExecutionInstance extends Base {
    */
   public void setExecutionType(WorkflowType executionType) {
     this.executionType = executionType;
+  }
+
+  public Map<String, Object> getParams() {
+    return params;
+  }
+
+  public void setParams(Map<String, Object> params) {
+    this.params = params;
   }
 
   @Override

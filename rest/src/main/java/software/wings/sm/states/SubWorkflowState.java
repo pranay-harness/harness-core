@@ -46,23 +46,29 @@ public class SubWorkflowState extends State {
 
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
 
-    StateExecutionInstance childStateExecutionInstance =
-        JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-
-    childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
-    childStateExecutionInstance.setStateName(null);
-    childStateExecutionInstance.setNotifyId(stateExecutionInstance.getUuid());
-    childStateExecutionInstance.setPrevInstanceId(null);
-    childStateExecutionInstance.setContextTransition(true);
-    childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
-    childStateExecutionInstance.setStartTs(null);
-    childStateExecutionInstance.setEndTs(null);
+    StateExecutionInstance childStateExecutionInstance = getSpawningInstance(stateExecutionInstance);
     executionResponse.add(childStateExecutionInstance);
     correlationIds.add(stateExecutionInstance.getUuid());
 
     executionResponse.setAsync(true);
     executionResponse.setCorrelationIds(correlationIds);
     return executionResponse;
+  }
+
+  protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
+    StateExecutionInstance childStateExecutionInstance =
+        JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+
+    childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
+    childStateExecutionInstance.setStateName(null);
+    childStateExecutionInstance.setStateType(null);
+    childStateExecutionInstance.setNotifyId(stateExecutionInstance.getUuid());
+    childStateExecutionInstance.setPrevInstanceId(null);
+    childStateExecutionInstance.setContextTransition(true);
+    childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
+    childStateExecutionInstance.setStartTs(null);
+    childStateExecutionInstance.setEndTs(null);
+    return childStateExecutionInstance;
   }
 
   /*

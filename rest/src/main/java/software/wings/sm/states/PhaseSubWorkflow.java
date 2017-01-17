@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import software.wings.beans.DeploymentType;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -21,6 +22,18 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   // Only relevant for custom kubernetes environment
   private String deploymentMasterId;
+
+  @Override
+  protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
+    StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
+    spawningInstance.getParams().put("serviceId", serviceId);
+    spawningInstance.getParams().put("computerProviderId", computerProviderId);
+    spawningInstance.getParams().put("deploymentType", deploymentType);
+    if (deploymentMasterId != null) {
+      spawningInstance.getParams().put("deploymentMasterId", deploymentMasterId);
+    }
+    return spawningInstance;
+  }
 
   public String getServiceId() {
     return serviceId;

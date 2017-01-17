@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Describes response of an execution.
@@ -20,6 +21,7 @@ public class ExecutionResponse {
   private String errorMessage;
   private StateExecutionData stateExecutionData;
   private NotifyResponseData notifyResponseData;
+  private Map<String, Object> params;
 
   /**
    * Is asynch boolean.
@@ -127,6 +129,14 @@ public class ExecutionResponse {
    */
   public void setNotifyResponseData(NotifyResponseData notifyResponseData) {
     this.notifyResponseData = notifyResponseData;
+  }
+
+  public Map<String, Object> getParams() {
+    return params;
+  }
+
+  public void setParams(Map<String, Object> params) {
+    this.params = params;
   }
 
   /**

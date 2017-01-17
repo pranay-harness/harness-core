@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.ServiceInstance;
@@ -40,6 +42,7 @@ public class DcNodeSelectState extends State {
             ImmutableMap.of("random", random, "randomInstanceCount", randomInstanceCount, "instanceIds", instanceIds,
                 "excludeInstanceIds", excludeInstanceIds));
 
+    List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
     return new ExecutionResponse();
   }
 
