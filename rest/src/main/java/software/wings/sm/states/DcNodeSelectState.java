@@ -25,7 +25,7 @@ public class DcNodeSelectState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     // It should return list of InstanceIds
-    return null;
+    return new ExecutionResponse();
   }
 
   @Override
