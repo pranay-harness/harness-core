@@ -79,4 +79,15 @@ public interface InfrastructureMappingService {
    */
   List<ServiceInstance> selectServiceInstances(
       String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams);
+
+  /**
+   * List compute provider hosts list.
+   *
+   * @param appId             the app id
+   * @param envId             the env id
+   * @param serviceId         the service id
+   * @param computeProviderId the compute provider id
+   * @return the list
+   */
+  List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId);
 }

@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionContext;
@@ -25,10 +26,9 @@ public class DcNodeSelectState extends State {
 
   private String serviceId;
   private String computeProviderId;
-  private boolean random;
-  private int randomInstanceCount;
-  private List<String> instanceIds;
-  private List<String> excludeInstanceIds;
+  @Attributes(title = "Number of instances") private int instanceCount;
+  @Attributes(title = "Select specific hosts") private boolean random;
+  private List<String> hostNames;
 
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
@@ -45,8 +45,7 @@ public class DcNodeSelectState extends State {
 
     List<ServiceInstance> serviceInstances =
         infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
-            ImmutableMap.of("random", random, "randomInstanceCount", randomInstanceCount, "instanceIds", instanceIds,
-                "excludeInstanceIds", excludeInstanceIds));
+            ImmutableMap.of("random", random, "instanceCount", instanceCount, "hostNames", hostNames));
 
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
     return new ExecutionResponse();
@@ -79,27 +78,19 @@ public class DcNodeSelectState extends State {
     this.random = random;
   }
 
-  public int getRandomInstanceCount() {
-    return randomInstanceCount;
+  public int getInstanceCount() {
+    return instanceCount;
   }
 
-  public void setRandomInstanceCount(int randomInstanceCount) {
-    this.randomInstanceCount = randomInstanceCount;
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
   }
 
-  public List<String> getInstanceIds() {
-    return instanceIds;
+  public List<String> getHostNames() {
+    return hostNames;
   }
 
-  public void setInstanceIds(List<String> instanceIds) {
-    this.instanceIds = instanceIds;
-  }
-
-  public List<String> getExcludeInstanceIds() {
-    return excludeInstanceIds;
-  }
-
-  public void setExcludeInstanceIds(List<String> excludeInstanceIds) {
-    this.excludeInstanceIds = excludeInstanceIds;
+  public void setHostNames(List<String> hostNames) {
+    this.hostNames = hostNames;
   }
 }

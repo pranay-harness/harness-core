@@ -12,6 +12,7 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -56,6 +57,14 @@ public class InfrastructureMappingResource {
   public RestResponse<InfrastructureMapping> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.get(appId, envId, infraMappingId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/hosts")
+  public RestResponse<List<String>> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @QueryParam("serviceId") String serviceId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureMappingService.listComputeProviderHosts(appId, envId, serviceId, computeProviderId));
   }
 
   @PUT
