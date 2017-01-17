@@ -8,7 +8,9 @@ import software.wings.common.UUIDGenerator;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -95,6 +97,15 @@ public class WorkflowPhase {
         .addProperty("deploymentMasterId", deploymentMasterId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
+  }
+
+  public Map<String, Object> params() {
+    Map<String, Object> params = new HashMap<>();
+    params.put("serviceId", serviceId);
+    params.put("computerProviderId", computerProviderId);
+    params.put("deploymentType", deploymentType);
+    params.put("deploymentMasterId", deploymentMasterId);
+    return params;
   }
 
   public static final class WorkflowPhaseBuilder {

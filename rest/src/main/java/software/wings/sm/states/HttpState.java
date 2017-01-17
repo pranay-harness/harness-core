@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,15 +269,17 @@ public class HttpState extends State {
     String errorMessage = executionData.getErrorMsg();
     executionData.setAssertionStatement(assertion);
 
-    boolean status = false;
-    try {
-      status = (boolean) context.evaluateExpression(assertion, executionData);
-      logger.info("assertion status: {}", status);
-    } catch (Exception e) {
-      errorMessage = getMessage(e);
-      executionData.setErrorMsg(errorMessage);
-      logger.error("Error in httpStateAssertion", e);
-      status = false;
+    boolean status = true;
+    if (StringUtils.isNotBlank(assertion)) {
+      try {
+        status = (boolean) context.evaluateExpression(assertion, executionData);
+        logger.info("assertion status: {}", status);
+      } catch (Exception e) {
+        errorMessage = getMessage(e);
+        executionData.setErrorMsg(errorMessage);
+        logger.error("Error in httpStateAssertion", e);
+        status = false;
+      }
     }
 
     ExecutionStatus executionStatus = status ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;

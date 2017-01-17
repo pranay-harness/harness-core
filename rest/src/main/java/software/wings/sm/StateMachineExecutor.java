@@ -28,7 +28,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
@@ -247,16 +246,8 @@ public class StateMachineExecutor {
     ExecutionResponse executionResponse = null;
     Exception ex = null;
     try {
-      if (stateExecutionInstance.getParams() != null && !stateExecutionInstance.getParams().isEmpty()) {
-        stateMachine = JsonUtils.clone(stateMachine, StateMachine.class);
-        currentState = stateMachine.getState(
-            stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-        MapperUtils.mapObject(stateExecutionInstance.getParams(), currentState);
-      } else {
-        currentState = stateMachine.getState(
-            stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-      }
-
+      currentState =
+          stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {

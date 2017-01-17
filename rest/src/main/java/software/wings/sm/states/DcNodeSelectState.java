@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionContext;
@@ -19,6 +21,8 @@ import javax.inject.Inject;
  * Created by rishi on 1/12/17.
  */
 public class DcNodeSelectState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(DcNodeSelectState.class);
+
   private String serviceId;
   private String computeProviderId;
   private boolean random;
@@ -36,6 +40,8 @@ public class DcNodeSelectState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
     String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
+
+    logger.info("serviceId : {}, computeProviderId: {}", serviceId, computeProviderId);
 
     List<ServiceInstance> serviceInstances =
         infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
