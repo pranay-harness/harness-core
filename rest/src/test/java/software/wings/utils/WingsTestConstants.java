@@ -348,4 +348,6 @@ public class WingsTestConstants {
    * The constant INFRA_MAPPING_ID.
    */
   public static final String INFRA_MAPPING_ID = "INFRA_MAPPING_ID";
+
+  public static final String COMPUTE_PROVIDER_ID = "COMPUTE_PROVIDER_ID";
 }

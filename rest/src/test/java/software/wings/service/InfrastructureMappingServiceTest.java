@@ -7,11 +7,15 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -22,6 +26,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -30,6 +35,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
+import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -124,5 +130,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   public void shouldDelete() {
     infrastructureMappingService.delete(APP_ID, ENV_ID, INFRA_MAPPING_ID);
     verify(wingsPersistence).delete(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+  }
+
+  @Test
+  public void shouldSelectServiceInstances() {
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
+        APP_ID, SERVICE_ID, ENV_ID, COMPUTE_PROVIDER_ID, ImmutableMap.of());
   }
 }

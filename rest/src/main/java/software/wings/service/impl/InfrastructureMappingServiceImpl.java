@@ -161,14 +161,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<ServiceInstance> selectServiceInstances(
       String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams) {
+    Object serviceTemplateId =
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
     InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
                                                       .field("appId")
                                                       .equal(appId)
                                                       .field("envId")
                                                       .equal(envId)
-                                                      .field("serviceId")
-                                                      .equal(serviceId)
-                                                      .field("computeProviderId")
+                                                      .field("serviceTemplateId")
+                                                      .equal(serviceTemplateId)
+                                                      .field("computeProviderSettingId")
                                                       .equal(computeProviderId)
                                                       .get();
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
@@ -178,7 +180,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return serviceInstanceService
           .list(PageRequest.Builder.aPageRequest()
                     .addFilter("appId", Operator.EQ, appId)
-                    .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
+                    .addFilter("serviceTemplateId", Operator.EQ, serviceTemplateId)
                     .build())
           .getResponse();
     } else {
