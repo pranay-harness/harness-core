@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -183,10 +182,10 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   public void shouldApplyServiceConfigFilesIT() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
 
-    Map<String, List<ConfigFile>> hostConfigMapping =
-        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
+    List<ConfigFile> hostConfigs = templateService.computedConfigFiles(
+        template.getAppId(), template.getEnvId(), template.getUuid(), hosts.get(0).getUuid());
 
-    assertThat(hostConfigMapping.get(hosts.get(0).getHostName()))
+    assertThat(hostConfigs)
         .isEqualTo(configService.getConfigFilesForEntity(
             template.getAppId(), DEFAULT_TEMPLATE_ID, template.getService().getUuid()));
   }

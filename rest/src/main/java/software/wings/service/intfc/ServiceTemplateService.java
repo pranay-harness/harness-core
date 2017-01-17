@@ -14,7 +14,6 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.util.List;
-import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -52,9 +51,10 @@ public interface ServiceTemplateService {
    * @param appId      the app id
    * @param envId      the env id
    * @param templateId the template id
+   * @param hostId     the host id
    * @return the map
    */
-  Map<String, List<ServiceVariable>> computeServiceVariables(String appId, String envId, String templateId);
+  List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId, String hostId);
 
   /**
    * Override config files.
@@ -71,9 +71,10 @@ public interface ServiceTemplateService {
    * @param appId      the app id
    * @param envId      the env id
    * @param templateId the template id
+   * @param hostId     the host id
    * @return the map
    */
-  Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId);
+  List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId, String hostId);
 
   /**
    * Delete.

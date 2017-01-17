@@ -132,7 +132,7 @@ public class ServiceTemplateResource {
   @Path("{templateId}/compute-files")
   public RestResponse<List<ConfigFile>> computeFiles(@PathParam("templateId") String templateId,
       @QueryParam("envId") @NotEmpty String envId, @QueryParam("appId") @NotEmpty String appId,
-      @QueryParam("hostName") @NotEmpty String hostName, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId).get(hostName));
+      @QueryParam("hostId") @NotEmpty String hostId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId, hostId));
   }
 }

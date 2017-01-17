@@ -7,6 +7,7 @@ package software.wings.common;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -151,7 +152,8 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     processor.setServiceTemplateService(serviceTemplateService);
     on(processor).set("hostService", hostService);
 
-    when(serviceTemplateService.get(anyString(), eq(TEMPLATE_ID))).thenReturn(serviceTemplate);
+    when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean()))
+        .thenReturn(serviceTemplate);
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))

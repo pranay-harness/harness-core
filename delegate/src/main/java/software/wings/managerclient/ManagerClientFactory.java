@@ -81,10 +81,9 @@ private OkHttpClient getUnsafeOkHttpClient() {
               Response response = chain.proceed(request);
 
               long t2 = System.nanoTime();
-              if (response.code() == 400) {
-                logger.debug(String.format("Received response for %s in %.1fms%n%s\n%s\n", response.request().url(),
-                    (t2 - t1) / 1e6d, response.headers(), response.body().string()));
-              }
+              logger.debug(String.format("Received response for %s in %.1fms%n%s\n", response.request().url(),
+                  (t2 - t1) / 1e6d, response.headers()));
+
               return response;
 
             })

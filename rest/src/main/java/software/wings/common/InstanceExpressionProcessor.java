@@ -253,7 +253,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     List<InstanceElement> elements = new ArrayList<>();
     for (ServiceInstance instance : instances) {
       ServiceTemplate serviceTemplate =
-          serviceTemplateService.get(instance.getAppId(), instance.getServiceTemplateId());
+          serviceTemplateService.get(instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false);
       Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
       elements.add(convertToInstanceElement(instance, host, serviceTemplate));
     }

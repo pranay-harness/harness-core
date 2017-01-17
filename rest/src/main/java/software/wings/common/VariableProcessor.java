@@ -4,8 +4,6 @@
 
 package software.wings.common;
 
-import static java.util.Collections.emptyList;
-
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
@@ -50,10 +48,11 @@ public class VariableProcessor {
               .get();
 
       InstanceElement instance = (InstanceElement) instanceElement.get();
-      Map<String, List<ServiceVariable>> serviceSettingMap = serviceTemplateService.computeServiceVariables(
-          standardParam.getAppId(), standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid());
-      serviceSettingMap.getOrDefault(instance.getHostElement().getUuid(), emptyList())
-          .forEach(serviceVariable -> variables.put(serviceVariable.getName(), serviceVariable.getValue()));
+      List<ServiceVariable> serviceSettingMap =
+          serviceTemplateService.computeServiceVariables(standardParam.getAppId(), standardParam.getEnvId(),
+              instance.getServiceTemplateElement().getUuid(), instance.getHostElement().getUuid());
+      serviceSettingMap.forEach(
+          serviceVariable -> variables.put(serviceVariable.getName(), serviceVariable.getValue()));
     }
 
     return variables;

@@ -3,6 +3,7 @@ package software.wings.common;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -17,6 +18,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -60,11 +62,11 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class InstanceExpressionProcessorTest extends WingsBaseTest {
-  private static final ServiceTemplate SERVICE_TEMPLATE =
-      aServiceTemplate()
-          .withName("template")
-          .withService(aService().withUuid("uuid1").withName("svc1").build())
-          .build();
+  private ServiceTemplate SERVICE_TEMPLATE = aServiceTemplate()
+                                                 .withUuid(TEMPLATE_ID)
+                                                 .withName("template")
+                                                 .withService(aService().withUuid("uuid1").withName("svc1").build())
+                                                 .build();
   /**
    * The Injector.
    */
@@ -107,6 +109,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
         .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
     on(appService).set("settingsService", settingsService);
   }
+
   /**
    * Should return instances.
    */
@@ -147,7 +150,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
                .thenReturn(aHost().withHostName(instance.getHostName()).build()));
     SERVICE_TEMPLATE.setService(aService().withAppId(app.getAppId()).withUuid(SERVICE_ID).build());
-    when(serviceTemplateServiceMock.get(anyString(), anyString())).thenReturn(SERVICE_TEMPLATE);
+    when(serviceTemplateServiceMock.get(anyString(), anyString(), anyString(), anyBoolean()))
+        .thenReturn(SERVICE_TEMPLATE);
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
@@ -335,6 +339,14 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
+    Service service = wingsPersistence.saveAndGet(Service.class, aService().withName("svc1").build());
+
+    ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
+                                                                      .withAppId(app.getUuid())
+                                                                      .withEnvId(env.getUuid())
+                                                                      .withName("template")
+                                                                      .withServiceId(service.getUuid())
+                                                                      .build());
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
@@ -348,8 +360,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
+                                    .withAppId(app.getUuid())
+                                    .withEnvId(env.getUuid())
                                     .withHost(aHost().withHostName("host1").build())
-                                    .withServiceTemplate(SERVICE_TEMPLATE)
+                                    .withServiceTemplate(serviceTemplate)
                                     .build();
     List<ServiceInstance> instances = Lists.newArrayList(instance1);
     res.setResponse(instances);
@@ -363,8 +377,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     processor.setServiceInstanceService(serviceInstanceServiceMock);
     on(processor).set("hostService", hostService);
 
-    SERVICE_TEMPLATE.setService(aService().withUuid(SERVICE_ID).withAppId(app.getAppId()).withName("svc1").build());
-    when(serviceTemplateServiceMock.get(anyString(), anyString())).thenReturn(SERVICE_TEMPLATE);
+    serviceTemplate.setService(service);
+    when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false))
+        .thenReturn(serviceTemplate);
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))

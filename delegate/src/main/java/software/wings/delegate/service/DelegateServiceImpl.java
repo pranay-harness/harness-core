@@ -151,13 +151,12 @@ public class DelegateServiceImpl implements DelegateService {
         } else {
           logger.warn("Error while fetching tasks from manager: [ code: {}, body: {} ]", response.code(),
               response.errorBody().string());
+          response.errorBody().close();
           Thread.sleep(1000);
           continue;
         }
       } catch (Exception e) {
         logger.warn("Error while fetching tasks from manager: ", e);
-        Thread.sleep(1000);
-        continue;
       }
       if (isNotEmpty(delegateTasks.getResource())) {
         DelegateTask delegateTask = delegateTasks.getResource().get(0);
@@ -176,7 +175,7 @@ public class DelegateServiceImpl implements DelegateService {
                             .build())
                     .execute();
               } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Unable to send response to manager ", e);
               }
             });
         injector.injectMembers(delegateRunnableTask);

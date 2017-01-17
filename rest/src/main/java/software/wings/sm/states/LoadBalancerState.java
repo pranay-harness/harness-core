@@ -26,7 +26,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -65,12 +64,11 @@ public class LoadBalancerState extends State {
     Optional<ServiceVariable> serviceVariableOpt =
         ofNullable(serviceTemplateService
                        .computeServiceVariables(standardParam.getAppId(), standardParam.getEnvId(),
-                           instance.getServiceTemplateElement().getUuid())
-                       .get(instance.getHostElement().getUuid()))
-            .orElse(Collections.emptyList())
-            .stream()
-            .filter(serviceVariable -> serviceVariable.getType() == Type.LB)
-            .findFirst();
+                           instance.getServiceTemplateElement().getUuid(), instance.getHostElement().getUuid())
+                       .stream()
+                       .filter(serviceVariable -> serviceVariable.getType() == Type.LB)
+                       .findFirst()
+                       .orElse(null));
 
     if (serviceVariableOpt.isPresent()) {
       SettingAttribute settingAttribute =
