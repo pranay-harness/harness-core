@@ -8,6 +8,7 @@ import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionEvent;
 
 import java.util.List;
@@ -106,6 +107,9 @@ public interface WorkflowExecutionService {
    * @return the execution details without graph
    */
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
+
+  WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
+      ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
 
   /**
    * Trigger env execution workflow execution.

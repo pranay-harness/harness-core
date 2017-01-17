@@ -38,6 +38,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InstanceStatusSummary;
+import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
@@ -327,7 +328,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String envId, String orchestrationId, ExecutionArgs executionArgs) {
-    return triggerOrchestrationExecution(appId, envId, orchestrationId, executionArgs, null);
+    return triggerOrchestrationWorkflowExecution(appId, envId, orchestrationId, executionArgs, null);
   }
 
   /**
@@ -340,6 +341,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param workflowExecutionUpdate the workflow execution update
    * @return the workflow execution
    */
+  @Override
   public WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =
@@ -354,7 +356,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
 
-    OrchestrationWorkflow orchestration = wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationId);
+    Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
