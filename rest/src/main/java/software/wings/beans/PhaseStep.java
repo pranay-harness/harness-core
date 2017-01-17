@@ -40,6 +40,9 @@ public class PhaseStep {
   }
 
   public String getName() {
+    if (name == null && phaseStepType != null) {
+      name = phaseStepType.name();
+    }
     return name;
   }
 
@@ -53,9 +56,6 @@ public class PhaseStep {
 
   public void setPhaseStepType(PhaseStepType phaseStepType) {
     this.phaseStepType = phaseStepType;
-    if (name == null) {
-      name = phaseStepType.name();
-    }
   }
 
   public List<Node> getSteps() {
@@ -93,7 +93,7 @@ public class PhaseStep {
   public Node generatePhaseStepNode() {
     return aNode()
         .withId(uuid)
-        .withName(name)
+        .withName(getName())
         .withType(StateType.PHASE_STEP.name())
         .addProperty("stepsInParallel", stepsInParallel)
         .addProperty("failureStrategies", failureStrategies)

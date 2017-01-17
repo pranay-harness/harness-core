@@ -208,8 +208,14 @@ public class StateMachine extends Base {
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
     String originStateName = null;
     for (Node node : graph.getNodes()) {
+      logger.info("node : {}", node);
+
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown stencil type");
+      }
+
+      if (node.getName() == null) {
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Node name null");
       }
 
       if (node.isOrigin()) {

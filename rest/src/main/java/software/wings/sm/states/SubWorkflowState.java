@@ -50,6 +50,7 @@ public class SubWorkflowState extends State {
         JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
 
     childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
+    childStateExecutionInstance.setStateName(null);
     childStateExecutionInstance.setNotifyId(stateExecutionInstance.getUuid());
     childStateExecutionInstance.setPrevInstanceId(null);
     childStateExecutionInstance.setContextTransition(true);

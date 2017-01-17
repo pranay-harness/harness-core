@@ -461,6 +461,10 @@ public class StateMachineExecutor {
           childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
           if (childStateExecutionInstance.getStateName() == null
               && childStateExecutionInstance.getChildStateMachineId() != null) {
+            if (sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()) == null) {
+              notify(childStateExecutionInstance, ExecutionStatus.SUCCESS);
+              return;
+            }
             childStateExecutionInstance.setStateName(sm.getChildStateMachines()
                                                          .get(childStateExecutionInstance.getChildStateMachineId())
                                                          .getInitialStateName());

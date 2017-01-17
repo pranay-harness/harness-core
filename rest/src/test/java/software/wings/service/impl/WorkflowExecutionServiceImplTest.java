@@ -10,14 +10,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.DeploymentType.SSH;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
@@ -41,6 +45,9 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
+import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -50,6 +57,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowOrchestrationType;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
@@ -78,6 +87,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
+import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
@@ -2423,6 +2433,94 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasSize(1)
         .extracting("status")
         .containsExactly(ExecutionStatus.SUCCESS.name());
+  }
+
+  @Test
+  public void shouldTriggerOrchestrationWorkflow() throws InterruptedException {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    triggerOrchestrationWorkflow(app.getAppId(), env);
+  }
+
+  /**
+   * Trigger orchestration.
+   *
+   * @param appId the app id
+   * @param env   the env
+   * @return the string
+   * @throws InterruptedException the interrupted exception
+   */
+  public String triggerOrchestrationWorkflow(String appId, Environment env) throws InterruptedException {
+    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                      .triggerOrchestrationWorkflowExecution(
+                                          appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
+    workflowExecutionSignals.get(signalId).await();
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Orchestration executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    return executionId;
+  }
+
+  private OrchestrationWorkflow createOrchestrationWorkflow(String appId) {
+    OrchestrationWorkflow orchestrationWorkflow =
+        anOrchestrationWorkflow()
+            .withAppId(appId)
+            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
+            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+            .addWorkflowPhases(aWorkflowPhase()
+                                   .withName("Phase1")
+                                   .withComputerProviderId("computeProviderId1")
+                                   .withServiceId("serviceId1")
+                                   .withDeploymentType(SSH)
+                                   .build())
+            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .build();
+
+    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph");
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow3).isNotNull();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
+    PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
+                                    .stream()
+                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
+                                    .collect(Collectors.toList())
+                                    .get(0);
+
+    deployPhaseStep.getSteps().add(aNode().withType("HTTP").addProperty("url", "www.google.com").build());
+
+    workflowService.updateWorkflowPhase(
+        orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
+
+    OrchestrationWorkflow orchestrationWorkflow4 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+
+    logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
+
+    return orchestrationWorkflow4;
   }
 
   /**

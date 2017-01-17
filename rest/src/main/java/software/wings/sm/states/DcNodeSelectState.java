@@ -39,7 +39,8 @@ public class DcNodeSelectState extends State {
         infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
             ImmutableMap.of("random", random, "randomInstanceCount", randomInstanceCount, "instanceIds", instanceIds,
                 "excludeInstanceIds", excludeInstanceIds));
-    return null;
+
+    return new ExecutionResponse();
   }
 
   @Override
