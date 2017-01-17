@@ -2483,7 +2483,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
-                                   .withComputerProviderId("computeProviderId1")
+                                   .withComputeProviderId("computeProviderId1")
                                    .withServiceId("serviceId1")
                                    .withDeploymentType(SSH)
                                    .build())

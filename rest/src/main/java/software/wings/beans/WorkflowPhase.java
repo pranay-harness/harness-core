@@ -21,7 +21,7 @@ public class WorkflowPhase {
   private String name;
   private @NotNull String serviceId;
   private @NotNull DeploymentType deploymentType;
-  private @NotNull String computerProviderId;
+  private @NotNull String computeProviderId;
   private String deploymentMasterId;
 
   private List<PhaseStep> phaseSteps = new ArrayList<>();
@@ -50,12 +50,12 @@ public class WorkflowPhase {
     this.serviceId = serviceId;
   }
 
-  public String getComputerProviderId() {
-    return computerProviderId;
+  public String getComputeProviderId() {
+    return computeProviderId;
   }
 
-  public void setComputerProviderId(String computerProviderId) {
-    this.computerProviderId = computerProviderId;
+  public void setComputeProviderId(String computeProviderId) {
+    this.computeProviderId = computeProviderId;
   }
 
   public DeploymentType getDeploymentType() {
@@ -93,7 +93,7 @@ public class WorkflowPhase {
         .withType(StateType.PHASE.name())
         .addProperty("serviceId", serviceId)
         .addProperty("deploymentType", deploymentType)
-        .addProperty("computerProviderId", computerProviderId)
+        .addProperty("computeProviderId", computeProviderId)
         .addProperty("deploymentMasterId", deploymentMasterId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
@@ -102,7 +102,7 @@ public class WorkflowPhase {
   public Map<String, Object> params() {
     Map<String, Object> params = new HashMap<>();
     params.put("serviceId", serviceId);
-    params.put("computerProviderId", computerProviderId);
+    params.put("computeProviderId", computeProviderId);
     params.put("deploymentType", deploymentType);
     params.put("deploymentMasterId", deploymentMasterId);
     return params;
@@ -112,7 +112,7 @@ public class WorkflowPhase {
     private String uuid = UUIDGenerator.getUuid();
     private String name;
     private String serviceId;
-    private String computerProviderId;
+    private String computeProviderId;
     private DeploymentType deploymentType;
     private String deploymentMasterId;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
@@ -138,8 +138,8 @@ public class WorkflowPhase {
       return this;
     }
 
-    public WorkflowPhaseBuilder withComputerProviderId(String computerProviderId) {
-      this.computerProviderId = computerProviderId;
+    public WorkflowPhaseBuilder withComputeProviderId(String computeProviderId) {
+      this.computeProviderId = computeProviderId;
       return this;
     }
 
@@ -163,7 +163,7 @@ public class WorkflowPhase {
       workflowPhase.setUuid(uuid);
       workflowPhase.setName(name);
       workflowPhase.setServiceId(serviceId);
-      workflowPhase.setComputerProviderId(computerProviderId);
+      workflowPhase.setComputeProviderId(computeProviderId);
       workflowPhase.setDeploymentType(deploymentType);
       workflowPhase.setDeploymentMasterId(deploymentMasterId);
       workflowPhase.setPhaseSteps(phaseSteps);

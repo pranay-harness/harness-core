@@ -213,6 +213,25 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  @Override
+  public InfrastructureMapping getInfraMappingByComputeProviderAndServiceId(
+      String appId, String envId, String serviceId, String computeProviderId) {
+    Object serviceTemplateId =
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
+    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                      .field("appId")
+                                                      .equal(appId)
+                                                      .field("envId")
+                                                      .equal(envId)
+                                                      .field("serviceTemplateId")
+                                                      .equal(serviceTemplateId)
+                                                      .field("computeProviderSettingId")
+                                                      .equal(computeProviderId)
+                                                      .get();
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+    return infrastructureMapping;
+  }
+
   private Object readUiSchema(String type) {
     try {
       return readResource(stencilsPath + type + uiSchemaSuffix);

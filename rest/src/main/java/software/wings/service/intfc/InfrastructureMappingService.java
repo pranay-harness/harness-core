@@ -90,4 +90,16 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId);
+
+  /**
+   * Gets infra mapping by compute provider and service id.
+   *
+   * @param appId              the app id
+   * @param envId              the env id
+   * @param serviceId          the service id
+   * @param computeProviderId the computer provider id
+   * @return the infra mapping by compute provider and service id
+   */
+  InfrastructureMapping getInfraMappingByComputeProviderAndServiceId(
+      String appId, String envId, String serviceId, String computeProviderId);
 }

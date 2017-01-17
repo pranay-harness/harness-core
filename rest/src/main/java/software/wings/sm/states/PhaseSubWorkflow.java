@@ -16,7 +16,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   }
 
   private String serviceId;
-  private String computerProviderId;
+  private String computeProviderId;
   private DeploymentType deploymentType;
 
   // Only relevant for custom kubernetes environment
@@ -30,12 +30,12 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     this.serviceId = serviceId;
   }
 
-  public String getComputerProviderId() {
-    return computerProviderId;
+  public String getComputeProviderId() {
+    return computeProviderId;
   }
 
-  public void setComputerProviderId(String computerProviderId) {
-    this.computerProviderId = computerProviderId;
+  public void setComputeProviderId(String computeProviderId) {
+    this.computeProviderId = computeProviderId;
   }
 
   public DeploymentType getDeploymentType() {
@@ -56,7 +56,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public static class PhaseSubWorkflowExecutionData extends StateExecutionData implements NotifyResponseData {
     private String serviceId;
-    private String computerProviderId;
+    private String computeProviderId;
     private DeploymentType deploymentType;
 
     private String deploymentMasterId;
@@ -71,12 +71,12 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       this.serviceId = serviceId;
     }
 
-    public String getComputerProviderId() {
-      return computerProviderId;
+    public String getComputeProviderId() {
+      return computeProviderId;
     }
 
-    public void setComputerProviderId(String computerProviderId) {
-      this.computerProviderId = computerProviderId;
+    public void setComputeProviderId(String computeProviderId) {
+      this.computeProviderId = computeProviderId;
     }
 
     public DeploymentType getDeploymentType() {

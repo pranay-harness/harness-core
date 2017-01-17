@@ -22,6 +22,12 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.StateType.AWS_NODE_PROVISION;
+import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.DC_NODE_SELECT;
+import static software.wings.sm.StateType.FORK;
+import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.StateType.values;
 
 import com.google.inject.Singleton;
 
@@ -42,11 +48,13 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
@@ -63,6 +71,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
@@ -118,6 +127,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private EntityVersionService entityVersionService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -169,7 +179,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
-    stencils.addAll(Arrays.asList(StateType.values()));
+    stencils.addAll(Arrays.asList(values()));
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
@@ -523,6 +533,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       PageRequest<OrchestrationWorkflow> pageRequest) {
     return listOrchestrationWorkflows(pageRequest, 0);
   }
+
   @Override
   public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
       PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount) {
@@ -574,7 +585,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, Object> params = new HashMap<>();
     orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow, params));
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
-      generateNewWorkflowPhaseSteps(workflowPhase);
+      generateNewWorkflowPhaseSteps(
+          orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase, params));
     }
     orchestrationWorkflow = wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
@@ -647,7 +659,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
 
-    generateNewWorkflowPhaseSteps(workflowPhase);
+    generateNewWorkflowPhaseSteps(
+        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
 
@@ -676,14 +689,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflowPhase;
   }
 
-  private void generateNewWorkflowPhaseSteps(WorkflowPhase workflowPhase) {
+  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase) {
     // For DC only - for other types it has to be customized
+
+    StateType stateType =
+        determineStateType(appId, envId, workflowPhase.getServiceId(), workflowPhase.getComputeProviderId());
+
+    if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT, AWS_NODE_PROVISION).contains(stateType)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
+    }
 
     workflowPhase.addPhaseStep(
         aPhaseStep(PhaseStepType.PROVISION_NODE)
             .withName("Provision Nodes")
-            .addStep(
-                aNode().withType(StateType.DC_NODE_SELECT.name()).withName("Select Nodes").withOrigin(true).build())
+            .addStep(aNode().withType(stateType.name()).withName("Select Nodes").withOrigin(true).build())
             .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).withName("Disable Service").build());
@@ -698,6 +717,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
+  }
+
+  private StateType determineStateType(String appId, String envId, String serviceId, String computeProviderId) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.getInfraMappingByComputeProviderAndServiceId(
+            appId, envId, serviceId, computeProviderId);
+
+    StateType stateType =
+        infrastructureMapping instanceof PhysicalInfrastructureMapping ? DC_NODE_SELECT : AWS_NODE_SELECT;
+
+    return stateType;
   }
 
   @Override
@@ -904,7 +934,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       // introduce repeat node
 
       repeatNode = aNode()
-                       .withType(StateType.REPEAT.name())
+                       .withType(REPEAT.name())
                        .withName("All Instances")
                        .addProperty("executionStrategy", "PARALLEL")
                        .addProperty("repeatElementExpression", "${instances}")
@@ -914,8 +944,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (phaseStep.isStepsInParallel()) {
-      Node forkNode =
-          aNode().withId(getUuid()).withType(StateType.FORK.name()).withName(phaseStep.getName() + "-FORK").build();
+      Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(phaseStep.getName() + "-FORK").build();
       for (Node step : phaseStep.getSteps()) {
         step.getProperties().putAll(params);
         graphBuilder.addNodes(step);
