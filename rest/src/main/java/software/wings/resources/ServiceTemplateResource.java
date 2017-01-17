@@ -11,7 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.DelegateAuth;
@@ -126,72 +125,6 @@ public class ServiceTemplateResource {
       @PathParam("templateId") String serviceTemplateId) {
     serviceTemplateService.delete(appId, envId, serviceTemplateId);
     return new RestResponse();
-  }
-
-  /**
-   * Map hosts.
-   *
-   * @param envId             the env id
-   * @param appId             the app id
-   * @param serviceTemplateId the service template id
-   * @param hostIds           the host ids
-   * @return the rest response
-   */
-  @PUT
-  @Path("{templateId}/map-hosts")
-  public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
-      @PathParam("templateId") String serviceTemplateId, List<String> hostIds) {
-    return new RestResponse<>(serviceTemplateService.updateHosts(appId, envId, serviceTemplateId, hostIds));
-  }
-
-  /**
-   * Map tags.
-   *
-   * @param envId             the env id
-   * @param appId             the app id
-   * @param serviceTemplateId the service template id
-   * @param tagIds            the tag ids
-   * @return the rest response
-   */
-  @PUT
-  @Path("{templateId}/map-tags")
-  public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
-      @PathParam("templateId") String serviceTemplateId, List<String> tagIds) {
-    return new RestResponse<>(serviceTemplateService.updateTags(appId, envId, serviceTemplateId, tagIds));
-  }
-
-  /**
-   * Host configs.
-   *
-   * @param envId       the env id
-   * @param appId       the app id
-   * @param templateId  the template id
-   * @param pageRequest the page request
-   * @return the rest response
-   */
-  @GET
-  @Path("{templateId}/tagged-hosts")
-  public RestResponse<PageResponse<ApplicationHost>> hostConfigs(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
-      @BeanParam PageRequest<ApplicationHost> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", infrastructureService.getInfraByEnvId(appId, envId), EQ);
-    return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
-  }
-
-  /**
-   * Override files rest response.
-   *
-   * @param envId      the env id
-   * @param appId      the app id
-   * @param templateId the template id
-   * @return the rest response
-   */
-  @GET
-  @Path("{templateId}/override-files")
-  public RestResponse<List<ConfigFile>> overrideFiles(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
-    return new RestResponse<>(serviceTemplateService.getOverrideFiles(appId, envId, templateId));
   }
 
   @DelegateAuth

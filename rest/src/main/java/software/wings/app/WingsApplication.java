@@ -48,6 +48,7 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.health.WingsHealthCheck;
+import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -219,6 +220,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(KryoFeature.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(ConstraintViolationExceptionMapper.class);

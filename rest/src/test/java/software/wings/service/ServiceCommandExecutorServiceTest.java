@@ -14,7 +14,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -66,7 +65,8 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
   private ExecutionCredential credential =
       aSSHExecutionCredential().withSshUser(USER_NAME).withSshPassword(WingsTestConstants.USER_PASSWORD).build();
-  private Host host = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttrPwd).build();
+  private Host host =
+      aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttrPwd.getUuid()).build();
   private Service service = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private ServiceTemplate serviceTemplate =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withEnvId(ENV_ID).withService(service).build();
@@ -75,7 +75,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withServiceId(SERVICE_ID)
           .withEnvId(ENV_ID)
-          .withHost(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build())
+          .withHost(aHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build())
           .withServiceTemplate(serviceTemplate)
           .build();
   private AbstractCommandUnit commandUnit =

@@ -64,7 +64,26 @@ public class ConfigFile extends BaseFile {
 
   private String overridePath;
 
+  @NotNull(groups = {Create.class}) private ConfigOverrideType configOverrideType;
+  private String configOverrideExpression;
+
   @Transient private ConfigFile overriddenConfigFile;
+
+  /**
+   * The enum Config override type.
+   */
+  public enum ConfigOverrideType {
+    /**
+     * All config override type.
+     */
+    ALL, /**
+          * Instances config override type.
+          */
+    INSTANCES, /**
+                * Custom config override type.
+                */
+    CUSTOM
+  }
 
   /**
    * Gets entity id.
@@ -282,6 +301,48 @@ public class ConfigFile extends BaseFile {
     this.envIdVersionMap = envIdVersionMap;
   }
 
+  /**
+   * Gets config override type.
+   *
+   * @return the config override type
+   */
+  public ConfigOverrideType getConfigOverrideType() {
+    return configOverrideType;
+  }
+
+  /**
+   * Sets config override type.
+   *
+   * @param configOverrideType the config override type
+   */
+  public void setConfigOverrideType(ConfigOverrideType configOverrideType) {
+    this.configOverrideType = configOverrideType;
+  }
+
+  /**
+   * Gets config override expression.
+   *
+   * @return the config override expression
+   */
+  public String getConfigOverrideExpression() {
+    return configOverrideExpression;
+  }
+
+  /**
+   * Sets config override expression.
+   *
+   * @param configOverrideExpression the config override expression
+   */
+  public void setConfigOverrideExpression(String configOverrideExpression) {
+    this.configOverrideExpression = configOverrideExpression;
+  }
+
+  /**
+   * Gets version for env.
+   *
+   * @param envId the env id
+   * @return the version for env
+   */
   @JsonIgnore
   public int getVersionForEnv(String envId) {
     return Optional.ofNullable(envIdVersionMap.get(envId))
@@ -289,69 +350,40 @@ public class ConfigFile extends BaseFile {
         .getVersion();
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
-              targetToAllEnv, defaultVersion, envIdVersionMap, overridePath, overriddenConfigFile);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final ConfigFile other = (ConfigFile) obj;
-    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
-        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
-        && Objects.equals(this.description, other.description)
-        && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
-        && Objects.equals(this.relativeFilePath, other.relativeFilePath)
-        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv)
-        && Objects.equals(this.defaultVersion, other.defaultVersion)
-        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
-        && Objects.equals(this.overridePath, other.overridePath)
-        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("templateId", templateId)
-        .add("envId", envId)
-        .add("entityType", entityType)
-        .add("entityId", entityId)
-        .add("description", description)
-        .add("parentConfigFileId", parentConfigFileId)
-        .add("relativeFilePath", relativeFilePath)
-        .add("targetToAllEnv", targetToAllEnv)
-        .add("defaultVersion", defaultVersion)
-        .add("envIdVersionMap", envIdVersionMap)
-        .add("overridePath", overridePath)
-        .add("overriddenConfigFile", overriddenConfigFile)
-        .toString();
-  }
-
+  /**
+   * Is set as default boolean.
+   *
+   * @return the boolean
+   */
   @JsonIgnore
   public boolean isSetAsDefault() {
     return setAsDefault;
   }
 
+  /**
+   * Sets set as default.
+   *
+   * @param setAsDefault the set as default
+   */
   @JsonProperty
   public void setSetAsDefault(boolean setAsDefault) {
     this.setAsDefault = setAsDefault;
   }
 
+  /**
+   * Gets notes.
+   *
+   * @return the notes
+   */
   public String getNotes() {
     return notes;
   }
 
+  /**
+   * Sets notes.
+   *
+   * @param notes the notes
+   */
   public void setNotes(String notes) {
     this.notes = notes;
   }
@@ -374,19 +406,69 @@ public class ConfigFile extends BaseFile {
     this.envIdVersionMapString = envIdVersionMapString;
   }
 
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
+              targetToAllEnv, defaultVersion, envIdVersionMap, envIdVersionMapString, setAsDefault, notes, overridePath,
+              configOverrideType, configOverrideExpression, overriddenConfigFile);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final ConfigFile other = (ConfigFile) obj;
+    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
+        && Objects.equals(this.description, other.description)
+        && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
+        && Objects.equals(this.relativeFilePath, other.relativeFilePath)
+        && Objects.equals(this.targetToAllEnv, other.targetToAllEnv)
+        && Objects.equals(this.defaultVersion, other.defaultVersion)
+        && Objects.equals(this.envIdVersionMap, other.envIdVersionMap)
+        && Objects.equals(this.envIdVersionMapString, other.envIdVersionMapString)
+        && Objects.equals(this.setAsDefault, other.setAsDefault) && Objects.equals(this.notes, other.notes)
+        && Objects.equals(this.overridePath, other.overridePath)
+        && Objects.equals(this.configOverrideType, other.configOverrideType)
+        && Objects.equals(this.configOverrideExpression, other.configOverrideExpression)
+        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("templateId", templateId)
+        .add("envId", envId)
+        .add("entityType", entityType)
+        .add("entityId", entityId)
+        .add("description", description)
+        .add("parentConfigFileId", parentConfigFileId)
+        .add("relativeFilePath", relativeFilePath)
+        .add("targetToAllEnv", targetToAllEnv)
+        .add("defaultVersion", defaultVersion)
+        .add("envIdVersionMap", envIdVersionMap)
+        .add("envIdVersionMapString", envIdVersionMapString)
+        .add("setAsDefault", setAsDefault)
+        .add("notes", notes)
+        .add("overridePath", overridePath)
+        .add("configOverrideType", configOverrideType)
+        .add("configOverrideExpression", configOverrideExpression)
+        .add("overriddenConfigFile", overriddenConfigFile)
+        .toString();
+  }
+
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private String templateId;
-    private String envId;
-    private EntityType entityType;
-    private String entityId;
-    private String description;
-    private String parentConfigFileId;
-    private String relativeFilePath;
-    private String overridePath;
-    private ConfigFile overriddenConfigFile;
     private String name;
     private String fileUuid;
     private String fileName;
@@ -400,6 +482,23 @@ public class ConfigFile extends BaseFile {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String templateId;
+    private String envId;
+    private EntityType entityType;
+    private String entityId;
+    private String description;
+    private String parentConfigFileId;
+    private String relativeFilePath;
+    private boolean targetToAllEnv;
+    private int defaultVersion;
+    private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
+    private String envIdVersionMapString;
+    private boolean setAsDefault;
+    private String notes;
+    private String overridePath;
+    private ConfigOverrideType configOverrideType;
+    private String configOverrideExpression;
+    private ConfigFile overriddenConfigFile;
 
     private Builder() {}
 
@@ -410,105 +509,6 @@ public class ConfigFile extends BaseFile {
      */
     public static Builder aConfigFile() {
       return new Builder();
-    }
-
-    /**
-     * With template id builder.
-     *
-     * @param templateId the template id
-     * @return the builder
-     */
-    public Builder withTemplateId(String templateId) {
-      this.templateId = templateId;
-      return this;
-    }
-
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
-    public Builder withEnvId(String envId) {
-      this.envId = envId;
-      return this;
-    }
-
-    /**
-     * With entity type builder.
-     *
-     * @param entityType the entity type
-     * @return the builder
-     */
-    public Builder withEntityType(EntityType entityType) {
-      this.entityType = entityType;
-      return this;
-    }
-
-    /**
-     * With entity id builder.
-     *
-     * @param entityId the entity id
-     * @return the builder
-     */
-    public Builder withEntityId(String entityId) {
-      this.entityId = entityId;
-      return this;
-    }
-
-    /**
-     * With description builder.
-     *
-     * @param description the description
-     * @return the builder
-     */
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    /**
-     * With parent config file id builder.
-     *
-     * @param parentConfigFileId the parent config file id
-     * @return the builder
-     */
-    public Builder withParentConfigFileId(String parentConfigFileId) {
-      this.parentConfigFileId = parentConfigFileId;
-      return this;
-    }
-
-    /**
-     * With relative file path builder.
-     *
-     * @param relativeFilePath the relative file path
-     * @return the builder
-     */
-    public Builder withRelativeFilePath(String relativeFilePath) {
-      this.relativeFilePath = relativeFilePath;
-      return this;
-    }
-
-    /**
-     * With override path builder.
-     *
-     * @param overridePath the override path
-     * @return the builder
-     */
-    public Builder withOverridePath(String overridePath) {
-      this.overridePath = overridePath;
-      return this;
-    }
-
-    /**
-     * With overridden config file builder.
-     *
-     * @param overriddenConfigFile the overridden config file
-     * @return the builder
-     */
-    public Builder withOverriddenConfigFile(ConfigFile overriddenConfigFile) {
-      this.overriddenConfigFile = overriddenConfigFile;
-      return this;
     }
 
     /**
@@ -655,21 +655,199 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
+     * With template id builder.
+     *
+     * @param templateId the template id
+     * @return the builder
+     */
+    public Builder withTemplateId(String templateId) {
+      this.templateId = templateId;
+      return this;
+    }
+
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
+    public Builder withEntityType(EntityType entityType) {
+      this.entityType = entityType;
+      return this;
+    }
+
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
+    public Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    /**
+     * With parent config file id builder.
+     *
+     * @param parentConfigFileId the parent config file id
+     * @return the builder
+     */
+    public Builder withParentConfigFileId(String parentConfigFileId) {
+      this.parentConfigFileId = parentConfigFileId;
+      return this;
+    }
+
+    /**
+     * With relative file path builder.
+     *
+     * @param relativeFilePath the relative file path
+     * @return the builder
+     */
+    public Builder withRelativeFilePath(String relativeFilePath) {
+      this.relativeFilePath = relativeFilePath;
+      return this;
+    }
+
+    /**
+     * With target to all env builder.
+     *
+     * @param targetToAllEnv the target to all env
+     * @return the builder
+     */
+    public Builder withTargetToAllEnv(boolean targetToAllEnv) {
+      this.targetToAllEnv = targetToAllEnv;
+      return this;
+    }
+
+    /**
+     * With default version builder.
+     *
+     * @param defaultVersion the default version
+     * @return the builder
+     */
+    public Builder withDefaultVersion(int defaultVersion) {
+      this.defaultVersion = defaultVersion;
+      return this;
+    }
+
+    /**
+     * With env id version map builder.
+     *
+     * @param envIdVersionMap the env id version map
+     * @return the builder
+     */
+    public Builder withEnvIdVersionMap(Map<String, EntityVersion> envIdVersionMap) {
+      this.envIdVersionMap = envIdVersionMap;
+      return this;
+    }
+
+    /**
+     * With env id version map string builder.
+     *
+     * @param envIdVersionMapString the env id version map string
+     * @return the builder
+     */
+    public Builder withEnvIdVersionMapString(String envIdVersionMapString) {
+      this.envIdVersionMapString = envIdVersionMapString;
+      return this;
+    }
+
+    /**
+     * With set as default builder.
+     *
+     * @param setAsDefault the set as default
+     * @return the builder
+     */
+    public Builder withSetAsDefault(boolean setAsDefault) {
+      this.setAsDefault = setAsDefault;
+      return this;
+    }
+
+    /**
+     * With notes builder.
+     *
+     * @param notes the notes
+     * @return the builder
+     */
+    public Builder withNotes(String notes) {
+      this.notes = notes;
+      return this;
+    }
+
+    /**
+     * With override path builder.
+     *
+     * @param overridePath the override path
+     * @return the builder
+     */
+    public Builder withOverridePath(String overridePath) {
+      this.overridePath = overridePath;
+      return this;
+    }
+
+    /**
+     * With config override type builder.
+     *
+     * @param configOverrideType the config override type
+     * @return the builder
+     */
+    public Builder withConfigOverrideType(ConfigOverrideType configOverrideType) {
+      this.configOverrideType = configOverrideType;
+      return this;
+    }
+
+    /**
+     * With config override expression builder.
+     *
+     * @param configOverrideExpression the config override expression
+     * @return the builder
+     */
+    public Builder withConfigOverrideExpression(String configOverrideExpression) {
+      this.configOverrideExpression = configOverrideExpression;
+      return this;
+    }
+
+    /**
+     * With overridden config file builder.
+     *
+     * @param overriddenConfigFile the overridden config file
+     * @return the builder
+     */
+    public Builder withOverriddenConfigFile(ConfigFile overriddenConfigFile) {
+      this.overriddenConfigFile = overriddenConfigFile;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return aConfigFile()
-          .withTemplateId(templateId)
-          .withEnvId(envId)
-          .withEntityType(entityType)
-          .withEntityId(entityId)
-          .withDescription(description)
-          .withParentConfigFileId(parentConfigFileId)
-          .withRelativeFilePath(relativeFilePath)
-          .withOverridePath(overridePath)
-          .withOverriddenConfigFile(overriddenConfigFile)
           .withName(name)
           .withFileUuid(fileUuid)
           .withFileName(fileName)
@@ -682,7 +860,24 @@ public class ConfigFile extends BaseFile {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withTemplateId(templateId)
+          .withEnvId(envId)
+          .withEntityType(entityType)
+          .withEntityId(entityId)
+          .withDescription(description)
+          .withParentConfigFileId(parentConfigFileId)
+          .withRelativeFilePath(relativeFilePath)
+          .withTargetToAllEnv(targetToAllEnv)
+          .withDefaultVersion(defaultVersion)
+          .withEnvIdVersionMap(envIdVersionMap)
+          .withEnvIdVersionMapString(envIdVersionMapString)
+          .withSetAsDefault(setAsDefault)
+          .withNotes(notes)
+          .withOverridePath(overridePath)
+          .withConfigOverrideType(configOverrideType)
+          .withConfigOverrideExpression(configOverrideExpression)
+          .withOverriddenConfigFile(overriddenConfigFile);
     }
 
     /**
@@ -692,15 +887,6 @@ public class ConfigFile extends BaseFile {
      */
     public ConfigFile build() {
       ConfigFile configFile = new ConfigFile();
-      configFile.setTemplateId(templateId);
-      configFile.setEnvId(envId);
-      configFile.setEntityType(entityType);
-      configFile.setEntityId(entityId);
-      configFile.setDescription(description);
-      configFile.setParentConfigFileId(parentConfigFileId);
-      configFile.setRelativeFilePath(relativeFilePath);
-      configFile.setOverridePath(overridePath);
-      configFile.setOverriddenConfigFile(overriddenConfigFile);
       configFile.setName(name);
       configFile.setFileUuid(fileUuid);
       configFile.setFileName(fileName);
@@ -714,6 +900,23 @@ public class ConfigFile extends BaseFile {
       configFile.setCreatedAt(createdAt);
       configFile.setLastUpdatedBy(lastUpdatedBy);
       configFile.setLastUpdatedAt(lastUpdatedAt);
+      configFile.setTemplateId(templateId);
+      configFile.setEnvId(envId);
+      configFile.setEntityType(entityType);
+      configFile.setEntityId(entityId);
+      configFile.setDescription(description);
+      configFile.setParentConfigFileId(parentConfigFileId);
+      configFile.setRelativeFilePath(relativeFilePath);
+      configFile.setTargetToAllEnv(targetToAllEnv);
+      configFile.setDefaultVersion(defaultVersion);
+      configFile.setEnvIdVersionMap(envIdVersionMap);
+      configFile.setEnvIdVersionMapString(envIdVersionMapString);
+      configFile.setSetAsDefault(setAsDefault);
+      configFile.setNotes(notes);
+      configFile.setOverridePath(overridePath);
+      configFile.setConfigOverrideType(configOverrideType);
+      configFile.setConfigOverrideExpression(configOverrideExpression);
+      configFile.setOverriddenConfigFile(overriddenConfigFile);
       return configFile;
     }
   }

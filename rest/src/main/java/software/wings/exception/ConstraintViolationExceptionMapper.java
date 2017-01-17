@@ -166,6 +166,8 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       errors = ImmutableList.of(Strings.nullToEmpty(exception.getMessage()));
     }
 
+    System.out.println(toRestResponse(errors));
+
     return Response.status(Status.BAD_REQUEST).entity(toRestResponse(errors)).build();
   }
 

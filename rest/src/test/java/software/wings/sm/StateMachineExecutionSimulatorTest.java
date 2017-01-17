@@ -20,7 +20,6 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
@@ -52,7 +51,6 @@ import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -171,14 +169,13 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "STOP"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(cmd).build());
 
-    Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build();
+    Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR.getUuid()).build();
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(
-        aServiceInstance().withUuid(getUuid()).withHost(anApplicationHost().withHost(host).build()).build()));
+    res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(host).build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
     when(hostService.list(any(PageRequest.class)))
-        .thenReturn(aPageResponse().withResponse(Arrays.asList(anApplicationHost().withHost(host).build())).build());
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(host)).build());
     when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
 
     RequiredExecutionArgs reqArgs =
@@ -229,14 +226,13 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(cmd).build());
 
-    Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build();
+    Host host = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR.getUuid()).build();
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(
-        aServiceInstance().withUuid(getUuid()).withHost(anApplicationHost().withHost(host).build()).build()));
+    res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(host).build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
     when(hostService.list(any(PageRequest.class)))
-        .thenReturn(aPageResponse().withResponse(Arrays.asList(anApplicationHost().withHost(host).build())).build());
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(host)).build());
     when(settingsService.get(HOST_CONN_ATTR_ID)).thenReturn(USER_PASS_HOST_CONN_ATTR);
 
     RequiredExecutionArgs reqArgs =
@@ -288,10 +284,8 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(cmd).build());
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
-    ApplicationHost applicationHost1 =
-        anApplicationHost().withHost(aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build()).build();
-    ApplicationHost applicationHost2 =
-        anApplicationHost().withHost(aHost().withHostConnAttr(USER_PASS_SU_HOST_CONN_ATTR).build()).build();
+    Host applicationHost1 = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR.getUuid()).build();
+    Host applicationHost2 = aHost().withHostConnAttr(USER_PASS_SU_HOST_CONN_ATTR.getUuid()).build();
 
     res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(applicationHost1).build(),
         aServiceInstance().withUuid(getUuid()).withHost(applicationHost2).build()));
@@ -350,11 +344,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), env.getUuid(), "INSTALL"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(cmd).build());
 
-    ApplicationHost applicationHost1 =
-        anApplicationHost().withHost(aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR).build()).build();
+    Host applicationHost1 = aHost().withHostConnAttr(USER_PASS_HOST_CONN_ATTR.getUuid()).build();
 
-    ApplicationHost applicationHost2 =
-        anApplicationHost().withHost(aHost().withHostConnAttr(USER_PASS_SUDO_HOST_CONN_ATTR).build()).build();
+    Host applicationHost2 = aHost().withHostConnAttr(USER_PASS_SUDO_HOST_CONN_ATTR.getUuid()).build();
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(applicationHost1).build(),

@@ -747,19 +747,20 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
 
-      Orchestration orchestration =
-          wingsPersistence.get(Orchestration.class, appId, executionArgs.getOrchestrationId());
+      OrchestrationWorkflow orchestration =
+          wingsPersistence.get(OrchestrationWorkflow.class, appId, executionArgs.getOrchestrationId());
       if (orchestration == null) {
         logger.error("Invalid orchestrationId");
         throw new WingsException(
             ErrorCodes.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
       }
 
-      StateMachine stateMachine = workflowService.readForEnv(appId, envId, executionArgs.getOrchestrationId());
+      StateMachine stateMachine = workflowService.readLatest(appId, executionArgs.getOrchestrationId());
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }
-      return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
+      return new RequiredExecutionArgs();
+      // return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
 
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.debug("Received an simple execution request");

@@ -44,7 +44,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -194,7 +194,7 @@ public class CommandState extends State {
       ServiceTemplate serviceTemplate =
           serviceTemplateService.get(appId, instanceElement.getServiceTemplateElement().getUuid());
       Service service = serviceTemplate.getService();
-      ApplicationHost host =
+      Host host =
           hostService.getHostByEnv(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getHostId());
 
       executionDataBuilder.withServiceId(service.getUuid())
@@ -265,17 +265,15 @@ public class CommandState extends State {
               .withStagingPath(stagingPath)
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
               .withServiceVariables(context.getServiceVariables())
-              .withHost(host.getHost())
+              .withHost(host)
               .withServiceTemplate(serviceTemplate)
               .withAccountId(application.getAccountId());
 
-      if (isNotEmpty(host.getHost().getHostConnAttr())) {
-        commandExecutionContextBuilder.withHostConnectionAttributes(
-            settingsService.get(host.getHost().getHostConnAttr()));
+      if (isNotEmpty(host.getHostConnAttr())) {
+        commandExecutionContextBuilder.withHostConnectionAttributes(settingsService.get(host.getHostConnAttr()));
       }
-      if (isNotEmpty(host.getHost().getBastionConnAttr())) {
-        commandExecutionContextBuilder.withBastionConnectionAttributes(
-            settingsService.get(host.getHost().getBastionConnAttr()));
+      if (isNotEmpty(host.getBastionConnAttr())) {
+        commandExecutionContextBuilder.withBastionConnectionAttributes(settingsService.get(host.getBastionConnAttr()));
       }
 
       if (command.isArtifactNeeded()) {

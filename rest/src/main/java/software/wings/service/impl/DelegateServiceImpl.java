@@ -52,6 +52,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -181,17 +182,17 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
     String topicName = UUIDGenerator.getUuid();
-    task.setTopicName(UUIDGenerator.getUuid());
+    task.setTopicName(topicName);
     ITopic<T> topic = hazelcastInstance.getTopic(topicName);
     CountDownLatch latchForResponse = new CountDownLatch(1);
-    final T[] response = (T[]) new Object[1];
+    final NotifyResponseData[] response = new NotifyResponseData[1];
     topic.addMessageListener(message -> {
       response[0] = message.getMessageObject();
       latchForResponse.countDown();
     });
     wingsPersistence.save(task);
-    latchForResponse.await();
-    return response[0];
+    latchForResponse.await(30000, TimeUnit.MILLISECONDS);
+    return (T) response[0];
   }
 
   @Override

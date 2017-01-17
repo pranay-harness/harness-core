@@ -1,28 +1,32 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.ErrorCodes;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
-import software.wings.beans.infrastructure.InfrastructureProviderConfig;
-
-import java.util.List;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 
 /**
  * Created by anubhaw on 10/4/16.
  */
 public interface InfrastructureProvider {
   /**
-   * Infra type supported boolean.
-   *
-   * @param infrastructureType the infrastructure type
-   * @return the boolean
-   */
-  boolean infraTypeSupported(InfrastructureType infrastructureType);
-
-  /**
    * Gets all host.
    *
-   * @param infrastructureProviderConfig the infrastructure provider config
+   * @param computeProviderSetting the compute provider setting
    * @return the all host
    */
-  public List<Host> getAllHost(InfrastructureProviderConfig infrastructureProviderConfig);
+  PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req);
+
+  /**
+   * Save host host.
+   *
+   * @param host the host
+   * @return the host
+   */
+  default Host
+    saveHost(Host host) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Operation not supported");
+    }
 }

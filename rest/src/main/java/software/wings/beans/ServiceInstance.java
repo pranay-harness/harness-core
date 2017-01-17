@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Property;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("appId")
-                           , @Field("envId"), @Field("host"), @Field("serviceTemplate") },
+                           , @Field("envId"), @Field("hostName"), @Field("serviceTemplate") },
     options = @IndexOptions(unique = true)))
 public class ServiceInstance extends Base {
   @Indexed private String envId;
@@ -33,11 +33,10 @@ public class ServiceInstance extends Base {
 
   @Indexed private String serviceName;
 
-  @Property("host") private String hostId;
-
+  private String hostId;
   @Indexed private String hostName;
-
-  @Indexed private String tagName;
+  private String infraMappingId;
+  private String infraMappingType;
 
   private String artifactStreamId;
   @Indexed private String artifactStreamName;
@@ -379,24 +378,6 @@ public class ServiceInstance extends Base {
   }
 
   /**
-   * Getter for property 'tagName'.
-   *
-   * @return Value for property 'tagName'.
-   */
-  public String getTagName() {
-    return tagName;
-  }
-
-  /**
-   * Setter for property 'tagName'.
-   *
-   * @param tagName Value to set for property 'tagName'.
-   */
-  public void setTagName(String tagName) {
-    this.tagName = tagName;
-  }
-
-  /**
    * Getter for property 'serviceId'.
    *
    * @return Value for property 'serviceId'.
@@ -445,7 +426,7 @@ public class ServiceInstance extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName, tagName,
+        + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName,
               artifactStreamId, artifactStreamName, artifactId, artifactName, artifactDeployedOn,
               artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId, lastActivityStatus,
               lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
@@ -467,7 +448,7 @@ public class ServiceInstance extends Base {
         && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
         && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
         && Objects.equals(this.hostId, other.hostId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.tagName, other.tagName) && Objects.equals(this.artifactStreamId, other.artifactStreamId)
+        && Objects.equals(this.artifactStreamId, other.artifactStreamId)
         && Objects.equals(this.artifactStreamName, other.artifactStreamName)
         && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.artifactDeployedOn, other.artifactDeployedOn)
@@ -490,7 +471,6 @@ public class ServiceInstance extends Base {
         .add("serviceName", serviceName)
         .add("hostId", hostId)
         .add("hostName", hostName)
-        .add("tagName", tagName)
         .add("artifactStreamId", artifactStreamId)
         .add("artifactStreamName", artifactStreamName)
         .add("artifactId", artifactId)
@@ -509,6 +489,42 @@ public class ServiceInstance extends Base {
   }
 
   /**
+   * Gets infra mapping type.
+   *
+   * @return the infra mapping type
+   */
+  public String getInfraMappingType() {
+    return infraMappingType;
+  }
+
+  /**
+   * Sets infra mapping type.
+   *
+   * @param infraMappingType the infra mapping type
+   */
+  public void setInfraMappingType(String infraMappingType) {
+    this.infraMappingType = infraMappingType;
+  }
+
+  /**
+   * Gets infra mapping id.
+   *
+   * @return the infra mapping id
+   */
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  /**
+   * Sets infra mapping id.
+   *
+   * @param infraMappingId the infra mapping id
+   */
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -519,30 +535,28 @@ public class ServiceInstance extends Base {
     private String serviceName;
     private String hostId;
     private String hostName;
-    private String tagName;
+    private String infraMappingId;
+    private String infraMappingType;
+    private String uuid;
     private String artifactStreamId;
+    private String appId;
     private String artifactStreamName;
+    private EmbeddedUser createdBy;
     private String artifactId;
+    private long createdAt;
     private String artifactName;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
     private long artifactDeployedOn;
     private ExecutionStatus artifactDeploymentStatus;
-    private String uuid;
     private String artifactDeploymentActivityId;
-    private String appId;
     private String lastActivityId;
     private ExecutionStatus lastActivityStatus;
-    private EmbeddedUser createdBy;
     private long lastActivityCreatedAt;
-    private long createdAt;
     private String commandName;
     private String commandType;
-    private EmbeddedUser lastUpdatedBy;
     private long lastDeployedOn;
-    private long lastUpdatedAt;
 
-    /**
-     * Do not instantiate Builder.
-     */
     private Builder() {}
 
     /**
@@ -577,13 +591,13 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With service name builder.
+     * With service template name builder.
      *
-     * @param serviceName the service name
+     * @param serviceTemplateName the service template name
      * @return the builder
      */
-    public Builder withServiceName(String serviceName) {
-      this.serviceName = serviceName;
+    public Builder withServiceTemplateName(String serviceTemplateName) {
+      this.serviceTemplateName = serviceTemplateName;
       return this;
     }
 
@@ -593,7 +607,7 @@ public class ServiceInstance extends Base {
      * @param host the host
      * @return the builder
      */
-    public Builder withHost(ApplicationHost host) {
+    public Builder withHost(Host host) {
       this.hostId = host.getUuid();
       this.hostName = host.getHostName();
       // this.tagName = host.getConfigTagId() != null ? host.getConfigTagId().getName() : null;
@@ -612,6 +626,28 @@ public class ServiceInstance extends Base {
       this.serviceTemplateName = serviceTemplate.getName();
 
       this.serviceTemplateId = serviceTemplate.getUuid();
+      return this;
+    }
+
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
+     * With service name builder.
+     *
+     * @param serviceName the service name
+     * @return the builder
+     */
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
       return this;
     }
 
@@ -638,18 +674,40 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With tag name builder.
+     * With infra mapping id builder.
      *
-     * @param tagName the tag name
+     * @param infraMappingId the infra mapping id
      * @return the builder
      */
-    public Builder withTagName(String tagName) {
-      this.tagName = tagName;
+    public Builder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
       return this;
     }
 
     /**
-     * With release id builder.
+     * With infra mapping type builder.
+     *
+     * @param infraMappingType the infra mapping type
+     * @return the builder
+     */
+    public Builder withInfraMappingType(String infraMappingType) {
+      this.infraMappingType = infraMappingType;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * With artifact stream id builder.
      *
      * @param artifactStreamId the artifact stream id
      * @return the builder
@@ -660,13 +718,35 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With release name builder.
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With artifact stream name builder.
      *
      * @param artifactStreamName the artifact stream name
      * @return the builder
      */
     public Builder withArtifactStreamName(String artifactStreamName) {
       this.artifactStreamName = artifactStreamName;
+      return this;
+    }
+
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
       return this;
     }
 
@@ -682,6 +762,17 @@ public class ServiceInstance extends Base {
     }
 
     /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
      * With artifact name builder.
      *
      * @param artifactName the artifact name
@@ -689,6 +780,28 @@ public class ServiceInstance extends Base {
      */
     public Builder withArtifactName(String artifactName) {
       this.artifactName = artifactName;
+      return this;
+    }
+
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
@@ -715,17 +828,6 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    /**
      * With artifact deployment activity id builder.
      *
      * @param artifactDeploymentActivityId the artifact deployment activity id
@@ -733,17 +835,6 @@ public class ServiceInstance extends Base {
      */
     public Builder withArtifactDeploymentActivityId(String artifactDeploymentActivityId) {
       this.artifactDeploymentActivityId = artifactDeploymentActivityId;
-      return this;
-    }
-
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
       return this;
     }
 
@@ -770,17 +861,6 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
      * With last activity created at builder.
      *
      * @param lastActivityCreatedAt the last activity created at
@@ -788,17 +868,6 @@ public class ServiceInstance extends Base {
      */
     public Builder withLastActivityCreatedAt(long lastActivityCreatedAt) {
       this.lastActivityCreatedAt = lastActivityCreatedAt;
-      return this;
-    }
-
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
       return this;
     }
 
@@ -825,17 +894,6 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    /**
      * With last deployed on builder.
      *
      * @param lastDeployedOn the last deployed on
@@ -843,17 +901,6 @@ public class ServiceInstance extends Base {
      */
     public Builder withLastDeployedOn(long lastDeployedOn) {
       this.lastDeployedOn = lastDeployedOn;
-      return this;
-    }
-
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
@@ -871,48 +918,27 @@ public class ServiceInstance extends Base {
           .withServiceName(serviceName)
           .withHostId(hostId)
           .withHostName(hostName)
-          .withTagName(tagName)
+          .withInfraMappingId(infraMappingId)
+          .withInfraMappingType(infraMappingType)
+          .withUuid(uuid)
           .withArtifactStreamId(artifactStreamId)
+          .withAppId(appId)
           .withArtifactStreamName(artifactStreamName)
+          .withCreatedBy(createdBy)
           .withArtifactId(artifactId)
+          .withCreatedAt(createdAt)
           .withArtifactName(artifactName)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
           .withArtifactDeployedOn(artifactDeployedOn)
           .withArtifactDeploymentStatus(artifactDeploymentStatus)
-          .withUuid(uuid)
           .withArtifactDeploymentActivityId(artifactDeploymentActivityId)
-          .withAppId(appId)
           .withLastActivityId(lastActivityId)
           .withLastActivityStatus(lastActivityStatus)
-          .withCreatedBy(createdBy)
           .withLastActivityCreatedAt(lastActivityCreatedAt)
-          .withCreatedAt(createdAt)
           .withCommandName(commandName)
           .withCommandType(commandType)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastDeployedOn(lastDeployedOn)
-          .withLastUpdatedAt(lastUpdatedAt);
-    }
-
-    /**
-     * With service template name builder.
-     *
-     * @param serviceTemplateName the service template name
-     * @return the builder
-     */
-    public Builder withServiceTemplateName(String serviceTemplateName) {
-      this.serviceTemplateName = serviceTemplateName;
-      return this;
-    }
-
-    /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
+          .withLastDeployedOn(lastDeployedOn);
     }
 
     /**
@@ -924,31 +950,32 @@ public class ServiceInstance extends Base {
       ServiceInstance serviceInstance = new ServiceInstance();
       serviceInstance.setEnvId(envId);
       serviceInstance.setServiceTemplateId(serviceTemplateId);
+      serviceInstance.setServiceTemplateName(serviceTemplateName);
+      serviceInstance.setServiceId(serviceId);
       serviceInstance.setServiceName(serviceName);
       serviceInstance.setHostId(hostId);
       serviceInstance.setHostName(hostName);
-      serviceInstance.setTagName(tagName);
+      serviceInstance.setInfraMappingId(infraMappingId);
+      serviceInstance.setInfraMappingType(infraMappingType);
+      serviceInstance.setUuid(uuid);
       serviceInstance.setArtifactStreamId(artifactStreamId);
+      serviceInstance.setAppId(appId);
       serviceInstance.setArtifactStreamName(artifactStreamName);
+      serviceInstance.setCreatedBy(createdBy);
       serviceInstance.setArtifactId(artifactId);
+      serviceInstance.setCreatedAt(createdAt);
       serviceInstance.setArtifactName(artifactName);
+      serviceInstance.setLastUpdatedBy(lastUpdatedBy);
+      serviceInstance.setLastUpdatedAt(lastUpdatedAt);
       serviceInstance.setArtifactDeployedOn(artifactDeployedOn);
       serviceInstance.setArtifactDeploymentStatus(artifactDeploymentStatus);
-      serviceInstance.setUuid(uuid);
       serviceInstance.setArtifactDeploymentActivityId(artifactDeploymentActivityId);
-      serviceInstance.setAppId(appId);
       serviceInstance.setLastActivityId(lastActivityId);
       serviceInstance.setLastActivityStatus(lastActivityStatus);
-      serviceInstance.setCreatedBy(createdBy);
       serviceInstance.setLastActivityCreatedAt(lastActivityCreatedAt);
-      serviceInstance.setCreatedAt(createdAt);
       serviceInstance.setCommandName(commandName);
       serviceInstance.setCommandType(commandType);
-      serviceInstance.setLastUpdatedBy(lastUpdatedBy);
       serviceInstance.setLastDeployedOn(lastDeployedOn);
-      serviceInstance.setLastUpdatedAt(lastUpdatedAt);
-      serviceInstance.setServiceId(serviceId);
-      serviceInstance.setServiceTemplateName(serviceTemplateName);
       return serviceInstance;
     }
   }

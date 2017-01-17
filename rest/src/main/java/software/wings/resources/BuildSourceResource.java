@@ -37,8 +37,9 @@ public class BuildSourceResource {
    */
   @GET
   @Path("jobs")
-  public RestResponse<Set<String>> getJobs(@QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getJobs(settingId));
+  public RestResponse<Set<String>> getJobs(
+      @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getJobs(appId, settingId));
   }
 
   /**
@@ -49,8 +50,9 @@ public class BuildSourceResource {
    */
   @GET
   @Path("plans")
-  public RestResponse<Map<String, String>> getBuildPlans(@QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getPlans(settingId));
+  public RestResponse<Map<String, String>> getBuildPlans(
+      @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getPlans(appId, settingId));
   }
 
   /**
@@ -62,9 +64,9 @@ public class BuildSourceResource {
    */
   @GET
   @Path("jobs/{jobName}/paths")
-  public RestResponse<Set<String>> getArtifactPaths(
+  public RestResponse<Set<String>> getArtifactPaths(@QueryParam("appId") String appId,
       @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getArtifactPaths(jobName, settingId));
+    return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId));
   }
 
   /**

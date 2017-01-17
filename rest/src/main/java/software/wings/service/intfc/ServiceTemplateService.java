@@ -8,8 +8,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
-import software.wings.beans.Tag;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -18,7 +16,6 @@ import software.wings.utils.validation.Update;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/4/16.
@@ -109,73 +106,6 @@ public interface ServiceTemplateService {
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
 
   /**
-   * Update hosts.
-   *
-   * @param appId             the app id
-   * @param envId             the env id
-   * @param serviceTemplateId the service template id
-   * @param hostIds           the host ids
-   * @return the service template
-   */
-  ServiceTemplate updateHosts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId,
-      @NotNull List<String> hostIds);
-
-  /**
-   * Update tags.
-   *
-   * @param appId             the app id
-   * @param envId             the env id
-   * @param serviceTemplateId the service template id
-   * @param tagIds            the tag ids
-   * @return the service template
-   */
-  ServiceTemplate updateTags(
-      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId, @NotNull List<String> tagIds);
-
-  /**
-   * Gets the tagged hosts.
-   *
-   * @param appId       the app id
-   * @param envId       the env id
-   * @param templateId  the template id
-   * @param pageRequest the page request   @return the tagged hosts
-   * @return the tagged hosts
-   */
-  PageResponse<ApplicationHost> getTaggedHosts(@NotEmpty String appId, @NotEmpty String envId,
-      @NotEmpty String templateId, PageRequest<ApplicationHost> pageRequest);
-
-  /**
-   * Delete host from templates.
-   *
-   * @param host the host
-   */
-  void deleteHostFromTemplates(@NotNull ApplicationHost host);
-
-  /**
-   * Gets templates by leaf tag.
-   *
-   * @param tagId the tagId
-   * @return the templates by leaf tag
-   */
-  List<ServiceTemplate> getTemplatesByLeafTag(@NotNull String tagId, @NotNull String appId, @NotNull String envId);
-
-  /**
-   * Gets template by mapped tags.
-   *
-   * @param tags the tags
-   * @return the template by mapped tags
-   */
-  List<ServiceTemplate> getTemplateByMappedTags(@NotNull List<Tag> tags);
-
-  /**
-   * Add leaf tag.
-   *
-   * @param template the template
-   * @param tag      the tag
-   */
-  void addLeafTag(ServiceTemplate template, Tag tag);
-
-  /**
    * Delete by env.
    *
    * @param appId the app id
@@ -206,15 +136,6 @@ public interface ServiceTemplateService {
   void createDefaultTemplatesByService(Service service);
 
   /**
-   * Add hosts.
-   *
-   * @param template the template
-   * @param hosts    the hosts
-   * @return the service template
-   */
-  ServiceTemplate addHosts(ServiceTemplate template, List<ApplicationHost> hosts);
-
-  /**
    * Gets template ref keys by service.
    *
    * @param appId     the app id
@@ -225,16 +146,6 @@ public interface ServiceTemplateService {
   List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId);
 
   /**
-   * Gets override files.
-   *
-   * @param appId      the app id
-   * @param envId      the env id
-   * @param templateId the template id
-   * @return the override files
-   */
-  List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId);
-
-  /**
    * Update default service template name.
    *
    * @param appId          the app id
@@ -243,4 +154,13 @@ public interface ServiceTemplateService {
    * @param newServiceName the new service name
    */
   void updateDefaultServiceTemplateName(String appId, String serviceId, String oldServiceName, String newServiceName);
+
+  /**
+   * Exist boolean.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @return the boolean
+   */
+  boolean exist(String appId, String templateId);
 }

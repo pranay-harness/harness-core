@@ -22,7 +22,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -127,7 +127,7 @@ public class StateMachineExecutionSimulator {
     PageRequest<ServiceInstance> pageRequest = aPageRequest()
                                                    .addFilter("appId", Operator.EQ, appId)
                                                    .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
-                                                   .addFieldsIncluded("uuid", "host")
+                                                   .addFieldsIncluded("uuid", "hostId")
                                                    .build();
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
@@ -137,19 +137,19 @@ public class StateMachineExecutionSimulator {
     }
 
     Set<AccessType> accessTypes = new HashSet<>();
-    List<ApplicationHost> hostResponse = hostService
-                                             .list(aPageRequest()
-                                                       .addFilter(ID_KEY, Operator.IN,
-                                                           res.getResponse()
-                                                               .stream()
-                                                               .map(ServiceInstance::getHostId)
-                                                               .collect(Collectors.toSet())
-                                                               .toArray())
-                                                       .build())
-                                             .getResponse();
+    List<Host> hostResponse = hostService
+                                  .list(aPageRequest()
+                                            .addFilter(ID_KEY, Operator.IN,
+                                                res.getResponse()
+                                                    .stream()
+                                                    .map(ServiceInstance::getHostId)
+                                                    .collect(Collectors.toSet())
+                                                    .toArray())
+                                            .build())
+                                  .getResponse();
 
-    for (ApplicationHost host : hostResponse) {
-      SettingAttribute connAttribute = settingsService.get(host.getHost().getHostConnAttr());
+    for (Host host : hostResponse) {
+      SettingAttribute connAttribute = settingsService.get(host.getHostConnAttr());
       if (connAttribute == null || connAttribute.getValue() == null
           || !(connAttribute.getValue() instanceof HostConnectionAttributes)
           || ((HostConnectionAttributes) connAttribute.getValue()).getAccessType() == null) {

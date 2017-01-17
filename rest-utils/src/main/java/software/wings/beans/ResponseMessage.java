@@ -2,10 +2,14 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import java.io.Serializable;
+
 /**
  * The Class ResponseMessage.
  */
-public class ResponseMessage {
+public class ResponseMessage implements Serializable {
+  private static final long serialVersionUID = 7669895652860634550L;
+
   private ErrorCodes code;
   private ResponseTypeEnum errorType;
   private String message;

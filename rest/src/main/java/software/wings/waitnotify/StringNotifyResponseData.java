@@ -10,6 +10,8 @@ import java.util.Objects;
 public class StringNotifyResponseData implements NotifyResponseData {
   private String data;
 
+  public StringNotifyResponseData() {}
+
   /**
    * Gets data.
    *

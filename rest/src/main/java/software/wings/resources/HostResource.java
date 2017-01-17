@@ -15,7 +15,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -23,7 +22,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.utils.BoundedInputStream;
 
-import java.io.File;
 import java.io.InputStream;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
@@ -37,7 +35,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
@@ -75,7 +72,7 @@ public class HostResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<ApplicationHost>> list(@BeanParam PageRequest<ApplicationHost> pageRequest) {
+  public RestResponse<PageResponse<Host>> list(@BeanParam PageRequest<Host> pageRequest) {
     return new RestResponse<>(hostService.list(pageRequest));
   }
 
@@ -89,7 +86,7 @@ public class HostResource {
    */
   @GET
   @Path("{hostId}")
-  public RestResponse<ApplicationHost> get(
+  public RestResponse<Host> get(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     return new RestResponse<>(hostService.get(appId, envId, hostId));
   }
@@ -97,44 +94,34 @@ public class HostResource {
   /**
    * Save.
    *
-   * @param infraId  the infra id
    * @param appId    the app id
    * @param envId    the env id
    * @param baseHost the base host
    * @return the rest response
    */
   @POST
-  public Response save(@QueryParam("infraId") String infraId, @QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, Host baseHost) {
-    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
-      infraId = infraService.getDefaultInfrastructureId();
-    }
+  public Response save(@QueryParam("appId") String appId, @QueryParam("envId") String envId, Host baseHost) {
     baseHost.setAppId(isNullOrEmpty(appId) ? Base.GLOBAL_APP_ID : appId);
-    ResponseMessage responseMessage = hostService.bulkSave(infraId, envId, baseHost);
+    ResponseMessage responseMessage = hostService.bulkSave(envId, baseHost);
     return Response.status(OK).entity(aRestResponse().withResponseMessages(asList(responseMessage)).build()).build();
   }
 
   /**
    * Update.
    *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @param envId   the env id
-   * @param hostId  the host id
-   * @param host    the host
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
+   * @param host   the host
    * @return the rest response
    */
   @PUT
   @Path("{hostId}")
-  public RestResponse<ApplicationHost> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
-    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
-      infraId = infraService.getDefaultInfrastructureId();
-    }
+  public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @PathParam("hostId") String hostId, Host host) {
     host.setUuid(hostId);
-    host.setInfraId(infraId);
     host.setAppId(appId);
-    return new RestResponse<ApplicationHost>(hostService.update(envId, host));
+    return new RestResponse<Host>(hostService.update(envId, host));
   }
 
   /**
@@ -187,10 +174,10 @@ public class HostResource {
   @Encoded
   public Response exportHosts(
       @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @QueryParam("envId") String envId) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    File hostsFile = hostService.exportHosts(appId, infraId);
-    Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
-    response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
-    return response.build();
+    //    File hostsFile = hostService.exportHosts(appId);
+    //    Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
+    //    response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
+    //    return response.build();
+    return Response.ok().build();
   }
 }
