@@ -14,6 +14,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.http.ExponentialBackOff;
 
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -67,7 +68,7 @@ private OkHttpClient getUnsafeOkHttpClient() {
 
     OkHttpClient okHttpClient =
         new Builder()
-            .connectionPool(new ConnectionPool())
+            .connectionPool(new ConnectionPool(0, 1, TimeUnit.MILLISECONDS))
             .retryOnConnectionFailure(true)
             .addInterceptor(new DelegateAuthInterceptor(accountId, accountSecret))
             .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
