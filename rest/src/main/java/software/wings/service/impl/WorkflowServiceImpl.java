@@ -655,15 +655,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-            .add("workflowPhaseIds", workflowPhase.getUuid())
-            .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase)
-            .set("graph.nodes", graph.getNodes())
-            .set("graph.links", graph.getLinks());
+            .add("workflowPhaseIds", workflowPhase.getUuid());
 
     Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, new HashMap<>());
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
       updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
     }
+    updateOps.set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase)
+        .set("graph.nodes", graph.getNodes())
+        .set("graph.links", graph.getLinks());
+
     wingsPersistence.update(query, updateOps);
 
     orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
@@ -693,7 +694,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).withName("Enable Service").build());
 
-    // Not needed for DC
+    // Not needed for non-DC
     // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
