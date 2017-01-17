@@ -8,6 +8,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import org.apache.commons.codec.binary.StringUtils;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.YamlUtils;
@@ -15,11 +16,24 @@ import software.wings.utils.YamlUtils;
 import java.io.FileReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class DelegateApplication {
+  static {
+    // Optionally remove existing handlers attached to j.u.l root logger
+    SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)
+
+    // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
+    // the initialization phase of your application
+    SLF4JBridgeHandler.install();
+
+    // Set logging level
+    java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
+  }
+
   public static void main(String... args) throws Exception {
     String configFile = args[0];
     boolean upgrade = false;

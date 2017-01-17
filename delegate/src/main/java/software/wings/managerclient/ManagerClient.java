@@ -45,7 +45,7 @@ public interface ManagerClient {
   @Headers({"Content-Type: application/x-kryo"})
   @KryoRequest
   @POST("delegates/{delegateId}/tasks/{taskId}")
-  Call<Void> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
+  Call<ResponseBody> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);
 
   @Multipart
