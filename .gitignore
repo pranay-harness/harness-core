@@ -13,3 +13,4 @@ dependency-reduced-pom.xml
 wingsui
 access.log
 access*gz
+*/delegate.log

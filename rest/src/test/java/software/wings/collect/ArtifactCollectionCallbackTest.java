@@ -18,7 +18,7 @@ import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
-import static software.wings.waitnotify.ListNotifyResponseData.ListNotifyResponseDataBuilder.aListNotifyResponseData;
+import static software.wings.waitnotify.ListNotifyResponseData.Builder.aListNotifyResponseData;
 
 import com.google.common.collect.Lists;
 
