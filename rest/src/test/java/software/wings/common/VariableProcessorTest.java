@@ -57,8 +57,8 @@ public class VariableProcessorTest {
    */
   @Test
   public void shouldGetVariablesForInstanceElement() throws Exception {
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID))
-        .thenReturn(ImmutableMap.of(HOST_ID, asList(aServiceVariable().withName("PORT").withValue("8080").build())));
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, HOST_ID))
+        .thenReturn(asList(aServiceVariable().withName("PORT").withValue("8080").build()));
 
     WorkflowStandardParams workflowStandardParams =
         aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();

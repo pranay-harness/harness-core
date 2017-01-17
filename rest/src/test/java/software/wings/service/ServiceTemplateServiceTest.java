@@ -14,7 +14,6 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -35,7 +34,6 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Service;
@@ -54,7 +52,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
-import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -274,9 +271,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1"))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
 
-    Map<String, List<ConfigFile>> hostConfigFileMapping =
-        templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID);
-    assertThat(hostConfigFileMapping.get("HOST_NAME_1"))
+    List<ConfigFile> hostConfigFiles = templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID, HOST_ID);
+    assertThat(hostConfigFiles)
         .isEqualTo(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
   }
 }

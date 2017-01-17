@@ -26,6 +26,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -35,10 +36,9 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.Validator;
 
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
@@ -116,6 +116,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return serviceTemplate;
   }
 
+  /**
+   * Sets references.
+   *
+   * @param serviceTemplate the service template
+   */
   public void setReferences(ServiceTemplate serviceTemplate) {
     if (serviceTemplate.getAppId() == null) {
       return;
@@ -287,21 +292,22 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
-    if (serviceTemplate == null) {
-      return new HashMap<>();
+  public List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId, String hostId) {
+    ServiceTemplate serviceTemplate;
+    try { // TODO:: remove it
+      serviceTemplate = get(appId, envId, templateId, false);
+    } catch (Exception ex) {
+      return Arrays.asList();
     }
+
     /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId);
+    List<ConfigFile> templateConfigFiles =
+        configService.getConfigFilesForEntity(appId, templateId, serviceTemplate.getServiceId(), envId);
 
-    // Tag -> Host override
-    logger.info("Apply host overrides");
-    Map<String, List<ConfigFile>> computedHostConfigs = new HashMap<>();
-
-    return computedHostConfigs;
+    return overrideConfigFiles(serviceConfigFiles, templateConfigFiles);
   }
 
   /* (non-Javadoc)
@@ -309,19 +315,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public Map<String, List<ServiceVariable>> computeServiceVariables(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
-    if (serviceTemplate == null) {
-      return new HashMap<>();
+  public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId, String hostId) {
+    ServiceTemplate serviceTemplate;
+    try { // TODO:: remove it
+      serviceTemplate = get(appId, envId, templateId, false);
+    } catch (Exception ex) {
+      return Arrays.asList();
     }
-    /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
 
-    List<ServiceVariable> serviceConfigFiles =
+    List<ServiceVariable> serviceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
+    List<ServiceVariable> templateServiceVariables =
+        serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getServiceId());
 
-    Map<String, List<ServiceVariable>> computedHostConfigs = new HashMap<>();
-
-    return computedHostConfigs;
+    return overrideServiceSettings(serviceVariables, templateServiceVariables);
   }
 
   /* (non-Javadoc)
