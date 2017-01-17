@@ -6,7 +6,6 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Lists.newArrayList;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -655,7 +654,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-            .add("workflowPhaseIds", workflowPhase.getUuid());
+            .addToSet("workflowPhaseIds", workflowPhase.getUuid());
 
     Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, new HashMap<>());
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
@@ -726,24 +725,30 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow == null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
     }
-    List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
-    if (workflowPhases == null || workflowPhases.isEmpty() || phaseId == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowPhase");
+
+    List<String> phaseIds = orchestrationWorkflow.getWorkflowPhaseIds();
+    if (orchestrationWorkflow == null || phaseIds == null || !phaseIds.contains(phaseId)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "phaseId");
     }
 
-    Map<String, WorkflowPhase> workflowMap = workflowPhases.stream().collect(toMap(WorkflowPhase::getUuid, identity()));
-
-    WorkflowPhase origWorkflowPhase = workflowMap.get(phaseId);
-
-    workflowPhases.remove(origWorkflowPhase);
-
+    phaseIds.remove(phaseId);
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
     UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhases", workflowPhases);
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhaseIds", phaseIds);
+
+    if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null
+        && orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId) != null) {
+      updateOps.unset("workflowPhaseIdMap." + phaseId);
+    }
+
+    if (orchestrationWorkflow.getGraph() != null && orchestrationWorkflow.getGraph().getSubworkflows() != null
+        && orchestrationWorkflow.getGraph().getSubworkflows().get(phaseId) != null) {
+      updateOps.unset("graph.subworkflows." + phaseId);
+    }
 
     wingsPersistence.update(query, updateOps);
   }

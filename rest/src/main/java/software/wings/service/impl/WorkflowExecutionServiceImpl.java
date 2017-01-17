@@ -235,6 +235,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean expandLastOnly) {
     List<StateExecutionInstance> allInstances = queryAllInstances(workflowExecution);
+    if (allInstances == null || allInstances.isEmpty()) {
+      return;
+    }
     Map<String, StateExecutionInstance> allInstancesIdMap =
         allInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
