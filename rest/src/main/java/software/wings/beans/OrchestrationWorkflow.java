@@ -37,6 +37,8 @@ public class OrchestrationWorkflow extends Workflow {
 
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
+  private String environmentId;
+
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
     return workflowOrchestrationType;
   }
@@ -146,6 +148,14 @@ public class OrchestrationWorkflow extends Workflow {
     this.workflowPhaseIdMap = workflowPhaseIdMap;
   }
 
+  public String getEnvironmentId() {
+    return environmentId;
+  }
+
+  public void setEnvironmentId(String environmentId) {
+    this.environmentId = environmentId;
+  }
+
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
     private String name;
@@ -165,6 +175,7 @@ public class OrchestrationWorkflow extends Workflow {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String environmentId;
 
     private OrchestrationWorkflowBuilder() {}
 
@@ -238,6 +249,11 @@ public class OrchestrationWorkflow extends Workflow {
       return this;
     }
 
+    public OrchestrationWorkflowBuilder withEnvironmentId(String environmentId) {
+      this.environmentId = environmentId;
+      return this;
+    }
+
     public OrchestrationWorkflowBuilder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -278,6 +294,7 @@ public class OrchestrationWorkflow extends Workflow {
       orchestrationWorkflow.setUuid(uuid);
       orchestrationWorkflow.setGraph(graph);
       orchestrationWorkflow.setAppId(appId);
+      orchestrationWorkflow.setEnvironmentId(environmentId);
       orchestrationWorkflow.setCreatedBy(createdBy);
       orchestrationWorkflow.setWorkflowExecutions(workflowExecutions);
       orchestrationWorkflow.setCreatedAt(createdAt);
