@@ -418,6 +418,10 @@ public class StateMachine extends Base {
     return getNextState(fromStateName, TransitionType.SUCCESS);
   }
 
+  public State getSuccessTransition(String childStateMachineId, String fromStateName) {
+    return getNextState(childStateMachineId, fromStateName, TransitionType.SUCCESS);
+  }
+
   /**
    * Returns next state given start state and transition type.
    *
@@ -431,6 +435,17 @@ public class StateMachine extends Base {
       return null;
     }
     return nextStates.get(0);
+  }
+  public State getNextState(String childStateMachineId, String fromStateName, TransitionType transitionType) {
+    if (childStateMachineId == null) {
+      return getNextState(fromStateName, transitionType);
+    } else {
+      StateMachine sm = childStateMachines.get(childStateMachineId);
+      if (sm == null) {
+        return null;
+      }
+      return sm.getNextState(fromStateName, transitionType);
+    }
   }
 
   /**
@@ -581,6 +596,10 @@ public class StateMachine extends Base {
    */
   public State getFailureTransition(String fromStateName) {
     return getNextState(fromStateName, TransitionType.FAILURE);
+  }
+
+  public State getFailureTransition(String childStateMachineId, String fromStateName) {
+    return getNextState(childStateMachineId, fromStateName, TransitionType.FAILURE);
   }
 
   /**

@@ -343,7 +343,8 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
 
-    State nextState = sm.getSuccessTransition(stateExecutionInstance.getStateName());
+    State nextState =
+        sm.getSuccessTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
       logger.info("nextSuccessState is null.. ending execution  - currentState : "
           + stateExecutionInstance.getStateName() + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
@@ -364,7 +365,8 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
 
-    State nextState = sm.getFailureTransition(stateExecutionInstance.getStateName());
+    State nextState =
+        sm.getFailureTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
       logger.info("nextFailureState is null.. for the currentState : {}, stateExecutionInstanceId: {}",
           stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
