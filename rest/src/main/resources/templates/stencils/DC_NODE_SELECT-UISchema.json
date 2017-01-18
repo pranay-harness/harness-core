@@ -1,3 +1,8 @@
 {
-  "ui:order": ["instanceCount", "random"]
+  "computeProviderType": { "ui:widget": "hidden" },
+  "computeProviderId": { "ui:widget": "hidden" },
+  "environmentId": { "ui:widget": "hidden" },
+  "serviceId": { "ui:widget": "hidden" },
+  "specificHosts": { "ui:widget": "radio", "classNames": "__specificHosts"  },
+  "ui:order": ["*" , "specificHosts", "instanceCount", "hostNames"]
 }
