@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -36,7 +35,7 @@ public class ServiceInstance extends Base {
 
   private String hostId;
   @Indexed private String hostName;
-  @Indexed @NotEmpty private String infraMappingId;
+  @Indexed private String infraMappingId;
   private String infraMappingType;
 
   private String artifactStreamId;
