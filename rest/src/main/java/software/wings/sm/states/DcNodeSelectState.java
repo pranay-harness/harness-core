@@ -42,12 +42,18 @@ public class DcNodeSelectState extends State {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
     String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
 
-    logger.info("serviceId : {}, computeProviderId: {}", serviceId, computeProviderId);
+    logger.info(
+        "serviceId: {}, environmentId: {}, computeProviderId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
+        serviceId, environmentId, computeProviderId, instanceCount, specificHosts, hostNames);
 
-    List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
-            ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount, "hostNames", hostNames));
-
+    List<ServiceInstance> serviceInstances;
+    if (specificHosts) {
+      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
+          ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
+    } else {
+      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
+          ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
+    }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
     return new ExecutionResponse();
   }
