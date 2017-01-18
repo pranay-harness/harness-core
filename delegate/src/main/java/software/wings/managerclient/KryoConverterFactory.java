@@ -8,12 +8,12 @@ import com.esotericsoftware.kryo.io.Output;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import org.apache.commons.io.IOUtils;
 import retrofit2.Converter;
 import retrofit2.Converter.Factory;
 import retrofit2.Retrofit;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
@@ -32,10 +32,15 @@ public class KryoConverterFactory extends Factory {
             .filter(annotation -> annotation.annotationType().isAssignableFrom(KryoRequest.class))
             .findFirst()
             .isPresent()) {
-      return new KyroRequestConverter();
-    } else {
-      return null;
+      return value -> {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Output output = new Output(baos);
+        kryos.get().writeClassAndObject(output, value);
+        output.flush();
+        return RequestBody.create(MEDIA_TYPE, baos.toByteArray());
+      };
     }
+    return null;
   }
 
   @Override
@@ -44,37 +49,17 @@ public class KryoConverterFactory extends Factory {
             .filter(annotation -> annotation.annotationType().isAssignableFrom(KryoResponse.class))
             .findFirst()
             .isPresent()) {
-      return new KryoResponseConverter(
-          ((sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl) type).getRawType());
-    } else {
-      return null;
+      return value -> {
+        try {
+          Input input = new Input(value.bytes());
+          Object someObject = kryos.get().readClassAndObject(input);
+          input.close();
+          return someObject;
+        } finally {
+          IOUtils.closeQuietly(value);
+        }
+      };
     }
-  }
-
-  private static class KryoResponseConverter<T> implements Converter<ResponseBody, T> {
-    private Class<T> klass;
-
-    public KryoResponseConverter(Class<T> type) {
-      klass = type;
-    }
-
-    @Override
-    public T convert(ResponseBody value) throws IOException {
-      Input input = new Input(value.bytes());
-      T someObject = (T) kryos.get().readClassAndObject(input);
-      input.close();
-      return someObject;
-    }
-  }
-
-  private class KyroRequestConverter<T> implements Converter<T, RequestBody> {
-    @Override
-    public RequestBody convert(T value) throws IOException {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      Output output = new Output(baos);
-      kryos.get().writeClassAndObject(output, value);
-      output.flush();
-      return RequestBody.create(MEDIA_TYPE, baos.toByteArray());
-    }
+    return null;
   }
 }
