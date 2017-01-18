@@ -27,7 +27,7 @@ public class DcNodeSelectState extends State {
   private String serviceId;
   private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
-  @Attributes(title = "Select specific hosts") private boolean random;
+  @Attributes(title = "Select specific hosts") private boolean specificHosts;
   private List<String> hostNames;
 
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -45,7 +45,7 @@ public class DcNodeSelectState extends State {
 
     List<ServiceInstance> serviceInstances =
         infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
-            ImmutableMap.of("random", random, "instanceCount", instanceCount, "hostNames", hostNames));
+            ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount, "hostNames", hostNames));
 
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
     return new ExecutionResponse();
@@ -70,12 +70,12 @@ public class DcNodeSelectState extends State {
     this.computeProviderId = computeProviderId;
   }
 
-  public boolean isRandom() {
-    return random;
+  public boolean isSpecificHosts() {
+    return specificHosts;
   }
 
-  public void setRandom(boolean random) {
-    this.random = random;
+  public void setSpecificHosts(boolean specificHosts) {
+    this.specificHosts = specificHosts;
   }
 
   public int getInstanceCount() {
