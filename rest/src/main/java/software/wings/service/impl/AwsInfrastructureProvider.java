@@ -12,6 +12,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import javax.inject.Singleton;
 @Singleton
 public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private AwsHelperService awsHelperService;
+  @Inject private HostService hostService;
 
   @Override
   public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
@@ -49,5 +51,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                                          .build())
                               .collect(Collectors.toList());
     return PageResponse.Builder.aPageResponse().withResponse(awsHosts).build();
+  }
+
+  @Override
+  public Host saveHost(Host host) {
+    return hostService.saveHost(host);
   }
 }

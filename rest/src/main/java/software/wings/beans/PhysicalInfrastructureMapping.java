@@ -12,7 +12,6 @@ import java.util.List;
 @JsonTypeName("PHYSICAL_DATA_CENTER")
 public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Host Names") private List<String> hostnames;
-  @Attributes(title = "Connection Type") private String hostConnectionAttrs;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -37,24 +36,6 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    */
   public void setHostnames(List<String> hostnames) {
     this.hostnames = hostnames;
-  }
-
-  /**
-   * Gets host connection attrs.
-   *
-   * @return the host connection attrs
-   */
-  public String getHostConnectionAttrs() {
-    return hostConnectionAttrs;
-  }
-
-  /**
-   * Sets host connection attrs.
-   *
-   * @param hostConnectionAttrs the host connection attrs
-   */
-  public void setHostConnectionAttrs(String hostConnectionAttrs) {
-    this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
   /**

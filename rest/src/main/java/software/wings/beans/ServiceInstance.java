@@ -35,7 +35,7 @@ public class ServiceInstance extends Base {
 
   private String hostId;
   @Indexed private String hostName;
-  private String infraMappingId;
+  @Indexed private String infraMappingId;
   private String infraMappingType;
 
   private String artifactStreamId;

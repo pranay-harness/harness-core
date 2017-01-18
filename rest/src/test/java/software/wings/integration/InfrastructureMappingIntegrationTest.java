@@ -3,6 +3,9 @@ package software.wings.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.common.collect.ImmutableMap;
@@ -13,9 +16,12 @@ import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.PhysicalInfrastructureMapping;
-import software.wings.beans.PhysicalInfrastructureMapping.Builder;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -95,7 +101,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(app.getUuid()).build());
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
-        Builder.aPhysicalInfrastructureMapping()
+        aPhysicalInfrastructureMapping()
             .withAppId(app.getUuid())
             .withEnvId(environment.getUuid())
             .withServiceTemplateId(serviceTemplateId)
@@ -116,12 +122,58 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
 
     // Setup done. Two Host and Two service instances
 
-    List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.selectServiceInstances(app.getUuid(), service.getUuid(), environment.getUuid(),
-            infrastructureMapping.getComputeProviderSettingId(), ImmutableMap.of());
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(app.getUuid(),
+        service.getUuid(), environment.getUuid(), infrastructureMapping.getComputeProviderSettingId(),
+        ImmutableMap.of("specificHosts", true, "hostNames", Arrays.asList("host1")));
 
     assertThat(serviceInstances.size()).isEqualTo(2);
     assertThat(serviceInstances.stream().map(ServiceInstance::getHostName).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("host1", "host2");
+  }
+
+  @Test
+  public void shouldSelectAwsInfrastructureInstances() {
+    List<Key<ServiceTemplate>> templateRefKeysByService =
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid());
+    String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
+
+    SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute()
+            .withAppId(app.getUuid())
+            .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                           .withAccessType(AccessType.KEY)
+                           .withConnectionType(ConnectionType.SSH)
+                           .withKey("wingsKey")
+                           .build())
+            .build());
+    SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute()
+            .withAppId(app.getUuid())
+            .withValue(anAwsConfig()
+                           .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
+                           .withSecretKey("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")
+                           .build())
+            .build());
+
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping()
+            .withAppId(app.getUuid())
+            .withEnvId(environment.getUuid())
+            .withServiceTemplateId(serviceTemplateId)
+            .withComputeProviderSettingId(computeProviderSetting.getUuid())
+            .withHostConnectionAttrs(hostConnectionAttr.getUuid())
+            .build();
+
+    awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
+
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
+        app.getUuid(), service.getUuid(), environment.getUuid(), computeProviderSetting.getUuid(), ImmutableMap.of());
+
+    System.out.println(serviceInstances.size());
+    serviceInstances = infrastructureMappingService.selectServiceInstances(
+        app.getUuid(), service.getUuid(), environment.getUuid(), computeProviderSetting.getUuid(), ImmutableMap.of());
+    System.out.println(serviceInstances.size());
+
+    System.out.println(awsInfrastructureMapping.toString());
   }
 }
