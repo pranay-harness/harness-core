@@ -91,12 +91,4 @@ public class AwsNodeProvisionState extends State {
   public void setLauncherConfigName(String launcherConfigName) {
     this.launcherConfigName = launcherConfigName;
   }
-
-  public InfrastructureMappingService getInfrastructureMappingService() {
-    return infrastructureMappingService;
-  }
-
-  public void setInfrastructureMappingService(InfrastructureMappingService infrastructureMappingService) {
-    this.infrastructureMappingService = infrastructureMappingService;
-  }
 }
