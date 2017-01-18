@@ -60,7 +60,7 @@ public interface ManagerClient {
   @GET("service-templates/{templateId}/compute-files")
   Call<RestResponse<List<ConfigFile>>> getConfigFiles(@Path("templateId") String templateId,
       @Query("accountId") String accountId, @Query("appId") String appId, @Query("envId") String envId,
-      @Query("hostName") String hostName);
+      @Query("hostId") String hostId);
 
   @POST("logs") Call<RestResponse<Log>> saveLog(@Query("accountId") String accountId, @Body Log log);
 

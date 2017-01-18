@@ -18,8 +18,8 @@ public class DelegateConfigServiceImpl implements DelegateConfigService {
   @Inject private ManagerClient managerClient;
 
   @Override
-  public List<ConfigFile> getConfigFiles(String appId, String envId, String uuid, String hostName, String accountId)
+  public List<ConfigFile> getConfigFiles(String appId, String envId, String uuid, String hostId, String accountId)
       throws IOException {
-    return managerClient.getConfigFiles(uuid, accountId, appId, envId, hostName).execute().body().getResource();
+    return managerClient.getConfigFiles(uuid, accountId, appId, envId, hostId).execute().body().getResource();
   }
 }
