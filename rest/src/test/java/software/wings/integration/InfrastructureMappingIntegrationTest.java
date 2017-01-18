@@ -11,6 +11,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
@@ -47,6 +48,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 1/16/17.
  */
 @RealMongo
+@Ignore
 public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
