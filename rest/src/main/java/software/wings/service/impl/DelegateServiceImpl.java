@@ -197,6 +197,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
+    wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
     return wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
   }
 
