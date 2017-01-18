@@ -1,12 +1,14 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionContext;
@@ -55,7 +57,9 @@ public class DcNodeSelectState extends State {
           ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
     }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-    return new ExecutionResponse();
+    return anExecutionResponse()
+        .addElement(aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build())
+        .build();
   }
 
   @Override

@@ -289,8 +289,8 @@ public class StateMachineExecutor {
             executionResponse.getCorrelationIds().toArray(new String[executionResponse.getCorrelationIds().size()]));
       }
 
-      boolean updated = updateStateExecutionData(
-          stateExecutionInstance, executionResponse.getStateExecutionData(), ExecutionStatus.RUNNING, null);
+      boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
+          ExecutionStatus.RUNNING, null, executionResponse.getElements());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -298,7 +298,7 @@ public class StateMachineExecutor {
 
     } else {
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          status, executionResponse.getErrorMessage());
+          status, executionResponse.getErrorMessage(), executionResponse.getElements());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -329,7 +329,7 @@ public class StateMachineExecutor {
     logger.info("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
         stateExecutionInstance.getUuid(), exception);
 
-    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage());
+    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage(), null);
 
     try {
       return failedTransition(context, exception);
@@ -429,8 +429,8 @@ public class StateMachineExecutor {
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
       currentState.handleAbortEvent(context);
-      updated = updateStateExecutionData(
-          stateExecutionInstance, null, ExecutionStatus.ABORTED, null, Lists.newArrayList(ExecutionStatus.ABORTING));
+      updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
+          Lists.newArrayList(ExecutionStatus.ABORTING), null);
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
       logger.error("Error in aborting", e);
@@ -441,11 +441,11 @@ public class StateMachineExecutor {
   }
 
   private void notify(StateExecutionInstance stateExecutionInstance, ExecutionStatus status) {
-    waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(),
-        anElementNotifyResponseData()
-            .withContextElement(stateExecutionInstance.getContextElement())
-            .withExecutionStatus(status)
-            .build());
+    ElementNotifyResponseData notifyResponseData = anElementNotifyResponseData().withExecutionStatus(status).build();
+    if (stateExecutionInstance.getNotifyElements() != null && !stateExecutionInstance.getNotifyElements().isEmpty()) {
+      notifyResponseData.setContextElements(stateExecutionInstance.getNotifyElements());
+    }
+    waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), notifyResponseData);
   }
 
   private void handleSpawningStateExecutionInstances(
@@ -459,6 +459,7 @@ public class StateMachineExecutor {
           childStateExecutionInstance.setUuid(null);
           childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
           childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
+          childStateExecutionInstance.setNotifyElements(null);
           if (childStateExecutionInstance.getStateName() == null
               && childStateExecutionInstance.getChildStateMachineId() != null) {
             if (sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()) == null) {
@@ -541,13 +542,13 @@ public class StateMachineExecutor {
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
-      StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg) {
-    return updateStateExecutionData(stateExecutionInstance, stateExecutionData, status, errorMsg, null);
+      StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements) {
+    return updateStateExecutionData(stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements);
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
-      List<ExecutionStatus> runningStatusLists) {
+      List<ExecutionStatus> runningStatusLists, List<ContextElement> elements) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
       stateExecutionMap = new HashMap<>();
@@ -576,6 +577,24 @@ public class StateMachineExecutor {
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
 
+    if (elements != null && !elements.isEmpty()) {
+      List<ContextElement> notifyElements = stateExecutionInstance.getNotifyElements();
+      if (notifyElements == null) {
+        notifyElements = new ArrayList<>();
+      }
+      List<ContextElement> finalNotifyElements = notifyElements;
+      elements.stream().forEach(e -> {
+        if (e != null) {
+          stateExecutionInstance.getContextElements().push(e);
+          finalNotifyElements.add(e);
+        }
+      });
+
+      ops.set("contextElements", stateExecutionInstance.getContextElements());
+
+      stateExecutionInstance.setNotifyElements(notifyElements);
+      ops.set("notifyElements", notifyElements);
+    }
     stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
     if (stateExecutionInstance.getEndTs() != null) {
       stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());

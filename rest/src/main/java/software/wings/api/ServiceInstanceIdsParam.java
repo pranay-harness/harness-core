@@ -82,4 +82,32 @@ public class ServiceInstanceIdsParam implements ContextElement {
    * @param uuid the uuid
    */
   public void setUuid(String uuid) {}
+
+  public static final class ServiceInstanceIdsParamBuilder {
+    private String serviceId;
+    private List<String> instanceIds;
+
+    private ServiceInstanceIdsParamBuilder() {}
+
+    public static ServiceInstanceIdsParamBuilder aServiceInstanceIdsParam() {
+      return new ServiceInstanceIdsParamBuilder();
+    }
+
+    public ServiceInstanceIdsParamBuilder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public ServiceInstanceIdsParamBuilder withInstanceIds(List<String> instanceIds) {
+      this.instanceIds = instanceIds;
+      return this;
+    }
+
+    public ServiceInstanceIdsParam build() {
+      ServiceInstanceIdsParam serviceInstanceIdsParam = new ServiceInstanceIdsParam();
+      serviceInstanceIdsParam.setServiceId(serviceId);
+      serviceInstanceIdsParam.setInstanceIds(instanceIds);
+      return serviceInstanceIdsParam;
+    }
+  }
 }
