@@ -1,4 +1,4 @@
 {
   "computeProviderType": { "ui:widget": "hidden" },
-  "ui:order": [ "*" , "computeProviderType", "clusterName"]
+  "ui:order": [  "*", "computeProviderType", "hostConnectionAttrs", "clusterName"]
 }

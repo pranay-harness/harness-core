@@ -1,4 +1,6 @@
 {
   "computeProviderType": { "ui:widget": "hidden" },
-  "ui:order": [ "*" , "computeProviderType", "restrictionType", "restrictionExpression"]
+  "restrictionType": { "ui:widget": "hidden" },
+  "restrictionExpression": { "ui:widget": "hidden" },
+  "ui:order": [ "*", "computeProviderType", "hostConnectionAttrs"]
 }
