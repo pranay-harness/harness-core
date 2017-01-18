@@ -24,6 +24,7 @@ import javax.inject.Inject;
 public class DcNodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(DcNodeSelectState.class);
 
+  private String environmentId;
   private String serviceId;
   private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
@@ -53,6 +54,14 @@ public class DcNodeSelectState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  public String getEnvironmentId() {
+    return environmentId;
+  }
+
+  public void setEnvironmentId(String environmentId) {
+    this.environmentId = environmentId;
+  }
 
   public String getServiceId() {
     return serviceId;
