@@ -25,6 +25,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -44,10 +45,12 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -2440,7 +2443,29 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    triggerOrchestrationWorkflow(app.getAppId(), env);
+
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withServiceId(service.getUuid())
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+    serviceTemplate.setService(service);
+
+    wingsPersistence.saveAndGet(InfrastructureMapping.class,
+        PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withServiceTemplateId(serviceTemplate.getUuid())
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .build());
+
+    triggerOrchestrationWorkflow(app.getAppId(), env, service);
   }
 
   /**
@@ -2448,11 +2473,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    *
    * @param appId the app id
    * @param env   the env
+   * @param service
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerOrchestrationWorkflow(String appId, Environment env) throws InterruptedException {
-    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId);
+  public String triggerOrchestrationWorkflow(String appId, Environment env, Service service)
+      throws InterruptedException {
+    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId, env, service);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     String signalId = UUIDGenerator.getUuid();
@@ -2475,16 +2502,17 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return executionId;
   }
 
-  private OrchestrationWorkflow createOrchestrationWorkflow(String appId) {
+  private OrchestrationWorkflow createOrchestrationWorkflow(String appId, Environment env, Service service) {
     OrchestrationWorkflow orchestrationWorkflow =
         anOrchestrationWorkflow()
             .withAppId(appId)
+            .withEnvironmentId(env.getUuid())
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
-                                   .withComputerProviderId("computeProviderId1")
-                                   .withServiceId("serviceId1")
+                                   .withComputeProviderId(COMPUTE_PROVIDER_ID)
+                                   .withServiceId(service.getUuid())
                                    .withDeploymentType(SSH)
                                    .build())
             .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())

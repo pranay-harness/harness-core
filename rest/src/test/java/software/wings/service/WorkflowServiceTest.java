@@ -51,6 +51,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -91,6 +92,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceInstanceService serviceInstanceServiceMock;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   private Environment env;
   private List<Service> services;
@@ -876,7 +878,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
-                                   .withComputerProviderId("computeProviderId1")
+                                   .withComputeProviderId("computeProviderId1")
                                    .withServiceId("serviceId1")
                                    .withDeploymentType(SSH)
                                    .build())

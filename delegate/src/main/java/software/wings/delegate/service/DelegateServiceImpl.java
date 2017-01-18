@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import okhttp3.ResponseBody;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
@@ -165,17 +166,22 @@ public class DelegateServiceImpl implements DelegateService {
 
         DelegateRunnableTask delegateRunnableTask =
             delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask, notifyResponseData -> {
+              Response<ResponseBody> response = null;
               try {
-                managerClient
-                    .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                        aDelegateTaskResponse()
-                            .withTaskId(delegateTask.getUuid())
-                            .withAccountId(accountId)
-                            .withResponse(notifyResponseData)
-                            .build())
-                    .execute();
+                response = managerClient
+                               .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                                   aDelegateTaskResponse()
+                                       .withTaskId(delegateTask.getUuid())
+                                       .withAccountId(accountId)
+                                       .withResponse(notifyResponseData)
+                                       .build())
+                               .execute();
               } catch (IOException e) {
                 logger.error("Unable to send response to manager ", e);
+              } finally {
+                if (response != null && !response.isSuccessful()) {
+                  response.errorBody().close();
+                }
               }
             });
         injector.injectMembers(delegateRunnableTask);
