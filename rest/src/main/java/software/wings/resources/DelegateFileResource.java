@@ -76,7 +76,7 @@ public class DelegateFileResource {
   @GET
   @Path("fileId")
   public RestResponse<String> getFileId(@QueryParam("entityId") @NotEmpty String entityId,
-      @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("version") @NotEmpty int version,
+      @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("version") int version,
       @QueryParam("accountId") @NotEmpty String accountId) {
     logger.debug("entityId: {}, fileBucket: {}, version: {}", entityId, fileBucket, version);
 
