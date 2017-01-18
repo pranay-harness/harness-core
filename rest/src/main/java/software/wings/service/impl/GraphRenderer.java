@@ -211,6 +211,7 @@ public class GraphRenderer {
     if (element.equals(Constants.SUB_WORKFLOW)) {
       Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
       if (elementRepeatNode != null) {
+        elementRepeatNode.setNewBranch(true);
         group.getElements().add(elementRepeatNode);
         logger.debug("generateNodeHierarchy elementRepeatNode added - node: {}", elementRepeatNode);
         generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, null,
@@ -221,6 +222,8 @@ public class GraphRenderer {
 
     Node elementNode =
         Node.Builder.aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
+    elementNode.setNewBranch(true);
+
     group.getElements().add(elementNode);
     logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
     Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
