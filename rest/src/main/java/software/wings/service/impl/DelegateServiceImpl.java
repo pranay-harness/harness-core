@@ -15,7 +15,7 @@ import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.core.IQueue;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -50,7 +50,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
@@ -181,18 +180,11 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
-    String topicName = UUIDGenerator.getUuid();
-    task.setTopicName(topicName);
-    ITopic<T> topic = hazelcastInstance.getTopic(topicName);
-    CountDownLatch latchForResponse = new CountDownLatch(1);
-    final NotifyResponseData[] response = new NotifyResponseData[1];
-    topic.addMessageListener(message -> {
-      response[0] = message.getMessageObject();
-      latchForResponse.countDown();
-    });
+    String queueName = UUIDGenerator.getUuid();
+    task.setQueueName(queueName);
+    IQueue<T> topic = hazelcastInstance.getQueue(queueName);
     wingsPersistence.save(task);
-    latchForResponse.await(30000, TimeUnit.MILLISECONDS);
-    return (T) response[0];
+    return topic.poll(30000, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -212,10 +204,10 @@ public class DelegateServiceImpl implements DelegateService {
       String waitId = delegateTask.getWaitId();
       waitNotifyEngine.notify(waitId, response.getResponse());
     } else {
-      String topicName = delegateTask.getTopicName();
+      String topicName = delegateTask.getQueueName();
       // do the haze
-      ITopic<NotifyResponseData> topic = hazelcastInstance.getTopic(topicName);
-      topic.publish(response.getResponse());
+      IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
+      topic.offer(response.getResponse());
     }
     wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                 .field("accountId")
