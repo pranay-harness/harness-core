@@ -9,7 +9,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.List;
@@ -34,7 +33,6 @@ import javax.ws.rs.QueryParam;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
-@PublicApi // TODO:: remove
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
 

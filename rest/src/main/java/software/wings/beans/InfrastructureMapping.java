@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -14,6 +15,7 @@ public abstract class InfrastructureMapping extends Base {
   private String envId;
   private String serviceTemplateId;
   private String computeProviderType;
+  @Attributes(title = "Connection Type") private String hostConnectionAttrs;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -133,5 +135,23 @@ public abstract class InfrastructureMapping extends Base {
   @Override
   public String getUuid() {
     return super.getUuid();
+  }
+
+  /**
+   * Gets host connection attrs.
+   *
+   * @return the host connection attrs
+   */
+  public String getHostConnectionAttrs() {
+    return hostConnectionAttrs;
+  }
+
+  /**
+   * Sets host connection attrs.
+   *
+   * @param hostConnectionAttrs the host connection attrs
+   */
+  public void setHostConnectionAttrs(String hostConnectionAttrs) {
+    this.hostConnectionAttrs = hostConnectionAttrs;
   }
 }
