@@ -755,7 +755,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(graph.getNodes()).isNotNull().hasSize(1);
     Node node = graph.getNodes().get(0);
     assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
-    assertThat(node.getProperties()).isNotNull().hasSize(1).containsKey("URL").containsValue("http://www.google.com");
+    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.google.com");
     node.getProperties().put("URL", "http://www.yahoo.com");
 
     workflowService.updateGraphNode(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(),
@@ -781,7 +781,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(graph.getNodes()).isNotNull().hasSize(1);
     node = graph.getNodes().get(0);
     assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
-    assertThat(node.getProperties()).isNotNull().hasSize(1).containsKey("URL").containsValue("http://www.yahoo.com");
+    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.yahoo.com");
   }
 
   @Test

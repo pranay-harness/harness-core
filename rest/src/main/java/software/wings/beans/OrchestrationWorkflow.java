@@ -156,6 +156,14 @@ public class OrchestrationWorkflow extends Workflow {
     this.environmentId = environmentId;
   }
 
+  public Map<String, Object> params() {
+    Map<String, Object> params = new HashMap<>();
+    params.put("workflowOrchestrationType", workflowOrchestrationType);
+    params.put("environmentId", environmentId);
+    params.put("workflowId", getUuid());
+    return params;
+  }
+
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
     private String name;

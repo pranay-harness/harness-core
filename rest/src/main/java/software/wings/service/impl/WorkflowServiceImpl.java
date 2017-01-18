@@ -581,7 +581,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
-    Map<String, Object> params = new HashMap<>();
+    Map<String, Object> params = orchestrationWorkflow.params();
     orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow, params));
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       generateNewWorkflowPhaseSteps(
@@ -611,14 +611,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public PhaseStep updatePreDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep, new HashMap<>());
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    Graph workflowOuterStepsGraph = generateGraph(phaseStep, orchestrationWorkflow.params());
     Map<String, Object> map = new HashMap<>();
     map.put("preDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
 
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
     if (orchestrationWorkflow.getGraph() != null) {
       StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
       wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
@@ -629,14 +630,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public PhaseStep updatePostDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep, new HashMap<>());
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    Graph workflowOuterStepsGraph = generateGraph(phaseStep, orchestrationWorkflow.params());
     Map<String, Object> map = new HashMap<>();
     map.put("postDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
 
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
     if (orchestrationWorkflow.getGraph() != null) {
       StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
       wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
@@ -663,13 +665,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
 
-    Graph graph = generateMainGraph(orchestrationWorkflow, new HashMap<>());
+    Graph graph = generateMainGraph(orchestrationWorkflow, orchestrationWorkflow.params());
 
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
             .add("workflowPhaseIds", workflowPhase.getUuid());
 
-    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, new HashMap<>());
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
       updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
     }
@@ -731,6 +733,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
@@ -739,7 +743,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
             .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase);
-    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, new HashMap<>());
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
       updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
     }
