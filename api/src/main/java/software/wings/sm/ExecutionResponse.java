@@ -6,8 +6,8 @@ import com.google.common.collect.Lists;
 
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Describes response of an execution.
@@ -21,7 +21,7 @@ public class ExecutionResponse {
   private String errorMessage;
   private StateExecutionData stateExecutionData;
   private NotifyResponseData notifyResponseData;
-  private Map<String, Object> params;
+  private List<ContextElement> elements;
 
   /**
    * Is asynch boolean.
@@ -131,12 +131,12 @@ public class ExecutionResponse {
     this.notifyResponseData = notifyResponseData;
   }
 
-  public Map<String, Object> getParams() {
-    return params;
+  public List<ContextElement> getElements() {
+    return elements;
   }
 
-  public void setParams(Map<String, Object> params) {
-    this.params = params;
+  public void setElements(List<ContextElement> elements) {
+    this.elements = elements;
   }
 
   /**
@@ -148,6 +148,7 @@ public class ExecutionResponse {
     private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     private String errorMessage;
     private StateExecutionData stateExecutionData;
+    private List<ContextElement> elements;
 
     private Builder() {}
 
@@ -227,6 +228,20 @@ public class ExecutionResponse {
     }
 
     /**
+     * Add param.
+     *
+     * @param contextElement the contextElement
+     * @return the builder
+     */
+    public Builder addElement(ContextElement contextElement) {
+      if (this.elements == null) {
+        this.elements = new ArrayList<>();
+      }
+      this.elements.add(contextElement);
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -252,6 +267,7 @@ public class ExecutionResponse {
       executionResponse.setExecutionStatus(executionStatus);
       executionResponse.setErrorMessage(errorMessage);
       executionResponse.setStateExecutionData(stateExecutionData);
+      executionResponse.setElements(elements);
       return executionResponse;
     }
   }

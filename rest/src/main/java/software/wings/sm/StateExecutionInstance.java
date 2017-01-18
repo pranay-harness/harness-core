@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -7,7 +8,6 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsDeque;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,9 +27,11 @@ public class StateExecutionInstance extends Base {
   private ContextElement contextElement;
   private boolean contextTransition;
 
-  private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+  @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
+
+  private List<ContextElement> notifyElements;
 
   private StateMachineExecutionCallback callback;
 
@@ -282,7 +284,7 @@ public class StateExecutionInstance extends Base {
    *
    * @return the context elements
    */
-  public ArrayDeque<ContextElement> getContextElements() {
+  public WingsDeque<ContextElement> getContextElements() {
     return contextElements;
   }
 
@@ -428,6 +430,14 @@ public class StateExecutionInstance extends Base {
    */
   public void setExecutionType(WorkflowType executionType) {
     this.executionType = executionType;
+  }
+
+  public List<ContextElement> getNotifyElements() {
+    return notifyElements;
+  }
+
+  public void setNotifyElements(List<ContextElement> notifyElements) {
+    this.notifyElements = notifyElements;
   }
 
   @Override
