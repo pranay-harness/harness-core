@@ -146,6 +146,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     Map<String, String> data =
         settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+
     ObjectNode jsonSchemaField = ((ObjectNode) physicalJsonSchema.get("properties").get("hostConnectionAttrs"));
     jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
     jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
@@ -154,6 +155,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         ImmutableMap.of("jsonSchema", physicalJsonSchema, "uiSchema", readUiSchema("PHYSICAL_DATA_CENTER")));
 
     JsonNode awsJsonSchema = JsonUtils.jsonSchema(AwsInfrastructureMapping.class);
+    jsonSchemaField = ((ObjectNode) awsJsonSchema.get("properties").get("hostConnectionAttrs"));
+    jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
+    jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
 
     infraStencils.put(AWS.name(), ImmutableMap.of("jsonSchema", awsJsonSchema, "uiSchema", readUiSchema("AWS")));
     infraStencils.put(ECS.name(),
@@ -289,6 +293,40 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .get();
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
     return infrastructureMapping;
+  }
+
+  @Override
+  public List<ServiceInstance> provisionNodes(
+      String appId, String serviceId, String envId, String computeProviderId, String launcherConfigName) {
+    String serviceTemplateId =
+        (String) serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
+
+    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                      .field("appId")
+                                                      .equal(appId)
+                                                      .field("envId")
+                                                      .equal(envId)
+                                                      .field("serviceTemplateId")
+                                                      .equal(serviceTemplateId)
+                                                      .field("computeProviderSettingId")
+                                                      .equal(computeProviderId)
+                                                      .get();
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+      Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+      if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+        // syncAwsHostsAndUpdateInstances(appId, envId, serviceTemplateId, infrastructureMapping,
+        // computeProviderSetting); // TODO:: instead of on-demand do it periodically?
+        return null;
+      }
+      return selectServiceInstancesByInfraMapping(appId, serviceTemplateId, infrastructureMapping.getUuid(), null);
+
+    } else {
+      throw new WingsException(
+          ErrorCodes.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infra mapping");
+    }
   }
 
   private Object readUiSchema(String type) {
