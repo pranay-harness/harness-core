@@ -669,7 +669,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-            .add("workflowPhaseIds", workflowPhase.getUuid());
+            .set("workflowPhaseIds", orchestrationWorkflow.getWorkflowPhaseIds());
 
     Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
@@ -740,10 +740,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
+
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
             .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase);
-    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
       updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
     }
