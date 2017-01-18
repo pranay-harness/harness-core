@@ -27,6 +27,8 @@ public class DelegateTask extends Base {
   private String accountId;
   private String waitId;
   private String topicName;
+  private Status status = Status.QUEUED;
+  private String delegateId;
 
   /**
    * Getter for property 'taskType'.
@@ -136,9 +138,46 @@ public class DelegateTask extends Base {
     this.topicName = topicName;
   }
 
+  /**
+   * Getter for property 'status'.
+   *
+   * @return Value for property 'status'.
+   */
+  public Status getStatus() {
+    return status;
+  }
+
+  /**
+   * Setter for property 'status'.
+   *
+   * @param status Value to set for property 'status'.
+   */
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  /**
+   * Getter for property 'delegateId'.
+   *
+   * @return Value for property 'delegateId'.
+   */
+  public String getDelegateId() {
+    return delegateId;
+  }
+
+  /**
+   * Setter for property 'delegateId'.
+   *
+   * @param delegateId Value to set for property 'delegateId'.
+   */
+  public void setDelegateId(String delegateId) {
+    this.delegateId = delegateId;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(taskType, parameters, tag, accountId, waitId, topicName);
+    return 31 * super.hashCode()
+        + Objects.hash(taskType, parameters, tag, accountId, waitId, topicName, status, delegateId);
   }
 
   @Override
@@ -155,7 +194,8 @@ public class DelegateTask extends Base {
     final DelegateTask other = (DelegateTask) obj;
     return Objects.equals(this.taskType, other.taskType) && Objects.deepEquals(this.parameters, other.parameters)
         && Objects.equals(this.tag, other.tag) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.topicName, other.topicName);
+        && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.topicName, other.topicName)
+        && Objects.equals(this.status, other.status) && Objects.equals(this.delegateId, other.delegateId);
   }
 
   @Override
@@ -167,121 +207,9 @@ public class DelegateTask extends Base {
         .add("accountId", accountId)
         .add("waitId", waitId)
         .add("topicName", topicName)
+        .add("status", status)
+        .add("delegateId", delegateId)
         .toString();
-  }
-
-  public static final class Builder {
-    private TaskType taskType;
-    private Object[] parameters;
-    private String tag;
-    private String accountId;
-    private String waitId;
-    private String topicName;
-    private String uuid;
-    private String appId;
-    private EmbeddedUser createdBy;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
-
-    private Builder() {}
-
-    public static Builder aDelegateTask() {
-      return new Builder();
-    }
-
-    public Builder withTaskType(TaskType taskType) {
-      this.taskType = taskType;
-      return this;
-    }
-
-    public Builder withParameters(Object[] parameters) {
-      this.parameters = parameters;
-      return this;
-    }
-
-    public Builder withTag(String tag) {
-      this.tag = tag;
-      return this;
-    }
-
-    public Builder withAccountId(String accountId) {
-      this.accountId = accountId;
-      return this;
-    }
-
-    public Builder withWaitId(String waitId) {
-      this.waitId = waitId;
-      return this;
-    }
-
-    public Builder withTopicName(String topicName) {
-      this.topicName = topicName;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder but() {
-      return aDelegateTask()
-          .withTaskType(taskType)
-          .withParameters(parameters)
-          .withTag(tag)
-          .withAccountId(accountId)
-          .withWaitId(waitId)
-          .withTopicName(topicName)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
-    }
-
-    public DelegateTask build() {
-      DelegateTask delegateTask = new DelegateTask();
-      delegateTask.setTaskType(taskType);
-      delegateTask.setParameters(parameters);
-      delegateTask.setTag(tag);
-      delegateTask.setAccountId(accountId);
-      delegateTask.setWaitId(waitId);
-      delegateTask.setTopicName(topicName);
-      delegateTask.setUuid(uuid);
-      delegateTask.setAppId(appId);
-      delegateTask.setCreatedBy(createdBy);
-      delegateTask.setCreatedAt(createdAt);
-      delegateTask.setLastUpdatedBy(lastUpdatedBy);
-      delegateTask.setLastUpdatedAt(lastUpdatedAt);
-      return delegateTask;
-    }
   }
 
   public static class Context {
@@ -376,6 +304,138 @@ public class DelegateTask extends Base {
     @Override
     public Object decode(Class<?> targetClass, Object fromDBObject, MappedField optionalExtraInfo) {
       return kryos.get().readClassAndObject(new Input(Base64.decodeBase64((String) fromDBObject)));
+    }
+  }
+
+  public enum Status { QUEUED, STARTED, FINISHED }
+
+  public static final class Builder {
+    private TaskType taskType;
+    private Object[] parameters;
+    private String tag;
+    private String accountId;
+    private String waitId;
+    private String topicName;
+    private Status status = Status.QUEUED;
+    private String delegateId;
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
+
+    private Builder() {}
+
+    public static Builder aDelegateTask() {
+      return new Builder();
+    }
+
+    public Builder withTaskType(TaskType taskType) {
+      this.taskType = taskType;
+      return this;
+    }
+
+    public Builder withParameters(Object[] parameters) {
+      this.parameters = parameters;
+      return this;
+    }
+
+    public Builder withTag(String tag) {
+      this.tag = tag;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public Builder withWaitId(String waitId) {
+      this.waitId = waitId;
+      return this;
+    }
+
+    public Builder withTopicName(String topicName) {
+      this.topicName = topicName;
+      return this;
+    }
+
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withDelegateId(String delegateId) {
+      this.delegateId = delegateId;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder but() {
+      return aDelegateTask()
+          .withTaskType(taskType)
+          .withParameters(parameters)
+          .withTag(tag)
+          .withAccountId(accountId)
+          .withWaitId(waitId)
+          .withTopicName(topicName)
+          .withStatus(status)
+          .withDelegateId(delegateId)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt);
+    }
+
+    public DelegateTask build() {
+      DelegateTask delegateTask = new DelegateTask();
+      delegateTask.setTaskType(taskType);
+      delegateTask.setParameters(parameters);
+      delegateTask.setTag(tag);
+      delegateTask.setAccountId(accountId);
+      delegateTask.setWaitId(waitId);
+      delegateTask.setTopicName(topicName);
+      delegateTask.setStatus(status);
+      delegateTask.setDelegateId(delegateId);
+      delegateTask.setUuid(uuid);
+      delegateTask.setAppId(appId);
+      delegateTask.setCreatedBy(createdBy);
+      delegateTask.setCreatedAt(createdAt);
+      delegateTask.setLastUpdatedBy(lastUpdatedBy);
+      delegateTask.setLastUpdatedAt(lastUpdatedAt);
+      return delegateTask;
     }
   }
 }
