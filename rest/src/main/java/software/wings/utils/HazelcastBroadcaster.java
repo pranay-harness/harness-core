@@ -7,7 +7,6 @@ package software.wings.utils;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import org.atmosphere.cpr.AtmosphereConfig;
-import org.atmosphere.cpr.AtmosphereConfig.ShutdownHook;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.util.AbstractBroadcasterProxy;
@@ -38,11 +37,9 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
 
   public void setUp() {
     this.topic = HAZELCAST_INSTANCE.getTopic(this.getID());
-    this.config.shutdownHook(new ShutdownHook() {
-      public void shutdown() {
-        HazelcastBroadcaster.HAZELCAST_INSTANCE.shutdown();
-        HazelcastBroadcaster.this.isClosed.set(true);
-      }
+    this.config.shutdownHook(() -> {
+      HazelcastBroadcaster.HAZELCAST_INSTANCE.shutdown();
+      HazelcastBroadcaster.this.isClosed.set(true);
     });
   }
 
