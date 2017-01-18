@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
+import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -26,7 +27,7 @@ public class DelegateTask extends Base {
   private String tag;
   private String accountId;
   private String waitId;
-  private String topicName;
+  @AlsoLoad("topicName") private String queueName;
   private Status status = Status.QUEUED;
   private String delegateId;
 
@@ -121,21 +122,21 @@ public class DelegateTask extends Base {
   }
 
   /**
-   * Getter for property 'topicName'.
+   * Getter for property 'queueName'.
    *
-   * @return Value for property 'topicName'.
+   * @return Value for property 'queueName'.
    */
-  public String getTopicName() {
-    return topicName;
+  public String getQueueName() {
+    return queueName;
   }
 
   /**
-   * Setter for property 'topicName'.
+   * Setter for property 'queueName'.
    *
-   * @param topicName Value to set for property 'topicName'.
+   * @param queueName Value to set for property 'queueName'.
    */
-  public void setTopicName(String topicName) {
-    this.topicName = topicName;
+  public void setQueueName(String queueName) {
+    this.queueName = queueName;
   }
 
   /**
@@ -177,7 +178,7 @@ public class DelegateTask extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(taskType, parameters, tag, accountId, waitId, topicName, status, delegateId);
+        + Objects.hash(taskType, parameters, tag, accountId, waitId, queueName, status, delegateId);
   }
 
   @Override
@@ -194,7 +195,7 @@ public class DelegateTask extends Base {
     final DelegateTask other = (DelegateTask) obj;
     return Objects.equals(this.taskType, other.taskType) && Objects.deepEquals(this.parameters, other.parameters)
         && Objects.equals(this.tag, other.tag) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.topicName, other.topicName)
+        && Objects.equals(this.waitId, other.waitId) && Objects.equals(this.queueName, other.queueName)
         && Objects.equals(this.status, other.status) && Objects.equals(this.delegateId, other.delegateId);
   }
 
@@ -206,7 +207,7 @@ public class DelegateTask extends Base {
         .add("tag", tag)
         .add("accountId", accountId)
         .add("waitId", waitId)
-        .add("topicName", topicName)
+        .add("queueName", queueName)
         .add("status", status)
         .add("delegateId", delegateId)
         .toString();
@@ -315,7 +316,7 @@ public class DelegateTask extends Base {
     private String tag;
     private String accountId;
     private String waitId;
-    private String topicName;
+    private String queueName;
     private Status status = Status.QUEUED;
     private String delegateId;
     private String uuid;
@@ -356,8 +357,8 @@ public class DelegateTask extends Base {
       return this;
     }
 
-    public Builder withTopicName(String topicName) {
-      this.topicName = topicName;
+    public Builder withQueueName(String queueName) {
+      this.queueName = queueName;
       return this;
     }
 
@@ -408,7 +409,7 @@ public class DelegateTask extends Base {
           .withTag(tag)
           .withAccountId(accountId)
           .withWaitId(waitId)
-          .withTopicName(topicName)
+          .withQueueName(queueName)
           .withStatus(status)
           .withDelegateId(delegateId)
           .withUuid(uuid)
@@ -426,7 +427,7 @@ public class DelegateTask extends Base {
       delegateTask.setTag(tag);
       delegateTask.setAccountId(accountId);
       delegateTask.setWaitId(waitId);
-      delegateTask.setTopicName(topicName);
+      delegateTask.setQueueName(queueName);
       delegateTask.setStatus(status);
       delegateTask.setDelegateId(delegateId);
       delegateTask.setUuid(uuid);
