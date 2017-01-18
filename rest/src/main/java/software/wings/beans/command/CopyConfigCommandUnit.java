@@ -59,7 +59,7 @@ public class CopyConfigCommandUnit extends AbstractCommandUnit {
     List<ConfigFile> configFiles = null;
     try {
       configFiles = delegateConfigService.getConfigFiles(serviceTemplate.getAppId(), serviceTemplate.getEnvId(),
-          serviceTemplate.getUuid(), context.getHost().getHostName(), context.getAccountId());
+          serviceTemplate.getUuid(), context.getHost().getUuid(), context.getAccountId());
     } catch (IOException e) {
       delegateLogService.save(context.getAccountId(),
           aLog()
