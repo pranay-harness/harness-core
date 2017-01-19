@@ -90,7 +90,7 @@ public class ExecutionResource {
 
     filter = new SearchFilter();
     filter.setFieldName("workflowType");
-    filter.setFieldValues(WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE);
+    filter.setFieldValues(WorkflowType.ORCHESTRATION_WORKFLOW, WorkflowType.SIMPLE);
     filter.setOp(Operator.IN);
     pageRequest.addFilter(filter);
 
