@@ -62,7 +62,9 @@ public class GraphRenderer {
 
       if ((StateType.REPEAT.name().equals(instance.getStateType())
               || StateType.FORK.name().equals(instance.getStateType())
-              || StateType.SUB_WORKFLOW.name().equals(instance.getStateType()))
+              || StateType.SUB_WORKFLOW.name().equals(instance.getStateType())
+              || StateType.PHASE_STEP.name().equals(instance.getStateType())
+              || StateType.PHASE.name().equals(instance.getStateType()))
           && (allExpanded || expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
         node.setExpanded(false);
       } else {
@@ -81,7 +83,13 @@ public class GraphRenderer {
         }
         if (instanceIdMap.get(instance.getParentInstanceId()) != null
             && instanceIdMap.get(instance.getParentInstanceId()).getStateType() != null
-            && instanceIdMap.get(instance.getParentInstanceId()).getStateType().equals(Constants.SUB_WORKFLOW)) {
+            && (instanceIdMap.get(instance.getParentInstanceId()).getStateType().equals(StateType.SUB_WORKFLOW.name())
+                   || instanceIdMap.get(instance.getParentInstanceId())
+                          .getStateType()
+                          .equals(StateType.PHASE_STEP.name())
+                   || instanceIdMap.get(instance.getParentInstanceId())
+                          .getStateType()
+                          .equals(StateType.PHASE.name()))) {
           elementsMap.put(Constants.SUB_WORKFLOW, node);
           continue;
         }

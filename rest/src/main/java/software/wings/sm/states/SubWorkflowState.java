@@ -34,7 +34,7 @@ public class SubWorkflowState extends State {
   }
 
   protected SubWorkflowState(String name, String stateType) {
-    super(name, StateType.SUB_WORKFLOW.name());
+    super(name, stateType);
   }
 
   private String subWorkflowId;
@@ -84,7 +84,6 @@ public class SubWorkflowState extends State {
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponse.setExecutionStatus(executionStatus);
     }
-
     logger.info("Subworkflow state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
         ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
         executionResponse.getExecutionStatus());

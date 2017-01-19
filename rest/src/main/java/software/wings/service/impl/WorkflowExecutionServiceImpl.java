@@ -857,13 +857,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshSummaries(WorkflowExecution workflowExecution) {
-    if (!(workflowExecution.getStatus() == ExecutionStatus.SUCCESS
-            || workflowExecution.getStatus() == ExecutionStatus.FAILED
-            || workflowExecution.getStatus() == ExecutionStatus.ERROR
-            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
-      return;
-    }
-
     if (workflowExecution.getServiceExecutionSummaries() != null
         && workflowExecution.getStatusInstanceBreakdownMap() != null) {
       return;
@@ -873,7 +866,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         aPageRequest()
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
-            .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name())
+            .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
+                StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), StateType.PHASE_STEP.name())
             .addFilter("parentInstanceId", Operator.NOT_EXISTS, null)
             .build();
 
@@ -912,6 +906,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummary);
+    }
+
+    if (workflowExecution.getServiceExecutionSummaries() != null
+        && (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+               || workflowExecution.getStatus() == ExecutionStatus.FAILED
+               || workflowExecution.getStatus() == ExecutionStatus.ERROR
+               || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
       wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
           workflowExecution.getServiceExecutionSummaries());
     }

@@ -1,11 +1,11 @@
 package software.wings.sm.states;
 
-import software.wings.beans.DeploymentType;
-import software.wings.sm.StateExecutionData;
-import software.wings.sm.StateType;
-import software.wings.waitnotify.NotifyResponseData;
+import static software.wings.api.PhaseSubWorkflowExecutionData.PhaseSubWorkflowExecutionDataBuilder.aPhaseSubWorkflowExecutionData;
 
-import java.util.List;
+import software.wings.beans.DeploymentType;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateType;
 
 /**
  * Created by rishi on 1/12/17.
@@ -21,6 +21,18 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   // Only relevant for custom kubernetes environment
   private String deploymentMasterId;
+
+  @Override
+  public ExecutionResponse execute(ExecutionContext contextIntf) {
+    ExecutionResponse response = super.execute(contextIntf);
+    response.setStateExecutionData(aPhaseSubWorkflowExecutionData()
+                                       .withComputeProviderId(computeProviderId)
+                                       .withDeploymentType(deploymentType)
+                                       .withServiceId(serviceId)
+                                       .withDeploymentMasterId(deploymentMasterId)
+                                       .build());
+    return response;
+  }
 
   public String getServiceId() {
     return serviceId;
@@ -52,55 +64,5 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public void setDeploymentMasterId(String deploymentMasterId) {
     this.deploymentMasterId = deploymentMasterId;
-  }
-
-  public static class PhaseSubWorkflowExecutionData extends StateExecutionData implements NotifyResponseData {
-    private String serviceId;
-    private String computeProviderId;
-    private DeploymentType deploymentType;
-
-    private String deploymentMasterId;
-
-    private List<String> instanceIds;
-
-    public String getServiceId() {
-      return serviceId;
-    }
-
-    public void setServiceId(String serviceId) {
-      this.serviceId = serviceId;
-    }
-
-    public String getComputeProviderId() {
-      return computeProviderId;
-    }
-
-    public void setComputeProviderId(String computeProviderId) {
-      this.computeProviderId = computeProviderId;
-    }
-
-    public DeploymentType getDeploymentType() {
-      return deploymentType;
-    }
-
-    public void setDeploymentType(DeploymentType deploymentType) {
-      this.deploymentType = deploymentType;
-    }
-
-    public String getDeploymentMasterId() {
-      return deploymentMasterId;
-    }
-
-    public void setDeploymentMasterId(String deploymentMasterId) {
-      this.deploymentMasterId = deploymentMasterId;
-    }
-
-    public List<String> getInstanceIds() {
-      return instanceIds;
-    }
-
-    public void setInstanceIds(List<String> instanceIds) {
-      this.instanceIds = instanceIds;
-    }
   }
 }

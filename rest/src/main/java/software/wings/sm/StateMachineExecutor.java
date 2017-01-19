@@ -632,7 +632,9 @@ public class StateMachineExecutor {
 
     if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR)
         && (stateExecutionInstance.getStateType().equals(StateType.REPEAT.name())
-               || stateExecutionInstance.getStateType().equals(StateType.FORK.name()))) {
+               || stateExecutionInstance.getStateType().equals(StateType.FORK.name())
+               || stateExecutionInstance.getStateType().equals(StateType.PHASE_STEP.name())
+               || stateExecutionInstance.getStateType().equals(StateType.PHASE.name()))) {
       refreshSummary(stateExecutionInstance);
     }
     return updated;
@@ -842,7 +844,9 @@ public class StateMachineExecutor {
       StateExecutionInstance last = stateExecutionInstance;
       StateExecutionInstance next = stateExecutionInstance;
       while (next != null) {
-        if ((next.getStateType().equals(StateType.REPEAT.name()) || next.getStateType().equals(StateType.FORK.name()))
+        if ((next.getStateType().equals(StateType.REPEAT.name()) || next.getStateType().equals(StateType.FORK.name())
+                || next.getStateType().equals(StateType.PHASE.name())
+                || next.getStateType().equals(StateType.PHASE_STEP.name()))
             && (next.getStateExecutionData() instanceof ElementStateExecutionData)) {
           ElementStateExecutionData childStateExecutionData = (ElementStateExecutionData) next.getStateExecutionData();
           if (childStateExecutionData.getInstanceStatusSummary() != null) {
@@ -900,7 +904,8 @@ public class StateMachineExecutor {
             .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
                 ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR))
             .field("stateType")
-            .notIn(Lists.newArrayList(StateType.REPEAT.name(), StateType.FORK.name()));
+            .notIn(Lists.newArrayList(StateType.REPEAT.name(), StateType.FORK.name(), StateType.PHASE.name(),
+                StateType.PHASE_STEP.name(), StateType.SUB_WORKFLOW.name()));
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
       logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
