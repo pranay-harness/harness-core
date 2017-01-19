@@ -6,6 +6,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
@@ -79,9 +80,15 @@ public class SubWorkflowState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
+    ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
+    if (executionStatus != ExecutionStatus.SUCCESS) {
+      executionResponse.setExecutionStatus(executionStatus);
+    }
+
     logger.info("Subworkflow state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
         ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
         executionResponse.getExecutionStatus());
+
     return executionResponse;
   }
 

@@ -737,11 +737,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
     }
 
-    workflowPhase.addPhaseStep(
-        aPhaseStep(PhaseStepType.PROVISION_NODE)
-            .withName("Provision Nodes")
-            .addStep(aNode().withType(stateType.name()).withName("Select Nodes").withOrigin(true).build())
-            .build());
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE)
+                                   .withName("Provision Nodes")
+                                   .addStep(aNode()
+                                                .withType(stateType.name())
+                                                .withName("Select Nodes")
+                                                .withOrigin(true)
+                                                .addProperty("specificHosts", false)
+                                                .addProperty("instanceCount", 1)
+                                                .build())
+                                   .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).withName("Disable Service").build());
 

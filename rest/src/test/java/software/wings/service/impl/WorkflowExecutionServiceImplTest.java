@@ -17,15 +17,16 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
-import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -59,6 +60,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowOrchestrationType;
 import software.wings.beans.WorkflowPhase;
@@ -2457,15 +2459,19 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .build());
     serviceTemplate.setService(service);
 
+    SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+
     wingsPersistence.saveAndGet(InfrastructureMapping.class,
         PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
             .withAppId(app.getUuid())
             .withEnvId(env.getUuid())
+            .withHostnames(Lists.newArrayList("host1"))
             .withServiceTemplateId(serviceTemplate.getUuid())
-            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withComputeProviderSettingId(computeProvider.getUuid())
             .build());
 
-    triggerOrchestrationWorkflow(app.getAppId(), env, service);
+    triggerOrchestrationWorkflow(app.getAppId(), env, service, computeProvider);
   }
 
   /**
@@ -2474,12 +2480,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @param appId the app id
    * @param env   the env
    * @param service
+   * @param computeProvider
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerOrchestrationWorkflow(String appId, Environment env, Service service)
-      throws InterruptedException {
-    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId, env, service);
+  public String triggerOrchestrationWorkflow(
+      String appId, Environment env, Service service, SettingAttribute computeProvider) throws InterruptedException {
+    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId, env, service, computeProvider);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     String signalId = UUIDGenerator.getUuid();
@@ -2502,7 +2509,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return executionId;
   }
 
-  private OrchestrationWorkflow createOrchestrationWorkflow(String appId, Environment env, Service service) {
+  private OrchestrationWorkflow createOrchestrationWorkflow(
+      String appId, Environment env, Service service, SettingAttribute computeProvider) {
     OrchestrationWorkflow orchestrationWorkflow =
         anOrchestrationWorkflow()
             .withAppId(appId)
@@ -2511,7 +2519,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
-                                   .withComputeProviderId(COMPUTE_PROVIDER_ID)
+                                   .withComputeProviderId(computeProvider.getUuid())
                                    .withServiceId(service.getUuid())
                                    .withDeploymentType(SSH)
                                    .build())
