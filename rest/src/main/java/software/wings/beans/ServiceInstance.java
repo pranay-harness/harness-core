@@ -19,9 +19,8 @@ import java.util.Objects;
  * The Class ServiceInstance.
  */
 @Entity(value = "serviceInstance", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("appId")
-                           , @Field("envId"), @Field("hostName"), @Field("serviceTemplate") },
-    options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("hostName")
+                           , @Field("infraMappingId") }, options = @IndexOptions(unique = true)))
 public class ServiceInstance extends Base {
   @Indexed private String envId;
 

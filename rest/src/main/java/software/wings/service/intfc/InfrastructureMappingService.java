@@ -111,8 +111,9 @@ public interface InfrastructureMappingService {
    * @param envId              the env id
    * @param computeProviderId  the compute provider id
    * @param launcherConfigName the launcher config name
+   * @param instanceCount
    * @return the list
    */
-  List<ServiceInstance> provisionNodes(
-      String appId, String serviceId, String envId, String computeProviderId, String launcherConfigName);
+  List<ServiceInstance> provisionNodes(String appId, String serviceId, String envId, String computeProviderId,
+      String launcherConfigName, int instanceCount);
 }

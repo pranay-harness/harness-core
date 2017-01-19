@@ -203,7 +203,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     AwsInfrastructureProvider awsInfrastructureProvider =
         (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
     List<Host> hosts = awsInfrastructureProvider.listHosts(computeProviderSetting, new PageRequest<>()).getResponse();
-    List<Host> savedHosts = hosts.stream()
+    saveHostsAndUpdateServiceInstances(
+        appId, envId, serviceTemplateId, infrastructureMapping, awsInfrastructureProvider, hosts, Arrays.asList());
+  }
+
+  private void saveHostsAndUpdateServiceInstances(String appId, String envId, String serviceTemplateId,
+      InfrastructureMapping infrastructureMapping, AwsInfrastructureProvider awsInfrastructureProvider,
+      List<Host> newHosts, List<String> deletedHostNames) {
+    List<Host> savedHosts = newHosts.stream()
                                 .map(host -> {
                                   host.setAppId(appId);
                                   host.setEnvId(envId);
@@ -215,7 +222,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                 .collect(Collectors.toList());
 
     ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts, Arrays.asList());
+    serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts, deletedHostNames);
   }
 
   private List<ServiceInstance> selectServiceInstancesByInfraMapping(
@@ -227,12 +234,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     boolean specificHosts =
         selectionParams.containsKey("specificHosts") && (boolean) selectionParams.get("specificHosts");
+    String instanceCount = selectionParams.containsKey("instanceCount")
+        ? Integer.toString((int) selectionParams.get("instanceCount"))
+        : PageRequest.UNLIMITED;
+
     if (specificHosts) {
       List<String> hostNames = (List<String>) selectionParams.get("hostNames");
       requestBuilder.addFilter("hostName", Operator.IN, hostNames.toArray());
     } else {
-      int instanceCount = (int) selectionParams.get("instanceCount");
-      requestBuilder.withLimit(Integer.toString(instanceCount));
+      requestBuilder.withLimit(instanceCount);
     }
 
     return serviceInstanceService.list(requestBuilder.build()).getResponse();
@@ -296,8 +306,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<ServiceInstance> provisionNodes(
-      String appId, String serviceId, String envId, String computeProviderId, String launcherConfigName) {
+  public List<ServiceInstance> provisionNodes(String appId, String serviceId, String envId, String computeProviderId,
+      String launcherConfigName, int instanceCount) {
     String serviceTemplateId =
         (String) serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
 
@@ -312,17 +322,23 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .equal(computeProviderId)
                                                       .get();
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
     if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
       Validator.notNullCheck("ComputeProvider", computeProviderSetting);
 
-      if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-        // syncAwsHostsAndUpdateInstances(appId, envId, serviceTemplateId, infrastructureMapping,
-        // computeProviderSetting); // TODO:: instead of on-demand do it periodically?
-        return null;
-      }
-      return selectServiceInstancesByInfraMapping(appId, serviceTemplateId, infrastructureMapping.getUuid(), null);
+      AwsInfrastructureProvider awsInfrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(
+              infrastructureMapping.getComputeProviderType());
 
+      List<Host> hosts =
+          awsInfrastructureProvider.provisionHosts(computeProviderSetting, launcherConfigName, instanceCount);
+      saveHostsAndUpdateServiceInstances(
+          appId, envId, serviceTemplateId, infrastructureMapping, awsInfrastructureProvider, hosts, Arrays.asList());
+
+      return selectServiceInstancesByInfraMapping(appId, serviceTemplateId, infrastructureMapping.getUuid(),
+          ImmutableMap.of(
+              "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
     } else {
       throw new WingsException(
           ErrorCodes.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infra mapping");

@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
@@ -43,10 +45,12 @@ public class AwsNodeProvisionState extends State {
 
     logger.info("serviceId : {}, computeProviderId: {}", serviceId, computeProviderId);
 
-    List<ServiceInstance> serviceInstances =
-        infrastructureMappingService.provisionNodes(appId, serviceId, envId, computeProviderId, launcherConfigName);
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(
+        appId, serviceId, envId, computeProviderId, launcherConfigName, instanceCount);
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-    return new ExecutionResponse();
+    return anExecutionResponse()
+        .addElement(aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build())
+        .build();
   }
 
   @Override
