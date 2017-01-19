@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static software.wings.api.PhaseStepSubWorkflowExecutionData.PhaseStepSubWorkflowExecutionDataBuilder.aPhaseStepSubWorkflowExecutionData;
+
 import software.wings.beans.FailureStrategy;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ElementNotifyResponseData;
@@ -23,6 +25,17 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
+
+  @Override
+  public ExecutionResponse execute(ExecutionContext contextIntf) {
+    ExecutionResponse response = super.execute(contextIntf);
+    response.setStateExecutionData(aPhaseStepSubWorkflowExecutionData()
+                                       .withStepsInParallel(stepsInParallel)
+                                       .withDefaultFailureStrategy(defaultFailureStrategy)
+                                       .withFailureStrategies(failureStrategies)
+                                       .build());
+    return response;
+  }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
