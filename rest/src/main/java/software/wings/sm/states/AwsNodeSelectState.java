@@ -31,10 +31,10 @@ public class AwsNodeSelectState extends State {
   private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
 
-  @Attributes(title = "Select specific hosts") private boolean specificHosts;
+  @Attributes(title = "Select specific hosts?") private boolean specificHosts;
   private List<String> hostNames;
 
-  @Attributes(title = "Provision Node") private boolean provisionNode;
+  @Attributes(title = "Provision Nodes?") private boolean provisionNode;
   @Attributes(title = "Host specification (Launch Configuration Name)") private String launcherConfigName;
 
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;

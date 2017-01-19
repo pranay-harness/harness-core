@@ -30,7 +30,7 @@ public class DcNodeSelectState extends State {
   private String serviceId;
   private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
-  @Attributes(title = "Select specific hosts") private boolean specificHosts;
+  @Attributes(title = "Select specific hosts?") private boolean specificHosts;
   private List<String> hostNames;
 
   @Inject private InfrastructureMappingService infrastructureMappingService;
