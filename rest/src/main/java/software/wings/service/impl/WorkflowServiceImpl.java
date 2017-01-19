@@ -589,11 +589,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase, params));
     }
     orchestrationWorkflow = wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
-    if (orchestrationWorkflow.getGraph() != null) {
-      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
-      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    }
 
+    updateStateMachine(orchestrationWorkflow.getAppId(), orchestrationWorkflow.getUuid());
     return orchestrationWorkflow;
   }
 
@@ -620,11 +617,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
 
-    if (orchestrationWorkflow.getGraph() != null) {
-      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
-      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    }
-
+    updateStateMachine(appId, orchestrationWorkflowId);
     return phaseStep;
   }
 
@@ -639,10 +632,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, map);
 
-    if (orchestrationWorkflow.getGraph() != null) {
-      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
-      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    }
+    updateStateMachine(appId, orchestrationWorkflowId);
+
     return phaseStep;
   }
 
@@ -681,13 +672,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     wingsPersistence.update(query, updateOps);
 
-    orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    updateStateMachine(appId, orchestrationWorkflowId);
+    return workflowPhase;
+  }
+
+  private void updateStateMachine(String appId, String orchestrationWorkflowId) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
     if (orchestrationWorkflow.getGraph() != null) {
       StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
       wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
     }
-
-    return workflowPhase;
   }
 
   private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase) {
@@ -750,6 +744,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     wingsPersistence.update(query, updateOps);
 
+    updateStateMachine(appId, orchestrationWorkflowId);
     return workflowPhase;
   }
 
@@ -786,6 +781,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     wingsPersistence.update(query, updateOps);
+
+    updateStateMachine(appId, orchestrationWorkflowId);
   }
 
   @Override
@@ -816,6 +813,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       return node;
     }
+
+    updateStateMachine(appId, orchestrationWorkflowId);
     return null;
   }
 

@@ -2538,7 +2538,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .collect(Collectors.toList())
                                     .get(0);
 
-    deployPhaseStep.getSteps().add(aNode().withType("HTTP").addProperty("url", "www.google.com").build());
+    deployPhaseStep.getSteps().add(
+        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
 
     workflowService.updateWorkflowPhase(
         orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
