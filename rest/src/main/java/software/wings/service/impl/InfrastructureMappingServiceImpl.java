@@ -214,7 +214,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                 .map(host -> {
                                   host.setAppId(appId);
                                   host.setEnvId(envId);
-                                  host.setHostConnAttr(infrastructureMapping.getComputeProviderSettingId());
+                                  host.setHostConnAttr(infrastructureMapping.getHostConnectionAttrs());
                                   host.setInfraMappingId(infrastructureMapping.getUuid());
                                   host.setServiceTemplateId(serviceTemplateId);
                                   return awsInfrastructureProvider.saveHost(host);

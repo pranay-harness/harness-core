@@ -60,7 +60,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                               .map(instance
                                   -> anAwsHost()
                                          .withAppId(Base.GLOBAL_APP_ID)
-                                         .withHostName(instance.getPrivateDnsName())
+                                         .withHostName(instance.getPublicDnsName())
                                          .withInstance(instance)
                                          .build())
                               .collect(Collectors.toList());
@@ -114,11 +114,17 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         "Provisioned hosts count = {} and provisioned hosts instance ids = {}", instancesIds.size(), instancesIds);
 
     waitForAllInstancesToBeReady(amazonEc2Client, instancesIds);
-    return instances.stream()
+    logger.info("All instances are in running state");
+    Misc.quietSleep(SLEEP_INTERVAL * 12);
+
+    return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instancesIds))
+        .getReservations()
+        .stream()
+        .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
             -> anAwsHost()
                    .withAppId(Base.GLOBAL_APP_ID)
-                   .withHostName(instance.getPrivateDnsName())
+                   .withHostName(instance.getPublicDnsName())
                    .withInstance(instance)
                    .build())
         .collect(Collectors.toList());

@@ -17,7 +17,7 @@ public class SshSessionConfig {
   @NotEmpty private ExecutorType executorType;
   @NotEmpty private String executionId;
   @NotEmpty private String commandUnitName;
-  private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(5);
+  private Integer socketConnectTimeout = (int) TimeUnit.MINUTES.toMillis(5);
   private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
   private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
   private Integer retryInterval;
