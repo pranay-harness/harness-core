@@ -12,9 +12,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.InstanceExecutionHistory.InstanceExecutionHistoryBuilder.anInstanceExecutionHistory;
 import static software.wings.beans.StatusInstanceBreakdown.StatusInstanceBreakdownBuilder.aStatusInstanceBreakdown;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ContextElementType.INSTANCE;
-import static software.wings.sm.ContextElementType.SERVICE;
-import static software.wings.sm.ContextElementType.SERVICE_TEMPLATE;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -23,6 +20,7 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseSubWorkflowExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
@@ -69,6 +67,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -877,37 +876,61 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (pageResponse == null || pageResponse.isEmpty()) {
       return;
     }
-
+    List<ElementExecutionSummary> serviceExecutionSummary = new ArrayList<>();
     List<StateExecutionInstance> topInstances = pageResponse.getResponse();
 
-    List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(topInstances);
-    workflowExecution.setStatusInstanceBreakdownMap(getStatusInstanceBreakdownMap(instanceStatusSummary));
-    wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "statusInstanceBreakdownMap",
-        workflowExecution.getStatusInstanceBreakdownMap());
-
-    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
-    Map<String, ElementExecutionSummary> elementExecutionSummaryMap = new HashMap<>();
-
-    boolean svcRepeatFound = true;
-    StateExecutionInstance repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE);
-    if (repeatStateExecutionInstance == null) {
-      svcRepeatFound = false;
-      repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE_TEMPLATE);
-      if (repeatStateExecutionInstance == null) {
-        repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, INSTANCE);
+    for (StateExecutionInstance stateExecutionInstance : topInstances) {
+      if (stateExecutionInstance.getStateType().equals("PHASE")) {
+        StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+        if (stateExecutionData != null && stateExecutionData instanceof PhaseSubWorkflowExecutionData) {
+          PhaseSubWorkflowExecutionData phaseSubWorkflowExecutionData =
+              (PhaseSubWorkflowExecutionData) stateExecutionData;
+          String serviceId = phaseSubWorkflowExecutionData.getServiceId();
+          Service service = serviceResourceService.get(stateExecutionInstance.getAppId(), serviceId);
+          ServiceElement serviceElement =
+              ServiceElement.Builder.aServiceElement().withUuid(serviceId).withName(service.getName()).build();
+          serviceExecutionSummary.add(anElementExecutionSummary()
+                                          .withContextElement(serviceElement)
+                                          .withStartTs(stateExecutionData.getStartTs())
+                                          .withEndTs(stateExecutionData.getEndTs())
+                                          .withInstancesCount(0)
+                                          .build());
+        }
       }
     }
-    if (repeatStateExecutionInstance != null) {
-      List<ElementExecutionSummary> serviceExecutionSummary = getServiceExecutionSummaries(
-          workflowExecution, repeatStateExecutionInstance, elementExecutionSummaries, elementExecutionSummaryMap);
 
-      if (svcRepeatFound) {
-        handleQueuedServices(repeatStateExecutionInstance, serviceExecutionSummary);
-      }
+    workflowExecution.setServiceExecutionSummaries(serviceExecutionSummary);
 
-      workflowExecution.setServiceExecutionSummaries(serviceExecutionSummary);
-    }
-
+    //    List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(topInstances);
+    //    workflowExecution.setStatusInstanceBreakdownMap(getStatusInstanceBreakdownMap(instanceStatusSummary));
+    //    wingsPersistence
+    //        .updateField(WorkflowExecution.class, workflowExecution.getUuid(), "statusInstanceBreakdownMap",
+    //        workflowExecution.getStatusInstanceBreakdownMap());
+    //
+    //    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
+    //    Map<String, ElementExecutionSummary> elementExecutionSummaryMap = new HashMap<>();
+    //
+    //    boolean svcRepeatFound = true;
+    //    StateExecutionInstance repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE);
+    //    if (repeatStateExecutionInstance == null) {
+    //      svcRepeatFound = false;
+    //      repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE_TEMPLATE);
+    //      if (repeatStateExecutionInstance == null) {
+    //        repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, INSTANCE);
+    //      }
+    //    }
+    //    if (repeatStateExecutionInstance != null) {
+    //      List<ElementExecutionSummary> serviceExecutionSummary =
+    //          getServiceExecutionSummaries(workflowExecution, repeatStateExecutionInstance, elementExecutionSummaries,
+    //          elementExecutionSummaryMap);
+    //
+    //      if (svcRepeatFound) {
+    //        handleQueuedServices(repeatStateExecutionInstance, serviceExecutionSummary);
+    //      }
+    //
+    //      workflowExecution.setServiceExecutionSummaries(serviceExecutionSummary);
+    //    }
+    //
     if (workflowExecution.getServiceExecutionSummaries() != null
         && (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
                || workflowExecution.getStatus() == ExecutionStatus.FAILED
@@ -956,6 +979,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (pageResponse == null || pageResponse.isEmpty()) {
       return null;
     }
+
     List<StateExecutionInstance> contextTransitionInstances = new ArrayList<>();
     Map<String, StateExecutionInstance> prevInstanceIdMap = new HashMap<>();
     pageResponse.forEach(stateExecutionInstance -> {
