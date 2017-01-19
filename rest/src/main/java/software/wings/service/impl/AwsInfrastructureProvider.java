@@ -10,6 +10,7 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
@@ -26,6 +27,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.Misc;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -49,7 +51,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     AmazonEC2Client amazonEC2Client =
         awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances();
+    DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
+        new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
 
     List<Host> awsHosts = describeInstancesResult.getReservations()
                               .stream()

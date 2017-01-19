@@ -32,7 +32,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -56,7 +55,6 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EnvironmentService environmentService;
-  @Inject private HostService hostService;
   @Inject private SettingsService settingsService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
