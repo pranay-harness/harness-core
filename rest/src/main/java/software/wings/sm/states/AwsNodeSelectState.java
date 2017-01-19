@@ -7,6 +7,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.common.collect.ImmutableMap;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceInstance;
@@ -29,10 +30,14 @@ public class AwsNodeSelectState extends State {
   private String serviceId;
   private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
+
   @Attributes(title = "Select specific hosts") private boolean specificHosts;
   private List<String> hostNames;
 
-  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Attributes(title = "provision node") private boolean provisionNode;
+  @Attributes(title = "Host specification (Launch Configuration Name") private String launcherConfigName;
+
+  @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
   /**
    * Instantiates a new Aws node select state.
@@ -51,12 +56,18 @@ public class AwsNodeSelectState extends State {
     logger.info("serviceId : {}, computeProviderId: {}", serviceId, computeProviderId);
 
     List<ServiceInstance> serviceInstances;
-    if (specificHosts) {
-      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
-          ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
+
+    if (provisionNode) {
+      serviceInstances = infrastructureMappingService.provisionNodes(
+          appId, serviceId, envId, computeProviderId, launcherConfigName, instanceCount);
     } else {
-      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
-          ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
+      if (specificHosts) {
+        serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId,
+            computeProviderId, ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
+      } else {
+        serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId,
+            computeProviderId, ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
+      }
     }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
     return anExecutionResponse()
@@ -155,5 +166,41 @@ public class AwsNodeSelectState extends State {
    */
   public void setHostNames(List<String> hostNames) {
     this.hostNames = hostNames;
+  }
+
+  /**
+   * Is provision node boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isProvisionNode() {
+    return provisionNode;
+  }
+
+  /**
+   * Sets provision node.
+   *
+   * @param provisionNode the provision node
+   */
+  public void setProvisionNode(boolean provisionNode) {
+    this.provisionNode = provisionNode;
+  }
+
+  /**
+   * Gets launcher config name.
+   *
+   * @return the launcher config name
+   */
+  public String getLauncherConfigName() {
+    return launcherConfigName;
+  }
+
+  /**
+   * Sets launcher config name.
+   *
+   * @param launcherConfigName the launcher config name
+   */
+  public void setLauncherConfigName(String launcherConfigName) {
+    this.launcherConfigName = launcherConfigName;
   }
 }

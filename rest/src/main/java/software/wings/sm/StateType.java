@@ -22,7 +22,6 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactState;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
-import software.wings.sm.states.AwsNodeProvisionState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
@@ -136,11 +135,6 @@ public enum StateType implements StateTypeDescriptor {
    * Jenkins state type.
    */
   JENKINS(JenkinsState.class, VERIFICATIONS, ORCHESTRATION_STENCILS),
-
-  /**
-   * AWS Node Provision state.
-   */
-  AWS_NODE_PROVISION(AwsNodeProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.

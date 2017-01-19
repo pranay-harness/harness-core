@@ -21,7 +21,6 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.StateType.AWS_NODE_PROVISION;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.FORK;
@@ -733,7 +732,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     StateType stateType =
         determineStateType(appId, envId, workflowPhase.getServiceId(), workflowPhase.getComputeProviderId());
 
-    if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT, AWS_NODE_PROVISION).contains(stateType)) {
+    if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
     }
 
