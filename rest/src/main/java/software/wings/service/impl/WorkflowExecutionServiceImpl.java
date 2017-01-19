@@ -743,7 +743,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowType is null");
     }
 
-    if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+    if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION
+        || executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
       logger.debug("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
@@ -763,7 +764,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }
-      return new RequiredExecutionArgs();
+
+      RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
+      requiredExecutionArgs.setEntityTypes(orchestration.getRequiredEntityTypes());
+      return requiredExecutionArgs;
       // return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
 
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {

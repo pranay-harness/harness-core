@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by rishi on 12/21/16.
@@ -38,6 +39,8 @@ public class OrchestrationWorkflow extends Workflow {
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   private String environmentId;
+
+  private Set<EntityType> requiredEntityTypes;
 
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
     return workflowOrchestrationType;
@@ -154,6 +157,14 @@ public class OrchestrationWorkflow extends Workflow {
 
   public void setEnvironmentId(String environmentId) {
     this.environmentId = environmentId;
+  }
+
+  public Set<EntityType> getRequiredEntityTypes() {
+    return requiredEntityTypes;
+  }
+
+  public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
+    this.requiredEntityTypes = requiredEntityTypes;
   }
 
   public Map<String, Object> params() {

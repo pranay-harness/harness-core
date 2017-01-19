@@ -119,7 +119,7 @@ public class CommandState extends State {
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
 
-  @Inject private transient WaitNotifyEngine waitNotifyEngine;
+  @Inject @Transient private transient WaitNotifyEngine waitNotifyEngine;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateDataProvider.class)

@@ -63,6 +63,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -71,6 +72,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
@@ -88,10 +90,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -127,6 +131,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -682,6 +687,44 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
       wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
     }
+    updateRequiredEntities(orchestrationWorkflow);
+  }
+
+  private void updateRequiredEntities(OrchestrationWorkflow orchestrationWorkflow) {
+    Set<EntityType> requiredEntityTypes = new HashSet<>();
+
+    if (orchestrationWorkflow != null && orchestrationWorkflow.getWorkflowPhases() != null) {
+      for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
+        requiredEntityTypes.addAll(getRequiredEntityTypes(orchestrationWorkflow.getAppId(), workflowPhase));
+      }
+    }
+    updateOrchestrationWorkflowField(
+        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getUuid(), "requiredEntityTypes", requiredEntityTypes);
+  }
+
+  private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
+    Set<EntityType> requiredEntityTypes = new HashSet<>();
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
+      return requiredEntityTypes;
+    }
+    String serviceId = workflowPhase.getServiceId();
+
+    for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+      if (phaseStep.getSteps() == null) {
+        continue;
+      }
+      for (Node step : phaseStep.getSteps()) {
+        if ("COMMAND".equals(step.getType())) {
+          ServiceCommand command = serviceResourceService.getCommandByName(
+              appId, serviceId, (String) step.getProperties().get("commandName"));
+          if (command.getCommand().isArtifactNeeded()) {
+            requiredEntityTypes.add(EntityType.ARTIFACT);
+            return requiredEntityTypes;
+          }
+        }
+      }
+    }
+    return requiredEntityTypes;
   }
 
   private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase) {
