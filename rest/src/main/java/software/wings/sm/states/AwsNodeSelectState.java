@@ -35,7 +35,7 @@ public class AwsNodeSelectState extends State {
   private List<String> hostNames;
 
   @Attributes(title = "provision node") private boolean provisionNode;
-  @Attributes(title = "Host specification (Launch Configuration Name") private String launcherConfigName;
+  @Attributes(title = "Host specification (Launch Configuration Name)") private String launcherConfigName;
 
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
