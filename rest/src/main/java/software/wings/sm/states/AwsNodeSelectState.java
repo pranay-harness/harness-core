@@ -1,6 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -57,7 +59,9 @@ public class AwsNodeSelectState extends State {
           ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
     }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
-    return new ExecutionResponse();
+    return anExecutionResponse()
+        .addElement(aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build())
+        .build();
   }
 
   @Override

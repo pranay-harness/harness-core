@@ -178,4 +178,50 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
 
     System.out.println(awsInfrastructureMapping.toString());
   }
+
+  @Test
+  public void shouldProvisionAwsNodes() {
+    List<Key<ServiceTemplate>> templateRefKeysByService =
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), environment.getUuid());
+    String serviceTemplateId = (String) templateRefKeysByService.get(0).getId();
+
+    SettingAttribute hostConnectionAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute()
+            .withAppId(app.getUuid())
+            .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                           .withAccessType(AccessType.KEY)
+                           .withConnectionType(ConnectionType.SSH)
+                           .withKey("wingsKey")
+                           .build())
+            .build());
+    SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute()
+            .withAppId(app.getUuid())
+            .withValue(anAwsConfig()
+                           .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
+                           .withSecretKey("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")
+                           .build())
+            .build());
+
+    AwsInfrastructureMapping awsInfrastructureMapping =
+        anAwsInfrastructureMapping()
+            .withAppId(app.getUuid())
+            .withEnvId(environment.getUuid())
+            .withServiceTemplateId(serviceTemplateId)
+            .withComputeProviderSettingId(computeProviderSetting.getUuid())
+            .withHostConnectionAttrs(hostConnectionAttr.getUuid())
+            .build();
+
+    awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
+
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(app.getUuid(),
+        service.getUuid(), environment.getUuid(), computeProviderSetting.getUuid(), "DemoTargetHosts", 5);
+
+    System.out.println(serviceInstances.size());
+    serviceInstances = infrastructureMappingService.selectServiceInstances(
+        app.getUuid(), service.getUuid(), environment.getUuid(), computeProviderSetting.getUuid(), ImmutableMap.of());
+    System.out.println(serviceInstances.size());
+
+    System.out.println(awsInfrastructureMapping.toString());
+  }
 }
