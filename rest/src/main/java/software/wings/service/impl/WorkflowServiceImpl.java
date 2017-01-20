@@ -5,7 +5,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -17,7 +16,6 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -60,6 +58,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
@@ -75,7 +74,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -552,20 +550,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       populateOrchestrationWorkflow(orchestrationWorkflow);
 
       if (previousExecutionsCount != null && previousExecutionsCount > 0) {
-        // TODO - integrate the actual call
+        PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+            aPageRequest()
+                .withLimit(previousExecutionsCount.toString())
+                .addFilter("workflowId", EQ, orchestrationWorkflow.getUuid())
+                .build();
 
-        orchestrationWorkflow.setWorkflowExecutions(newArrayList(aWorkflowExecution()
-                                                                     .withStatus(ExecutionStatus.SUCCESS)
-                                                                     .withEnvName("Production")
-                                                                     .withStartTs(System.currentTimeMillis())
-                                                                     .withEndTs(System.currentTimeMillis() - 652)
-                                                                     .build(),
-            aWorkflowExecution()
-                .withStatus(ExecutionStatus.SUCCESS)
-                .withEnvName("Production")
-                .withStartTs(System.currentTimeMillis() - 200)
-                .withEndTs(System.currentTimeMillis() - 1123)
-                .build()));
+        orchestrationWorkflow.setWorkflowExecutions(
+            workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false).getResponse());
       }
     }
 
