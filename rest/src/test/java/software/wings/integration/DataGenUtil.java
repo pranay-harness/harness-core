@@ -653,7 +653,7 @@ private List<Environment> addEnvs(String appId) throws IOException {
     assertThat(response.getResource()).isInstanceOf(Environment.class);
     environments.add(response.getResource());
   }
-  environments.forEach(this ::addHostsToEnv);
+  // environments.forEach(this::addHostsToEnv);
   return environments;
 }
 

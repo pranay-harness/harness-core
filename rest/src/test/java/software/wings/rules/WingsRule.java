@@ -136,6 +136,16 @@ public class WingsRule implements MethodRule {
       mongodExecutable = starter.prepare(mongodConfig);
       mongodExecutable.start();
       mongoClient = new MongoClient("localhost", port);
+    } else if (annotations.stream()
+                   .filter(annotation -> Integration.class.isInstance(annotation))
+                   .findFirst()
+                   .isPresent()) {
+      try {
+        port = Integer.parseInt(System.getProperty("mongoPort", "27017"));
+      } catch (NumberFormatException ex) {
+        port = 27017;
+      }
+      mongoClient = new MongoClient("localhost", port);
     } else {
       mongoServer = new MongoServer(new MemoryBackend());
       mongoServer.bind("localhost", port);
