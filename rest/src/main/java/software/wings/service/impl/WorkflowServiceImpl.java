@@ -57,6 +57,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
@@ -95,6 +96,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -541,11 +543,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
       PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount) {
     PageResponse<OrchestrationWorkflow> pageResponse = wingsPersistence.query(OrchestrationWorkflow.class, pageRequest);
-    if (previousExecutionsCount != null && previousExecutionsCount > 0 && pageResponse.size() > 0) {
-      // TODO - integrate the actual call
 
-      for (OrchestrationWorkflow orchestrationWorkflow : pageResponse) {
-        populatePhaseSteps(orchestrationWorkflow);
+    if (pageResponse == null || pageResponse.size() == 0) {
+      return pageResponse;
+    }
+
+    for (OrchestrationWorkflow orchestrationWorkflow : pageResponse) {
+      populateOrchestrationWorkflow(orchestrationWorkflow);
+
+      if (previousExecutionsCount != null && previousExecutionsCount > 0) {
+        // TODO - integrate the actual call
+
         orchestrationWorkflow.setWorkflowExecutions(newArrayList(aWorkflowExecution()
                                                                      .withStatus(ExecutionStatus.SUCCESS)
                                                                      .withEnvName("Production")
@@ -560,6 +568,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 .build()));
       }
     }
+
     return pageResponse;
   }
 
@@ -567,8 +576,30 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId) {
     OrchestrationWorkflow orchestrationWorkflow =
         wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationWorkflowId);
-    populatePhaseSteps(orchestrationWorkflow);
+    populateOrchestrationWorkflow(orchestrationWorkflow);
     return orchestrationWorkflow;
+  }
+
+  private void populateOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow == null) {
+      return;
+    }
+    populateServices(orchestrationWorkflow);
+    populatePhaseSteps(orchestrationWorkflow);
+  }
+  private void populateServices(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow.getWorkflowPhaseIdMap() == null) {
+      return;
+    }
+    List<Service> services = new ArrayList<>();
+    Set<String> serviceIds = orchestrationWorkflow.getWorkflowPhaseIdMap()
+                                 .values()
+                                 .stream()
+                                 .map(WorkflowPhase::getServiceId)
+                                 .collect(Collectors.toSet());
+    serviceIds.forEach(
+        serviceId -> { services.add(serviceResourceService.get(orchestrationWorkflow.getAppId(), serviceId, false)); });
+    orchestrationWorkflow.setServices(services);
   }
 
   private void populatePhaseSteps(OrchestrationWorkflow orchestrationWorkflow) {

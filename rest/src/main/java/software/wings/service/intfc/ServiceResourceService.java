@@ -51,6 +51,8 @@ public interface ServiceResourceService {
    */
   Service get(@NotEmpty String appId, @NotEmpty String serviceId);
 
+  Service get(String appId, String serviceId, boolean includeDetails);
+
   /**
    * Exist boolean.
    *
