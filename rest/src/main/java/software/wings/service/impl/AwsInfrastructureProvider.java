@@ -115,7 +115,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     waitForAllInstancesToBeReady(amazonEc2Client, instancesIds);
     logger.info("All instances are in running state");
-    Misc.quietSleep(SLEEP_INTERVAL * 12);
 
     return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instancesIds))
         .getReservations()

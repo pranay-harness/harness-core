@@ -20,6 +20,8 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
 import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
@@ -41,6 +43,8 @@ public class DatabaseModule extends AbstractModule {
   private DistributedLockSvc distributedLockSvc;
 
   private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Creates a guice module for portal app.
@@ -93,7 +97,8 @@ public class DatabaseModule extends AbstractModule {
         indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
           BasicDBObject keys = new BasicDBObject();
           Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
-          this.primaryDatastore.getCollection(mc.getClazz()).createIndex(keys, null, index.options().unique());
+          this.primaryDatastore.getCollection(mc.getClazz())
+              .createIndex(keys, null, index.unique() || index.options().unique());
         });
       }
 
@@ -103,9 +108,11 @@ public class DatabaseModule extends AbstractModule {
           final Indexed indexed = mf.getAnnotation(Indexed.class);
           try {
             this.primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
+                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
+                    indexed.unique() || indexed.options().unique());
           } catch (MongoCommandException mex) {
-            System.out.println(mex);
+            logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+            throw mex;
           }
         }
       }
