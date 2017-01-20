@@ -9,17 +9,24 @@ import com.google.inject.name.Names;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.ReadPref;
 import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +57,7 @@ public class DatabaseModule extends AbstractModule {
     }
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setMapSubPackages(true);
     MongoClient mongoClient = new MongoClient(serverAddresses);
     this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     distributedLockSvc = new ManagedDistributedLockSvc(
@@ -57,21 +65,51 @@ public class DatabaseModule extends AbstractModule {
             .getLockSvc());
 
     if (hosts.size() > 1) {
-      mongoClient = new MongoClient(serverAddresses);
-      mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
+      mongoClient = new MongoClient(
+          serverAddresses, MongoClientOptions.builder().readPreference(ReadPreference.secondaryPreferred()).build());
       this.secondaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     } else {
       this.secondaryDatastore = primaryDatastore;
     }
 
     morphia.mapPackage("software.wings");
-    this.primaryDatastore.ensureIndexes();
-    if (hosts.size() > 1) {
-      this.secondaryDatastore.ensureIndexes();
-    }
+    ensureIndex(morphia);
 
     datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
+  }
+
+  private void ensureIndex(Morphia morphia) {
+    /*
+    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+    There is no way to override this behavior.
+    https://github.com/mongodb/morphia/issues/706
+     */
+
+    // Read Entity level "Indexes" annotation
+    morphia.getMapper().getMappedClasses().forEach(mc -> {
+      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+      if (indexesAnnotations != null) {
+        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+          BasicDBObject keys = new BasicDBObject();
+          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+          this.primaryDatastore.getCollection(mc.getClazz()).createIndex(keys, null, index.options().unique());
+        });
+      }
+
+      // Read field level "Indexed" annotation
+      for (final MappedField mf : mc.getPersistenceFields()) {
+        if (mf.hasAnnotation(Indexed.class)) {
+          final Indexed indexed = mf.getAnnotation(Indexed.class);
+          try {
+            this.primaryDatastore.getCollection(mc.getClazz())
+                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
+          } catch (MongoCommandException mex) {
+            System.out.println(mex);
+          }
+        }
+      }
+    });
   }
 
   /**
