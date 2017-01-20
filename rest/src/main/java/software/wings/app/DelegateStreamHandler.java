@@ -17,8 +17,6 @@ import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
@@ -36,18 +34,15 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 8/15/16.
  */
-@AtmosphereHandlerService(path = "/stream/ui/{channel}", interceptors = {AtmosphereResourceLifecycleInterceptor.class},
-    broadcasterCache = UUIDBroadcasterCache.class)
-public class UiStreamHandler extends AtmosphereHandlerAdapter {
-  private static final Logger logger = LoggerFactory.getLogger(UiStreamHandler.class);
-
+@AtmosphereHandlerService(path = "/stream/delegate/{accountId}",
+    interceptors = {AtmosphereResourceLifecycleInterceptor.class}, broadcasterCache = UUIDBroadcasterCache.class)
+public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   @Inject private AuthService authService;
 
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
     AtmosphereRequest req = resource.getRequest();
-    logger.info("Broadcaster Id = " + resource.getBroadcaster().getID());
     if (req.getMethod().equals("GET")) {
       if (isBlank(req.getParameter("token"))) {
         sendError(resource, INVALID_TOKEN);

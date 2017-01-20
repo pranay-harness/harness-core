@@ -125,8 +125,8 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .buildValidatorFactory();
 
     CacheModule cacheModule = new CacheModule();
-    PushModule pushModule = new PushModule(environment, cacheModule.getHazelcastInstance());
-    Injector injector = Guice.createInjector(cacheModule, pushModule,
+    StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
+    Injector injector = Guice.createInjector(cacheModule, streamModule,
         new AbstractModule() {
           @Override
           protected void configure() {
@@ -136,7 +136,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
         new QueueModule(databaseModule.getPrimaryDatastore()));
 
-    pushModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
+    streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerResources(environment, injector);
 
