@@ -44,8 +44,8 @@ public class EventEmitterTest {
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, event);
-    verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts", event);
-    verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts/" + ARTIFACT_ID, event);
+    verify(metaBroadcaster).broadcastTo("/stream/ui/*/all/all/all/artifacts", event);
+    verify(metaBroadcaster).broadcastTo("/stream/ui/*/all/all/all/artifacts/" + ARTIFACT_ID, event);
   }
 
   /**
@@ -57,7 +57,7 @@ public class EventEmitterTest {
   public void shouldSendToGeneralChannelWhenIdisNull() throws Exception {
     Event event = anEvent().withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, event);
-    verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts", event);
+    verify(metaBroadcaster).broadcastTo("/stream/ui/*/all/all/all/artifacts", event);
     verifyNoMoreInteractions(metaBroadcaster);
   }
 
@@ -66,7 +66,7 @@ public class EventEmitterTest {
     when(appService.get(APP_ID)).thenReturn(anApplication().withAccountId("ACCOUNT_ID").withAppId(APP_ID).build());
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).withAppId(APP_ID).build();
     eventEmitter.send(Channel.ARTIFACTS, event);
-    verify(metaBroadcaster).broadcastTo("/stream/ACCOUNT_ID/APP_ID/all/all/artifacts", event);
-    verify(metaBroadcaster).broadcastTo("/stream/ACCOUNT_ID/APP_ID/all/all/artifacts/" + ARTIFACT_ID, event);
+    verify(metaBroadcaster).broadcastTo("/stream/ui/ACCOUNT_ID/APP_ID/all/all/artifacts", event);
+    verify(metaBroadcaster).broadcastTo("/stream/ui/ACCOUNT_ID/APP_ID/all/all/artifacts/" + ARTIFACT_ID, event);
   }
 }

@@ -40,12 +40,13 @@ public class EventEmitter {
       Application application = appService.get(event.getAppId());
       event.setOrgId(application.getAccountId());
     }
-    metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
-            + event.getServiceId() + "/" + channel.getChannelName(),
+    metaBroadcaster.broadcastTo("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId() + "/"
+            + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName(),
         event);
     if (isNotBlank(event.getUuid())) {
-      metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
-              + event.getServiceId() + "/" + channel.getChannelName() + "/" + event.getUuid(),
+      metaBroadcaster.broadcastTo("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId()
+              + "/" + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName() + "/"
+              + event.getUuid(),
           event);
     }
   }
@@ -57,26 +58,29 @@ public class EventEmitter {
     /**
      * Artifacts channel.
      */
-    ARTIFACTS("artifacts", "ARTIFACT:ALL"), /**
-                                             * Activities channel.
-                                             */
-    ACTIVITIES("activities", "ENVIRONMENT:ALL"),
+    ARTIFACTS("artifacts", "ui", "ARTIFACT:ALL"), /**
+                                                   * Activities channel.
+                                                   */
+    ACTIVITIES("activities", "ui", "ENVIRONMENT:ALL"),
 
-    DELEGATES("delegates", "");
+    DELEGATES("delegates", "ui", "");
 
     private String channelName;
     private String permission;
+    private String target;
     private PermissionScope scope = PermissionScope.APP;
 
-    Channel(String channelName, String permission) {
+    Channel(String channelName, String target, String permission) {
       this.channelName = channelName;
       this.permission = permission;
+      this.target = target;
     }
 
-    Channel(String channelName, String permission, PermissionScope scope) {
+    Channel(String channelName, String target, String permission, PermissionScope scope) {
       this.channelName = channelName;
       this.permission = permission;
       this.scope = scope;
+      this.target = target;
     }
 
     /**
@@ -128,6 +132,10 @@ public class EventEmitter {
      */
     public PermissionScope getScope() {
       return scope;
+    }
+
+    public String getTarget() {
+      return target;
     }
   }
 }

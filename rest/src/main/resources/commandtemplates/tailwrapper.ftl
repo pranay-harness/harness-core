@@ -124,6 +124,19 @@ TAIL_FILE_PATH=$(realpath "${tailPattern.filePath}")
 #touch file again to make sure it works.
 touch "$TAIL_FILE_PATH"
 
+if [ -e "$TAIL_FILE_PATH" ]
+then
+printf "File exists $TAIL_FILE_PATH"
+else
+sleep 30
+touch "$TAIL_FILE_PATH"
+if [ ! -e "$TAIL_FILE_PATH" ]
+then
+printf "File could not be created"
+exit 1
+fi
+fi
+
 #now tail the file
 tail -F -n0 "$TAIL_FILE_PATH" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
 pid${tailPattern?index}=$!

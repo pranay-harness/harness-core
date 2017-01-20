@@ -16,7 +16,7 @@ import javax.servlet.ServletRegistration.Dynamic;
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
-public class PushModule extends AbstractModule {
+public class StreamModule extends AbstractModule {
   private AtmosphereServlet atmosphereServlet;
   private MetaBroadcaster metaBroadcaster;
 
@@ -25,7 +25,7 @@ public class PushModule extends AbstractModule {
    *
    * @param environment the environment
    */
-  public PushModule(Environment environment, HazelcastInstance hazelcastInstance) {
+  public StreamModule(Environment environment, HazelcastInstance hazelcastInstance) {
     atmosphereServlet = new AtmosphereServlet();
 
     atmosphereServlet.framework()
@@ -35,7 +35,7 @@ public class PushModule extends AbstractModule {
     atmosphereServlet.framework().setDefaultBroadcasterClassName(HazelcastBroadcaster.class.getName());
 
     HazelcastBroadcaster.HAZELCAST_INSTANCE = hazelcastInstance;
-    Dynamic dynamic = environment.servlets().addServlet("UIPushServlet", atmosphereServlet);
+    Dynamic dynamic = environment.servlets().addServlet("StreamServlet", atmosphereServlet);
     dynamic.setAsyncSupported(true);
     dynamic.setLoadOnStartup(0);
     dynamic.addMapping("/stream/*");
