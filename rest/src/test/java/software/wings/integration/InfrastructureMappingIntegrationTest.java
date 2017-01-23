@@ -107,12 +107,12 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
             .withServiceTemplateId(serviceTemplateId)
             .withHostConnectionAttrs(hostConnectionAttr.getUuid())
             .withComputeProviderSettingId(computeProviderSetting.getUuid())
-            .withHostnames(Arrays.asList("host1", "host2"))
+            .withHostNames(Arrays.asList("host1", "host2"))
             .build();
     PhysicalInfrastructureMapping infrastructureMapping =
         (PhysicalInfrastructureMapping) infrastructureMappingService.save(physicalInfrastructureMapping);
 
-    assertThat(infrastructureMapping.getHostnames()).containsExactlyInAnyOrder("host1", "host2");
+    assertThat(infrastructureMapping.getHostNames()).containsExactlyInAnyOrder("host1", "host2");
     assertThat(serviceInstanceService.list(new PageRequest<>())
                    .getResponse()
                    .stream()

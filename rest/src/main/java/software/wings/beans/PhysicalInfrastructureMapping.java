@@ -11,7 +11,7 @@ import java.util.List;
  */
 @JsonTypeName("PHYSICAL_DATA_CENTER")
 public class PhysicalInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Host Names") private List<String> hostnames;
+  @Attributes(title = "Host Names") private List<String> hostNames;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -21,33 +21,39 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   }
 
   /**
-   * Gets hostnames.
+   * Gets hostNames.
    *
-   * @return the hostnames
+   * @return the hostNames
    */
-  public List<String> getHostnames() {
-    return hostnames;
+  public List<String> getHostNames() {
+    return hostNames;
   }
 
   /**
-   * Sets hostnames.
+   * Sets hostNames.
    *
-   * @param hostnames the hostnames
+   * @param hostNames the hostNames
    */
-  public void setHostnames(List<String> hostnames) {
-    this.hostnames = hostnames;
+  public void setHostNames(List<String> hostNames) {
+    this.hostNames = hostNames;
+  }
+
+  @Attributes(title = "Connection Type")
+  @Override
+  public String getHostConnectionAttrs() {
+    return super.getHostConnectionAttrs();
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
+    private List<String> hostNames;
     private String computeProviderSettingId;
-    private List<String> hostnames;
     private String envId;
     private String serviceTemplateId;
-    private String hostConnectionAttrs;
     private String computeProviderType;
+    private String hostConnectionAttrs;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -67,6 +73,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With host names builder.
+     *
+     * @param hostNames the host names
+     * @return the builder
+     */
+    public Builder withHostNames(List<String> hostNames) {
+      this.hostNames = hostNames;
+      return this;
+    }
+
+    /**
      * With compute provider setting id builder.
      *
      * @param computeProviderSettingId the compute provider setting id
@@ -74,17 +91,6 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withComputeProviderSettingId(String computeProviderSettingId) {
       this.computeProviderSettingId = computeProviderSettingId;
-      return this;
-    }
-
-    /**
-     * With hostnames builder.
-     *
-     * @param hostnames the hostnames
-     * @return the builder
-     */
-    public Builder withHostnames(List<String> hostnames) {
-      this.hostnames = hostnames;
       return this;
     }
 
@@ -111,17 +117,6 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With host connection attrs builder.
-     *
-     * @param hostConnectionAttrs the host connection attrs
-     * @return the builder
-     */
-    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
-      this.hostConnectionAttrs = hostConnectionAttrs;
-      return this;
-    }
-
-    /**
      * With compute provider type builder.
      *
      * @param computeProviderType the compute provider type
@@ -129,6 +124,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withComputeProviderType(String computeProviderType) {
       this.computeProviderType = computeProviderType;
+      return this;
+    }
+
+    /**
+     * With host connection attrs builder.
+     *
+     * @param hostConnectionAttrs the host connection attrs
+     * @return the builder
+     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
       return this;
     }
 
@@ -205,12 +211,12 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder but() {
       return aPhysicalInfrastructureMapping()
+          .withHostNames(hostNames)
           .withComputeProviderSettingId(computeProviderSettingId)
-          .withHostnames(hostnames)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
-          .withHostConnectionAttrs(hostConnectionAttrs)
           .withComputeProviderType(computeProviderType)
+          .withHostConnectionAttrs(hostConnectionAttrs)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -226,12 +232,12 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public PhysicalInfrastructureMapping build() {
       PhysicalInfrastructureMapping physicalInfrastructureMapping = new PhysicalInfrastructureMapping();
+      physicalInfrastructureMapping.setHostNames(hostNames);
       physicalInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
-      physicalInfrastructureMapping.setHostnames(hostnames);
       physicalInfrastructureMapping.setEnvId(envId);
       physicalInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
-      physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
+      physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       physicalInfrastructureMapping.setUuid(uuid);
       physicalInfrastructureMapping.setAppId(appId);
       physicalInfrastructureMapping.setCreatedBy(createdBy);

@@ -1,10 +1,6 @@
 package software.wings.resources;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static javax.ws.rs.core.Response.Status.OK;
-import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -12,8 +8,6 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Base;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -48,7 +42,6 @@ import javax.ws.rs.core.Response;
 @Consumes("application/json")
 public class HostResource {
   private HostService hostService;
-  private InfrastructureService infraService;
   private MainConfiguration configuration;
 
   /**
@@ -61,7 +54,6 @@ public class HostResource {
   @Inject
   public HostResource(HostService hostService, InfrastructureService infraService, MainConfiguration configuration) {
     this.hostService = hostService;
-    this.infraService = infraService;
     this.configuration = configuration;
   }
 
@@ -89,21 +81,6 @@ public class HostResource {
   public RestResponse<Host> get(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     return new RestResponse<>(hostService.get(appId, envId, hostId));
-  }
-
-  /**
-   * Save.
-   *
-   * @param appId    the app id
-   * @param envId    the env id
-   * @param baseHost the base host
-   * @return the rest response
-   */
-  @POST
-  public Response save(@QueryParam("appId") String appId, @QueryParam("envId") String envId, Host baseHost) {
-    baseHost.setAppId(isNullOrEmpty(appId) ? Base.GLOBAL_APP_ID : appId);
-    ResponseMessage responseMessage = hostService.bulkSave(envId, baseHost);
-    return Response.status(OK).entity(aRestResponse().withResponseMessages(asList(responseMessage)).build()).build();
   }
 
   /**

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -25,5 +26,21 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
   @Override
   public Host saveHost(Host host) {
     return hostService.saveHost(host);
+  }
+
+  @Override
+  public void deleteHost(String appId, String infraMappingId, String hostName) {
+    hostService.deleteByHostName(appId, infraMappingId, hostName);
+  }
+
+  @Override
+  public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
+    hostService.updateHostConnectionAttrByInfraMappingId(
+        infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
+  }
+
+  @Override
+  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
+    hostService.deleteByInfraMappingId(appId, infraMappingId);
   }
 }

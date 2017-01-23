@@ -1,11 +1,10 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -15,6 +14,7 @@ public interface InfrastructureProvider {
    * Gets all host.
    *
    * @param computeProviderSetting the compute provider setting
+   * @param req                    the req
    * @return the all host
    */
   PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req);
@@ -25,8 +25,30 @@ public interface InfrastructureProvider {
    * @param host the host
    * @return the host
    */
-  default Host
-    saveHost(Host host) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Operation not supported");
-    }
+  Host saveHost(Host host);
+
+  /**
+   * Delete host.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @param hostName       the host name
+   */
+  void deleteHost(String appId, String infraMappingId, String hostName);
+
+  /**
+   * Update host conn attrs.
+   *
+   * @param infrastructureMapping the infrastructure mapping
+   * @param hostConnectionAttrs   the host connection attrs
+   */
+  void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs);
+
+  /**
+   * Delete host by infra mapping id.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   */
+  void deleteHostByInfraMappingId(String appId, String infraMappingId);
 }
