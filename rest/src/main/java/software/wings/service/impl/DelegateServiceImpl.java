@@ -24,6 +24,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Request;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +74,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
   @Inject private HazelcastInstance hazelcastInstance;
+  @Inject private BroadcasterFactory broadcasterFactory;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -90,6 +92,7 @@ public class DelegateServiceImpl implements DelegateService {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, "status", delegate.getStatus());
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
+    setUnset(updateOperations, "connected", delegate.isConnected());
 
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
@@ -182,8 +185,9 @@ public class DelegateServiceImpl implements DelegateService {
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
     String queueName = UUIDGenerator.getUuid();
     task.setQueueName(queueName);
+    task.setUuid(queueName);
     IQueue<T> topic = hazelcastInstance.getQueue(queueName);
-    wingsPersistence.save(task);
+    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     return topic.poll(30000, TimeUnit.MILLISECONDS);
   }
 
@@ -195,25 +199,24 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
-    DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
-        aPageRequest()
-            .addFilter("accountId", EQ, response.getAccountId())
-            .addFilter(ID_KEY, EQ, response.getTaskId())
-            .build());
-    if (isNotBlank(delegateTask.getWaitId())) {
+    if (isNotBlank(response.getTask().getWaitId())) {
+      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
+          aPageRequest()
+              .addFilter("accountId", EQ, response.getAccountId())
+              .addFilter(ID_KEY, EQ, response.getTask().getUuid())
+              .build());
       String waitId = delegateTask.getWaitId();
       waitNotifyEngine.notify(waitId, response.getResponse());
+      wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
+                                  .field("accountId")
+                                  .equal(response.getAccountId())
+                                  .field(ID_KEY)
+                                  .equal(delegateTask.getUuid()));
     } else {
-      String topicName = delegateTask.getQueueName();
-      // do the haze
+      String topicName = response.getTask().getQueueName();
       IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
       topic.offer(response.getResponse());
     }
-    wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                .field("accountId")
-                                .equal(response.getAccountId())
-                                .field(ID_KEY)
-                                .equal(response.getTaskId()));
   }
 
   @Override

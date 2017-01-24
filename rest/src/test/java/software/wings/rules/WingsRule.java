@@ -30,6 +30,7 @@ import de.flapdoodle.embed.mongo.distribution.Version.Main;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -183,6 +184,7 @@ public class WingsRule implements MethodRule {
           @Override
           protected void configure() {
             bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
+            bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
           }
         },
         new ValidationModule(validatorFactory), new DatabaseModule(datastore, datastore, distributedLockSvc),

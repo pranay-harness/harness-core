@@ -37,13 +37,11 @@ public void checkServerTrusted(java.security.cert.X509Certificate[] certs, Strin
 
 private final Logger logger = LoggerFactory.getLogger("http");
 private String baseUrl;
-private String accountId;
-private String accountSecret;
+private TokenGenerator tokenGenerator;
 
-public ManagerClientFactory(String baseUrl, String accountId, String accountSecret) {
+public ManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
   this.baseUrl = baseUrl;
-  this.accountId = accountId;
-  this.accountSecret = accountSecret;
+  this.tokenGenerator = tokenGenerator;
 }
 
 @Override
@@ -69,7 +67,7 @@ private OkHttpClient getUnsafeOkHttpClient() {
         new Builder()
             .connectionPool(new ConnectionPool())
             .retryOnConnectionFailure(true)
-            .addInterceptor(new DelegateAuthInterceptor(accountId, accountSecret))
+            .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
             .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
             .addInterceptor(chain -> {
               Request request = chain.request();

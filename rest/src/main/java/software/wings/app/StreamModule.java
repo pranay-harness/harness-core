@@ -6,6 +6,7 @@ import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.setup.Environment;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultMetaBroadcaster;
 import org.atmosphere.cpr.MetaBroadcaster;
 import software.wings.service.impl.EventEmitter;
@@ -46,6 +47,7 @@ public class StreamModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(EventEmitter.class).toInstance(new EventEmitter(metaBroadcaster));
+    bind(BroadcasterFactory.class).toInstance(atmosphereServlet.framework().getBroadcasterFactory());
   }
 
   /**

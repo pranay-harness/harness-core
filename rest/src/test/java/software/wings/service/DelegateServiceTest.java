@@ -166,7 +166,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(
         aDelegateTaskResponse()
             .withAccountId(ACCOUNT_ID)
-            .withTaskId(delegateTask.getUuid())
+            .withTask(delegateTask)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid())).isEmpty();

@@ -2,18 +2,14 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
+import software.wings.utils.KryoUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Objects;
 
 /**
@@ -287,24 +283,18 @@ public class DelegateTask extends Base {
   }
 
   public static class Converter extends TypeConverter {
-    private static final ThreadLocal<Kryo> kryos = ThreadLocal.withInitial(() -> new Kryo());
-
     public Converter() {
       super(Object[].class);
     }
 
     @Override
     public Object encode(Object value, MappedField optionalExtraInfo) {
-      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-      Output output = new Output(byteArrayOutputStream);
-      kryos.get().writeClassAndObject(output, value);
-      output.flush();
-      return Base64.encodeBase64String(byteArrayOutputStream.toByteArray());
+      return KryoUtils.asString(value);
     }
 
     @Override
     public Object decode(Class<?> targetClass, Object fromDBObject, MappedField optionalExtraInfo) {
-      return kryos.get().readClassAndObject(new Input(Base64.decodeBase64((String) fromDBObject)));
+      return KryoUtils.asObject((String) fromDBObject);
     }
   }
 
