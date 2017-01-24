@@ -156,9 +156,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
-      SettingAttribute computeProviderSetting =
-          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      Validator.notNullCheck("ComputeProvider", computeProviderSetting);
       syncPhysicalHostsAndServiceInstances(
           infrastructureMapping, ((PhysicalInfrastructureMapping) savedInfraMapping).getHostNames());
     }
@@ -344,10 +341,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .stream()
           .map(Host::getHostName)
           .collect(Collectors.toList());
-    } else {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
-          "Only PhysicalInfrastructureMapping type is supported for instance selection");
     }
+    return new ArrayList<>();
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {

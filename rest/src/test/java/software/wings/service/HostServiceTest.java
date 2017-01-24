@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -45,13 +44,9 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
@@ -64,19 +59,15 @@ import javax.inject.Inject;
 public class HostServiceTest extends WingsBaseTest {
   @Mock private HostCsvFileHelper csvFileHelper;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private WingsPersistence wingsPersistence;
-  @Mock private InfrastructureService infrastructureService;
-  @Mock private ServiceTemplateService serviceTemplateService;
-  @Mock private SettingsService settingsService;
+
   @Mock private EnvironmentService environmentService;
   @Mock private NotificationService notificationService;
-  @Mock private AppService appService;
 
   @Inject @InjectMocks private HostService hostService;
 
   @Mock private Query<Host> hostQuery;
   @Mock private FieldEnd hostQueryEnd;
   @Mock private UpdateOperations<Host> updateOperations;
-  @Mock private AggregationPipeline aggregationPipeline;
 
   private SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute()

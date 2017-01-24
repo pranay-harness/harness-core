@@ -14,7 +14,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
@@ -43,7 +42,6 @@ public class ServiceTemplateResource {
    * The Service template service.
    */
   @Inject ServiceTemplateService serviceTemplateService;
-  @Inject private InfrastructureService infrastructureService;
 
   /**
    * List.

@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -39,7 +38,6 @@ import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.ANY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.collect.ImmutableMap;
@@ -75,7 +73,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -87,7 +84,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
@@ -698,37 +694,6 @@ private List<Environment> addEnvs(String appId) throws IOException {
   }
   // environments.forEach(this::addHostsToEnv);
   return environments;
-}
-
-private void addHostsToEnv(Environment env) {
-  if (envAttr == null) {
-    envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute()
-            .withAppId(env.getAppId())
-            .withAccountId(accountId)
-            .withName("JumpBox")
-            .withValue(new BastionConnectionAttributes())
-            .build());
-  }
-
-  Infrastructure infrastructure = wingsPersistence.createQuery(Infrastructure.class).get();
-  WebTarget target = client.target(format(
-      API_BASE + "/hosts?infraId=%s&appId=%s&envId=%s", infrastructure.getUuid(), env.getAppId(), env.getUuid()));
-
-  List<SettingAttribute> connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                    .field("appId")
-                                                    .equal(env.getAppId())
-                                                    .field("value.type")
-                                                    .equal(HOST_CONNECTION_ATTRIBUTES)
-                                                    .asList();
-
-  for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
-    Response response = getRequestWithAuthHeader(target).post(Entity.entity(
-        ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttr",
-            connectionAttributes.get(i % connectionAttributes.size()).getUuid(), "bastionConnAttr", envAttr.getUuid()),
-        APPLICATION_JSON));
-    assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
-  }
 }
 
 private File getTestFile(String name) throws IOException {

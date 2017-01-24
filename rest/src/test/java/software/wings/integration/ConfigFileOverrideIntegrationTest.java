@@ -26,7 +26,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
@@ -34,7 +33,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -92,10 +90,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    * The Srs.
    */
   @Inject ServiceResourceService srs;
-  /**
-   * The Infrastructure service.
-   */
-  @Inject InfrastructureService infrastructureService;
+
   /**
    * The Template service.
    */
@@ -132,8 +127,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   public void setUp() throws IOException {
     // DB cleanup
     Arrays
-        .asList(Application.class, Environment.class, Host.class, Infrastructure.class, ConfigFile.class,
-            ServiceTemplate.class, Service.class, SettingAttribute.class)
+        .asList(Application.class, Environment.class, Host.class, ConfigFile.class, ServiceTemplate.class,
+            Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());

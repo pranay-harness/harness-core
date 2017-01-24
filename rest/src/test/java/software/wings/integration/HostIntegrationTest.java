@@ -20,14 +20,10 @@ import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
-import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -59,28 +55,12 @@ public class HostIntegrationTest extends WingsBaseTest {
 
   @Inject private ServiceTemplateService serviceTemplateService;
 
-  @Inject private ServiceInstanceService serviceInstanceService;
-
-  /**
-   * The Infrastructure service.
-   */
-  @Inject private InfrastructureService infrastructureService;
-
   /**
    * The Environment service.
    */
   @Inject private EnvironmentService environmentService;
-  /**
-   * The Host service.
-   */
-  @Inject private HostService hostService;
 
   @Inject private SettingsService settingsService;
-
-  /**
-   * The Infrastructure id.
-   */
-  String infraId;
 
   /**
    * The Environment.
@@ -109,8 +89,8 @@ public class HostIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() throws IOException {
     // DB cleanup
-    asList(Application.class, Environment.class, Host.class, Infrastructure.class, ConfigFile.class,
-        ServiceTemplate.class, Service.class, SettingAttribute.class)
+    asList(Application.class, Environment.class, Host.class, ConfigFile.class, ServiceTemplate.class, Service.class,
+        SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());

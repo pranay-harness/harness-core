@@ -13,7 +13,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.InputStream;
@@ -48,11 +47,10 @@ public class HostResource {
    * Instantiates a new Host resource.
    *
    * @param hostService   the host service
-   * @param infraService  the infra service
    * @param configuration the configuration
    */
   @Inject
-  public HostResource(HostService hostService, InfrastructureService infraService, MainConfiguration configuration) {
+  public HostResource(HostService hostService, MainConfiguration configuration) {
     this.hostService = hostService;
     this.configuration = configuration;
   }

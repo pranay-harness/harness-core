@@ -24,7 +24,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
@@ -38,14 +37,13 @@ public class HostResourceTest extends WingsBaseTest {
    */
   public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
   private static final HostService RESOURCE_SERVICE = mock(HostService.class);
-  private static final InfrastructureService INFRA_SERVICE = mock(InfrastructureService.class);
   /**
    * The constant RESOURCES.
    */
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new HostResource(RESOURCE_SERVICE, INFRA_SERVICE, MAIN_CONFIGURATION))
+          .addResource(new HostResource(RESOURCE_SERVICE, MAIN_CONFIGURATION))
           .addProvider(WingsExceptionMapper.class)
           .build();
   private static final Host host = Builder.aHost().withAppId(APP_ID).withEnvId(ENV_ID).withHostName(HOST_NAME).build();
