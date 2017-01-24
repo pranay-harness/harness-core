@@ -90,29 +90,31 @@ public class DatabaseModule extends AbstractModule {
     https://github.com/mongodb/morphia/issues/706
      */
 
-    // Read Entity level "Indexes" annotation
     morphia.getMapper().getMappedClasses().forEach(mc -> {
-      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-      if (indexesAnnotations != null) {
-        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-          BasicDBObject keys = new BasicDBObject();
-          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
-          this.primaryDatastore.getCollection(mc.getClazz())
-              .createIndex(keys, null, index.unique() || index.options().unique());
-        });
-      }
-
-      // Read field level "Indexed" annotation
-      for (final MappedField mf : mc.getPersistenceFields()) {
-        if (mf.hasAnnotation(Indexed.class)) {
-          final Indexed indexed = mf.getAnnotation(Indexed.class);
-          try {
+      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
+        // Read Entity level "Indexes" annotation
+        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+        if (indexesAnnotations != null) {
+          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+            BasicDBObject keys = new BasicDBObject();
+            Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
             this.primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
-                    indexed.unique() || indexed.options().unique());
-          } catch (MongoCommandException mex) {
-            logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
-            throw mex;
+                .createIndex(keys, null, index.unique() || index.options().unique());
+          });
+        }
+
+        // Read field level "Indexed" annotation
+        for (final MappedField mf : mc.getPersistenceFields()) {
+          if (mf.hasAnnotation(Indexed.class)) {
+            final Indexed indexed = mf.getAnnotation(Indexed.class);
+            try {
+              this.primaryDatastore.getCollection(mc.getClazz())
+                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
+                      indexed.unique() || indexed.options().unique());
+            } catch (MongoCommandException mex) {
+              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+              throw mex;
+            }
           }
         }
       }

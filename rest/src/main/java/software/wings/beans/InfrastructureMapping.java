@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -153,5 +155,16 @@ public abstract class InfrastructureMapping extends Base {
    */
   public void setHostConnectionAttrs(String hostConnectionAttrs) {
     this.hostConnectionAttrs = hostConnectionAttrs;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("computeProviderSettingId", computeProviderSettingId)
+        .add("envId", envId)
+        .add("serviceTemplateId", serviceTemplateId)
+        .add("computeProviderType", computeProviderType)
+        .add("hostConnectionAttrs", hostConnectionAttrs)
+        .toString();
   }
 }

@@ -1,10 +1,13 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -38,10 +41,24 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     this.hostNames = hostNames;
   }
 
-  @Attributes(title = "Connection Type")
   @Override
-  public String getHostConnectionAttrs() {
-    return super.getHostConnectionAttrs();
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final PhysicalInfrastructureMapping other = (PhysicalInfrastructureMapping) obj;
+    return Objects.equals(this.hostNames, other.hostNames);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("hostNames", hostNames).toString();
   }
 
   /**

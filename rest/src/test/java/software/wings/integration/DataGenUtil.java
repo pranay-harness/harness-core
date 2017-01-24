@@ -50,6 +50,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoCommandException;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -60,8 +62,11 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.utils.ReflectionUtils;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.mapping.MappedField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -95,10 +100,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Modifier;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -199,14 +204,48 @@ client = ClientBuilder.newBuilder()
 
 private void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
   wingsPersistence.getDatastore().getDB().dropDatabase();
-  for (final Class clazz : ReflectionUtils.getClasses("software.wings.beans", false)) {
-    final Embedded embeddedAnn = ReflectionUtils.getClassEmbeddedAnnotation(clazz);
-    final org.mongodb.morphia.annotations.Entity entityAnn = ReflectionUtils.getClassEntityAnnotation(clazz);
-    final boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
-    if ((entityAnn != null || embeddedAnn != null) && !isAbstract) {
-      wingsPersistence.getDatastore().ensureIndexes(clazz);
+  Morphia morphia = new Morphia();
+  morphia.getMapper().getOptions().setMapSubPackages(true);
+  morphia.mapPackage("software.wings");
+  ensureIndex(morphia, wingsPersistence.getDatastore());
+}
+
+private void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
+  /*
+  Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+  There is no way to override this behavior.
+  https://github.com/mongodb/morphia/issues/706
+   */
+
+  morphia.getMapper().getMappedClasses().forEach(mc -> {
+    if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
+      // Read Entity level "Indexes" annotation
+      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+      if (indexesAnnotations != null) {
+        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+          BasicDBObject keys = new BasicDBObject();
+          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+          primaryDatastore.getCollection(mc.getClazz())
+              .createIndex(keys, null, index.unique() || index.options().unique());
+        });
+      }
+
+      // Read field level "Indexed" annotation
+      for (final MappedField mf : mc.getPersistenceFields()) {
+        if (mf.hasAnnotation(Indexed.class)) {
+          final Indexed indexed = mf.getAnnotation(Indexed.class);
+          try {
+            primaryDatastore.getCollection(mc.getClazz())
+                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
+                    indexed.unique() || indexed.options().unique());
+          } catch (MongoCommandException mex) {
+            logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+            throw mex;
+          }
+        }
+      }
     }
-  }
+  });
 }
 
 /**
