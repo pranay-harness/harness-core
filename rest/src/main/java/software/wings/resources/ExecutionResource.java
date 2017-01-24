@@ -20,7 +20,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ExecutionEvent;
+import software.wings.sm.ExecutionInterrupt;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -181,20 +181,20 @@ public class ExecutionResource {
    * @param appId               the app id
    * @param envId               the env id
    * @param workflowExecutionId the workflow execution id
-   * @param executionEvent      the execution event
+   * @param executionInterrupt      the execution event
    * @return the rest response
    */
   @PUT
   @Path("{workflowExecutionId}")
   @Produces("application/json")
-  public RestResponse<ExecutionEvent> triggerWorkflowExecutionEvent(@QueryParam("appId") String appId,
+  public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      ExecutionEvent executionEvent) {
-    executionEvent.setAppId(appId);
-    executionEvent.setEnvId(envId);
-    executionEvent.setExecutionUuid(workflowExecutionId);
+      ExecutionInterrupt executionInterrupt) {
+    executionInterrupt.setAppId(appId);
+    executionInterrupt.setEnvId(envId);
+    executionInterrupt.setExecutionUuid(workflowExecutionId);
 
-    return new RestResponse<>(workflowExecutionService.triggerExecutionEvent(executionEvent));
+    return new RestResponse<>(workflowExecutionService.triggerExecutionInterrupt(executionInterrupt));
   }
 
   /**

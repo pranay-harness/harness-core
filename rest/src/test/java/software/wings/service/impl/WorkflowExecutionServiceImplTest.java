@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.DeploymentType.SSH;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -82,8 +82,8 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionEvent;
-import software.wings.sm.ExecutionEventType;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
@@ -1590,14 +1590,15 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasFieldOrPropertyWithValue("name", "pause1")
         .hasFieldOrPropertyWithValue("status", "PAUSED");
 
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withEnvId(env.getUuid())
-                                        .withExecutionUuid(executionId)
-                                        .withStateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
-                                        .withExecutionEventType(ExecutionEventType.RESUME)
-                                        .build();
-    workflowExecutionService.triggerExecutionEvent(executionEvent);
+    ExecutionInterrupt executionInterrupt =
+        ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withExecutionUuid(executionId)
+            .withStateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
+            .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+            .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     workflowExecutionSignals.get(signalId).await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
@@ -1687,14 +1688,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Thread.sleep(1000);
 
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withExecutionEventType(ExecutionEventType.PAUSE_ALL)
-                                        .withExecutionUuid(executionId)
-                                        .withEnvId(env.getUuid())
-                                        .build();
-    executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
-    assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
+    ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                                                .withAppId(app.getUuid())
+                                                .withExecutionInterruptType(ExecutionInterruptType.PAUSE_ALL)
+                                                .withExecutionUuid(executionId)
+                                                .withEnvId(env.getUuid())
+                                                .build();
+    executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
+    assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     int i = 0;
     do {
@@ -1726,14 +1727,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasSize(2)
         .allMatch(n -> "WAIT".equals(n.getType()) && "PAUSED".equals(n.getStatus()));
 
-    executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                         .withAppId(app.getUuid())
-                         .withExecutionEventType(ExecutionEventType.RESUME_ALL)
-                         .withExecutionUuid(executionId)
-                         .withEnvId(env.getUuid())
-                         .build();
-    executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
-    assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
+    executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                             .withAppId(app.getUuid())
+                             .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)
+                             .withExecutionUuid(executionId)
+                             .withEnvId(env.getUuid())
+                             .build();
+    executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
+    assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     workflowExecutionSignals.get(signalId).await();
 
@@ -1773,14 +1774,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withExecutionEventType(ExecutionEventType.PAUSE)
-                                        .withEnvId(env.getUuid())
-                                        .withExecutionUuid(UUIDGenerator.getUuid())
-                                        .build();
+    ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                                                .withAppId(app.getUuid())
+                                                .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
+                                                .withEnvId(env.getUuid())
+                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .build();
     try {
-      executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
+      executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception.getParams().values()).doesNotContainNull();
@@ -1869,14 +1870,15 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasFieldOrPropertyWithValue("name", "pause1")
         .hasFieldOrPropertyWithValue("status", "PAUSED");
 
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withEnvId(env.getUuid())
-                                        .withExecutionUuid(executionId)
-                                        .withStateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
-                                        .withExecutionEventType(ExecutionEventType.ABORT)
-                                        .build();
-    workflowExecutionService.triggerExecutionEvent(executionEvent);
+    ExecutionInterrupt executionInterrupt =
+        ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withExecutionUuid(executionId)
+            .withStateExecutionInstanceId(execution.getExecutionNode().getNext().getId())
+            .withExecutionInterruptType(ExecutionInterruptType.ABORT)
+            .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     workflowExecutionSignals.get(signalId).await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
@@ -1963,14 +1965,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Thread.sleep(1000);
 
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withExecutionEventType(ExecutionEventType.ABORT_ALL)
-                                        .withExecutionUuid(executionId)
-                                        .withEnvId(env.getUuid())
-                                        .build();
-    executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
-    assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
+    ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                                                .withAppId(app.getUuid())
+                                                .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
+                                                .withExecutionUuid(executionId)
+                                                .withEnvId(env.getUuid())
+                                                .build();
+    executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
+    assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     int i = 0;
     do {
@@ -2137,14 +2139,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
 
     Node installNode = installNodes.get(0);
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withEnvId(env.getUuid())
-                                        .withExecutionUuid(executionId)
-                                        .withStateExecutionInstanceId(installNode.getId())
-                                        .withExecutionEventType(ExecutionEventType.RESUME)
-                                        .build();
-    workflowExecutionService.triggerExecutionEvent(executionEvent);
+    ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                                                .withAppId(app.getUuid())
+                                                .withEnvId(env.getUuid())
+                                                .withExecutionUuid(executionId)
+                                                .withStateExecutionInstanceId(installNode.getId())
+                                                .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+                                                .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
 
     i = 0;
     installNodes = null;
@@ -2190,14 +2192,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
             .collect(Collectors.toList())
             .get(0);
-    executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                         .withAppId(app.getUuid())
-                         .withEnvId(env.getUuid())
-                         .withExecutionUuid(executionId)
-                         .withStateExecutionInstanceId(installNode.getId())
-                         .withExecutionEventType(ExecutionEventType.RESUME)
-                         .build();
-    workflowExecutionService.triggerExecutionEvent(executionEvent);
+    executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                             .withAppId(app.getUuid())
+                             .withEnvId(env.getUuid())
+                             .withExecutionUuid(executionId)
+                             .withStateExecutionInstanceId(installNode.getId())
+                             .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+                             .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     workflowExecutionSignals.get(signalId).await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
@@ -2357,14 +2359,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
 
     Node installNode = installNodes.get(0);
-    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                        .withAppId(app.getUuid())
-                                        .withEnvId(env.getUuid())
-                                        .withExecutionUuid(executionId)
-                                        .withStateExecutionInstanceId(installNode.getId())
-                                        .withExecutionEventType(ExecutionEventType.RETRY)
-                                        .build();
-    workflowExecutionService.triggerExecutionEvent(executionEvent);
+    ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                                                .withAppId(app.getUuid())
+                                                .withEnvId(env.getUuid())
+                                                .withExecutionUuid(executionId)
+                                                .withStateExecutionInstanceId(installNode.getId())
+                                                .withExecutionInterruptType(ExecutionInterruptType.RETRY)
+                                                .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
 
     i = 0;
     installNodes = null;
@@ -2406,14 +2408,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
 
     installNode = installNodes.get(0);
-    executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
-                         .withAppId(app.getUuid())
-                         .withEnvId(env.getUuid())
-                         .withExecutionUuid(executionId)
-                         .withStateExecutionInstanceId(installNode.getId())
-                         .withExecutionEventType(ExecutionEventType.RESUME)
-                         .build();
-    workflowExecutionService.triggerExecutionEvent(executionEvent);
+    executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
+                             .withAppId(app.getUuid())
+                             .withEnvId(env.getUuid())
+                             .withExecutionUuid(executionId)
+                             .withStateExecutionInstanceId(installNode.getId())
+                             .withExecutionInterruptType(ExecutionInterruptType.RESUME)
+                             .build();
+    workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     workflowExecutionSignals.get(signalId).await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);

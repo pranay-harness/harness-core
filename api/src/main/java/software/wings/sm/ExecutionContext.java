@@ -67,6 +67,8 @@ public interface ExecutionContext {
    */
   <T extends ContextElement> T getContextElement(ContextElementType contextElementType);
 
+  <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name);
+
   /**
    * Gets context element list.
    *

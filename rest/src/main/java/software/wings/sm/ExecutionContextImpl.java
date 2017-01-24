@@ -128,6 +128,19 @@ public class ExecutionContextImpl implements ExecutionContext {
    * {@inheritDoc}
    */
   @Override
+  public <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name) {
+    return (T) stateExecutionInstance.getContextElements()
+        .stream()
+        .filter(contextElement
+            -> contextElement.getElementType() == contextElementType && name.equals(contextElement.getName()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType) {
     return stateExecutionInstance.getContextElements()
         .stream()

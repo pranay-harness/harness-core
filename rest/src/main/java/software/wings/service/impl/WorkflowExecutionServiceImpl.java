@@ -65,13 +65,13 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionEvent;
+import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
-import software.wings.sm.StateMachineExecutionEventManager;
+import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
@@ -107,7 +107,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private EnvironmentService environmentService;
-  @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
+  @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ArtifactService artifactService;
@@ -723,16 +723,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public ExecutionEvent triggerExecutionEvent(ExecutionEvent executionEvent) {
-    String executionUuid = executionEvent.getExecutionUuid();
+  public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    String executionUuid = executionInterrupt.getExecutionUuid();
     WorkflowExecution workflowExecution =
-        wingsPersistence.get(WorkflowExecution.class, executionEvent.getAppId(), executionUuid);
+        wingsPersistence.get(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
       throw new WingsException(
           ErrorCodes.INVALID_ARGUMENT, "args", "no workflowExecution for executionUuid:" + executionUuid);
     }
 
-    return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
+    return executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
   }
 
   @Override
@@ -846,7 +846,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .equal(workflowExecution.getStateMachineId())
               .forEach(stateExecutionInstance -> {
                 wingsPersistence.delete(stateExecutionInstance);
-                wingsPersistence.delete(wingsPersistence.createQuery(ExecutionEvent.class)
+                wingsPersistence.delete(wingsPersistence.createQuery(ExecutionInterrupt.class)
                                             .field("appId")
                                             .equal(appId)
                                             .field("stateExecutionInstanceId")

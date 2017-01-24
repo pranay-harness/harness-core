@@ -45,6 +45,8 @@ public interface Constants {
    * The constant SERVICE_INSTANCE_IDS_PARAMS.
    */
   String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
+
+  String PHASE_PARAM = "PHASE_PARAM";
   /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
    */

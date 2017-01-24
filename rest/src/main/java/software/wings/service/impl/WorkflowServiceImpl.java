@@ -971,16 +971,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, Graph> graphs = new HashMap<>();
     Builder graphBuilder = aGraph().withGraphName(workflowPhase.getName());
 
-    Map<String, Object> phaseParams = new HashMap<>(params);
-    phaseParams.putAll(workflowPhase.params());
-
     String id1 = null;
     String id2;
     Node node;
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
       id2 = phaseStep.getUuid();
       node = phaseStep.generatePhaseStepNode();
-      node.getProperties().putAll(phaseParams);
+      // node.getProperties().putAll(params);
       graphBuilder.addNodes(node);
       if (id1 == null) {
         node.setOrigin(true);
@@ -989,7 +986,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
       }
       id1 = id2;
-      Graph stepsGraph = generateGraph(phaseStep, phaseParams);
+      Graph stepsGraph = generateGraph(phaseStep, params);
       graphs.put(phaseStep.getUuid(), stepsGraph);
     }
 
@@ -1041,7 +1038,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String id1 = null;
       String id2;
       for (Node step : phaseStep.getSteps()) {
-        step.getProperties().putAll(params);
+        // step.getProperties().putAll(params);
         id2 = step.getId();
         graphBuilder.addNodes(step);
         if (id1 == null && originNode == null) {
