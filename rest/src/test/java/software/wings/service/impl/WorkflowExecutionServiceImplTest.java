@@ -1197,6 +1197,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void triggerPipeline() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
