@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.URI;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -103,20 +104,22 @@ public class DelegateServiceImpl implements DelegateService {
           new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build());
       Client client = ClientFactory.getDefault().newClient();
 
+      URI uri = new URI(delegateConfiguration.getManagerUrl());
       // Stream the request body
-      RequestBuilder request = client.newRequestBuilder()
-                                   .method(METHOD.GET)
-                                   .uri("https://localhost:9090/stream/delegate/" + accountId)
-                                   .queryString("delegateId", delegateId)
-                                   .queryString("token", tokenGenerator.getToken("https", "localhost", 9090))
-                                   .header("Version", getVersion())
-                                   .encoder(new Encoder<Delegate, Reader>() { // Stream the request body
-                                     @Override
-                                     public Reader encode(Delegate s) {
-                                       return new StringReader(JsonUtils.asJson(s));
-                                     }
-                                   })
-                                   .transport(Request.TRANSPORT.WEBSOCKET);
+      RequestBuilder request =
+          client.newRequestBuilder()
+              .method(METHOD.GET)
+              .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
+              .queryString("delegateId", delegateId)
+              .queryString("token", tokenGenerator.getToken("https", "localhost", 9090))
+              .header("Version", getVersion())
+              .encoder(new Encoder<Delegate, Reader>() { // Stream the request body
+                @Override
+                public Reader encode(Delegate s) {
+                  return new StringReader(JsonUtils.asJson(s));
+                }
+              })
+              .transport(Request.TRANSPORT.WEBSOCKET);
 
       Options clientOptions = client.newOptionsBuilder()
                                   .runtime(asyncHttpClient, true)
