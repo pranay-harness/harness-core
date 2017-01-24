@@ -10,7 +10,8 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "delegates", noClassnameStored = true)
 public class Delegate extends Base {
   @NotEmpty private String accountId;
-  private Status status;
+  private Status status = Status.ENABLED;
+  private boolean connected;
   private String ip;
   private String hostName;
   private long lastHeartBeat;
@@ -152,11 +153,29 @@ public class Delegate extends Base {
     this.upgradeScript = upgradeScript;
   }
 
-  public enum Status { ENABLED, DISABLED, DISCONNECTED, UPGRADING }
+  /**
+   * Getter for property 'connected'.
+   *
+   * @return Value for property 'connected'.
+   */
+  public boolean isConnected() {
+    return connected;
+  }
+
+  /**
+   * Setter for property 'connected'.
+   *
+   * @param connected Value to set for property 'connected'.
+   */
+  public void setConnected(boolean connected) {
+    this.connected = connected;
+  }
+
+  public enum Status { ENABLED, DISABLED }
 
   public static final class Builder {
     private String accountId;
-    private Status status;
+    private Status status = Status.ENABLED;
     private String ip;
     private String hostName;
     private long lastHeartBeat;

@@ -235,7 +235,11 @@ public void populateData() throws IOException {
 }
 
 private void addDefaultRoleAndUsers() {
-  accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
+  accountId = wingsPersistence.save(anAccount()
+                                        .withUuid("kmpySmUISimoRrJL6NL73w")
+                                        .withAccountKey("2f6b0988b6fb3370073c3d0505baee59")
+                                        .withCompanyName("Wings Software")
+                                        .build());
   Role administrator = aRole()
                            .withAppId(Base.GLOBAL_APP_ID)
                            .withAccountId(accountId)
