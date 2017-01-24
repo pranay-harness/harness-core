@@ -89,7 +89,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     hostService.deleteByInfraMappingId(appId, infraMappingId);
   }
 
-  public AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
+  private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
     }
@@ -142,12 +142,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .getReservations()
         .stream()
         .flatMap(reservation -> reservation.getInstances().stream())
-        .map(instance
-            -> anAwsHost()
-                   .withAppId(Base.GLOBAL_APP_ID)
-                   .withHostName(instance.getPublicDnsName())
-                   .withInstance(instance)
-                   .build())
+        .map(instance -> anAwsHost().withHostName(instance.getPublicDnsName()).withInstance(instance).build())
         .collect(Collectors.toList());
   }
 
