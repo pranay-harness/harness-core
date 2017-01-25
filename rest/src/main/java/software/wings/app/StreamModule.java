@@ -9,7 +9,6 @@ import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultMetaBroadcaster;
 import org.atmosphere.cpr.MetaBroadcaster;
-import org.atmosphere.interceptor.HeartbeatInterceptor;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.HazelcastBroadcaster;
 
@@ -32,9 +31,7 @@ public class StreamModule extends AbstractModule {
 
     atmosphereServlet.framework()
         .addInitParameter(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
-        .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true")
-        .addInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "EMPTY")
-        .addInitParameter(ApplicationConfig.DISABLE_ATMOSPHEREINTERCEPTORS, HeartbeatInterceptor.class.getName());
+        .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true");
 
     atmosphereServlet.framework().setDefaultBroadcasterClassName(HazelcastBroadcaster.class.getName());
 
