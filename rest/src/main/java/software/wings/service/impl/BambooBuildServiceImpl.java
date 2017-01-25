@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static software.wings.utils.Validator.equalCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -12,7 +11,6 @@ import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BambooBuildService;
 
 import java.util.List;
@@ -25,12 +23,9 @@ import javax.inject.Inject;
 @Singleton
 public class BambooBuildServiceImpl implements BambooBuildService {
   @Inject private BambooService bambooService;
-  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, BambooConfig bambooConfig) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("artifactStream", artifactStream);
+  public List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, BambooConfig bambooConfig) {
     equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO);
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);
@@ -53,9 +48,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, BambooConfig bambooConfig) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("artifactStream", artifactStream);
+  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, BambooConfig bambooConfig) {
     equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO);
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);

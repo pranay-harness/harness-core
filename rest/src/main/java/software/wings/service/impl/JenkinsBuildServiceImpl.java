@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static software.wings.utils.Validator.equalCheck;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -10,7 +9,6 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStream;
@@ -20,7 +18,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
@@ -46,17 +43,13 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private JenkinsFactory jenkinsFactory;
-  @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private MainConfiguration configuration;
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
-    return getBuildDetails(artifactStreamId, appId, jenkinsConfig);
+  public List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, JenkinsConfig jenkinsConfig) {
+    return getBuildDetails(artifactStream, appId, jenkinsConfig);
   }
 
-  private List<BuildDetails> getBuildDetails(String artifactStreamId, String appId, JenkinsConfig jenkinsConfig) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("artifactStream", artifactStream);
+  private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream, String appId, JenkinsConfig jenkinsConfig) {
     equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS);
 
     JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
@@ -64,7 +57,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
-      return jenkins.getBuildsForJob(jenkinsArtifactSource.getJobname(), configuration.getJenkinsBuildQuerySize());
+      return jenkins.getBuildsForJob(jenkinsArtifactSource.getJobname(), 50);
     } catch (IOException ex) {
       throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Error in fetching builds from jenkins server");
     }
@@ -102,9 +95,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig) {
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("artifactStream", artifactStream);
+  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, JenkinsConfig jenkinsConfig) {
     equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS);
 
     JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);

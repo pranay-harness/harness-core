@@ -7,8 +7,10 @@ import com.google.common.collect.Sets;
 
 import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
@@ -30,6 +32,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SettingsService settingsService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public Set<String> getJobs(String appId, String settingId) {
@@ -57,15 +60,21 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    return getBuildService(settingAttribute, appId).getBuilds(appId, artifactStreamId, settingAttribute.getValue());
+
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    notNullCheck("artifactStream", artifactStream);
+
+    return getBuildService(settingAttribute, appId).getBuilds(appId, artifactStream, settingAttribute.getValue());
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    notNullCheck("artifactStream", artifactStream);
     return getBuildService(settingAttribute, appId)
-        .getLastSuccessfulBuild(appId, artifactStreamId, settingAttribute.getValue());
+        .getLastSuccessfulBuild(appId, artifactStream, settingAttribute.getValue());
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId) {

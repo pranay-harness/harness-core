@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
@@ -35,7 +36,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
@@ -52,9 +52,16 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   @Mock private Jenkins jenkins;
 
-  @Mock private ArtifactStreamService artifactStreamService;
-
   @InjectMocks @Inject private JenkinsBuildService jenkinsBuildService;
+
+  private static final JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
+                                                                         .withUuid(ARTIFACT_STREAM_ID)
+                                                                         .withAppId(APP_ID)
+                                                                         .withSettingId("")
+                                                                         .withSourceName(ARTIFACT_STREAM_NAME)
+                                                                         .withJobname("job1")
+                                                                         .withArtifactPathServices(Lists.newArrayList())
+                                                                         .build();
 
   /**
    * setups all mocks for test.
@@ -64,42 +71,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws IOException {
     when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);
-    when(jenkins.getBuildsForJob(anyString(), anyInt()))
+    when(jenkins.getBuildsForJob(eq("job1"), anyInt()))
         .thenReturn(Lists.newArrayList(aBuildDetails().withNumber("67").withRevision("1bfdd117").build(),
             aBuildDetails().withNumber("65").withRevision("1bfdd117").build(),
             aBuildDetails().withNumber("64").withRevision("1bfdd117").build(),
             aBuildDetails().withNumber("63").withRevision("1bfdd117").build()));
-    JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
-                                                      .withUuid(ARTIFACT_STREAM_ID)
-                                                      .withAppId(APP_ID)
-                                                      .withSettingId("")
-                                                      .withSourceName(ARTIFACT_STREAM_NAME)
-                                                      .withJobname(ARTIFACT_STREAM_NAME)
-                                                      .withArtifactPathServices(Lists.newArrayList())
-                                                      .build();
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-  }
-
-  /**
-   * Should fail validation when artifact source id is null.
-   *
-   * @throws IOException the io exception
-   */
-  @Test
-  public void shouldFailValidationWhenArtifactSourceIdIsNull() throws IOException {
-    assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, null, new JenkinsConfig()));
-  }
-
-  /**
-   * Should fail validation when artifact source does not exists.
-   *
-   * @throws IOException the io exception
-   */
-  @Test
-  public void shouldFailValidationWhenArtifactSourceDoesNotExists() throws IOException {
-    assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, "NON_EXISTENT_ID", jenkinsConfig));
   }
 
   /**
@@ -110,8 +86,9 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   @Ignore // TODO:: remove ignore
   public void shouldFailValidationWhenJobDoesNotExists() throws IOException {
+    jenkinsArtifactStream.setJobname("job2");
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, jenkinsConfig));
+        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream, jenkinsConfig));
   }
 
   /**
@@ -121,7 +98,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
-    assertThat(jenkinsBuildService.getBuilds(APP_ID, ARTIFACT_STREAM_ID, jenkinsConfig))
+    assertThat(jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream, jenkinsConfig))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(
