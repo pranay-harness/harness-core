@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import software.wings.sm.ExecutionEventType;
+import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
 
 /**
@@ -10,7 +10,7 @@ public class InstanceExecutionHistory {
   private int intanceCount;
   private String stateName;
   private ErrorCodes errorCodes;
-  private ExecutionEventType executionEventType;
+  private ExecutionInterruptType executionInterruptType;
   private ExecutionStatus status;
   private String message;
 
@@ -73,17 +73,17 @@ public class InstanceExecutionHistory {
    *
    * @return the execution event type
    */
-  public ExecutionEventType getExecutionEventType() {
-    return executionEventType;
+  public ExecutionInterruptType getExecutionInterruptType() {
+    return executionInterruptType;
   }
 
   /**
    * Sets execution event type.
    *
-   * @param executionEventType the execution event type
+   * @param executionInterruptType the execution event type
    */
-  public void setExecutionEventType(ExecutionEventType executionEventType) {
-    this.executionEventType = executionEventType;
+  public void setExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
+    this.executionInterruptType = executionInterruptType;
   }
 
   /**
@@ -129,7 +129,7 @@ public class InstanceExecutionHistory {
     private int intanceCount;
     private String stateName;
     private ErrorCodes errorCodes;
-    private ExecutionEventType executionEventType;
+    private ExecutionInterruptType executionInterruptType;
     private ExecutionStatus status;
     private String message;
 
@@ -180,11 +180,11 @@ public class InstanceExecutionHistory {
     /**
      * With execution event type instance execution history builder.
      *
-     * @param executionEventType the execution event type
+     * @param executionInterruptType the execution event type
      * @return the instance execution history builder
      */
-    public InstanceExecutionHistoryBuilder withExecutionEventType(ExecutionEventType executionEventType) {
-      this.executionEventType = executionEventType;
+    public InstanceExecutionHistoryBuilder withExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
+      this.executionInterruptType = executionInterruptType;
       return this;
     }
 
@@ -220,7 +220,7 @@ public class InstanceExecutionHistory {
       instanceExecutionHistory.setIntanceCount(intanceCount);
       instanceExecutionHistory.setStateName(stateName);
       instanceExecutionHistory.setErrorCodes(errorCodes);
-      instanceExecutionHistory.setExecutionEventType(executionEventType);
+      instanceExecutionHistory.setExecutionInterruptType(executionInterruptType);
       instanceExecutionHistory.setStatus(status);
       instanceExecutionHistory.setMessage(message);
       return instanceExecutionHistory;

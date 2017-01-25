@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.api;
 
 /**
  * Created by rishi on 12/22/16.

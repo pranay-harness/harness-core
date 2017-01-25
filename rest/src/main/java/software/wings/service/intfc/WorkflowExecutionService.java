@@ -9,7 +9,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;
-import software.wings.sm.ExecutionEvent;
+import software.wings.sm.ExecutionInterrupt;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -124,10 +124,10 @@ public interface WorkflowExecutionService {
   /**
    * Trigger execution event
    *
-   * @param executionEvent the workflow execution event
+   * @param executionInterrupt the workflow execution event
    * @return execution event
    */
-  ExecutionEvent triggerExecutionEvent(@Valid ExecutionEvent executionEvent);
+  ExecutionInterrupt triggerExecutionInterrupt(@Valid ExecutionInterrupt executionInterrupt);
 
   /**
    * Increment in progress count.

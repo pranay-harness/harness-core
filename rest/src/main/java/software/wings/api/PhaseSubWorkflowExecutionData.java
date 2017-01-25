@@ -1,6 +1,5 @@
 package software.wings.api;
 
-import software.wings.beans.DeploymentType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;

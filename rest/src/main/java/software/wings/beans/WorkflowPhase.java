@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.beans.Graph.Node.Builder.aNode;
 
+import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;

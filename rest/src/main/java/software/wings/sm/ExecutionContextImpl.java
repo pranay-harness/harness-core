@@ -66,6 +66,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     if (!isEmpty(stateExecutionInstance.getContextElements())) {
       stateExecutionInstance.getContextElements().forEach(contextElement -> injector.injectMembers(contextElement));
     }
+    if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
+      stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> injector.injectMembers(advisor));
+    }
   }
 
   /**
@@ -120,6 +123,19 @@ public class ExecutionContextImpl implements ExecutionContext {
     return (T) stateExecutionInstance.getContextElements()
         .stream()
         .filter(contextElement -> contextElement.getElementType() == contextElementType)
+        .findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name) {
+    return (T) stateExecutionInstance.getContextElements()
+        .stream()
+        .filter(contextElement
+            -> contextElement.getElementType() == contextElementType && name.equals(contextElement.getName()))
         .findFirst()
         .orElse(null);
   }

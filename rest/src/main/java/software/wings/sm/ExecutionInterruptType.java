@@ -5,7 +5,7 @@ package software.wings.sm;
  *
  * @author Rishi
  */
-public enum ExecutionEventType {
+public enum ExecutionInterruptType {
   /**
    * Abort state event.
    */
@@ -37,7 +37,7 @@ public enum ExecutionEventType {
 
   private String description;
 
-  private ExecutionEventType(String description) {
+  private ExecutionInterruptType(String description) {
     this.description = description;
   }
 

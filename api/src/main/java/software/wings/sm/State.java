@@ -13,6 +13,8 @@ import java.util.Map;
  * @author Rishi
  */
 public abstract class State {
+  @SchemaIgnore private String id;
+
   @SchemaIgnore private String name;
 
   @SchemaIgnore private ContextElementType requiredContextElementType;
@@ -28,6 +30,26 @@ public abstract class State {
   public State(String name, String stateType) {
     this.name = name;
     this.stateType = stateType;
+  }
+
+  /**
+   * Gets id.
+   *
+   * @return the id
+   */
+  @SchemaIgnore
+  public String getId() {
+    return id;
+  }
+
+  /**
+   * Sets id.
+   *
+   * @param id the id
+   */
+  @SchemaIgnore
+  public void setId(String id) {
+    this.id = id;
   }
 
   /**

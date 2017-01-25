@@ -232,6 +232,10 @@ public class StateMachine extends Base {
       State state = stateTypeDesc.newInstance(node.getName());
 
       Map<String, Object> properties = node.getProperties();
+      if (properties == null) {
+        properties = new HashMap<>();
+      }
+      properties.put("id", node.getId());
 
       // populate properties
       MapperUtils.mapObject(properties, state);

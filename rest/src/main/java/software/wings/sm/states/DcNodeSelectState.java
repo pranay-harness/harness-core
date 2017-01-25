@@ -9,8 +9,11 @@ import com.google.common.collect.ImmutableMap;
 import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PhaseElement;
 import software.wings.beans.ServiceInstance;
+import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -26,9 +29,6 @@ import javax.inject.Inject;
 public class DcNodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(DcNodeSelectState.class);
 
-  private String environmentId;
-  private String serviceId;
-  private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
   private List<String> hostNames;
@@ -44,9 +44,13 @@ public class DcNodeSelectState extends State {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
     String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
 
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    String computeProviderId = phaseElement.getComputeProviderId();
+
     logger.info(
         "serviceId: {}, environmentId: {}, computeProviderId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
-        serviceId, environmentId, computeProviderId, instanceCount, specificHosts, hostNames);
+        serviceId, envId, computeProviderId, instanceCount, specificHosts, hostNames);
 
     List<ServiceInstance> serviceInstances;
     if (specificHosts) {
@@ -64,30 +68,6 @@ public class DcNodeSelectState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
-
-  public String getEnvironmentId() {
-    return environmentId;
-  }
-
-  public void setEnvironmentId(String environmentId) {
-    this.environmentId = environmentId;
-  }
-
-  public String getServiceId() {
-    return serviceId;
-  }
-
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
-  }
-
-  public String getComputeProviderId() {
-    return computeProviderId;
-  }
-
-  public void setComputeProviderId(String computeProviderId) {
-    this.computeProviderId = computeProviderId;
-  }
 
   public boolean isSpecificHosts() {
     return specificHosts;

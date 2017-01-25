@@ -2,7 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
-import static software.wings.beans.DeploymentType.SSH;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -913,6 +913,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     OrchestrationWorkflow orchestrationWorkflow4 =
         workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    workflowService.deleteWorkflowPhase(orchestrationWorkflow4.getAppId(), orchestrationWorkflow4.getUuid(),
+        orchestrationWorkflow4.getWorkflowPhaseIds().get(0));
+
+    OrchestrationWorkflow orchestrationWorkflow5 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow5).isNotNull();
 
     logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
   }
