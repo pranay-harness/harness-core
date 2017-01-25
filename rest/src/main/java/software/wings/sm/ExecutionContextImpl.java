@@ -66,6 +66,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     if (!isEmpty(stateExecutionInstance.getContextElements())) {
       stateExecutionInstance.getContextElements().forEach(contextElement -> injector.injectMembers(contextElement));
     }
+    if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
+      stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> injector.injectMembers(advisor));
+    }
   }
 
   /**

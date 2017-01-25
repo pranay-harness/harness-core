@@ -31,6 +31,8 @@ public class StateExecutionInstance extends Base {
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
 
+  private List<ExecutionEventAdvisor> executionEventAdvisors;
+
   private List<ContextElement> notifyElements;
 
   private StateMachineExecutionCallback callback;
@@ -187,6 +189,14 @@ public class StateExecutionInstance extends Base {
    */
   public void setStateMachineId(String stateMachineId) {
     this.stateMachineId = stateMachineId;
+  }
+
+  public List<ExecutionEventAdvisor> getExecutionEventAdvisors() {
+    return executionEventAdvisors;
+  }
+
+  public void setExecutionEventAdvisors(List<ExecutionEventAdvisor> executionEventAdvisors) {
+    this.executionEventAdvisors = executionEventAdvisors;
   }
 
   /**

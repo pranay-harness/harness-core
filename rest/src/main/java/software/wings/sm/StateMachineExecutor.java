@@ -26,6 +26,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
@@ -67,10 +68,9 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    return execute(
-        wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams, callback);
+    return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams,
+        callback, null);
   }
-
   /**
    * Execute.
    *
@@ -82,7 +82,8 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(StateMachine sm, String executionUuid, String executionName,
-      List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback,
+      List<ExecutionEventAdvisor> executionEventAdvisors) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
@@ -91,6 +92,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionName(executionName);
     stateExecutionInstance.setExecutionUuid(executionUuid);
+    stateExecutionInstance.setExecutionEventAdvisors(executionEventAdvisors);
 
     WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     if (contextParams != null) {
@@ -177,9 +179,6 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
-    State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    injector.injectMembers(currentState);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
     startExecution(context);
@@ -221,6 +220,7 @@ public class StateMachineExecutor {
       currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
+      notifyAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
       logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
@@ -231,6 +231,15 @@ public class StateMachineExecutor {
       handleExecuteResponse(context, executionResponse);
     } else {
       handleExecuteResponseException(context, ex);
+    }
+  }
+
+  private void notifyAdvisors(ExecutionContextImpl context, State state) {
+    List<ExecutionEventAdvisor> advisors = context.getStateExecutionInstance().getExecutionEventAdvisors();
+    if (advisors != null && !advisors.isEmpty()) {
+      advisors.forEach(advisor
+          -> advisor.onExecutionEvent(
+              ExecutionEventBuilder.anExecutionEvent().withContext(context).withState(state).build()));
     }
   }
 
@@ -266,6 +275,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
+      notifyAdvisors(context, currentState);
       handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
 
     } else {
@@ -274,6 +284,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
+      notifyAdvisors(context, currentState);
       if (status == ExecutionStatus.SUCCESS) {
         return successTransition(context);
       } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR) {
@@ -405,6 +416,8 @@ public class StateMachineExecutor {
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
           Lists.newArrayList(ExecutionStatus.ABORTING), null);
+      notifyAdvisors(context, currentState);
+
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
       logger.error("Error in aborting", e);
