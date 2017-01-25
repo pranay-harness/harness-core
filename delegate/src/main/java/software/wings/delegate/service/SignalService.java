@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.LockSupport;
+import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 1/4/17.
@@ -17,35 +17,35 @@ public class SignalService {
 
   AtomicReference<State> state = new AtomicReference<>(State.RUNNING);
 
+  @Inject private DelegateService delegateService;
+
   public void pause() {
     if (state.compareAndSet(State.RUNNING, State.PAUSE)) {
       logger.debug("Setting state to pause from running");
+      delegateService.pause();
     }
   }
 
   public void resume() {
     if (state.compareAndSet(State.PAUSE, State.RUNNING)) {
       logger.debug("Setting state to running from pause");
+      delegateService.resume();
     }
     if (state.compareAndSet(State.PAUSED, State.RUNNING)) {
       logger.debug("Setting state to running from paused");
+      delegateService.resume();
     }
   }
 
   public void stop() {
     state.set(State.STOP);
     logger.info("Setting state to stopped");
+    delegateService.stop();
   }
 
   public void paused() {
     if (state.compareAndSet(State.PAUSE, State.PAUSED)) {
       logger.debug("Setting state to paused from pause");
-    }
-  }
-
-  public void waitForPause() {
-    while (state.get() != State.PAUSED) {
-      LockSupport.parkNanos(0);
     }
   }
 

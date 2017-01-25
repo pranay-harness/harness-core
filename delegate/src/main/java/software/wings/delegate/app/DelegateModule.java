@@ -7,6 +7,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClientConfig;
 import software.wings.common.thread.ThreadPool;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.delegate.service.DelegateConfigServiceImpl;
@@ -70,5 +72,7 @@ public class DelegateModule extends AbstractModule {
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
     bind(BambooService.class).to(BambooServiceImpl.class);
+    bind(AsyncHttpClient.class)
+        .toInstance(new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build()));
   }
 }
