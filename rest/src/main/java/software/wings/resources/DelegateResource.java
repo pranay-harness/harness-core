@@ -143,6 +143,14 @@ public class DelegateResource {
   }
 
   @DelegateAuth
+  @PUT
+  @Path("{delegateId}/tasks/{taskId}/acquire")
+  public boolean acquireDelegateTask(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
+  }
+
+  @DelegateAuth
   @GET
   @Path("{deletgateId}/upgrade")
   public RestResponse<Delegate> checkForUpgrade(@Context HttpServletRequest request,
