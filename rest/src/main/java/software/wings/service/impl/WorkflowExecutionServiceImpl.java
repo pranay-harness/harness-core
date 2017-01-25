@@ -874,15 +874,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     populateServiceSummary(serviceExecutionSummaryMap, workflowExecution);
 
-    workflowExecution.setServiceExecutionSummaries(new ArrayList<>(serviceExecutionSummaryMap.values()));
+    if (!serviceExecutionSummaryMap.isEmpty()) {
+      workflowExecution.setServiceExecutionSummaries(new ArrayList<>(serviceExecutionSummaryMap.values()));
 
-    if (workflowExecution.getServiceExecutionSummaries() != null
-        && (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
-               || workflowExecution.getStatus() == ExecutionStatus.FAILED
-               || workflowExecution.getStatus() == ExecutionStatus.ERROR
-               || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
-      wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
-          workflowExecution.getServiceExecutionSummaries());
+      if (workflowExecution.getServiceExecutionSummaries() != null && !serviceExecutionSummaryMap.isEmpty()
+          && (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+                 || workflowExecution.getStatus() == ExecutionStatus.FAILED
+                 || workflowExecution.getStatus() == ExecutionStatus.ERROR
+                 || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
+        wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
+            workflowExecution.getServiceExecutionSummaries());
+      }
     }
   }
 
