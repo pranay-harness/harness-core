@@ -33,7 +33,7 @@ public class StreamModule extends AbstractModule {
     atmosphereServlet.framework()
         .addInitParameter(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
         .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true")
-        .addInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "IDLE")
+        .addInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "EMPTY")
         .addInitParameter(ApplicationConfig.DISABLE_ATMOSPHEREINTERCEPTORS, HeartbeatInterceptor.class.getName());
 
     atmosphereServlet.framework().setDefaultBroadcasterClassName(HazelcastBroadcaster.class.getName());
