@@ -114,6 +114,12 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
+  @Attributes(title = "Connection Type")
+  @Override
+  public String getHostConnectionAttrs() {
+    return super.getHostConnectionAttrs();
+  }
+
   /**
    * The type Builder.
    */

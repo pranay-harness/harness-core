@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -95,15 +94,6 @@ public interface HostService {
   Host getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
-   * Bulk save.
-   *
-   * @param envId    the env id
-   * @param baseHost the base host  @return the response message
-   * @return the response message
-   */
-  ResponseMessage bulkSave(String envId, Host baseHost);
-
-  /**
    * Save application host application host.
    *
    * @param appHost the app host
@@ -127,4 +117,30 @@ public interface HostService {
    * @param envId the env id
    */
   void deleteByEnvironment(String appId, String envId);
+
+  /**
+   * Delete by host name.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @param hostName       the host name
+   */
+  void deleteByHostName(String appId, String infraMappingId, String hostName);
+
+  /**
+   * Update host connection attr by infra mapping id.
+   *
+   * @param appId               the app id
+   * @param infraMappingId      the infra mapping id
+   * @param hostConnectionAttrs the host connection attrs
+   */
+  void updateHostConnectionAttrByInfraMappingId(String appId, String infraMappingId, String hostConnectionAttrs);
+
+  /**
+   * Delete by infra mapping id.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   */
+  void deleteByInfraMappingId(String appId, String infraMappingId);
 }

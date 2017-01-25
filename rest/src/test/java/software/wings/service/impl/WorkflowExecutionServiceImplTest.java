@@ -2472,7 +2472,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
                                           .withAppId(app.getUuid())
                                           .withEnvId(env.getUuid())
-                                          .withHostnames(Lists.newArrayList("host1"))
+                                          .withHostNames(Lists.newArrayList("host1"))
                                           .withServiceTemplateId(serviceTemplate.getUuid())
                                           .withComputeProviderSettingId(computeProvider.getUuid())
                                           .build());

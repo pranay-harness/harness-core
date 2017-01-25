@@ -41,7 +41,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -80,7 +79,6 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationService notificationService;
   @Inject private HistoryService historyService;
-  @Inject private InfrastructureService infrastructureService;
   @Inject private WorkflowService workflowService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;

@@ -19,12 +19,13 @@ xxxxxxxx
       validateCerts: false
 
 logging:
+  level: INFO
   appenders:
     - type: console
-      threshold: INFO
+      threshold: TRACE
       target: stdout
 #    - type: rsyslog-tcp-ssl
-#      threshold: INFO
+#      threshold: TRACE
 #      host: logs5.papertrailapp.com
 #      port: 13747
 #      programName: manager-saas

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.beans.ErrorCodes.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -14,11 +15,16 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
+import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.infrastructure.AwsHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -67,7 +73,23 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return PageResponse.Builder.aPageResponse().withResponse(awsHosts).build();
   }
 
-  public AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
+  @Override
+  public void deleteHost(String appId, String infraMappingId, String hostName) {
+    hostService.deleteByHostName(appId, infraMappingId, hostName);
+  }
+
+  @Override
+  public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
+    hostService.updateHostConnectionAttrByInfraMappingId(
+        infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
+  }
+
+  @Override
+  public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
+    hostService.deleteByInfraMappingId(appId, infraMappingId);
+  }
+
+  private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AwsConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
     }
@@ -115,19 +137,33 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     waitForAllInstancesToBeReady(amazonEc2Client, instancesIds);
     logger.info("All instances are in running state");
-    Misc.quietSleep(SLEEP_INTERVAL * 12);
 
     return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instancesIds))
         .getReservations()
         .stream()
         .flatMap(reservation -> reservation.getInstances().stream())
-        .map(instance
-            -> anAwsHost()
-                   .withAppId(Base.GLOBAL_APP_ID)
-                   .withHostName(instance.getPublicDnsName())
-                   .withInstance(instance)
-                   .build())
+        .map(instance -> anAwsHost().withHostName(instance.getPublicDnsName()).withInstance(instance).build())
         .collect(Collectors.toList());
+  }
+
+  public void deProvisionHosts(
+      String appId, String infraMappingId, SettingAttribute computeProviderSetting, List<String> hostNames) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    AmazonEC2Client amazonEc2Client =
+        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+    List<AwsHost> awsHosts = hostService
+                                 .list(aPageRequest()
+                                           .addFilter("appId", Operator.EQ, appId)
+                                           .addFilter("infraMappingId", Operator.EQ, infraMappingId)
+                                           .addFilter("hostNames", Operator.IN, hostNames)
+                                           .build())
+                                 .getResponse();
+
+    List<String> hostInstanceId =
+        awsHosts.stream().map(host -> ((AwsHost) host).getInstance().getInstanceId()).collect(Collectors.toList());
+    TerminateInstancesResult terminateInstancesResult =
+        amazonEc2Client.terminateInstances(new TerminateInstancesRequest(hostInstanceId));
   }
 
   private void waitForAllInstancesToBeReady(AmazonEC2Client amazonEC2Client, List<String> instancesIds) {

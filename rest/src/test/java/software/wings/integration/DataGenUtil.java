@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -39,7 +38,6 @@ import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.ANY;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +48,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoCommandException;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -60,8 +60,11 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.utils.ReflectionUtils;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.mapping.MappedField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -70,7 +73,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -82,7 +84,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
@@ -95,10 +96,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Modifier;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -199,14 +200,48 @@ client = ClientBuilder.newBuilder()
 
 private void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
   wingsPersistence.getDatastore().getDB().dropDatabase();
-  for (final Class clazz : ReflectionUtils.getClasses("software.wings.beans", false)) {
-    final Embedded embeddedAnn = ReflectionUtils.getClassEmbeddedAnnotation(clazz);
-    final org.mongodb.morphia.annotations.Entity entityAnn = ReflectionUtils.getClassEntityAnnotation(clazz);
-    final boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
-    if ((entityAnn != null || embeddedAnn != null) && !isAbstract) {
-      wingsPersistence.getDatastore().ensureIndexes(clazz);
+  Morphia morphia = new Morphia();
+  morphia.getMapper().getOptions().setMapSubPackages(true);
+  morphia.mapPackage("software.wings");
+  ensureIndex(morphia, wingsPersistence.getDatastore());
+}
+
+private void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
+  /*
+  Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+  There is no way to override this behavior.
+  https://github.com/mongodb/morphia/issues/706
+   */
+
+  morphia.getMapper().getMappedClasses().forEach(mc -> {
+    if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
+      // Read Entity level "Indexes" annotation
+      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+      if (indexesAnnotations != null) {
+        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+          BasicDBObject keys = new BasicDBObject();
+          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+          primaryDatastore.getCollection(mc.getClazz())
+              .createIndex(keys, null, index.unique() || index.options().unique());
+        });
+      }
+
+      // Read field level "Indexed" annotation
+      for (final MappedField mf : mc.getPersistenceFields()) {
+        if (mf.hasAnnotation(Indexed.class)) {
+          final Indexed indexed = mf.getAnnotation(Indexed.class);
+          try {
+            primaryDatastore.getCollection(mc.getClazz())
+                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
+                    indexed.unique() || indexed.options().unique());
+          } catch (MongoCommandException mex) {
+            logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+            throw mex;
+          }
+        }
+      }
     }
-  }
+  });
 }
 
 /**
@@ -659,37 +694,6 @@ private List<Environment> addEnvs(String appId) throws IOException {
   }
   // environments.forEach(this::addHostsToEnv);
   return environments;
-}
-
-private void addHostsToEnv(Environment env) {
-  if (envAttr == null) {
-    envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute()
-            .withAppId(env.getAppId())
-            .withAccountId(accountId)
-            .withName("JumpBox")
-            .withValue(new BastionConnectionAttributes())
-            .build());
-  }
-
-  Infrastructure infrastructure = wingsPersistence.createQuery(Infrastructure.class).get();
-  WebTarget target = client.target(format(
-      API_BASE + "/hosts?infraId=%s&appId=%s&envId=%s", infrastructure.getUuid(), env.getAppId(), env.getUuid()));
-
-  List<SettingAttribute> connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
-                                                    .field("appId")
-                                                    .equal(env.getAppId())
-                                                    .field("value.type")
-                                                    .equal(HOST_CONNECTION_ATTRIBUTES)
-                                                    .asList();
-
-  for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
-    Response response = getRequestWithAuthHeader(target).post(Entity.entity(
-        ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttr",
-            connectionAttributes.get(i % connectionAttributes.size()).getUuid(), "bastionConnAttr", envAttr.getUuid()),
-        APPLICATION_JSON));
-    assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
-  }
 }
 
 private File getTestFile(String name) throws IOException {

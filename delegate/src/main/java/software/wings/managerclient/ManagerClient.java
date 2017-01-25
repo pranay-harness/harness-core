@@ -75,4 +75,8 @@ public interface ManagerClient {
   @GET("delegateFiles/metainfo")
   Call<RestResponse<DelegateFile>> getMetaInfo(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
+
+  @PUT("delegates/{delegateId}/tasks/{taskId}/acquire")
+  Call<Boolean> acquireTask(
+      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 }
