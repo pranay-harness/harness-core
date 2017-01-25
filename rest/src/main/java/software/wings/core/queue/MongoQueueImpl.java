@@ -5,6 +5,8 @@ import static org.joor.Reflect.on;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Objects;
@@ -16,6 +18,8 @@ import java.util.concurrent.TimeUnit;
  * @param <T> the generic type
  */
 public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
+  private static final Logger logger = LoggerFactory.getLogger(MongoQueueImpl.class);
+
   private Datastore datastore;
   private Class<T> klass;
   private int resetDurationInSeconds;
@@ -130,7 +134,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     if (datastore.findAndModify(query, updateOperations) != null) {
       message.setResetTimestamp(resetTimestamp);
     } else {
-      System.out.println("Reset failed");
+      logger.error("Reset duration failed");
     }
   }
 

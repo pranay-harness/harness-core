@@ -36,7 +36,11 @@ public interface DelegateService {
 
   PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId);
 
+  boolean acquireDelegateTask(String accountId, String delegateId, String taskId);
+
   void processDelegateResponse(DelegateTaskResponse response);
 
   File download(String managerHost, String accountId) throws IOException, TemplateException;
+
+  boolean filter(String delegateId, DelegateTask task);
 }

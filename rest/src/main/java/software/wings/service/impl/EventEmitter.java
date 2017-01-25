@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Singleton;
 
-import org.atmosphere.cpr.MetaBroadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
 import software.wings.security.PermissionAttribute.PermissionScope;
@@ -17,17 +17,8 @@ import javax.inject.Inject;
  */
 @Singleton
 public class EventEmitter {
-  private MetaBroadcaster metaBroadcaster;
+  @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private AppService appService;
-
-  /**
-   * Instantiates a new Event emitter.
-   *
-   * @param metaBroadcaster the broadcaster factory
-   */
-  public EventEmitter(MetaBroadcaster metaBroadcaster) {
-    this.metaBroadcaster = metaBroadcaster;
-  }
 
   /**
    * Send.
@@ -40,14 +31,18 @@ public class EventEmitter {
       Application application = appService.get(event.getAppId());
       event.setOrgId(application.getAccountId());
     }
-    metaBroadcaster.broadcastTo("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId() + "/"
-            + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName(),
-        event);
+    broadcasterFactory
+        .lookup("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId() + "/"
+                + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName(),
+            true)
+        .broadcast(event);
     if (isNotBlank(event.getUuid())) {
-      metaBroadcaster.broadcastTo("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId()
-              + "/" + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName() + "/"
-              + event.getUuid(),
-          event);
+      broadcasterFactory
+          .lookup("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId() + "/"
+                  + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName() + "/"
+                  + event.getUuid(),
+              true)
+          .broadcast(event);
     }
   }
 

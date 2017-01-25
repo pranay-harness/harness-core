@@ -1,6 +1,8 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -21,6 +23,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -62,6 +66,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private EventEmitter eventEmitter;
   @Mock private MainConfiguration mainConfiguration;
+  @Mock private BroadcasterFactory broadcasterFactory;
+  @Mock private Broadcaster broadcaster;
 
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
@@ -70,6 +76,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void setUp() {
     when(mainConfiguration.getDelegateMetadataUrl())
         .thenReturn("http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
+    when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
   }
 
   @Test

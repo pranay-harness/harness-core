@@ -217,6 +217,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifyResponseCleaner")))
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30000L, TimeUnit.MILLISECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
   private void registerJerseyProviders(Environment environment) {

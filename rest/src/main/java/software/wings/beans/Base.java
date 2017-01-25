@@ -28,6 +28,8 @@ public class Base {
    */
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
+  public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
+
   /**
    * The constant GLOBAL_ENV_ID.
    */

@@ -4,9 +4,11 @@ import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -25,6 +27,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,6 +182,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void queueTask(DelegateTask task) {
     wingsPersistence.save(task);
+    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
   }
 
   @Override
@@ -193,8 +197,25 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
-    wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
     return wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
+  }
+
+  @Override
+  public boolean acquireDelegateTask(String accountId, String delegateId, String taskId) {
+    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                    .field("accountId")
+                                    .equal(accountId)
+                                    .field("status")
+                                    .equal(DelegateTask.Status.QUEUED)
+                                    .field("delegateId")
+                                    .doesNotExist()
+                                    .field(ID_KEY)
+                                    .equal(taskId);
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .set("status", DelegateTask.Status.STARTED)
+                                                          .set("delegateId", delegateId);
+    DelegateTask delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    return delegateTask != null;
   }
 
   @Override
@@ -214,6 +235,7 @@ public class DelegateServiceImpl implements DelegateService {
                                   .equal(delegateTask.getUuid()));
     } else {
       String topicName = response.getTask().getQueueName();
+      // do the haze
       IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
       topic.offer(response.getResponse());
     }
@@ -266,5 +288,22 @@ public class DelegateServiceImpl implements DelegateService {
 
     out.close();
     return delegateFile;
+  }
+
+  @Override
+  public boolean filter(String delegateId, DelegateTask task) {
+    boolean qualifies = false;
+    Delegate delegate = wingsPersistence.get(Delegate.class,
+        aPageRequest()
+            .addFilter("accountId", IN, task.getAccountId(), GLOBAL_ACCOUNT_ID)
+            .addFilter(ID_KEY, EQ, delegateId)
+            .addFilter("status", EQ, Status.ENABLED)
+            .build());
+
+    if (delegate != null) {
+      qualifies = true;
+    }
+
+    return qualifies;
   }
 }

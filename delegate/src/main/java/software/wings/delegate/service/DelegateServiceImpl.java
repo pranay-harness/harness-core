@@ -1,5 +1,6 @@
 package software.wings.delegate.service;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
@@ -131,12 +132,14 @@ public class DelegateServiceImpl implements DelegateService {
       socket
           .on(Event.MESSAGE,
               (String message) -> {
-                try {
-                  DelegateTask delegateTask = (DelegateTask) KryoUtils.asObject(message);
-                  dispatchDelegateTask(delegateTask, delegateId, accountId);
-                } catch (Exception e) {
-                  System.out.println(message);
-                  logger.error("Exception while decoding task: ", e);
+                if (!StringUtils.equals(message, "X")) {
+                  try {
+                    DelegateTask delegateTask = (DelegateTask) KryoUtils.asObject(message);
+                    dispatchDelegateTask(delegateTask, delegateId, accountId);
+                  } catch (Exception e) {
+                    System.out.println(message);
+                    logger.error("Exception while decoding task: ", e);
+                  }
                 }
               })
           .on(Event.ERROR,
@@ -148,8 +151,11 @@ public class DelegateServiceImpl implements DelegateService {
           .on(Event.REOPENED, o -> {
             // register again
             try {
-              socket.fire(
-                  builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build());
+              socket.fire(builder.but()
+                              .withLastHeartBeat(System.currentTimeMillis())
+                              .withStatus(Status.ENABLED)
+                              .withConnected(true)
+                              .build());
             } catch (IOException e) {
               e.printStackTrace();
             }
@@ -219,7 +225,8 @@ public class DelegateServiceImpl implements DelegateService {
       logger.debug("sending heartbeat..");
       try {
         if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
-          socket.fire(JsonUtils.asJson(builder.but().withLastHeartBeat(System.currentTimeMillis()).build()));
+          socket.fire(JsonUtils.asJson(
+              builder.but().withLastHeartBeat(System.currentTimeMillis()).withConnected(true).build()));
         }
       } catch (IOException e) {
         logger.error("Exception while sending heartbeat ", e);
@@ -230,28 +237,52 @@ public class DelegateServiceImpl implements DelegateService {
   private void dispatchDelegateTask(DelegateTask delegateTask, String delegateId, String accountId) {
     logger.info("DelegateTask received - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
-    DelegateRunnableTask delegateRunnableTask =
-        delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask, notifyResponseData -> {
-          Response<ResponseBody> response = null;
-          try {
-            response = managerClient
-                           .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
-                               aDelegateTaskResponse()
-                                   .withTask(delegateTask)
-                                   .withAccountId(accountId)
-                                   .withResponse(notifyResponseData)
-                                   .build())
-                           .execute();
-          } catch (IOException e) {
-            logger.error("Unable to send response to manager ", e);
-          } finally {
-            if (response != null && !response.isSuccessful()) {
-              response.errorBody().close();
-            }
-          }
-        });
-    injector.injectMembers(delegateRunnableTask);
-    executorService.submit(delegateRunnableTask);
+    Response<Boolean> acquireResponse = null;
+
+    try {
+      boolean taskAcquired = false;
+      if (isNotBlank(delegateTask.getWaitId())) {
+        acquireResponse = managerClient.acquireTask(delegateId, delegateTask.getUuid(), accountId).execute();
+        taskAcquired = acquireResponse.body();
+      } else {
+        taskAcquired = true;
+      }
+      if (taskAcquired) {
+        logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
+            delegateTask.getAccountId(), delegateTask.getTaskType());
+        DelegateRunnableTask delegateRunnableTask =
+            delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask, notifyResponseData -> {
+              Response<ResponseBody> response = null;
+              try {
+                response = managerClient
+                               .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                                   aDelegateTaskResponse()
+                                       .withTask(delegateTask)
+                                       .withAccountId(accountId)
+                                       .withResponse(notifyResponseData)
+                                       .build())
+                               .execute();
+              } catch (IOException e) {
+                logger.error("Unable to send response to manager ", e);
+              } finally {
+                if (response != null && !response.isSuccessful()) {
+                  response.errorBody().close();
+                }
+              }
+            });
+        injector.injectMembers(delegateRunnableTask);
+        executorService.submit(delegateRunnableTask);
+      } else {
+        logger.info("DelegateTask excecuting on some other delegate - uuid: {}, accountId: {}, taskType: {}",
+            delegateTask.getUuid(), delegateTask.getAccountId(), delegateTask.getTaskType());
+      }
+    } catch (IOException e) {
+      logger.error("Unable to acquire task ", e);
+    } finally {
+      if (acquireResponse != null && !acquireResponse.isSuccessful()) {
+        acquireResponse.errorBody().close();
+      }
+    }
   }
 
   private String getVersion() {
