@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
+import static software.wings.beans.DeploymentType.SSH;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -30,6 +31,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
@@ -49,6 +51,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -69,6 +72,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -88,6 +92,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceInstanceService serviceInstanceServiceMock;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   private Environment env;
   private List<Service> services;
@@ -466,8 +471,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID);
     logger.debug(JsonUtils.asJson(stencils));
-    assertThat(stencils).isNotNull().hasSize(2).containsKeys(
-        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS);
+    assertThat(stencils).isNotNull().hasSize(3).containsKeys(
+        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
         .contains("REPEAT", "FORK");
@@ -596,8 +601,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow2)
         .isNotNull()
         .hasFieldOrProperty("uuid")
-        .isEqualToIgnoringGivenFields(
-            orchestrationWorkflow, "uuid", "createdAt", "lastUpdatedAt", "createdBy", "lastUpdatedBy");
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph");
     return orchestrationWorkflow2;
   }
 
@@ -683,7 +689,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     WorkflowPhase workflowPhase2 =
         orchestrationWorkflow2.getWorkflowPhases().get(orchestrationWorkflow2.getWorkflowPhases().size() - 1);
     assertThat(workflowPhase2).isNotNull().hasFieldOrPropertyWithValue("name", "phase1");
-    assertThat(workflowPhase2.getPhaseSteps()).isNotNull().hasSize(7);
+    assertThat(workflowPhase2.getPhaseSteps()).isNotNull().hasSize(6);
   }
 
   @Test
@@ -714,6 +720,68 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow3).isNotNull();
     assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
     assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
+  }
+
+  @Test
+  public void shouldUpdateNode() {
+    OrchestrationWorkflow orchestrationWorkflow =
+        anOrchestrationWorkflow()
+            .withAppId(APP_ID)
+            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
+            .withPreDeploymentSteps(
+                aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
+                    .addStep(
+                        aNode().withType("HTTP").withName("http").addProperty("URL", "http://www.google.com").build())
+                    .build())
+            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .build();
+
+    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("graph")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps");
+
+    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow2.getPreDeploymentSteps().getUuid())
+        .containsKeys(orchestrationWorkflow2.getPostDeploymentSteps().getUuid());
+
+    Graph graph = orchestrationWorkflow2.getGraph().getSubworkflows().get(
+        orchestrationWorkflow2.getPreDeploymentSteps().getUuid());
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(1);
+    Node node = graph.getNodes().get(0);
+    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
+    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.google.com");
+    node.getProperties().put("URL", "http://www.yahoo.com");
+
+    workflowService.updateGraphNode(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(),
+        orchestrationWorkflow2.getPreDeploymentSteps().getUuid(), node);
+
+    orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("graph")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps");
+
+    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow2.getPreDeploymentSteps().getUuid())
+        .containsKeys(orchestrationWorkflow2.getPostDeploymentSteps().getUuid());
+
+    graph = orchestrationWorkflow2.getGraph().getSubworkflows().get(
+        orchestrationWorkflow2.getPreDeploymentSteps().getUuid());
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(1);
+    node = graph.getNodes().get(0);
+    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
+    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.yahoo.com");
   }
 
   @Test
@@ -799,5 +867,53 @@ public class WorkflowServiceTest extends WingsBaseTest {
     OrchestrationWorkflow orchestrationWorkflow2 =
         workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
     assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
+  }
+
+  @Test
+  public void shouldCreateComplexWorkflow() {
+    OrchestrationWorkflow orchestrationWorkflow =
+        anOrchestrationWorkflow()
+            .withAppId(APP_ID)
+            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
+            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+            .addWorkflowPhases(aWorkflowPhase()
+                                   .withName("Phase1")
+                                   .withComputeProviderId("computeProviderId1")
+                                   .withServiceId("serviceId1")
+                                   .withDeploymentType(SSH)
+                                   .build())
+            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .build();
+
+    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph");
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow3).isNotNull();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
+    PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
+                                    .stream()
+                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
+                                    .collect(Collectors.toList())
+                                    .get(0);
+
+    deployPhaseStep.getSteps().add(
+        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+
+    workflowService.updateWorkflowPhase(
+        orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
+
+    OrchestrationWorkflow orchestrationWorkflow4 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+
+    logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
   }
 }

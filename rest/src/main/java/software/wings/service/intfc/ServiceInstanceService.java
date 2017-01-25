@@ -3,16 +3,15 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
-import software.wings.beans.InstanceCountByEnv;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
-import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -59,11 +58,12 @@ public interface ServiceInstanceService {
    * Update host mappings.
    *
    * @param template     the template
+   * @param infraMapping the infra mapping
    * @param addedHosts   the added hosts
    * @param deletedHosts the deleted hosts
    */
-  void updateInstanceMappings(
-      @NotNull ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts);
+  void updateInstanceMappings(@NotNull ServiceTemplate template, InfrastructureMapping infraMapping,
+      List<Host> addedHosts, List<String> deletedHosts);
 
   /**
    * Delete by env.
@@ -83,18 +83,17 @@ public interface ServiceInstanceService {
   void deleteByServiceTemplate(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String templateId);
 
   /**
-   * Gets counts by env.
-   *
-   * @param appId            the app id
-   * @param serviceTemplates the service templates
-   * @return the counts by env
-   */
-  Iterable<InstanceCountByEnv> getCountsByEnv(@NotEmpty String appId, Set<ServiceTemplate> serviceTemplates);
-
-  /**
    * Update activity.
    *
    * @param activity the activity
    */
   void updateActivity(@NotNull Activity activity);
+
+  /**
+   * Delete by infra mapping id.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   */
+  void deleteByInfraMappingId(String appId, String infraMappingId);
 }

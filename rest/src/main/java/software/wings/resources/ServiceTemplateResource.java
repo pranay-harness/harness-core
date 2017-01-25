@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.service.intfc.InfrastructureService;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
@@ -42,7 +42,6 @@ public class ServiceTemplateResource {
    * The Service template service.
    */
   @Inject ServiceTemplateService serviceTemplateService;
-  @Inject private InfrastructureService infrastructureService;
 
   /**
    * List.
@@ -126,69 +125,12 @@ public class ServiceTemplateResource {
     return new RestResponse();
   }
 
-  /**
-   * Map hosts.
-   *
-   * @param envId             the env id
-   * @param appId             the app id
-   * @param serviceTemplateId the service template id
-   * @param hostIds           the host ids
-   * @return the rest response
-   */
-  @PUT
-  @Path("{templateId}/map-hosts")
-  public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
-      @PathParam("templateId") String serviceTemplateId, List<String> hostIds) {
-    return new RestResponse<>(serviceTemplateService.updateHosts(appId, envId, serviceTemplateId, hostIds));
-  }
-
-  /**
-   * Map tags.
-   *
-   * @param envId             the env id
-   * @param appId             the app id
-   * @param serviceTemplateId the service template id
-   * @param tagIds            the tag ids
-   * @return the rest response
-   */
-  @PUT
-  @Path("{templateId}/map-tags")
-  public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
-      @PathParam("templateId") String serviceTemplateId, List<String> tagIds) {
-    return new RestResponse<>(serviceTemplateService.updateTags(appId, envId, serviceTemplateId, tagIds));
-  }
-
-  /**
-   * Host configs.
-   *
-   * @param envId       the env id
-   * @param appId       the app id
-   * @param templateId  the template id
-   * @param pageRequest the page request
-   * @return the rest response
-   */
+  @DelegateAuth
   @GET
-  @Path("{templateId}/tagged-hosts")
-  public RestResponse<PageResponse<ApplicationHost>> hostConfigs(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
-      @BeanParam PageRequest<ApplicationHost> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", infrastructureService.getInfraByEnvId(appId, envId), EQ);
-    return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
-  }
-
-  /**
-   * Override files rest response.
-   *
-   * @param envId      the env id
-   * @param appId      the app id
-   * @param templateId the template id
-   * @return the rest response
-   */
-  @GET
-  @Path("{templateId}/override-files")
-  public RestResponse<List<ConfigFile>> overrideFiles(@QueryParam("envId") String envId,
-      @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
-    return new RestResponse<>(serviceTemplateService.getOverrideFiles(appId, envId, templateId));
+  @Path("{templateId}/compute-files")
+  public RestResponse<List<ConfigFile>> computeFiles(@PathParam("templateId") String templateId,
+      @QueryParam("envId") @NotEmpty String envId, @QueryParam("appId") @NotEmpty String appId,
+      @QueryParam("hostId") @NotEmpty String hostId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId, hostId));
   }
 }

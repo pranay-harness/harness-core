@@ -20,7 +20,7 @@
     Please see the schema for how to configure Hazelcast at https://hazelcast.com/schema/config/hazelcast-config-3.7.xsd
     or the documentation at https://hazelcast.org/documentation/
 -->
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.4.xsd"
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.7.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <properties>
@@ -63,8 +63,6 @@
                 <tag-key>type</tag-key>
                 <tag-value>hz-nodes</tag-value>
             </aws>
-            <discovery-strategies>
-            </discovery-strategies>
         </join>
         <interfaces enabled="false">
             <interface>10.10.1.*</interface>
@@ -205,8 +203,6 @@
                         INDEX-ONLY: Caches values only when they are inserted into an index.
                         ALWAYS: Always cache deserialized values.
         -->
-        <cache-deserialized-values>INDEX-ONLY</cache-deserialized-values>
-
     </map>
 
     <multimap name="default">
@@ -255,12 +251,11 @@
     <serialization>
         <portable-version>0</portable-version>
         <serializers>
-            <global-serializer>software.wings.utils.HazelcastJacksonSerializer</global-serializer>
+            <global-serializer>
+                info.jerrinot.subzero.Serializer
+            </global-serializer>
         </serializers>
     </serialization>
 
     <services enable-defaults="true"/>
-
-    <lite-member enabled="false"/>
-
 </hazelcast>

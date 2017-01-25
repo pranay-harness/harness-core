@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.EntityType.HOST;
-
 import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -11,15 +9,10 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.infrastructure.ApplicationHost;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/4/16.
@@ -31,18 +24,12 @@ public class ServiceTemplate extends Base {
   @NotEmpty private String envId;
   @NotEmpty private String name;
   private String description;
-  @NotNull private EntityType mappedBy = HOST;
   @NotEmpty private String serviceId;
-  private List<String> tagIds = new ArrayList<>();
-  private List<String> hostIds = new ArrayList<>();
-  private List<String> leafTagIds = new ArrayList<>();
 
   @Transient private Service service;
-  @Transient private List<Tag> tags = new ArrayList<>();
-  @Transient private List<ApplicationHost> hosts = new ArrayList<>();
-  @Transient private Set<Tag> leafTags = new HashSet<>();
-  @Transient private List<ApplicationHost> taggedHosts = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
+  @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
+  @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
 
   /**
@@ -82,60 +69,6 @@ public class ServiceTemplate extends Base {
   }
 
   /**
-   * Gets mapped by.
-   *
-   * @return the mapped by
-   */
-  public EntityType getMappedBy() {
-    return mappedBy;
-  }
-
-  /**
-   * Sets mapped by.
-   *
-   * @param mappedBy the mapped by
-   */
-  public void setMappedBy(EntityType mappedBy) {
-    this.mappedBy = mappedBy;
-  }
-
-  /**
-   * Gets tags.
-   *
-   * @return the tags
-   */
-  public List<Tag> getTags() {
-    return tags;
-  }
-
-  /**
-   * Sets tags.
-   *
-   * @param tags the tags
-   */
-  public void setTags(List<Tag> tags) {
-    this.tags = tags;
-  }
-
-  /**
-   * Gets hosts.
-   *
-   * @return the hosts
-   */
-  public List<ApplicationHost> getHosts() {
-    return hosts;
-  }
-
-  /**
-   * Sets hosts.
-   *
-   * @param hosts the hosts
-   */
-  public void setHosts(List<ApplicationHost> hosts) {
-    this.hosts = hosts;
-  }
-
-  /**
    * Gets env id.
    *
    * @return the env id
@@ -169,42 +102,6 @@ public class ServiceTemplate extends Base {
    */
   public void setService(Service service) {
     this.service = service;
-  }
-
-  /**
-   * Gets leaf tags.
-   *
-   * @return the leaf tags
-   */
-  public Set<Tag> getLeafTags() {
-    return leafTags;
-  }
-
-  /**
-   * Sets leaf tags.
-   *
-   * @param leafTags the leaf tags
-   */
-  public void setLeafTags(Set<Tag> leafTags) {
-    this.leafTags = leafTags;
-  }
-
-  /**
-   * Gets tagged hosts.
-   *
-   * @return the tagged hosts
-   */
-  public List<ApplicationHost> getTaggedHosts() {
-    return taggedHosts;
-  }
-
-  /**
-   * Sets tagged hosts.
-   *
-   * @param taggedHosts the tagged hosts
-   */
-  public void setTaggedHosts(List<ApplicationHost> taggedHosts) {
-    this.taggedHosts = taggedHosts;
   }
 
   /**
@@ -262,85 +159,28 @@ public class ServiceTemplate extends Base {
   }
 
   /**
-   * Gets tag ids.
+   * Gets service variables.
    *
-   * @return the tag ids
+   * @return the service variables
    */
-  public List<String> getTagIds() {
-    return tagIds;
+  public List<ServiceVariable> getServiceVariables() {
+    return serviceVariables;
   }
 
   /**
-   * Sets tag ids.
+   * Sets service variables.
    *
-   * @param tagIds the tag ids
+   * @param serviceVariables the service variables
    */
-  public void setTagIds(List<String> tagIds) {
-    this.tagIds = tagIds;
-  }
-
-  /**
-   * Gets host ids.
-   *
-   * @return the host ids
-   */
-  public List<String> getHostIds() {
-    return hostIds;
-  }
-
-  /**
-   * Sets host ids.
-   *
-   * @param hostIds the host ids
-   */
-  public void setHostIds(List<String> hostIds) {
-    this.hostIds = hostIds;
-  }
-
-  /**
-   * Gets leaf tag ids.
-   *
-   * @return the leaf tag ids
-   */
-  public List<String> getLeafTagIds() {
-    return leafTagIds;
-  }
-
-  /**
-   * Sets leaf tag ids.
-   *
-   * @param leafTagIds the leaf tag ids
-   */
-  public void setLeafTagIds(List<String> leafTagIds) {
-    this.leafTagIds = leafTagIds;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("envId", envId)
-        .add("name", name)
-        .add("description", description)
-        .add("mappedBy", mappedBy)
-        .add("serviceId", serviceId)
-        .add("tagIds", tagIds)
-        .add("hostIds", hostIds)
-        .add("leafTagIds", leafTagIds)
-        .add("service", service)
-        .add("tags", tags)
-        .add("hosts", hosts)
-        .add("leafTags", leafTags)
-        .add("taggedHosts", taggedHosts)
-        .add("configFiles", configFiles)
-        .add("defaultServiceTemplate", defaultServiceTemplate)
-        .toString();
+  public void setServiceVariables(List<ServiceVariable> serviceVariables) {
+    this.serviceVariables = serviceVariables;
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, name, description, mappedBy, serviceId, tagIds, hostIds, leafTagIds, service, tags, hosts,
-              leafTags, taggedHosts, configFiles, defaultServiceTemplate);
+        + Objects.hash(
+              envId, name, description, serviceId, service, configFiles, serviceVariables, defaultServiceTemplate);
   }
 
   @Override
@@ -356,13 +196,32 @@ public class ServiceTemplate extends Base {
     }
     final ServiceTemplate other = (ServiceTemplate) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
-        && Objects.equals(this.description, other.description) && Objects.equals(this.mappedBy, other.mappedBy)
-        && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.tagIds, other.tagIds)
-        && Objects.equals(this.hostIds, other.hostIds) && Objects.equals(this.leafTagIds, other.leafTagIds)
-        && Objects.equals(this.service, other.service) && Objects.equals(this.tags, other.tags)
-        && Objects.equals(this.hosts, other.hosts) && Objects.equals(this.leafTags, other.leafTags)
-        && Objects.equals(this.taggedHosts, other.taggedHosts) && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.description, other.description) && Objects.equals(this.serviceId, other.serviceId)
+        && Objects.equals(this.service, other.service) && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.serviceVariables, other.serviceVariables)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("envId", envId)
+        .add("name", name)
+        .add("description", description)
+        .add("serviceId", serviceId)
+        .add("service", service)
+        .add("configFiles", configFiles)
+        .add("serviceVariables", serviceVariables)
+        .add("defaultServiceTemplate", defaultServiceTemplate)
+        .toString();
+  }
+
+  public List<InfrastructureMapping> getInfrastructureMappings() {
+    return infrastructureMappings;
+  }
+
+  public void setInfrastructureMappings(List<InfrastructureMapping> infrastructureMappings) {
+    this.infrastructureMappings = infrastructureMappings;
   }
 
   /**
@@ -372,17 +231,10 @@ public class ServiceTemplate extends Base {
     private String envId;
     private String name;
     private String description;
-    private EntityType mappedBy = HOST;
     private String serviceId;
-    private List<String> tagIds = new ArrayList<>();
-    private List<String> hostIds = new ArrayList<>();
-    private List<String> leafTagIds = new ArrayList<>();
     private Service service;
-    private List<Tag> tags = new ArrayList<>();
-    private List<ApplicationHost> hosts = new ArrayList<>();
-    private Set<Tag> leafTags = new HashSet<>();
-    private List<ApplicationHost> taggedHosts = new ArrayList<>();
     private List<ConfigFile> configFiles = new ArrayList<>();
+    private List<ServiceVariable> serviceVariables = new ArrayList<>();
     private boolean defaultServiceTemplate = false;
     private String uuid;
     private String appId;
@@ -436,17 +288,6 @@ public class ServiceTemplate extends Base {
     }
 
     /**
-     * With mapped by builder.
-     *
-     * @param mappedBy the mapped by
-     * @return the builder
-     */
-    public Builder withMappedBy(EntityType mappedBy) {
-      this.mappedBy = mappedBy;
-      return this;
-    }
-
-    /**
      * With service id builder.
      *
      * @param serviceId the service id
@@ -458,92 +299,13 @@ public class ServiceTemplate extends Base {
     }
 
     /**
-     * With tag ids builder.
-     *
-     * @param tagIds the tag ids
-     * @return the builder
-     */
-    public Builder withTagIds(List<String> tagIds) {
-      this.tagIds = tagIds;
-      return this;
-    }
-
-    /**
-     * With host ids builder.
-     *
-     * @param hostIds the host ids
-     * @return the builder
-     */
-    public Builder withHostIds(List<String> hostIds) {
-      this.hostIds = hostIds;
-      return this;
-    }
-
-    /**
-     * With leaf tag ids builder.
-     *
-     * @param leafTagIds the leaf tag ids
-     * @return the builder
-     */
-    public Builder withLeafTagIds(List<String> leafTagIds) {
-      this.leafTagIds = leafTagIds;
-      return this;
-    }
-
-    /**
      * With service builder.
      *
      * @param service the service
      * @return the builder
      */
     public Builder withService(Service service) {
-      if (service != null) {
-        this.serviceId = service.getUuid();
-      }
-      return this;
-    }
-
-    /**
-     * With tags builder.
-     *
-     * @param tags the tags
-     * @return the builder
-     */
-    public Builder withTags(List<Tag> tags) {
-      this.tagIds.addAll(tags.stream().map(Tag::getUuid).collect(Collectors.toList()));
-      return this;
-    }
-
-    /**
-     * With hosts builder.
-     *
-     * @param hosts the hosts
-     * @return the builder
-     */
-    public Builder withHosts(List<ApplicationHost> hosts) {
-      this.hostIds.addAll(hosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
-      return this;
-    }
-
-    /**
-     * With leaf tags builder.
-     *
-     * @param leafTags the leaf tags
-     * @return the builder
-     */
-    public Builder withLeafTags(Set<Tag> leafTags) {
-      this.leafTagIds.addAll(leafTags.stream().map(Tag::getUuid).collect(Collectors.toList()));
-      return this;
-    }
-
-    /**
-     * With tagged hosts builder.
-     *
-     * @param taggedHosts the tagged hosts
-     * @return the builder
-     */
-    public Builder withTaggedHosts(List<ApplicationHost> taggedHosts) {
-      this.taggedHosts = taggedHosts;
+      this.service = service;
       return this;
     }
 
@@ -555,6 +317,17 @@ public class ServiceTemplate extends Base {
      */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
+      return this;
+    }
+
+    /**
+     * With service variables builder.
+     *
+     * @param serviceVariables the service variables
+     * @return the builder
+     */
+    public Builder withServiceVariables(List<ServiceVariable> serviceVariables) {
+      this.serviceVariables = serviceVariables;
       return this;
     }
 
@@ -645,17 +418,10 @@ public class ServiceTemplate extends Base {
           .withEnvId(envId)
           .withName(name)
           .withDescription(description)
-          .withMappedBy(mappedBy)
           .withServiceId(serviceId)
-          .withTagIds(tagIds)
-          .withHostIds(hostIds)
-          .withLeafTagIds(leafTagIds)
           .withService(service)
-          .withTags(tags)
-          .withHosts(hosts)
-          .withLeafTags(leafTags)
-          .withTaggedHosts(taggedHosts)
           .withConfigFiles(configFiles)
+          .withServiceVariables(serviceVariables)
           .withDefaultServiceTemplate(defaultServiceTemplate)
           .withUuid(uuid)
           .withAppId(appId)
@@ -675,17 +441,10 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setEnvId(envId);
       serviceTemplate.setName(name);
       serviceTemplate.setDescription(description);
-      serviceTemplate.setMappedBy(mappedBy);
       serviceTemplate.setServiceId(serviceId);
-      serviceTemplate.setTagIds(tagIds);
-      serviceTemplate.setHostIds(hostIds);
-      serviceTemplate.setLeafTagIds(leafTagIds);
       serviceTemplate.setService(service);
-      serviceTemplate.setTags(tags);
-      serviceTemplate.setHosts(hosts);
-      serviceTemplate.setLeafTags(leafTags);
-      serviceTemplate.setTaggedHosts(taggedHosts);
       serviceTemplate.setConfigFiles(configFiles);
+      serviceTemplate.setServiceVariables(serviceVariables);
       serviceTemplate.setDefaultServiceTemplate(defaultServiceTemplate);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setAppId(appId);

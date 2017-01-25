@@ -83,7 +83,7 @@ public class WaitNotifyEngine {
 
     log().debug("notify request received for the correlationId : {}", correlationId);
 
-    String notificationId = wingsPersistence.save(new NotifyResponse<T>(correlationId, response));
+    String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
 
     PageRequest<WaitQueue> req = new PageRequest<>();
     req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);

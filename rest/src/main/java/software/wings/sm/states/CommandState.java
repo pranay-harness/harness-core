@@ -1,20 +1,18 @@
 package software.wings.sm.states;
 
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -37,24 +35,23 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
+import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.infrastructure.ApplicationHost;
-import software.wings.common.cache.ResponseCodeCache;
+import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -108,8 +105,6 @@ public class CommandState extends State {
 
   @Inject @Transient private transient HostService hostService;
 
-  @Inject @Transient private transient ServiceCommandExecutorService serviceCommandExecutorService;
-
   @Inject @Transient private transient ActivityService activityService;
 
   @Inject @Transient private transient SettingsService settingsService;
@@ -120,9 +115,11 @@ public class CommandState extends State {
 
   @Inject @Transient private ArtifactStreamService artifactStreamService;
 
+  @Inject @Transient private DelegateService delegateService;
+
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
 
-  @Inject private transient WaitNotifyEngine waitNotifyEngine;
+  @Inject @Transient private transient WaitNotifyEngine waitNotifyEngine;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateDataProvider.class)
@@ -197,7 +194,7 @@ public class CommandState extends State {
       ServiceTemplate serviceTemplate =
           serviceTemplateService.get(appId, instanceElement.getServiceTemplateElement().getUuid());
       Service service = serviceTemplate.getService();
-      ApplicationHost host =
+      Host host =
           hostService.getHostByEnv(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getHostId());
 
       executionDataBuilder.withServiceId(service.getUuid())
@@ -262,14 +259,22 @@ public class CommandState extends State {
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
               .withAppId(appId)
-              .withServiceInstance(serviceInstance)
+              .withEnvId(envId)
               .withBackupPath(backupPath)
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
               .withServiceVariables(context.getServiceVariables())
-              .withHost(host.getHost())
-              .withServiceTemplate(serviceTemplate);
+              .withHost(host)
+              .withServiceTemplate(serviceTemplate)
+              .withAccountId(application.getAccountId());
+
+      if (isNotEmpty(host.getHostConnAttr())) {
+        commandExecutionContextBuilder.withHostConnectionAttributes(settingsService.get(host.getHostConnAttr()));
+      }
+      if (isNotEmpty(host.getBastionConnAttr())) {
+        commandExecutionContextBuilder.withBastionConnectionAttributes(settingsService.get(host.getBastionConnAttr()));
+      }
 
       if (command.isArtifactNeeded()) {
         Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getServiceId());
@@ -282,7 +287,7 @@ public class CommandState extends State {
             .withArtifactStreamName(artifactStream.getSourceName())
             .withArtifactName(artifact.getDisplayName())
             .withArtifactId(artifact.getUuid());
-        commandExecutionContextBuilder.withArtifact(artifact);
+        commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
       }
 
@@ -290,37 +295,20 @@ public class CommandState extends State {
       activityId = activity.getUuid();
 
       executionDataBuilder.withActivityId(activityId);
-
-      String finalActivityId = activityId;
       expandCommand(serviceInstance, command, service.getUuid(), envId);
-      executorService.execute(() -> {
-        ExecutionResult executionResult = ExecutionResult.SUCCESS;
-        String errorMessage = null;
-        try {
-          CommandExecutionContext commandExecutionContext =
-              commandExecutionContextBuilder.withActivityId(finalActivityId).build();
-          executionResult = serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
-        } catch (Exception e) {
-          logger.warn("Exception: ", e);
-          if (e instanceof WingsException) {
-            WingsException ex = (WingsException) e;
-            errorMessage =
-                Joiner.on(",").join(ex.getResponseMessageList()
-                                        .stream()
-                                        .map(responseMessage
-                                            -> ResponseCodeCache.getInstance()
-                                                   .getResponseMessage(responseMessage.getCode(), ex.getParams())
-                                                   .getMessage())
-                                        .collect(toList()));
-          } else {
-            errorMessage = e.getMessage();
-          }
-          executionResult = ExecutionResult.FAILURE;
-        }
-        waitNotifyEngine.notify(finalActivityId,
-            anExecutionResultData().withResult(executionResult).withErrorMessage(errorMessage).build());
-      });
+      CommandExecutionContext commandExecutionContext =
+          commandExecutionContextBuilder.withActivityId(activityId).build();
+
+      delegateService.queueTask(aDelegateTask()
+                                    .withAccountId(application.getAccountId())
+                                    .withAppId(appId)
+                                    .withTaskType(TaskType.COMMAND)
+                                    .withWaitId(activityId)
+                                    .withParameters(new Object[] {command, commandExecutionContext})
+                                    .build());
+
     } catch (Exception e) {
+      logger.error("Exception in command execution: ", e);
       handleCommandException(context, activityId, appId);
       updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
       return anExecutionResponse()

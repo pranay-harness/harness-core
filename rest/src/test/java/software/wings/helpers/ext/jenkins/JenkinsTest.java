@@ -10,38 +10,27 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import software.wings.WingsBaseTest;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import javax.inject.Inject;
 
 /**
  * The Class JenkinsTest.
  */
-public class JenkinsTest extends WingsBaseTest {
+public class JenkinsTest {
   /**
    * The Wire mock rule.
    */
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
-  @Inject private JenkinsFactory jenkinsFactory;
-  private Jenkins jenkins;
+  private Jenkins jenkins =
+      new JenkinsImpl("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2");
 
-  /**
-   * Sets the up.
-   *
-   * @throws URISyntaxException the URI syntax exception
-   */
-  @Before
-  public void setUp() throws URISyntaxException {
-    jenkins = jenkinsFactory.create("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2");
-  }
+  public JenkinsTest() throws URISyntaxException {}
 
   /**
    * Should get job from jenkins.

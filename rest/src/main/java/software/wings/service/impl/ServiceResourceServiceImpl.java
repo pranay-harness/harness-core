@@ -172,9 +172,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service get(String appId, String serviceId) {
+    return get(appId, serviceId, true);
+  }
+
+  @Override
+  public Service get(String appId, String serviceId, boolean includeDetails) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
+    }
+
+    if (!includeDetails) {
+      return service;
     }
 
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));

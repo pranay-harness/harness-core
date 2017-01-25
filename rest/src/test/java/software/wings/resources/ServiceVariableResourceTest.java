@@ -12,7 +12,6 @@ import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.ClassRule;
@@ -53,7 +52,7 @@ public class ServiceVariableResourceTest {
                                                               .withEnvId(ENV_ID)
                                                               .withUuid(WingsTestConstants.SERVICE_VARIABLE_ID)
                                                               .withEntityType(EntityType.ENVIRONMENT)
-                                                              .withEntityId(TAG_ID)
+                                                              .withEntityId(TEMPLATE_ID)
                                                               .withTemplateId(TEMPLATE_ID)
                                                               .withType(Type.TEXT)
                                                               .withValue("8080")
@@ -158,9 +157,11 @@ public class ServiceVariableResourceTest {
    */
   @Test
   public void shoudlDeleteByEntity() throws Exception {
-    Response restResponse =
-        RESOURCES.client().target(format("/service-variables/entity/%s?appId=%s", TAG_ID, APP_ID)).request().delete();
+    Response restResponse = RESOURCES.client()
+                                .target(format("/service-variables/entity/%s?appId=%s", TEMPLATE_ID, APP_ID))
+                                .request()
+                                .delete();
     assertThat(restResponse.getStatus()).isEqualTo(200);
-    verify(VARIABLE_SERVICE).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, TAG_ID);
+    verify(VARIABLE_SERVICE).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, TEMPLATE_ID);
   }
 }

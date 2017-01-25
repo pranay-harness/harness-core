@@ -10,7 +10,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -34,7 +33,8 @@ import java.util.Objects;
  */
 @JsonTypeName("EXEC")
 public class ExecCommandUnit extends AbstractCommandUnit {
-  @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
+  private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+
   @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;
 

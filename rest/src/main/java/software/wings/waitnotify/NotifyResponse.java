@@ -15,10 +15,9 @@ import java.util.Objects;
  * @param <T> the generic type
  * @author Rishi
  */
-@Embedded
 @Entity(value = "notifyResponses", noClassnameStored = true)
 public class NotifyResponse<T extends NotifyResponseData> extends Base {
-  private T response;
+  @Embedded private T response;
 
   @Indexed private Date expiryTs;
 

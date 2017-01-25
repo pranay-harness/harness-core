@@ -3,7 +3,8 @@ package software.wings.service.impl;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
-import software.wings.beans.ServiceInstance;
+import com.google.inject.Singleton;
+
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
@@ -15,7 +16,6 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.util.List;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -34,7 +34,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    * software.wings.beans.command.Command)
    */
   @Override
-  public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
+  public ExecutionResult execute(Command command, CommandExecutionContext context) {
     try {
       InitCommandUnit initCommandUnit = new InitCommandUnit();
       initCommandUnit.setCommand(command);

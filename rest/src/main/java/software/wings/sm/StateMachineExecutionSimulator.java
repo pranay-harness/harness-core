@@ -22,7 +22,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -127,7 +127,7 @@ public class StateMachineExecutionSimulator {
     PageRequest<ServiceInstance> pageRequest = aPageRequest()
                                                    .addFilter("appId", Operator.EQ, appId)
                                                    .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
-                                                   .addFieldsIncluded("uuid", "host")
+                                                   .addFieldsIncluded("uuid", "hostId")
                                                    .build();
 
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
@@ -137,19 +137,19 @@ public class StateMachineExecutionSimulator {
     }
 
     Set<AccessType> accessTypes = new HashSet<>();
-    List<ApplicationHost> hostResponse = hostService
-                                             .list(aPageRequest()
-                                                       .addFilter(ID_KEY, Operator.IN,
-                                                           res.getResponse()
-                                                               .stream()
-                                                               .map(ServiceInstance::getHostId)
-                                                               .collect(Collectors.toSet())
-                                                               .toArray())
-                                                       .build())
-                                             .getResponse();
+    List<Host> hostResponse = hostService
+                                  .list(aPageRequest()
+                                            .addFilter(ID_KEY, Operator.IN,
+                                                res.getResponse()
+                                                    .stream()
+                                                    .map(ServiceInstance::getHostId)
+                                                    .collect(Collectors.toSet())
+                                                    .toArray())
+                                            .build())
+                                  .getResponse();
 
-    for (ApplicationHost host : hostResponse) {
-      SettingAttribute connAttribute = settingsService.get(host.getHost().getHostConnAttr());
+    for (Host host : hostResponse) {
+      SettingAttribute connAttribute = settingsService.get(host.getHostConnAttr());
       if (connAttribute == null || connAttribute.getValue() == null
           || !(connAttribute.getValue() instanceof HostConnectionAttributes)
           || ((HostConnectionAttributes) connAttribute.getValue()).getAccessType() == null) {
@@ -206,7 +206,7 @@ public class StateMachineExecutionSimulator {
         logger.warn("No repeatElements found for the expression: {}", repeatElementExpression);
         return null;
       }
-      State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
+      State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());
       ContextElement repeatElement = repeatElements.get(0);
 
       // Now repeat for one element
@@ -225,7 +225,7 @@ public class StateMachineExecutionSimulator {
 
     } else if (state instanceof ForkState) {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
-        State child = stateMachine.getState(childStateName);
+        State child = stateMachine.getState(null, childStateName);
         StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(child.getName());
         ExecutionContextImpl childContext =
@@ -294,7 +294,7 @@ public class StateMachineExecutionSimulator {
         logger.warn("No repeatElements found for the expression: {}", repeatElementExpression);
         return;
       }
-      State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
+      State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());
       repeatElements.forEach(repeatElement -> {
         StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(repeat.getName());
@@ -307,7 +307,7 @@ public class StateMachineExecutionSimulator {
       });
     } else if (state instanceof ForkState) {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
-        State child = stateMachine.getState(childStateName);
+        State child = stateMachine.getState(null, childStateName);
         StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(child.getName());
         cloned.setContextElement(

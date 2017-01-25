@@ -15,7 +15,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -121,7 +121,7 @@ public class SetupServiceImpl implements SetupService {
       return null;
     }
     for (Environment env : application.getEnvironments()) {
-      List<ApplicationHost> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
+      List<Host> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
       if (hosts != null && !hosts.isEmpty()) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
@@ -153,7 +153,7 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction fetchIncompleteMandatoryEnvironmentAction(Environment environment) {
-    List<ApplicationHost> hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
+    List<Host> hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
 
     if (hosts.size() == 0) {
       return aSetupAction()

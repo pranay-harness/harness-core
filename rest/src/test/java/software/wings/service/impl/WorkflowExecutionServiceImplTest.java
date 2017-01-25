@@ -10,20 +10,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.DeploymentType.SSH;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.beans.infrastructure.Infrastructure.Builder.anInfrastructure;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
-import static software.wings.utils.WingsTestConstants.INFRA_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -45,6 +49,10 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
+import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -53,12 +61,13 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowOrchestrationType;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -66,6 +75,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -84,6 +94,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
+import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
@@ -108,6 +119,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Mock @Inject private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -736,8 +748,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(
-        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -768,20 +778,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
 
-    ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host1")
-            .build());
-    ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host2")
-            .build());
+    Host applicationHost1 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
+    Host applicationHost2 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -892,8 +892,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(
-        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Graph graph = aGraph()
                       .addNodes(aNode()
@@ -919,20 +917,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
 
-    ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host1")
-            .build());
-    ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host2")
-            .build());
+    Host applicationHost1 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
+    Host applicationHost2 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -1039,18 +1027,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(
-        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
+        Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
     Host host2 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
-
-    ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host1).build());
-    ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host2).build());
+        Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service1 = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -1082,10 +1063,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ServiceInstance.Builder builder2 =
         aServiceInstance().withServiceTemplate(serviceTemplate2).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    ServiceInstance inst11 = serviceInstanceService.save(builder1.withHost(applicationHost1).build());
-    ServiceInstance inst12 = serviceInstanceService.save(builder1.withHost(applicationHost2).build());
-    ServiceInstance inst21 = serviceInstanceService.save(builder2.withHost(applicationHost1).build());
-    ServiceInstance inst22 = serviceInstanceService.save(builder2.withHost(applicationHost2).build());
+    ServiceInstance inst11 = serviceInstanceService.save(builder1.withHost(host1).build());
+    ServiceInstance inst12 = serviceInstanceService.save(builder1.withHost(host2).build());
+    ServiceInstance inst21 = serviceInstanceService.save(builder2.withHost(host1).build());
+    ServiceInstance inst22 = serviceInstanceService.save(builder2.withHost(host2).build());
 
     Graph graph =
         aGraph()
@@ -1216,18 +1197,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Ignore
   public void triggerPipeline() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(
-        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host").build());
-
-    ApplicationHost applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host).build());
+        Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -1244,7 +1221,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    ServiceInstance inst = serviceInstanceService.save(builder.withHost(applicationHost).build());
+    ServiceInstance inst = serviceInstanceService.save(builder.withHost(host).build());
 
     Graph graph =
         aGraph()
@@ -2038,23 +2015,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(
-        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
-    ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host1")
-            .build());
-    ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost()
-            .withAppId(app.getAppId())
-            .withEnvId(env.getUuid())
-            .withInfraId(INFRA_ID)
-            .withHostName("host2")
-            .build());
+    Host applicationHost1 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
+    Host applicationHost2 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -2272,14 +2237,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(
-        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
-
-    ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host1).build());
+        Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -2296,7 +2256,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(applicationHost1).build());
+    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
 
     Graph graph =
         aGraph()
@@ -2482,6 +2442,126 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .hasSize(1)
         .extracting("status")
         .containsExactly(ExecutionStatus.SUCCESS.name());
+  }
+
+  @Test
+  @Ignore
+  public void shouldTriggerOrchestrationWorkflow() throws InterruptedException {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Builder.anEnvironment().withName(ENV_NAME).withAppId(app.getUuid()).build());
+
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withServiceId(service.getUuid())
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+    serviceTemplate.setService(service);
+
+    SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
+
+    infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                          .withAppId(app.getUuid())
+                                          .withEnvId(env.getUuid())
+                                          .withHostNames(Lists.newArrayList("host1"))
+                                          .withServiceTemplateId(serviceTemplate.getUuid())
+                                          .withComputeProviderSettingId(computeProvider.getUuid())
+                                          .build());
+
+    triggerOrchestrationWorkflow(app.getAppId(), env, service, computeProvider);
+  }
+
+  /**
+   * Trigger orchestration.
+   *
+   * @param appId           the app id
+   * @param env             the env
+   * @param service
+   * @param computeProvider
+   * @return the string
+   * @throws InterruptedException the interrupted exception
+   */
+  public String triggerOrchestrationWorkflow(
+      String appId, Environment env, Service service, SettingAttribute computeProvider) throws InterruptedException {
+    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId, env, service, computeProvider);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                      .triggerOrchestrationWorkflowExecution(
+                                          appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
+    workflowExecutionSignals.get(signalId).await();
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Orchestration executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    return executionId;
+  }
+
+  private OrchestrationWorkflow createOrchestrationWorkflow(
+      String appId, Environment env, Service service, SettingAttribute computeProvider) {
+    OrchestrationWorkflow orchestrationWorkflow =
+        anOrchestrationWorkflow()
+            .withAppId(appId)
+            .withEnvironmentId(env.getUuid())
+            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
+            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+            .addWorkflowPhases(aWorkflowPhase()
+                                   .withName("Phase1")
+                                   .withComputeProviderId(computeProvider.getUuid())
+                                   .withServiceId(service.getUuid())
+                                   .withDeploymentType(SSH)
+                                   .build())
+            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .build();
+
+    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow2)
+        .isNotNull()
+        .hasFieldOrProperty("uuid")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph");
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow3).isNotNull();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
+    PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
+                                    .stream()
+                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
+                                    .collect(Collectors.toList())
+                                    .get(0);
+
+    deployPhaseStep.getSteps().add(
+        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+
+    workflowService.updateWorkflowPhase(
+        orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
+
+    OrchestrationWorkflow orchestrationWorkflow4 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+
+    logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
+
+    return orchestrationWorkflow4;
   }
 
   /**

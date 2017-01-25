@@ -1,33 +1,26 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
 import com.mongodb.DuplicateKeyException;
-import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
-import software.wings.beans.InstanceCountByEnv;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.Tag;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.service.intfc.TagService;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -40,7 +33,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private TagService tagService;
 
   @Override
   public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
@@ -77,15 +69,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    */
   @Override
   public void updateInstanceMappings(
-      ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts) {
-    Query<ServiceInstance> deleteQuery =
-        wingsPersistence.createQuery(ServiceInstance.class)
-            .field("appId")
-            .equal(template.getAppId())
-            .field("serviceTemplate")
-            .equal(template.getUuid())
-            .field("host")
-            .hasAnyOf(deletedHosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
+      ServiceTemplate template, InfrastructureMapping infraMapping, List<Host> addedHosts, List<String> deletedHosts) {
+    Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
+                                             .field("appId")
+                                             .equal(template.getAppId())
+                                             .field("serviceTemplate")
+                                             .equal(template.getUuid())
+                                             .field("hostName")
+                                             .hasAnyOf(deletedHosts);
     wingsPersistence.delete(deleteQuery);
 
     addedHosts.forEach(host -> {
@@ -95,13 +86,10 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
               .withEnvId(template.getEnvId()) // Fixme: do it one by one and ignore unique constraints failure
               .withServiceTemplate(template)
               .withHost(host)
+              .withInfraMappingId(infraMapping.getUuid())
+              .withInfraMappingType(infraMapping.getComputeProviderType())
               .build();
       try {
-        if (isNotBlank(host.getConfigTagId())) {
-          Tag tag =
-              tagService.get(serviceInstance.getAppId(), serviceInstance.getEnvId(), host.getConfigTagId(), false);
-          serviceInstance.setTagName(tag.getName());
-        }
         wingsPersistence.save(serviceInstance);
       } catch (DuplicateKeyException ex) {
         logger.warn("Reinserting an existing service instance ignore");
@@ -149,20 +137,6 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   @Override
-  public Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates) {
-    return ()
-               -> wingsPersistence.getDatastore()
-                      .createAggregation(ServiceInstance.class)
-                      .match(wingsPersistence.createQuery(ServiceInstance.class)
-                                 .field("serviceTemplate")
-                                 .in(serviceTemplates)
-                                 .field("appId")
-                                 .equal(appId))
-                      .group("envId", grouping("count", new Accumulator("$sum", 1)))
-                      .out(InstanceCountByEnv.class);
-  }
-
-  @Override
   public void updateActivity(Activity activity) {
     Query<ServiceInstance> query = wingsPersistence.createQuery(ServiceInstance.class)
                                        .field("appId")
@@ -190,5 +164,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
       operations.set("lastDeployedOn", activity.getLastUpdatedAt());
     }
     wingsPersistence.update(query, operations);
+  }
+
+  @Override
+  public void deleteByInfraMappingId(String appId, String infraMappingId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field("infraMappingId")
+                                .equal(infraMappingId));
   }
 }

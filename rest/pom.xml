@@ -358,6 +358,11 @@
             <artifactId>expiringmap</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>info.jerrinot</groupId>
+            <artifactId>subzero-core</artifactId>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -589,17 +594,17 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.62</minimum>
+                                            <minimum>0.60</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.47</minimum>
+                                            <minimum>0.46</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.50</minimum>
+                                            <minimum>0.47</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -856,7 +861,6 @@
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>ci.wings.software</portalHost>
                 <app.name>CI Server</app.name>
             </properties>
@@ -876,7 +880,6 @@
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>demo.wings.software</portalHost>
                 <app.name>Demo Server</app.name>
             </properties>

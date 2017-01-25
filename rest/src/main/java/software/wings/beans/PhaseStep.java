@@ -1,7 +1,13 @@
 package software.wings.beans;
 
+import static software.wings.beans.Graph.Node.Builder.aNode;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Graph.Node;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +16,11 @@ import java.util.List;
  * Created by rishi on 12/21/16.
  */
 public class PhaseStep {
-  private String uuid;
+  private String uuid = UUIDGenerator.getUuid();
   private String name;
   private PhaseStepType phaseStepType;
-  private List<Node> steps = new ArrayList<>();
+  @JsonIgnore private List<String> stepsIds = new ArrayList<>();
+  @Transient private List<Node> steps = new ArrayList<>();
   private boolean stepsInParallel;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
@@ -34,7 +41,7 @@ public class PhaseStep {
 
   public String getName() {
     if (name == null && phaseStepType != null) {
-      return phaseStepType.name();
+      name = phaseStepType.name();
     }
     return name;
   }
@@ -75,6 +82,25 @@ public class PhaseStep {
     this.failureStrategies = failureStrategies;
   }
 
+  public List<String> getStepsIds() {
+    return stepsIds;
+  }
+
+  public void setStepsIds(List<String> stepsIds) {
+    this.stepsIds = stepsIds;
+  }
+
+  public Node generatePhaseStepNode() {
+    return aNode()
+        .withId(uuid)
+        .withName(getName())
+        .withType(StateType.PHASE_STEP.name())
+        .addProperty("stepsInParallel", stepsInParallel)
+        .addProperty("failureStrategies", failureStrategies)
+        .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
+        .build();
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -110,7 +136,7 @@ public class PhaseStep {
   }
 
   public static final class PhaseStepBuilder {
-    private String uuid;
+    private String uuid = UUIDGenerator.getUuid();
     private String name;
     private PhaseStepType phaseStepType;
     private List<Node> steps = new ArrayList<>();

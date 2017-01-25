@@ -21,7 +21,7 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.beans.Setup;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.HostService;
@@ -65,9 +65,8 @@ public class SetupServiceTest extends WingsBaseTest {
   //    Application application =
   //    Builder.anApplication().withUuid(APP_ID).withServices(asList(aService().withUuid(SERVICE_ID).build()))
   //        .withEnvironments(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build())).build();
-  //    when(hostService.getHostsByEnv(APP_ID,
-  //    ENV_ID)).thenReturn(asList(ApplicationHost.Builder.anApplicationHost().build())); Setup setupStatus =
-  //    setupService.getApplicationSetupStatus(application);
+  //    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(Host.Builder.aHost().build()));
+  //    Setup setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
   //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
   //    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_RELEASE_FOUND");
@@ -145,8 +144,7 @@ public class SetupServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetEnvironmentSetupStatus() {
-    when(hostService.getHostsByEnv(APP_ID, ENV_ID))
-        .thenReturn(asList(ApplicationHost.Builder.anApplicationHost().build()));
+    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(Host.Builder.aHost().build()));
     Setup setupStatus =
         setupService.getEnvironmentSetupStatus(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);

@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Objects;
@@ -9,25 +11,27 @@ import java.util.Objects;
  */
 public class DelegateTaskResponse {
   private String accountId;
-  private String taskId;
   private NotifyResponseData response;
+  private DelegateTask task;
+
+  public DelegateTaskResponse() {}
 
   /**
-   * Getter for property 'taskId'.
+   * Getter for property 'task'.
    *
-   * @return Value for property 'taskId'.
+   * @return Value for property 'task'.
    */
-  public String getTaskId() {
-    return taskId;
+  public DelegateTask getTask() {
+    return task;
   }
 
   /**
-   * Setter for property 'taskId'.
+   * Setter for property 'task'.
    *
-   * @param taskId Value to set for property 'taskId'.
+   * @param task Value to set for property 'task'.
    */
-  public void setTaskId(String taskId) {
-    this.taskId = taskId;
+  public void setTask(DelegateTask task) {
+    this.task = task;
   }
 
   /**
@@ -68,7 +72,7 @@ public class DelegateTaskResponse {
 
   @Override
   public int hashCode() {
-    return Objects.hash(accountId, taskId, response);
+    return Objects.hash(accountId, task, response);
   }
 
   @Override
@@ -80,13 +84,22 @@ public class DelegateTaskResponse {
       return false;
     }
     final DelegateTaskResponse other = (DelegateTaskResponse) obj;
-    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.taskId, other.taskId)
+    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.task, other.task)
         && Objects.equals(this.response, other.response);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("accountId", accountId)
+        .add("taskId", task)
+        .add("response", response)
+        .toString();
   }
 
   public static final class Builder {
     private String accountId;
-    private String taskId;
+    private DelegateTask task;
     private NotifyResponseData response;
 
     private Builder() {}
@@ -100,8 +113,8 @@ public class DelegateTaskResponse {
       return this;
     }
 
-    public Builder withTaskId(String taskId) {
-      this.taskId = taskId;
+    public Builder withTask(DelegateTask task) {
+      this.task = task;
       return this;
     }
 
@@ -111,13 +124,13 @@ public class DelegateTaskResponse {
     }
 
     public Builder but() {
-      return aDelegateTaskResponse().withAccountId(accountId).withTaskId(taskId).withResponse(response);
+      return aDelegateTaskResponse().withAccountId(accountId).withTask(task).withResponse(response);
     }
 
     public DelegateTaskResponse build() {
       DelegateTaskResponse delegateTaskResponse = new DelegateTaskResponse();
       delegateTaskResponse.setAccountId(accountId);
-      delegateTaskResponse.setTaskId(taskId);
+      delegateTaskResponse.setTask(task);
       delegateTaskResponse.setResponse(response);
       return delegateTaskResponse;
     }

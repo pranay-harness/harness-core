@@ -98,18 +98,6 @@ public class WingsTestConstants {
    */
   public static final String HOST_NAME = "HOST_NAME";
   /**
-   * The constant TAG_ID.
-   */
-  public static final String TAG_ID = "TAG_ID";
-  /**
-   * The constant TAG_NAME.
-   */
-  public static final String TAG_NAME = "TAG_NAME";
-  /**
-   * The constant PARENT_TAG.
-   */
-  public static final String PARENT_TAG = "PARENT_TAG";
-  /**
    * The constant TEMPLATE_ID.
    */
   public static final String TEMPLATE_ID = "TEMPLATE_ID";
@@ -289,6 +277,11 @@ public class WingsTestConstants {
   public static final String SERVICE_VARIABLE_ID = "SERVICE_VARIABLE_ID";
 
   /**
+   * The constant SERVICE_VARIABLE_NAME.
+   */
+  public static final String SERVICE_VARIABLE_NAME = "SERVICE_VARIABLE_NAME";
+
+  /**
    * The constant HOST_CONN_ATTR_ID.
    */
   public static final String HOST_CONN_ATTR_ID = "HOST_CONN_ATTR_ID";
@@ -350,4 +343,11 @@ public class WingsTestConstants {
    * The constant AUTO_SCALING_GROUP_NAME.
    */
   public static final String AUTO_SCALING_GROUP_NAME = "AUTO_SCALING_GROUP_NAME";
+
+  /**
+   * The constant INFRA_MAPPING_ID.
+   */
+  public static final String INFRA_MAPPING_ID = "INFRA_MAPPING_ID";
+
+  public static final String COMPUTE_PROVIDER_ID = "COMPUTE_PROVIDER_ID";
 }

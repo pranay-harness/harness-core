@@ -246,6 +246,9 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    if (expression == null) {
+      return null;
+    }
     List<ExpressionProcessor> expressionProcessors = new ArrayList<>();
     Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
 

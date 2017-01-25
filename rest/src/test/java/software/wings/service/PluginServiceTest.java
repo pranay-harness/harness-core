@@ -14,6 +14,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -31,7 +32,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(8)
+        .hasSize(9)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -53,7 +54,7 @@ public class PluginServiceTest {
                 .withAccountId(accountId)
                 .withIsEnabled(true)
                 .withDisplayName("Docker Registry")
-                .withType("DOCKER_REGISTRY")
+                .withType("DOCKER")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -95,6 +96,14 @@ public class PluginServiceTest {
                 .withDisplayName("AWS")
                 .withType("AWS")
                 .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(PhysicalDataCenterConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Physical Data Center")
+                .withType("PHYSICAL_DATA_CENTER")
+                .withPluginCategories(asList(CloudProvider))
                 .build());
   }
 
@@ -103,7 +112,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(8)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "DOCKER_REGISTRY");
+        .hasSize(9)
+        .containsOnlyKeys(
+            "APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER", "DOCKER");
   }
 }

@@ -6,17 +6,27 @@ import static software.wings.cloudprovider.AwsClusterConfiguration.Builder.anAws
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
+import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
+import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.RunInstancesResult;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.AwsClusterConfiguration;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.cloudprovider.aws.EcsService;
+import software.wings.service.impl.AwsHelperService;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +36,7 @@ import java.util.Map;
 public class ClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private ClusterService clusterService;
   @Inject private EcsService ecsService;
+  @Inject private AwsHelperService awsHelperService;
 
   private SettingAttribute awsConnectorSetting =
       aSettingAttribute()
@@ -106,5 +117,37 @@ public class ClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
     ecsService.provisionNodes(awsConnectorSetting, 5, "wins_demo_launchconfig_v1", params);
+  }
+
+  @Test
+  public void shouldFetchAutoScalingGroup() {
+    AwsConfig awsConfig = (AwsConfig) awsConnectorSetting.getValue();
+    AmazonAutoScalingClient amazonAutoScalingClient =
+        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonEC2Client amazonEc2Client =
+        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+    List<LaunchConfiguration> launchConfigurations =
+        amazonAutoScalingClient
+            .describeLaunchConfigurations(
+                new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames("DemoTargetHosts"))
+            .getLaunchConfigurations();
+    LaunchConfiguration launchConfiguration = launchConfigurations.get(0);
+
+    RunInstancesRequest runInstancesRequest =
+        new RunInstancesRequest()
+            .withImageId(launchConfiguration.getImageId())
+            .withInstanceType(launchConfiguration.getInstanceType())
+            .withMinCount(1)
+            .withMaxCount(1)
+            .withKeyName(launchConfiguration.getKeyName())
+            .withIamInstanceProfile(
+                new IamInstanceProfileSpecification().withName(launchConfiguration.getIamInstanceProfile()))
+            .withSecurityGroupIds(launchConfiguration.getSecurityGroups())
+            .withUserData(launchConfiguration.getUserData());
+
+    RunInstancesResult runInstancesResult = amazonEc2Client.runInstances(runInstancesRequest);
+    runInstancesResult.getReservation().getInstances().forEach(
+        instance -> { System.out.println(instance.toString()); });
   }
 }

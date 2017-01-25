@@ -211,7 +211,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactStreamId)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(Arrays.asList(Status.READY, Status.APPROVED))
+        .hasAnyOf(Arrays.asList(Status.RUNNING, Status.REJECTED, Status.WAITING, Status.READY, Status.APPROVED))
         .get();
   }
 }

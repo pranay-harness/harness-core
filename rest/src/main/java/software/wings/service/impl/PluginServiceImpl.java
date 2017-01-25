@@ -20,6 +20,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.exception.WingsException;
@@ -113,6 +114,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("AWS")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("AWS"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(PhysicalDataCenterConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Physical Data Center")
+            .withType("PHYSICAL_DATA_CENTER")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("PHYSICAL_DATA_CENTER"))
             .build());
   }
 

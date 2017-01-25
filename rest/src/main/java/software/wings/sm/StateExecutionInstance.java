@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -7,7 +8,6 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsDeque;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +21,17 @@ import java.util.Map;
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 public class StateExecutionInstance extends Base {
   private String stateMachineId;
+  private String childStateMachineId;
   private String stateName;
   private String stateType;
   private ContextElement contextElement;
   private boolean contextTransition;
 
-  private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+  @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
+
+  private List<ContextElement> notifyElements;
 
   private StateMachineExecutionCallback callback;
 
@@ -160,6 +163,14 @@ public class StateExecutionInstance extends Base {
     this.notifyId = notifyId;
   }
 
+  public String getChildStateMachineId() {
+    return childStateMachineId;
+  }
+
+  public void setChildStateMachineId(String childStateMachineId) {
+    this.childStateMachineId = childStateMachineId;
+  }
+
   /**
    * Gets state machine id.
    *
@@ -273,7 +284,7 @@ public class StateExecutionInstance extends Base {
    *
    * @return the context elements
    */
-  public ArrayDeque<ContextElement> getContextElements() {
+  public WingsDeque<ContextElement> getContextElements() {
     return contextElements;
   }
 
@@ -421,6 +432,14 @@ public class StateExecutionInstance extends Base {
     this.executionType = executionType;
   }
 
+  public List<ContextElement> getNotifyElements() {
+    return notifyElements;
+  }
+
+  public void setNotifyElements(List<ContextElement> notifyElements) {
+    this.notifyElements = notifyElements;
+  }
+
   @Override
   public String toString() {
     return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName
@@ -437,6 +456,7 @@ public class StateExecutionInstance extends Base {
    */
   public static final class Builder {
     private String stateMachineId;
+    private String childStateMachineId;
     private String stateName;
     private String stateType;
     private ContextElement contextElement;
@@ -477,9 +497,14 @@ public class StateExecutionInstance extends Base {
     /**
      * With state machine id builder.
      *
-     * @param stateMachineId the state machine id
+     * @param childStateMachineId the state machine id
      * @return the builder
      */
+    public Builder withChildStateMachineId(String childStateMachineId) {
+      this.childStateMachineId = childStateMachineId;
+      return this;
+    }
+
     public Builder withStateMachineId(String stateMachineId) {
       this.stateMachineId = stateMachineId;
       return this;
@@ -803,6 +828,7 @@ public class StateExecutionInstance extends Base {
     public StateExecutionInstance build() {
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
       stateExecutionInstance.setStateMachineId(stateMachineId);
+      stateExecutionInstance.setChildStateMachineId(childStateMachineId);
       stateExecutionInstance.setStateName(stateName);
       stateExecutionInstance.setStateType(stateType);
       stateExecutionInstance.setContextElement(contextElement);

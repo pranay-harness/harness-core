@@ -24,7 +24,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BambooBuildService;
 
 import java.util.List;
-import java.util.Set;
 import javax.inject.Inject;
 
 /**
@@ -67,13 +66,13 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   public void shouldGetPlans() {
     when(bambooService.getPlanKeys(bambooConfig))
         .thenReturn(ImmutableMap.of("PlanAKey", "PlanAName", "PlanBKey", "PlanBName"));
-    Set<String> jobs = bambooBuildService.getJobs(bambooConfig);
+    List<String> jobs = bambooBuildService.getJobs(bambooConfig);
     assertThat(jobs).hasSize(2).containsExactlyInAnyOrder("PlanAKey", "PlanBKey");
   }
 
   @Test
   public void shouldGetArtifactPaths() {
-    Set<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, bambooConfig);
+    List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, bambooConfig);
     assertThat(artifactPaths.size()).isEqualTo(0);
   }
 

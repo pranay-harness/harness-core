@@ -1,11 +1,14 @@
 package software.wings.service.impl;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -13,6 +16,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IQueue;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -21,6 +26,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Request;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +38,14 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.Event.Type;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.File;
@@ -46,6 +55,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -66,6 +76,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AccountService accountService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
+  @Inject private HazelcastInstance hazelcastInstance;
+  @Inject private BroadcasterFactory broadcasterFactory;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -83,6 +95,7 @@ public class DelegateServiceImpl implements DelegateService {
     UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
     setUnset(updateOperations, "status", delegate.getStatus());
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
+    setUnset(updateOperations, "connected", delegate.isConnected());
 
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
@@ -167,8 +180,19 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void sendTaskWaitNotify(DelegateTask task) {
+  public void queueTask(DelegateTask task) {
     wingsPersistence.save(task);
+    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+  }
+
+  @Override
+  public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+    String queueName = UUIDGenerator.getUuid();
+    task.setQueueName(queueName);
+    task.setUuid(queueName);
+    IQueue<T> topic = hazelcastInstance.getQueue(queueName);
+    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+    return topic.poll(30000, TimeUnit.MILLISECONDS);
   }
 
   @Override
@@ -177,19 +201,44 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public boolean acquireDelegateTask(String accountId, String delegateId, String taskId) {
+    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                    .field("accountId")
+                                    .equal(accountId)
+                                    .field("status")
+                                    .equal(DelegateTask.Status.QUEUED)
+                                    .field("delegateId")
+                                    .doesNotExist()
+                                    .field(ID_KEY)
+                                    .equal(taskId);
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .set("status", DelegateTask.Status.STARTED)
+                                                          .set("delegateId", delegateId);
+    DelegateTask delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    return delegateTask != null;
+  }
+
+  @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
-    DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
-        aPageRequest()
-            .addFilter("accountId", EQ, response.getAccountId())
-            .addFilter(ID_KEY, EQ, response.getTaskId())
-            .build());
-    String waitId = delegateTask.getWaitId();
-    waitNotifyEngine.notify(waitId, response.getResponse());
-    wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                .field("accountId")
-                                .equal(response.getAccountId())
-                                .field(ID_KEY)
-                                .equal(response.getTaskId()));
+    if (isNotBlank(response.getTask().getWaitId())) {
+      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
+          aPageRequest()
+              .addFilter("accountId", EQ, response.getAccountId())
+              .addFilter(ID_KEY, EQ, response.getTask().getUuid())
+              .build());
+      String waitId = delegateTask.getWaitId();
+      waitNotifyEngine.notify(waitId, response.getResponse());
+      wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
+                                  .field("accountId")
+                                  .equal(response.getAccountId())
+                                  .field(ID_KEY)
+                                  .equal(delegateTask.getUuid()));
+    } else {
+      String topicName = response.getTask().getQueueName();
+      // do the haze
+      IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
+      topic.offer(response.getResponse());
+    }
   }
 
   @Override
@@ -239,5 +288,22 @@ public class DelegateServiceImpl implements DelegateService {
 
     out.close();
     return delegateFile;
+  }
+
+  @Override
+  public boolean filter(String delegateId, DelegateTask task) {
+    boolean qualifies = false;
+    Delegate delegate = wingsPersistence.get(Delegate.class,
+        aPageRequest()
+            .addFilter("accountId", IN, task.getAccountId(), GLOBAL_ACCOUNT_ID)
+            .addFilter(ID_KEY, EQ, delegateId)
+            .addFilter("status", EQ, Status.ENABLED)
+            .build());
+
+    if (delegate != null) {
+      qualifies = true;
+    }
+
+    return qualifies;
   }
 }

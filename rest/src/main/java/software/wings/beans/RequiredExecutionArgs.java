@@ -34,6 +34,10 @@ public class RequiredExecutionArgs {
     this.entityTypes = entityTypes;
   }
 
+  public void addEntityType(EntityType entityType) {
+    this.entityTypes.add(entityType);
+  }
+
   /**
    * Gets default execution args.
    *

@@ -90,7 +90,7 @@ if [ ! -e delegate.jar ]
 then
   wget $REMOTE_DELEGATE_URL -O delegate.jar
 else
-  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " ")
+  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
     wget $REMOTE_DELEGATE_URL -O delegate.jar
@@ -103,12 +103,14 @@ then
   echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
   echo "managerUrl: https://https://localhost:9090/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+  echo "localDiskPath: /tmp" >> config-delegate.yml
 fi
 
 
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
-  echo "Delegate already running"
+  echo "Delegate already running."
 else
-  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml &
+  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
+  echo "Delegate started."
 fi

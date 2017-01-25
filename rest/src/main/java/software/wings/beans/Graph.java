@@ -337,9 +337,10 @@ public class Graph {
    * The Class Node.
    */
   public static class Node {
-    private String id;
+    private String id = UUIDGenerator.getUuid();
     private String name;
     private String type;
+    private boolean newBranch;
     private String status;
     private int x;
     private int y;
@@ -412,6 +413,14 @@ public class Graph {
      */
     public void setType(String type) {
       this.type = type;
+    }
+
+    public boolean isNewBranch() {
+      return newBranch;
+    }
+
+    public void setNewBranch(boolean newBranch) {
+      this.newBranch = newBranch;
     }
 
     /**
@@ -768,7 +777,7 @@ public class Graph {
      * The Class Builder.
      */
     public static final class Builder {
-      private String id;
+      private String id = UUIDGenerator.getUuid();
       private String name;
       private String type;
       private String status;

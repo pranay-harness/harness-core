@@ -2,9 +2,9 @@ package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.LogService;
 
 import javax.inject.Inject;
 
@@ -19,7 +19,7 @@ public class SshPubKeyAuthExecutor extends AbstractSshExecutor {
    * @param logService  the log service
    */
   @Inject
-  public SshPubKeyAuthExecutor(FileService fileService, LogService logService) {
+  public SshPubKeyAuthExecutor(DelegateFileManager fileService, DelegateLogService logService) {
     super(fileService, logService);
   }
 

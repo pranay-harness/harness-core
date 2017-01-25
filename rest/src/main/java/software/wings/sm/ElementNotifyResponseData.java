@@ -3,11 +3,14 @@ package software.wings.sm;
 import software.wings.beans.StatusInstanceBreakdown;
 import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by rishi on 8/18/16.
  */
 public class ElementNotifyResponseData extends ExecutionStatusData {
-  private ContextElement contextElement;
+  private List<ContextElement> contextElements;
   private StatusInstanceBreakdown statusInstanceBreakdown;
   private Long startTs;
   private Long endTs;
@@ -15,19 +18,19 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
   /**
    * Gets context element.
    *
-   * @return the context element
+   * @return the context elements
    */
-  public ContextElement getContextElement() {
-    return contextElement;
+  public List<ContextElement> getContextElements() {
+    return contextElements;
   }
 
   /**
    * Sets context element.
    *
-   * @param contextElement the context element
+   * @param contextElements the context elements
    */
-  public void setContextElement(ContextElement contextElement) {
-    this.contextElement = contextElement;
+  public void setContextElements(List<ContextElement> contextElements) {
+    this.contextElements = contextElements;
   }
 
   /**
@@ -89,7 +92,7 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
    */
   public static final class Builder {
     private ExecutionStatus executionStatus;
-    private ContextElement contextElement;
+    private List<ContextElement> contextElements;
     private StatusInstanceBreakdown statusInstanceBreakdown;
     private Long startTs;
     private Long endTs;
@@ -122,8 +125,25 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
      * @param contextElement the context element
      * @return the element notify response data . builder
      */
-    public ElementNotifyResponseData.Builder withContextElement(ContextElement contextElement) {
-      this.contextElement = contextElement;
+    public ElementNotifyResponseData.Builder addContextElement(ContextElement contextElement) {
+      if (this.contextElements == null) {
+        this.contextElements = new ArrayList<>();
+      }
+      this.contextElements.add(contextElement);
+      return this;
+    }
+
+    /**
+     * With context element element notify response data . builder.
+     *
+     * @param contextElements the context element
+     * @return the element notify response data . builder
+     */
+    public ElementNotifyResponseData.Builder addContextElements(List<ContextElement> contextElements) {
+      if (this.contextElements == null) {
+        this.contextElements = new ArrayList<>();
+      }
+      this.contextElements.addAll(contextElements);
       return this;
     }
 
@@ -178,7 +198,7 @@ public class ElementNotifyResponseData extends ExecutionStatusData {
     public ElementNotifyResponseData build() {
       ElementNotifyResponseData elementNotifyResponseData = new ElementNotifyResponseData();
       elementNotifyResponseData.setExecutionStatus(executionStatus);
-      elementNotifyResponseData.setContextElement(contextElement);
+      elementNotifyResponseData.setContextElements(contextElements);
       elementNotifyResponseData.setStartTs(startTs);
       elementNotifyResponseData.setEndTs(endTs);
       return elementNotifyResponseData;

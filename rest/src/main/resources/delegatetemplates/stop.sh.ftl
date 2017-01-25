@@ -5,11 +5,15 @@ then
   i=0
   while [ "$i" -lt 30 ]
   do
-    pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
+    if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+    then
+      pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
+    fi
     pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null
     rc=$?
     if [ "$rc" -eq 0 ]
     then
+
       sleep 1
       i=$((i+1))
     else

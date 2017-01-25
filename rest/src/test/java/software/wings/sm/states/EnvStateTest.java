@@ -55,14 +55,14 @@ public class EnvStateTest extends WingsBaseTest {
     when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
-    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), any()))
+    when(workflowExecutionService.triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), any()))
         .thenReturn(aWorkflowExecution().withUuid(WORKFLOW_EXECUTION_ID).build());
   }
 
   @Test
   public void shouldExecute() {
     ExecutionResponse executionResponse = envState.execute(context);
-    verify(workflowExecutionService).triggerEnvExecution(eq(APP_ID), eq(ENV_ID), any());
+    verify(workflowExecutionService).triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), any());
     verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(Arrays.asList(WORKFLOW_EXECUTION_ID));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);

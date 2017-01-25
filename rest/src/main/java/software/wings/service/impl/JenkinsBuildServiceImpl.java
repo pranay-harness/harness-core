@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import com.offbytwo.jenkins.model.Artifact;
@@ -23,11 +24,10 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -37,10 +37,6 @@ import javax.inject.Inject;
 @Singleton
 public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   /**
-   * The constant ARTIFACT_STREAM_ID.
-   */
-  public static final String ARTIFACT_STREAM_ID = "artifactStreamId";
-  /**
    * The constant APP_ID.
    */
   public static final String APP_ID = "appId";
@@ -48,6 +44,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
    * The constant ARTIFACT_STREAM_NAME.
    */
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private JenkinsFactory jenkinsFactory;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private MainConfiguration configuration;
@@ -74,29 +71,30 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public Set<String> getJobs(JenkinsConfig jenkinsConfig) {
+  public List<String> getJobs(JenkinsConfig jenkinsConfig) {
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
-      return jenkins.getJobs().keySet();
+      return Lists.newArrayList(jenkins.getJobs().keySet());
     } catch (IOException e) {
       throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Error in fetching jobs from jenkins server");
     }
   }
 
   @Override
-  public Set<String> getArtifactPaths(String jobName, JenkinsConfig jenkinsConfig) {
+  public List<String> getArtifactPaths(String jobName, JenkinsConfig jenkinsConfig) {
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-    Set<String> artifactPaths = new HashSet<>();
+    List<String> artifactPaths = new ArrayList<>();
     try {
       JobWithDetails job = jenkins.getJob(jobName);
-      return job.getLastSuccessfulBuild()
-          .details()
-          .getArtifacts()
-          .parallelStream()
-          .map(Artifact::getRelativePath)
-          .collect(Collectors.toSet());
+      return Lists.newArrayList(job.getLastSuccessfulBuild()
+                                    .details()
+                                    .getArtifacts()
+                                    .parallelStream()
+                                    .map(Artifact::getRelativePath)
+                                    .distinct()
+                                    .collect(Collectors.toList()));
     } catch (Exception ex) {
       logger.error("Exception in generating artifact path suggestions for {}", ex);
     }
@@ -122,7 +120,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public Map<String, String> getPlans(JenkinsConfig jenkinsConfig) {
-    Set<String> jobs = getJobs(jenkinsConfig);
+    List<String> jobs = getJobs(jenkinsConfig);
     Map<String, String> jobKeyMap = new HashMap<>();
     if (jobs != null) {
       jobs.forEach(jobKey -> jobKeyMap.put(jobKey, jobKey));

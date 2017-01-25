@@ -406,7 +406,7 @@ public class HttpStateTest extends WingsBaseTest {
       return null;
     })
         .when(delegateService)
-        .sendTaskWaitNotify(any(DelegateTask.class));
+        .queueTask(any(DelegateTask.class));
 
     return httpState;
   }

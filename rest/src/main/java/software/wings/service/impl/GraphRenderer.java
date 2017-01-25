@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Graph.Group;
 import software.wings.beans.Graph.Node;
+import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
@@ -60,7 +61,10 @@ public class GraphRenderer {
       Node node = convertToNode(instance);
 
       if ((StateType.REPEAT.name().equals(instance.getStateType())
-              || StateType.FORK.name().equals(instance.getStateType()))
+              || StateType.FORK.name().equals(instance.getStateType())
+              || StateType.SUB_WORKFLOW.name().equals(instance.getStateType())
+              || StateType.PHASE_STEP.name().equals(instance.getStateType())
+              || StateType.PHASE.name().equals(instance.getStateType()))
           && (allExpanded || expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
         node.setExpanded(false);
       } else {
@@ -77,6 +81,19 @@ public class GraphRenderer {
           elementsMap = new HashMap<>();
           parentIdElementsMap.put(instance.getParentInstanceId(), elementsMap);
         }
+        if (instanceIdMap.get(instance.getParentInstanceId()) != null
+            && instanceIdMap.get(instance.getParentInstanceId()).getStateType() != null
+            && (instanceIdMap.get(instance.getParentInstanceId()).getStateType().equals(StateType.SUB_WORKFLOW.name())
+                   || instanceIdMap.get(instance.getParentInstanceId())
+                          .getStateType()
+                          .equals(StateType.PHASE_STEP.name())
+                   || instanceIdMap.get(instance.getParentInstanceId())
+                          .getStateType()
+                          .equals(StateType.PHASE.name()))) {
+          elementsMap.put(Constants.SUB_WORKFLOW, node);
+          continue;
+        }
+
         if (instance.getContextElement() == null) {
           continue;
         }
@@ -162,6 +179,7 @@ public class GraphRenderer {
                        .collect(Collectors.toList());
         group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
       }
+
       logger.debug("generateNodeHierarchy processing group - node: {}", elements);
       if (elements == null) {
         elements = parentIdElementsMap.get(node.getId()).keySet();
@@ -198,8 +216,22 @@ public class GraphRenderer {
   private void generateElement(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
       Boolean expandLastOnly, boolean allExpanded, Group group, String element) {
+    if (element.equals(Constants.SUB_WORKFLOW)) {
+      Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+      if (elementRepeatNode != null) {
+        elementRepeatNode.setNewBranch(true);
+        group.getElements().add(elementRepeatNode);
+        logger.debug("generateNodeHierarchy elementRepeatNode added - node: {}", elementRepeatNode);
+        generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, null,
+            expandLastOnly, allExpanded);
+      }
+      return;
+    }
+
     Node elementNode =
         Node.Builder.aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
+    elementNode.setNewBranch(true);
+
     group.getElements().add(elementNode);
     logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
     Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);

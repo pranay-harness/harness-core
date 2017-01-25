@@ -92,4 +92,7 @@ public interface Constants {
 
   String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
   String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
+
+  String SUB_WORKFLOW_ID = "subWorkflowId";
+  String SUB_WORKFLOW = "SUB_WORKFLOW";
 }

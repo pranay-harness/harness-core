@@ -37,13 +37,11 @@ public void checkServerTrusted(java.security.cert.X509Certificate[] certs, Strin
 
 private final Logger logger = LoggerFactory.getLogger("http");
 private String baseUrl;
-private String accountId;
-private String accountSecret;
+private TokenGenerator tokenGenerator;
 
-public ManagerClientFactory(String baseUrl, String accountId, String accountSecret) {
+public ManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
   this.baseUrl = baseUrl;
-  this.accountId = accountId;
-  this.accountSecret = accountSecret;
+  this.tokenGenerator = tokenGenerator;
 }
 
 @Override
@@ -51,6 +49,7 @@ public ManagerClient get() {
   Retrofit retrofit = new Retrofit.Builder()
                           .baseUrl(baseUrl)
                           .client(getUnsafeOkHttpClient())
+                          .addConverterFactory(new KryoConverterFactory())
                           .addConverterFactory(JacksonConverterFactory.create(new ObjectMapper()))
                           .build();
   return retrofit.create(ManagerClient.class);
@@ -68,7 +67,7 @@ private OkHttpClient getUnsafeOkHttpClient() {
         new Builder()
             .connectionPool(new ConnectionPool())
             .retryOnConnectionFailure(true)
-            .addInterceptor(new DelegateAuthInterceptor(accountId, accountSecret))
+            .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
             .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
             .addInterceptor(chain -> {
               Request request = chain.request();
@@ -80,7 +79,7 @@ private OkHttpClient getUnsafeOkHttpClient() {
               Response response = chain.proceed(request);
 
               long t2 = System.nanoTime();
-              logger.debug(String.format("Received response for %s in %.1fms%n%s", response.request().url(),
+              logger.debug(String.format("Received response for %s in %.1fms%n%s\n", response.request().url(),
                   (t2 - t1) / 1e6d, response.headers()));
 
               return response;

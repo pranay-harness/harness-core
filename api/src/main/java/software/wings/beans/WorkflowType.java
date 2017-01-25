@@ -22,5 +22,5 @@ public enum WorkflowType {
   SIMPLE, /**
            * Sub workflow workflow type.
            */
-  SUB_WORKFLOW
+  ORCHESTRATION_WORKFLOW
 }

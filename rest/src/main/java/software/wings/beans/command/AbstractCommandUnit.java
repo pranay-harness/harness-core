@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -13,7 +12,7 @@ import java.util.Objects;
  */
 public abstract class AbstractCommandUnit implements CommandUnit {
   @SchemaIgnore private String name;
-  @JsonTypeId private CommandUnitType commandUnitType;
+  private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   @SchemaIgnore private boolean artifactNeeded = false;
 
@@ -186,6 +185,8 @@ public abstract class AbstractCommandUnit implements CommandUnit {
       private ExecutionResult result;
 
       private String errorMessage;
+
+      public ExecutionResultData() {}
 
       /**
        * Gets result.

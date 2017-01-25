@@ -7,16 +7,16 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
+import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import com.offbytwo.jenkins.model.Artifact;
@@ -29,8 +29,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -136,7 +136,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldFetchJobNames() throws IOException {
     when(jenkins.getJobs()).thenReturn(ImmutableMap.of("jobName", new Job()));
-    assertThat(jenkinsBuildService.getJobs(jenkinsConfig)).isEqualTo(ImmutableSet.of("jobName"));
+    assertThat(jenkinsBuildService.getJobs(jenkinsConfig)).containsExactly("jobName");
   }
 
   /**
@@ -149,9 +149,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     JobWithDetails jobWithDetails = Mockito.mock(JobWithDetails.class, RETURNS_DEEP_STUBS);
     Artifact artifact = new Artifact();
     artifact.setRelativePath("relativePath");
-    when(jenkins.getJob("jobName")).thenReturn(jobWithDetails);
+    when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
     when(jobWithDetails.getLastSuccessfulBuild().details().getArtifacts()).thenReturn(ImmutableList.of(artifact));
-    assertThat(jenkinsBuildService.getArtifactPaths("jobName", jenkinsConfig))
-        .isEqualTo(ImmutableSet.of("relativePath"));
+    assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, jenkinsConfig)).containsExactly("relativePath");
   }
 }

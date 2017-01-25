@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
@@ -23,6 +24,8 @@ public class DelegateFile extends FileMetadata {
   private String taskId;
   private String accountId;
   private String appId;
+  private long length;
+  private InputStream inputStream;
 
   public String getFileId() {
     return fileId;
@@ -88,7 +91,34 @@ public class DelegateFile extends FileMetadata {
     this.appId = appId;
   }
 
+  /**
+   * Getter for property 'length'.
+   *
+   * @return Value for property 'length'.
+   */
+  public long getLength() {
+    return length;
+  }
+
+  /**
+   * Setter for property 'length'.
+   *
+   * @param length Value to set for property 'length'.
+   */
+  public void setLength(long length) {
+    this.length = length;
+  }
+
+  public void setInputStream(InputStream inputStream) {
+    this.inputStream = inputStream;
+  }
+
+  @JsonIgnore
   public InputStream getContentSource() throws FileNotFoundException {
+    if (inputStream != null) {
+      return inputStream;
+    }
+
     if (localFilePath == null) {
       return null;
     }
@@ -99,7 +129,7 @@ public class DelegateFile extends FileMetadata {
     return new FileInputStream(file);
   }
 
-  public static final class DelegateFileBuilder {
+  public static final class Builder {
     private String fileName;
     private String mimeType;
     private ChecksumType checksumType;
@@ -113,76 +143,107 @@ public class DelegateFile extends FileMetadata {
     private String taskId;
     private String accountId;
     private String appId;
+    private long length;
+    private InputStream inputStream;
 
-    private DelegateFileBuilder() {}
+    private Builder() {}
 
-    public static DelegateFileBuilder aDelegateFile() {
-      return new DelegateFileBuilder();
+    public static Builder aDelegateFile() {
+      return new Builder();
     }
 
-    public DelegateFileBuilder withFileName(String fileName) {
+    public Builder withFileName(String fileName) {
       this.fileName = fileName;
       return this;
     }
 
-    public DelegateFileBuilder withMimeType(String mimeType) {
+    public Builder withMimeType(String mimeType) {
       this.mimeType = mimeType;
       return this;
     }
 
-    public DelegateFileBuilder withChecksumType(ChecksumType checksumType) {
+    public Builder withChecksumType(ChecksumType checksumType) {
       this.checksumType = checksumType;
       return this;
     }
 
-    public DelegateFileBuilder withChecksum(String checksum) {
+    public Builder withChecksum(String checksum) {
       this.checksum = checksum;
       return this;
     }
 
-    public DelegateFileBuilder withRelativePath(String relativePath) {
+    public Builder withRelativePath(String relativePath) {
       this.relativePath = relativePath;
       return this;
     }
 
-    public DelegateFileBuilder withFileId(String fileId) {
+    public Builder withFileId(String fileId) {
       this.fileId = fileId;
       return this;
     }
 
-    public DelegateFileBuilder withBucket(FileBucket bucket) {
+    public Builder withBucket(FileBucket bucket) {
       this.bucket = bucket;
       return this;
     }
 
-    public DelegateFileBuilder withEntityId(String entityId) {
+    public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
-    public DelegateFileBuilder withLocalFilePath(String localFilePath) {
+    public Builder withLocalFilePath(String localFilePath) {
       this.localFilePath = localFilePath;
       return this;
     }
 
-    public DelegateFileBuilder withDelegateId(String delegateId) {
+    public Builder withDelegateId(String delegateId) {
       this.delegateId = delegateId;
       return this;
     }
 
-    public DelegateFileBuilder withTaskId(String taskId) {
+    public Builder withTaskId(String taskId) {
       this.taskId = taskId;
       return this;
     }
 
-    public DelegateFileBuilder withAccountId(String accountId) {
+    public Builder withAccountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public DelegateFileBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
+    }
+
+    public Builder withLength(long length) {
+      this.length = length;
+      return this;
+    }
+
+    public Builder withInputStream(InputStream inputStream) {
+      this.inputStream = inputStream;
+      return this;
+    }
+
+    public Builder but() {
+      return aDelegateFile()
+          .withFileName(fileName)
+          .withMimeType(mimeType)
+          .withChecksumType(checksumType)
+          .withChecksum(checksum)
+          .withRelativePath(relativePath)
+          .withFileId(fileId)
+          .withBucket(bucket)
+          .withEntityId(entityId)
+          .withLocalFilePath(localFilePath)
+          .withDelegateId(delegateId)
+          .withTaskId(taskId)
+          .withAccountId(accountId)
+          .withAppId(appId)
+          .withLength(length)
+          .withInputStream(inputStream);
     }
 
     public DelegateFile build() {
@@ -199,7 +260,9 @@ public class DelegateFile extends FileMetadata {
       delegateFile.setDelegateId(delegateId);
       delegateFile.setTaskId(taskId);
       delegateFile.setAccountId(accountId);
-      delegateFile.appId = this.appId;
+      delegateFile.setAppId(appId);
+      delegateFile.setLength(length);
+      delegateFile.setInputStream(inputStream);
       return delegateFile;
     }
   }

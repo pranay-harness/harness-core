@@ -7,19 +7,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
+import java.util.Set;
 
 /**
  * Created by rishi on 12/21/16.
  */
 @Entity(value = "orchWorkflows", noClassnameStored = true)
-public class OrchestrationWorkflow extends Base {
+public class OrchestrationWorkflow extends Workflow {
   private WorkflowOrchestrationType workflowOrchestrationType;
 
-  @NotNull private String name;
-
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
-  ;
 
   private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -28,12 +25,10 @@ public class OrchestrationWorkflow extends Base {
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
   private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
-  ;
 
   private List<NotificationRule> notificationRules = new ArrayList<>();
 
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
-  ;
 
   private List<Variable> systemVariables = new ArrayList<>();
 
@@ -41,9 +36,11 @@ public class OrchestrationWorkflow extends Base {
 
   private List<Variable> derivedVariables = new ArrayList<>();
 
-  private Graph graph;
-
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+
+  private String environmentId;
+
+  private Set<EntityType> requiredEntityTypes;
 
   public WorkflowOrchestrationType getWorkflowOrchestrationType() {
     return workflowOrchestrationType;
@@ -51,14 +48,6 @@ public class OrchestrationWorkflow extends Base {
 
   public void setWorkflowOrchestrationType(WorkflowOrchestrationType workflowOrchestrationType) {
     this.workflowOrchestrationType = workflowOrchestrationType;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public PhaseStep getPreDeploymentSteps() {
@@ -146,14 +135,6 @@ public class OrchestrationWorkflow extends Base {
     this.workflowExecutions = workflowExecutions;
   }
 
-  public Graph getGraph() {
-    return graph;
-  }
-
-  public void setGraph(Graph graph) {
-    this.graph = graph;
-  }
-
   public List<String> getWorkflowPhaseIds() {
     return workflowPhaseIds;
   }
@@ -168,6 +149,30 @@ public class OrchestrationWorkflow extends Base {
 
   public void setWorkflowPhaseIdMap(Map<String, WorkflowPhase> workflowPhaseIdMap) {
     this.workflowPhaseIdMap = workflowPhaseIdMap;
+  }
+
+  public String getEnvironmentId() {
+    return environmentId;
+  }
+
+  public void setEnvironmentId(String environmentId) {
+    this.environmentId = environmentId;
+  }
+
+  public Set<EntityType> getRequiredEntityTypes() {
+    return requiredEntityTypes;
+  }
+
+  public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
+    this.requiredEntityTypes = requiredEntityTypes;
+  }
+
+  public Map<String, Object> params() {
+    Map<String, Object> params = new HashMap<>();
+    params.put("workflowOrchestrationType", workflowOrchestrationType);
+    params.put("environmentId", environmentId);
+    params.put("workflowId", getUuid());
+    return params;
   }
 
   public static final class OrchestrationWorkflowBuilder {
@@ -189,6 +194,7 @@ public class OrchestrationWorkflow extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String environmentId;
 
     private OrchestrationWorkflowBuilder() {}
 
@@ -262,6 +268,11 @@ public class OrchestrationWorkflow extends Base {
       return this;
     }
 
+    public OrchestrationWorkflowBuilder withEnvironmentId(String environmentId) {
+      this.environmentId = environmentId;
+      return this;
+    }
+
     public OrchestrationWorkflowBuilder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -302,6 +313,7 @@ public class OrchestrationWorkflow extends Base {
       orchestrationWorkflow.setUuid(uuid);
       orchestrationWorkflow.setGraph(graph);
       orchestrationWorkflow.setAppId(appId);
+      orchestrationWorkflow.setEnvironmentId(environmentId);
       orchestrationWorkflow.setCreatedBy(createdBy);
       orchestrationWorkflow.setWorkflowExecutions(workflowExecutions);
       orchestrationWorkflow.setCreatedAt(createdAt);

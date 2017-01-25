@@ -4,17 +4,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.List;
+
 /**
  * Created by peeyushaggarwal on 11/28/16.
  */
 @Entity(value = "delegates", noClassnameStored = true)
 public class Delegate extends Base {
   @NotEmpty private String accountId;
-  private Status status;
+  private Status status = Status.ENABLED;
+  private boolean connected;
   private String ip;
   private String hostName;
   private long lastHeartBeat;
   private String version;
+  private List<TaskType> supportedTaskTypes;
   @Transient private boolean doUpgrade;
   @Transient private String upgradeScript;
 
@@ -152,15 +156,55 @@ public class Delegate extends Base {
     this.upgradeScript = upgradeScript;
   }
 
-  public enum Status { ENABLED, DISABLED, DISCONNECTED, UPGRADING }
+  /**
+   * Getter for property 'connected'.
+   *
+   * @return Value for property 'connected'.
+   */
+  public boolean isConnected() {
+    return connected;
+  }
+
+  /**
+   * Setter for property 'connected'.
+   *
+   * @param connected Value to set for property 'connected'.
+   */
+  public void setConnected(boolean connected) {
+    this.connected = connected;
+  }
+
+  /**
+   * Getter for property 'supportedTaskTypes'.
+   *
+   * @return Value for property 'supportedTaskTypes'.
+   */
+  public List<TaskType> getSupportedTaskTypes() {
+    return supportedTaskTypes;
+  }
+
+  /**
+   * Setter for property 'supportedTaskTypes'.
+   *
+   * @param supportedTaskTypes Value to set for property 'supportedTaskTypes'.
+   */
+  public void setSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
+    this.supportedTaskTypes = supportedTaskTypes;
+  }
+
+  public enum Status { ENABLED, DISABLED }
 
   public static final class Builder {
     private String accountId;
-    private Status status;
+    private Status status = Status.ENABLED;
+    private boolean connected;
     private String ip;
     private String hostName;
     private long lastHeartBeat;
     private String version;
+    private List<TaskType> supportedTaskTypes;
+    private boolean doUpgrade;
+    private String upgradeScript;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -184,6 +228,11 @@ public class Delegate extends Base {
       return this;
     }
 
+    public Builder withConnected(boolean connected) {
+      this.connected = connected;
+      return this;
+    }
+
     public Builder withIp(String ip) {
       this.ip = ip;
       return this;
@@ -201,6 +250,21 @@ public class Delegate extends Base {
 
     public Builder withVersion(String version) {
       this.version = version;
+      return this;
+    }
+
+    public Builder withSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
+      this.supportedTaskTypes = supportedTaskTypes;
+      return this;
+    }
+
+    public Builder withDoUpgrade(boolean doUpgrade) {
+      this.doUpgrade = doUpgrade;
+      return this;
+    }
+
+    public Builder withUpgradeScript(String upgradeScript) {
+      this.upgradeScript = upgradeScript;
       return this;
     }
 
@@ -238,10 +302,14 @@ public class Delegate extends Base {
       return aDelegate()
           .withAccountId(accountId)
           .withStatus(status)
+          .withConnected(connected)
           .withIp(ip)
           .withHostName(hostName)
           .withLastHeartBeat(lastHeartBeat)
           .withVersion(version)
+          .withSupportedTaskTypes(supportedTaskTypes)
+          .withDoUpgrade(doUpgrade)
+          .withUpgradeScript(upgradeScript)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -254,10 +322,14 @@ public class Delegate extends Base {
       Delegate delegate = new Delegate();
       delegate.setAccountId(accountId);
       delegate.setStatus(status);
+      delegate.setConnected(connected);
       delegate.setIp(ip);
       delegate.setHostName(hostName);
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
+      delegate.setSupportedTaskTypes(supportedTaskTypes);
+      delegate.setDoUpgrade(doUpgrade);
+      delegate.setUpgradeScript(upgradeScript);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);
       delegate.setCreatedBy(createdBy);

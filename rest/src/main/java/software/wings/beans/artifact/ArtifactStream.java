@@ -28,24 +28,18 @@ import javax.validation.constraints.NotNull;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Entity(value = "artifactStream")
 public abstract class ArtifactStream extends Base {
-  @NotEmpty private String sourceName;
-  @NotNull private ArtifactStreamType artifactStreamType;
-  @NotEmpty private String settingId;
-
-  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-
-  private boolean autoDownload = false;
-
-  private boolean autoApproveForProduction = false;
-
-  private List<ArtifactStreamAction> streamActions = new ArrayList<>();
-
-  @Transient private Artifact lastArtifact;
-
   /**
    * The Date format.
    */
   static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+  @NotEmpty private String sourceName;
+  @NotNull private ArtifactStreamType artifactStreamType;
+  @NotEmpty private String settingId;
+  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
+  private boolean autoDownload = false;
+  private boolean autoApproveForProduction = false;
+  private List<ArtifactStreamAction> streamActions = new ArrayList<>();
+  @Transient private Artifact lastArtifact;
 
   /**
    * Instantiates a new lastArtifact source.
@@ -54,6 +48,15 @@ public abstract class ArtifactStream extends Base {
    */
   public ArtifactStream(ArtifactStreamType artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
+  }
+
+  /**
+   * Gets date format.
+   *
+   * @return the date format
+   */
+  public static DateFormat getDateFormat() {
+    return dateFormat;
   }
 
   /**
@@ -66,6 +69,8 @@ public abstract class ArtifactStream extends Base {
         .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
         .collect(toSet());
   }
+
+  public void setServiceIds(Set<String> serviceIds) {}
 
   /**
    * Gets artifact display name.
@@ -208,15 +213,6 @@ public abstract class ArtifactStream extends Base {
    */
   public void setLastArtifact(Artifact lastArtifact) {
     this.lastArtifact = lastArtifact;
-  }
-
-  /**
-   * Gets date format.
-   *
-   * @return the date format
-   */
-  public static DateFormat getDateFormat() {
-    return dateFormat;
   }
 
   /**
