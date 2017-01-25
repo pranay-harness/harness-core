@@ -9,7 +9,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -35,6 +34,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
+import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
@@ -74,9 +74,13 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Inject private Injector injector;
 
-  @Inject private SignalService signalService;
-
   @Inject private TokenGenerator tokenGenerator;
+
+  @Inject private AsyncHttpClient asyncHttpClient;
+
+  private Socket socket;
+  private RequestBuilder request;
+  Object waiter = new Object();
 
   @Override
   public void run(boolean upgrade) {
@@ -101,13 +105,11 @@ public class DelegateServiceImpl implements DelegateService {
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
-      AsyncHttpClient asyncHttpClient =
-          new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build());
       Client client = ClientFactory.getDefault().newClient();
 
       URI uri = new URI(delegateConfiguration.getManagerUrl());
       // Stream the request body
-      RequestBuilder request =
+      request =
           client.newRequestBuilder()
               .method(METHOD.GET)
               .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
@@ -128,7 +130,7 @@ public class DelegateServiceImpl implements DelegateService {
                                   .reconnectAttempts(Integer.MAX_VALUE)
                                   .pauseBeforeReconnectInMilliseconds(RandomUtils.nextInt(1000, 10000))
                                   .build();
-      final Socket socket = client.create(clientOptions);
+      socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
               (String message) -> {
@@ -161,6 +163,8 @@ public class DelegateServiceImpl implements DelegateService {
             }
           });
 
+      socket.open(request.build());
+
       startHeartbeat(builder, socket);
 
       startUpgradeCheck(accountId, delegateId, getVersion());
@@ -168,19 +172,34 @@ public class DelegateServiceImpl implements DelegateService {
 
       logger.info("Delegate started.");
 
-      socket.open(request.build());
-
-      /*while (!signalService.shouldStop()) {
-        runTaskLoop(accountId, delegateId);
-        signalService.paused();
-      }*/
-      Object waiter = new Object();
       synchronized (waiter) {
         waiter.wait();
       }
 
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate ", e);
+    }
+  }
+
+  @Override
+  public void pause() {
+    socket.close();
+  }
+
+  @Override
+  public void resume() {
+    try {
+      ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+    } catch (IOException e) {
+      logger.error("Failed to resume.");
+      stop();
+    }
+  }
+
+  @Override
+  public void stop() {
+    synchronized (waiter) {
+      waiter.notify();
     }
   }
 

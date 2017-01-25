@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import com.ning.http.client.AsyncHttpClient;
 import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
@@ -16,6 +17,7 @@ import software.wings.utils.YamlUtils;
 import java.io.FileReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -62,7 +64,9 @@ public class DelegateApplication {
     // This should run in case of upgrade flow otherwise never called
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
-    injector.getInstance(ExecutorService.class).shutdownNow();
+    injector.getInstance(ExecutorService.class).shutdown();
+    injector.getInstance(ExecutorService.class).awaitTermination(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+    injector.getInstance(AsyncHttpClient.class).close();
     System.exit(0);
   }
 }

@@ -73,7 +73,6 @@ public class UpgradeServiceImpl implements UpgradeService {
       if (processStarted) {
         try {
           signalService.pause();
-          signalService.waitForPause();
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
           signalService.stop();
         } finally {
