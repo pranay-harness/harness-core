@@ -235,4 +235,79 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "999.0.0", "https://localhost:9090");
     assertThat(delegate.isDoUpgrade()).isFalse();
   }
+
+  @Test
+  public void shouldAcquireTaskWhenQueued() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isTrue();
+  }
+
+  @Test
+  public void shouldNotAcquireTaskWhenAlreadyAcquired() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withDelegateId(DELEGATE_ID + "1")
+                                    .withStatus(DelegateTask.Status.STARTED)
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isFalse();
+  }
+
+  @Test
+  public void shouldFilterTaskForAccount() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID + "1")
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
+  }
+
+  @Test
+  public void shouldFilterTaskWhenDelegateIsDisabled() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(
+        Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withDelegateId(DELEGATE_ID)
+                                    .withStatus(DelegateTask.Status.STARTED)
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
+  }
+
+  @Test
+  public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isTrue();
+  }
 }

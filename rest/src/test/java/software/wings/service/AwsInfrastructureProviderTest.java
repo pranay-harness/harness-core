@@ -170,4 +170,20 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     verify(amazonEC2Client).terminateInstances(new TerminateInstancesRequest().withInstanceIds("INSTANCE_ID"));
     verify(awsHelperService).getAmazonEc2Client(ACCESS_KEY, SECRET_KEY);
   }
+
+  @Test
+  public void shouldListLaunchConfigs() {
+    when(amazonAutoScalingClient.describeLaunchConfigurations())
+        .thenReturn(new DescribeLaunchConfigurationsResult().withLaunchConfigurations(
+            new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
+
+    List<LaunchConfiguration> launchConfigurations = infrastructureProvider.listLaunchConfigurations(awsSetting);
+
+    assertThat(launchConfigurations)
+        .hasSize(1)
+        .extracting(LaunchConfiguration::getLaunchConfigurationName)
+        .containsExactly("LAUNCH_CONFIG");
+    verify(awsHelperService).getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY);
+    verify(amazonAutoScalingClient).describeLaunchConfigurations();
+  }
 }

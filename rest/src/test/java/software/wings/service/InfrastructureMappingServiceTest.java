@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -370,6 +371,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     List<String> hostNames =
         infrastructureMappingService.listComputeProviderHosts(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
     assertThat(hostNames).hasSize(1).containsExactly(HOST_NAME);
+    verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
+    verify(query).get();
   }
 
   @Test
@@ -397,7 +400,46 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     List<String> hostNames =
         infrastructureMappingService.listComputeProviderHosts(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
+
     assertThat(hostNames).hasSize(1).containsExactly(HOST_NAME);
+    verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
+    verify(settingsService).get(COMPUTE_PROVIDER_ID);
+    verify(awsInfrastructureProvider).listHosts(computeProviderSetting, new PageRequest<>());
+  }
+
+  @Test
+  public void shouldListLaunchConfigs() {
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
+                                                            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+                                                            .withComputeProviderSettingId(SETTING_ID)
+                                                            .withAppId(APP_ID)
+                                                            .withEnvId(ENV_ID)
+                                                            .withComputeProviderType(AWS.name())
+                                                            .withUuid(INFRA_MAPPING_ID)
+                                                            .withServiceTemplateId(TEMPLATE_ID)
+                                                            .build();
+
+    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(asList(new Key<ServiceTemplate>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+    when(query.get()).thenReturn(awsInfrastructureMapping);
+
+    SettingAttribute computeProviderSetting =
+        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
+    when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
+
+    when(awsInfrastructureProvider.listLaunchConfigurations(computeProviderSetting))
+        .thenReturn(asList(new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
+
+    List<LaunchConfiguration> launchConfigurations =
+        infrastructureMappingService.listLaunchConfigs(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
+
+    assertThat(launchConfigurations)
+        .hasSize(1)
+        .extracting(LaunchConfiguration::getLaunchConfigurationName)
+        .isEqualTo(asList("LAUNCH_CONFIG"));
+    verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
+    verify(settingsService).get(COMPUTE_PROVIDER_ID);
+    verify(awsInfrastructureProvider).listLaunchConfigurations(computeProviderSetting);
   }
 
   @Test
