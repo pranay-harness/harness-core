@@ -14,10 +14,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.ExecutionArgs;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
@@ -79,32 +77,6 @@ public class StateMachineExecutionSimulator {
     extrapolateProgress(
         countsByStatuses, context, stateMachine, stateMachine.getInitialState(), "", stateExecutionInstanceMap, false);
     return countsByStatuses;
-  }
-
-  /**
-   * Gets required execution args.
-   *
-   * @param appId         the app id
-   * @param envId         the env id
-   * @param stateMachine  the state machine
-   * @param executionArgs the execution args
-   * @return the required execution args
-   */
-  public RequiredExecutionArgs getRequiredExecutionArgs(
-      String appId, String envId, StateMachine stateMachine, ExecutionArgs executionArgs) {
-    ExecutionContextImpl context = getInitialExecutionContext(appId, envId, stateMachine);
-
-    RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-    Set<String> serviceInstanceIds = new HashSet<>();
-    Set<EntityType> entityTypes = extrapolateRequiredExecutionArgs(
-        context, stateMachine, stateMachine.getInitialState(), new HashSet<>(), new HashMap<>(), serviceInstanceIds);
-    if (serviceInstanceIds.size() > 0) {
-      Set<EntityType> infraEntityTypes = getInfrastructureRequiredEntityType(appId, serviceInstanceIds);
-      entityTypes.remove(EntityType.INSTANCE);
-      entityTypes.addAll(infraEntityTypes);
-    }
-    requiredExecutionArgs.setEntityTypes(entityTypes);
-    return requiredExecutionArgs;
   }
 
   private ExecutionContextImpl getInitialExecutionContext(String appId, String envId, StateMachine stateMachine) {
@@ -186,93 +158,6 @@ public class StateMachineExecutionSimulator {
       }
     });
 
-    return entityTypes;
-  }
-
-  private Set<EntityType> extrapolateRequiredExecutionArgs(ExecutionContextImpl context, StateMachine stateMachine,
-      State state, Set<EntityType> argsInContext, Map<String, Command> commandMap, Set<String> serviceInstanceIds) {
-    if (state == null) {
-      return null;
-    }
-    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-    stateExecutionInstance.setStateName(state.getName());
-
-    Set<EntityType> entityTypes = new HashSet<>();
-
-    if (state instanceof RepeatState) {
-      String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
-      List<ContextElement> repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
-      if (repeatElements == null || repeatElements.isEmpty()) {
-        logger.warn("No repeatElements found for the expression: {}", repeatElementExpression);
-        return null;
-      }
-      State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());
-      ContextElement repeatElement = repeatElements.get(0);
-
-      // Now repeat for one element
-      StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-      cloned.setStateName(repeat.getName());
-      ExecutionContextImpl childContext =
-          (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
-      childContext.pushContextElement(repeatElement);
-      Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
-      addArgsTypeFromContextElement(repeatArgsInContext, repeatElement.getElementType());
-      Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
-          childContext, stateMachine, repeat, repeatArgsInContext, commandMap, serviceInstanceIds);
-      if (nextReqEntities != null) {
-        entityTypes.addAll(nextReqEntities);
-      }
-
-    } else if (state instanceof ForkState) {
-      ((ForkState) state).getForkStateNames().forEach(childStateName -> {
-        State child = stateMachine.getState(null, childStateName);
-        StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-        cloned.setStateName(child.getName());
-        ExecutionContextImpl childContext =
-            (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
-        cloned.setContextElement(
-            aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());
-        Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
-        Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
-            childContext, stateMachine, child, repeatArgsInContext, commandMap, serviceInstanceIds);
-        if (nextReqEntities != null) {
-          entityTypes.addAll(nextReqEntities);
-        }
-      });
-    } else {
-      if (state.getRequiredExecutionArgumentTypes() != null) {
-        for (EntityType type : state.getRequiredExecutionArgumentTypes()) {
-          if (type == EntityType.INSTANCE) {
-            serviceInstanceIds.add(context.getContextElement(ContextElementType.INSTANCE).getUuid());
-          }
-          if (argsInContext.contains(type)) {
-            continue;
-          }
-          entityTypes.add(type);
-        }
-      }
-      if (state instanceof CommandState && isArtifactNeeded(context, (CommandState) state, commandMap)) {
-        entityTypes.add(EntityType.ARTIFACT);
-      }
-    }
-
-    State success = stateMachine.getSuccessTransition(state.getName());
-    if (success != null) {
-      Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
-          context, stateMachine, success, argsInContext, commandMap, serviceInstanceIds);
-      if (nextReqEntities != null) {
-        entityTypes.addAll(nextReqEntities);
-      }
-    }
-
-    State failure = stateMachine.getFailureTransition(state.getName());
-    if (failure != null) {
-      Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
-          context, stateMachine, failure, argsInContext, commandMap, serviceInstanceIds);
-      if (nextReqEntities != null) {
-        entityTypes.addAll(nextReqEntities);
-      }
-    }
     return entityTypes;
   }
 

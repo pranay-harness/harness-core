@@ -913,6 +913,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     OrchestrationWorkflow orchestrationWorkflow4 =
         workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    workflowService.deleteWorkflowPhase(orchestrationWorkflow4.getAppId(), orchestrationWorkflow4.getUuid(),
+        orchestrationWorkflow4.getWorkflowPhaseIds().get(0));
+
+    OrchestrationWorkflow orchestrationWorkflow5 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    assertThat(orchestrationWorkflow5).isNotNull();
 
     logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
   }
