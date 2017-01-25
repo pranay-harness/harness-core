@@ -186,4 +186,12 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                              .allMatch(instance -> instance.getState().getName().equals("running"));
     return allRunning;
   }
+
+  public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    AmazonAutoScalingClient amazonAutoScalingClient =
+        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    // TODO:: remove direct usage of LaunchConfiguration
+    return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
+  }
 }

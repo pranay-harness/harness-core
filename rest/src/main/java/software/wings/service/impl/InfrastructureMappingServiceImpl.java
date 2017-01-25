@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
@@ -341,6 +342,33 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .stream()
           .map(Host::getHostName)
           .collect(Collectors.toList());
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<LaunchConfiguration> listLaunchConfigs(
+      String appId, String envId, String serviceId, String computeProviderId) {
+    Object serviceTemplateId =
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
+    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                      .field("appId")
+                                                      .equal(appId)
+                                                      .field("envId")
+                                                      .equal(envId)
+                                                      .field("serviceTemplateId")
+                                                      .equal(serviceTemplateId)
+                                                      .field("computeProviderSettingId")
+                                                      .equal(computeProviderId)
+                                                      .get();
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
+    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+      Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+      return infrastructureProvider.listLaunchConfigurations(computeProviderSetting);
     }
     return new ArrayList<>();
   }

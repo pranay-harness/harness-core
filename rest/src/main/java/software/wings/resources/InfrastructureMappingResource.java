@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -59,10 +60,20 @@ public class InfrastructureMappingResource {
 
   @GET
   @Path("compute-providers/{computeProviderId}/hosts")
-  public RestResponse<List<String>> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
-      @QueryParam("serviceId") String serviceId, @PathParam("computeProviderId") String computeProviderId) {
+  public RestResponse<List<String>> listComputeProviderHosts(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
+      @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
         infrastructureMappingService.listComputeProviderHosts(appId, envId, serviceId, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/launchconfigs")
+  public RestResponse<List<LaunchConfiguration>> listLaunchConfigs(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureMappingService.listLaunchConfigs(appId, envId, serviceId, computeProviderId));
   }
 
   @PUT

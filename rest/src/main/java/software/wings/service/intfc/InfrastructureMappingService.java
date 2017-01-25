@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
@@ -90,6 +91,17 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId);
+
+  /**
+   * List launch configs list.
+   *
+   * @param appId             the app id
+   * @param envId             the env id
+   * @param serviceId         the service id
+   * @param computeProviderId the compute provider id
+   * @return the list
+   */
+  List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String serviceId, String computeProviderId);
 
   /**
    * Gets infra mapping by compute provider and service id.
