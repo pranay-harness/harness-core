@@ -858,16 +858,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       OrchestrationWorkflow orchestrationWorkflow =
           workflowService.readOrchestrationWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
       List<Service> services = orchestrationWorkflow.getServices();
-      services.forEach(service -> {
-        ServiceElement serviceElement =
-            ServiceElement.Builder.aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
-        ElementExecutionSummary elementSummary = anElementExecutionSummary()
-                                                     .withContextElement(serviceElement)
-                                                     .withStatus(ExecutionStatus.QUEUED)
-                                                     .withInstancesCount(0)
-                                                     .build();
-        serviceExecutionSummaryMap.put(service.getUuid(), elementSummary);
-      });
+      if (services != null) {
+        services.forEach(service -> {
+          ServiceElement serviceElement =
+              ServiceElement.Builder.aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
+          ElementExecutionSummary elementSummary = anElementExecutionSummary()
+                                                       .withContextElement(serviceElement)
+                                                       .withStatus(ExecutionStatus.QUEUED)
+                                                       .withInstancesCount(0)
+                                                       .build();
+          serviceExecutionSummaryMap.put(service.getUuid(), elementSummary);
+        });
+      }
     }
 
     populateServiceSummary(serviceExecutionSummaryMap, workflowExecution);
