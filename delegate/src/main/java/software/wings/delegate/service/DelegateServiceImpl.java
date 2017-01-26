@@ -52,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
@@ -140,18 +141,21 @@ public class DelegateServiceImpl implements DelegateService {
           .on(Event.ERROR,
               new Function<Exception>() {
                 @Override
-                public void on(Exception ioe) {
-                  ioe.printStackTrace();
-                  logger.error("Exception: ", ioe);
-                  try {
-                    socket.close();
-                  } catch (Exception e) {
-                    // Ignore
-                  }
-                  try {
-                    ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
-                  } catch (IOException e) {
-                    e.printStackTrace();
+                public void on(Exception e) {
+                  if (e instanceof SSLException) {
+                    logger.info("Reopening connection to manager.");
+                    try {
+                      ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+                    } catch (IOException ex) {
+                      logger.error("Unable to open socket: ", e);
+                    }
+                  } else {
+                    logger.error("Exception: ", e);
+                    try {
+                      socket.close();
+                    } catch (Exception ex) {
+                      // Ignore
+                    }
                   }
                 }
               })
