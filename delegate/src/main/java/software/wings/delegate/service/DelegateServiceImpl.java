@@ -17,6 +17,7 @@ import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
+import org.atmosphere.wasync.Function;
 import org.atmosphere.wasync.Options;
 import org.atmosphere.wasync.Request.METHOD;
 import org.atmosphere.wasync.Request.TRANSPORT;
@@ -122,33 +123,40 @@ public class DelegateServiceImpl implements DelegateService {
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
-              (String message) -> {
-                if (!StringUtils.equals(message, "X")) {
-                  try {
-                    DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-                    dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
-                  } catch (Exception e) {
-                    System.out.println(message);
-                    logger.error("Exception while decoding task: ", e);
+              new Function<String>() {
+                @Override
+                public void on(String message) {
+                  if (!StringUtils.equals(message, "X")) {
+                    try {
+                      DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
+                      dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                    } catch (Exception e) {
+                      System.out.println(message);
+                      logger.error("Exception while decoding task: ", e);
+                    }
                   }
                 }
               })
           .on(Event.ERROR,
-              (Exception ioe) -> {
-                ioe.printStackTrace();
-                logger.error("Exception: ", ioe);
-                // Some IOException occurred
+              new Function<Exception>() {
+                @Override
+                public void on(Exception ioe) {
+                  ioe.printStackTrace();
+                  logger.error("Exception: ", ioe);
+                }
               })
-          .on(Event.REOPENED, o -> {
-            // register again
-            try {
-              socket.fire(builder.but()
-                              .withLastHeartBeat(System.currentTimeMillis())
-                              .withStatus(Status.ENABLED)
-                              .withConnected(true)
-                              .build());
-            } catch (IOException e) {
-              e.printStackTrace();
+          .on(Event.REOPENED, new Function<Object>() {
+            @Override
+            public void on(Object o) {
+              try {
+                socket.fire(builder.but()
+                                .withLastHeartBeat(System.currentTimeMillis())
+                                .withStatus(Status.ENABLED)
+                                .withConnected(true)
+                                .build());
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
             }
           });
 
