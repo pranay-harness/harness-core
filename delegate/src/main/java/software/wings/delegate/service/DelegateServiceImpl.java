@@ -101,9 +101,6 @@ public class DelegateServiceImpl implements DelegateService {
       }
       System.out.println(delegateConfiguration.getManagerUrl());
       URI uri = new URI(delegateConfiguration.getManagerUrl());
-      System.out.println(uri.getScheme());
-      System.out.println(uri.getHost());
-      System.out.println(uri.getPort());
 
       String delegateId = registerDelegate(accountId, builder);
 
@@ -147,7 +144,6 @@ public class DelegateServiceImpl implements DelegateService {
                     DelegateTask delegateTask = (DelegateTask) KryoUtils.asObject(message);
                     dispatchDelegateTask(delegateTask, delegateId, accountId);
                   } catch (Exception e) {
-                    System.out.println(message);
                     logger.error("Exception while decoding task: ", e);
                   }
                 }
