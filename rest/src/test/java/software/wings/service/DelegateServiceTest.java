@@ -237,7 +237,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegate.isDoUpgrade()).isFalse();
   }
 
-  @Cache(cacheName = "delegateSyncCache", keyType = String.class, valueType = DelegateTask.class)
+  @Cache
   @Test
   public void shouldAcquireTaskWhenQueued() throws Exception {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
@@ -252,7 +252,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
   }
 
-  @Cache(cacheName = "delegateSyncCache", keyType = String.class, valueType = DelegateTask.class)
+  @Cache
   @Test
   public void shouldNotAcquireTaskWhenAlreadyAcquired() throws Exception {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());

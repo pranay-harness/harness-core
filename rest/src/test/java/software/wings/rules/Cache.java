@@ -10,8 +10,4 @@ import java.lang.annotation.Target;
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.METHOD, ElementType.TYPE})
-public @interface Cache {
-  String cacheName() default "";
-  Class<?> keyType() default Void.class;
-  Class<?> valueType() default Void.class;
-}
+public @interface Cache {}
