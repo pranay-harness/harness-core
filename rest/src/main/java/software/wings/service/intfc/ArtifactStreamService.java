@@ -6,8 +6,9 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.stencils.Stencil;
 
-import java.util.Map;
+import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -117,5 +118,5 @@ public interface ArtifactStreamService {
    * @param appId the app id
    * @return the artifact stream schema
    */
-  Map<String, Map<String, Object>> getArtifactStreamSchema(String appId);
+  List<Stencil> getArtifactStreamSchema(String appId);
 }

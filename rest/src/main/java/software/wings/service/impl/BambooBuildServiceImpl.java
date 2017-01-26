@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;

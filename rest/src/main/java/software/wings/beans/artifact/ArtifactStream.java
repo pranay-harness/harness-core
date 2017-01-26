@@ -6,9 +6,9 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 
 import java.text.DateFormat;
@@ -28,25 +28,22 @@ import javax.validation.constraints.NotNull;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 @Entity(value = "artifactStream")
 public abstract class ArtifactStream extends Base {
-  /**
-   * The Date format.
-   */
-  static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+  @SchemaIgnore private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
   @NotEmpty private String sourceName;
-  @NotNull private ArtifactStreamType artifactStreamType;
+  @NotNull private String artifactStreamType;
   @NotEmpty private String settingId;
+
   @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
   private boolean autoDownload = false;
   private boolean autoApproveForProduction = false;
   private List<ArtifactStreamAction> streamActions = new ArrayList<>();
-  @Transient private Artifact lastArtifact;
 
   /**
    * Instantiates a new lastArtifact source.
    *
    * @param artifactStreamType the source type
    */
-  public ArtifactStream(ArtifactStreamType artifactStreamType) {
+  public ArtifactStream(String artifactStreamType) {
     this.artifactStreamType = artifactStreamType;
   }
 
@@ -55,6 +52,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the date format
    */
+  @SchemaIgnore
   public static DateFormat getDateFormat() {
     return dateFormat;
   }
@@ -70,6 +68,11 @@ public abstract class ArtifactStream extends Base {
         .collect(toSet());
   }
 
+  /**
+   * Sets service ids.
+   *
+   * @param serviceIds the service ids
+   */
   public void setServiceIds(Set<String> serviceIds) {}
 
   /**
@@ -103,7 +106,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the source type
    */
-  public ArtifactStreamType getArtifactStreamType() {
+  public String getArtifactStreamType() {
     return artifactStreamType;
   }
 
@@ -184,6 +187,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the stream actions
    */
+  @SchemaIgnore
   public List<ArtifactStreamAction> getStreamActions() {
     return streamActions;
   }
@@ -197,40 +201,6 @@ public abstract class ArtifactStream extends Base {
     this.streamActions = streamActions;
   }
 
-  /**
-   * Gets last artifact.
-   *
-   * @return the last artifact
-   */
-  public Artifact getLastArtifact() {
-    return lastArtifact;
-  }
-
-  /**
-   * Sets last artifact.
-   *
-   * @param lastArtifact the last artifact
-   */
-  public void setLastArtifact(Artifact lastArtifact) {
-    this.lastArtifact = lastArtifact;
-  }
-
-  /**
-   * The Enum ArtifactStreamType.
-   */
-  public enum ArtifactStreamType {
-    /**
-     * Jenkins source type.
-     */
-    JENKINS, /**
-              * BambooService source type.
-              */
-    BAMBOO, /**
-             * Docker source type.
-             */
-    DOCKER
-  }
-
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -241,7 +211,6 @@ public abstract class ArtifactStream extends Base {
         .add("autoDownload", autoDownload)
         .add("autoApproveForProduction", autoApproveForProduction)
         .add("streamActions", streamActions)
-        .add("lastArtifact", lastArtifact)
         .toString();
   }
 
@@ -249,7 +218,7 @@ public abstract class ArtifactStream extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(sourceName, artifactStreamType, settingId, artifactPathServices, autoDownload,
-              autoApproveForProduction, streamActions, lastArtifact);
+              autoApproveForProduction, streamActions);
   }
 
   @Override
@@ -270,7 +239,6 @@ public abstract class ArtifactStream extends Base {
         && Objects.equals(this.artifactPathServices, other.artifactPathServices)
         && Objects.equals(this.autoDownload, other.autoDownload)
         && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
-        && Objects.equals(this.streamActions, other.streamActions)
-        && Objects.equals(this.lastArtifact, other.lastArtifact);
+        && Objects.equals(this.streamActions, other.streamActions);
   }
 }

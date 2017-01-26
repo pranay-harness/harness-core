@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;

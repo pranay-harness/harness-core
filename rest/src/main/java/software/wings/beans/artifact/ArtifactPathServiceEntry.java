@@ -2,6 +2,7 @@ package software.wings.beans.artifact;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
@@ -18,7 +19,7 @@ import java.util.Objects;
 public class ArtifactPathServiceEntry {
   @NotEmpty private String artifactPathRegex;
 
-  @Transient private List<Service> services;
+  @Transient @SchemaIgnore private List<Service> services;
 
   private List<String> serviceIds = new ArrayList<>();
 
@@ -45,6 +46,7 @@ public class ArtifactPathServiceEntry {
    *
    * @return the services
    */
+  @SchemaIgnore
   public List<Service> getServices() {
     return services;
   }

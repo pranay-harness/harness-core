@@ -21,12 +21,12 @@ public class BambooArtifactStream extends ArtifactStream {
    * Instantiates a new Bamboo artifact stream.
    */
   public BambooArtifactStream() {
-    super(ArtifactStreamType.BAMBOO);
+    super(ArtifactStreamType.BAMBOO.name());
   }
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getSourceName(), buildNo, dateFormat.format(new Date()));
+    return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
@@ -51,9 +51,9 @@ public class BambooArtifactStream extends ArtifactStream {
    * The type Builder.
    */
   public static final class Builder {
+    private String jobname;
     private String sourceName;
     private String settingId;
-    private String jobname;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private boolean autoDownload = false;
     private String uuid;
@@ -64,7 +64,6 @@ public class BambooArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private Artifact lastArtifact;
 
     private Builder() {}
 
@@ -75,6 +74,17 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public static Builder aBambooArtifactStream() {
       return new Builder();
+    }
+
+    /**
+     * With jobname builder.
+     *
+     * @param jobname the jobname
+     * @return the builder
+     */
+    public Builder withJobname(String jobname) {
+      this.jobname = jobname;
+      return this;
     }
 
     /**
@@ -96,17 +106,6 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public Builder withSettingId(String settingId) {
       this.settingId = settingId;
-      return this;
-    }
-
-    /**
-     * With jobname builder.
-     *
-     * @param jobname the jobname
-     * @return the builder
-     */
-    public Builder withJobname(String jobname) {
-      this.jobname = jobname;
       return this;
     }
 
@@ -221,26 +220,15 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With last artifact builder.
-     *
-     * @param lastArtifact the last artifact
-     * @return the builder
-     */
-    public Builder withLastArtifact(Artifact lastArtifact) {
-      this.lastArtifact = lastArtifact;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return aBambooArtifactStream()
+          .withJobname(jobname)
           .withSourceName(sourceName)
           .withSettingId(settingId)
-          .withJobname(jobname)
           .withArtifactPathServices(artifactPathServices)
           .withAutoDownload(autoDownload)
           .withUuid(uuid)
@@ -250,8 +238,7 @@ public class BambooArtifactStream extends ArtifactStream {
           .withStreamActions(streamActions)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withLastArtifact(lastArtifact);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -261,9 +248,9 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public BambooArtifactStream build() {
       BambooArtifactStream bambooArtifactStream = new BambooArtifactStream();
+      bambooArtifactStream.setJobname(jobname);
       bambooArtifactStream.setSourceName(sourceName);
       bambooArtifactStream.setSettingId(settingId);
-      bambooArtifactStream.setJobname(jobname);
       bambooArtifactStream.setArtifactPathServices(artifactPathServices);
       bambooArtifactStream.setAutoDownload(autoDownload);
       bambooArtifactStream.setUuid(uuid);
@@ -274,7 +261,6 @@ public class BambooArtifactStream extends ArtifactStream {
       bambooArtifactStream.setCreatedAt(createdAt);
       bambooArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      bambooArtifactStream.setLastArtifact(lastArtifact);
       return bambooArtifactStream;
     }
   }

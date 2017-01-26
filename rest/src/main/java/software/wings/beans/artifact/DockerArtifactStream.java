@@ -1,6 +1,6 @@
 package software.wings.beans.artifact;
 
-import static software.wings.beans.artifact.ArtifactStream.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -16,7 +16,7 @@ public class DockerArtifactStream extends ArtifactStream {
    * Instantiates a new Docker artifact stream.
    */
   public DockerArtifactStream() {
-    super(DOCKER);
+    super(DOCKER.name());
     super.setAutoApproveForProduction(true);
   }
 

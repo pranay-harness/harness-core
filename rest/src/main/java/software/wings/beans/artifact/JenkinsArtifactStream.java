@@ -21,7 +21,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * Instantiates a new jenkins artifact source.
    */
   public JenkinsArtifactStream() {
-    super(ArtifactStreamType.JENKINS);
+    super(ArtifactStreamType.JENKINS.name());
   }
 
   /**
@@ -31,7 +31,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * @return the artifact display name
    */
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getJobname(), buildNo, dateFormat.format(new Date()));
+    return String.format("%s_%s_%s", getJobname(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
@@ -56,10 +56,9 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * The type Builder.
    */
   public static final class Builder {
-    private String sourceName;
-    private ArtifactStreamType artifactStreamType;
-    private String settingId;
     private String jobname;
+    private String sourceName;
+    private String settingId;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private boolean autoDownload = false;
     private String uuid;
@@ -70,7 +69,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private Artifact lastArtifact;
 
     private Builder() {}
 
@@ -81,6 +79,17 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public static Builder aJenkinsArtifactStream() {
       return new Builder();
+    }
+
+    /**
+     * With jobname builder.
+     *
+     * @param jobname the jobname
+     * @return the builder
+     */
+    public Builder withJobname(String jobname) {
+      this.jobname = jobname;
+      return this;
     }
 
     /**
@@ -95,17 +104,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With source type builder.
-     *
-     * @param artifactStreamType the source type
-     * @return the builder
-     */
-    public Builder withSourceType(ArtifactStreamType artifactStreamType) {
-      this.artifactStreamType = artifactStreamType;
-      return this;
-    }
-
-    /**
      * With setting id builder.
      *
      * @param settingId the setting id
@@ -113,17 +111,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public Builder withSettingId(String settingId) {
       this.settingId = settingId;
-      return this;
-    }
-
-    /**
-     * With jobname builder.
-     *
-     * @param jobname the jobname
-     * @return the builder
-     */
-    public Builder withJobname(String jobname) {
-      this.jobname = jobname;
       return this;
     }
 
@@ -238,27 +225,15 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With last artifact builder.
-     *
-     * @param lastArtifact the last artifact
-     * @return the builder
-     */
-    public Builder withLastArtifact(Artifact lastArtifact) {
-      this.lastArtifact = lastArtifact;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return aJenkinsArtifactStream()
-          .withSourceName(sourceName)
-          .withSourceType(artifactStreamType)
-          .withSettingId(settingId)
           .withJobname(jobname)
+          .withSourceName(sourceName)
+          .withSettingId(settingId)
           .withArtifactPathServices(artifactPathServices)
           .withAutoDownload(autoDownload)
           .withUuid(uuid)
@@ -268,8 +243,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
           .withStreamActions(streamActions)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withLastArtifact(lastArtifact);
+          .withLastUpdatedAt(lastUpdatedAt);
     }
 
     /**
@@ -279,9 +253,9 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public JenkinsArtifactStream build() {
       JenkinsArtifactStream jenkinsArtifactStream = new JenkinsArtifactStream();
+      jenkinsArtifactStream.setJobname(jobname);
       jenkinsArtifactStream.setSourceName(sourceName);
       jenkinsArtifactStream.setSettingId(settingId);
-      jenkinsArtifactStream.setJobname(jobname);
       jenkinsArtifactStream.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactStream.setAutoDownload(autoDownload);
       jenkinsArtifactStream.setUuid(uuid);
@@ -292,7 +266,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
       jenkinsArtifactStream.setCreatedAt(createdAt);
       jenkinsArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      jenkinsArtifactStream.setLastArtifact(lastArtifact);
       return jenkinsArtifactStream;
     }
   }

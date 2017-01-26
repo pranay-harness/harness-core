@@ -38,6 +38,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -58,11 +59,14 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
+import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -89,6 +93,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
   @Inject private EnvironmentService environmentService;
+  @Inject private StencilPostProcessor stencilPostProcessor;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -341,8 +346,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public Map<String, Map<String, Object>> getArtifactStreamSchema(String appId) {
-    return null;
+  public List<Stencil> getArtifactStreamSchema(String appId) {
+    return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId);
   }
 
   private Artifact getLastSuccessfullyDeployedArtifact(String appId, ArtifactStreamAction artifactStreamAction) {

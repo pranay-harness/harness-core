@@ -2,7 +2,7 @@ package software.wings.scheduler;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.ArtifactStream.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;

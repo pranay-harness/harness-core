@@ -17,10 +17,13 @@ import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.stencils.Stencil;
 
 import java.text.ParseException;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
@@ -46,6 +49,7 @@ import javax.ws.rs.QueryParam;
 @Consumes("application/json")
 @Timed
 @ExceptionMetered
+@PublicApi
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
 
@@ -226,9 +230,8 @@ public class ArtifactStreamResource {
   }
 
   @GET
-  @Path("schema")
-  public RestResponse<Map<String, Map<String, Object>>> installedPluginSettingSchema(
-      @QueryParam("appId") String appId) {
+  @Path("stencils")
+  public RestResponse<List<Stencil>> installedPluginSettingSchema(@QueryParam("appId") String appId) {
     return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId)).build();
   }
 }

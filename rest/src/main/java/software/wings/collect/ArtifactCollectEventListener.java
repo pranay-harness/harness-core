@@ -17,6 +17,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.UUIDGenerator;
@@ -82,7 +83,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
   private DelegateTask createDelegateTask(
       String accountId, ArtifactStream artifactStream, Artifact artifact, String waitId) {
-    switch (artifactStream.getArtifactStreamType()) {
+    switch (ArtifactStreamType.valueOf(artifactStream.getArtifactStreamType())) {
       case JENKINS: {
         JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStream;
         SettingAttribute settingAttribute = settingsService.get(jenkinsArtifactStream.getSettingId());

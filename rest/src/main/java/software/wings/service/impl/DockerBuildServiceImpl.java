@@ -9,7 +9,7 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStream.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.DockerBuildService;
 
