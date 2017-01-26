@@ -3,6 +3,8 @@ package software.wings.beans.artifact;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
@@ -15,7 +17,7 @@ import java.util.List;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsArtifactStream extends ArtifactStream {
-  @NotEmpty private String jobname;
+  @NotEmpty @Attributes(title = "Job Name*") private String jobname;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -30,6 +32,8 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * @param buildNo the build no
    * @return the artifact display name
    */
+  @Override
+  @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getJobname(), buildNo, getDateFormat().format(new Date()));
   }
@@ -52,6 +56,31 @@ public class JenkinsArtifactStream extends ArtifactStream {
     this.jobname = jobname;
   }
 
+  @Attributes(title = "Source Type")
+  public String getArtifactStreamType() {
+    return super.getArtifactStreamType();
+  }
+
+  @Attributes(title = "Source Server")
+  public String getSettingId() {
+    return super.getSettingId();
+  }
+
+  @Attributes(title = "Artifact Path*")
+  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
+    return super.getArtifactPathServices();
+  }
+
+  @Attributes(title = "Automatic Download")
+  public boolean isAutoDownload() {
+    return super.isAutoDownload();
+  }
+
+  @Attributes(title = "Auto-approved for Production")
+  public boolean isAutoApproveForProduction() {
+    return super.isAutoApproveForProduction();
+  }
+
   /**
    * The type Builder.
    */
@@ -59,16 +88,16 @@ public class JenkinsArtifactStream extends ArtifactStream {
     private String jobname;
     private String sourceName;
     private String settingId;
-    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-    private boolean autoDownload = false;
     private String uuid;
-    private boolean autoApproveForProduction = false;
     private String appId;
     private EmbeddedUser createdBy;
-    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
     private long createdAt;
+    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private boolean autoDownload = false;
+    private boolean autoApproveForProduction = false;
+    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
     private Builder() {}
 
@@ -115,28 +144,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With artifact path services builder.
-     *
-     * @param artifactPathServices the artifact path services
-     * @return the builder
-     */
-    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-      this.artifactPathServices = artifactPathServices;
-      return this;
-    }
-
-    /**
-     * With auto download builder.
-     *
-     * @param autoDownload the auto download
-     * @return the builder
-     */
-    public Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
-      return this;
-    }
-
-    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -144,17 +151,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
-      return this;
-    }
-
-    /**
-     * With auto approve for production builder.
-     *
-     * @param autoApproveForProduction the auto approve for production
-     * @return the builder
-     */
-    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-      this.autoApproveForProduction = autoApproveForProduction;
       return this;
     }
 
@@ -181,17 +177,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With stream actions builder.
-     *
-     * @param streamActions the stream actions
-     * @return the builder
-     */
-    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
-      this.streamActions = streamActions;
-      return this;
-    }
-
-    /**
      * With created at builder.
      *
      * @param createdAt the created at
@@ -199,6 +184,17 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
+     * With artifact path services builder.
+     *
+     * @param artifactPathServices the artifact path services
+     * @return the builder
+     */
+    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
+      this.artifactPathServices = artifactPathServices;
       return this;
     }
 
@@ -225,6 +221,39 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With auto download builder.
+     *
+     * @param autoDownload the auto download
+     * @return the builder
+     */
+    public Builder withAutoDownload(boolean autoDownload) {
+      this.autoDownload = autoDownload;
+      return this;
+    }
+
+    /**
+     * With auto approve for production builder.
+     *
+     * @param autoApproveForProduction the auto approve for production
+     * @return the builder
+     */
+    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+      this.autoApproveForProduction = autoApproveForProduction;
+      return this;
+    }
+
+    /**
+     * With stream actions builder.
+     *
+     * @param streamActions the stream actions
+     * @return the builder
+     */
+    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
+      this.streamActions = streamActions;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -234,16 +263,16 @@ public class JenkinsArtifactStream extends ArtifactStream {
           .withJobname(jobname)
           .withSourceName(sourceName)
           .withSettingId(settingId)
-          .withArtifactPathServices(artifactPathServices)
-          .withAutoDownload(autoDownload)
           .withUuid(uuid)
-          .withAutoApproveForProduction(autoApproveForProduction)
           .withAppId(appId)
           .withCreatedBy(createdBy)
-          .withStreamActions(streamActions)
           .withCreatedAt(createdAt)
+          .withArtifactPathServices(artifactPathServices)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAutoDownload(autoDownload)
+          .withAutoApproveForProduction(autoApproveForProduction)
+          .withStreamActions(streamActions);
     }
 
     /**
@@ -256,16 +285,16 @@ public class JenkinsArtifactStream extends ArtifactStream {
       jenkinsArtifactStream.setJobname(jobname);
       jenkinsArtifactStream.setSourceName(sourceName);
       jenkinsArtifactStream.setSettingId(settingId);
-      jenkinsArtifactStream.setArtifactPathServices(artifactPathServices);
-      jenkinsArtifactStream.setAutoDownload(autoDownload);
       jenkinsArtifactStream.setUuid(uuid);
-      jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       jenkinsArtifactStream.setAppId(appId);
       jenkinsArtifactStream.setCreatedBy(createdBy);
-      jenkinsArtifactStream.setStreamActions(streamActions);
       jenkinsArtifactStream.setCreatedAt(createdAt);
+      jenkinsArtifactStream.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      jenkinsArtifactStream.setAutoDownload(autoDownload);
+      jenkinsArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      jenkinsArtifactStream.setStreamActions(streamActions);
       return jenkinsArtifactStream;
     }
   }

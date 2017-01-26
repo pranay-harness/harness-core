@@ -3,6 +3,8 @@ package software.wings.beans.artifact;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
@@ -15,7 +17,7 @@ import java.util.List;
  */
 @JsonTypeName("BAMBOO")
 public class BambooArtifactStream extends ArtifactStream {
-  @NotEmpty private String jobname;
+  @NotEmpty @Attributes(title = "Plan name") private String jobname;
 
   /**
    * Instantiates a new Bamboo artifact stream.
@@ -25,6 +27,7 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Override
+  @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
   }
@@ -45,6 +48,31 @@ public class BambooArtifactStream extends ArtifactStream {
    */
   public void setJobname(String jobname) {
     this.jobname = jobname;
+  }
+
+  @Attributes(title = "Source Type")
+  public String getArtifactStreamType() {
+    return super.getArtifactStreamType();
+  }
+
+  @Attributes(title = "Source Server")
+  public String getSettingId() {
+    return super.getSettingId();
+  }
+
+  @Attributes(title = "Artifact Path*")
+  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
+    return super.getArtifactPathServices();
+  }
+
+  @Attributes(title = "Automatic Download")
+  public boolean isAutoDownload() {
+    return super.isAutoDownload();
+  }
+
+  @Attributes(title = "Auto-approved for Production")
+  public boolean isAutoApproveForProduction() {
+    return super.isAutoApproveForProduction();
   }
 
   /**

@@ -6,10 +6,12 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
+import software.wings.beans.EmbeddedUser;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -29,14 +31,23 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "artifactStream")
 public abstract class ArtifactStream extends Base {
   @SchemaIgnore private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
-  @NotEmpty private String sourceName;
-  @NotNull private String artifactStreamType;
-  @NotEmpty private String settingId;
 
-  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-  private boolean autoDownload = false;
-  private boolean autoApproveForProduction = false;
-  private List<ArtifactStreamAction> streamActions = new ArrayList<>();
+  @NotNull @Attributes(title = "Source Type") private String artifactStreamType;
+
+  @NotEmpty @SchemaIgnore private String sourceName;
+
+  @NotEmpty @Attributes(title = "Source Server") private String settingId;
+
+  @NotEmpty
+  @Valid
+  @Attributes(title = "Artifact Path*")
+  private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
+
+  @Attributes(title = "Automatic Download") private boolean autoDownload = false;
+
+  @Attributes(title = "Auto-approved for Production") private boolean autoApproveForProduction = false;
+
+  @SchemaIgnore private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
   /**
    * Instantiates a new lastArtifact source.
@@ -62,6 +73,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the service ids
    */
+  @SchemaIgnore
   public Set<String> getServiceIds() {
     return artifactPathServices.stream()
         .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
@@ -88,6 +100,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the source name
    */
+  @SchemaIgnore
   public String getSourceName() {
     return sourceName;
   }
@@ -190,6 +203,42 @@ public abstract class ArtifactStream extends Base {
   @SchemaIgnore
   public List<ArtifactStreamAction> getStreamActions() {
     return streamActions;
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getAppId() {
+    return super.getAppId();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getCreatedBy() {
+    return super.getCreatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public EmbeddedUser getLastUpdatedBy() {
+    return super.getLastUpdatedBy();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getCreatedAt() {
+    return super.getCreatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public long getLastUpdatedAt() {
+    return super.getLastUpdatedAt();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getUuid() {
+    return super.getUuid();
   }
 
   /**
