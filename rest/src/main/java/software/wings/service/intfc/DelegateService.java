@@ -36,7 +36,7 @@ public interface DelegateService {
 
   PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId);
 
-  boolean acquireDelegateTask(String accountId, String delegateId, String taskId);
+  DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId);
 
   void processDelegateResponse(DelegateTaskResponse response);
 

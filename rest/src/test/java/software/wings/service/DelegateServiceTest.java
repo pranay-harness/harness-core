@@ -38,6 +38,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Cache;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
@@ -236,6 +237,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegate.isDoUpgrade()).isFalse();
   }
 
+  @Cache(cacheName = "delegateSyncCache", keyType = String.class, valueType = DelegateTask.class)
   @Test
   public void shouldAcquireTaskWhenQueued() throws Exception {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
@@ -247,9 +249,10 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withParameters(new Object[] {})
                                     .build();
     wingsPersistence.save(delegateTask);
-    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isTrue();
+    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
   }
 
+  @Cache(cacheName = "delegateSyncCache", keyType = String.class, valueType = DelegateTask.class)
   @Test
   public void shouldNotAcquireTaskWhenAlreadyAcquired() throws Exception {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
@@ -263,7 +266,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withStatus(DelegateTask.Status.STARTED)
                                     .build();
     wingsPersistence.save(delegateTask);
-    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isFalse();
+    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNull();
   }
 
   @Test

@@ -1,5 +1,6 @@
 package software.wings.rules;
 
+import static java.util.stream.Collectors.toMap;
 import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -61,6 +62,7 @@ import java.lang.annotation.Annotation;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -240,9 +242,13 @@ public class WingsRule implements MethodRule {
             .findFirst()
             .isPresent()) {
       CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
+      Map<String, Cache> cacheMap =
+          annotations.stream()
+              .filter(annotation -> Cache.class.isInstance(annotation) && ((Cache) annotation).keyType() != null)
+              .collect(toMap(o -> ((Cache) o).cacheName(), o -> (Cache) o));
       cacheManager.getCacheNames().forEach(s -> {
-        if ("downloadTokenCache".equals(s)) {
-          cacheManager.getCache(s, String.class, String.class).clear();
+        if (cacheMap.containsKey(s)) {
+          cacheManager.getCache(s, cacheMap.get(s).keyType(), cacheMap.get(s).valueType()).clear();
         } else {
           cacheManager.getCache(s).clear();
         }

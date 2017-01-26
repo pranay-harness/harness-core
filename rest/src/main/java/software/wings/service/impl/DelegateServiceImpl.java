@@ -45,6 +45,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -56,6 +57,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Caching;
 import javax.inject.Inject;
 
 /**
@@ -191,6 +193,7 @@ public class DelegateServiceImpl implements DelegateService {
     task.setQueueName(queueName);
     task.setUuid(queueName);
     IQueue<T> topic = hazelcastInstance.getQueue(queueName);
+    CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(queueName, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     return topic.poll(30000, TimeUnit.MILLISECONDS);
   }
@@ -201,21 +204,26 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public boolean acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                    .field("accountId")
-                                    .equal(accountId)
-                                    .field("status")
-                                    .equal(DelegateTask.Status.QUEUED)
-                                    .field("delegateId")
-                                    .doesNotExist()
-                                    .field(ID_KEY)
-                                    .equal(taskId);
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                          .set("status", DelegateTask.Status.STARTED)
-                                                          .set("delegateId", delegateId);
-    DelegateTask delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
-    return delegateTask != null;
+  public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
+    DelegateTask delegateTask = CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    if (delegateTask == null) {
+      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                      .field("accountId")
+                                      .equal(accountId)
+                                      .field("status")
+                                      .equal(DelegateTask.Status.QUEUED)
+                                      .field("delegateId")
+                                      .doesNotExist()
+                                      .field(ID_KEY)
+                                      .equal(taskId);
+      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                            .set("status", DelegateTask.Status.STARTED)
+                                                            .set("delegateId", delegateId);
+      delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    } else {
+      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
+    }
+    return delegateTask;
   }
 
   @Override
