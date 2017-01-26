@@ -14,3 +14,4 @@ wingsui
 access.log
 access*gz
 */delegate*.log
+*/upgrade.sh
