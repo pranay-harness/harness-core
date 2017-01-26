@@ -143,6 +143,16 @@ public class DelegateServiceImpl implements DelegateService {
                 public void on(Exception ioe) {
                   ioe.printStackTrace();
                   logger.error("Exception: ", ioe);
+                  try {
+                    socket.close();
+                  } catch (Exception e) {
+                    // Ignore
+                  }
+                  try {
+                    ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+                  } catch (IOException e) {
+                    e.printStackTrace();
+                  }
                 }
               })
           .on(Event.REOPENED, new Function<Object>() {
