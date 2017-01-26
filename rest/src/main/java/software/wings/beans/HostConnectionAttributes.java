@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue;
 
 import java.util.Objects;
@@ -12,10 +13,11 @@ import java.util.Objects;
  */
 @JsonTypeName("HOST_CONNECTION_ATTRIBUTES")
 public class HostConnectionAttributes extends SettingValue {
-  private ConnectionType connectionType;
-  private AccessType accessType;
-  private String key;
-  private String userName;
+  @Attributes(title = "Connection Type") private ConnectionType connectionType;
+  @Attributes(title = "Access Type") private AccessType accessType;
+
+  @Attributes(title = "username") private String userName;
+  @Attributes(title = "Key") private String key;
 
   /**
    * Instantiates a new host connection attributes.

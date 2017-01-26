@@ -50,7 +50,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream, String appId, JenkinsConfig jenkinsConfig) {
-    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
 

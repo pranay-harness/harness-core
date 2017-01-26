@@ -6,6 +6,7 @@ import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
+import static software.wings.beans.PluginCategory.ConnectionAttributes;
 import static software.wings.beans.PluginCategory.Verification;
 
 import org.junit.Test;
@@ -13,6 +14,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
@@ -32,7 +34,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(9)
+        .hasSize(10)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -104,6 +106,14 @@ public class PluginServiceTest {
                 .withDisplayName("Physical Data Center")
                 .withType("PHYSICAL_DATA_CENTER")
                 .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(HostConnectionAttributes.class)
+                .withAccountId(accountId)
+                .withIsEnabled(false)
+                .withDisplayName("Host Connection Attributes")
+                .withType("HOST_CONNECTION_ATTRIBUTES")
+                .withPluginCategories(asList(ConnectionAttributes))
                 .build());
   }
 
@@ -112,8 +122,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(9)
-        .containsOnlyKeys(
-            "APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER", "DOCKER");
+        .hasSize(10)
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER",
+            "DOCKER", "HOST_CONNECTION_ATTRIBUTES");
   }
 }

@@ -6,6 +6,7 @@ import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
+import static software.wings.beans.PluginCategory.ConnectionAttributes;
 import static software.wings.beans.PluginCategory.Verification;
 
 import com.google.common.base.Charsets;
@@ -19,6 +20,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
@@ -123,6 +125,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("PHYSICAL_DATA_CENTER")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("PHYSICAL_DATA_CENTER"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(HostConnectionAttributes.class)
+            .withAccountId(accountId)
+            .withIsEnabled(false)
+            .withDisplayName("Host Connection Attributes")
+            .withType("HOST_CONNECTION_ATTRIBUTES")
+            .withPluginCategories(asList(ConnectionAttributes))
+            .withUiSchema(readUiSchema("HOST_CONNECTION_ATTRIBUTES"))
             .build());
   }
 

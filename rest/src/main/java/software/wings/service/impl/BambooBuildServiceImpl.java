@@ -26,7 +26,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, BambooConfig bambooConfig) {
-    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);
     return bambooService.getBuilds(bambooConfig, bambooArtifactStream.getJobname(), 50); // read 50 from some config
@@ -49,7 +49,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, BambooConfig bambooConfig) {
-    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO);
+    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
 
     BambooArtifactStream bambooArtifactStream = ((BambooArtifactStream) artifactStream);
     return bambooService.getLastSuccessfulBuild(bambooConfig, bambooArtifactStream.getJobname());
