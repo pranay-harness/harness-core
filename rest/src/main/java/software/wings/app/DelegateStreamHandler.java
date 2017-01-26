@@ -86,7 +86,11 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
     if (r.isSuspended()) {
       Object message = event.getMessage() == null ? null : event.getMessage();
       if (message != null) {
-        event.getResource().write(JsonUtils.asJson(message));
+        if (message instanceof String) {
+          event.getResource().write((String) message);
+        } else {
+          event.getResource().write(JsonUtils.asJson(message));
+        }
       }
       switch (r.transport()) {
         case JSONP:
