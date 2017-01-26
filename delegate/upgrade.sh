@@ -88,18 +88,18 @@ then
   then
     mkdir -p backup.$CURRENT_VERSION
     cp delegate.jar backup.$CURRENT_VERSION
-    wget $REMOTE_DELEGATE_URL -O delegate.jar
+    curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
   else
     exit 1
   fi
 else
-  wget $REMOTE_DELEGATE_URL -O delegate.jar
+  curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
 fi
 
 if [ ! -d  $JRE_DIR ]
 then
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
+  curl -skLO -H "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
   tar xzvf $JVM_TAR_FILENAME
   rm -rf jre
   ln -s $JRE_DIR jre
