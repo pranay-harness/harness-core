@@ -240,13 +240,7 @@ public class WingsRule implements MethodRule {
             .findFirst()
             .isPresent()) {
       CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
-      cacheManager.getCacheNames().forEach(s -> {
-        if ("downloadTokenCache".equals(s)) {
-          cacheManager.getCache(s, String.class, String.class).clear();
-        } else {
-          cacheManager.getCache(s).clear();
-        }
-      });
+      cacheManager.getCacheNames().forEach(s -> cacheManager.destroyCache(s));
     }
 
     try {

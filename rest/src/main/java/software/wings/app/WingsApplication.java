@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.User;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
@@ -62,6 +63,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Caching;
+import javax.cache.configuration.Configuration;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.validation.Validation;
@@ -135,6 +138,25 @@ public class WingsApplication extends Application<MainConfiguration> {
         },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
         new QueueModule(databaseModule.getPrimaryDatastore()));
+
+    Caching.getCachingProvider().getCacheManager().createCache(
+        "delegateSyncCache", new Configuration<String, DelegateTask>() {
+          public static final long serialVersionUID = 1l;
+          @Override
+          public Class<String> getKeyType() {
+            return String.class;
+          }
+
+          @Override
+          public Class<DelegateTask> getValueType() {
+            return DelegateTask.class;
+          }
+
+          @Override
+          public boolean isStoreByValue() {
+            return true;
+          }
+        });
 
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 

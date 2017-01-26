@@ -1,6 +1,5 @@
 package software.wings.delegate.service;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
@@ -18,6 +17,7 @@ import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
+import org.atmosphere.wasync.Function;
 import org.atmosphere.wasync.Options;
 import org.atmosphere.wasync.Request.METHOD;
 import org.atmosphere.wasync.Request.TRANSPORT;
@@ -31,6 +31,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
@@ -38,7 +39,6 @@ import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.KryoUtils;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -59,28 +59,18 @@ import javax.net.ssl.SSLContext;
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   private final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
-
+  Object waiter = new Object();
   @Inject private DelegateConfiguration delegateConfiguration;
-
   @Inject private ManagerClient managerClient;
-
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
-
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
-
   @Inject private ExecutorService executorService;
-
   @Inject private UpgradeService upgradeService;
-
   @Inject private Injector injector;
-
   @Inject private TokenGenerator tokenGenerator;
-
   @Inject private AsyncHttpClient asyncHttpClient;
-
   private Socket socket;
   private RequestBuilder request;
-  Object waiter = new Object();
 
   @Override
   public void run(boolean upgrade) {
@@ -122,7 +112,7 @@ public class DelegateServiceImpl implements DelegateService {
                   return new StringReader(JsonUtils.asJson(s));
                 }
               })
-              .transport(TRANSPORT.LONG_POLLING);
+              .transport(TRANSPORT.WEBSOCKET);
 
       Options clientOptions = client.newOptionsBuilder()
                                   .runtime(asyncHttpClient, true)
@@ -133,34 +123,40 @@ public class DelegateServiceImpl implements DelegateService {
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
-              (String message) -> {
-                if (!StringUtils.equals(message, "X")) {
-                  try {
-                    DelegateTask delegateTask = (DelegateTask) KryoUtils.asObject(message);
-                    dispatchDelegateTask(delegateTask, delegateId, accountId);
-                  } catch (Exception e) {
-                    System.out.println(message);
-                    logger.error("Exception while decoding task: ", e);
-                    System.exit(0);
+              new Function<String>() {
+                @Override
+                public void on(String message) {
+                  if (!StringUtils.equals(message, "X")) {
+                    try {
+                      DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
+                      dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                    } catch (Exception e) {
+                      System.out.println(message);
+                      logger.error("Exception while decoding task: ", e);
+                    }
                   }
                 }
               })
           .on(Event.ERROR,
-              (Exception ioe) -> {
-                ioe.printStackTrace();
-                logger.error("Exception: ", ioe);
-                // Some IOException occurred
+              new Function<Exception>() {
+                @Override
+                public void on(Exception ioe) {
+                  ioe.printStackTrace();
+                  logger.error("Exception: ", ioe);
+                }
               })
-          .on(Event.REOPENED, o -> {
-            // register again
-            try {
-              socket.fire(builder.but()
-                              .withLastHeartBeat(System.currentTimeMillis())
-                              .withStatus(Status.ENABLED)
-                              .withConnected(true)
-                              .build());
-            } catch (IOException e) {
-              e.printStackTrace();
+          .on(Event.REOPENED, new Function<Object>() {
+            @Override
+            public void on(Object o) {
+              try {
+                socket.fire(builder.but()
+                                .withLastHeartBeat(System.currentTimeMillis())
+                                .withStatus(Status.ENABLED)
+                                .withConnected(true)
+                                .build());
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
             }
           });
 
@@ -254,30 +250,27 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void dispatchDelegateTask(DelegateTask delegateTask, String delegateId, String accountId) {
-    logger.info("DelegateTask received - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
-        delegateTask.getAccountId(), delegateTask.getTaskType());
-    Response<Boolean> acquireResponse = null;
+  private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
+    logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
+    Response<DelegateTask> acquireResponse = null;
 
     try {
-      boolean taskAcquired = false;
-      if (isNotBlank(delegateTask.getWaitId())) {
-        acquireResponse = managerClient.acquireTask(delegateId, delegateTask.getUuid(), accountId).execute();
-        taskAcquired = acquireResponse.body();
-      } else {
-        taskAcquired = true;
-      }
-      if (taskAcquired) {
+      DelegateTask delegateTask = null;
+      acquireResponse =
+          managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId).execute();
+      delegateTask = acquireResponse.body();
+      if (delegateTask != null) {
         logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
             delegateTask.getAccountId(), delegateTask.getTaskType());
+        DelegateTask finalDelegateTask = delegateTask;
         DelegateRunnableTask delegateRunnableTask =
             delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask, notifyResponseData -> {
               Response<ResponseBody> response = null;
               try {
                 response = managerClient
-                               .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
+                               .sendTaskStatus(delegateId, finalDelegateTask.getUuid(), accountId,
                                    aDelegateTaskResponse()
-                                       .withTask(delegateTask)
+                                       .withTask(finalDelegateTask)
                                        .withAccountId(accountId)
                                        .withResponse(notifyResponseData)
                                        .build())

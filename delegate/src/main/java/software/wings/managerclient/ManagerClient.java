@@ -76,7 +76,8 @@ public interface ManagerClient {
   Call<RestResponse<DelegateFile>> getMetaInfo(
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
+  @KryoResponse
   @PUT("delegates/{delegateId}/tasks/{taskId}/acquire")
-  Call<Boolean> acquireTask(
+  Call<DelegateTask> acquireTask(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 }

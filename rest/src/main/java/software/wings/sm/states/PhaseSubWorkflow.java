@@ -5,6 +5,7 @@ import static software.wings.api.PhaseSubWorkflowExecutionData.PhaseSubWorkflowE
 
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Service;
 import software.wings.service.intfc.ServiceResourceService;
@@ -52,13 +53,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     ServiceElement serviceElement = new ServiceElement();
     Service service = serviceResourceService.get(stateExecutionInstance.getAppId(), serviceId, false);
     MapperUtils.mapObject(service, serviceElement);
-    spawningInstance.getContextElements().push(aPhaseElement()
-                                                   .withUuid(uuid)
-                                                   .withServiceElement(serviceElement)
-                                                   .withComputeProviderId(computeProviderId)
-                                                   .withDeploymentType(deploymentType)
-                                                   .withDeploymentMasterId(deploymentMasterId)
-                                                   .build());
+    PhaseElement phaseElement = aPhaseElement()
+                                    .withUuid(uuid)
+                                    .withServiceElement(serviceElement)
+                                    .withComputeProviderId(computeProviderId)
+                                    .withDeploymentType(deploymentType)
+                                    .withDeploymentMasterId(deploymentMasterId)
+                                    .build();
+    spawningInstance.getContextElements().push(phaseElement);
+    spawningInstance.setContextElement(phaseElement);
 
     return spawningInstance;
   }

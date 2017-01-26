@@ -12,6 +12,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
+import software.wings.utils.CacheHelper;
 
 import javax.inject.Inject;
 
@@ -40,6 +41,13 @@ public class DelegateQueueTask implements Runnable {
         return;
       }
 
+      CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class)
+          .iterator()
+          .forEachRemaining(stringDelegateTaskEntry
+              -> broadcasterFactory
+                     .lookup("/stream/delegate/" + stringDelegateTaskEntry.getValue().getAccountId(), true)
+                     .broadcast(stringDelegateTaskEntry.getValue()));
+
       PageResponse<DelegateTask> delegateTasks = wingsPersistence.query(
           DelegateTask.class, aPageRequest().addFilter("status", Operator.EQ, Status.QUEUED).build());
 
@@ -48,9 +56,9 @@ public class DelegateQueueTask implements Runnable {
         return;
       }
 
-      for (DelegateTask delegateTask : delegateTasks) {
-        broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-      }
+      delegateTasks.getResponse().forEach(delegateTask
+          -> broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true)
+                 .broadcast(delegateTask));
 
     } catch (Exception exception) {
       log().error("Error seen in the Notifier call", exception);
