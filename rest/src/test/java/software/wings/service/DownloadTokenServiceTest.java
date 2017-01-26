@@ -16,7 +16,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 12/13/16.
  */
-@software.wings.rules.Cache(cacheName = "downloadTokenCache", keyType = String.class, valueType = String.class)
+@software.wings.rules.Cache
 public class DownloadTokenServiceTest extends WingsBaseTest {
   private Cache<String, String> cache;
 
