@@ -19,8 +19,8 @@ import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
 import org.atmosphere.wasync.Options;
-import org.atmosphere.wasync.Request;
 import org.atmosphere.wasync.Request.METHOD;
+import org.atmosphere.wasync.Request.TRANSPORT;
 import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
@@ -99,6 +99,11 @@ public class DelegateServiceImpl implements DelegateService {
           line = it.nextLine();
         }
       }
+      System.out.println(delegateConfiguration.getManagerUrl());
+      URI uri = new URI(delegateConfiguration.getManagerUrl());
+      System.out.println(uri.getScheme());
+      System.out.println(uri.getHost());
+      System.out.println(uri.getPort());
 
       String delegateId = registerDelegate(accountId, builder);
 
@@ -107,7 +112,10 @@ public class DelegateServiceImpl implements DelegateService {
 
       Client client = ClientFactory.getDefault().newClient();
 
-      URI uri = new URI(delegateConfiguration.getManagerUrl());
+      /*URI uri = new URI(delegateConfiguration.getManagerUrl());
+      System.out.println(uri.getScheme());
+      System.out.println(uri.getHost());
+      System.out.println(uri.getPort());*/
       // Stream the request body
       request =
           client.newRequestBuilder()
@@ -122,7 +130,7 @@ public class DelegateServiceImpl implements DelegateService {
                   return new StringReader(JsonUtils.asJson(s));
                 }
               })
-              .transport(Request.TRANSPORT.WEBSOCKET);
+              .transport(TRANSPORT.LONG_POLLING);
 
       Options clientOptions = client.newOptionsBuilder()
                                   .runtime(asyncHttpClient, true)
