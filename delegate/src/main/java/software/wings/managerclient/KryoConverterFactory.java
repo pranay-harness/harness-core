@@ -2,7 +2,6 @@ package software.wings.managerclient;
 
 import static java.util.Arrays.stream;
 
-import com.esotericsoftware.kryo.Kryo;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -20,8 +19,6 @@ import java.lang.reflect.Type;
  */
 public class KryoConverterFactory extends Factory {
   private static final MediaType MEDIA_TYPE = MediaType.parse("application/x-kryo");
-
-  private static final ThreadLocal<Kryo> kryos = ThreadLocal.withInitial(() -> new Kryo());
 
   @Override
   public Converter<?, RequestBody> requestBodyConverter(
