@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -68,6 +69,14 @@ public class DockerArtifactStream extends ArtifactStream {
   @Attributes(title = "Auto-approved for Production")
   public boolean isAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
+  }
+
+  @Override
+  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+    return anArtifactStreamAttributes()
+        .withArtifactStreamType(getArtifactStreamType())
+        .withImageName(imageName)
+        .build();
   }
 
   /**

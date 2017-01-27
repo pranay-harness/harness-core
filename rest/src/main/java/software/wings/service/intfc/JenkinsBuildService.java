@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
   @DelegateTaskType(TaskType.JENKINS_GET_BUILDS)
-  List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, JenkinsConfig config);
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config);
 
   @DelegateTaskType(TaskType.JENKINS_GET_JOBS) List<String> getJobs(JenkinsConfig jenkinsConfig);
 
@@ -22,7 +22,8 @@ public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
   List<String> getArtifactPaths(String jobName, JenkinsConfig config);
 
   @DelegateTaskType(TaskType.JENKINS_LAST_SUCCESSFUL_BUILD)
-  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, JenkinsConfig config);
+  BuildDetails getLastSuccessfulBuild(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config);
 
   @DelegateTaskType(TaskType.JENKINS_GET_PLANS) Map<String, String> getPlans(JenkinsConfig config);
 }

@@ -11,9 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -45,19 +44,19 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Inject private JenkinsFactory jenkinsFactory;
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, JenkinsConfig jenkinsConfig) {
-    return getBuildDetails(artifactStream, appId, jenkinsConfig);
+  public List<BuildDetails> getBuilds(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config) {
+    return getBuildDetails(artifactStreamAttributes, appId, config);
   }
 
-  private List<BuildDetails> getBuildDetails(ArtifactStream artifactStream, String appId, JenkinsConfig jenkinsConfig) {
-    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
-
-    JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
+  private List<BuildDetails> getBuildDetails(
+      ArtifactStreamAttributes artifactStreamAttributes, String appId, JenkinsConfig jenkinsConfig) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
-      return jenkins.getBuildsForJob(jenkinsArtifactSource.getJobname(), 50);
+      return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), 50);
     } catch (IOException ex) {
       throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Error in fetching builds from jenkins server");
     }
@@ -95,15 +94,14 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, JenkinsConfig jenkinsConfig) {
-    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.JENKINS);
-
-    JenkinsArtifactStream jenkinsArtifactSource = ((JenkinsArtifactStream) artifactStream);
+  public BuildDetails getLastSuccessfulBuild(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig jenkinsConfig) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS);
 
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
-      return jenkins.getLastSuccessfulBuildForJob(jenkinsArtifactSource.getJobname());
+      return jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName());
     } catch (IOException ex) {
       throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Error in fetching build from jenkins server");
     }

@@ -250,4 +250,6 @@ public abstract class ArtifactStream extends Base {
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
   }
+
+  public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
 }

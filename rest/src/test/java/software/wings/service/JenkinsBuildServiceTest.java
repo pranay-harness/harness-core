@@ -87,7 +87,9 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   public void shouldFailValidationWhenJobDoesNotExists() throws IOException {
     jenkinsArtifactStream.setJobname("job2");
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream, jenkinsConfig));
+        .isThrownBy(()
+                        -> jenkinsBuildService.getBuilds(
+                            APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig));
   }
 
   /**
@@ -97,7 +99,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
-    assertThat(jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream, jenkinsConfig))
+    assertThat(
+        jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(

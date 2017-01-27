@@ -1,5 +1,7 @@
 package software.wings.beans.artifact;
 
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -74,6 +76,11 @@ public class JenkinsArtifactStream extends ArtifactStream {
   @Attributes(title = "Auto-approved for Production")
   public boolean isAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
+  }
+
+  @Override
+  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+    return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
   }
 
   /**

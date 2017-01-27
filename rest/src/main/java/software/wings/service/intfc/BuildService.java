@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
@@ -15,12 +15,12 @@ public interface BuildService<T> {
   /**
    * Gets builds.
    *
-   * @param appId          the app id
-   * @param artifactStream the artifact stream
-   * @param config         the jenkins config
+   * @param appId                     the app id
+   * @param artifactStreamAttributes the build service request params
+   * @param config                    the jenkins config
    * @return the builds
    */
-  List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, T config);
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config);
 
   /**
    * Gets jobs.
@@ -42,12 +42,12 @@ public interface BuildService<T> {
   /**
    * Gets last successful build.
    *
-   * @param appId          the app id
-   * @param artifactStream the artifact stream
-   * @param config         the jenkins config
+   * @param appId                     the app id
+   * @param artifactStreamAttributes the build service request params
+   * @param config                    the jenkins config
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, T config);
+  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, T config);
 
   /**
    * Gets plans.

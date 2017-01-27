@@ -4,9 +4,8 @@ import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -25,10 +24,11 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Inject private DockerRegistryService dockerRegistryService;
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, DockerConfig dockerConfig) {
-    equalCheck(artifactStream.getArtifactStreamType(), ArtifactStreamType.DOCKER.name());
-    DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
-    List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, dockerArtifactStream.getImageName(), 50);
+  public List<BuildDetails> getBuilds(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, DockerConfig dockerConfig) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.DOCKER.name());
+    List<BuildDetails> builds =
+        dockerRegistryService.getBuilds(dockerConfig, artifactStreamAttributes.getImageName(), 50);
     return builds;
   }
 
@@ -45,7 +45,8 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, DockerConfig dockerConfig) {
+  public BuildDetails getLastSuccessfulBuild(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, DockerConfig dockerConfig) {
     throw new WingsException(
         ErrorCodes.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }

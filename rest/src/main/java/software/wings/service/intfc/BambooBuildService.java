@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.BambooConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public interface BambooBuildService extends BuildService<BambooConfig> {
   @DelegateTaskType(TaskType.BAMBOO_GET_BUILDS)
-  List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, BambooConfig config);
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig config);
 
   @DelegateTaskType(TaskType.BAMBOO_GET_JOBS) List<String> getJobs(BambooConfig jenkinsConfig);
 
@@ -22,7 +22,8 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
   List<String> getArtifactPaths(String jobName, BambooConfig config);
 
   @DelegateTaskType(TaskType.BAMBOO_LAST_SUCCESSFUL_BUILD)
-  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, BambooConfig config);
+  BuildDetails getLastSuccessfulBuild(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig config);
 
   @DelegateTaskType(TaskType.BAMBOO_GET_PLANS) Map<String, String> getPlans(BambooConfig config);
 }

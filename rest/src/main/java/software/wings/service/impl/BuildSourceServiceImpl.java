@@ -64,7 +64,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("artifactStream", artifactStream);
 
-    return getBuildService(settingAttribute, appId).getBuilds(appId, artifactStream, settingAttribute.getValue());
+    return getBuildService(settingAttribute, appId)
+        .getBuilds(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
   }
 
   @Override
@@ -74,7 +75,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("artifactStream", artifactStream);
     return getBuildService(settingAttribute, appId)
-        .getLastSuccessfulBuild(appId, artifactStream, settingAttribute.getValue());
+        .getLastSuccessfulBuild(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
