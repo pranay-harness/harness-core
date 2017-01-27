@@ -1,9 +1,6 @@
 package software.wings.beans.artifact;
 
-import static java.util.stream.Collectors.toSet;
-
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.Attributes;
@@ -18,8 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -38,10 +33,7 @@ public abstract class ArtifactStream extends Base {
 
   @NotEmpty @Attributes(title = "Source Server") private String settingId;
 
-  @NotEmpty
-  @Valid
-  @Attributes(title = "Artifact Path*")
-  private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
+  private String serviceId;
 
   @Attributes(title = "Automatic Download") private boolean autoDownload = false;
 
@@ -67,25 +59,6 @@ public abstract class ArtifactStream extends Base {
   public static DateFormat getDateFormat() {
     return dateFormat;
   }
-
-  /**
-   * Gets service ids.
-   *
-   * @return the service ids
-   */
-  @SchemaIgnore
-  public Set<String> getServiceIds() {
-    return artifactPathServices.stream()
-        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
-        .collect(toSet());
-  }
-
-  /**
-   * Sets service ids.
-   *
-   * @param serviceIds the service ids
-   */
-  public void setServiceIds(Set<String> serviceIds) {}
 
   /**
    * Gets artifact display name.
@@ -139,24 +112,6 @@ public abstract class ArtifactStream extends Base {
    */
   public void setSettingId(String settingId) {
     this.settingId = settingId;
-  }
-
-  /**
-   * Gets artifact path services.
-   *
-   * @return the artifact path services
-   */
-  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
-    return artifactPathServices;
-  }
-
-  /**
-   * Sets artifact path services.
-   *
-   * @param artifactPathServices the artifact path services
-   */
-  public void setArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-    this.artifactPathServices = artifactPathServices;
   }
 
   /**
@@ -256,7 +211,6 @@ public abstract class ArtifactStream extends Base {
         .add("sourceName", sourceName)
         .add("artifactStreamType", artifactStreamType)
         .add("settingId", settingId)
-        .add("artifactPathServices", artifactPathServices)
         .add("autoDownload", autoDownload)
         .add("autoApproveForProduction", autoApproveForProduction)
         .add("streamActions", streamActions)
@@ -266,8 +220,8 @@ public abstract class ArtifactStream extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(sourceName, artifactStreamType, settingId, artifactPathServices, autoDownload,
-              autoApproveForProduction, streamActions);
+        + Objects.hash(
+              sourceName, artifactStreamType, settingId, autoDownload, autoApproveForProduction, streamActions);
   }
 
   @Override
@@ -284,10 +238,16 @@ public abstract class ArtifactStream extends Base {
     final ArtifactStream other = (ArtifactStream) obj;
     return Objects.equals(this.sourceName, other.sourceName)
         && Objects.equals(this.artifactStreamType, other.artifactStreamType)
-        && Objects.equals(this.settingId, other.settingId)
-        && Objects.equals(this.artifactPathServices, other.artifactPathServices)
-        && Objects.equals(this.autoDownload, other.autoDownload)
+        && Objects.equals(this.settingId, other.settingId) && Objects.equals(this.autoDownload, other.autoDownload)
         && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction)
         && Objects.equals(this.streamActions, other.streamActions);
+  }
+
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
   }
 }

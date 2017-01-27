@@ -349,11 +349,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.docker-java</groupId>
-            <artifactId>docker-java</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>net.jodah</groupId>
             <artifactId>expiringmap</artifactId>
         </dependency>

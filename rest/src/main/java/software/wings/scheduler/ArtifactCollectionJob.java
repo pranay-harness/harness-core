@@ -84,7 +84,6 @@ public class ArtifactCollectionJob implements Job {
         int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
             ? Integer.parseInt(lastCollectedArtifact.getMetadata().get("buildNo"))
             : 0;
-        // TODO: fix it for Docker
         if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
           logger.info(
               "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",

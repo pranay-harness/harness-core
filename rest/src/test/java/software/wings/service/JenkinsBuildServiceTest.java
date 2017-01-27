@@ -60,7 +60,6 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
                                                                          .withSettingId("")
                                                                          .withSourceName(ARTIFACT_STREAM_NAME)
                                                                          .withJobname("job1")
-                                                                         .withArtifactPathServices(Lists.newArrayList())
                                                                          .build();
 
   /**

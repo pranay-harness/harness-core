@@ -38,10 +38,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactStreamAction;
-import software.wings.beans.artifact.BambooArtifactStream;
-import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -100,36 +98,12 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
     PageResponse<ArtifactStream> pageResponse = wingsPersistence.query(ArtifactStream.class, req);
-    pageResponse.getResponse().forEach(this ::populateStreamSpecificData);
     return pageResponse;
-  }
-
-  private void populateStreamSpecificData(ArtifactStream artifactStream) {
-    if (artifactStream instanceof JenkinsArtifactStream) {
-      ((JenkinsArtifactStream) artifactStream)
-          .getArtifactPathServices()
-          .forEach(artifactPathServiceEntry
-              -> artifactPathServiceEntry.setServices(
-                  artifactPathServiceEntry.getServiceIds()
-                      .stream()
-                      .map(sid -> serviceResourceService.get(artifactStream.getAppId(), sid))
-                      .collect(Collectors.toList())));
-    } else if (artifactStream instanceof BambooArtifactStream) {
-      ((BambooArtifactStream) artifactStream)
-          .getArtifactPathServices()
-          .forEach(artifactPathServiceEntry
-              -> artifactPathServiceEntry.setServices(
-                  artifactPathServiceEntry.getServiceIds()
-                      .stream()
-                      .map(sid -> serviceResourceService.get(artifactStream.getAppId(), sid))
-                      .collect(Collectors.toList())));
-    }
   }
 
   @Override
   public ArtifactStream get(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
-    populateStreamSpecificData(artifactStream);
     return artifactStream;
   }
 

@@ -1,7 +1,5 @@
 package software.wings.beans.artifact;
 
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -18,6 +16,8 @@ import java.util.List;
 @JsonTypeName("BAMBOO")
 public class BambooArtifactStream extends ArtifactStream {
   @NotEmpty @Attributes(title = "Plan name") private String jobname;
+
+  @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
 
   /**
    * Instantiates a new Bamboo artifact stream.
@@ -60,11 +60,6 @@ public class BambooArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @Attributes(title = "Artifact Path*")
-  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
-    return super.getArtifactPathServices();
-  }
-
   @Attributes(title = "Automatic Download")
   public boolean isAutoDownload() {
     return super.isAutoDownload();
@@ -76,22 +71,41 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   /**
+   * Gets artifact paths.
+   *
+   * @return the artifact paths
+   */
+  public List<String> getArtifactPaths() {
+    return artifactPaths;
+  }
+
+  /**
+   * Sets artifact paths.
+   *
+   * @param artifactPaths the artifact paths
+   */
+  public void setArtifactPaths(List<String> artifactPaths) {
+    this.artifactPaths = artifactPaths;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String jobname;
+    private List<String> artifactPaths;
     private String sourceName;
     private String settingId;
-    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-    private boolean autoDownload = false;
+    private String serviceId;
     private String uuid;
-    private boolean autoApproveForProduction = false;
     private String appId;
     private EmbeddedUser createdBy;
-    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private boolean autoDownload = false;
+    private boolean autoApproveForProduction = false;
+    private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
     private Builder() {}
 
@@ -112,6 +126,17 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public Builder withJobname(String jobname) {
       this.jobname = jobname;
+      return this;
+    }
+
+    /**
+     * With artifact paths builder.
+     *
+     * @param artifactPaths the artifact paths
+     * @return the builder
+     */
+    public Builder withArtifactPaths(List<String> artifactPaths) {
+      this.artifactPaths = artifactPaths;
       return this;
     }
 
@@ -138,24 +163,13 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * With artifact path services builder.
+     * With service id builder.
      *
-     * @param artifactPathServices the artifact path services
+     * @param serviceId the service id
      * @return the builder
      */
-    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-      this.artifactPathServices = artifactPathServices;
-      return this;
-    }
-
-    /**
-     * With auto download builder.
-     *
-     * @param autoDownload the auto download
-     * @return the builder
-     */
-    public Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -167,17 +181,6 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
-      return this;
-    }
-
-    /**
-     * With auto approve for production builder.
-     *
-     * @param autoApproveForProduction the auto approve for production
-     * @return the builder
-     */
-    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-      this.autoApproveForProduction = autoApproveForProduction;
       return this;
     }
 
@@ -200,17 +203,6 @@ public class BambooArtifactStream extends ArtifactStream {
      */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
-     * With stream actions builder.
-     *
-     * @param streamActions the stream actions
-     * @return the builder
-     */
-    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
-      this.streamActions = streamActions;
       return this;
     }
 
@@ -248,6 +240,39 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With auto download builder.
+     *
+     * @param autoDownload the auto download
+     * @return the builder
+     */
+    public Builder withAutoDownload(boolean autoDownload) {
+      this.autoDownload = autoDownload;
+      return this;
+    }
+
+    /**
+     * With auto approve for production builder.
+     *
+     * @param autoApproveForProduction the auto approve for production
+     * @return the builder
+     */
+    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
+      this.autoApproveForProduction = autoApproveForProduction;
+      return this;
+    }
+
+    /**
+     * With stream actions builder.
+     *
+     * @param streamActions the stream actions
+     * @return the builder
+     */
+    public Builder withStreamActions(List<ArtifactStreamAction> streamActions) {
+      this.streamActions = streamActions;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -255,18 +280,19 @@ public class BambooArtifactStream extends ArtifactStream {
     public Builder but() {
       return aBambooArtifactStream()
           .withJobname(jobname)
+          .withArtifactPaths(artifactPaths)
           .withSourceName(sourceName)
           .withSettingId(settingId)
-          .withArtifactPathServices(artifactPathServices)
-          .withAutoDownload(autoDownload)
+          .withServiceId(serviceId)
           .withUuid(uuid)
-          .withAutoApproveForProduction(autoApproveForProduction)
           .withAppId(appId)
           .withCreatedBy(createdBy)
-          .withStreamActions(streamActions)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAutoDownload(autoDownload)
+          .withAutoApproveForProduction(autoApproveForProduction)
+          .withStreamActions(streamActions);
     }
 
     /**
@@ -277,18 +303,19 @@ public class BambooArtifactStream extends ArtifactStream {
     public BambooArtifactStream build() {
       BambooArtifactStream bambooArtifactStream = new BambooArtifactStream();
       bambooArtifactStream.setJobname(jobname);
+      bambooArtifactStream.setArtifactPaths(artifactPaths);
       bambooArtifactStream.setSourceName(sourceName);
       bambooArtifactStream.setSettingId(settingId);
-      bambooArtifactStream.setArtifactPathServices(artifactPathServices);
-      bambooArtifactStream.setAutoDownload(autoDownload);
+      bambooArtifactStream.setServiceId(serviceId);
       bambooArtifactStream.setUuid(uuid);
-      bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
       bambooArtifactStream.setAppId(appId);
       bambooArtifactStream.setCreatedBy(createdBy);
-      bambooArtifactStream.setStreamActions(streamActions);
       bambooArtifactStream.setCreatedAt(createdAt);
       bambooArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      bambooArtifactStream.setAutoDownload(autoDownload);
+      bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      bambooArtifactStream.setStreamActions(streamActions);
       return bambooArtifactStream;
     }
   }

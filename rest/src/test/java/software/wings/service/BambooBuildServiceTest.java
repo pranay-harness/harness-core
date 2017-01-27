@@ -43,7 +43,6 @@ public class BambooBuildServiceTest extends WingsBaseTest {
                                                                        .withSettingId("")
                                                                        .withSourceName(ARTIFACT_STREAM_NAME)
                                                                        .withJobname(BUILD_JOB_NAME)
-                                                                       .withArtifactPathServices(Lists.newArrayList())
                                                                        .build();
 
   @Before

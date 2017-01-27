@@ -2,8 +2,6 @@ package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -16,7 +14,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 1/5/17.
  */
-@JsonTypeName("BAMBOO")
+@JsonTypeName("DOCKER")
 public class DockerArtifactStream extends ArtifactStream {
   @NotEmpty @Attributes(title = "Docker Image name") private String imageName;
 
@@ -62,11 +60,6 @@ public class DockerArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @Attributes(title = "Artifact Path*")
-  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
-    return super.getArtifactPathServices();
-  }
-
   @Attributes(title = "Automatic Download")
   public boolean isAutoDownload() {
     return super.isAutoDownload();
@@ -84,11 +77,11 @@ public class DockerArtifactStream extends ArtifactStream {
     private String imageName;
     private String sourceName;
     private String settingId;
+    private String serviceId;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
     private long createdAt;
-    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean autoDownload = false;
@@ -140,6 +133,17 @@ public class DockerArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -180,17 +184,6 @@ public class DockerArtifactStream extends ArtifactStream {
      */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
-      return this;
-    }
-
-    /**
-     * With artifact path services builder.
-     *
-     * @param artifactPathServices the artifact path services
-     * @return the builder
-     */
-    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-      this.artifactPathServices = artifactPathServices;
       return this;
     }
 
@@ -259,11 +252,11 @@ public class DockerArtifactStream extends ArtifactStream {
           .withImageName(imageName)
           .withSourceName(sourceName)
           .withSettingId(settingId)
+          .withServiceId(serviceId)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
-          .withArtifactPathServices(artifactPathServices)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoDownload(autoDownload)
@@ -281,11 +274,11 @@ public class DockerArtifactStream extends ArtifactStream {
       dockerArtifactStream.setImageName(imageName);
       dockerArtifactStream.setSourceName(sourceName);
       dockerArtifactStream.setSettingId(settingId);
+      dockerArtifactStream.setServiceId(serviceId);
       dockerArtifactStream.setUuid(uuid);
       dockerArtifactStream.setAppId(appId);
       dockerArtifactStream.setCreatedBy(createdBy);
       dockerArtifactStream.setCreatedAt(createdAt);
-      dockerArtifactStream.setArtifactPathServices(artifactPathServices);
       dockerArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       dockerArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       dockerArtifactStream.setAutoDownload(autoDownload);

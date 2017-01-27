@@ -93,7 +93,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("artifactStream", artifactStream);
 
-    artifact.setServiceIds(artifactStream.getServiceIds().stream().collect(Collectors.toList()));
+    artifact.setServiceIds(Arrays.asList(artifactStream.getServiceId()));
     artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 

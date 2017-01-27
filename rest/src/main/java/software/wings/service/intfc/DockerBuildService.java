@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 1/6/17.
  */
-public interface DockerBuildService {
+public interface DockerBuildService extends BuildService<DockerConfig> {
   /**
    * Gets builds.
    *
@@ -19,14 +19,4 @@ public interface DockerBuildService {
    * @return the builds
    */
   List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, DockerConfig dockerConfig);
-
-  /**
-   * Gets last successful build.
-   *
-   * @param appId          the app id
-   * @param artifactStream the artifact stream
-   * @param dockerConfig   the docker config
-   * @return the last successful build
-   */
-  BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, DockerConfig dockerConfig);
 }

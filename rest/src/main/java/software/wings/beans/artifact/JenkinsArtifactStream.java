@@ -1,7 +1,5 @@
 package software.wings.beans.artifact;
 
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -18,6 +16,8 @@ import java.util.List;
 @JsonTypeName("JENKINS")
 public class JenkinsArtifactStream extends ArtifactStream {
   @NotEmpty @Attributes(title = "Job Name*") private String jobname;
+
+  @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -66,11 +66,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
-  @Attributes(title = "Artifact Path*")
-  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
-    return super.getArtifactPathServices();
-  }
-
   @Attributes(title = "Automatic Download")
   public boolean isAutoDownload() {
     return super.isAutoDownload();
@@ -82,17 +77,36 @@ public class JenkinsArtifactStream extends ArtifactStream {
   }
 
   /**
+   * Gets artifact paths.
+   *
+   * @return the artifact paths
+   */
+  public List<String> getArtifactPaths() {
+    return artifactPaths;
+  }
+
+  /**
+   * Sets artifact paths.
+   *
+   * @param artifactPaths the artifact paths
+   */
+  public void setArtifactPaths(List<String> artifactPaths) {
+    this.artifactPaths = artifactPaths;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String jobname;
+    private List<String> artifactPaths;
     private String sourceName;
     private String settingId;
+    private String serviceId;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
     private long createdAt;
-    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean autoDownload = false;
@@ -122,6 +136,17 @@ public class JenkinsArtifactStream extends ArtifactStream {
     }
 
     /**
+     * With artifact paths builder.
+     *
+     * @param artifactPaths the artifact paths
+     * @return the builder
+     */
+    public Builder withArtifactPaths(List<String> artifactPaths) {
+      this.artifactPaths = artifactPaths;
+      return this;
+    }
+
+    /**
      * With source name builder.
      *
      * @param sourceName the source name
@@ -140,6 +165,17 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public Builder withSettingId(String settingId) {
       this.settingId = settingId;
+      return this;
+    }
+
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -184,17 +220,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
      */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
-      return this;
-    }
-
-    /**
-     * With artifact path services builder.
-     *
-     * @param artifactPathServices the artifact path services
-     * @return the builder
-     */
-    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-      this.artifactPathServices = artifactPathServices;
       return this;
     }
 
@@ -261,13 +286,14 @@ public class JenkinsArtifactStream extends ArtifactStream {
     public Builder but() {
       return aJenkinsArtifactStream()
           .withJobname(jobname)
+          .withArtifactPaths(artifactPaths)
           .withSourceName(sourceName)
           .withSettingId(settingId)
+          .withServiceId(serviceId)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
-          .withArtifactPathServices(artifactPathServices)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withAutoDownload(autoDownload)
@@ -283,13 +309,14 @@ public class JenkinsArtifactStream extends ArtifactStream {
     public JenkinsArtifactStream build() {
       JenkinsArtifactStream jenkinsArtifactStream = new JenkinsArtifactStream();
       jenkinsArtifactStream.setJobname(jobname);
+      jenkinsArtifactStream.setArtifactPaths(artifactPaths);
       jenkinsArtifactStream.setSourceName(sourceName);
       jenkinsArtifactStream.setSettingId(settingId);
+      jenkinsArtifactStream.setServiceId(serviceId);
       jenkinsArtifactStream.setUuid(uuid);
       jenkinsArtifactStream.setAppId(appId);
       jenkinsArtifactStream.setCreatedBy(createdBy);
       jenkinsArtifactStream.setCreatedAt(createdAt);
-      jenkinsArtifactStream.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactStream.setLastUpdatedBy(lastUpdatedBy);
       jenkinsArtifactStream.setLastUpdatedAt(lastUpdatedAt);
       jenkinsArtifactStream.setAutoDownload(autoDownload);
