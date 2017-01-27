@@ -9,6 +9,22 @@ import java.util.List;
  * Created by anubhaw on 1/6/17.
  */
 public interface DockerRegistryService {
-  public List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds);
-  public BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName);
+  /**
+   * Gets builds.
+   *
+   * @param dockerConfig      the docker config
+   * @param imageName         the image name
+   * @param maxNumberOfBuilds the max number of builds
+   * @return the builds
+   */
+  List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds);
+
+  /**
+   * Gets last successful build.
+   *
+   * @param dockerConfig the docker config
+   * @param imageName    the image name
+   * @return the last successful build
+   */
+  BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName);
 }

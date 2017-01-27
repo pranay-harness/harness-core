@@ -1,4 +1,4 @@
 {
   "type": { "ui:widget": "hidden" },
-  "ui:order": [ "type", "connectionType", "accessType", "username", "key" ]
+  "ui:order": [ "type", "connectionType", "accessType", "userName", "key" ]
 }

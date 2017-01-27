@@ -12,6 +12,7 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.cloudprovider.ClusterServiceImpl;
@@ -216,6 +217,7 @@ public class WingsModule extends AbstractModule {
 
     buildServiceMapBinder.addBinding(JenkinsConfig.class).toInstance(JenkinsBuildService.class);
     buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
+    buildServiceMapBinder.addBinding(DockerConfig.class).toInstance(DockerBuildService.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

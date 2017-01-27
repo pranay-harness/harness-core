@@ -52,7 +52,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
@@ -83,7 +82,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
   private static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
   @Inject private JobScheduler jobScheduler;
   @Inject private PipelineService pipelineService;

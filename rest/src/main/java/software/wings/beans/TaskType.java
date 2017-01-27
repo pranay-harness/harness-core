@@ -33,7 +33,8 @@ public enum TaskType {
   BAMBOO_GET_JOBS(ServiceImplDelegateTask.class),
   BAMBOO_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
   BAMBOO_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
-  BAMBOO_GET_PLANS(ServiceImplDelegateTask.class);
+  BAMBOO_GET_PLANS(ServiceImplDelegateTask.class),
+  DOCKER_GET_BUILDS(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

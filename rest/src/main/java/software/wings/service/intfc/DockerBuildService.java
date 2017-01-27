@@ -1,7 +1,9 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.DockerConfig;
+import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
@@ -18,5 +20,6 @@ public interface DockerBuildService extends BuildService<DockerConfig> {
    * @param dockerConfig   the docker config
    * @return the builds
    */
+  @DelegateTaskType(TaskType.DOCKER_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStream artifactStream, DockerConfig dockerConfig);
 }
