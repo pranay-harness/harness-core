@@ -9,7 +9,6 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import org.apache.commons.codec.binary.StringUtils;
-import org.slf4j.MDC;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
@@ -27,8 +26,7 @@ import java.util.logging.Level;
  */
 public class DelegateApplication {
   static {
-    MDC.put("process_id", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
-    MDC.put("version", System.getProperty("version", "1.0.0-DEV"));
+    System.setProperty("process_id", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
 
     // Optionally remove existing handlers attached to j.u.l root logger
     SLF4JBridgeHandler.removeHandlersForRootLogger(); // (since SLF4J 1.6.5)

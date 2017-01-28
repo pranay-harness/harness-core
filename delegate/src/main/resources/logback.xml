@@ -14,7 +14,7 @@
 
         <withJansi>true</withJansi>
         <encoder>
-            <pattern>%date{ISO8601} %boldGreen(%X{process_id}) %boldCyan(%X{version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+            <pattern>%date{ISO8601} %boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
     </appender>
 
