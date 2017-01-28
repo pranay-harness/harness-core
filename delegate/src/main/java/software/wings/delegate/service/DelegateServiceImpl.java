@@ -231,7 +231,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startUpgradeCheck(String accountId, String delegateId, String version) {
     logger.info("Starting upgrade check at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    upgradeExecutor.scheduleWithFixedDelay(new MdcRetainingRunnable(() -> {
+    upgradeExecutor.scheduleWithFixedDelay(() -> {
       logger.info("checking for upgrade");
       try {
         RestResponse<Delegate> restResponse =
@@ -245,14 +245,13 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (IOException | InterruptedException | TimeoutException e) {
         logger.error("Exception while checking for upgrade ", e);
       }
-    }),
-        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+    }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
   private void startHeartbeat(Builder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     Delegate delegate = builder.but().withLastHeartBeat(System.currentTimeMillis()).build();
-    heartbeatExecutor.scheduleAtFixedRate(new MdcRetainingRunnable(() -> {
+    heartbeatExecutor.scheduleAtFixedRate(() -> {
       logger.debug("sending heartbeat..");
       try {
         if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
@@ -262,8 +261,7 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (IOException e) {
         logger.error("Exception while sending heartbeat ", e);
       }
-    }),
-        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+    }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
@@ -300,7 +298,7 @@ public class DelegateServiceImpl implements DelegateService {
               }
             });
         injector.injectMembers(delegateRunnableTask);
-        executorService.submit(new MdcRetainingRunnable(delegateRunnableTask));
+        executorService.submit(delegateRunnableTask);
       } else {
         logger.info("DelegateTask excecuting on some other delegate - uuid: {}, accountId: {}, taskType: {}",
             delegateTask.getUuid(), delegateTask.getAccountId(), delegateTask.getTaskType());
