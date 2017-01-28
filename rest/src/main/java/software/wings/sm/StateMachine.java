@@ -617,6 +617,9 @@ public class StateMachine extends Base {
     if (statesMap == null) {
       return null;
     }
+    if (stateName == null) {
+      return statesMap.get(initialStateName);
+    }
     return statesMap.get(stateName);
   }
 

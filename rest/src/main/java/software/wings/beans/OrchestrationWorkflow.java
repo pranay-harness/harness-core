@@ -22,6 +22,8 @@ public class OrchestrationWorkflow extends Workflow {
 
   private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
 
+  private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
+
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
   private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
@@ -151,6 +153,14 @@ public class OrchestrationWorkflow extends Workflow {
     this.workflowPhaseIdMap = workflowPhaseIdMap;
   }
 
+  public Map<String, WorkflowPhase> getRollbackWorkflowPhaseIdMap() {
+    return rollbackWorkflowPhaseIdMap;
+  }
+
+  public void setRollbackWorkflowPhaseIdMap(Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap) {
+    this.rollbackWorkflowPhaseIdMap = rollbackWorkflowPhaseIdMap;
+  }
+
   public String getEnvironmentId() {
     return environmentId;
   }
@@ -165,14 +175,6 @@ public class OrchestrationWorkflow extends Workflow {
 
   public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
     this.requiredEntityTypes = requiredEntityTypes;
-  }
-
-  public Map<String, Object> params() {
-    Map<String, Object> params = new HashMap<>();
-    params.put("workflowOrchestrationType", workflowOrchestrationType);
-    params.put("environmentId", environmentId);
-    params.put("workflowId", getUuid());
-    return params;
   }
 
   public static final class OrchestrationWorkflowBuilder {

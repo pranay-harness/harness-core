@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
@@ -111,8 +110,6 @@ public class ExecutionResource {
    * @param envId               the env id
    * @param workflowExecutionId the workflow execution id
    * @param expandedGroupIds    the expanded group ids
-   * @param requestedGroupId    the requested group id
-   * @param nodeOps             the node ops
    * @return the execution details
    */
   @GET
@@ -120,10 +117,9 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      @QueryParam("expandedGroupId") List<String> expandedGroupIds,
-      @QueryParam("requestedGroupId") String requestedGroupId, @QueryParam("nodeOps") Graph.NodeOps nodeOps) {
-    return new RestResponse<>(workflowExecutionService.getExecutionDetails(
-        appId, workflowExecutionId, expandedGroupIds, requestedGroupId, nodeOps));
+      @QueryParam("expandedGroupId") List<String> expandedGroupIds) {
+    return new RestResponse<>(
+        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, expandedGroupIds));
   }
 
   /**

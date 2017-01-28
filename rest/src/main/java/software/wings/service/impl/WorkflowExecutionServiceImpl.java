@@ -11,6 +11,8 @@ import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflo
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -25,13 +27,13 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
@@ -61,6 +63,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionStatus;
@@ -174,15 +177,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
-    return getExecutionDetails(appId, workflowExecutionId, null, null, null);
+    return getExecutionDetails(appId, workflowExecutionId, null);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, List<String> expandedGroupIds,
-      String requestedGroupId, Graph.NodeOps nodeOps) {
+  public WorkflowExecution getExecutionDetails(
+      String appId, String workflowExecutionId, List<String> expandedGroupIds) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (expandedGroupIds == null) {
@@ -418,12 +421,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
-    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
+    return triggerExecution(
+        workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
       ContextElement... contextElements) {
+    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, contextElements);
+  }
+
+  private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
+      ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
+      WorkflowStandardParams stdParams, ContextElement... contextElements) {
     Application app = appService.get(workflowExecution.getAppId());
     workflowExecution.setAppName(app.getName());
     if (workflowExecution.getEnvId() != null) {
@@ -501,6 +511,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecutionUpdate.setAppId(workflowExecution.getAppId());
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
+    if (workflowExecutionAdvisor != null) {
+      stateExecutionInstance.setExecutionEventAdvisors(Lists.newArrayList(workflowExecutionAdvisor));
+    }
 
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"

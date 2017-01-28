@@ -16,6 +16,7 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -608,12 +609,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
-    Map<String, Object> params = orchestrationWorkflow.params();
-    orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow, params));
+    orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow));
+
+    int i = 0;
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
+      workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
       generateNewWorkflowPhaseSteps(
           orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase);
-      orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase, params));
+      populatePhaseStepIds(workflowPhase);
+      orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
+
+      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflowPhase);
+      orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+      orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(rollbackWorkflowPhase));
     }
     orchestrationWorkflow = wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
 
@@ -637,7 +645,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PhaseStep updatePreDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep, orchestrationWorkflow.params());
+    Graph workflowOuterStepsGraph = generateGraph(phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("preDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
@@ -652,7 +660,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PhaseStep updatePostDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep, orchestrationWorkflow.params());
+    Graph workflowOuterStepsGraph = generateGraph(phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("postDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
@@ -672,6 +680,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
     }
 
+    if (orchestrationWorkflow.getWorkflowPhases() == null) {
+      workflowPhase.setName(Constants.PHASE_NAME_PREFIX + 1);
+    } else {
+      workflowPhase.setName(Constants.PHASE_NAME_PREFIX + (orchestrationWorkflow.getWorkflowPhases().size() + 1));
+    }
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
@@ -680,22 +693,34 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     generateNewWorkflowPhaseSteps(
         orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase);
+    populatePhaseStepIds(workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
 
-    Graph graph = generateMainGraph(orchestrationWorkflow, orchestrationWorkflow.params());
+    WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflowPhase);
+    orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+
+    Map<String, Graph> rollbackSubworkflows = generateGraph(rollbackWorkflowPhase);
+    orchestrationWorkflow.getGraph().getSubworkflows().putAll(rollbackSubworkflows);
+
+    Graph graph = generateMainGraph(orchestrationWorkflow);
 
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
             .set("workflowPhaseIds", orchestrationWorkflow.getWorkflowPhaseIds());
 
-    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase);
     for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
       updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
     }
     updateOps.set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase)
         .set("graph.nodes", graph.getNodes())
         .set("graph.links", graph.getLinks());
+
+    updateOps.set("rollbackWorkflowPhaseIdMap." + workflowPhase.getUuid(), rollbackWorkflowPhase);
+    for (Map.Entry<String, Graph> entry : rollbackSubworkflows.entrySet()) {
+      updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
+    }
 
     wingsPersistence.update(query, updateOps);
 
@@ -784,6 +809,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
   }
 
+  private WorkflowPhase generateRollbackWorkflowPhase(WorkflowPhase workflowPhase) {
+    WorkflowPhase rollbackWorkflowPhase =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
+            .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).withName("Disable Service").build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE).withName("Stop Service").build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).withName("Enable Service").build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.DE_PROVISION_NODE).withName("Deprovision Nodes").build())
+            .build();
+
+    return rollbackWorkflowPhase;
+  }
+
   private StateType determineStateType(String appId, String envId, String serviceId, String computeProviderId) {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.getInfraMappingByComputeProviderAndServiceId(
@@ -804,7 +846,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .equal(appId)
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
-    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase, orchestrationWorkflow.params());
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase);
 
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
@@ -843,15 +885,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null
         && orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId) != null) {
       updateOps.unset("workflowPhaseIdMap." + phaseId);
-    }
 
-    if (orchestrationWorkflow.getGraph() != null && orchestrationWorkflow.getGraph().getSubworkflows() != null
-        && orchestrationWorkflow.getGraph().getSubworkflows().get(phaseId) != null) {
+      // TODO: subworkflows cleanup
       updateOps.unset("graph.subworkflows." + phaseId);
     }
 
-    wingsPersistence.update(query, updateOps);
+    if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null
+        && orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId) != null) {
+      updateOps.unset("rollbackWorkflowPhaseIdMap." + phaseId);
 
+      // TODO: subworkflows cleanup
+      updateOps.unset(
+          "graph.subworkflows." + orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId).getUuid());
+    }
+
+    wingsPersistence.update(query, updateOps);
     updateStateMachine(appId, orchestrationWorkflowId);
   }
 
@@ -909,6 +957,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return userVariables;
   }
 
+  private void populatePhaseStepIds(WorkflowPhase workflowPhase) {
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null || workflowPhase.getPhaseSteps().isEmpty()) {
+      return;
+    }
+    workflowPhase.getPhaseSteps().forEach(this ::populatePhaseStepIds);
+  }
+
   private void populatePhaseStepIds(PhaseStep phaseStep) {
     if (phaseStep == null || phaseStep.getSteps() == null) {
       logger.error("Incorrect arguments to populate phaseStepIds: {}", phaseStep);
@@ -938,17 +993,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     phaseStep.setSteps(phaseStep.getStepsIds().stream().map(stepId -> nodesMap.get(stepId)).collect(toList()));
   }
 
-  private Graph generateMainGraph(OrchestrationWorkflow orchestrationWorkflow, Map<String, Object> params) {
+  private Graph generateMainGraph(OrchestrationWorkflow orchestrationWorkflow) {
     String id1 = orchestrationWorkflow.getPreDeploymentSteps().getUuid();
     String id2;
     Node preDeploymentNode = orchestrationWorkflow.getPreDeploymentSteps().generatePhaseStepNode();
     preDeploymentNode.setOrigin(true);
-    Builder graphBuilder =
-        aGraph()
-            .addNodes(preDeploymentNode)
-            .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps(), params));
+    Builder graphBuilder = aGraph()
+                               .addNodes(preDeploymentNode)
+                               .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps()));
 
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
+
+    Map<String, WorkflowPhase> rollbackPhaseMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
+    if (rollbackPhaseMap == null) {
+      rollbackPhaseMap = new HashMap<>();
+    }
 
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
@@ -956,18 +1015,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         graphBuilder.addNodes(workflowPhase.generatePhaseNode())
             .addLinks(
                 aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+
+        if (rollbackPhaseMap.get(workflowPhase.getUuid()) != null) {
+          Node rollbackNode = rollbackPhaseMap.get(workflowPhase.getUuid()).generatePhaseNode();
+          graphBuilder.addNodes(rollbackNode);
+        }
         id1 = id2;
       }
     }
     id2 = orchestrationWorkflow.getPostDeploymentSteps().getUuid();
     graphBuilder.addNodes(orchestrationWorkflow.getPostDeploymentSteps().generatePhaseStepNode())
         .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
-        .addSubworkflow(id2, generateGraph(orchestrationWorkflow.getPostDeploymentSteps(), params));
+        .addSubworkflow(id2, generateGraph(orchestrationWorkflow.getPostDeploymentSteps()));
 
     return graphBuilder.build();
   }
 
-  private Map<String, Graph> generateGraph(WorkflowPhase workflowPhase, Map<String, Object> params) {
+  private Map<String, Graph> generateGraph(WorkflowPhase workflowPhase) {
     Map<String, Graph> graphs = new HashMap<>();
     Builder graphBuilder = aGraph().withGraphName(workflowPhase.getName());
 
@@ -977,7 +1041,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
       id2 = phaseStep.getUuid();
       node = phaseStep.generatePhaseStepNode();
-      // node.getProperties().putAll(params);
       graphBuilder.addNodes(node);
       if (id1 == null) {
         node.setOrigin(true);
@@ -986,7 +1049,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
       }
       id1 = id2;
-      Graph stepsGraph = generateGraph(phaseStep, params);
+      Graph stepsGraph = generateGraph(phaseStep);
       graphs.put(phaseStep.getUuid(), stepsGraph);
     }
 
@@ -994,7 +1057,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return graphs;
   }
 
-  private Graph generateGraph(PhaseStep phaseStep, Map<String, Object> params) {
+  private Graph generateGraph(PhaseStep phaseStep) {
     Builder graphBuilder = aGraph().withGraphName(phaseStep.getName());
     if (phaseStep == null || phaseStep.getSteps() == null || phaseStep.getSteps().isEmpty()) {
       return graphBuilder.build();
@@ -1022,7 +1085,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (phaseStep.isStepsInParallel()) {
       Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(phaseStep.getName() + "-FORK").build();
       for (Node step : phaseStep.getSteps()) {
-        step.getProperties().putAll(params);
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()
                                   .withId(getUuid())
@@ -1038,7 +1100,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String id1 = null;
       String id2;
       for (Node step : phaseStep.getSteps()) {
-        // step.getProperties().putAll(params);
         id2 = step.getId();
         graphBuilder.addNodes(step);
         if (id1 == null && originNode == null) {
@@ -1062,7 +1123,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .build());
     }
 
-    populatePhaseStepIds(phaseStep);
     return graphBuilder.build();
   }
 

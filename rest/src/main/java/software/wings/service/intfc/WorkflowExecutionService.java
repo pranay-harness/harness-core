@@ -3,7 +3,6 @@ package software.wings.service.intfc;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
@@ -92,12 +91,10 @@ public interface WorkflowExecutionService {
    * @param appId               the app id
    * @param workflowExecutionId the workflow execution id
    * @param expandedGroupIds    the expanded group ids
-   * @param requestedGroupId    the requested group id
-   * @param nodeOps             the node ops
    * @return the execution details
    */
-  WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId,
-      List<String> expandedGroupIds, String requestedGroupId, NodeOps nodeOps);
+  WorkflowExecution getExecutionDetails(
+      @NotNull String appId, @NotNull String workflowExecutionId, List<String> expandedGroupIds);
 
   /**
    * Gets execution details without graph.

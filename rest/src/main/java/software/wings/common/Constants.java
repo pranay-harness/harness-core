@@ -97,4 +97,6 @@ public interface Constants {
 
   String SUB_WORKFLOW_ID = "subWorkflowId";
   String SUB_WORKFLOW = "SUB_WORKFLOW";
+  String ROLLBACK_PREFIX = "Rollback ";
+  String PHASE_NAME_PREFIX = "Phase ";
 }
