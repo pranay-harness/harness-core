@@ -107,7 +107,7 @@ public class DelegateServiceImpl implements DelegateService {
               .queryString("delegateId", delegateId)
               .queryString("token", tokenGenerator.getToken("https", "localhost", 9090))
               .header("Version", getVersion())
-              .encoder(new Encoder<Delegate, Reader>() { // Stream the request body
+              .encoder(new Encoder<Delegate, Reader>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public Reader encode(Delegate s) {
                   return new StringReader(JsonUtils.asJson(s));
@@ -124,10 +124,10 @@ public class DelegateServiceImpl implements DelegateService {
       socket = client.create(clientOptions);
       socket
           .on(Event.MESSAGE,
-              new Function<String>() {
+              new Function<String>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(String message) {
-                  if (!StringUtils.equals(message, "X")) {
+                  if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
                     try {
                       DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
                       dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
@@ -139,11 +139,16 @@ public class DelegateServiceImpl implements DelegateService {
                 }
               })
           .on(Event.ERROR,
-              new Function<Exception>() {
+              new Function<Exception>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(Exception e) {
                   if (e instanceof SSLException) {
                     logger.info("Reopening connection to manager.");
+                    try {
+                      socket.close();
+                    } catch (Exception ex) {
+                      // Ignore
+                    }
                     try {
                       ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
                     } catch (IOException ex) {
@@ -159,7 +164,7 @@ public class DelegateServiceImpl implements DelegateService {
                   }
                 }
               })
-          .on(Event.REOPENED, new Function<Object>() {
+          .on(Event.REOPENED, new Function<Object>() { // Do not change this wasync doesn't like lambda's
             @Override
             public void on(Object o) {
               try {
