@@ -34,7 +34,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
                                                     .withAutoApproveForProduction(true)
                                                     .withSettingId("knCLyrVjRjyUYM15RcjUQQ")
                                                     .withSourceName(ArtifactType.DOCKER.name())
-                                                    .withServiceId("jf_6aiHZRFGpKTJF7yDHgg")
+                                                    .withServiceId("Yn57GaqwR9ioXq8YZ4V87Q")
                                                     .build();
     ArtifactStream artifactStream = artifactStreamService.create(dockerArtifactStream);
     System.out.println(artifactStream.toString());

@@ -91,6 +91,7 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Override
+  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
   }

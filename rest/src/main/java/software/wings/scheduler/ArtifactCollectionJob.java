@@ -47,7 +47,7 @@ public class ArtifactCollectionJob implements Job {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     Validator.notNullCheck("artifactStream", artifactStream);
 
-    if (artifactStream.getArtifactStreamType().equals(DOCKER)) {
+    if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
       List<Artifact> artifacts = artifactService
                                      .list(aPageRequest()

@@ -72,6 +72,7 @@ public class DockerArtifactStream extends ArtifactStream {
   }
 
   @Override
+  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())

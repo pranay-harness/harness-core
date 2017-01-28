@@ -251,5 +251,5 @@ public abstract class ArtifactStream extends Base {
     this.serviceId = serviceId;
   }
 
-  public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
+  @SchemaIgnore public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
 }
