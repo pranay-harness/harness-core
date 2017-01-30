@@ -728,6 +728,52 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUpdateWorkflowPhaseRollback() {
+    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull();
+    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(0);
+    assertThat(workflowPhase2).isNotNull();
+
+    assertThat(orchestrationWorkflow2.getRollbackWorkflowPhaseIdMap())
+        .isNotNull()
+        .containsKeys(workflowPhase2.getUuid());
+
+    WorkflowPhase rollbackPhase = orchestrationWorkflow2.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
+    assertThat(rollbackPhase).isNotNull();
+
+    int size = rollbackPhase.getPhaseSteps().size();
+    rollbackPhase.getPhaseSteps().remove(0);
+
+    workflowService.updateWorkflowPhaseRollback(
+        APP_ID, orchestrationWorkflow2.getUuid(), workflowPhase2.getUuid(), rollbackPhase);
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow3).isNotNull();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(0))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("uuid", workflowPhase2.getUuid());
+
+    assertThat(orchestrationWorkflow3.getRollbackWorkflowPhaseIdMap())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow3.getWorkflowPhases().get(0).getUuid());
+    WorkflowPhase rollbackPhase2 = orchestrationWorkflow3.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
+    assertThat(rollbackPhase2).isNotNull().hasFieldOrPropertyWithValue("uuid", rollbackPhase.getUuid());
+    assertThat(rollbackPhase2.getPhaseSteps()).hasSize(size - 1);
+  }
+
+  @Test
   public void shouldUpdateNode() {
     OrchestrationWorkflow orchestrationWorkflow =
         anOrchestrationWorkflow()

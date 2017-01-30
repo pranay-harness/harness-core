@@ -733,6 +733,150 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflowPhase;
   }
 
+  @Override
+  public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase);
+
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+            .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase);
+    for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
+      updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
+    }
+    wingsPersistence.update(query, updateOps);
+
+    updateStateMachine(appId, orchestrationWorkflowId);
+    return workflowPhase;
+  }
+
+  @Override
+  public WorkflowPhase updateWorkflowPhaseRollback(
+      String appId, String orchestrationWorkflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+            .set("rollbackWorkflowPhaseIdMap." + phaseId, rollbackWorkflowPhase);
+
+    Map<String, Graph> rollbackSubworkflows = generateGraph(rollbackWorkflowPhase);
+    for (Map.Entry<String, Graph> entry : rollbackSubworkflows.entrySet()) {
+      updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
+    }
+
+    wingsPersistence.update(query, updateOps);
+
+    updateStateMachine(appId, orchestrationWorkflowId);
+    return rollbackWorkflowPhase;
+  }
+
+  @Override
+  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+
+    if (orchestrationWorkflow == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+    }
+
+    List<String> phaseIds = orchestrationWorkflow.getWorkflowPhaseIds();
+    if (orchestrationWorkflow == null || phaseIds == null || !phaseIds.contains(phaseId)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "phaseId");
+    }
+
+    phaseIds.remove(phaseId);
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhaseIds", phaseIds);
+
+    if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null
+        && orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId) != null) {
+      updateOps.unset("workflowPhaseIdMap." + phaseId);
+
+      // TODO: subworkflows cleanup
+      updateOps.unset("graph.subworkflows." + phaseId);
+    }
+
+    if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null
+        && orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId) != null) {
+      updateOps.unset("rollbackWorkflowPhaseIdMap." + phaseId);
+
+      // TODO: subworkflows cleanup
+      updateOps.unset(
+          "graph.subworkflows." + orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId).getUuid());
+    }
+
+    wingsPersistence.update(query, updateOps);
+    updateStateMachine(appId, orchestrationWorkflowId);
+  }
+
+  @Override
+  public Node updateGraphNode(String appId, String orchestrationWorkflowId, String subworkflowId, Node node) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(subworkflowId);
+
+    boolean found = false;
+    for (int i = 0; i < graph.getNodes().size(); i++) {
+      Node childNode = graph.getNodes().get(i);
+      if (childNode.getId().equals(node.getId())) {
+        graph.getNodes().remove(i);
+        graph.getNodes().add(i, node);
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                               .field("appId")
+                                               .equal(appId)
+                                               .field(ID_KEY)
+                                               .equal(orchestrationWorkflowId);
+      UpdateOperations<OrchestrationWorkflow> updateOps =
+          wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+              .set("graph.subworkflows." + subworkflowId, graph);
+      wingsPersistence.update(query, updateOps);
+
+      return node;
+    }
+
+    updateStateMachine(appId, orchestrationWorkflowId);
+    return null;
+  }
+
+  @Override
+  public List<NotificationRule> updateNotificationRules(
+      String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "notificationRules", notificationRules);
+    return notificationRules;
+  }
+
+  @Override
+  public List<FailureStrategy> updateFailureStrategies(
+      String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "failureStrategies", failureStrategies);
+    return failureStrategies;
+  }
+
+  @Override
+  public List<Variable> updateUserVariables(
+      String appId, String orchestrationWorkflowId, List<Variable> userVariables) {
+    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "userVariables", userVariables);
+    return userVariables;
+  }
+
   private void updateStateMachine(String appId, String orchestrationWorkflowId) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
     if (orchestrationWorkflow.getGraph() != null) {
@@ -926,126 +1070,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         infrastructureMapping instanceof PhysicalInfrastructureMapping ? DC_NODE_SELECT : AWS_NODE_SELECT;
 
     return stateType;
-  }
-
-  @Override
-  public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
-
-    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
-                                             .field("appId")
-                                             .equal(appId)
-                                             .field(ID_KEY)
-                                             .equal(orchestrationWorkflowId);
-    Map<String, Graph> phaseSubworkflows = generateGraph(workflowPhase);
-
-    UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-            .set("workflowPhaseIdMap." + workflowPhase.getUuid(), workflowPhase);
-    for (Map.Entry<String, Graph> entry : phaseSubworkflows.entrySet()) {
-      updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
-    }
-    wingsPersistence.update(query, updateOps);
-
-    updateStateMachine(appId, orchestrationWorkflowId);
-    return workflowPhase;
-  }
-
-  @Override
-  public void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId) {
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
-
-    if (orchestrationWorkflow == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
-    }
-
-    List<String> phaseIds = orchestrationWorkflow.getWorkflowPhaseIds();
-    if (orchestrationWorkflow == null || phaseIds == null || !phaseIds.contains(phaseId)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "phaseId");
-    }
-
-    phaseIds.remove(phaseId);
-    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
-                                             .field("appId")
-                                             .equal(appId)
-                                             .field(ID_KEY)
-                                             .equal(orchestrationWorkflowId);
-    UpdateOperations<OrchestrationWorkflow> updateOps =
-        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhaseIds", phaseIds);
-
-    if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null
-        && orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId) != null) {
-      updateOps.unset("workflowPhaseIdMap." + phaseId);
-
-      // TODO: subworkflows cleanup
-      updateOps.unset("graph.subworkflows." + phaseId);
-    }
-
-    if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null
-        && orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId) != null) {
-      updateOps.unset("rollbackWorkflowPhaseIdMap." + phaseId);
-
-      // TODO: subworkflows cleanup
-      updateOps.unset(
-          "graph.subworkflows." + orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId).getUuid());
-    }
-
-    wingsPersistence.update(query, updateOps);
-    updateStateMachine(appId, orchestrationWorkflowId);
-  }
-
-  @Override
-  public Node updateGraphNode(String appId, String orchestrationWorkflowId, String subworkflowId, Node node) {
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
-    Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(subworkflowId);
-
-    boolean found = false;
-    for (int i = 0; i < graph.getNodes().size(); i++) {
-      Node childNode = graph.getNodes().get(i);
-      if (childNode.getId().equals(node.getId())) {
-        graph.getNodes().remove(i);
-        graph.getNodes().add(i, node);
-        found = true;
-        break;
-      }
-    }
-    if (found) {
-      Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
-                                               .field("appId")
-                                               .equal(appId)
-                                               .field(ID_KEY)
-                                               .equal(orchestrationWorkflowId);
-      UpdateOperations<OrchestrationWorkflow> updateOps =
-          wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
-              .set("graph.subworkflows." + subworkflowId, graph);
-      wingsPersistence.update(query, updateOps);
-
-      return node;
-    }
-
-    updateStateMachine(appId, orchestrationWorkflowId);
-    return null;
-  }
-
-  @Override
-  public List<NotificationRule> updateNotificationRules(
-      String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "notificationRules", notificationRules);
-    return notificationRules;
-  }
-
-  @Override
-  public List<FailureStrategy> updateFailureStrategies(
-      String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "failureStrategies", failureStrategies);
-    return failureStrategies;
-  }
-
-  @Override
-  public List<Variable> updateUserVariables(
-      String appId, String orchestrationWorkflowId, List<Variable> userVariables) {
-    updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "userVariables", userVariables);
-    return userVariables;
   }
 
   private void populatePhaseStepIds(WorkflowPhase workflowPhase) {
