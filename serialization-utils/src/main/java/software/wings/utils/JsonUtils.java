@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.reinert.jjschema.v1.JsonSchemaFactory;
@@ -75,6 +76,7 @@ public class JsonUtils {
 
     mapperForCloning = new ObjectMapper();
     mapperForCloning.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapperForCloning.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     mapperForCloning.setSerializationInclusion(Include.NON_NULL);
     mapperForCloning.enableDefaultTyping();
     mapperForCloning.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));

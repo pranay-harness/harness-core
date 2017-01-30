@@ -162,7 +162,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
@@ -225,7 +225,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
@@ -290,7 +290,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
@@ -361,7 +361,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
         .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
@@ -426,7 +426,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
         .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
@@ -490,7 +490,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
         .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
@@ -551,7 +551,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
         .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
@@ -649,7 +649,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
         .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
@@ -712,7 +712,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.trigger(appId, sm.getUuid(), executionUuid, executionUuid);
 
     String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     ((WorkflowExecutionServiceImpl) workflowExecutionService)
         .trigger(appId, smId, executionUuid, executionUuid, callback);
@@ -2584,6 +2584,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
      */
     public WorkflowExecutionUpdateMock(String signalId) {
       super();
+      this.signalId = signalId;
+    }
+
+    /**
+     * Instantiates a new Workflow execution update mock.
+     *
+     * @param signalId the signal id
+     */
+    public WorkflowExecutionUpdateMock(String signalId, String appId, String workflowExecutionId) {
+      super(appId, workflowExecutionId);
       this.signalId = signalId;
     }
 

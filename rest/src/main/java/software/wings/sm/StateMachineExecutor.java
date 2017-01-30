@@ -68,9 +68,10 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams,
-        callback, null);
+    return execute(
+        wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams, callback);
   }
+
   /**
    * Execute.
    *
@@ -82,8 +83,7 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(StateMachine sm, String executionUuid, String executionName,
-      List<ContextElement> contextParams, StateMachineExecutionCallback callback,
-      List<ExecutionEventAdvisor> executionEventAdvisors) {
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
@@ -92,7 +92,6 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionName(executionName);
     stateExecutionInstance.setExecutionUuid(executionUuid);
-    stateExecutionInstance.setExecutionEventAdvisors(executionEventAdvisors);
 
     WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     if (contextParams != null) {
@@ -220,7 +219,7 @@ public class StateMachineExecutor {
       currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
-      notifyAdvisors(context, currentState);
+      invokedvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
       logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
@@ -234,13 +233,18 @@ public class StateMachineExecutor {
     }
   }
 
-  private void notifyAdvisors(ExecutionContextImpl context, State state) {
+  private ExecutionEventAdvice invokedvisors(ExecutionContextImpl context, State state) {
     List<ExecutionEventAdvisor> advisors = context.getStateExecutionInstance().getExecutionEventAdvisors();
-    if (advisors != null && !advisors.isEmpty()) {
-      advisors.forEach(advisor
-          -> advisor.onExecutionEvent(
-              ExecutionEventBuilder.anExecutionEvent().withContext(context).withState(state).build()));
+    if (advisors == null || advisors.isEmpty()) {
+      return null;
     }
+
+    ExecutionEventAdvice executionEventAdvice = null;
+    for (ExecutionEventAdvisor advisor : advisors) {
+      executionEventAdvice = advisor.onExecutionEvent(
+          ExecutionEventBuilder.anExecutionEvent().withContext(context).withState(state).build());
+    }
+    return executionEventAdvice;
   }
 
   /**
@@ -275,7 +279,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
-      notifyAdvisors(context, currentState);
+      invokedvisors(context, currentState);
       handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
 
     } else {
@@ -284,8 +288,12 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
-      notifyAdvisors(context, currentState);
-      if (status == ExecutionStatus.SUCCESS) {
+      ExecutionEventAdvice executionEventAdvice = invokedvisors(context, currentState);
+      if (executionEventAdvice != null
+          && (executionEventAdvice.getNextChildStateMachineId() != null
+                 || executionEventAdvice.getNextStateName() != null)) {
+        executionEventAdviceTransition(context, executionEventAdvice);
+      } else if (status == ExecutionStatus.SUCCESS) {
         return successTransition(context);
       } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR) {
         return failedTransition(context, null);
@@ -295,6 +303,16 @@ public class StateMachineExecutor {
     }
 
     return stateExecutionInstance;
+  }
+
+  private StateExecutionInstance executionEventAdviceTransition(
+      ExecutionContextImpl context, ExecutionEventAdvice executionEventAdvice) {
+    StateMachine sm = context.getStateMachine();
+    State nextState =
+        sm.getState(executionEventAdvice.getNextChildStateMachineId(), executionEventAdvice.getNextStateName());
+    StateExecutionInstance cloned =
+        clone(context.getStateExecutionInstance(), executionEventAdvice.getNextChildStateMachineId(), nextState);
+    return triggerExecution(sm, cloned);
   }
 
   /**
@@ -383,7 +401,7 @@ public class StateMachineExecutor {
     if (stateExecutionInstance.getNotifyId() == null) {
       if (stateExecutionInstance.getCallback() != null) {
         injector.injectMembers(callback);
-        stateExecutionInstance.getCallback().callback(context, status, exception);
+        callback.callback(context, status, exception);
       } else {
         logger.info("No callback for the stateMachine: {}, executionUuid: {}", context.getStateMachine().getName(),
             stateExecutionInstance.getExecutionUuid());
@@ -416,7 +434,7 @@ public class StateMachineExecutor {
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
           Lists.newArrayList(ExecutionStatus.ABORTING), null);
-      notifyAdvisors(context, currentState);
+      invokedvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
@@ -465,8 +483,19 @@ public class StateMachineExecutor {
 
   /**
    * @param stateExecutionInstance
-   * @param nextState
-   * @return
+   * @param childStateMachineId
+   *@param nextState  @return
+   */
+  private StateExecutionInstance clone(
+      StateExecutionInstance stateExecutionInstance, String childStateMachineId, State nextState) {
+    StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
+    cloned.setChildStateMachineId(childStateMachineId);
+    return cloned;
+  }
+
+  /**
+   * @param stateExecutionInstance
+   *@param nextState  @return
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);

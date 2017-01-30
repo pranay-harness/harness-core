@@ -46,6 +46,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowOrchestrationType;
 import software.wings.beans.WorkflowPhase;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -675,7 +676,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateWorkflowPhase() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().build();
 
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
@@ -688,7 +689,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     WorkflowPhase workflowPhase2 =
         orchestrationWorkflow2.getWorkflowPhases().get(orchestrationWorkflow2.getWorkflowPhases().size() - 1);
-    assertThat(workflowPhase2).isNotNull().hasFieldOrPropertyWithValue("name", "phase1");
+    assertThat(workflowPhase2).isNotNull().hasFieldOrPropertyWithValue("name", Constants.PHASE_NAME_PREFIX + 1);
     assertThat(workflowPhase2.getPhaseSteps()).isNotNull().hasSize(6);
   }
 
@@ -816,12 +817,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Graph graph = orchestrationWorkflow3.getGraph();
     assertThat(graph).isNotNull();
-    assertThat(graph.getNodes()).isNotNull().hasSize(4).doesNotContainNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(6).doesNotContainNull();
     assertThat(graph.getLinks()).isNotNull().hasSize(3).doesNotContainNull();
     assertThat(graph.getNodes().get(0).getId()).isEqualTo(orchestrationWorkflow3.getPreDeploymentSteps().getUuid());
     assertThat(graph.getNodes().get(1).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
-    assertThat(graph.getNodes().get(2).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
-    assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+    assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
+    assertThat(graph.getNodes().get(5).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
     logger.info("Graph Nodes: {}", graph.getNodes());
     assertThat(graph.getSubworkflows())
         .isNotNull()

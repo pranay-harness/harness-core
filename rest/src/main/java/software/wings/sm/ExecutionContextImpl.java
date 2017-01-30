@@ -67,7 +67,7 @@ public class ExecutionContextImpl implements ExecutionContext {
       stateExecutionInstance.getContextElements().forEach(contextElement -> injector.injectMembers(contextElement));
     }
     if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
-      stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> injector.injectMembers(advisor));
+      stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> { injector.injectMembers(advisor); });
     }
   }
 
@@ -113,6 +113,14 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public StateExecutionData getStateExecutionData() {
     return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T extends ContextElement> T getContextElement() {
+    return (T) stateExecutionInstance.getContextElement();
   }
 
   /**
@@ -337,6 +345,11 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public String getStateExecutionInstanceId() {
     return stateExecutionInstance.getUuid();
+  }
+
+  @Override
+  public String getAppId() {
+    return ((WorkflowStandardParams) getContextElement(ContextElementType.STANDARD)).getAppId();
   }
 
   @Override

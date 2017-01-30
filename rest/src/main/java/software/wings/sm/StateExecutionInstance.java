@@ -26,6 +26,7 @@ public class StateExecutionInstance extends Base {
   private String stateType;
   private ContextElement contextElement;
   private boolean contextTransition;
+  private boolean rollback;
 
   @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
