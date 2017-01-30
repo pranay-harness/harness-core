@@ -33,11 +33,11 @@ public abstract class ArtifactStream extends Base {
 
   @NotEmpty @Attributes(title = "Source Server") private String settingId;
 
-  private String serviceId;
+  @SchemaIgnore private String serviceId;
 
-  @Attributes(title = "Automatic Download") private boolean autoDownload = false;
+  @SchemaIgnore private boolean autoDownload = false;
 
-  @Attributes(title = "Auto-approved for Production") private boolean autoApproveForProduction = false;
+  @SchemaIgnore private boolean autoApproveForProduction = false;
 
   @SchemaIgnore private List<ArtifactStreamAction> streamActions = new ArrayList<>();
 
@@ -119,6 +119,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the boolean
    */
+  @SchemaIgnore
   public boolean isAutoDownload() {
     return autoDownload;
   }
@@ -137,6 +138,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the boolean
    */
+  @SchemaIgnore
   public boolean isAutoApproveForProduction() {
     return autoApproveForProduction;
   }

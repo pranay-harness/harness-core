@@ -52,26 +52,6 @@ public class DockerArtifactStream extends ArtifactStream {
     this.imageName = imageName;
   }
 
-  @Attributes(title = "Source Type")
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  @Attributes(title = "Source Server")
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  @Attributes(title = "Automatic Download")
-  public boolean isAutoDownload() {
-    return super.isAutoDownload();
-  }
-
-  @Attributes(title = "Auto-approved for Production")
-  public boolean isAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
-  }
-
   @Override
   @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
@@ -79,6 +59,28 @@ public class DockerArtifactStream extends ArtifactStream {
         .withArtifactStreamType(getArtifactStreamType())
         .withImageName(imageName)
         .build();
+  }
+
+  @Attributes(title = "Source Type")
+  @Override
+  public String getArtifactStreamType() {
+    return super.getArtifactStreamType();
+  }
+
+  @Attributes(title = "Source Server")
+  @Override
+  public String getSettingId() {
+    return super.getSettingId();
+  }
+
+  @Attributes(title = "Automatic Download")
+  public boolean getAutoDownload() {
+    return super.isAutoDownload();
+  }
+
+  @Attributes(title = "Auto-approved for Production")
+  public boolean getAutoApproveForProduction() {
+    return super.isAutoApproveForProduction();
   }
 
   /**

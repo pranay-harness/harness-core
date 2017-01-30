@@ -316,7 +316,7 @@
             <dependency>
                 <groupId>com.github.reinert</groupId>
                 <artifactId>jjschema</artifactId>
-                <version>0.9-SNAPSHOT</version>
+                <version>1.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>

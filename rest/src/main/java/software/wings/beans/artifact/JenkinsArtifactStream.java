@@ -59,22 +59,24 @@ public class JenkinsArtifactStream extends ArtifactStream {
   }
 
   @Attributes(title = "Source Type")
+  @Override
   public String getArtifactStreamType() {
     return super.getArtifactStreamType();
   }
 
   @Attributes(title = "Source Server")
+  @Override
   public String getSettingId() {
     return super.getSettingId();
   }
 
   @Attributes(title = "Automatic Download")
-  public boolean isAutoDownload() {
+  public boolean getAutoDownload() {
     return super.isAutoDownload();
   }
 
   @Attributes(title = "Auto-approved for Production")
-  public boolean isAutoApproveForProduction() {
+  public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 
