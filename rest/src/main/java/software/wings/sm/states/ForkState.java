@@ -21,7 +21,7 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
+import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -64,8 +64,7 @@ public class ForkState extends State {
     forkStateExecutionData.setElements(new ArrayList<>());
     for (String state : forkStateNames) {
       ForkElement element = aForkElement().withStateName(state).withParentId(stateExecutionInstance.getUuid()).build();
-      StateExecutionInstance childStateExecutionInstance =
-          JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+      StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
 
       childStateExecutionInstance.setContextElement(element);
       childStateExecutionInstance.setStateName(state);
