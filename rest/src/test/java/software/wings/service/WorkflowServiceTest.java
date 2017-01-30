@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
+import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -18,6 +19,7 @@ import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrate
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -675,8 +677,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateWorkflowPhase() {
+    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().withServiceId(SERVICE_ID).build();
 
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
@@ -695,13 +698,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateWorkflowPhase() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").build();
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").build();
+    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
 
@@ -787,13 +791,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldHaveGraph() {
+    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").build();
+    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").build();
+    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
 
@@ -872,6 +877,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateComplexWorkflow() {
+    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     OrchestrationWorkflow orchestrationWorkflow =
         anOrchestrationWorkflow()
             .withAppId(APP_ID)
@@ -880,7 +886,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
                                    .withComputeProviderId("computeProviderId1")
-                                   .withServiceId("serviceId1")
+                                   .withServiceId(SERVICE_ID)
                                    .withDeploymentType(SSH)
                                    .build())
             .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())

@@ -57,6 +57,8 @@ public class Command extends Base implements CommandUnit {
 
   @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
+  private CommandType commandType = CommandType.OTHER;
+
   public Command() {
     this.commandUnitType = CommandUnitType.COMMAND;
   }
@@ -231,6 +233,14 @@ public class Command extends Base implements CommandUnit {
     this.artifactType = artifactType;
   }
 
+  public CommandType getCommandType() {
+    return commandType;
+  }
+
+  public void setCommandType(CommandType commandType) {
+    this.commandType = commandType;
+  }
+
   /**
    * Transform graph.
    */
@@ -333,6 +343,7 @@ public class Command extends Base implements CommandUnit {
     private String name;
     private ExecutionResult executionResult;
     private boolean artifactNeeded;
+    private CommandType commandType = CommandType.OTHER;
 
     private Builder() {}
 
@@ -423,6 +434,17 @@ public class Command extends Base implements CommandUnit {
     }
 
     /**
+     * With command type
+     *
+     * @param commandType the command type
+     * @return the builder
+     */
+    public Builder withCommandType(CommandType commandType) {
+      this.commandType = commandType;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -434,7 +456,8 @@ public class Command extends Base implements CommandUnit {
           .withCommandUnits(commandUnits)
           .withName(name)
           .withExecutionResult(executionResult)
-          .withArtifactNeeded(artifactNeeded);
+          .withArtifactNeeded(artifactNeeded)
+          .withCommandType(commandType);
     }
 
     /**
@@ -450,6 +473,7 @@ public class Command extends Base implements CommandUnit {
       command.setName(name);
       command.setExecutionResult(executionResult);
       command.setArtifactNeeded(artifactNeeded);
+      command.setCommandType(commandType);
       return command;
     }
   }
