@@ -10,6 +10,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ public class DockerArtifactStream extends ArtifactStream {
   @Override
   @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
-    return null;
+    return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
