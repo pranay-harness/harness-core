@@ -182,10 +182,28 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/phases/{phaseId}")
-  public RestResponse<WorkflowPhase> create(@QueryParam("appId") String appId,
+  public RestResponse<WorkflowPhase> update(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId,
       WorkflowPhase workflowPhase) {
     return new RestResponse<>(workflowService.updateWorkflowPhase(appId, orchestrationWorkflowId, workflowPhase));
+  }
+
+  /**
+   * Updates the phase.
+   *
+   * @param appId         the app id
+   * @param orchestrationWorkflowId the orchestration id
+   * @param phaseId the orchestration id
+   * @param rollbackWorkflowPhase the rollback workflow phase
+   * @return the rest response
+   */
+  @PUT
+  @Path("{orchestrationWorkflowId}/phases/{phaseId}/rollback")
+  public RestResponse<WorkflowPhase> updateRollback(@QueryParam("appId") String appId,
+      @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId,
+      WorkflowPhase rollbackWorkflowPhase) {
+    return new RestResponse<>(
+        workflowService.updateWorkflowPhaseRollback(appId, orchestrationWorkflowId, phaseId, rollbackWorkflowPhase));
   }
 
   /**

@@ -172,6 +172,11 @@ public class PhaseStep {
       return this;
     }
 
+    public PhaseStepBuilder addAllSteps(List<Node> steps) {
+      this.steps.addAll(steps);
+      return this;
+    }
+
     public PhaseStepBuilder withStepsInParallel(boolean stepsInParallel) {
       this.stepsInParallel = stepsInParallel;
       return this;

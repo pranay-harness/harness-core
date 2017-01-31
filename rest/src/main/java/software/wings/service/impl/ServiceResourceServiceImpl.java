@@ -33,7 +33,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EventType;
-import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.Command;
@@ -133,7 +132,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Service addDefaultCommands(Service service) {
-    List<Graph> commands = emptyList();
+    List<Command> commands = emptyList();
     if (service.getAppContainer() != null && service.getAppContainer().getFamily() != null) {
       commands = service.getAppContainer().getFamily().getDefaultCommands(
           service.getArtifactType(), service.getAppContainer());
@@ -142,9 +141,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     Service serviceToReturn = service;
-    for (Graph command : commands) {
+    for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(command).build()).build());
+          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     }
 
     return serviceToReturn;

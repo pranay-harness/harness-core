@@ -21,6 +21,7 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.REPEAT;
@@ -63,6 +64,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
@@ -619,7 +622,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       populatePhaseStepIds(workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
 
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflowPhase);
+      WorkflowPhase rollbackWorkflowPhase =
+          generateRollbackWorkflowPhase(orchestrationWorkflow.getAppId(), workflowPhase);
       orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(rollbackWorkflowPhase));
     }
@@ -697,7 +701,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
 
-    WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflowPhase);
+    WorkflowPhase rollbackWorkflowPhase =
+        generateRollbackWorkflowPhase(orchestrationWorkflow.getAppId(), workflowPhase);
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
 
     Map<String, Graph> rollbackSubworkflows = generateGraph(rollbackWorkflowPhase);
@@ -728,115 +733,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflowPhase;
   }
 
-  private void updateStateMachine(String appId, String orchestrationWorkflowId) {
-    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
-    if (orchestrationWorkflow.getGraph() != null) {
-      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
-      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    }
-    updateRequiredEntities(orchestrationWorkflow);
-  }
-
-  private void updateRequiredEntities(OrchestrationWorkflow orchestrationWorkflow) {
-    Set<EntityType> requiredEntityTypes = new HashSet<>();
-
-    if (orchestrationWorkflow != null && orchestrationWorkflow.getWorkflowPhases() != null) {
-      for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
-        requiredEntityTypes.addAll(getRequiredEntityTypes(orchestrationWorkflow.getAppId(), workflowPhase));
-      }
-    }
-    updateOrchestrationWorkflowField(
-        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getUuid(), "requiredEntityTypes", requiredEntityTypes);
-  }
-
-  private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
-    Set<EntityType> requiredEntityTypes = new HashSet<>();
-    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
-      return requiredEntityTypes;
-    }
-    String serviceId = workflowPhase.getServiceId();
-
-    for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-      if (phaseStep.getSteps() == null) {
-        continue;
-      }
-      for (Node step : phaseStep.getSteps()) {
-        if ("COMMAND".equals(step.getType())) {
-          ServiceCommand command = serviceResourceService.getCommandByName(
-              appId, serviceId, (String) step.getProperties().get("commandName"));
-          if (command.getCommand().isArtifactNeeded()) {
-            requiredEntityTypes.add(EntityType.ARTIFACT);
-            return requiredEntityTypes;
-          }
-        }
-      }
-    }
-    return requiredEntityTypes;
-  }
-
-  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase) {
-    // For DC only - for other types it has to be customized
-
-    StateType stateType =
-        determineStateType(appId, envId, workflowPhase.getServiceId(), workflowPhase.getComputeProviderId());
-
-    if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
-    }
-
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE)
-                                   .withName("Provision Nodes")
-                                   .addStep(aNode()
-                                                .withType(stateType.name())
-                                                .withName("Select Nodes")
-                                                .withOrigin(true)
-                                                .addProperty("specificHosts", false)
-                                                .addProperty("instanceCount", 1)
-                                                .build())
-                                   .build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).withName("Disable Service").build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).withName("Deploy Service").build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE).withName("Verify Service").build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).withName("Enable Service").build());
-
-    // Not needed for non-DC
-    // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
-
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
-  }
-
-  private WorkflowPhase generateRollbackWorkflowPhase(WorkflowPhase workflowPhase) {
-    WorkflowPhase rollbackWorkflowPhase =
-        aWorkflowPhase()
-            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-            .withServiceId(workflowPhase.getServiceId())
-            .withComputeProviderId(workflowPhase.getComputeProviderId())
-            .withDeploymentType(workflowPhase.getDeploymentType())
-            .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
-            .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE).withName("Disable Service").build())
-            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE).withName("Stop Service").build())
-            .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE).withName("Enable Service").build())
-            .addPhaseStep(aPhaseStep(PhaseStepType.DE_PROVISION_NODE).withName("Deprovision Nodes").build())
-            .build();
-
-    return rollbackWorkflowPhase;
-  }
-
-  private StateType determineStateType(String appId, String envId, String serviceId, String computeProviderId) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
-
-    StateType stateType =
-        infrastructureMapping instanceof PhysicalInfrastructureMapping ? DC_NODE_SELECT : AWS_NODE_SELECT;
-
-    return stateType;
-  }
-
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
@@ -858,6 +754,30 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     updateStateMachine(appId, orchestrationWorkflowId);
     return workflowPhase;
+  }
+
+  @Override
+  public WorkflowPhase updateWorkflowPhaseRollback(
+      String appId, String orchestrationWorkflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
+                                             .field("appId")
+                                             .equal(appId)
+                                             .field(ID_KEY)
+                                             .equal(orchestrationWorkflowId);
+
+    UpdateOperations<OrchestrationWorkflow> updateOps =
+        wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class)
+            .set("rollbackWorkflowPhaseIdMap." + phaseId, rollbackWorkflowPhase);
+
+    Map<String, Graph> rollbackSubworkflows = generateGraph(rollbackWorkflowPhase);
+    for (Map.Entry<String, Graph> entry : rollbackSubworkflows.entrySet()) {
+      updateOps.set("graph.subworkflows." + entry.getKey(), entry.getValue());
+    }
+
+    wingsPersistence.update(query, updateOps);
+
+    updateStateMachine(appId, orchestrationWorkflowId);
+    return rollbackWorkflowPhase;
   }
 
   @Override
@@ -955,6 +875,201 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       String appId, String orchestrationWorkflowId, List<Variable> userVariables) {
     updateOrchestrationWorkflowField(appId, orchestrationWorkflowId, "userVariables", userVariables);
     return userVariables;
+  }
+
+  private void updateStateMachine(String appId, String orchestrationWorkflowId) {
+    OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
+    if (orchestrationWorkflow.getGraph() != null) {
+      StateMachine stateMachine = new StateMachine(orchestrationWorkflow, stencilMap());
+      wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    }
+    updateRequiredEntities(orchestrationWorkflow);
+  }
+
+  private void updateRequiredEntities(OrchestrationWorkflow orchestrationWorkflow) {
+    Set<EntityType> requiredEntityTypes = new HashSet<>();
+
+    if (orchestrationWorkflow != null && orchestrationWorkflow.getWorkflowPhases() != null) {
+      for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
+        requiredEntityTypes.addAll(getRequiredEntityTypes(orchestrationWorkflow.getAppId(), workflowPhase));
+      }
+    }
+    updateOrchestrationWorkflowField(
+        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getUuid(), "requiredEntityTypes", requiredEntityTypes);
+  }
+
+  private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
+    Set<EntityType> requiredEntityTypes = new HashSet<>();
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
+      return requiredEntityTypes;
+    }
+    String serviceId = workflowPhase.getServiceId();
+
+    for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
+      if (phaseStep.getSteps() == null) {
+        continue;
+      }
+      for (Node step : phaseStep.getSteps()) {
+        if ("COMMAND".equals(step.getType())) {
+          ServiceCommand command = serviceResourceService.getCommandByName(
+              appId, serviceId, (String) step.getProperties().get("commandName"));
+          if (command.getCommand().isArtifactNeeded()) {
+            requiredEntityTypes.add(EntityType.ARTIFACT);
+            return requiredEntityTypes;
+          }
+        }
+      }
+    }
+    return requiredEntityTypes;
+  }
+
+  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase) {
+    // For DC only - for other types it has to be customized
+
+    StateType stateType =
+        determineStateType(appId, envId, workflowPhase.getServiceId(), workflowPhase.getComputeProviderId());
+
+    if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
+    }
+
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE)
+                                   .withName("Provision Nodes")
+                                   .addStep(aNode()
+                                                .withType(stateType.name())
+                                                .withName("Select Nodes")
+                                                .withOrigin(true)
+                                                .addProperty("specificHosts", false)
+                                                .addProperty("instanceCount", 1)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE)
+                                   .withName("Disable Service")
+                                   .addAllSteps(commandNodes(commandMap, CommandType.DISABLE))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE)
+                                   .withName("Deploy Service")
+                                   .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE)
+                                   .withName("Verify Service")
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE)
+                                   .withName("Enable Service")
+                                   .addAllSteps(commandNodes(commandMap, CommandType.ENABLE))
+                                   .build());
+
+    // Not needed for non-DC
+    // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    WorkflowPhase rollbackWorkflowPhase =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
+            .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE)
+                              .withName("Disable Service")
+                              .addAllSteps(commandNodes(commandMap, CommandType.DISABLE))
+                              .build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
+                              .withName("Stop Service")
+                              .addAllSteps(commandNodes(commandMap, CommandType.STOP))
+                              .build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE)
+                              .withName("Enable Service")
+                              .addAllSteps(commandNodes(commandMap, CommandType.ENABLE))
+                              .build())
+            .build();
+
+    // get provision NODE
+    Optional<PhaseStep> provisionPhaseStep = workflowPhase.getPhaseSteps()
+                                                 .stream()
+                                                 .filter(ps -> ps.getPhaseStepType() == PhaseStepType.PROVISION_NODE)
+                                                 .findFirst();
+    if (provisionPhaseStep.isPresent() && provisionPhaseStep.get().getSteps() != null) {
+      Optional<Node> awsProvisionNode =
+          provisionPhaseStep.get()
+              .getSteps()
+              .stream()
+              .filter(n
+                  -> n.getType() != null && n.getType().equals(AWS_NODE_SELECT.name()) && n.getProperties() != null
+                      && n.getProperties().get("provisionNode") != null
+                      && n.getProperties().get("provisionNode").equals(true))
+              .findFirst();
+
+      if (awsProvisionNode.isPresent()) {
+        rollbackWorkflowPhase.getPhaseSteps().add(
+            aPhaseStep(PhaseStepType.DE_PROVISION_NODE).withName("Deprovision Nodes").build());
+      }
+    }
+
+    return rollbackWorkflowPhase;
+  }
+
+  private Map<CommandType, List<Command>> getCommandTypeListMap(Service service) {
+    Map<CommandType, List<Command>> commandMap = new HashMap<>();
+    if (service.getServiceCommands() == null) {
+      return commandMap;
+    }
+    for (ServiceCommand sc : service.getServiceCommands()) {
+      if (sc.getCommand() == null || sc.getCommand().getCommandType() == null) {
+        continue;
+      }
+      List<Command> list = commandMap.get(sc.getCommand().getCommandType());
+      if (list == null) {
+        list = new ArrayList<>();
+        commandMap.put(sc.getCommand().getCommandType(), list);
+      }
+      list.add(sc.getCommand());
+    }
+    return commandMap;
+  }
+
+  private List<Node> commandNodes(Map<CommandType, List<Command>> commandMap, CommandType commandType) {
+    List<Node> nodes = new ArrayList<>();
+
+    List<Command> commands = commandMap.get(commandType);
+    if (commands == null) {
+      return nodes;
+    }
+
+    for (Command command : commands) {
+      nodes.add(Node.Builder.aNode()
+                    .withId(getUuid())
+                    .withType(COMMAND.name())
+                    .withName(command.getName())
+                    .addProperty("commandName", command.getName())
+                    .build());
+    }
+    return nodes;
+  }
+
+  private StateType determineStateType(String appId, String envId, String serviceId, String computeProviderId) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.getInfraMappingByComputeProviderAndServiceId(
+            appId, envId, serviceId, computeProviderId);
+
+    StateType stateType =
+        infrastructureMapping instanceof PhysicalInfrastructureMapping ? DC_NODE_SELECT : AWS_NODE_SELECT;
+
+    return stateType;
   }
 
   private void populatePhaseStepIds(WorkflowPhase workflowPhase) {

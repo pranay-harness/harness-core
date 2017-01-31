@@ -11,7 +11,7 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
+import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -57,8 +57,7 @@ public class SubWorkflowState extends State {
   }
 
   protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
-    StateExecutionInstance childStateExecutionInstance =
-        JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+    StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
 
     childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
     childStateExecutionInstance.setStateName(null);

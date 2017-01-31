@@ -223,6 +223,9 @@ public interface WorkflowService {
 
   WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
 
+  WorkflowPhase updateWorkflowPhaseRollback(
+      String appId, String orchestrationWorkflowId, String phaseId, WorkflowPhase workflowPhase);
+
   void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId);
 
   List<NotificationRule> updateNotificationRules(

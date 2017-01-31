@@ -15,6 +15,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseSubWorkflow;
 
+import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -48,10 +49,31 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return null;
       }
 
-      return ExecutionEventAdviceBuilder.anExecutionEventAdvice()
-          .withNextStateName(Constants.ROLLBACK_PREFIX + phaseSubWorkflow.getName())
-          .build();
+      if (isRollbackStrategy(orchestrationWorkflow)) {
+        return ExecutionEventAdviceBuilder.anExecutionEventAdvice()
+            .withNextStateName(Constants.ROLLBACK_PREFIX + phaseSubWorkflow.getName())
+            .build();
+      }
     }
     return null;
+  }
+
+  private boolean isRollbackStrategy(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow.getFailureStrategies() == null) {
+      return false;
+    }
+    Optional<FailureStrategy> rollbackStrategy =
+        orchestrationWorkflow.getFailureStrategies()
+            .stream()
+            .filter(f
+                -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE
+                    || f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE)
+            .findFirst();
+
+    if (rollbackStrategy.isPresent()) {
+      return true;
+    }
+
+    return false;
   }
 }
