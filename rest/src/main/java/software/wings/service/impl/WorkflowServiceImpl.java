@@ -735,6 +735,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    populatePhaseStepIds(workflowPhase);
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
@@ -759,6 +760,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String orchestrationWorkflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    populatePhaseStepIds(rollbackWorkflowPhase);
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)

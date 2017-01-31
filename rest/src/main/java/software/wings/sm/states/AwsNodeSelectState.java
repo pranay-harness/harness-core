@@ -10,8 +10,11 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.PhaseElement;
 import software.wings.beans.ServiceInstance;
+import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -27,8 +30,6 @@ import javax.inject.Inject;
 public class AwsNodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(AwsNodeSelectState.class);
 
-  private String serviceId;
-  private String computeProviderId;
   @Attributes(title = "Number of instances") private int instanceCount;
 
   @Attributes(title = "Select specific hosts?") private boolean specificHosts;
@@ -52,6 +53,10 @@ public class AwsNodeSelectState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     String appId = ((ExecutionContextImpl) context).getApp().getUuid();
     String envId = ((ExecutionContextImpl) context).getEnv().getUuid();
+
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    String computeProviderId = phaseElement.getComputeProviderId();
 
     logger.info("serviceId : {}, computeProviderId: {}", serviceId, computeProviderId);
 
@@ -77,42 +82,6 @@ public class AwsNodeSelectState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
-
-  /**
-   * Gets service id.
-   *
-   * @return the service id
-   */
-  public String getServiceId() {
-    return serviceId;
-  }
-
-  /**
-   * Sets service id.
-   *
-   * @param serviceId the service id
-   */
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
-  }
-
-  /**
-   * Gets compute provider id.
-   *
-   * @return the compute provider id
-   */
-  public String getComputeProviderId() {
-    return computeProviderId;
-  }
-
-  /**
-   * Sets compute provider id.
-   *
-   * @param computeProviderId the compute provider id
-   */
-  public void setComputeProviderId(String computeProviderId) {
-    this.computeProviderId = computeProviderId;
-  }
 
   /**
    * Gets instance count.

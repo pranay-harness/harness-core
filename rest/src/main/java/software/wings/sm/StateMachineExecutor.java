@@ -598,13 +598,12 @@ public class StateMachineExecutor {
       if (notifyElements == null) {
         notifyElements = new ArrayList<>();
       }
-      List<ContextElement> finalNotifyElements = notifyElements;
-      elements.stream().forEach(e -> {
+      for (ContextElement e : elements) {
         if (e != null) {
           stateExecutionInstance.getContextElements().push(e);
-          finalNotifyElements.add(e);
+          notifyElements.add(e);
         }
-      });
+      }
 
       ops.set("contextElements", stateExecutionInstance.getContextElements());
 
