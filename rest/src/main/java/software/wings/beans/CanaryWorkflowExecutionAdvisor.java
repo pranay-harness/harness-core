@@ -22,9 +22,9 @@ import javax.inject.Inject;
  * Created by rishi on 1/24/17.
  */
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
-  @Inject @Transient WorkflowExecutionService workflowExecutionService;
+  @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
-  @Inject @Transient WorkflowService workflowService;
+  @Inject @Transient private transient WorkflowService workflowService;
 
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {

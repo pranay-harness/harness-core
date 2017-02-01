@@ -603,10 +603,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return;
     }
     populatePhaseSteps(orchestrationWorkflow.getPreDeploymentSteps(), orchestrationWorkflow.getGraph());
-    orchestrationWorkflow.getWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
-      workflowPhase.getPhaseSteps().forEach(
-          phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
-    });
+    if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null) {
+      orchestrationWorkflow.getWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+        workflowPhase.getPhaseSteps().forEach(
+            phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
+      });
+    }
+    if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
+      orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+        workflowPhase.getPhaseSteps().forEach(
+            phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
+      });
+    }
     populatePhaseSteps(orchestrationWorkflow.getPostDeploymentSteps(), orchestrationWorkflow.getGraph());
   }
 
