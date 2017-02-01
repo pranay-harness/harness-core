@@ -603,10 +603,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return;
     }
     populatePhaseSteps(orchestrationWorkflow.getPreDeploymentSteps(), orchestrationWorkflow.getGraph());
-    orchestrationWorkflow.getWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
-      workflowPhase.getPhaseSteps().forEach(
-          phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
-    });
+    if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null) {
+      orchestrationWorkflow.getWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+        workflowPhase.getPhaseSteps().forEach(
+            phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
+      });
+    }
+    if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null) {
+      orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+        workflowPhase.getPhaseSteps().forEach(
+            phaseStep -> { populatePhaseSteps(phaseStep, orchestrationWorkflow.getGraph()); });
+      });
+    }
     populatePhaseSteps(orchestrationWorkflow.getPostDeploymentSteps(), orchestrationWorkflow.getGraph());
   }
 
@@ -735,6 +743,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    populatePhaseStepIds(workflowPhase);
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
@@ -759,6 +768,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String orchestrationWorkflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    populatePhaseStepIds(rollbackWorkflowPhase);
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
                                              .field("appId")
                                              .equal(appId)
