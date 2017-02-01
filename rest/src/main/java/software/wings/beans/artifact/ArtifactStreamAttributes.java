@@ -1,5 +1,7 @@
 package software.wings.beans.artifact;
 
+import software.wings.beans.SettingAttribute;
+
 /**
  * Created by anubhaw on 1/27/17.
  */
@@ -7,6 +9,7 @@ public class ArtifactStreamAttributes {
   private String jobName;
   private String imageName;
   private String artifactStreamType;
+  private SettingAttribute serverSetting;
 
   /**
    * Gets job name.
@@ -63,12 +66,31 @@ public class ArtifactStreamAttributes {
   }
 
   /**
+   * Gets setting attribute.
+   *
+   * @return the setting attribute
+   */
+  public SettingAttribute getServerSetting() {
+    return serverSetting;
+  }
+
+  /**
+   * Sets setting attribute.
+   *
+   * @param serverSetting the setting attribute
+   */
+  public void setServerSetting(SettingAttribute serverSetting) {
+    this.serverSetting = serverSetting;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String jobName;
     private String imageName;
     private String artifactStreamType;
+    private SettingAttribute serverSetting;
 
     private Builder() {}
 
@@ -115,13 +137,27 @@ public class ArtifactStreamAttributes {
     }
 
     /**
+     * With server setting builder.
+     *
+     * @param serverSetting the server setting
+     * @return the builder
+     */
+    public Builder withServerSetting(SettingAttribute serverSetting) {
+      this.serverSetting = serverSetting;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return anArtifactStreamAttributes().withJobName(jobName).withImageName(imageName).withArtifactStreamType(
-          artifactStreamType);
+      return anArtifactStreamAttributes()
+          .withJobName(jobName)
+          .withImageName(imageName)
+          .withArtifactStreamType(artifactStreamType)
+          .withServerSetting(serverSetting);
     }
 
     /**
@@ -134,6 +170,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setJobName(jobName);
       artifactStreamAttributes.setImageName(imageName);
       artifactStreamAttributes.setArtifactStreamType(artifactStreamType);
+      artifactStreamAttributes.setServerSetting(serverSetting);
       return artifactStreamAttributes;
     }
   }

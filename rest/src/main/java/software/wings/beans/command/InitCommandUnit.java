@@ -15,6 +15,8 @@ import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.artifact.ArtifactStreamType;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -71,6 +73,14 @@ public class InitCommandUnit extends AbstractCommandUnit {
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
     if (!isEmpty(context.getArtifactFiles())) {
       envVariables.put("ARTIFACT_FILE_NAME", context.getArtifactFiles().get(0).getName());
+    }
+
+    if (context.getArtifactStreamAttributes() != null
+        && context.getArtifactStreamAttributes().getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
+      DockerConfig dockerConfig = (DockerConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
+      envVariables.put("DOCKER_USER_ID", dockerConfig.getUsername());
+      envVariables.put("DOCKER_USER_PASSWORD", dockerConfig.getPassword());
+      envVariables.put("DOCKER_IMAGE", context.getArtifactStreamAttributes().getImageName());
     }
 
     launcherScriptFileName = "wingslauncher" + activityId + ".sh";

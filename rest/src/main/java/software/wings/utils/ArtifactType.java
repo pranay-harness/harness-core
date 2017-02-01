@@ -7,6 +7,8 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
+import static software.wings.beans.command.CommandUnitType.DOCKER_START;
+import static software.wings.beans.command.CommandUnitType.DOCKER_STOP;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED;
@@ -372,11 +374,11 @@ public enum ArtifactType {
                               .withX(200)
                               .withY(50)
                               .withId(UUIDGenerator.graphIdGenerator("node"))
-                              .withType(EXEC.name())
+                              .withType(DOCKER_START.name())
                               .withName("Run Container")
                               .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
                               .addProperty("commandString",
-                                  "\ndocker login --username=\"$USER_NAME\" --password=\"$PASSWORD\"\ndocker run \"$IMAGE\" -w \"$WINGS_RUNTIME_PATH\" \ndocker logout")
+                                  "\ndocker login --username=\"$DOCKER_USER_ID\" --password=\"$DOCKER_USER_PASSWORD\" \ndocker run -d -it \"$DOCKER_IMAGE\" \ndocker logout")
                               .build())
                       .buildPipeline())
               .build(),
@@ -390,7 +392,7 @@ public enum ArtifactType {
                                            .withX(350)
                                            .withY(50)
                                            .withId(UUIDGenerator.graphIdGenerator("node"))
-                                           .withType(EXEC.name())
+                                           .withType(DOCKER_STOP.name())
                                            .withName("Stop Container")
                                            .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
                                            .addProperty("commandString", "docker ps -a -q | xargs docker stop")
