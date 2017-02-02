@@ -17,12 +17,13 @@ public class DockerStartCommandUnit extends ExecCommandUnit {
    */
   public DockerStartCommandUnit() {
     super();
+    super.setArtifactNeeded(true);
     setCommandUnitType(CommandUnitType.DOCKER_START);
   }
 
   @Attributes(title = "Command")
   @DefaultValue(
-      "docker login --username=\"$USER_NAME\" --password=\"$PASSWORD\"\ndocker run -d \"$IMAGE\" -w \"$WINGS_RUNTIME_PATH\" \ndocker logout")
+      "docker login --username=\"$DOCKER_USER_ID\" --password=\"$DOCKER_USER_PASSWORD\"\ndocker run -d -it \"$DOCKER_IMAGE\"\ndocker logout")
   @Override
   public String
   getCommandString() {

@@ -31,8 +31,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private SettingsService settingsService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public Set<String> getJobs(String appId, String settingId) {
@@ -60,21 +60,22 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    String jobName = getJobName(appId, artifactStreamId);
-    return getBuildService(settingAttribute, appId).getBuilds(appId, jobName, settingAttribute.getValue());
+
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    notNullCheck("artifactStream", artifactStream);
+
+    return getBuildService(settingAttribute, appId)
+        .getBuilds(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    String jobName = getJobName(appId, artifactStreamId);
-    return getBuildService(settingAttribute, appId).getLastSuccessfulBuild(appId, jobName, settingAttribute.getValue());
-  }
-
-  private String getJobName(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    return artifactStream.getJobname();
+    notNullCheck("artifactStream", artifactStream);
+    return getBuildService(settingAttribute, appId)
+        .getLastSuccessfulBuild(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId) {

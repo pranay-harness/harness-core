@@ -65,8 +65,8 @@ public class BambooServiceTest extends WingsBaseTest {
                     .withHeader("Content-Type", "application/json")));
     List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50);
     Assertions.assertThat(bamboo_plan_key)
-        .containsExactly(aBuildDetails().withNumber(11).withRevision("REV_11").build(),
-            aBuildDetails().withNumber(12).withRevision("REV_12").build());
+        .containsExactly(aBuildDetails().withNumber("11").withRevision("REV_11").build(),
+            aBuildDetails().withNumber("12").withRevision("REV_12").build());
   }
 
   @Test

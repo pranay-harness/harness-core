@@ -131,7 +131,8 @@ public class JenkinsTest {
     assertThat(buildDetails)
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
+        .containsExactly(
+            tuple("67", "1bfdd117"), tuple("65", "1bfdd117"), tuple("64", "1bfdd117"), tuple("63", "1bfdd117"));
   }
 
   /**
@@ -146,7 +147,7 @@ public class JenkinsTest {
     assertThat(buildDetails)
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple(65, "39"), tuple(64, "39"), tuple(63, "39"), tuple(62, "39"));
+        .containsExactly(tuple("65", "39"), tuple("64", "39"), tuple("63", "39"), tuple("62", "39"));
   }
 
   @Test

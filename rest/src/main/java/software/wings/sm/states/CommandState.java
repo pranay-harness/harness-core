@@ -38,6 +38,8 @@ import software.wings.beans.StringValue;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -283,6 +285,12 @@ public class CommandState extends State {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+
+        if (artifactStream.getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
+          ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+          artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
+          commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
+        }
 
         activityBuilder.withArtifactStreamId(artifactStream.getUuid())
             .withArtifactStreamName(artifactStream.getSourceName())

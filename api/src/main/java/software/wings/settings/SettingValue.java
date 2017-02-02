@@ -90,8 +90,11 @@ public abstract class SettingValue implements ExtensionPoint {
             * Aws setting variable types.
             */
     AWS, /**
-          * Ecs setting variable types.
+          * Docket registry setting variable types.
           */
+    DOCKER, /**
+             * Ecs setting variable types.
+             */
     ECS, /**
           * Kubernetes setting variable types.
           */

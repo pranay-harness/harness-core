@@ -13,6 +13,7 @@ import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -33,7 +34,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(9)
+        .hasSize(10)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -48,6 +49,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Bamboo")
                 .withType("BAMBOO")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(DockerConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Docker Registry")
+                .withType("DOCKER")
                 .withPluginCategories(asList(Artifact))
                 .build(),
             anAccountPlugin()
@@ -113,8 +122,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(9)
+        .hasSize(10)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER",
-            "HOST_CONNECTION_ATTRIBUTES");
+            "DOCKER", "HOST_CONNECTION_ATTRIBUTES");
   }
 }

@@ -9,8 +9,11 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 
 import com.google.common.collect.ImmutableList;
@@ -28,14 +31,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
-import software.wings.service.impl.JenkinsBuildServiceImpl;
-import software.wings.service.intfc.BuildService;
+import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
+import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.
@@ -48,7 +52,15 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   @Mock private Jenkins jenkins;
 
-  @InjectMocks private BuildService<JenkinsConfig> jenkinsBuildService = new JenkinsBuildServiceImpl();
+  @InjectMocks @Inject private JenkinsBuildService jenkinsBuildService;
+
+  private static final JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
+                                                                         .withUuid(ARTIFACT_STREAM_ID)
+                                                                         .withAppId(APP_ID)
+                                                                         .withSettingId("")
+                                                                         .withSourceName(ARTIFACT_STREAM_NAME)
+                                                                         .withJobname("job1")
+                                                                         .build();
 
   /**
    * setups all mocks for test.
@@ -58,34 +70,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws IOException {
     when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);
-    when(jenkins.getBuildsForJob(eq(BUILD_JOB_NAME), anyInt()))
-        .thenReturn(Lists.newArrayList(aBuildDetails().withNumber(67).withRevision("1bfdd117").build(),
-            aBuildDetails().withNumber(65).withRevision("1bfdd117").build(),
-            aBuildDetails().withNumber(64).withRevision("1bfdd117").build(),
-            aBuildDetails().withNumber(63).withRevision("1bfdd117").build()));
-    when(jenkins.getBuildsForJob(eq("NON_EXISTENT_ID"), anyInt())).thenThrow(WingsException.class);
-  }
-
-  /**
-   * Should fail validation when artifact source id is null.
-   *
-   * @throws IOException the io exception
-   */
-  @Test
-  public void shouldFailValidationWhenArtifactSourceIdIsNull() throws IOException {
-    assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, null, new JenkinsConfig()));
-  }
-
-  /**
-   * Should fail validation when artifact source does not exists.
-   *
-   * @throws IOException the io exception
-   */
-  @Test
-  public void shouldFailValidationWhenArtifactSourceDoesNotExists() throws IOException {
-    assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, "NON_EXISTENT_ID", jenkinsConfig));
+    when(jenkins.getBuildsForJob(eq("job1"), anyInt()))
+        .thenReturn(Lists.newArrayList(aBuildDetails().withNumber("67").withRevision("1bfdd117").build(),
+            aBuildDetails().withNumber("65").withRevision("1bfdd117").build(),
+            aBuildDetails().withNumber("64").withRevision("1bfdd117").build(),
+            aBuildDetails().withNumber("63").withRevision("1bfdd117").build()));
   }
 
   /**
@@ -96,8 +85,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   @Ignore // TODO:: remove ignore
   public void shouldFailValidationWhenJobDoesNotExists() throws IOException {
+    jenkinsArtifactStream.setJobname("job2");
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(APP_ID, BUILD_JOB_NAME, jenkinsConfig));
+        .isThrownBy(()
+                        -> jenkinsBuildService.getBuilds(
+                            APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig));
   }
 
   /**
@@ -107,10 +99,12 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
-    assertThat(jenkinsBuildService.getBuilds(APP_ID, BUILD_JOB_NAME, jenkinsConfig))
+    assertThat(
+        jenkinsBuildService.getBuilds(APP_ID, jenkinsArtifactStream.getArtifactStreamAttributes(), jenkinsConfig))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
+        .containsExactly(
+            tuple("67", "1bfdd117"), tuple("65", "1bfdd117"), tuple("64", "1bfdd117"), tuple("63", "1bfdd117"));
   }
 
   /**

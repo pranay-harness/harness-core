@@ -25,6 +25,8 @@ ARTIFACT_SOURCE_TYPE:
       value: JENKINS
     - name: BAMBOO
       value: BAMBOO
+    - name: DOCKER
+      value: DOCKER
 
 DEPLOYMENT_STRATEGY:
     - name: SERIAL

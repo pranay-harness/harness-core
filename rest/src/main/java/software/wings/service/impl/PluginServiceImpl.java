@@ -19,6 +19,7 @@ import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -61,6 +62,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("BAMBOO")
             .withPluginCategories(asList(Artifact))
             .withUiSchema(readUiSchema("BAMBOO"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(DockerConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Docker Registry")
+            .withType("DOCKER")
+            .withPluginCategories(asList(Artifact))
+            .withUiSchema(readUiSchema("DOCKER"))
             .build(),
         anAccountPlugin()
             .withSettingClass(AppDynamicsConfig.class)

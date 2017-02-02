@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 
@@ -11,6 +12,7 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.cloudprovider.ClusterServiceImpl;
@@ -20,6 +22,13 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.bamboo.BambooService;
+import software.wings.helpers.ext.bamboo.BambooServiceImpl;
+import software.wings.helpers.ext.docker.DockerRegistryService;
+import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AccountServiceImpl;
@@ -31,12 +40,14 @@ import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.CommandServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
@@ -45,6 +56,7 @@ import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HistoryServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
+import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -81,6 +93,7 @@ import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
@@ -157,6 +170,7 @@ public class WingsModule extends AbstractModule {
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
+    bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(new TypeLiteral<EmailNotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
@@ -180,11 +194,15 @@ public class WingsModule extends AbstractModule {
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
+    bind(BambooService.class).to(BambooServiceImpl.class);
+    bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
     bind(DownloadTokenService.class).to(DownloadTokenServiceImpl.class);
     bind(CloudWatchService.class).to(CloudWatchServiceImpl.class);
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(EcsService.class).to(EcsServiceImpl.class);
     bind(ClusterService.class).to(ClusterServiceImpl.class);
+    bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);
+    bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
@@ -199,6 +217,9 @@ public class WingsModule extends AbstractModule {
 
     buildServiceMapBinder.addBinding(JenkinsConfig.class).toInstance(JenkinsBuildService.class);
     buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
+    buildServiceMapBinder.addBinding(DockerConfig.class).toInstance(DockerBuildService.class);
+
+    install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
     Multibinder<LoadBalancer> loadBalancerMultibinder = Multibinder.newSetBinder(binder(), LoadBalancer.class);
     loadBalancerMultibinder.addBinding().to(ElasticLoadBalancer.class);

@@ -1,9 +1,13 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.Validator.equalCheck;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import software.wings.beans.BambooConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BambooBuildService;
@@ -20,8 +24,11 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   @Inject private BambooService bambooService;
 
   @Override
-  public List<BuildDetails> getBuilds(String appId, String jobName, BambooConfig bambooConfig) {
-    return bambooService.getBuilds(bambooConfig, jobName, 50); // read 50 from some config
+  public List<BuildDetails> getBuilds(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig bambooConfig) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
+
+    return bambooService.getBuilds(bambooConfig, artifactStreamAttributes.getJobName(), 50);
   }
 
   @Override
@@ -40,7 +47,10 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(String appId, String jobName, BambooConfig bambooConfig) {
-    return bambooService.getLastSuccessfulBuild(bambooConfig, jobName);
+  public BuildDetails getLastSuccessfulBuild(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig bambooConfig) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.BAMBOO.name());
+
+    return bambooService.getLastSuccessfulBuild(bambooConfig, artifactStreamAttributes.getJobName());
   }
 }

@@ -316,7 +316,7 @@
             <dependency>
                 <groupId>com.github.reinert</groupId>
                 <artifactId>jjschema</artifactId>
-                <version>0.9-SNAPSHOT</version>
+                <version>1.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
@@ -492,6 +492,11 @@
                 <version>v1.3.0.RELEASE</version>
             </dependency>
 
+            <dependency>
+                <groupId>net.jodah</groupId>
+                <artifactId>expiringmap</artifactId>
+                <version>0.5.7</version>
+            </dependency>
             <dependency>
                 <groupId>info.jerrinot</groupId>
                 <artifactId>subzero-core</artifactId>

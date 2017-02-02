@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -13,43 +14,51 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by anubhaw on 11/22/16.
+ * Created by anubhaw on 1/5/17.
  */
-@JsonTypeName("BAMBOO")
-public class BambooArtifactStream extends ArtifactStream {
-  @NotEmpty @Attributes(title = "Plan name") private String jobname;
-
-  @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
+@JsonTypeName("DOCKER")
+public class DockerArtifactStream extends ArtifactStream {
+  @NotEmpty @Attributes(title = "Docker Image name") private String imageName;
 
   /**
-   * Instantiates a new Bamboo artifact stream.
+   * Instantiates a new Docker artifact stream.
    */
-  public BambooArtifactStream() {
-    super(ArtifactStreamType.BAMBOO.name());
+  public DockerArtifactStream() {
+    super(DOCKER.name());
+    super.setAutoApproveForProduction(true);
   }
 
   @Override
   @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getSourceName(), buildNo, getDateFormat().format(new Date()));
+    return String.format("%s_%s_%s", getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
   /**
-   * Gets jobname.
+   * Gets image name.
    *
-   * @return the jobname
+   * @return the image name
    */
-  public String getJobname() {
-    return jobname;
+  public String getImageName() {
+    return imageName;
   }
 
   /**
-   * Sets jobname.
+   * Sets image name.
    *
-   * @param jobname the jobname
+   * @param imageName the image name
    */
-  public void setJobname(String jobname) {
-    this.jobname = jobname;
+  public void setImageName(String imageName) {
+    this.imageName = imageName;
+  }
+
+  @Override
+  @SchemaIgnore
+  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+    return anArtifactStreamAttributes()
+        .withArtifactStreamType(getArtifactStreamType())
+        .withImageName(imageName)
+        .build();
   }
 
   @Attributes(title = "Source Type")
@@ -75,35 +84,10 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   /**
-   * Gets artifact paths.
-   *
-   * @return the artifact paths
-   */
-  public List<String> getArtifactPaths() {
-    return artifactPaths;
-  }
-
-  /**
-   * Sets artifact paths.
-   *
-   * @param artifactPaths the artifact paths
-   */
-  public void setArtifactPaths(List<String> artifactPaths) {
-    this.artifactPaths = artifactPaths;
-  }
-
-  @Override
-  @SchemaIgnore
-  public ArtifactStreamAttributes getArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
-  }
-
-  /**
    * The type Builder.
    */
   public static final class Builder {
-    private String jobname;
-    private List<String> artifactPaths;
+    private String imageName;
     private String sourceName;
     private String settingId;
     private String serviceId;
@@ -120,33 +104,22 @@ public class BambooArtifactStream extends ArtifactStream {
     private Builder() {}
 
     /**
-     * A bamboo artifact stream builder.
+     * A docker artifact stream builder.
      *
      * @return the builder
      */
-    public static Builder aBambooArtifactStream() {
+    public static Builder aDockerArtifactStream() {
       return new Builder();
     }
 
     /**
-     * With jobname builder.
+     * With image name builder.
      *
-     * @param jobname the jobname
+     * @param imageName the image name
      * @return the builder
      */
-    public Builder withJobname(String jobname) {
-      this.jobname = jobname;
-      return this;
-    }
-
-    /**
-     * With artifact paths builder.
-     *
-     * @param artifactPaths the artifact paths
-     * @return the builder
-     */
-    public Builder withArtifactPaths(List<String> artifactPaths) {
-      this.artifactPaths = artifactPaths;
+    public Builder withImageName(String imageName) {
+      this.imageName = imageName;
       return this;
     }
 
@@ -288,9 +261,8 @@ public class BambooArtifactStream extends ArtifactStream {
      * @return the builder
      */
     public Builder but() {
-      return aBambooArtifactStream()
-          .withJobname(jobname)
-          .withArtifactPaths(artifactPaths)
+      return aDockerArtifactStream()
+          .withImageName(imageName)
           .withSourceName(sourceName)
           .withSettingId(settingId)
           .withServiceId(serviceId)
@@ -306,27 +278,26 @@ public class BambooArtifactStream extends ArtifactStream {
     }
 
     /**
-     * Build bamboo artifact stream.
+     * Build docker artifact stream.
      *
-     * @return the bamboo artifact stream
+     * @return the docker artifact stream
      */
-    public BambooArtifactStream build() {
-      BambooArtifactStream bambooArtifactStream = new BambooArtifactStream();
-      bambooArtifactStream.setJobname(jobname);
-      bambooArtifactStream.setArtifactPaths(artifactPaths);
-      bambooArtifactStream.setSourceName(sourceName);
-      bambooArtifactStream.setSettingId(settingId);
-      bambooArtifactStream.setServiceId(serviceId);
-      bambooArtifactStream.setUuid(uuid);
-      bambooArtifactStream.setAppId(appId);
-      bambooArtifactStream.setCreatedBy(createdBy);
-      bambooArtifactStream.setCreatedAt(createdAt);
-      bambooArtifactStream.setLastUpdatedBy(lastUpdatedBy);
-      bambooArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      bambooArtifactStream.setAutoDownload(autoDownload);
-      bambooArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      bambooArtifactStream.setStreamActions(streamActions);
-      return bambooArtifactStream;
+    public DockerArtifactStream build() {
+      DockerArtifactStream dockerArtifactStream = new DockerArtifactStream();
+      dockerArtifactStream.setImageName(imageName);
+      dockerArtifactStream.setSourceName(sourceName);
+      dockerArtifactStream.setSettingId(settingId);
+      dockerArtifactStream.setServiceId(serviceId);
+      dockerArtifactStream.setUuid(uuid);
+      dockerArtifactStream.setAppId(appId);
+      dockerArtifactStream.setCreatedBy(createdBy);
+      dockerArtifactStream.setCreatedAt(createdAt);
+      dockerArtifactStream.setLastUpdatedBy(lastUpdatedBy);
+      dockerArtifactStream.setLastUpdatedAt(lastUpdatedAt);
+      dockerArtifactStream.setAutoDownload(autoDownload);
+      dockerArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
+      dockerArtifactStream.setStreamActions(streamActions);
+      return dockerArtifactStream;
     }
   }
 }

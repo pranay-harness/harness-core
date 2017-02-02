@@ -23,15 +23,19 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
+import software.wings.helpers.ext.docker.DockerRegistryService;
+import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
+import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
@@ -71,7 +75,9 @@ public class DelegateModule extends AbstractModule {
     bind(DelegateConfigService.class).to(DelegateConfigServiceImpl.class);
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(BambooBuildService.class).to(BambooBuildServiceImpl.class);
+    bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);
     bind(BambooService.class).to(BambooServiceImpl.class);
+    bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(AsyncHttpClient.class)
         .toInstance(new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build()));
   }

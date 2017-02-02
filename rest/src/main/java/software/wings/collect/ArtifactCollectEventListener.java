@@ -1,6 +1,5 @@
 package software.wings.collect;
 
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
 
@@ -15,8 +14,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
-import software.wings.beans.artifact.ArtifactPathServiceEntry;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.exception.WingsException;
@@ -29,7 +30,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -80,39 +80,35 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
   private DelegateTask createDelegateTask(
       String accountId, ArtifactStream artifactStream, Artifact artifact, String waitId) {
-    switch (artifactStream.getSourceType()) {
+    switch (ArtifactStreamType.valueOf(artifactStream.getArtifactStreamType())) {
       case JENKINS: {
-        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(jenkinsArtifactStream.getSettingId());
         JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
-        List<String> artifactPaths = artifactStream.getArtifactPathServices()
-                                         .stream()
-                                         .map(ArtifactPathServiceEntry::getArtifactPathRegex)
-                                         .collect(toList());
 
         return aDelegateTask()
             .withTaskType(TaskType.JENKINS_COLLECTION)
             .withAccountId(accountId)
-            .withAppId(artifactStream.getAppId())
+            .withAppId(jenkinsArtifactStream.getAppId())
             .withWaitId(waitId)
             .withParameters(new Object[] {jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(),
-                jenkinsConfig.getPassword(), artifactStream.getJobname(), artifactPaths, artifact.getMetadata()})
+                jenkinsConfig.getPassword(), jenkinsArtifactStream.getJobname(),
+                jenkinsArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
       case BAMBOO: {
-        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        BambooArtifactStream bambooArtifactStream = (BambooArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(bambooArtifactStream.getSettingId());
         BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
-        List<String> artifactPaths = artifactStream.getArtifactPathServices()
-                                         .stream()
-                                         .map(ArtifactPathServiceEntry::getArtifactPathRegex)
-                                         .collect(toList());
 
         return aDelegateTask()
             .withTaskType(TaskType.BAMBOO_COLLECTION)
             .withAccountId(accountId)
-            .withAppId(artifactStream.getAppId())
+            .withAppId(bambooArtifactStream.getAppId())
             .withWaitId(waitId)
-            .withParameters(new Object[] {bambooConfig.getBambooUrl(), bambooConfig.getUsername(),
-                bambooConfig.getPassword(), artifactStream.getJobname(), artifactPaths, artifact.getMetadata()})
+            .withParameters(
+                new Object[] {bambooConfig.getBambooUrl(), bambooConfig.getUsername(), bambooConfig.getPassword(),
+                    bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
 

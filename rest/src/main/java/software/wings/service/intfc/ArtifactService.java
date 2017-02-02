@@ -108,13 +108,4 @@ public interface ArtifactService {
    * @return the artifact
    */
   Artifact fetchLatestArtifactForArtifactStream(String appId, String artifactStreamId);
-
-  /**
-   * Collect new artifacts from artifact stream.
-   *
-   * @param appId    the app id
-   * @param streamId the stream id
-   * @return the artifact
-   */
-  Artifact collectNewArtifactsFromArtifactStream(String appId, String streamId);
 }
