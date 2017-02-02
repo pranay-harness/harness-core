@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Maps;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -23,6 +24,7 @@ public class Activity extends Base {
   @NotNull private EnvironmentType environmentType;
   @NotEmpty private String commandName;
   private Map<String, Integer> commandNameVersionMap;
+  private Map<String, String> serviceVariables = Maps.newHashMap();
   private String commandType;
   private String serviceId;
   private String serviceName;
@@ -483,6 +485,24 @@ public class Activity extends Base {
     this.commandNameVersionMap = commandNameVersionMap;
   }
 
+  /**
+   * Getter for property 'serviceVariables'.
+   *
+   * @return Value for property 'serviceVariables'.
+   */
+  public Map<String, String> getServiceVariables() {
+    return serviceVariables;
+  }
+
+  /**
+   * Setter for property 'serviceVariables'.
+   *
+   * @param serviceVariables Value to set for property 'serviceVariables'.
+   */
+  public void setServiceVariables(Map<String, String> serviceVariables) {
+    this.serviceVariables = serviceVariables;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -577,6 +597,7 @@ public class Activity extends Base {
     private EnvironmentType environmentType;
     private String commandName;
     private Map<String, Integer> commandNameVersionMap;
+    private Map<String, String> serviceVariables = Maps.newHashMap();
     private String commandType;
     private String serviceId;
     private String serviceName;
@@ -675,6 +696,11 @@ public class Activity extends Base {
 
     public Builder withServiceInstanceId(String serviceInstanceId) {
       this.serviceInstanceId = serviceInstanceId;
+      return this;
+    }
+
+    public Builder withServiceVariables(Map<String, String> serviceVariables) {
+      this.serviceVariables = serviceVariables;
       return this;
     }
 
@@ -780,6 +806,7 @@ public class Activity extends Base {
           .withHostName(hostName)
           .withServiceInstanceId(serviceInstanceId)
           .withWorkflowExecutionId(workflowExecutionId)
+          .withServiceVariables(serviceVariables)
           .withWorkflowExecutionName(workflowExecutionName)
           .withWorkflowType(workflowType)
           .withUuid(uuid)
@@ -807,6 +834,7 @@ public class Activity extends Base {
       activity.setEnvironmentType(environmentType);
       activity.setCommandName(commandName);
       activity.setCommandNameVersionMap(commandNameVersionMap);
+      activity.setServiceVariables(serviceVariables);
       activity.setCommandType(commandType);
       activity.setServiceId(serviceId);
       activity.setServiceName(serviceName);

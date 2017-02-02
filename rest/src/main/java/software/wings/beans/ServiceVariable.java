@@ -20,9 +20,9 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @Entity(value = "serviceVariables", noClassnameStored = true)
-@Indexes(@Index(
-    fields = { @Field("entityId")
-               , @Field("templateId"), @Field("type") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("entityId")
+                           , @Field("templateId"), @Field("type"), @Field("name") },
+    options = @IndexOptions(unique = true)))
 public class ServiceVariable extends Base {
   /**
    * The constant DEFAULT_TEMPLATE_ID.

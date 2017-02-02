@@ -250,7 +250,8 @@ public class CommandState extends State {
                       .stream()
                       .filter(serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()) != 0)
                       .collect(toMap(ServiceCommand::getName,
-                          serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()))));
+                          serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()))))
+              .withServiceVariables(context.getServiceVariables());
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
