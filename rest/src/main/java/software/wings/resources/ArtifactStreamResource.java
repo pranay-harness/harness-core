@@ -235,4 +235,11 @@ public class ArtifactStreamResource {
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId, serviceId)).build();
   }
+
+  @GET
+  @Path("buildsource-types")
+  public RestResponse<Map<String, String>> getBuildSourceTypes(
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(artifactStreamService.getSupportedBuildSourceTypes(appId, serviceId));
+  }
 }

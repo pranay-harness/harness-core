@@ -9,6 +9,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import net.redhogs.cronparser.CronExpressionDescriptor;
@@ -33,6 +34,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -52,12 +54,14 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -90,6 +94,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private ArtifactService artifactService;
   @Inject private EnvironmentService environmentService;
   @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -373,6 +378,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       workflowExecutionService.triggerEnvExecution(artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
     } else {
       pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+    }
+  }
+
+  @Override
+  public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name());
+    } else {
+      return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
+          ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name());
     }
   }
 

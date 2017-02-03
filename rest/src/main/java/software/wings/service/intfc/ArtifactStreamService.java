@@ -9,6 +9,7 @@ import software.wings.dl.PageResponse;
 import software.wings.stencils.Stencil;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -120,4 +121,13 @@ public interface ArtifactStreamService {
    * @return the artifact stream schema
    */
   List<Stencil> getArtifactStreamSchema(String appId, String serviceId);
+
+  /**
+   * Gets build source.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the build source
+   */
+  Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId);
 }
