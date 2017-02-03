@@ -318,8 +318,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public List<Stencil> getArtifactStreamSchema(String appId) {
-    return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId);
+  public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
+    return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId, serviceId);
   }
 
   private Artifact getLastSuccessfullyDeployedArtifact(String appId, ArtifactStreamAction artifactStreamAction) {

@@ -26,6 +26,7 @@ public class DockerArtifactStream extends ArtifactStream {
   public DockerArtifactStream() {
     super(DOCKER.name());
     super.setAutoApproveForProduction(true);
+    super.setAutoDownload(true);
   }
 
   @Override
@@ -71,11 +72,6 @@ public class DockerArtifactStream extends ArtifactStream {
   @Override
   public String getSettingId() {
     return super.getSettingId();
-  }
-
-  @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
-    return super.isAutoDownload();
   }
 
   @Attributes(title = "Auto-approved for Production")

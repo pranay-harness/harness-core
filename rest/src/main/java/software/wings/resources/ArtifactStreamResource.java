@@ -231,7 +231,8 @@ public class ArtifactStreamResource {
 
   @GET
   @Path("stencils")
-  public RestResponse<List<Stencil>> installedPluginSettingSchema(@QueryParam("appId") String appId) {
-    return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId)).build();
+  public RestResponse<List<Stencil>> installedPluginSettingSchema(
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
+    return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId, serviceId)).build();
   }
 }

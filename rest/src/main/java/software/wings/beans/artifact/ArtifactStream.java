@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
+import software.wings.stencils.EnumData;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -27,7 +28,10 @@ import javax.validation.constraints.NotNull;
 public abstract class ArtifactStream extends Base {
   @SchemaIgnore private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
-  @NotNull @Attributes(title = "Source Type") private String artifactStreamType;
+  @NotNull
+  @Attributes(title = "Source Type")
+  @EnumData(enumDataProvider = ArtifactSourceTypeEnumDataProvider.class)
+  private String artifactStreamType;
 
   @NotEmpty @SchemaIgnore private String sourceName;
 

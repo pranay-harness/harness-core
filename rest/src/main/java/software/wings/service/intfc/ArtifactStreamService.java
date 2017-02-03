@@ -116,7 +116,8 @@ public interface ArtifactStreamService {
    * Gets artifact stream schema.
    *
    * @param appId the app id
+   * @param serviceId
    * @return the artifact stream schema
    */
-  List<Stencil> getArtifactStreamSchema(String appId);
+  List<Stencil> getArtifactStreamSchema(String appId, String serviceId);
 }
