@@ -1,5 +1,8 @@
 package software.wings.cloudprovider.aws;
 
+import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerService;
 
@@ -15,4 +18,9 @@ public interface EcsService extends ContainerService {
    * @param desiredCount    the desired count
    */
   void provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName, Integer desiredCount);
+
+  void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
+
+  TaskDefinition createTask(
+      SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
 }

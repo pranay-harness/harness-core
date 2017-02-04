@@ -5,15 +5,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.infrastructure.Host;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
 import java.util.Map;
@@ -320,51 +317,6 @@ public class CommandExecutionContext {
    */
   public void setAccountId(String accountId) {
     this.accountId = accountId;
-  }
-
-  /**
-   * Execute command string execution result.
-   *
-   * @param commandString the command string
-   * @return the execution result
-   */
-  public ExecutionResult executeCommandString(String commandString) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Execute command string execution result.
-   *
-   * @param commandString the command string
-   * @param output        the output
-   * @return the execution result
-   */
-  public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Copy files execution result.
-   *
-   * @param destinationDirectoryPath the destination directory path
-   * @param files                    the files
-   * @return the execution result
-   */
-  public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Copy grid fs files execution result.
-   *
-   * @param destinationDirectoryPath the destination directory path
-   * @param fileBucket               the file bucket
-   * @param fileNamesIds             the file ids
-   * @return the execution result
-   */
-  public ExecutionResult copyGridFsFiles(
-      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    throw new UnsupportedOperationException();
   }
 
   /**

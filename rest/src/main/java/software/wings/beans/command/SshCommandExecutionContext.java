@@ -1,7 +1,5 @@
 package software.wings.beans.command;
 
-import com.google.inject.assistedinject.AssistedInject;
-
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.core.ssh.executors.SshExecutor;
@@ -20,28 +18,23 @@ public class SshCommandExecutionContext extends CommandExecutionContext {
    *
    * @param other the other
    */
-  @AssistedInject
   public SshCommandExecutionContext(CommandExecutionContext other) {
     super(other);
   }
 
-  @Override
   public ExecutionResult copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     return sshExecutor.copyGridFsFiles(evaluateVariable(destinationDirectoryPath), fileBucket, fileNamesIds);
   }
 
-  @Override
   public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
     return sshExecutor.copyFiles(evaluateVariable(destinationDirectoryPath), files);
   }
 
-  @Override
   public ExecutionResult executeCommandString(String commandString) {
     return sshExecutor.executeCommandString(commandString);
   }
 
-  @Override
   public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
     return sshExecutor.executeCommandString(commandString, output);
   }

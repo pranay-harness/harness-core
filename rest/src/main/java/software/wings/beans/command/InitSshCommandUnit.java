@@ -33,7 +33,7 @@ import java.util.Properties;
  * Created by peeyushaggarwal on 7/26/16.
  */
 @JsonTypeName("INIT")
-public class InitCommandUnit extends AbstractCommandUnit {
+public class InitSshCommandUnit extends SshCommandUnit {
   /**
    * The constant INITIALIZE_UNIT.
    */
@@ -55,13 +55,13 @@ public class InitCommandUnit extends AbstractCommandUnit {
   /**
    * Instantiates a new Init command unit.
    */
-  public InitCommandUnit() {
+  public InitSshCommandUnit() {
     super(CommandUnitType.EXEC);
     setName(INITIALIZE_UNIT);
   }
 
   @Override
-  public ExecutionResult execute(CommandExecutionContext context) {
+  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
     cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
