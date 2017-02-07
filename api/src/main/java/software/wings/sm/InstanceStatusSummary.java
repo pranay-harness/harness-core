@@ -1,7 +1,6 @@
-package software.wings.beans;
+package software.wings.sm;
 
 import software.wings.api.InstanceElement;
-import software.wings.sm.ExecutionStatus;
 
 /**
  * Created by rishi on 8/15/16.

@@ -24,6 +24,9 @@ public class PhaseStep {
   private boolean stepsInParallel;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
+  private boolean rollback;
+  private String rollbackPhaseStepName;
+
   public PhaseStep() {}
 
   public PhaseStep(PhaseStepType phaseStepType) {
@@ -90,6 +93,22 @@ public class PhaseStep {
     this.stepsIds = stepsIds;
   }
 
+  public boolean isRollback() {
+    return rollback;
+  }
+
+  public void setRollback(boolean rollback) {
+    this.rollback = rollback;
+  }
+
+  public String getRollbackPhaseStepName() {
+    return rollbackPhaseStepName;
+  }
+
+  public void setRollbackPhaseStepName(String rollbackPhaseStepName) {
+    this.rollbackPhaseStepName = rollbackPhaseStepName;
+  }
+
   public Node generatePhaseStepNode() {
     return aNode()
         .withId(uuid)
@@ -142,6 +161,8 @@ public class PhaseStep {
     private List<Node> steps = new ArrayList<>();
     private boolean stepsInParallel;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
+    private boolean rollback;
+    private String rollbackPhaseStepName;
 
     private PhaseStepBuilder() {}
 
@@ -187,6 +208,16 @@ public class PhaseStep {
       return this;
     }
 
+    public PhaseStepBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public PhaseStepBuilder withRollbackPhaseStepName(String rollbackPhaseStepName) {
+      this.rollbackPhaseStepName = rollbackPhaseStepName;
+      return this;
+    }
+
     public PhaseStep build() {
       PhaseStep phaseStep = new PhaseStep();
       phaseStep.setUuid(uuid);
@@ -195,6 +226,8 @@ public class PhaseStep {
       phaseStep.setSteps(steps);
       phaseStep.setStepsInParallel(stepsInParallel);
       phaseStep.setFailureStrategies(failureStrategies);
+      phaseStep.setRollback(rollback);
+      phaseStep.setRollbackPhaseStepName(rollbackPhaseStepName);
       return phaseStep;
     }
   }

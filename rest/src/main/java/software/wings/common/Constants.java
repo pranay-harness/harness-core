@@ -92,6 +92,9 @@ public interface Constants {
    */
   String ALL_ENV = "__ALL_ENVIRONMENTS__";
 
+  String WINGS_VARIABLE_PREFIX = "${";
+  String WINGS_VARIABLE_SUFFIX = "}";
+
   String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
   String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
 
@@ -99,4 +102,6 @@ public interface Constants {
   String SUB_WORKFLOW = "SUB_WORKFLOW";
   String ROLLBACK_PREFIX = "Rollback ";
   String PHASE_NAME_PREFIX = "Phase ";
+
+  String PROVISION_NODE_NAME = "Provision Nodes";
 }

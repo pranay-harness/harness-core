@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
@@ -33,6 +34,8 @@ public class Service extends Base {
   @Version private long version;
 
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
+
+  @Embedded private List<ContainerTask> containerTasks;
 
   @Transient private List<ConfigFile> configFiles = Lists.newArrayList();
 
@@ -268,6 +271,14 @@ public class Service extends Base {
         .add("lastDeploymentActivity", lastDeploymentActivity)
         .add("lastProdDeploymentActivity", lastProdDeploymentActivity)
         .toString();
+  }
+
+  public List<ContainerTask> getContainerTasks() {
+    return containerTasks;
+  }
+
+  public void setContainerTasks(List<ContainerTask> containerTasks) {
+    this.containerTasks = containerTasks;
   }
 
   /**

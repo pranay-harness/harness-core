@@ -1,8 +1,6 @@
 package software.wings.sm;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 
@@ -15,11 +13,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.InstanceElement;
-import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ErrorStrategy;
-import software.wings.beans.InstanceStatusSummary;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -27,7 +22,6 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
-import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyCallback;
@@ -643,13 +637,6 @@ public class StateMachineExecutor {
       updated = false;
     }
 
-    if ((status == ExecutionStatus.SUCCESS || status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR)
-        && (stateExecutionInstance.getStateType().equals(StateType.REPEAT.name())
-               || stateExecutionInstance.getStateType().equals(StateType.FORK.name())
-               || stateExecutionInstance.getStateType().equals(StateType.PHASE_STEP.name())
-               || stateExecutionInstance.getStateType().equals(StateType.PHASE.name()))) {
-      refreshSummary(stateExecutionInstance);
-    }
     return updated;
   }
 
@@ -808,98 +795,6 @@ public class StateMachineExecutor {
 
       throw new WingsException(ErrorCodes.RETRY_FAILED, "stateName", stateExecutionInstance.getStateName());
     }
-  }
-
-  private void refreshSummary(StateExecutionInstance parentStateExecutionInstance) {
-    StateExecutionData stateExecutionData = parentStateExecutionInstance.getStateExecutionData();
-    if (!(stateExecutionData instanceof ElementStateExecutionData)) {
-      logger.error(
-          "refreshSummary could not be done for parentStateExecutionInstance: {} as stateExecutionData is not of ElementStateExecutionData type",
-          parentStateExecutionInstance.getUuid());
-      return;
-    }
-
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", Operator.EQ, parentStateExecutionInstance.getAppId())
-            .addFilter("executionUuid", Operator.EQ, parentStateExecutionInstance.getExecutionUuid())
-            .addFilter("parentInstanceId", Operator.IN, parentStateExecutionInstance.getUuid())
-            .build();
-
-    PageResponse<StateExecutionInstance> pageResponse =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (pageResponse == null || pageResponse.isEmpty()) {
-      return;
-    }
-
-    List<StateExecutionInstance> contextTransitionInstances = new ArrayList<>();
-    Map<String, StateExecutionInstance> prevInstanceIdMap = new HashMap<>();
-
-    mapChildInstances(pageResponse.getResponse(), prevInstanceIdMap, contextTransitionInstances);
-
-    ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) stateExecutionData;
-    elementStateExecutionData.setInstanceStatusSummary(new ArrayList<>());
-    for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
-      if (stateExecutionInstance.getContextElement() == null) {
-        logger.error(
-            "refreshSummary - no contextElement for stateExecutionInstance: {}", stateExecutionInstance.getUuid());
-        continue;
-      }
-      ContextElement contextElement = stateExecutionInstance.getContextElement();
-      ElementExecutionSummary elementExecutionSummary = anElementExecutionSummary()
-                                                            .withContextElement(contextElement)
-                                                            .withStartTs(stateExecutionInstance.getStartTs())
-                                                            .build();
-      elementStateExecutionData.getElementStatusSummary().add(elementExecutionSummary);
-
-      List<InstanceStatusSummary> instanceStatusSummary = new ArrayList<>();
-      StateExecutionInstance last = stateExecutionInstance;
-      StateExecutionInstance next = stateExecutionInstance;
-      while (next != null) {
-        if ((next.getStateType().equals(StateType.REPEAT.name()) || next.getStateType().equals(StateType.FORK.name())
-                || next.getStateType().equals(StateType.PHASE.name())
-                || next.getStateType().equals(StateType.PHASE_STEP.name()))
-            && (next.getStateExecutionData() instanceof ElementStateExecutionData)) {
-          ElementStateExecutionData childStateExecutionData = (ElementStateExecutionData) next.getStateExecutionData();
-          if (childStateExecutionData.getInstanceStatusSummary() != null) {
-            instanceStatusSummary.addAll(childStateExecutionData.getInstanceStatusSummary());
-          }
-        }
-        last = next;
-        next = prevInstanceIdMap.get(next.getUuid());
-      }
-
-      if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
-        elementExecutionSummary.setEndTs(last.getEndTs());
-        elementExecutionSummary.setStatus(last.getStatus());
-      }
-      elementExecutionSummary.setStatus(last.getStatus());
-      if (last.getContextElement() != null
-          && last.getContextElement().getElementType() == ContextElementType.INSTANCE) {
-        instanceStatusSummary.add(anInstanceStatusSummary()
-                                      .withStatus(last.getStatus())
-                                      .withInstanceElement((InstanceElement) last.getContextElement())
-                                      .build());
-      }
-      elementExecutionSummary.setInstancesCount(instanceStatusSummary.size());
-      elementStateExecutionData.getInstanceStatusSummary().addAll(instanceStatusSummary);
-    }
-    wingsPersistence.updateField(StateExecutionInstance.class, parentStateExecutionInstance.getUuid(),
-        "stateExecutionMap", parentStateExecutionInstance.getStateExecutionMap());
-  }
-
-  private void mapChildInstances(List<StateExecutionInstance> childInstances,
-      Map<String, StateExecutionInstance> prevInstanceIdMap, List<StateExecutionInstance> contextTransitionInstances) {
-    childInstances.forEach(stateExecutionInstance -> {
-      String prevInstanceId = stateExecutionInstance.getPrevInstanceId();
-      if (prevInstanceId != null) {
-        prevInstanceIdMap.put(prevInstanceId, stateExecutionInstance);
-      }
-      if (stateExecutionInstance.isContextTransition()) {
-        contextTransitionInstances.add(stateExecutionInstance);
-      }
-    });
   }
 
   private boolean markAbortingState(ExecutionInterrupt workflowExecutionInterrupt) {

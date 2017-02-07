@@ -11,7 +11,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;

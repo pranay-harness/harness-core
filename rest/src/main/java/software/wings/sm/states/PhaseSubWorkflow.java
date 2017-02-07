@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseSubWorkflowExecutionData.PhaseSubWorkflowExecutionDataBuilder.aPhaseSubWorkflowExecutionData;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -32,6 +33,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   // Only relevant for custom kubernetes environment
   private String deploymentMasterId;
+
+  // Only for rollback phase steps
+  @SchemaIgnore private boolean rollback;
+  @SchemaIgnore private String rollbackPhaseName;
 
   @Inject @Transient private ServiceResourceService serviceResourceService;
 
@@ -96,5 +101,32 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public void setDeploymentMasterId(String deploymentMasterId) {
     this.deploymentMasterId = deploymentMasterId;
+  }
+
+  @SchemaIgnore
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
+  @SchemaIgnore
+  public boolean isRollback() {
+    return rollback;
+  }
+
+  public void setRollback(boolean rollback) {
+    this.rollback = rollback;
+  }
+
+  @SchemaIgnore
+  public String getRollbackPhaseName() {
+    return rollbackPhaseName;
+  }
+
+  public void setRollbackPhaseName(String rollbackPhaseName) {
+    this.rollbackPhaseName = rollbackPhaseName;
   }
 }

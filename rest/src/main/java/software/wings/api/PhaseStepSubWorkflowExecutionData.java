@@ -2,8 +2,9 @@ package software.wings.api;
 
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.InstanceStatusSummary;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.PhaseStepExecutionState;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -17,6 +18,7 @@ public class PhaseStepSubWorkflowExecutionData extends ElementStateExecutionData
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  private PhaseStepExecutionState phaseStepExecutionState;
 
   public boolean isStepsInParallel() {
     return stepsInParallel;
@@ -40,6 +42,14 @@ public class PhaseStepSubWorkflowExecutionData extends ElementStateExecutionData
 
   public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
     this.failureStrategies = failureStrategies;
+  }
+
+  public PhaseStepExecutionState getPhaseStepExecutionState() {
+    return phaseStepExecutionState;
+  }
+
+  public void setPhaseStepExecutionState(PhaseStepExecutionState phaseStepExecutionState) {
+    this.phaseStepExecutionState = phaseStepExecutionState;
   }
 
   public static final class PhaseStepSubWorkflowExecutionDataBuilder {
@@ -118,7 +128,6 @@ public class PhaseStepSubWorkflowExecutionData extends ElementStateExecutionData
       phaseStepSubWorkflowExecutionData.setStepsInParallel(stepsInParallel);
       phaseStepSubWorkflowExecutionData.setStateName(stateName);
       phaseStepSubWorkflowExecutionData.setDefaultFailureStrategy(defaultFailureStrategy);
-      phaseStepSubWorkflowExecutionData.setInstanceStatusSummary(instanceStatusSummary);
       phaseStepSubWorkflowExecutionData.setStartTs(startTs);
       phaseStepSubWorkflowExecutionData.setEndTs(endTs);
       phaseStepSubWorkflowExecutionData.setFailureStrategies(failureStrategies);

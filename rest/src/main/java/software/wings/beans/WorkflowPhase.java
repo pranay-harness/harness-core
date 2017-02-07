@@ -25,6 +25,9 @@ public class WorkflowPhase {
   private @NotNull String computeProviderId;
   private String deploymentMasterId;
 
+  private boolean rollback;
+  private String rollbackPhaseName;
+
   private List<PhaseStep> phaseSteps = new ArrayList<>();
 
   public String getUuid() {
@@ -87,6 +90,22 @@ public class WorkflowPhase {
     this.phaseSteps = phaseSteps;
   }
 
+  public boolean isRollback() {
+    return rollback;
+  }
+
+  public void setRollback(boolean rollback) {
+    this.rollback = rollback;
+  }
+
+  public String getRollbackPhaseName() {
+    return rollbackPhaseName;
+  }
+
+  public void setRollbackPhaseName(String rollbackPhaseName) {
+    this.rollbackPhaseName = rollbackPhaseName;
+  }
+
   public Node generatePhaseNode() {
     return aNode()
         .withId(uuid)
@@ -117,6 +136,8 @@ public class WorkflowPhase {
     private DeploymentType deploymentType;
     private String deploymentMasterId;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
+    private boolean rollback;
+    private String rollbackPhaseName;
 
     private WorkflowPhaseBuilder() {}
 
@@ -154,6 +175,16 @@ public class WorkflowPhase {
       return this;
     }
 
+    public WorkflowPhaseBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public WorkflowPhaseBuilder withRollbackPhaseName(String rollbackPhaseName) {
+      this.rollbackPhaseName = rollbackPhaseName;
+      return this;
+    }
+
     public WorkflowPhaseBuilder addPhaseStep(PhaseStep phaseStep) {
       this.phaseSteps.add(phaseStep);
       return this;
@@ -168,6 +199,8 @@ public class WorkflowPhase {
       workflowPhase.setDeploymentType(deploymentType);
       workflowPhase.setDeploymentMasterId(deploymentMasterId);
       workflowPhase.setPhaseSteps(phaseSteps);
+      workflowPhase.setRollback(rollback);
+      workflowPhase.setRollbackPhaseName(rollbackPhaseName);
       return workflowPhase;
     }
   }

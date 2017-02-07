@@ -6,7 +6,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.ExecutionStatus.ExecutionStatusData;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;

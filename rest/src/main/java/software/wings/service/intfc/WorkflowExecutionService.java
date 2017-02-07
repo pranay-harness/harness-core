@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
@@ -189,4 +190,7 @@ public interface WorkflowExecutionService {
    * @param workflowId the workflow id
    */
   void deleteByWorkflow(String appId, String workflowId);
+
+  List<ElementExecutionSummary> getElementsSummary(
+      String appId, String executionUuid, String parentStateExecutionInstanceId);
 }

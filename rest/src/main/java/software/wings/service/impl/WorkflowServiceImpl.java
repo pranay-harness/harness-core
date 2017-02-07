@@ -947,7 +947,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE)
-                                   .withName("Provision Nodes")
+                                   .withName(Constants.PROVISION_NODE_NAME)
                                    .addStep(aNode()
                                                 .withType(stateType.name())
                                                 .withName("Select Nodes")
@@ -990,8 +990,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     WorkflowPhase rollbackWorkflowPhase =
         aWorkflowPhase()
             .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withRollbackPhaseName(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
             .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE)
