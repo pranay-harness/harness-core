@@ -1,7 +1,7 @@
 package software.wings.sm.states;
 
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.google.inject.name.Named;
 

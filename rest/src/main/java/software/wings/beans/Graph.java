@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.InstanceStatusSummary;
 
 import java.util.ArrayList;
 import java.util.Arrays;

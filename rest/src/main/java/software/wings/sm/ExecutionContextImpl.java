@@ -250,8 +250,10 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
-    context.putAll(stateExecutionInstance.getStateExecutionMap());
-    context.put(CURRENT_STATE, getStateExecutionInstance().getStateName());
+    stateExecutionInstance.getStateExecutionMap().entrySet().forEach(
+        entry -> { context.put(normalizeStateName(entry.getKey()), entry.getValue()); });
+
+    context.put(CURRENT_STATE, normalizeStateName(getStateExecutionInstance().getStateName()));
 
     // add context params
     Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
@@ -286,8 +288,12 @@ public class ExecutionContextImpl implements ExecutionContext {
       variable = variable.substring(2, variable.length() - 1);
 
       String topObjectName = variable;
-      if (topObjectName.indexOf('.') > 0) {
-        topObjectName = topObjectName.substring(0, topObjectName.indexOf('.'));
+      String topObjectNameSuffix = null;
+      int ind = variable.indexOf('.');
+      if (ind > 0) {
+        topObjectName = normalizeStateName(variable.substring(0, ind));
+        topObjectNameSuffix = variable.substring(ind);
+        variable = topObjectName + topObjectNameSuffix;
       }
 
       boolean unknownObject = false;

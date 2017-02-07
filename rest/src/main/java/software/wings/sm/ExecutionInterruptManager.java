@@ -11,7 +11,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.sm.ExecutionStatus.ExecutionStatusData;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import javax.inject.Inject;

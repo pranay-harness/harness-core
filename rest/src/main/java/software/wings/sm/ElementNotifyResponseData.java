@@ -1,7 +1,6 @@
 package software.wings.sm;
 
 import software.wings.beans.StatusInstanceBreakdown;
-import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 
 import java.util.ArrayList;
 import java.util.List;

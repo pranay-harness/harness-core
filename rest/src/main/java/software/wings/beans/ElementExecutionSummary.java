@@ -2,13 +2,16 @@ package software.wings.beans;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
+
+import java.util.List;
 
 /**
  * Created by rishi on 8/15/16.
  */
 public class ElementExecutionSummary {
   private ContextElement contextElement;
-  private Integer instancesCount;
+  private List<InstanceStatusSummary> instanceStatusSummaries;
   private Long startTs;
   private Long endTs;
   private ExecutionStatus status;
@@ -31,13 +34,24 @@ public class ElementExecutionSummary {
     this.contextElement = contextElement;
   }
 
+  public List<InstanceStatusSummary> getInstanceStatusSummaries() {
+    return instanceStatusSummaries;
+  }
+
+  public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
+    this.instanceStatusSummaries = instanceStatusSummaries;
+  }
+
   /**
    * Gets instances count.
    *
    * @return the instances count
    */
   public Integer getInstancesCount() {
-    return instancesCount;
+    if (instanceStatusSummaries == null) {
+      return 0;
+    }
+    return instanceStatusSummaries.size();
   }
 
   /**
@@ -45,9 +59,7 @@ public class ElementExecutionSummary {
    *
    * @param instancesCount the instances count
    */
-  public void setInstancesCount(Integer instancesCount) {
-    this.instancesCount = instancesCount;
-  }
+  public void setInstancesCount(Integer instancesCount) {}
 
   /**
    * Gets start ts.
@@ -111,7 +123,9 @@ public class ElementExecutionSummary {
    */
   public Integer getAvgTime() {
     Integer totalTime = getTotalTime();
-    if (totalTime != null && instancesCount != null && instancesCount != 0) {
+
+    int instancesCount = getInstancesCount();
+    if (totalTime != null && instancesCount != 0) {
       return totalTime / instancesCount;
     }
     return null;
@@ -147,10 +161,10 @@ public class ElementExecutionSummary {
    */
   public static final class ElementExecutionSummaryBuilder {
     private ContextElement contextElement;
-    private Integer instancesCount;
     private Long startTs;
     private Long endTs;
     private ExecutionStatus status;
+    private List<InstanceStatusSummary> instanceStatusSummaries;
 
     private ElementExecutionSummaryBuilder() {}
 
@@ -177,11 +191,12 @@ public class ElementExecutionSummary {
     /**
      * With instances count element execution summary builder.
      *
-     * @param instancesCount the instances count
+     * @param instanceStatusSummaries the instances summaries
      * @return the element execution summary builder
      */
-    public ElementExecutionSummaryBuilder withInstancesCount(Integer instancesCount) {
-      this.instancesCount = instancesCount;
+    public ElementExecutionSummaryBuilder withInstanceStatusSummaries(
+        List<InstanceStatusSummary> instanceStatusSummaries) {
+      this.instanceStatusSummaries = instanceStatusSummaries;
       return this;
     }
 
@@ -226,7 +241,7 @@ public class ElementExecutionSummary {
     public ElementExecutionSummary build() {
       ElementExecutionSummary elementExecutionSummary = new ElementExecutionSummary();
       elementExecutionSummary.setContextElement(contextElement);
-      elementExecutionSummary.setInstancesCount(instancesCount);
+      elementExecutionSummary.setInstanceStatusSummaries(instanceStatusSummaries);
       elementExecutionSummary.setStartTs(startTs);
       elementExecutionSummary.setEndTs(endTs);
       elementExecutionSummary.setStatus(status);

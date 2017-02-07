@@ -5,12 +5,12 @@
 package software.wings.common;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.InstanceElement;
@@ -277,7 +277,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (serviceInstanceIdsParam != null) {
       if (ArrayUtils.isNotEmpty(instanceIds)) {
         Collection<String> commonInstanceIds =
-            CollectionUtils.intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
+            intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
       } else {
         instanceIds = serviceInstanceIdsParam.getInstanceIds().toArray(

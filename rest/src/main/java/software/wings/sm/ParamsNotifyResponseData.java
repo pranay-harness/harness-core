@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-import software.wings.sm.ExecutionStatus.ExecutionStatusData;
-
 import java.util.HashMap;
 import java.util.Map;
 
