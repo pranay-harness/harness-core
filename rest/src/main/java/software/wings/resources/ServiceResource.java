@@ -7,12 +7,14 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import software.wings.beans.ContainerTask;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
@@ -38,6 +40,7 @@ import javax.ws.rs.QueryParam;
 @ExceptionMetered
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
+@PublicApi
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
 
@@ -195,5 +198,19 @@ public class ServiceResource {
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
     return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName));
+  }
+
+  @POST
+  @Path("{serviceId}/containers/tasks")
+  public RestResponse<ContainerTask> createContainerTask(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
+    return new RestResponse<>(serviceResourceService.createContainerTask(appId, serviceId, containerTask));
+  }
+
+  @GET
+  @Path("{serviceId}/containers/tasks/stencils")
+  public RestResponse<List<Stencil>> listTaskStencils(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.getContainerTaskStencils(appId, serviceId));
   }
 }

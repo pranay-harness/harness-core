@@ -48,7 +48,10 @@ public enum StencilCategory {
   SUB_WORKFLOW(100), /**
                       * Others stencil category.
                       */
-  OTHERS(10);
+  OTHERS(10), /**
+               * Configurations stencil category.
+               */
+  CONFIGURATIONS;
 
   private String displayName;
 

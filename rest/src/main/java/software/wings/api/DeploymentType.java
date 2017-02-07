@@ -5,5 +5,6 @@ package software.wings.api;
  */
 public enum DeploymentType {
   SSH,
+  ECS,
   KUBERNETES;
 }
