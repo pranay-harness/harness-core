@@ -29,6 +29,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ContainerTask;
+import software.wings.beans.ContinerTaskType;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -264,6 +266,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return service;
   }
 
+  @Override
+  public ContainerTask createContainerTask(String appId, String serviceId, ContainerTask containerTask) {
+    boolean created = wingsPersistence.addToList(
+        Service.class, appId, serviceId, wingsPersistence.createQuery(Service.class), "containerTasks", containerTask);
+    return containerTask;
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -432,6 +441,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName) {
     return stencilPostProcessor.postProcess(Arrays.asList(CommandUnitType.values()), appId, serviceId, commandName);
+  }
+
+  @Override
+  public List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
+    return stencilPostProcessor.postProcess(Arrays.asList(ContinerTaskType.values()), appId, serviceId);
   }
 
   @Override
