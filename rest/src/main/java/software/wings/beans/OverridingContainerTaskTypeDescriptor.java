@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.ContainerTaskTypeDescriptor;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 

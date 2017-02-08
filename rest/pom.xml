@@ -553,6 +553,7 @@
                         <exclude>software/wings/beans/infrastructure/*.class</exclude>
                         <exclude>software/wings/beans/artifact/*.class</exclude>
                         <exclude>software/wings/beans/stats/*.class</exclude>
+                        <exclude>software/wings/beans/container/*.class</exclude>
                         <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
                         <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
                         <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
