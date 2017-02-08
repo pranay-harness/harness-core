@@ -7,11 +7,11 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import software.wings.beans.ContainerTask;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.PublicApi;
@@ -204,7 +204,27 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks")
   public RestResponse<ContainerTask> createContainerTask(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
-    return new RestResponse<>(serviceResourceService.createContainerTask(appId, serviceId, containerTask));
+    containerTask.setAppId(appId);
+    containerTask.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createContainerTask(containerTask));
+  }
+
+  @GET
+  @Path("{serviceId}/containers/tasks")
+  public RestResponse<PageResponse<ContainerTask>> listContainerTask(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<ContainerTask> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
+    return new RestResponse<>(serviceResourceService.listContainerTasks(pageRequest));
+  }
+
+  @PUT
+  @Path("{serviceId}/containers/tasks/{taskId}")
+  public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId, ContainerTask containerTask) {
+    containerTask.setAppId(appId);
+    containerTask.setServiceId(serviceId);
+    containerTask.setUuid(taskId);
+    return new RestResponse<>(serviceResourceService.updateContainerTask(containerTask));
   }
 
   @GET

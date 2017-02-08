@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.container;
 
 import static org.joor.Reflect.on;
 
@@ -8,6 +8,7 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.api.DeploymentType;
+import software.wings.beans.OverridingContainerTaskTypeDescriptor;
 import software.wings.exception.WingsException;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -19,7 +20,7 @@ import java.util.HashMap;
 /**
  * Created by anubhaw on 2/6/17.
  */
-public enum ContinerTaskType implements ContainerTaskTypeDescriptor {
+public enum ContainerTaskType implements ContainerTaskTypeDescriptor {
   ECS(EcsContainerTask.class, DeploymentType.ECS.name());
 
   private static final String stencilsPath = "/templates/containertasks/";
@@ -31,7 +32,7 @@ public enum ContinerTaskType implements ContainerTaskTypeDescriptor {
   @JsonIgnore private Class<? extends ContainerTask> containerTaskClass;
   @JsonIgnore private String name;
 
-  ContinerTaskType(Class<? extends ContainerTask> containerTaskClass, String name) {
+  ContainerTaskType(Class<? extends ContainerTask> containerTaskClass, String name) {
     this.containerTaskClass = containerTaskClass;
     this.name = name;
     try {

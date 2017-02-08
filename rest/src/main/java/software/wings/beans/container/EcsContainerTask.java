@@ -1,7 +1,8 @@
-package software.wings.beans;
+package software.wings.beans.container;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
 
 import java.util.List;
@@ -23,6 +24,11 @@ public class EcsContainerTask extends ContainerTask {
 
   public void setContainerDefinitions(List<ContainerDefinition> containerDefinitions) {
     this.containerDefinitions = containerDefinitions;
+  }
+
+  @SchemaIgnore
+  public String getServiceId() {
+    return super.getServiceId();
   }
 
   public static class ContainerDefinition {
@@ -125,8 +131,8 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   private static class LogConfiguration {
-    private String logDriver;
-    private List<LogOption> options;
+    @Attributes(title = "Log Driver") private String logDriver;
+    @Attributes(title = "Options") private List<LogOption> options;
 
     public String getLogDriver() {
       return logDriver;
@@ -167,9 +173,9 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public static class StorageConfiguration {
-    private String hostSourcePath;
-    private String containerPath;
-    private boolean readonly = false;
+    @Attributes(title = "Host Source Path") private String hostSourcePath;
+    @Attributes(title = "Container Path") private String containerPath;
+    @Attributes(title = "Options") private boolean readonly = false;
 
     public String getHostSourcePath() {
       return hostSourcePath;
