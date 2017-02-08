@@ -625,13 +625,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     int i = 0;
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
-      generateNewWorkflowPhaseSteps(
+      generateNewWorkflowPhaseStepsForSSH(
           orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase);
       populatePhaseStepIds(workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
 
       WorkflowPhase rollbackWorkflowPhase =
-          generateRollbackWorkflowPhase(orchestrationWorkflow.getAppId(), workflowPhase);
+          generateRollbackWorkflowPhaseForSSH(orchestrationWorkflow.getAppId(), workflowPhase);
       orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(rollbackWorkflowPhase));
     }
@@ -703,14 +703,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
 
-    generateNewWorkflowPhaseSteps(
+    generateNewWorkflowPhaseStepsForSSH(
         orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase);
     populatePhaseStepIds(workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
 
     WorkflowPhase rollbackWorkflowPhase =
-        generateRollbackWorkflowPhase(orchestrationWorkflow.getAppId(), workflowPhase);
+        generateRollbackWorkflowPhaseForSSH(orchestrationWorkflow.getAppId(), workflowPhase);
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
 
     Map<String, Graph> rollbackSubworkflows = generateGraph(rollbackWorkflowPhase);
@@ -933,7 +933,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase) {
+  private void generateNewWorkflowPhaseStepsForECS(
+      String appId, String envId, WorkflowPhase workflowPhase, boolean includeContainer) {}
+  private void generateNewWorkflowPhaseStepsForSSH(String appId, String envId, WorkflowPhase workflowPhase) {
     // For DC only - for other types it has to be customized
 
     StateType stateType =
@@ -983,7 +985,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP).withName("Wrap Up").build());
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {
+  private WorkflowPhase generateRollbackWorkflowPhaseForSSH(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
