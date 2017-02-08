@@ -139,4 +139,14 @@ public interface InfrastructureMappingService {
    * @param hostNames         the host names
    */
   void deProvisionNodes(String appId, String serviceId, String envId, String computeProviderId, List<String> hostNames);
+
+  /**
+   * Gets cluster name.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param envId
+   * @return the cluster name
+   */
+  String getClusterName(String appId, String serviceId, String envId);
 }

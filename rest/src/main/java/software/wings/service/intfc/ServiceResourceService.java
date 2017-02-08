@@ -219,4 +219,14 @@ public interface ServiceResourceService {
    * @return the container task stencils
    */
   List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
+   * Gets container task by deployment type.
+   *
+   * @param appId          the app id
+   * @param serviceId      the service id
+   * @param deploymentType the deployment type
+   * @return the container task by deployment type
+   */
+  ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType);
 }

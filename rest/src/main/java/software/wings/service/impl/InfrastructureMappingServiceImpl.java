@@ -470,6 +470,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  @Override
+  public String getClusterName(String appId, String serviceId, String envId) {
+    String serviceTemplateId =
+        (String) serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
+
+    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                      .field("appId")
+                                                      .equal(appId)
+                                                      .field("envId")
+                                                      .equal(envId)
+                                                      .field("serviceTemplateId")
+                                                      .equal(serviceTemplateId)
+                                                      .field("computeProviderType")
+                                                      .equal(SettingVariableTypes.AWS.name())
+                                                      .get();
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
+    if (!(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ECS type infraMapping not found");
+    }
+
+    return ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
+  }
+
   private Object readUiSchema(String type) {
     try {
       return readResource(stencilsPath + type + uiSchemaSuffix);

@@ -467,6 +467,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType) {
+    return wingsPersistence.createQuery(ContainerTask.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .field("deploymentType")
+        .equal(deploymentType)
+        .get();
+  }
+
+  @Override
   public Map<String, String> getData(String appId, String... params) {
     Service service = get(appId, params[0]);
     if (isEmpty(service.getServiceCommands())) {

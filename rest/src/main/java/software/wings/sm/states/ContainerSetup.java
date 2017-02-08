@@ -9,21 +9,31 @@ import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
 import com.amazonaws.services.ecs.model.LoadBalancer;
+import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.EcsContainerTask.SystemSpecification;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
@@ -33,6 +43,9 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ECSConvention;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -46,10 +59,14 @@ public class ContainerSetup extends State {
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
+  @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
+
+  @Inject @Transient private ArtifactStreamService artifactStreamService;
+
   /**
    * Instantiates a new state.
    *
-   * @param name      the name
+   * @param name the name
    */
   public ContainerSetup(String name) {
     super(name, CONTAINER_SETUP.name());
@@ -63,35 +80,39 @@ public class ContainerSetup extends State {
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
-    // TODO - image names
-    String imageName = null;
+    String imageName = fetchArtifactImageName(artifact);
 
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
-    // TODO - It should be pulled from the InfraMapping
-    String clusterName = null;
+    String clusterName = infrastructureMappingService.getClusterName(
+        app.getUuid(), serviceId, env.getUuid()); // TODO:: remove this call with infrMapping get call
 
     // TODO - elasticLoadBalancerConfig can pulled using settingsService for a given loadBalancerSettingId
-    ElasticLoadBalancerConfig elasticLoadBalancerConfig = null;
+    ElasticLoadBalancerConfig elasticLoadBalancerConfig =
+        (ElasticLoadBalancerConfig) settingsService.get(loadBalancerSettingId).getValue();
     String loadBalancerName = elasticLoadBalancerConfig.getLoadBalancerName();
 
     Service service = serviceResourceService.get(app.getAppId(), serviceId);
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
 
-    SettingAttribute settingAttribute = settingsService.get(computeProviderId);
+    EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+        app.getAppId(), serviceId, DeploymentType.ECS.name());
 
-    TaskDefinition taskDefinition = clusterService.createTask(settingAttribute,
+    List<ContainerDefinition> containerDefinitions =
+        ecsContainerTask.getContainerDefinitions()
+            .stream()
+            .map(containerDefinition -> createContainerDefinition(imageName, containerDefinition))
+            .collect(Collectors.toList());
+
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest()
-            .withContainerDefinitions(
-                new ContainerDefinition()
-                    .withName("containerName")
-                    .withImage(imageName)
-                    .withPortMappings(new PortMapping().withContainerPort(8080).withProtocol(TransportProtocol.Tcp))
-                    .withEnvironment()
-                    .withMemoryReservation(128))
-            .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName())));
+            .withContainerDefinitions(containerDefinitions)
+            .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
 
-    clusterService.createService(settingAttribute,
+    TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
+
+    clusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
             .withCluster(clusterName)
             .withDesiredCount(0)
@@ -107,6 +128,58 @@ public class ContainerSetup extends State {
                     .withContainerPort(8080)));
 
     return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS).build();
+  }
+
+  public ContainerDefinition createContainerDefinition(
+      String imageName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
+    ContainerDefinition containerDefinition =
+        new ContainerDefinition().withName(wingsContainerDefinition.getName()).withImage(imageName);
+
+    if (wingsContainerDefinition.getSystemSpecification() != null) {
+      SystemSpecification systemSpecification = wingsContainerDefinition.getSystemSpecification();
+      containerDefinition.setCpu(systemSpecification.getCpu());
+      containerDefinition.setMemory(systemSpecification.getMemory());
+      List<PortMapping> portMappings = systemSpecification.getPortMappings()
+                                           .stream()
+                                           .map(portMapping
+                                               -> new PortMapping()
+                                                      .withContainerPort(portMapping.getContainerPort())
+                                                      .withHostPort(portMapping.getHostPort())
+                                                      .withProtocol(TransportProtocol.Tcp))
+                                           .collect(Collectors.toList());
+      containerDefinition.setPortMappings(portMappings);
+    }
+
+    if (wingsContainerDefinition.getCommands() != null) {
+      containerDefinition.setCommand(wingsContainerDefinition.getCommands());
+    }
+
+    if (wingsContainerDefinition.getLogConfiguration() != null) {
+      EcsContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
+      LogConfiguration logConfiguration = new LogConfiguration().withLogDriver(wingsLogConfiguration.getLogDriver());
+      wingsLogConfiguration.getOptions().forEach(
+          logOption -> logConfiguration.addOptionsEntry(logOption.getKey(), logOption.getValue()));
+      containerDefinition.setLogConfiguration(logConfiguration);
+    }
+
+    if (wingsContainerDefinition.getStorageConfigurations() != null) {
+      // TODO:: fill volume amd mount points here
+    }
+
+    return containerDefinition;
+  }
+
+  public String fetchArtifactImageName(Artifact artifact) {
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+
+    if (!(artifactStream instanceof DockerArtifactStream)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+          artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
+    }
+
+    DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
+
+    return dockerArtifactStream.getImageName();
   }
 
   @Override

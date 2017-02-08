@@ -32,7 +32,7 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public static class ContainerDefinition {
-    @Attributes(title = "Name") private String name;
+    @Attributes(title = "Name", required = true) private String name;
     @Attributes(title = "Commands") private List<String> commands;
     @Attributes(title = "SYSTEM SPECIFICATION") private SystemSpecification systemSpecification;
     @Attributes(title = "LOG CONFIGURATION") private LogConfiguration logConfiguration;
@@ -79,7 +79,7 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  private static class SystemSpecification {
+  public static class SystemSpecification {
     @Attributes(title = "CPU") private Integer cpu;
     @Attributes(title = "MEMORY") private Integer memory;
     @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
@@ -130,7 +130,7 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  private static class LogConfiguration {
+  public static class LogConfiguration {
     @Attributes(title = "Log Driver") private String logDriver;
     @Attributes(title = "Options") private List<LogOption> options;
 
