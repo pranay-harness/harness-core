@@ -7,6 +7,7 @@ import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
+import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.Verification;
 
 import org.junit.Test;
@@ -14,8 +15,11 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.EcsClusterConfig;
+import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -34,7 +38,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(10)
+        .hasSize(13)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -108,12 +112,36 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(EcsClusterConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("ECS cluster config")
+                .withType("ECS")
+                .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(KubernetesClusterConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Kubernetes cluster config")
+                .withType("KUBERNETES")
+                .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(HostConnectionAttributes.class)
                 .withAccountId(accountId)
                 .withIsEnabled(false)
                 .withDisplayName("Host Connection Attributes")
                 .withType("HOST_CONNECTION_ATTRIBUTES")
                 .withPluginCategories(asList(ConnectionAttributes))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(ElasticLoadBalancerConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Elastic Load Balancer")
+                .withType("ELB")
+                .withPluginCategories(asList(LoadBalancer))
                 .build());
   }
 
@@ -122,8 +150,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(10)
+        .hasSize(13)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER",
-            "DOCKER", "HOST_CONNECTION_ATTRIBUTES");
+            "ECS", "KUBERNETES", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB");
   }
 }
