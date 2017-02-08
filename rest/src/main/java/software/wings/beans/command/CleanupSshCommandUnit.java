@@ -5,7 +5,7 @@ import java.io.File;
 /**
  * Created by peeyushaggarwal on 7/26/16.
  */
-public class CleanupCommandUnit extends AbstractCommandUnit {
+public class CleanupSshCommandUnit extends SshCommandUnit {
   /**
    * The constant CLEANUP_UNIT.
    */
@@ -14,13 +14,13 @@ public class CleanupCommandUnit extends AbstractCommandUnit {
   /**
    * Instantiates a new Init command unit.
    */
-  public CleanupCommandUnit() {
+  public CleanupSshCommandUnit() {
     super(CommandUnitType.EXEC);
     setName(CLEANUP_UNIT);
   }
 
   @Override
-  public ExecutionResult execute(CommandExecutionContext context) {
+  public ExecutionResult executeInternal(SshCommandExecutionContext context) {
     return context.executeCommandString("rm -rf " + new File("/tmp", context.getActivityId()).getAbsolutePath());
   }
 }

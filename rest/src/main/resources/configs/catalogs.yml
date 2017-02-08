@@ -112,7 +112,7 @@ PHASE_STEP_TYPE:
     - name: Disable/Unpublish Services
       value: DISABLE_SERVICE
     - name: Deploy Services
-      value: DEPLOY_SERVICE
+      value: INSTALL
     - name: Enable/Publish Services
       value: ENABLE_SERVICE
     - name: Verify Services

@@ -55,7 +55,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
-import software.wings.beans.command.InitCommandUnit;
+import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
@@ -269,7 +269,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
-    InitCommandUnit commandUnit = new InitCommandUnit();
+    InitSshCommandUnit commandUnit = new InitSshCommandUnit();
     Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,
@@ -313,7 +313,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
-    InitCommandUnit commandUnit = new InitCommandUnit();
+    InitSshCommandUnit commandUnit = new InitSshCommandUnit();
     Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,

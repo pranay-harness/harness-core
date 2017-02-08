@@ -1,5 +1,8 @@
 package software.wings.cloudprovider;
 
+import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 
 /**
@@ -33,4 +36,9 @@ public interface ClusterService {
    * @param serviceName          the service name
    */
   void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+
+  void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
+
+  TaskDefinition createTask(
+      SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
 }

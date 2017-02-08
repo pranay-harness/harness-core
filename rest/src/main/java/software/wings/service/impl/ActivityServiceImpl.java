@@ -14,10 +14,10 @@ import software.wings.beans.Activity;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
-import software.wings.beans.command.CleanupCommandUnit;
+import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.InitCommandUnit;
+import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -108,8 +108,8 @@ public class ActivityServiceImpl implements ActivityService {
     List<CommandUnit> commandUnits =
         getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getCommandNameVersionMap(), command);
     if (commandUnits != null && commandUnits.size() > 0) {
-      commandUnits.add(0, new InitCommandUnit());
-      commandUnits.add(new CleanupCommandUnit());
+      commandUnits.add(0, new InitSshCommandUnit());
+      commandUnits.add(new CleanupSshCommandUnit());
       boolean markNextQueued = false;
       for (CommandUnit commandUnit : commandUnits) {
         ExecutionResult executionResult = ExecutionResult.QUEUED;

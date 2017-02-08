@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -30,6 +31,10 @@ public class AwsHelperService {
 
   public AmazonEC2Client getAmazonEc2Client(String accessKey, String secretKey) {
     return new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, String secretKey) {
+    return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
   public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, String secretKey) {
