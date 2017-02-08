@@ -15,41 +15,36 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact;
 import software.wings.cloudprovider.ClusterService;
-import software.wings.service.impl.AwsSettingProvider;
+import software.wings.common.Constants;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
-import software.wings.stencils.EnumData;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ECSConvention;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class ContainerSetup extends State {
-  @EnumData(enumDataProvider = AwsSettingProvider.class) @Attributes(title = "Cloud Config") private String settingId;
-
-  // should come from service
-  private String clusterName;
-
-  // should come from service
-  private String serviceName;
-
-  // should come from service variables
-  private String loadBalancerName;
-
-  // should come from service variables
-  private String imageName;
+  @Attributes(title = "Load Balancer") private String loadBalancerSettingId;
 
   @Inject @Transient private transient ClusterService clusterService;
 
   @Inject @Transient private transient SettingsService settingsService;
+
+  @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
   /**
    * Instantiates a new state.
@@ -62,9 +57,28 @@ public class ContainerSetup extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    SettingAttribute settingAttribute = settingsService.get(settingId);
-    Application app = ((ExecutionContextImpl) context).getApp();
-    Environment env = ((ExecutionContextImpl) context).getEnv();
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    String computeProviderId = phaseElement.getComputeProviderId();
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
+    // TODO - image names
+    String imageName = null;
+
+    Application app = workflowStandardParams.getApp();
+    Environment env = workflowStandardParams.getEnv();
+
+    // TODO - It should be pulled from the InfraMapping
+    String clusterName = null;
+
+    // TODO - elasticLoadBalancerConfig can pulled using settingsService for a given loadBalancerSettingId
+    ElasticLoadBalancerConfig elasticLoadBalancerConfig = null;
+    String loadBalancerName = elasticLoadBalancerConfig.getLoadBalancerName();
+
+    Service service = serviceResourceService.get(app.getAppId(), serviceId);
+
+    SettingAttribute settingAttribute = settingsService.get(computeProviderId);
 
     TaskDefinition taskDefinition = clusterService.createTask(settingAttribute,
         new RegisterTaskDefinitionRequest()
@@ -75,7 +89,7 @@ public class ContainerSetup extends State {
                     .withPortMappings(new PortMapping().withContainerPort(8080).withProtocol(TransportProtocol.Tcp))
                     .withEnvironment()
                     .withMemoryReservation(128))
-            .withFamily(ECSConvention.getTaskFamily(app.getName(), serviceName, env.getName())));
+            .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName())));
 
     clusterService.createService(settingAttribute,
         new CreateServiceRequest()
@@ -98,93 +112,11 @@ public class ContainerSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  /**
-   * Getter for property 'settingId'.
-   *
-   * @return Value for property 'settingId'.
-   */
-  public String getSettingId() {
-    return settingId;
+  public String getLoadBalancerSettingId() {
+    return loadBalancerSettingId;
   }
 
-  /**
-   * Setter for property 'settingId'.
-   *
-   * @param settingId Value to set for property 'settingId'.
-   */
-  public void setSettingId(String settingId) {
-    this.settingId = settingId;
-  }
-
-  /**
-   * Getter for property 'clusterName'.
-   *
-   * @return Value for property 'clusterName'.
-   */
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  /**
-   * Setter for property 'clusterName'.
-   *
-   * @param clusterName Value to set for property 'clusterName'.
-   */
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
-  }
-
-  /**
-   * Getter for property 'serviceName'.
-   *
-   * @return Value for property 'serviceName'.
-   */
-  public String getServiceName() {
-    return serviceName;
-  }
-
-  /**
-   * Setter for property 'serviceName'.
-   *
-   * @param serviceName Value to set for property 'serviceName'.
-   */
-  public void setServiceName(String serviceName) {
-    this.serviceName = serviceName;
-  }
-
-  /**
-   * Getter for property 'loadBalancerName'.
-   *
-   * @return Value for property 'loadBalancerName'.
-   */
-  public String getLoadBalancerName() {
-    return loadBalancerName;
-  }
-
-  /**
-   * Setter for property 'loadBalancerName'.
-   *
-   * @param loadBalancerName Value to set for property 'loadBalancerName'.
-   */
-  public void setLoadBalancerName(String loadBalancerName) {
-    this.loadBalancerName = loadBalancerName;
-  }
-
-  /**
-   * Getter for property 'imageName'.
-   *
-   * @return Value for property 'imageName'.
-   */
-  public String getImageName() {
-    return imageName;
-  }
-
-  /**
-   * Setter for property 'imageName'.
-   *
-   * @param imageName Value to set for property 'imageName'.
-   */
-  public void setImageName(String imageName) {
-    this.imageName = imageName;
+  public void setLoadBalancerSettingId(String loadBalancerSettingId) {
+    this.loadBalancerSettingId = loadBalancerSettingId;
   }
 }
