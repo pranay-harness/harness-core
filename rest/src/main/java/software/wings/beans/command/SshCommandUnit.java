@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import software.wings.api.DeploymentType;
+
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
@@ -26,4 +28,9 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
   }
 
   protected abstract ExecutionResult executeInternal(SshCommandExecutionContext context);
+
+  @Override
+  public String deploymentType() {
+    return DeploymentType.SSH.name();
+  }
 }

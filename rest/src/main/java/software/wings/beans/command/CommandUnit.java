@@ -50,6 +50,8 @@ public interface CommandUnit {
 
     @SchemaIgnore boolean isArtifactNeeded();
 
+    @SchemaIgnore String deploymentType();
+
     void setArtifactNeeded(boolean artifactNeeded);
 
     /**

@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import com.google.inject.Inject;
 
+import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.ClusterService;
 
 /**
@@ -21,5 +22,10 @@ public abstract class ContainerOrcherstrationCommandUnit extends AbstractCommand
    */
   public ContainerOrcherstrationCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
+  }
+
+  @Override
+  public String deploymentType() {
+    return DeploymentType.ECS.name(); // TODO: fix it for other tyes. eg. Kubernetes
   }
 }

@@ -286,6 +286,11 @@ public class Command extends Base implements CommandUnit {
   }
 
   @Override
+  public String deploymentType() {
+    return commandUnits.get(0).deploymentType();
+  }
+
+  @Override
   public void setArtifactNeeded(boolean artifactNeeded) {}
 
   @SchemaIgnore
