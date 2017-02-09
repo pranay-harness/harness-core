@@ -92,7 +92,7 @@ public class ClusterServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldResizeCluster() {
-    clusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, "wins_demo_launchconfigAsg_v1");
+    clusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3);
   }
 
   @Test

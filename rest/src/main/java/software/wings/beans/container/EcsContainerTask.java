@@ -1,7 +1,8 @@
-package software.wings.beans;
+package software.wings.beans.container;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
 
 import java.util.List;
@@ -25,13 +26,22 @@ public class EcsContainerTask extends ContainerTask {
     this.containerDefinitions = containerDefinitions;
   }
 
+  @SchemaIgnore
+  public String getServiceId() {
+    return super.getServiceId();
+  }
+
   public static class ContainerDefinition {
-    @Attributes(title = "Name") private String name;
+    @SchemaIgnore private String name;
     @Attributes(title = "Commands") private List<String> commands;
-    @Attributes(title = "SYSTEM SPECIFICATION") private SystemSpecification systemSpecification;
+    @Attributes(title = "CPU") private Integer cpu;
+    @Attributes(title = "MEMORY") private Integer memory;
+
+    @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
     @Attributes(title = "LOG CONFIGURATION") private LogConfiguration logConfiguration;
     @Attributes(title = "STORAGE/VOLUME") private List<StorageConfiguration> storageConfigurations;
 
+    @SchemaIgnore
     public String getName() {
       return name;
     }
@@ -46,14 +56,6 @@ public class EcsContainerTask extends ContainerTask {
 
     public void setCommands(List<String> commands) {
       this.commands = commands;
-    }
-
-    public SystemSpecification getSystemSpecification() {
-      return systemSpecification;
-    }
-
-    public void setSystemSpecification(SystemSpecification systemSpecification) {
-      this.systemSpecification = systemSpecification;
     }
 
     public LogConfiguration getLogConfiguration() {
@@ -71,12 +73,6 @@ public class EcsContainerTask extends ContainerTask {
     public void setStorageConfigurations(List<StorageConfiguration> storageConfigurations) {
       this.storageConfigurations = storageConfigurations;
     }
-  }
-
-  private static class SystemSpecification {
-    @Attributes(title = "CPU") private Integer cpu;
-    @Attributes(title = "MEMORY") private Integer memory;
-    @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
 
     public Integer getCpu() {
       return cpu;
@@ -104,8 +100,8 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public static class PortMapping {
-    @Attributes(title = "Host Port") private Integer containerPort;
-    @Attributes(title = "CPU") private Integer hostPort;
+    @Attributes(title = "Container port") private Integer containerPort;
+    @Attributes(title = "Host port") private Integer hostPort;
 
     public Integer getContainerPort() {
       return containerPort;
@@ -124,9 +120,9 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  private static class LogConfiguration {
-    private String logDriver;
-    private List<LogOption> options;
+  public static class LogConfiguration {
+    @Attributes(title = "Log Driver") private String logDriver;
+    @Attributes(title = "Options") private List<LogOption> options;
 
     public String getLogDriver() {
       return logDriver;
@@ -167,9 +163,9 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public static class StorageConfiguration {
-    private String hostSourcePath;
-    private String containerPath;
-    private boolean readonly = false;
+    @Attributes(title = "Host Source Path") private String hostSourcePath;
+    @Attributes(title = "Container Path") private String containerPath;
+    @Attributes(title = "Options") private boolean readonly = false;
 
     public String getHostSourcePath() {
       return hostSourcePath;

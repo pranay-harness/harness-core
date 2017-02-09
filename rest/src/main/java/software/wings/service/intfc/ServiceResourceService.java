@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.ContainerTask;
+import software.wings.beans.container.ContainerTask;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
@@ -182,12 +182,34 @@ public interface ServiceResourceService {
   /**
    * Create container task container task.
    *
-   * @param appId         the app id
-   * @param serviceId     the service id
    * @param containerTask the container task  @return the container task
    * @return the container task
    */
-  ContainerTask createContainerTask(String appId, String serviceId, ContainerTask containerTask);
+  ContainerTask createContainerTask(ContainerTask containerTask);
+
+  /**
+   * Delete container task.
+   *
+   * @param appId           the app id
+   * @param containerTaskId the container task id
+   */
+  void deleteContainerTask(String appId, String containerTaskId);
+
+  /**
+   * Update container task container task.
+   *
+   * @param containerTask the container task
+   * @return the container task
+   */
+  ContainerTask updateContainerTask(ContainerTask containerTask);
+
+  /**
+   * List container tasks page response.
+   *
+   * @param pageRequest the page request
+   * @return the page response
+   */
+  PageResponse<ContainerTask> listContainerTasks(PageRequest<ContainerTask> pageRequest);
 
   /**
    * Gets container task stencils.
@@ -197,4 +219,14 @@ public interface ServiceResourceService {
    * @return the container task stencils
    */
   List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
+   * Gets container task by deployment type.
+   *
+   * @param appId          the app id
+   * @param serviceId      the service id
+   * @param deploymentType the deployment type
+   * @return the container task by deployment type
+   */
+  ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType);
 }

@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("SCP")
-public class ScpCommandUnit extends AbstractCommandUnit {
+public class ScpCommandUnit extends SshCommandUnit {
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
@@ -43,7 +43,7 @@ public class ScpCommandUnit extends AbstractCommandUnit {
   }
 
   @Override
-  public ExecutionResult execute(CommandExecutionContext context) {
+  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     FileBucket fileBucket = null;
     switch (fileCategory) {

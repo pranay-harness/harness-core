@@ -9,6 +9,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -29,8 +30,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ContainerTask;
-import software.wings.beans.ContinerTaskType;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -40,6 +39,8 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.ContainerTaskType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -267,10 +268,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public ContainerTask createContainerTask(String appId, String serviceId, ContainerTask containerTask) {
-    boolean created = wingsPersistence.addToList(
-        Service.class, appId, serviceId, wingsPersistence.createQuery(Service.class), "containerTasks", containerTask);
-    return containerTask;
+  public ContainerTask createContainerTask(ContainerTask containerTask) {
+    boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
+    if (!exist) {
+      throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
+    }
+    return wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
+  }
+
+  @Override
+  public void deleteContainerTask(String appId, String containerTaskId) {
+    wingsPersistence.delete(ContainerTask.class, appId, containerTaskId);
+  }
+
+  @Override
+  public ContainerTask updateContainerTask(ContainerTask containerTask) {
+    return createContainerTask(containerTask);
+  }
+
+  @Override
+  public PageResponse<ContainerTask> listContainerTasks(PageRequest<ContainerTask> pageRequest) {
+    return wingsPersistence.query(ContainerTask.class, pageRequest);
   }
 
   /**
@@ -445,7 +463,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
-    return stencilPostProcessor.postProcess(Arrays.asList(ContinerTaskType.values()), appId, serviceId);
+    return stencilPostProcessor.postProcess(Arrays.asList(ContainerTaskType.values()), appId, serviceId);
+  }
+
+  @Override
+  public ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType) {
+    return wingsPersistence.createQuery(ContainerTask.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .field("deploymentType")
+        .equal(deploymentType)
+        .get();
   }
 
   @Override

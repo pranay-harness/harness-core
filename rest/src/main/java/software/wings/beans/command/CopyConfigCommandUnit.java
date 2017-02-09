@@ -32,7 +32,7 @@ import java.util.Objects;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("COPY_CONFIGS")
-public class CopyConfigCommandUnit extends AbstractCommandUnit {
+public class CopyConfigCommandUnit extends SshCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(CopyConfigCommandUnit.class);
 
   @Attributes(title = "Destination Parent Path")
@@ -53,7 +53,7 @@ public class CopyConfigCommandUnit extends AbstractCommandUnit {
   }
 
   @Override
-  public ExecutionResult execute(CommandExecutionContext context) {
+  public ExecutionResult executeInternal(SshCommandExecutionContext context) {
     ServiceTemplate serviceTemplate = context.getServiceTemplate();
 
     List<ConfigFile> configFiles = null;
@@ -99,7 +99,7 @@ public class CopyConfigCommandUnit extends AbstractCommandUnit {
           result = ExecutionResult.FAILURE;
           break;
         }
-        result = context.copyGridFsFiles(
+        result = (context).copyGridFsFiles(
                      path, FileBucket.CONFIGS, Collections.singletonList(Pair.of(fileId, destFile.getName())))
                 == ExecutionResult.FAILURE
             ? ExecutionResult.FAILURE

@@ -6,11 +6,11 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import com.google.inject.Singleton;
 
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
-import software.wings.beans.command.CleanupCommandUnit;
+import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.InitCommandUnit;
+import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
@@ -36,10 +36,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   @Override
   public ExecutionResult execute(Command command, CommandExecutionContext context) {
     try {
-      InitCommandUnit initCommandUnit = new InitCommandUnit();
+      InitSshCommandUnit initCommandUnit = new InitSshCommandUnit();
       initCommandUnit.setCommand(command);
       command.getCommandUnits().add(0, initCommandUnit);
-      command.getCommandUnits().add(new CleanupCommandUnit());
+      command.getCommandUnits().add(new CleanupSshCommandUnit());
       ExecutionResult executionResult = executeCommand(command, context);
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return executionResult;

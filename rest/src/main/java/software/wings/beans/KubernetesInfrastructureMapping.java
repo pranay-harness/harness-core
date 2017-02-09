@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
@@ -36,7 +36,7 @@ public class KubernetesInfrastructureMapping extends InfrastructureMapping {
     this.clusterName = clusterName;
   }
 
-  @Attributes(title = "Connection Type")
+  @SchemaIgnore
   @Override
   public String getHostConnectionAttrs() {
     return super.getHostConnectionAttrs();

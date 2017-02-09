@@ -1,5 +1,8 @@
 package software.wings.cloudprovider;
 
+import com.amazonaws.services.ecs.model.CreateServiceRequest;
+import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 
 /**
@@ -22,8 +25,8 @@ public interface ClusterService {
    * @param serviceName          the service name
    * @param desiredSize          the desired size
    */
-  void resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize,
-      String autoScalingGroupName);
+  void resizeCluster(
+      SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize);
 
   /**
    * Destroy cluster.
@@ -33,4 +36,32 @@ public interface ClusterService {
    * @param serviceName          the service name
    */
   void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+
+  /**
+   * Gets service desired count.
+   *
+   * @param cloudProviderSetting the cloud provider setting
+   * @param clusterName          the cluster name
+   * @param serviceName          the service name
+   * @return the service desired count
+   */
+  Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+
+  /**
+   * Create service.
+   *
+   * @param cloudProviderSetting the cloud provider setting
+   * @param clusterConfiguration the cluster configuration
+   */
+  void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
+
+  /**
+   * Create task task definition.
+   *
+   * @param settingAttribute              the setting attribute
+   * @param registerTaskDefinitionRequest the register task definition request
+   * @return the task definition
+   */
+  TaskDefinition createTask(
+      SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
 }

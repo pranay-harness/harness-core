@@ -36,6 +36,9 @@ public enum StencilCategory {
   SCRIPTS, /**
             * Verifications stencil category.
             */
+
+  CONTAINERS,
+
   VERIFICATIONS(2), /**
                      * Copy stencil category.
                      */
