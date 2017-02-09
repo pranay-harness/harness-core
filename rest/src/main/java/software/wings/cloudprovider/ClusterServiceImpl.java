@@ -44,10 +44,8 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public void resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
-      Integer desiredSize, String autoScalingGroupName) {
-    ecsService.provisionNodes(cloudProviderSetting, autoScalingGroupName, desiredSize);
-    logger.info("Successfully resized infrastructure");
+  public void resizeCluster(
+      SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize) {
     ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize);
     logger.info("Successfully resized the cluster to {} size", desiredSize);
   }

@@ -57,8 +57,7 @@ public class ClusterServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldResizeCluster() {
-    clusterService.resizeCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5, AUTO_SCALING_GROUP_NAME);
-    verify(ecsService).provisionNodes(cloudProviderSetting, AUTO_SCALING_GROUP_NAME, 5);
+    clusterService.resizeCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5);
     verify(ecsService).provisionTasks(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5);
   }
 
