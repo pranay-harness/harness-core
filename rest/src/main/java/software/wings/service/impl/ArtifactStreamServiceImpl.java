@@ -9,6 +9,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import net.redhogs.cronparser.CronExpressionDescriptor;
@@ -33,14 +34,14 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
-import software.wings.beans.artifact.BambooArtifactStream;
-import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -58,11 +59,15 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
+import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -77,11 +82,10 @@ import javax.ws.rs.NotFoundException;
 @Singleton
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
-  public static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
-  public static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
-  public static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
+  private static final String ARTIFACT_STREAM_CRON_GROUP = "ARTIFACT_STREAM_CRON_GROUP";
+  private static final String CRON_PREFIX = "0 "; // 'Second' unit prefix to convert unix to quartz cron expression
+  private static final int ARTIFACT_STREAM_POLL_INTERVAL = 60; // in secs
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
   @Inject private JobScheduler jobScheduler;
   @Inject private PipelineService pipelineService;
@@ -89,42 +93,20 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ArtifactService artifactService;
   @Inject private EnvironmentService environmentService;
+  @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
     PageResponse<ArtifactStream> pageResponse = wingsPersistence.query(ArtifactStream.class, req);
-    pageResponse.getResponse().forEach(this ::populateStreamSpecificData);
     return pageResponse;
-  }
-
-  private void populateStreamSpecificData(ArtifactStream artifactStream) {
-    if (artifactStream instanceof JenkinsArtifactStream) {
-      ((JenkinsArtifactStream) artifactStream)
-          .getArtifactPathServices()
-          .forEach(artifactPathServiceEntry
-              -> artifactPathServiceEntry.setServices(
-                  artifactPathServiceEntry.getServiceIds()
-                      .stream()
-                      .map(sid -> serviceResourceService.get(artifactStream.getAppId(), sid))
-                      .collect(Collectors.toList())));
-    } else if (artifactStream instanceof BambooArtifactStream) {
-      ((BambooArtifactStream) artifactStream)
-          .getArtifactPathServices()
-          .forEach(artifactPathServiceEntry
-              -> artifactPathServiceEntry.setServices(
-                  artifactPathServiceEntry.getServiceIds()
-                      .stream()
-                      .map(sid -> serviceResourceService.get(artifactStream.getAppId(), sid))
-                      .collect(Collectors.toList())));
-    }
   }
 
   @Override
   public ArtifactStream get(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
-    populateStreamSpecificData(artifactStream);
     return artifactStream;
   }
 
@@ -180,7 +162,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                   .equal(appId));
     if (deleted) {
       jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid());
-      artifactStream.getStreamActions().stream().forEach(
+      artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(artifactStreamId, streamAction.getWorkflowId()));
     }
     return deleted;
@@ -340,6 +322,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
   }
 
+  @Override
+  public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
+    return stencilPostProcessor.postProcess(Arrays.asList(ArtifactStreamType.values()), appId, serviceId);
+  }
+
   private Artifact getLastSuccessfullyDeployedArtifact(String appId, ArtifactStreamAction artifactStreamAction) {
     PageRequest pageRequest = Builder.aPageRequest()
                                   .addFilter("appId", Operator.EQ, appId)
@@ -391,6 +378,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       workflowExecutionService.triggerEnvExecution(artifact.getAppId(), artifactStreamAction.getEnvId(), executionArgs);
     } else {
       pipelineService.execute(artifact.getAppId(), artifactStreamAction.getWorkflowId(), executionArgs);
+    }
+  }
+
+  @Override
+  public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+      return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name());
+    } else {
+      return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
+          ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name());
     }
   }
 

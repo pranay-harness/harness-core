@@ -6,8 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.inject.Inject;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
@@ -25,7 +23,7 @@ import java.util.List;
 public class BambooServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9095);
 
-  @Inject private BambooService bambooService;
+  private BambooService bambooService = new BambooServiceImpl();
 
   private BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
                                           .withBamboosUrl("http://localhost:9095/rest/api/latest/")
@@ -67,8 +65,8 @@ public class BambooServiceTest extends WingsBaseTest {
                     .withHeader("Content-Type", "application/json")));
     List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50);
     Assertions.assertThat(bamboo_plan_key)
-        .containsExactly(aBuildDetails().withNumber(11).withRevision("REV_11").build(),
-            aBuildDetails().withNumber(12).withRevision("REV_12").build());
+        .containsExactly(aBuildDetails().withNumber("11").withRevision("REV_11").build(),
+            aBuildDetails().withNumber("12").withRevision("REV_12").build());
   }
 
   @Test

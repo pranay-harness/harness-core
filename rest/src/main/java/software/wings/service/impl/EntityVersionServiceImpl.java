@@ -6,6 +6,8 @@ import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersi
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Singleton;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -28,6 +30,7 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 10/18/16.
  */
+@Singleton
 public class EntityVersionServiceImpl implements EntityVersionService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 

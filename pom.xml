@@ -38,9 +38,9 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <atmosphere-version>2.4.5</atmosphere-version>
         <extensions-version>2.4.2</extensions-version>
-        <alpnboot.version>8.1.8.v20160420</alpnboot.version>
+        <alpnboot.version>8.1.11.v20170118</alpnboot.version>
         <newrelic.version>3.32.0</newrelic.version>
-        <aws.sdk.version>1.11.66</aws.sdk.version>
+        <aws.sdk.version>1.11.70</aws.sdk.version>
     </properties>
 
     <repositories>
@@ -122,13 +122,13 @@
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
-                <version>3.2.0</version>
+                <version>3.4.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.mongodb.morphia</groupId>
                 <artifactId>morphia</artifactId>
-                <version>1.2.1</version>
+                <version>1.3.1</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>mongo-java-driver</artifactId>
@@ -140,7 +140,7 @@
             <dependency>
                 <groupId>org.mongodb.morphia</groupId>
                 <artifactId>morphia-logging-slf4j</artifactId>
-                <version>1.2.0</version>
+                <version>1.3.1</version>
                 <exclusions>
                     <exclusion>
                         <artifactId>morphia</artifactId>
@@ -316,7 +316,7 @@
             <dependency>
                 <groupId>com.github.reinert</groupId>
                 <artifactId>jjschema</artifactId>
-                <version>0.9-SNAPSHOT</version>
+                <version>1.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
@@ -376,12 +376,24 @@
             <dependency>
                 <groupId>com.hazelcast</groupId>
                 <artifactId>hazelcast</artifactId>
-                <version>3.4</version>
+                <version>3.7</version>
             </dependency>
 
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-elasticloadbalancing</artifactId>
+                <version>${aws.sdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-ecs</artifactId>
                 <version>${aws.sdk.version}</version>
                 <exclusions>
                     <exclusion>
@@ -405,7 +417,31 @@
 
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-autoscaling</artifactId>
+                <version>${aws.sdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-cloudwatch</artifactId>
+                <version>${aws.sdk.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-cloudformation</artifactId>
                 <version>${aws.sdk.version}</version>
                 <exclusions>
                     <exclusion>
@@ -474,11 +510,23 @@
                 <version>1.4.27</version>
             </dependency>
 
-                    <dependency>
-                        <groupId>com.google.apis</groupId>
-                        <artifactId>google-api-services-container</artifactId>
-                        <version>v1-rev9-1.22.0</version>
-                    </dependency>
+            <dependency>
+                <groupId>com.google.apis</groupId>
+                <artifactId>google-api-services-container</artifactId>
+                <version>v1-rev9-1.22.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>net.jodah</groupId>
+                <artifactId>expiringmap</artifactId>
+                <version>0.5.7</version>
+            </dependency>
+
+            <dependency>
+                <groupId>info.jerrinot</groupId>
+                <artifactId>subzero-core</artifactId>
+                <version>0.7</version>
+            </dependency>
 
             <!-- Test Dependencies -->
             <dependency>
@@ -832,33 +880,6 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>com.syncleus.maven.plugins</groupId>
-                    <artifactId>maven-mongodb-plugin</artifactId>
-                    <version>1.1.1</version>
-                    <configuration>
-                        <randomPort>true</randomPort>
-                        <version>3.2.0</version>
-                        <logging>file</logging>
-                        <logFile>/tmp/mongo.log</logFile>
-                        <bindIp>127.0.0.1</bindIp>
-                        <syncDelay>0</syncDelay>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>start</id>
-                            <goals>
-                                <goal>start</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>stop</id>
-                            <goals>
-                                <goal>stop</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>2.18.1</version>
@@ -881,7 +902,6 @@
                             <include>**/IntegrationTest*.java</include>
                             <include>**/*IntegrationTest.java</include>
                         </includes>
-                        <argLine>-DmongoPort=${mongodb.port}</argLine>
                     </configuration>
                 </plugin>
                 <plugin>

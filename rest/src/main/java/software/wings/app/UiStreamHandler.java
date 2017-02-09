@@ -6,6 +6,7 @@ import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 
+import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
 import org.atmosphere.cache.UUIDBroadcasterCache;
@@ -16,6 +17,8 @@ import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
@@ -28,18 +31,23 @@ import software.wings.service.intfc.AuthService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 8/15/16.
  */
-@AtmosphereHandlerService(path = "{channel}", interceptors = {AtmosphereResourceLifecycleInterceptor.class},
+@AtmosphereHandlerService(path = "/stream/ui/{channel}", interceptors = {AtmosphereResourceLifecycleInterceptor.class},
     broadcasterCache = UUIDBroadcasterCache.class)
 public class UiStreamHandler extends AtmosphereHandlerAdapter {
+  private static final Logger logger = LoggerFactory.getLogger(UiStreamHandler.class);
+
+  public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   @Inject private AuthService authService;
 
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
     AtmosphereRequest req = resource.getRequest();
+    logger.info("Broadcaster Id = " + resource.getBroadcaster().getID());
     if (req.getMethod().equals("GET")) {
       if (isBlank(req.getParameter("token"))) {
         sendError(resource, INVALID_TOKEN);
@@ -49,14 +57,14 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
       try {
         AuthToken authToken = authService.validateToken(req.getParameter("token"));
 
-        String[] pathSegments = req.getPathInfo().split("/");
-        if (pathSegments.length <= 5) {
+        List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
+        if (pathSegments.size() <= 5) {
           sendError(resource, INVALID_REQUEST);
         }
 
-        String appId = "all".equalsIgnoreCase(pathSegments[2]) ? Base.GLOBAL_APP_ID : pathSegments[2];
-        String envId = "all".equalsIgnoreCase(pathSegments[3]) ? Base.GLOBAL_ENV_ID : pathSegments[3];
-        Channel channel = Channel.getChannelByChannelName(pathSegments[5]);
+        String appId = pathSegments.get(2).replace("all", Base.GLOBAL_APP_ID);
+        String envId = pathSegments.get(3).replace("all", Base.GLOBAL_ENV_ID);
+        Channel channel = Channel.getChannelByChannelName(pathSegments.get(5));
 
         if (channel == null) {
           sendError(resource, INVALID_REQUEST);

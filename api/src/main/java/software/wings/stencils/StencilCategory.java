@@ -36,16 +36,25 @@ public enum StencilCategory {
   SCRIPTS, /**
             * Verifications stencil category.
             */
+
+  CONTAINERS,
+
   VERIFICATIONS(2), /**
                      * Copy stencil category.
                      */
   COPY, /**
-         * Others stencil category.
+         * Cloud stencil category.
          */
   CLOUD(3), /**
-             * Others stencil category.
+             * Subworkflow stencil category.
              */
-  OTHERS(10);
+  SUB_WORKFLOW(100), /**
+                      * Others stencil category.
+                      */
+  OTHERS(10), /**
+               * Configurations stencil category.
+               */
+  CONFIGURATIONS;
 
   private String displayName;
 

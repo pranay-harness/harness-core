@@ -3,6 +3,7 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -10,6 +11,7 @@ import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.hazelcast.core.HazelcastInstance;
 import com.palantir.versioninfo.VersionInfoBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -29,13 +31,13 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.jsr107.ri.annotations.guice.module.CacheAnnotationsModule;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.User;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
@@ -47,6 +49,7 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.health.WingsHealthCheck;
+import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -60,6 +63,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Caching;
+import javax.cache.configuration.Configuration;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.validation.Validation;
@@ -122,12 +127,38 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    PushModule module = new PushModule(environment);
-    Injector injector = Guice.createInjector(new CacheAnnotationsModule(), module,
+    CacheModule cacheModule = new CacheModule();
+    StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
+    Injector injector = Guice.createInjector(cacheModule, streamModule,
+        new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
+          }
+        },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
         new QueueModule(databaseModule.getPrimaryDatastore()));
 
-    module.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
+    Caching.getCachingProvider().getCacheManager().createCache(
+        "delegateSyncCache", new Configuration<String, DelegateTask>() {
+          public static final long serialVersionUID = 1l;
+          @Override
+          public Class<String> getKeyType() {
+            return String.class;
+          }
+
+          @Override
+          public Class<DelegateTask> getValueType() {
+            return DelegateTask.class;
+          }
+
+          @Override
+          public boolean isStoreByValue() {
+            return true;
+          }
+        });
+
+    streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerResources(environment, injector);
 
@@ -208,9 +239,12 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifyResponseCleaner")))
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30000L, TimeUnit.MILLISECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
   private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(KryoFeature.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(ConstraintViolationExceptionMapper.class);

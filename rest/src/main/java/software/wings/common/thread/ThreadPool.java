@@ -3,7 +3,9 @@ package software.wings.common.thread;
 import software.wings.utils.Misc;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -29,8 +31,14 @@ public class ThreadPool {
    * @return the thread pool executor
    */
   public static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit) {
+    return create(corePoolSize, maxPoolSize, idleTime, unit, Executors.defaultThreadFactory());
+  }
+
+  public static ThreadPoolExecutor create(
+      int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit, ThreadFactory threadFactory) {
     ScalingQueue queue = new ScalingQueue();
-    ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(corePoolSize, maxPoolSize, idleTime, unit, queue);
+    ThreadPoolExecutor executor =
+        new ScalingThreadPoolExecutor(corePoolSize, maxPoolSize, idleTime, unit, queue, threadFactory);
     executor.setRejectedExecutionHandler(new ForceQueuePolicy());
     queue.setThreadPoolExecutor(executor);
     return executor;

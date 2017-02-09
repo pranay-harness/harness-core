@@ -5,14 +5,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.ExecutionCredential;
-import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
-import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
 import java.util.Map;
@@ -23,8 +21,9 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 6/9/16.
  */
 public class CommandExecutionContext {
-  private Artifact artifact;
-  private ServiceInstance serviceInstance;
+  private String accountId;
+  private List<ArtifactFile> artifactFiles;
+  private String envId;
   private Host host;
   private ServiceTemplate serviceTemplate;
   private String appId;
@@ -35,6 +34,9 @@ public class CommandExecutionContext {
   private ExecutionCredential executionCredential;
   private Map<String, String> serviceVariables = Maps.newHashMap();
   private Map<String, String> envVariables = Maps.newHashMap();
+  private SettingAttribute hostConnectionAttributes;
+  private SettingAttribute bastionConnectionAttributes;
+  private ArtifactStreamAttributes artifactStreamAttributes;
 
   /**
    * Instantiates a new Command execution context.
@@ -47,8 +49,9 @@ public class CommandExecutionContext {
    * @param other the other
    */
   public CommandExecutionContext(CommandExecutionContext other) {
-    this.artifact = other.artifact;
-    this.serviceInstance = other.serviceInstance;
+    this.accountId = other.accountId;
+    this.artifactFiles = other.artifactFiles;
+    this.envId = other.envId;
     this.appId = other.appId;
     this.activityId = other.activityId;
     this.runtimePath = other.runtimePath;
@@ -59,24 +62,27 @@ public class CommandExecutionContext {
     this.serviceVariables = other.serviceVariables;
     this.host = other.host;
     this.serviceTemplate = other.serviceTemplate;
+    this.hostConnectionAttributes = other.hostConnectionAttributes;
+    this.bastionConnectionAttributes = other.bastionConnectionAttributes;
+    this.artifactStreamAttributes = other.artifactStreamAttributes;
   }
 
   /**
-   * Gets artifact.
+   * Getter for property 'artifactFiles'.
    *
-   * @return the artifact
+   * @return Value for property 'artifactFiles'.
    */
-  public Artifact getArtifact() {
-    return artifact;
+  public List<ArtifactFile> getArtifactFiles() {
+    return artifactFiles;
   }
 
   /**
-   * Sets artifact.
+   * Setter for property 'artifactFiles'.
    *
-   * @param artifact the artifact
+   * @param artifactFiles Value to set for property 'artifactFiles'.
    */
-  public void setArtifact(Artifact artifact) {
-    this.artifact = artifact;
+  public void setArtifactFiles(List<ArtifactFile> artifactFiles) {
+    this.artifactFiles = artifactFiles;
   }
 
   /**
@@ -192,17 +198,17 @@ public class CommandExecutionContext {
    *
    * @return the service instance
    */
-  public ServiceInstance getServiceInstance() {
-    return serviceInstance;
+  public String getEnvId() {
+    return envId;
   }
 
   /**
    * Sets service instance.
    *
-   * @param serviceInstance the service instance
+   * @param envId the service instance
    */
-  public void setServiceInstance(ServiceInstance serviceInstance) {
-    this.serviceInstance = serviceInstance;
+  public void setEnvId(String envId) {
+    this.envId = envId;
   }
 
   /**
@@ -259,85 +265,58 @@ public class CommandExecutionContext {
     this.serviceTemplate = serviceTemplate;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        artifact, serviceInstance, appId, activityId, runtimePath, stagingPath, backupPath, executionCredential);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final CommandExecutionContext other = (CommandExecutionContext) obj;
-    return Objects.equals(this.artifact, other.artifact) && Objects.equals(this.serviceInstance, other.serviceInstance)
-        && Objects.equals(this.appId, other.appId) && Objects.equals(this.activityId, other.activityId)
-        && Objects.equals(this.runtimePath, other.runtimePath) && Objects.equals(this.stagingPath, other.stagingPath)
-        && Objects.equals(this.backupPath, other.backupPath)
-        && Objects.equals(this.executionCredential, other.executionCredential);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("artifact", artifact)
-        .add("serviceInstance", serviceInstance)
-        .add("appId", appId)
-        .add("activityId", activityId)
-        .add("runtimePath", runtimePath)
-        .add("stagingPath", stagingPath)
-        .add("backupPath", backupPath)
-        .add("executionCredential", executionCredential)
-        .toString();
+  /**
+   * Getter for property 'hostConnectionAttributes'.
+   *
+   * @return Value for property 'hostConnectionAttributes'.
+   */
+  public SettingAttribute getHostConnectionAttributes() {
+    return hostConnectionAttributes;
   }
 
   /**
-   * Execute command string execution result.
+   * Setter for property 'hostConnectionAttributes'.
    *
-   * @param commandString the command string
-   * @return the execution result
+   * @param hostConnectionAttributes Value to set for property 'hostConnectionAttributes'.
    */
-  public ExecutionResult executeCommandString(String commandString) {
-    throw new UnsupportedOperationException();
+  public void setHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
+    this.hostConnectionAttributes = hostConnectionAttributes;
   }
 
   /**
-   * Execute command string execution result.
+   * Getter for property 'bastionConnectionAttributes'.
    *
-   * @param commandString the command string
-   * @param output        the output
-   * @return the execution result
+   * @return Value for property 'bastionConnectionAttributes'.
    */
-  public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
-    throw new UnsupportedOperationException();
+  public SettingAttribute getBastionConnectionAttributes() {
+    return bastionConnectionAttributes;
   }
 
   /**
-   * Copy files execution result.
+   * Setter for property 'bastionConnectionAttributes'.
    *
-   * @param destinationDirectoryPath the destination directory path
-   * @param files                    the files
-   * @return the execution result
+   * @param bastionConnectionAttributes Value to set for property 'bastionConnectionAttributes'.
    */
-  public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
-    throw new UnsupportedOperationException();
+  public void setBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
+    this.bastionConnectionAttributes = bastionConnectionAttributes;
   }
 
   /**
-   * Copy grid fs files execution result.
+   * Getter for property 'accountId'.
    *
-   * @param destinationDirectoryPath the destination directory path
-   * @param fileBucket               the file bucket
-   * @param fileNamesIds             the file ids
-   * @return the execution result
+   * @return Value for property 'accountId'.
    */
-  public ExecutionResult copyGridFsFiles(
-      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    throw new UnsupportedOperationException();
+  public String getAccountId() {
+    return accountId;
+  }
+
+  /**
+   * Setter for property 'accountId'.
+   *
+   * @param accountId Value to set for property 'accountId'.
+   */
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**
@@ -370,11 +349,81 @@ public class CommandExecutionContext {
   }
 
   /**
+   * Gets artifact stream attributes.
+   *
+   * @return the artifact stream attributes
+   */
+  public ArtifactStreamAttributes getArtifactStreamAttributes() {
+    return artifactStreamAttributes;
+  }
+
+  /**
+   * Sets artifact stream attributes.
+   *
+   * @param artifactStreamAttributes the artifact stream attributes
+   */
+  public void setArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+    this.artifactStreamAttributes = artifactStreamAttributes;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(accountId, artifactFiles, envId, host, serviceTemplate, appId, activityId, runtimePath,
+        stagingPath, backupPath, executionCredential, serviceVariables, envVariables, hostConnectionAttributes,
+        bastionConnectionAttributes, artifactStreamAttributes);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final CommandExecutionContext other = (CommandExecutionContext) obj;
+    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.artifactFiles, other.artifactFiles)
+        && Objects.equals(this.envId, other.envId) && Objects.equals(this.host, other.host)
+        && Objects.equals(this.serviceTemplate, other.serviceTemplate) && Objects.equals(this.appId, other.appId)
+        && Objects.equals(this.activityId, other.activityId) && Objects.equals(this.runtimePath, other.runtimePath)
+        && Objects.equals(this.stagingPath, other.stagingPath) && Objects.equals(this.backupPath, other.backupPath)
+        && Objects.equals(this.executionCredential, other.executionCredential)
+        && Objects.equals(this.serviceVariables, other.serviceVariables)
+        && Objects.equals(this.envVariables, other.envVariables)
+        && Objects.equals(this.hostConnectionAttributes, other.hostConnectionAttributes)
+        && Objects.equals(this.bastionConnectionAttributes, other.bastionConnectionAttributes)
+        && Objects.equals(this.artifactStreamAttributes, other.artifactStreamAttributes);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("accountId", accountId)
+        .add("artifactFiles", artifactFiles)
+        .add("envId", envId)
+        .add("host", host)
+        .add("serviceTemplate", serviceTemplate)
+        .add("appId", appId)
+        .add("activityId", activityId)
+        .add("runtimePath", runtimePath)
+        .add("stagingPath", stagingPath)
+        .add("backupPath", backupPath)
+        .add("executionCredential", executionCredential)
+        .add("serviceVariables", serviceVariables)
+        .add("envVariables", envVariables)
+        .add("hostConnectionAttributes", hostConnectionAttributes)
+        .add("bastionConnectionAttributes", bastionConnectionAttributes)
+        .add("artifactStreamAttributes", artifactStreamAttributes)
+        .toString();
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
-    private Artifact artifact;
-    private ServiceInstance serviceInstance;
+    private String accountId;
+    private List<ArtifactFile> artifactFiles;
+    private String envId;
     private Host host;
     private ServiceTemplate serviceTemplate;
     private String appId;
@@ -384,6 +433,10 @@ public class CommandExecutionContext {
     private String backupPath;
     private ExecutionCredential executionCredential;
     private Map<String, String> serviceVariables = Maps.newHashMap();
+    private Map<String, String> envVariables = Maps.newHashMap();
+    private SettingAttribute hostConnectionAttributes;
+    private SettingAttribute bastionConnectionAttributes;
+    private ArtifactStreamAttributes artifactStreamAttributes;
 
     private Builder() {}
 
@@ -397,24 +450,35 @@ public class CommandExecutionContext {
     }
 
     /**
-     * With artifact builder.
+     * With account id builder.
      *
-     * @param artifact the artifact
+     * @param accountId the account id
      * @return the builder
      */
-    public Builder withArtifact(Artifact artifact) {
-      this.artifact = artifact;
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
     /**
-     * With service instance builder.
+     * With artifact files builder.
      *
-     * @param serviceInstance the service instance
+     * @param artifactFiles the artifact files
      * @return the builder
      */
-    public Builder withServiceInstance(ServiceInstance serviceInstance) {
-      this.serviceInstance = serviceInstance;
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      this.artifactFiles = artifactFiles;
+      return this;
+    }
+
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
       return this;
     }
 
@@ -518,14 +582,59 @@ public class CommandExecutionContext {
     }
 
     /**
+     * With env variables builder.
+     *
+     * @param envVariables the env variables
+     * @return the builder
+     */
+    public Builder withEnvVariables(Map<String, String> envVariables) {
+      this.envVariables = envVariables;
+      return this;
+    }
+
+    /**
+     * With host connection attributes builder.
+     *
+     * @param hostConnectionAttributes the host connection attributes
+     * @return the builder
+     */
+    public Builder withHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
+      this.hostConnectionAttributes = hostConnectionAttributes;
+      return this;
+    }
+
+    /**
+     * With bastion connection attributes builder.
+     *
+     * @param bastionConnectionAttributes the bastion connection attributes
+     * @return the builder
+     */
+    public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
+      this.bastionConnectionAttributes = bastionConnectionAttributes;
+      return this;
+    }
+
+    /**
+     * With artifact stream attributes builder.
+     *
+     * @param artifactStreamAttributes the artifact stream attributes
+     * @return the builder
+     */
+    public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+      this.artifactStreamAttributes = artifactStreamAttributes;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return aCommandExecutionContext()
-          .withArtifact(artifact)
-          .withServiceInstance(serviceInstance)
+          .withAccountId(accountId)
+          .withArtifactFiles(artifactFiles)
+          .withEnvId(envId)
           .withHost(host)
           .withServiceTemplate(serviceTemplate)
           .withAppId(appId)
@@ -534,7 +643,11 @@ public class CommandExecutionContext {
           .withStagingPath(stagingPath)
           .withBackupPath(backupPath)
           .withExecutionCredential(executionCredential)
-          .withServiceVariables(serviceVariables);
+          .withServiceVariables(serviceVariables)
+          .withEnvVariables(envVariables)
+          .withHostConnectionAttributes(hostConnectionAttributes)
+          .withBastionConnectionAttributes(bastionConnectionAttributes)
+          .withArtifactStreamAttributes(artifactStreamAttributes);
     }
 
     /**
@@ -544,8 +657,9 @@ public class CommandExecutionContext {
      */
     public CommandExecutionContext build() {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
-      commandExecutionContext.setArtifact(artifact);
-      commandExecutionContext.setServiceInstance(serviceInstance);
+      commandExecutionContext.setAccountId(accountId);
+      commandExecutionContext.setArtifactFiles(artifactFiles);
+      commandExecutionContext.setEnvId(envId);
       commandExecutionContext.setHost(host);
       commandExecutionContext.setServiceTemplate(serviceTemplate);
       commandExecutionContext.setAppId(appId);
@@ -555,6 +669,10 @@ public class CommandExecutionContext {
       commandExecutionContext.setBackupPath(backupPath);
       commandExecutionContext.setExecutionCredential(executionCredential);
       commandExecutionContext.setServiceVariables(serviceVariables);
+      commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
+      commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
+      commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
+      commandExecutionContext.envVariables = this.envVariables;
       return commandExecutionContext;
     }
   }

@@ -18,6 +18,8 @@ public class ManagerClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(ManagerClient.class).toProvider(new ManagerClientFactory(managerBaseUrl, accountId, accountSecret));
+    TokenGenerator tokenGenerator = new TokenGenerator(accountId, accountSecret);
+    bind(TokenGenerator.class).toInstance(tokenGenerator);
+    bind(ManagerClient.class).toProvider(new ManagerClientFactory(managerBaseUrl, tokenGenerator));
   }
 }

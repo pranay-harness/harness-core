@@ -7,7 +7,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
@@ -48,6 +47,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
@@ -69,17 +69,16 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Spy @InjectMocks private ArtifactStreamService spyArtifactStreamService = new ArtifactStreamServiceImpl();
 
-  private JenkinsArtifactStream jenkinsArtifactStream =
-      aJenkinsArtifactStream()
-          .withAppId(APP_ID)
-          .withUuid(ARTIFACT_STREAM_ID)
-          .withSourceName("SOURCE_NAME")
-          .withSettingId(SETTING_ID)
-          .withJobname("JOB")
-          .withAutoDownload(true)
-          .withArtifactPathServices(asList(
-              anArtifactPathServiceEntry().withArtifactPathRegex("*WAR").withServiceIds(asList(SERVICE_ID)).build()))
-          .build();
+  private JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
+                                                            .withAppId(APP_ID)
+                                                            .withUuid(ARTIFACT_STREAM_ID)
+                                                            .withSourceName("SOURCE_NAME")
+                                                            .withSettingId(SETTING_ID)
+                                                            .withJobname("JOB")
+                                                            .withAutoDownload(true)
+                                                            .withServiceId(SERVICE_ID)
+                                                            .withArtifactPaths(Arrays.asList("*WAR"))
+                                                            .build();
 
   @Before
   public void setUp() throws Exception {
@@ -102,7 +101,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     PageResponse<ArtifactStream> artifactStreams = artifactStreamService.list(pageRequest);
 
     assertThat(artifactStreams.size()).isEqualTo(1);
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
   }
 
   @Test
@@ -110,7 +108,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     ArtifactStream artifactStream = artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID);
     assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
   }
 

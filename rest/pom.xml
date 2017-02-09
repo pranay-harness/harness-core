@@ -283,6 +283,21 @@
         </dependency>
 
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ecs</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-autoscaling</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-cloudformation</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
         </dependency>
@@ -341,6 +356,16 @@
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>expiringmap</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>info.jerrinot</groupId>
+            <artifactId>subzero-core</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -530,6 +555,10 @@
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>
                         <exclude>software/wings/beans/*.class</exclude>
+                        <exclude>software/wings/beans/infrastructure/*.class</exclude>
+                        <exclude>software/wings/beans/artifact/*.class</exclude>
+                        <exclude>software/wings/beans/stats/*.class</exclude>
+                        <exclude>software/wings/beans/container/*.class</exclude>
                         <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
                         <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
                         <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
@@ -574,17 +603,17 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.62</minimum>
+                                            <minimum>0.58</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.47</minimum>
+                                            <minimum>0.46</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.50</minimum>
+                                            <minimum>0.46</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -841,7 +870,6 @@
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>ci.wings.software</portalHost>
                 <app.name>CI Server</app.name>
             </properties>
@@ -861,55 +889,9 @@
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>demo.wings.software</portalHost>
                 <app.name>Demo Server</app.name>
             </properties>
-        </profile>
-        <profile>
-            <id>migration</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.codehaus.gmaven</groupId>
-                        <artifactId>groovy-maven-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.mongeez</groupId>
-                                <artifactId>mongeez</artifactId>
-                                <version>0.9.6</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.codehaus.groovy</groupId>
-                                <artifactId>groovy-all</artifactId>
-                                <!-- any version of Groovy \>= 1.5.0 should work here -->
-                                <version>2.4.7</version>
-                                <scope>runtime</scope>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.mongodb</groupId>
-                                <artifactId>mongo-java-driver</artifactId>
-                                <version>3.2.0</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <source>
-                                import com.mongodb.Mongo;
-                                import org.mongeez.Mongeez;
-                                import java.io.File;
-                                import org.springframework.core.io.FileSystemResource;
-
-                                Mongeez mongeez = new Mongeez();
-                                mongeez.setFile(new FileSystemResource(new File("src/main/resources/migrations/mongeez.xml")));
-                                mongeez.setMongo(new Mongo(System.getProperty("mongoHost", "localhost"), Integer.parseInt(System.getProperty("mongoPort",
-                                "27017"))));
-                                mongeez.setDbName("wings");
-                                mongeez.process();
-                            </source>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 </project>

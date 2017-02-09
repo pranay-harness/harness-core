@@ -1,7 +1,5 @@
 package software.wings.common;
 
-import software.wings.beans.Workflow;
-
 /**
  * Common constants across application.
  *
@@ -47,6 +45,8 @@ public interface Constants {
    * The constant SERVICE_INSTANCE_IDS_PARAMS.
    */
   String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
+
+  String PHASE_PARAM = "PHASE_PARAM";
   /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
    */
@@ -91,4 +91,17 @@ public interface Constants {
    * The constant to represent all environment
    */
   String ALL_ENV = "__ALL_ENVIRONMENTS__";
+
+  String WINGS_VARIABLE_PREFIX = "${";
+  String WINGS_VARIABLE_SUFFIX = "}";
+
+  String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
+  String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
+
+  String SUB_WORKFLOW_ID = "subWorkflowId";
+  String SUB_WORKFLOW = "SUB_WORKFLOW";
+  String ROLLBACK_PREFIX = "Rollback ";
+  String PHASE_NAME_PREFIX = "Phase ";
+
+  String PROVISION_NODE_NAME = "Provision Nodes";
 }

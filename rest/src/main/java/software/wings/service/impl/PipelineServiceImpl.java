@@ -14,6 +14,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -64,6 +65,7 @@ import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by anubhaw on 10/26/16.
  */
+@Singleton
 @ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowExecutionService workflowExecutionService;

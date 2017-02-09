@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.InstanceStatusSummary;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +36,8 @@ import java.util.Optional;
 public class Graph {
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
-
   private List<Link> links = new ArrayList<>();
+  private Map<String, Graph> subworkflows = new HashMap<>();
 
   @Transient private Optional<Node> originState = null;
 
@@ -142,6 +143,14 @@ public class Graph {
   @JsonIgnore
   public void setVersion(int version) {
     this.version = version;
+  }
+
+  public Map<String, Graph> getSubworkflows() {
+    return subworkflows;
+  }
+
+  public void setSubworkflows(Map<String, Graph> subworkflows) {
+    this.subworkflows = subworkflows;
   }
 
   /**
@@ -329,9 +338,10 @@ public class Graph {
    * The Class Node.
    */
   public static class Node {
-    private String id;
+    private String id = UUIDGenerator.getUuid();
     private String name;
     private String type;
+    private boolean newBranch;
     private String status;
     private int x;
     private int y;
@@ -404,6 +414,14 @@ public class Graph {
      */
     public void setType(String type) {
       this.type = type;
+    }
+
+    public boolean isNewBranch() {
+      return newBranch;
+    }
+
+    public void setNewBranch(boolean newBranch) {
+      this.newBranch = newBranch;
     }
 
     /**
@@ -760,7 +778,7 @@ public class Graph {
      * The Class Builder.
      */
     public static final class Builder {
-      private String id;
+      private String id = UUIDGenerator.getUuid();
       private String name;
       private String type;
       private String status;
@@ -1170,6 +1188,7 @@ public class Graph {
     private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
     private List<Node> nodes = new ArrayList<>();
     private List<Link> links = new ArrayList<>();
+    private Map<String, Graph> subworkflows = new HashMap<>();
 
     private Builder() {}
 
@@ -1216,6 +1235,29 @@ public class Graph {
     }
 
     /**
+     * Adds the subworkflow.
+     *
+     * @param subworkflows subworkflows
+     * @return the builder
+     */
+    public Builder addSubworkflows(Map<String, Graph> subworkflows) {
+      this.subworkflows.putAll(subworkflows);
+      return this;
+    }
+
+    /**
+     * Adds the subworkflow.
+     *
+     * @param subworkflowName the subworkflowName
+     * @param subworkflow the subworkflow
+     * @return the builder
+     */
+    public Builder addSubworkflow(String subworkflowName, Graph subworkflow) {
+      this.subworkflows.put(subworkflowName, subworkflow);
+      return this;
+    }
+
+    /**
      * Adds the links.
      *
      * @param links the links
@@ -1256,6 +1298,7 @@ public class Graph {
       graph.setGraphName(graphName);
       graph.setNodes(nodes);
       graph.setLinks(links);
+      graph.setSubworkflows(subworkflows);
       return graph;
     }
 

@@ -1,4 +1,39 @@
 #!/bin/bash
+
+vercomp () {
+    if [[ $1 == $2 ]]
+    then
+        echo "0"
+        return
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            echo "1"
+            return
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            echo "2"
+            return
+        fi
+    done
+    echo "0"
+}
+
 JRE_DIR=jre1.8.0_112
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
@@ -11,7 +46,7 @@ case "$OSTYPE" in
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b16/jre-8u112-linux-x64.tar.gz
+    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz
     ;;
   bsd*)
     echo "freebsd not supported."
@@ -30,18 +65,36 @@ case "$OSTYPE" in
     ;;
 esac
 
-if [ ! -d  jre ]
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+if [ ! -d jre ]
 then
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
+  curl -skLO -H "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
   tar xzvf $JVM_TAR_FILENAME
-  mv $JRE_DIR jre
+  ln -s $JRE_DIR jre
 fi
+
+REMOTE_HOST=$(echo http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')
+REMOTE_DELEGATE_METADATA=$(curl http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt --fail --silent --show-error)
+REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
-  DELEGATE_URL="$(echo https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | awk -F/ '{print $3}')/$(curl https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt | cut -d " " -f2)"
-  wget $DELEGATE_URL
+  curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
+else
+  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
+  then
+    curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
+  fi
 fi
 
 if [ ! -e config-delegate.yml ]
@@ -50,6 +103,14 @@ then
   echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
   echo "managerUrl: https://https://localhost:9090/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+  echo "localDiskPath: /tmp" >> config-delegate.yml
 fi
 
-$JRE_BINARY -jar delegate.jar config-delegate.yml
+
+if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
+then
+  echo "Delegate already running."
+else
+  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
+  echo "Delegate started."
+fi

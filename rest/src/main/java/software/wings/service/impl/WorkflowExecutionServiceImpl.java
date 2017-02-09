@@ -9,12 +9,10 @@ import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.InstanceExecutionHistory.InstanceExecutionHistoryBuilder.anInstanceExecutionHistory;
-import static software.wings.beans.StatusInstanceBreakdown.StatusInstanceBreakdownBuilder.aStatusInstanceBreakdown;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ContextElementType.INSTANCE;
-import static software.wings.sm.ContextElementType.SERVICE;
-import static software.wings.sm.ContextElementType.SERVICE_TEMPLATE;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+
+import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -23,36 +21,35 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.History;
-import software.wings.beans.InstanceStatusSummary;
 import software.wings.beans.Orchestration;
+import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.StatusInstanceBreakdown;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -68,26 +65,27 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionEvent;
+import software.wings.sm.ExecutionEventAdvisor;
+import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
-import software.wings.sm.StateMachineExecutionEventManager;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
-import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -109,7 +107,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private EnvironmentService environmentService;
-  @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
+  @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ArtifactService artifactService;
@@ -183,15 +181,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
-    return getExecutionDetails(appId, workflowExecutionId, null, null, null);
+    return getExecutionDetails(appId, workflowExecutionId, null);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, List<String> expandedGroupIds,
-      String requestedGroupId, Graph.NodeOps nodeOps) {
+  public WorkflowExecution getExecutionDetails(
+      String appId, String workflowExecutionId, List<String> expandedGroupIds) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (expandedGroupIds == null) {
@@ -236,6 +234,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean expandLastOnly) {
     List<StateExecutionInstance> allInstances = queryAllInstances(workflowExecution);
+    if (allInstances == null || allInstances.isEmpty()) {
+      return;
+    }
     Map<String, StateExecutionInstance> allInstancesIdMap =
         allInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
@@ -329,7 +330,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String envId, String orchestrationId, ExecutionArgs executionArgs) {
-    return triggerOrchestrationExecution(appId, envId, orchestrationId, executionArgs, null);
+    return triggerOrchestrationWorkflowExecution(appId, envId, orchestrationId, executionArgs, null);
   }
 
   /**
@@ -342,6 +343,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param workflowExecutionUpdate the workflow execution update
    * @return the workflow execution
    */
+  @Override
   public WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =
@@ -351,7 +353,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    StateMachine stateMachine = workflowService.readForEnv(appId, envId, orchestrationId);
+    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
@@ -379,9 +381,63 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
 
+  /**
+   * Trigger orchestration execution workflow execution.
+   *
+   * @param appId                   the app id
+   * @param envId                   the env id
+   * @param orchestrationId         the orchestration id
+   * @param executionArgs           the execution args
+   * @param workflowExecutionUpdate the workflow execution update
+   * @return the workflow execution
+   */
+  public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
+      ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
+    List<WorkflowExecution> runningWorkflowExecutions =
+        getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION_WORKFLOW, appId, orchestrationId);
+    if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
+      throw new WingsException("Orchestration Workflow has already been triggered");
+    }
+    // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
+
+    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
+    if (stateMachine == null) {
+      throw new WingsException("No stateMachine associated with " + orchestrationId);
+    }
+
+    OrchestrationWorkflow orchestration = wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationId);
+
+    WorkflowExecution workflowExecution = new WorkflowExecution();
+    workflowExecution.setAppId(appId);
+    workflowExecution.setEnvId(envId);
+    workflowExecution.setWorkflowId(orchestrationId);
+    workflowExecution.setName(WORKFLOW_NAME_PREF + orchestration.getName());
+    workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION_WORKFLOW);
+    workflowExecution.setStateMachineId(stateMachine.getUuid());
+    workflowExecution.setExecutionArgs(executionArgs);
+
+    WorkflowStandardParams stdParams = new WorkflowStandardParams();
+    stdParams.setAppId(appId);
+    stdParams.setEnvId(envId);
+    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
+      stdParams.setArtifactIds(
+          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+    }
+    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
+
+    return triggerExecution(
+        workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
+  }
+
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
       ContextElement... contextElements) {
+    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, contextElements);
+  }
+
+  private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
+      ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
+      WorkflowStandardParams stdParams, ContextElement... contextElements) {
     Application app = appService.get(workflowExecution.getAppId());
     workflowExecution.setAppName(app.getName());
     if (workflowExecution.getEnvId() != null) {
@@ -459,6 +515,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecutionUpdate.setAppId(workflowExecution.getAppId());
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
+    if (workflowExecutionAdvisor != null) {
+      stateExecutionInstance.setExecutionEventAdvisors(Lists.newArrayList(workflowExecutionAdvisor));
+    }
 
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
@@ -674,16 +733,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public ExecutionEvent triggerExecutionEvent(ExecutionEvent executionEvent) {
-    String executionUuid = executionEvent.getExecutionUuid();
+  public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    String executionUuid = executionInterrupt.getExecutionUuid();
     WorkflowExecution workflowExecution =
-        wingsPersistence.get(WorkflowExecution.class, executionEvent.getAppId(), executionUuid);
+        wingsPersistence.get(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
       throw new WingsException(
           ErrorCodes.INVALID_ARGUMENT, "args", "no workflowExecution for executionUuid:" + executionUuid);
     }
 
-    return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
+    return executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
   }
 
   @Override
@@ -693,7 +752,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowType is null");
     }
 
-    if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+    if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION
+        || executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
       logger.debug("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
@@ -701,19 +761,23 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
 
-      Orchestration orchestration =
-          wingsPersistence.get(Orchestration.class, appId, executionArgs.getOrchestrationId());
+      OrchestrationWorkflow orchestration =
+          wingsPersistence.get(OrchestrationWorkflow.class, appId, executionArgs.getOrchestrationId());
       if (orchestration == null) {
         logger.error("Invalid orchestrationId");
         throw new WingsException(
             ErrorCodes.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
       }
 
-      StateMachine stateMachine = workflowService.readForEnv(appId, envId, executionArgs.getOrchestrationId());
+      StateMachine stateMachine = workflowService.readLatest(appId, executionArgs.getOrchestrationId());
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }
-      return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
+
+      RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
+      requiredExecutionArgs.setEntityTypes(orchestration.getRequiredEntityTypes());
+      return requiredExecutionArgs;
+      // return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
 
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.debug("Received an simple execution request");
@@ -752,18 +816,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
       entityType = EntityType.SIMPLE_DEPLOYMENT;
     }
-
-    History history = History.Builder.aHistory()
-                          .withAppId(workflowExecution.getAppId())
-                          .withEventType(EventType.CREATED)
-                          .withEntityType(entityType)
-                          .withEntityId(workflowExecution.getUuid())
-                          .withEntityName(workflowExecution.getName())
-                          .withEntityNewValue(workflowExecution)
-                          .withShortDescription(workflowExecution.getName() + " started")
-                          .withTitle(workflowExecution.getName() + " started")
-                          .build();
-    historyService.createAsync(history);
+    //
+    //    History history =
+    //    History.Builder.aHistory().withAppId(workflowExecution.getAppId()).withEventType(EventType.CREATED).withEntityType(entityType)
+    //        .withEntityId(workflowExecution.getUuid()).withEntityName(workflowExecution.getName()).withEntityNewValue(workflowExecution)
+    //        .withShortDescription(workflowExecution.getName() + " started").withTitle(workflowExecution.getName() + "
+    //        started").build();
+    //    historyService.createAsync(history);
   }
 
   @Override
@@ -797,7 +856,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .equal(workflowExecution.getStateMachineId())
               .forEach(stateExecutionInstance -> {
                 wingsPersistence.delete(stateExecutionInstance);
-                wingsPersistence.delete(wingsPersistence.createQuery(ExecutionEvent.class)
+                wingsPersistence.delete(wingsPersistence.createQuery(ExecutionInterrupt.class)
                                             .field("appId")
                                             .equal(appId)
                                             .field("stateExecutionInstanceId")
@@ -807,23 +866,50 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshSummaries(WorkflowExecution workflowExecution) {
-    if (!(workflowExecution.getStatus() == ExecutionStatus.SUCCESS
-            || workflowExecution.getStatus() == ExecutionStatus.FAILED
-            || workflowExecution.getStatus() == ExecutionStatus.ERROR
-            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
+    if (workflowExecution.getServiceExecutionSummaries() != null) {
       return;
     }
 
-    if (workflowExecution.getServiceExecutionSummaries() != null
-        && workflowExecution.getStatusInstanceBreakdownMap() != null) {
-      return;
+    HashMap<String, ElementExecutionSummary> serviceExecutionSummaryMap = new HashMap<>();
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
+      OrchestrationWorkflow orchestrationWorkflow =
+          workflowService.readOrchestrationWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+      List<Service> services = orchestrationWorkflow.getServices();
+      if (services != null) {
+        services.forEach(service -> {
+          ServiceElement serviceElement =
+              ServiceElement.Builder.aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
+          ElementExecutionSummary elementSummary =
+              anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
+          serviceExecutionSummaryMap.put(service.getUuid(), elementSummary);
+        });
+      }
     }
 
+    populateServiceSummary(serviceExecutionSummaryMap, workflowExecution);
+
+    if (!serviceExecutionSummaryMap.isEmpty()) {
+      workflowExecution.setServiceExecutionSummaries(new ArrayList<>(serviceExecutionSummaryMap.values()));
+
+      if (workflowExecution.getServiceExecutionSummaries() != null && !serviceExecutionSummaryMap.isEmpty()
+          && (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+                 || workflowExecution.getStatus() == ExecutionStatus.FAILED
+                 || workflowExecution.getStatus() == ExecutionStatus.ERROR
+                 || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
+        wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
+            workflowExecution.getServiceExecutionSummaries());
+      }
+    }
+  }
+
+  private void populateServiceSummary(
+      Map<String, ElementExecutionSummary> serviceSummaryMap, WorkflowExecution workflowExecution) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
-            .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name())
+            .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
+                StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), StateType.PHASE_STEP.name())
             .addFilter("parentInstanceId", Operator.NOT_EXISTS, null)
             .build();
 
@@ -835,122 +921,48 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<StateExecutionInstance> topInstances = pageResponse.getResponse();
+    Map<String, StateExecutionInstance> topInstanceMap =
+        topInstances.stream().collect(Collectors.toMap(StateExecutionInstance::getUuid, Function.identity()));
+    List<String> topInstanceIds =
+        topInstances.stream().map(StateExecutionInstance::getUuid).collect(Collectors.toList());
+    pageRequest = aPageRequest()
+                      .withLimit(PageRequest.UNLIMITED)
+                      .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                      .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+                      .addFilter("parentInstanceId", Operator.IN, topInstanceIds.toArray())
+                      .addFilter("contextTransition", Operator.EQ, true)
+                      .build();
 
-    List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(topInstances);
-    workflowExecution.setStatusInstanceBreakdownMap(getStatusInstanceBreakdownMap(instanceStatusSummary));
-    wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "statusInstanceBreakdownMap",
-        workflowExecution.getStatusInstanceBreakdownMap());
-
-    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
-    Map<String, ElementExecutionSummary> elementExecutionSummaryMap = new HashMap<>();
-
-    boolean svcRepeatFound = true;
-    StateExecutionInstance repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE);
-    if (repeatStateExecutionInstance == null) {
-      svcRepeatFound = false;
-      repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE_TEMPLATE);
-      if (repeatStateExecutionInstance == null) {
-        repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, INSTANCE);
-      }
-    }
-    if (repeatStateExecutionInstance != null) {
-      List<ElementExecutionSummary> serviceExecutionSummary = getServiceExecutionSummaries(
-          workflowExecution, repeatStateExecutionInstance, elementExecutionSummaries, elementExecutionSummaryMap);
-
-      if (svcRepeatFound) {
-        handleQueuedServices(repeatStateExecutionInstance, serviceExecutionSummary);
-      }
-
-      workflowExecution.setServiceExecutionSummaries(serviceExecutionSummary);
-      wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
-          workflowExecution.getServiceExecutionSummaries());
-    }
-  }
-
-  private void handleQueuedServices(
-      StateExecutionInstance repeatStateExecutionInstance, List<ElementExecutionSummary> serviceExecutionSummary) {
-    List<String> servicesIncluded =
-        serviceExecutionSummary.stream()
-            .map(elementExecutionSummary -> elementExecutionSummary.getContextElement().getUuid())
-            .collect(Collectors.toList());
-    List<ContextElement> repeatElements =
-        ((RepeatStateExecutionData) repeatStateExecutionInstance.getStateExecutionData()).getRepeatElements();
-    for (ContextElement contextElement : repeatElements) {
-      if (servicesIncluded.contains(contextElement.getUuid())) {
-        continue;
-      }
-      ElementExecutionSummary elementExecutionSummary = anElementExecutionSummary()
-                                                            .withContextElement(contextElement)
-                                                            .withStatus(ExecutionStatus.QUEUED)
-                                                            .withInstancesCount(0)
-                                                            .build();
-      // TODO: instance count should be estimated
-      serviceExecutionSummary.add(elementExecutionSummary);
-    }
-  }
-
-  private List<ElementExecutionSummary> getServiceExecutionSummaries(WorkflowExecution workflowExecution,
-      StateExecutionInstance repeatStateExecutionInstance, List<ElementExecutionSummary> elementExecutionSummaries,
-      Map<String, ElementExecutionSummary> elementExecutionSummaryMap) {
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
-            .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
-            .addFilter("parentInstanceId", Operator.IN, repeatStateExecutionInstance.getUuid())
-            .build();
-
-    PageResponse<StateExecutionInstance> pageResponse =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    pageResponse = wingsPersistence.query(StateExecutionInstance.class, pageRequest);
     if (pageResponse == null || pageResponse.isEmpty()) {
-      return null;
+      return;
     }
-    List<StateExecutionInstance> contextTransitionInstances = new ArrayList<>();
-    Map<String, StateExecutionInstance> prevInstanceIdMap = new HashMap<>();
-    pageResponse.forEach(stateExecutionInstance -> {
-      String prevInstanceId = stateExecutionInstance.getPrevInstanceId();
-      if (prevInstanceId != null) {
-        prevInstanceIdMap.put(prevInstanceId, stateExecutionInstance);
-      }
-      if (stateExecutionInstance.isContextTransition()) {
-        contextTransitionInstances.add(stateExecutionInstance);
-      }
-    });
 
-    for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
-      if (stateExecutionInstance.getContextElement() == null) {
+    for (StateExecutionInstance stateExecutionInstance : pageResponse.getResponse()) {
+      ServiceElement serviceElement = getServiceElement(stateExecutionInstance.getContextElement());
+      if (serviceElement == null) {
         continue;
       }
-      ContextElement svcElement = getServiceElement(stateExecutionInstance.getContextElement());
-      ElementExecutionSummary elementExecutionSummary = elementExecutionSummaryMap.get(svcElement.getUuid());
-      if (elementExecutionSummary == null) {
-        elementExecutionSummary = new ElementExecutionSummary();
-        elementExecutionSummary.setContextElement(svcElement);
-        elementExecutionSummary.setStartTs(stateExecutionInstance.getStartTs());
-        elementExecutionSummaries.add(elementExecutionSummary);
-        elementExecutionSummaryMap.put(svcElement.getUuid(), elementExecutionSummary);
+
+      ElementExecutionSummary elementSummary = serviceSummaryMap.get(serviceElement.getUuid());
+      if (elementSummary == null) {
+        elementSummary =
+            anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
+        serviceSummaryMap.put(serviceElement.getUuid(), elementSummary);
       }
 
-      StateExecutionInstance last = stateExecutionInstance;
-      StateExecutionInstance next = stateExecutionInstance;
-      List<StateExecutionInstance> childRepeatInstances = new ArrayList<>();
-      while (next != null) {
-        if (next.getStateType().equals(StateType.REPEAT.name()) || next.getStateType().equals(StateType.FORK.name())) {
-          childRepeatInstances.add(next);
-        }
-        last = next;
-        next = prevInstanceIdMap.get(next.getUuid());
+      if (stateExecutionInstance.getStartTs() != null
+          && (elementSummary.getStartTs() == null
+                 || elementSummary.getStartTs() > stateExecutionInstance.getStartTs())) {
+        elementSummary.setStartTs(stateExecutionInstance.getStartTs());
       }
 
-      if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
-        elementExecutionSummary.setEndTs(last.getEndTs());
-        elementExecutionSummary.setStatus(last.getStatus());
+      if (stateExecutionInstance.getEndTs() != null
+          && (elementSummary.getEndTs() == null || elementSummary.getEndTs() < stateExecutionInstance.getEndTs())) {
+        elementSummary.setEndTs(stateExecutionInstance.getEndTs());
       }
-
-      List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(childRepeatInstances);
-      elementExecutionSummary.setInstancesCount(instanceStatusSummary.size());
+      elementSummary.setStatus(topInstanceMap.get(stateExecutionInstance.getParentInstanceId()).getStatus());
     }
-    return elementExecutionSummaries;
   }
 
   private ServiceElement getServiceElement(ContextElement contextElement) {
@@ -967,78 +979,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       case INSTANCE: {
         return ((InstanceElement) contextElement).getServiceTemplateElement().getServiceElement();
       }
+      case PARAM: {
+        if (Constants.PHASE_PARAM.equals(contextElement.getName())) {
+          return ((PhaseElement) contextElement).getServiceElement();
+        }
+        break;
+      }
       default: {}
     }
     return null;
-  }
-
-  private StateExecutionInstance getRepeatInstanceByType(
-      List<StateExecutionInstance> topInstances, ContextElementType contextElementType) {
-    if (topInstances == null || topInstances.isEmpty()) {
-      return null;
-    }
-
-    for (StateExecutionInstance instance : topInstances) {
-      if (!instance.getStateType().equals(StateType.REPEAT.name())) {
-        continue;
-      }
-      if ((instance.getStateExecutionData() instanceof RepeatStateExecutionData)) {
-        RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) instance.getStateExecutionData();
-        if (repeatStateExecutionData.getRepeatElementType() == contextElementType) {
-          return instance;
-        }
-      }
-    }
-    return null;
-  }
-
-  private List<InstanceStatusSummary> aggregateInstanceStatusSummary(List<StateExecutionInstance> childInstances) {
-    // TODO: better aggregation needed
-    Map<String, InstanceStatusSummary> summaryMap = new HashMap<>();
-    for (StateExecutionInstance childInstance : childInstances) {
-      if (!(childInstance.getStateExecutionData() instanceof ElementStateExecutionData)) {
-        continue;
-      }
-      ElementStateExecutionData childStateExecutionData =
-          (ElementStateExecutionData) childInstance.getStateExecutionData();
-      if (childStateExecutionData.getInstanceStatusSummary() != null) {
-        childStateExecutionData.getInstanceStatusSummary().forEach(
-            summary -> { summaryMap.put(summary.getInstanceElement().getUuid(), summary); });
-      }
-    }
-    return new ArrayList<>(summaryMap.values());
-  }
-
-  private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> getStatusInstanceBreakdownMap(
-      List<InstanceStatusSummary> instanceStatusSummaries) {
-    LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap = new LinkedHashMap<>();
-    StatusInstanceBreakdown success = aStatusInstanceBreakdown().withStatus(ExecutionStatus.SUCCESS).build();
-    statusInstanceBreakdownMap.put(ExecutionStatus.SUCCESS, success);
-    StatusInstanceBreakdown failed = aStatusInstanceBreakdown().withStatus(ExecutionStatus.FAILED).build();
-    statusInstanceBreakdownMap.put(ExecutionStatus.FAILED, failed);
-    if (instanceStatusSummaries == null || instanceStatusSummaries.isEmpty()) {
-      return statusInstanceBreakdownMap;
-    }
-    instanceStatusSummaries.forEach(instanceStatusSummary -> {
-      ExecutionStatus status = instanceStatusSummary.getStatus();
-      StatusInstanceBreakdown statusInstanceBreakdown =
-          statusInstanceBreakdownMap.getOrDefault(status, aStatusInstanceBreakdown().withStatus(status).build());
-      statusInstanceBreakdown.setInstanceCount(statusInstanceBreakdown.getInstanceCount() + 1);
-    });
-    // TODO: interpret history
-    if (success.getInstanceCount() > 0) {
-      success.getInstanceExecutionHistories().add(anInstanceExecutionHistory()
-                                                      .withStatus(success.getStatus())
-                                                      .withIntanceCount(success.getInstanceCount())
-                                                      .build());
-    }
-    if (failed.getInstanceCount() > 0) {
-      failed.getInstanceExecutionHistories().add(anInstanceExecutionHistory()
-                                                     .withStatus(failed.getStatus())
-                                                     .withIntanceCount(failed.getInstanceCount())
-                                                     .build());
-    }
-    return statusInstanceBreakdownMap;
   }
 
   private void refreshBreakdown(WorkflowExecution workflowExecution) {
@@ -1091,5 +1040,81 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         logger.error("Error in breakdown retrieval", e);
       }
     }
+  }
+
+  @Override
+  public List<ElementExecutionSummary> getElementsSummary(
+      String appId, String executionUuid, String parentStateExecutionInstanceId) {
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", Operator.EQ, appId)
+            .addFilter("executionUuid", Operator.EQ, executionUuid)
+            .addFilter("parentInstanceId", Operator.IN, parentStateExecutionInstanceId)
+            .build();
+
+    PageResponse<StateExecutionInstance> pageResponse =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    if (pageResponse == null || pageResponse.isEmpty()) {
+      return null;
+    }
+
+    List<StateExecutionInstance> contextTransitionInstances = pageResponse.getResponse()
+                                                                  .stream()
+                                                                  .filter(instance -> instance.isContextTransition())
+                                                                  .collect(Collectors.toList());
+    Map<String, StateExecutionInstance> prevInstanceIdMap =
+        pageResponse.getResponse()
+            .stream()
+            .filter(instance -> instance.getPrevInstanceId() != null)
+            .collect(Collectors.toMap(instance -> instance.getPrevInstanceId(), Function.identity()));
+
+    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
+    for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
+      if (stateExecutionInstance.getContextElement() == null) {
+        logger.error(
+            "refreshSummary - no contextElement for stateExecutionInstance: {}", stateExecutionInstance.getUuid());
+        continue;
+      }
+      ContextElement contextElement = stateExecutionInstance.getContextElement();
+      ElementExecutionSummary elementExecutionSummary = anElementExecutionSummary()
+                                                            .withContextElement(contextElement)
+                                                            .withStartTs(stateExecutionInstance.getStartTs())
+                                                            .build();
+
+      List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+
+      StateExecutionInstance last = stateExecutionInstance;
+      for (StateExecutionInstance next = stateExecutionInstance; next != null;
+           next = prevInstanceIdMap.get(next.getUuid())) {
+        if ((StateType.REPEAT.name().equals(next.getStateType()) || StateType.REPEAT.name().equals(next.getStateType()))
+            && next.getStateExecutionData() instanceof ElementStateExecutionData) {
+          ElementStateExecutionData elementStateExecutionData =
+              (ElementStateExecutionData) next.getStateExecutionData();
+          instanceStatusSummaries.addAll(elementStateExecutionData.getElementStatusSummary()
+                                             .stream()
+                                             .filter(e -> e.getInstanceStatusSummaries() != null)
+                                             .flatMap(l -> l.getInstanceStatusSummaries().stream())
+                                             .collect(Collectors.toList()));
+        }
+        last = next;
+      }
+
+      if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
+        elementExecutionSummary.setEndTs(last.getEndTs());
+      }
+      if (contextElement.getElementType() == ContextElementType.INSTANCE) {
+        instanceStatusSummaries.add(anInstanceStatusSummary()
+                                        .withInstanceElement((InstanceElement) contextElement)
+                                        .withStatus(last.getStatus())
+                                        .build());
+      }
+
+      elementExecutionSummary.setStatus(last.getStatus());
+      elementExecutionSummary.setInstanceStatusSummaries(instanceStatusSummaries);
+      elementExecutionSummaries.add(elementExecutionSummary);
+    }
+
+    return elementExecutionSummaries;
   }
 }

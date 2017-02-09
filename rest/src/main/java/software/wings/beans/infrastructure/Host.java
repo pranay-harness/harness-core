@@ -1,29 +1,17 @@
 package software.wings.beans.infrastructure;
 
-import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
-
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.ConfigFile;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.HostConnectionCredential;
-import software.wings.beans.ServiceTemplate;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.Tag;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -32,44 +20,69 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Indexes(@Index(fields = { @Field("infraId")
+@Indexes(@Index(fields = { @Field("serviceTemplateId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base {
-  @NotEmpty private String infraId;
-  private String hostName;
-  private String osType;
-
-  @FormDataParam("hostConnAttr") @NotNull private String hostConnAttr;
-
-  @FormDataParam("bastionConnAttr") private String bastionConnAttr;
-
-  @FormDataParam("configTag") @Transient private Tag configTag;
-
-  @Transient private List<ConfigFile> configFiles = new ArrayList<>();
-
-  @Transient @JsonProperty(access = WRITE_ONLY) private List<String> hostNames; // to support bulk add host API
-
-  @FormDataParam("serviceTemplates")
-  @Transient
-  @JsonProperty(access = WRITE_ONLY)
-  private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
+  @NotEmpty private String envId;
+  private String serviceTemplateId;
+  private String infraMappingId;
+  private String computeProviderId;
+  @NotEmpty private String hostName;
+  @NotNull private String hostConnAttr;
+  private String bastionConnAttr;
 
   /**
-   * Gets infra id.
+   * Gets env id.
    *
-   * @return the infra id
+   * @return the env id
    */
-  public String getInfraId() {
-    return infraId;
+  public String getEnvId() {
+    return envId;
   }
 
   /**
-   * Sets infra id.
+   * Sets env id.
    *
-   * @param infraId the infra id
+   * @param envId the env id
    */
-  public void setInfraId(String infraId) {
-    this.infraId = infraId;
+  public void setEnvId(String envId) {
+    this.envId = envId;
+  }
+
+  /**
+   * Gets infra mapping id.
+   *
+   * @return the infra mapping id
+   */
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  /**
+   * Sets infra mapping id.
+   *
+   * @param infraMappingId the infra mapping id
+   */
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
+  }
+
+  /**
+   * Gets compute provider id.
+   *
+   * @return the compute provider id
+   */
+  public String getComputeProviderId() {
+    return computeProviderId;
+  }
+
+  /**
+   * Sets compute provider id.
+   *
+   * @param computeProviderId the compute provider id
+   */
+  public void setComputeProviderId(String computeProviderId) {
+    this.computeProviderId = computeProviderId;
   }
 
   /**
@@ -127,115 +140,28 @@ public class Host extends Base {
   }
 
   /**
-   * Gets config tag.
+   * Gets service template id.
    *
-   * @return the config tag
+   * @return the service template id
    */
-  public Tag getConfigTag() {
-    return configTag;
+  public String getServiceTemplateId() {
+    return serviceTemplateId;
   }
 
   /**
-   * Sets config tag.
+   * Sets service template id.
    *
-   * @param configTag the config tag
+   * @param serviceTemplateId the service template id
    */
-  public void setConfigTag(Tag configTag) {
-    this.configTag = configTag;
-  }
-
-  /**
-   * Gets config files.
-   *
-   * @return the config files
-   */
-  public List<ConfigFile> getConfigFiles() {
-    return configFiles;
-  }
-
-  /**
-   * Sets config files.
-   *
-   * @param configFiles the config files
-   */
-  public void setConfigFiles(List<ConfigFile> configFiles) {
-    this.configFiles = configFiles;
-  }
-
-  /**
-   * Gets host names.
-   *
-   * @return the host names
-   */
-  public List<String> getHostNames() {
-    return hostNames;
-  }
-
-  /**
-   * Sets host names.
-   *
-   * @param hostNames the host names
-   */
-  public void setHostNames(List<String> hostNames) {
-    this.hostNames = hostNames;
-  }
-
-  /**
-   * Gets os type.
-   *
-   * @return the os type
-   */
-  public String getOsType() {
-    return osType;
-  }
-
-  /**
-   * Sets os type.
-   *
-   * @param osType the os type
-   */
-  public void setOsType(String osType) {
-    this.osType = osType;
-  }
-
-  /**
-   * Gets service templates.
-   *
-   * @return the service templates
-   */
-  public List<ServiceTemplate> getServiceTemplates() {
-    return serviceTemplates;
-  }
-
-  /**
-   * Sets service templates.
-   *
-   * @param serviceTemplates the service templates
-   */
-  public void setServiceTemplates(List<ServiceTemplate> serviceTemplates) {
-    this.serviceTemplates = serviceTemplates;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("infraId", infraId)
-        .add("hostName", hostName)
-        .add("osType", osType)
-        .add("hostConnAttr", hostConnAttr)
-        .add("bastionConnAttr", bastionConnAttr)
-        .add("configTag", configTag)
-        .add("configFiles", configFiles)
-        .add("hostNames", hostNames)
-        .add("serviceTemplates", serviceTemplates)
-        .toString();
+  public void setServiceTemplateId(String serviceTemplateId) {
+    this.serviceTemplateId = serviceTemplateId;
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles, hostNames,
-              serviceTemplates);
+        + Objects.hash(
+              envId, serviceTemplateId, infraMappingId, computeProviderId, hostName, hostConnAttr, bastionConnAttr);
   }
 
   @Override
@@ -250,27 +176,37 @@ public class Host extends Base {
       return false;
     }
     final Host other = (Host) obj;
-    return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.osType, other.osType) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
-        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr)
-        && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles)
-        && Objects.equals(this.hostNames, other.hostNames)
-        && Objects.equals(this.serviceTemplates, other.serviceTemplates);
+    return Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
+        && Objects.equals(this.infraMappingId, other.infraMappingId)
+        && Objects.equals(this.computeProviderId, other.computeProviderId)
+        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
+        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("envId", envId)
+        .add("serviceTemplateId", serviceTemplateId)
+        .add("infraMappingId", infraMappingId)
+        .add("computeProviderId", computeProviderId)
+        .add("hostName", hostName)
+        .add("hostConnAttr", hostConnAttr)
+        .add("bastionConnAttr", bastionConnAttr)
+        .toString();
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private String infraId;
+    private String envId;
+    private String serviceTemplateId;
+    private String infraMappingId;
+    private String computeProviderId;
     private String hostName;
-    private String osType;
     private String hostConnAttr;
     private String bastionConnAttr;
-    private Tag configTag;
-    private List<ConfigFile> configFiles = new ArrayList<>();
-    private List<String> hostNames; // to support bulk add host API
-    private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -290,13 +226,46 @@ public class Host extends Base {
     }
 
     /**
-     * With infra id builder.
+     * With env id builder.
      *
-     * @param infraId the infra id
+     * @param envId the env id
      * @return the builder
      */
-    public Builder withInfraId(String infraId) {
-      this.infraId = infraId;
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With service template id builder.
+     *
+     * @param serviceTemplateId the service template id
+     * @return the builder
+     */
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    /**
+     * With infra mapping id builder.
+     *
+     * @param infraMappingId the infra mapping id
+     * @return the builder
+     */
+    public Builder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    /**
+     * With compute provider id builder.
+     *
+     * @param computeProviderId the compute provider id
+     * @return the builder
+     */
+    public Builder withComputeProviderId(String computeProviderId) {
+      this.computeProviderId = computeProviderId;
       return this;
     }
 
@@ -312,17 +281,6 @@ public class Host extends Base {
     }
 
     /**
-     * With os type builder.
-     *
-     * @param osType the os type
-     * @return the builder
-     */
-    public Builder withOsType(String osType) {
-      this.osType = osType;
-      return this;
-    }
-
-    /**
      * With host conn attr builder.
      *
      * @param hostConnAttr the host conn attr
@@ -330,11 +288,6 @@ public class Host extends Base {
      */
     public Builder withHostConnAttr(String hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
-      return this;
-    }
-
-    public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
-      this.hostConnAttr = hostConnAttr.getUuid();
       return this;
     }
 
@@ -346,65 +299,6 @@ public class Host extends Base {
      */
     public Builder withBastionConnAttr(String bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
-      return this;
-    }
-
-    public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
-      this.bastionConnAttr = bastionConnAttr.getUuid();
-      return this;
-    }
-
-    /**
-     * With config tag builder.
-     *
-     * @param configTag the config tag
-     * @return the builder
-     */
-    public Builder withConfigTag(Tag configTag) {
-      this.configTag = configTag;
-      return this;
-    }
-
-    /**
-     * With config files builder.
-     *
-     * @param configFiles the config files
-     * @return the builder
-     */
-    public Builder withConfigFiles(List<ConfigFile> configFiles) {
-      this.configFiles = configFiles;
-      return this;
-    }
-
-    /**
-     * With host connection credential builder.
-     *
-     * @param hostConnectionCredential the host connection credential
-     * @return the builder
-     */
-    public Builder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
-      return this;
-    }
-
-    /**
-     * With host names builder.
-     *
-     * @param hostNames the host names
-     * @return the builder
-     */
-    public Builder withHostNames(List<String> hostNames) {
-      this.hostNames = hostNames;
-      return this;
-    }
-
-    /**
-     * With service templates builder.
-     *
-     * @param serviceTemplates the service templates
-     * @return the builder
-     */
-    public Builder withServiceTemplates(List<ServiceTemplate> serviceTemplates) {
-      this.serviceTemplates = serviceTemplates;
       return this;
     }
 
@@ -481,15 +375,13 @@ public class Host extends Base {
      */
     public Builder but() {
       return aHost()
-          .withInfraId(infraId)
+          .withEnvId(envId)
+          .withServiceTemplateId(serviceTemplateId)
+          .withInfraMappingId(infraMappingId)
+          .withComputeProviderId(computeProviderId)
           .withHostName(hostName)
-          .withOsType(osType)
           .withHostConnAttr(hostConnAttr)
           .withBastionConnAttr(bastionConnAttr)
-          .withConfigTag(configTag)
-          .withConfigFiles(configFiles)
-          .withHostNames(hostNames)
-          .withServiceTemplates(serviceTemplates)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -505,15 +397,13 @@ public class Host extends Base {
      */
     public Host build() {
       Host host = new Host();
-      host.setInfraId(infraId);
+      host.setEnvId(envId);
+      host.setServiceTemplateId(serviceTemplateId);
+      host.setInfraMappingId(infraMappingId);
+      host.setComputeProviderId(computeProviderId);
       host.setHostName(hostName);
-      host.setOsType(osType);
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
-      host.setConfigTag(configTag);
-      host.setConfigFiles(configFiles);
-      host.setHostNames(hostNames);
-      host.setServiceTemplates(serviceTemplates);
       host.setUuid(uuid);
       host.setAppId(appId);
       host.setCreatedBy(createdBy);

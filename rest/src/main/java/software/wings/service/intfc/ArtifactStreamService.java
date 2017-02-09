@@ -6,7 +6,10 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.stencils.Stencil;
 
+import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -109,4 +112,22 @@ public interface ArtifactStreamService {
    * @param workflowId the workflow id
    */
   void triggerScheduledStreamAction(String appId, String streamId, String workflowId);
+
+  /**
+   * Gets artifact stream schema.
+   *
+   * @param appId the app id
+   * @param serviceId
+   * @return the artifact stream schema
+   */
+  List<Stencil> getArtifactStreamSchema(String appId, String serviceId);
+
+  /**
+   * Gets build source.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the build source
+   */
+  Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId);
 }

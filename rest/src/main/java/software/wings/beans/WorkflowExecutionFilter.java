@@ -26,6 +26,27 @@ public class WorkflowExecutionFilter {
     this.envIds = envIds;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    WorkflowExecutionFilter that = (WorkflowExecutionFilter) o;
+
+    if (workflowIds != null ? !workflowIds.equals(that.workflowIds) : that.workflowIds != null)
+      return false;
+    return envIds != null ? envIds.equals(that.envIds) : that.envIds == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = workflowIds != null ? workflowIds.hashCode() : 0;
+    result = 31 * result + (envIds != null ? envIds.hashCode() : 0);
+    return result;
+  }
+
   public static final class WorkflowExecutionFilterBuilder {
     private List<String> workflowIds = new ArrayList<>();
     private List<String> envIds = new ArrayList<>();

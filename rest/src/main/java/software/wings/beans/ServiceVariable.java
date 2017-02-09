@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.utils.validation.Create;
 
 import java.util.Objects;
@@ -19,9 +20,9 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @Entity(value = "serviceVariables", noClassnameStored = true)
-@Indexes(@Index(
-    fields = { @Field("entityId")
-               , @Field("templateId"), @Field("type") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("entityId")
+                           , @Field("templateId"), @Field("type"), @Field("name") },
+    options = @IndexOptions(unique = true)))
 public class ServiceVariable extends Base {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
@@ -35,6 +36,10 @@ public class ServiceVariable extends Base {
   @NotNull(groups = {Create.class}) private EntityType entityType;
 
   @NotEmpty(groups = {Create.class}) private String entityId;
+
+  private String parentServiceVariableId;
+
+  @Transient private ServiceVariable overriddenServiceVariable;
 
   private String name;
   private String value;
@@ -170,9 +175,27 @@ public class ServiceVariable extends Base {
     this.name = name;
   }
 
+  public String getParentServiceVariableId() {
+    return parentServiceVariableId;
+  }
+
+  public void setParentServiceVariableId(String parentServiceVariableId) {
+    this.parentServiceVariableId = parentServiceVariableId;
+  }
+
+  public ServiceVariable getOverriddenServiceVariable() {
+    return overriddenServiceVariable;
+  }
+
+  public void setOverriddenServiceVariable(ServiceVariable overriddenServiceVariable) {
+    this.overriddenServiceVariable = overriddenServiceVariable;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(templateId, envId, entityType, entityId, name, value, type);
+    return 31 * super.hashCode()
+        + Objects.hash(templateId, envId, entityType, entityId, parentServiceVariableId, overriddenServiceVariable,
+              name, value, type);
   }
 
   @Override
@@ -189,6 +212,8 @@ public class ServiceVariable extends Base {
     final ServiceVariable other = (ServiceVariable) obj;
     return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
         && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
+        && Objects.equals(this.parentServiceVariableId, other.parentServiceVariableId)
+        && Objects.equals(this.overriddenServiceVariable, other.overriddenServiceVariable)
         && Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value)
         && Objects.equals(this.type, other.type);
   }
@@ -200,6 +225,8 @@ public class ServiceVariable extends Base {
         .add("envId", envId)
         .add("entityType", entityType)
         .add("entityId", entityId)
+        .add("parentServiceVariableId", parentServiceVariableId)
+        .add("overriddenServiceVariable", overriddenServiceVariable)
         .add("name", name)
         .add("value", value)
         .add("type", type)

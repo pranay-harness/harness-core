@@ -45,6 +45,9 @@ public class MiscellaneousTest {
       new FilterEnum(), new FilterPackageInfo(), NO_TEST_FILTER, EXCLUDE_PACKAGES_FOR_GETTER_SETTER_TO_STRING,
       new FilterClassName("^((?!Test$).)*$"), new FilterClassName("^((?!Tester$).)*$")};
 
+  private static final PojoClassFilter EXCLUDE_APP_PACKAGE_FILTER =
+      pojoClass -> !EXCLUDE_APP_PACKAGE.matcher(pojoClass.getClazz().getName()).find();
+
   /**
    * Should provide coverage to getter setter and to string.
    */
@@ -67,7 +70,8 @@ public class MiscellaneousTest {
                               .with(new NoFieldShadowingRule())
                               .build();
 
-    validator.validateRecursively("software.wings", NO_TEST_FILTER, new FilterEnum(), new FilterNonConcrete());
+    validator.validateRecursively(
+        "software.wings", EXCLUDE_APP_PACKAGE_FILTER, NO_TEST_FILTER, new FilterEnum(), new FilterNonConcrete());
   }
 
   /**

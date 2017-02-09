@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,21 +15,17 @@ import javax.validation.constraints.Size;
 
 @Entity(value = "notificationRules", noClassnameStored = true)
 public class NotificationRule extends Base {
-  @NotNull private String ruleName;
+  private List<ExecutionStatus> conditions = new ArrayList<>();
+
+  private ExecutionScope executionScope;
 
   @NotNull @Size(min = 1) private Map<String, Object> notificationFilters;
 
   @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
+  private int batchIntervalInSecs;
+
   private boolean active = true;
-
-  public String getRuleName() {
-    return ruleName;
-  }
-
-  public void setRuleName(String ruleName) {
-    this.ruleName = ruleName;
-  }
 
   public Map<String, Object> getNotificationFilters() {
     return notificationFilters;
@@ -54,10 +51,36 @@ public class NotificationRule extends Base {
     this.active = active;
   }
 
+  public List<ExecutionStatus> getConditions() {
+    return conditions;
+  }
+
+  public void setConditions(List<ExecutionStatus> conditions) {
+    this.conditions = conditions;
+  }
+
+  public ExecutionScope getExecutionScope() {
+    return executionScope;
+  }
+
+  public void setExecutionScope(ExecutionScope executionScope) {
+    this.executionScope = executionScope;
+  }
+
+  public int getBatchIntervalInSecs() {
+    return batchIntervalInSecs;
+  }
+
+  public void setBatchIntervalInSecs(int batchIntervalInSecs) {
+    this.batchIntervalInSecs = batchIntervalInSecs;
+  }
+
   public static final class NotificationRuleBuilder {
-    private String ruleName;
+    private List<ExecutionStatus> conditions = new ArrayList<>();
+    private ExecutionScope executionScope;
     private Map<String, Object> notificationFilters;
     private List<NotificationGroup> notificationGroups = new ArrayList<>();
+    private int batchIntervalInSecs;
     private boolean active = true;
     private String uuid;
     private String appId;
@@ -72,8 +95,13 @@ public class NotificationRule extends Base {
       return new NotificationRuleBuilder();
     }
 
-    public NotificationRuleBuilder withRuleName(String ruleName) {
-      this.ruleName = ruleName;
+    public NotificationRuleBuilder withConditions(List<ExecutionStatus> conditions) {
+      this.conditions = conditions;
+      return this;
+    }
+
+    public NotificationRuleBuilder withExecutionScope(ExecutionScope executionScope) {
+      this.executionScope = executionScope;
       return this;
     }
 
@@ -82,8 +110,13 @@ public class NotificationRule extends Base {
       return this;
     }
 
-    public NotificationRuleBuilder addNotificationGroups(NotificationGroup notificationGroup) {
+    public NotificationRuleBuilder addNotificationGroup(NotificationGroup notificationGroup) {
       this.notificationGroups.add(notificationGroup);
+      return this;
+    }
+
+    public NotificationRuleBuilder withBatchIntervalInSecs(int batchIntervalInSecs) {
+      this.batchIntervalInSecs = batchIntervalInSecs;
       return this;
     }
 
@@ -124,9 +157,11 @@ public class NotificationRule extends Base {
 
     public NotificationRule build() {
       NotificationRule notificationRule = new NotificationRule();
-      notificationRule.setRuleName(ruleName);
+      notificationRule.setConditions(conditions);
+      notificationRule.setExecutionScope(executionScope);
       notificationRule.setNotificationFilters(notificationFilters);
       notificationRule.setNotificationGroups(notificationGroups);
+      notificationRule.setBatchIntervalInSecs(batchIntervalInSecs);
       notificationRule.setActive(active);
       notificationRule.setUuid(uuid);
       notificationRule.setAppId(appId);

@@ -9,7 +9,6 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
 
@@ -26,7 +25,6 @@ import java.util.Objects;
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;
   @FormDataParam("description") private String description;
-  @FormDataParam("source") private ArtifactStream source;
   private boolean standardUpload = false;
   @FormDataParam("family") private ContainerFamily family;
   private String stackRootDirectory;
@@ -67,24 +65,6 @@ public class AppContainer extends BaseFile {
    */
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  /**
-   * Gets source.
-   *
-   * @return the source
-   */
-  public ArtifactStream getSource() {
-    return source;
-  }
-
-  /**
-   * Sets source.
-   *
-   * @param source the source
-   */
-  public void setSource(ArtifactStream source) {
-    this.source = source;
   }
 
   /**
@@ -170,7 +150,7 @@ public class AppContainer extends BaseFile {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(standard, description, source, standardUpload, family, stackRootDirectory, fileType, accountId);
+        + Objects.hash(standard, description, standardUpload, family, stackRootDirectory, fileType, accountId);
   }
 
   @Override
@@ -178,7 +158,6 @@ public class AppContainer extends BaseFile {
     return MoreObjects.toStringHelper(this)
         .add("standard", standard)
         .add("description", description)
-        .add("source", source)
         .add("standardUpload", standardUpload)
         .add("family", family)
         .add("stackRootDirectory", stackRootDirectory)
@@ -200,8 +179,7 @@ public class AppContainer extends BaseFile {
     }
     final AppContainer other = (AppContainer) obj;
     return Objects.equals(this.standard, other.standard) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.source, other.source) && Objects.equals(this.standardUpload, other.standardUpload)
-        && Objects.equals(this.family, other.family)
+        && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family)
         && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
         && Objects.equals(this.fileType, other.fileType) && Objects.equals(this.accountId, other.accountId);
   }
@@ -219,7 +197,6 @@ public class AppContainer extends BaseFile {
     private String checksum;
     private boolean standard;
     private String description;
-    private ArtifactStream source;
     private boolean standardUpload = false;
     private ContainerFamily family;
     private String stackRootDirectory;
@@ -338,17 +315,6 @@ public class AppContainer extends BaseFile {
      */
     public Builder withDescription(String description) {
       this.description = description;
-      return this;
-    }
-
-    /**
-     * With source builder.
-     *
-     * @param source the source
-     * @return the builder
-     */
-    public Builder withSource(ArtifactStream source) {
-      this.source = source;
       return this;
     }
 
@@ -478,7 +444,6 @@ public class AppContainer extends BaseFile {
           .withChecksum(checksum)
           .withStandard(standard)
           .withDescription(description)
-          .withSource(source)
           .withStandardUpload(standardUpload)
           .withFamily(family)
           .withStackRootDirectory(stackRootDirectory)
@@ -507,7 +472,6 @@ public class AppContainer extends BaseFile {
       appContainer.setChecksum(checksum);
       appContainer.setStandard(standard);
       appContainer.setDescription(description);
-      appContainer.setSource(source);
       appContainer.setStandardUpload(standardUpload);
       appContainer.setFamily(family);
       appContainer.setStackRootDirectory(stackRootDirectory);

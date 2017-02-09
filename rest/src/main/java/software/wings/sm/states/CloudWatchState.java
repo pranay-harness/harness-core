@@ -30,9 +30,9 @@ import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsSettingProvider;
 import software.wings.service.intfc.ActivityService;
@@ -103,10 +103,10 @@ public class CloudWatchState extends State {
                                                      .build();
 
     SettingAttribute settingAttribute = settingsService.get(GLOBAL_APP_ID, awsCredentialsConfigId);
-    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsInfrastructureProviderConfig)) {
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
       throw new StateExecutionException("AWS account setting not found");
     }
-    AwsInfrastructureProviderConfig awsConfig = (AwsInfrastructureProviderConfig) settingAttribute.getValue();
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
 
     ContextElement contextElement = (ContextElement) context.evaluateExpression("${instance}");
     if (contextElement != null) {

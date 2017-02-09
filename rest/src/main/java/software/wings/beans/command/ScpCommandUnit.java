@@ -6,17 +6,15 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -30,14 +28,12 @@ import java.util.stream.Stream;
  * Created by anubhaw on 7/14/16.
  */
 @JsonTypeName("SCP")
-public class ScpCommandUnit extends AbstractCommandUnit {
+public class ScpCommandUnit extends SshCommandUnit {
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
 
   @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
-
-  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
   /**
    * Instantiates a new Scp command unit.
@@ -47,14 +43,13 @@ public class ScpCommandUnit extends AbstractCommandUnit {
   }
 
   @Override
-  public ExecutionResult execute(CommandExecutionContext context) {
+  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     FileBucket fileBucket = null;
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
-        context.getArtifact().getArtifactFiles().forEach(
-            artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+        context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
         break;
       case APPLICATION_STACK:
         fileBucket = FileBucket.PLATFORMS;
@@ -296,6 +291,7 @@ public class ScpCommandUnit extends AbstractCommandUnit {
   /**
    * The type Scp command data provider.
    */
+  @Singleton
   public static class ScpCommandDataProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {

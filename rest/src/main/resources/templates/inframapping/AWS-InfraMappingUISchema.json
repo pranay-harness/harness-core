@@ -1,0 +1,6 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "restrictionType": { "ui:widget": "hidden" },
+  "restrictionExpression": { "ui:widget": "hidden" },
+  "ui:order": [ "*", "computeProviderType", "hostConnectionAttrs"]
+}

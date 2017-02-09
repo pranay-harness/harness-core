@@ -35,7 +35,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
-import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.DataProvider;
 
@@ -55,7 +54,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class EnvironmentServiceImpl implements EnvironmentService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private TagService tagService;
   @Inject private ExecutorService executorService;
   @Inject private WorkflowService workflowService;
   @Inject private SetupService setupService;
@@ -134,7 +132,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment save(Environment environment) {
     environment = wingsPersistence.saveAndGet(Environment.class, environment);
-    tagService.createDefaultRootTagForEnvironment(environment);
     serviceTemplateService.createDefaultTemplatesByEnv(environment);
     notificationService.sendNotificationAsync(
         anInformationNotification()
@@ -181,7 +178,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     if (deleted) {
       executorService.submit(() -> {
         serviceTemplateService.deleteByEnv(appId, envId);
-        tagService.deleteByEnv(appId, envId);
         hostService.deleteByEnvironment(appId, envId);
         activityService.deleteByEnvironment(appId, envId);
         notificationService.sendNotificationAsync(

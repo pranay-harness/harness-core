@@ -3,6 +3,9 @@ package software.wings.core.ssh.executors;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
@@ -13,7 +16,10 @@ import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.F
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.CharStreams;
 
@@ -24,21 +30,21 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
+import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-import software.wings.rules.RealMongo;
 import software.wings.rules.SshRule;
-import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -80,8 +86,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Rule public SshRule sshRule = new SshRule(sshRoot);
   private SshSessionConfig.Builder configBuilder;
   private SshExecutor executor;
-  @Inject private FileService fileService;
-  @Inject private LogService logService;
+  @Mock private DelegateFileManager fileService;
+  @Mock private DelegateLogService logService;
 
   /**
    * Sets the up.
@@ -100,6 +106,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                         .withUserName(sshRule.getUsername())
                         .withPassword(sshRule.getPassword())
                         .withSshConnectionTimeout(5000)
+                        .withAccountId(ACCOUNT_ID)
                         .withCommandUnitName("test");
   }
 
@@ -206,7 +213,6 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    *
    * @throws IOException Signals that an I/O exception has occurred.
    */
-  @RealMongo
   @Test
   public void shouldTransferGridFSFile() throws IOException {
     File file = testFolder.newFile();
@@ -220,10 +226,12 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                                    .withFileName("text.txt")
                                    .build();
     FileInputStream fileInputStream = new FileInputStream(file);
-    String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
+    when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
+        .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
+    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString())).thenReturn(fileInputStream);
     executor.init(configBuilder.but().build());
 
-    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(fileId, null)))).isEqualTo(SUCCESS);
+    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, null)))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameContentAs(file).canRead().canWrite();
   }
@@ -233,7 +241,6 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    *
    * @throws IOException the io exception
    */
-  @RealMongo
   @Test
   public void shouldTransferGridFSFileWithDifferentName() throws IOException {
     File file = testFolder.newFile();
@@ -247,10 +254,12 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                                    .withFileName("text.txt")
                                    .build();
     FileInputStream fileInputStream = new FileInputStream(file);
-    String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
+    when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
+        .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
+    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString())).thenReturn(fileInputStream);
     executor.init(configBuilder.but().build());
 
-    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(fileId, "text1.txt")))).isEqualTo(SUCCESS);
+    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, "text1.txt")))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), "text1.txt")).hasSameContentAs(file).canRead().canWrite();
   }

@@ -9,6 +9,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -33,12 +34,13 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EventType;
-import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.ContainerTaskType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -133,7 +135,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Service addDefaultCommands(Service service) {
-    List<Graph> commands = emptyList();
+    List<Command> commands = emptyList();
     if (service.getAppContainer() != null && service.getAppContainer().getFamily() != null) {
       commands = service.getAppContainer().getFamily().getDefaultCommands(
           service.getArtifactType(), service.getAppContainer());
@@ -142,9 +144,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     Service serviceToReturn = service;
-    for (Graph command : commands) {
+    for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(command).build()).build());
+          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     }
 
     return serviceToReturn;
@@ -172,9 +174,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service get(String appId, String serviceId) {
+    return get(appId, serviceId, true);
+  }
+
+  @Override
+  public Service get(String appId, String serviceId, boolean includeDetails) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
+    }
+
+    if (!includeDetails) {
+      return service;
     }
 
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
@@ -254,6 +265,30 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       service.setSetup(setupService.getServiceSetupStatus(service));
     }
     return service;
+  }
+
+  @Override
+  public ContainerTask createContainerTask(ContainerTask containerTask) {
+    boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
+    if (!exist) {
+      throw new WingsException(INVALID_REQUEST, "message", "Service doesn't exists");
+    }
+    return wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
+  }
+
+  @Override
+  public void deleteContainerTask(String appId, String containerTaskId) {
+    wingsPersistence.delete(ContainerTask.class, appId, containerTaskId);
+  }
+
+  @Override
+  public ContainerTask updateContainerTask(ContainerTask containerTask) {
+    return createContainerTask(containerTask);
+  }
+
+  @Override
+  public PageResponse<ContainerTask> listContainerTasks(PageRequest<ContainerTask> pageRequest) {
+    return wingsPersistence.query(ContainerTask.class, pageRequest);
   }
 
   /**
@@ -424,6 +459,23 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName) {
     return stencilPostProcessor.postProcess(Arrays.asList(CommandUnitType.values()), appId, serviceId, commandName);
+  }
+
+  @Override
+  public List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
+    return stencilPostProcessor.postProcess(Arrays.asList(ContainerTaskType.values()), appId, serviceId);
+  }
+
+  @Override
+  public ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType) {
+    return wingsPersistence.createQuery(ContainerTask.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .field("deploymentType")
+        .equal(deploymentType)
+        .get();
   }
 
   @Override

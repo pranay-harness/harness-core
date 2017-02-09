@@ -5,12 +5,12 @@
 package software.wings.common;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.InstanceElement;
@@ -25,7 +25,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -99,7 +99,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return the instance element
    */
   static InstanceElement convertToInstanceElement(
-      ServiceInstance instance, ApplicationHost host, ServiceTemplate serviceTemplate) {
+      ServiceInstance instance, Host host, ServiceTemplate serviceTemplate) {
     InstanceElement element = new InstanceElement();
     MapperUtils.mapObject(instance, element);
     element.setHostElement(HostExpressionProcessor.convertToHostElement(host));
@@ -253,8 +253,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     List<InstanceElement> elements = new ArrayList<>();
     for (ServiceInstance instance : instances) {
       ServiceTemplate serviceTemplate =
-          serviceTemplateService.get(instance.getAppId(), instance.getServiceTemplateId());
-      ApplicationHost host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
+          serviceTemplateService.get(instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false);
+      Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
       elements.add(convertToInstanceElement(instance, host, serviceTemplate));
     }
 
@@ -277,7 +277,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     if (serviceInstanceIdsParam != null) {
       if (ArrayUtils.isNotEmpty(instanceIds)) {
         Collection<String> commonInstanceIds =
-            CollectionUtils.intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
+            intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
         instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
       } else {
         instanceIds = serviceInstanceIdsParam.getInstanceIds().toArray(

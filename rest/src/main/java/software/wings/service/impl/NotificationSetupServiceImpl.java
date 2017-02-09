@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.inject.Singleton;
+
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -21,6 +23,7 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 10/30/16.
  */
+@Singleton
 public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Inject private WingsPersistence wingsPersistence;
 
@@ -53,6 +56,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
+  public NotificationGroup readNotificationGroup(String appId, String notificationGroupId) {
+    return wingsPersistence.get(NotificationGroup.class, appId, notificationGroupId);
+  }
+
+  @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
     return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup);
   }
@@ -77,6 +85,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public PageResponse<NotificationRule> listNotificationRules(PageRequest<NotificationRule> pageRequest) {
     return wingsPersistence.query(NotificationRule.class, pageRequest);
+  }
+
+  @Override
+  public NotificationRule readNotificationRule(String appId, String notificationRuleId) {
+    return wingsPersistence.get(NotificationRule.class, appId, notificationRuleId);
   }
 
   @Override

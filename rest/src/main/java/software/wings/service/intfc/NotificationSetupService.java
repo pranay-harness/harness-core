@@ -20,6 +20,8 @@ public interface NotificationSetupService {
 
   PageResponse<NotificationGroup> listNotificationGroups(PageRequest<NotificationGroup> pageRequest);
 
+  NotificationGroup readNotificationGroup(String appId, String notificationGroupId);
+
   NotificationGroup createNotificationGroup(NotificationGroup notificationGroup);
 
   NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup);
@@ -29,6 +31,8 @@ public interface NotificationSetupService {
   List<NotificationRule> listNotificationRules(String appId);
 
   PageResponse<NotificationRule> listNotificationRules(PageRequest<NotificationRule> pageRequest);
+
+  NotificationRule readNotificationRule(String appId, String notificationRuleId);
 
   NotificationRule createNotificationRule(NotificationRule notificationRule);
 

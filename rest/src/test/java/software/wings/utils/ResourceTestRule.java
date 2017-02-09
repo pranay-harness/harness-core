@@ -23,6 +23,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import software.wings.exception.ConstraintViolationExceptionMapper;
+import software.wings.jersey.KryoMessageBodyProvider;
 
 import java.util.Map;
 import java.util.Set;
@@ -123,6 +124,8 @@ public class ResourceTestRule implements TestRule {
 
             @Override
             protected void configureClient(final ClientConfig config) {
+              config.register(KryoMessageBodyProvider.class, 0);
+
               JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
               jsonProvider.setMapper(mapper);
               config.register(jsonProvider);

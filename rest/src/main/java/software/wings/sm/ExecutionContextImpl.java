@@ -66,6 +66,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     if (!isEmpty(stateExecutionInstance.getContextElements())) {
       stateExecutionInstance.getContextElements().forEach(contextElement -> injector.injectMembers(contextElement));
     }
+    if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
+      stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> { injector.injectMembers(advisor); });
+    }
   }
 
   /**
@@ -116,10 +119,31 @@ public class ExecutionContextImpl implements ExecutionContext {
    * {@inheritDoc}
    */
   @Override
+  public <T extends ContextElement> T getContextElement() {
+    return (T) stateExecutionInstance.getContextElement();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
     return (T) stateExecutionInstance.getContextElements()
         .stream()
         .filter(contextElement -> contextElement.getElementType() == contextElementType)
+        .findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name) {
+    return (T) stateExecutionInstance.getContextElements()
+        .stream()
+        .filter(contextElement
+            -> contextElement.getElementType() == contextElementType && name.equals(contextElement.getName()))
         .findFirst()
         .orElse(null);
   }
@@ -226,8 +250,10 @@ public class ExecutionContextImpl implements ExecutionContext {
 
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
-    context.putAll(stateExecutionInstance.getStateExecutionMap());
-    context.put(CURRENT_STATE, getStateExecutionInstance().getStateName());
+    stateExecutionInstance.getStateExecutionMap().entrySet().forEach(
+        entry -> { context.put(normalizeStateName(entry.getKey()), entry.getValue()); });
+
+    context.put(CURRENT_STATE, normalizeStateName(getStateExecutionInstance().getStateName()));
 
     // add context params
     Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
@@ -246,6 +272,9 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    if (expression == null) {
+      return null;
+    }
     List<ExpressionProcessor> expressionProcessors = new ArrayList<>();
     Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
 
@@ -259,8 +288,12 @@ public class ExecutionContextImpl implements ExecutionContext {
       variable = variable.substring(2, variable.length() - 1);
 
       String topObjectName = variable;
-      if (topObjectName.indexOf('.') > 0) {
-        topObjectName = topObjectName.substring(0, topObjectName.indexOf('.'));
+      String topObjectNameSuffix = null;
+      int ind = variable.indexOf('.');
+      if (ind > 0) {
+        topObjectName = normalizeStateName(variable.substring(0, ind));
+        topObjectNameSuffix = variable.substring(ind);
+        variable = topObjectName + topObjectNameSuffix;
       }
 
       boolean unknownObject = false;
@@ -318,6 +351,11 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public String getStateExecutionInstanceId() {
     return stateExecutionInstance.getUuid();
+  }
+
+  @Override
+  public String getAppId() {
+    return ((WorkflowStandardParams) getContextElement(ContextElementType.STANDARD)).getAppId();
   }
 
   @Override

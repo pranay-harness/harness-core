@@ -49,10 +49,8 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
-import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.TagService;
 
 import javax.inject.Inject;
 
@@ -70,9 +68,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
-  @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
-  @Mock private TagService tagService;
   @Mock private NotificationService notificationService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
@@ -157,7 +153,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     environmentService.save(environment);
     verify(wingsPersistence).saveAndGet(Environment.class, environment);
-    verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     verify(historyService).createAsync(historyArgumentCaptor.capture());
@@ -198,12 +193,10 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(anEnvironment().withUuid(ENV_ID).withName("PROD").build());
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     environmentService.delete(APP_ID, ENV_ID);
-    InOrder inOrder =
-        inOrder(wingsPersistence, serviceTemplateService, tagService, infrastructureService, notificationService);
+    InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, notificationService);
     inOrder.verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
     inOrder.verify(wingsPersistence).delete(any(Query.class));
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
-    inOrder.verify(tagService).deleteByEnv(APP_ID, ENV_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any());
     verify(historyService).createAsync(historyArgumentCaptor.capture());
     assertThat(historyArgumentCaptor.getValue())

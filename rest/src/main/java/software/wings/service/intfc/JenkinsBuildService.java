@@ -1,58 +1,29 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.TaskType;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Created by peeyushaggarwal on 5/13/16.
+ * Created by peeyushaggarwal on 1/12/17.
  */
-public interface JenkinsBuildService {
-  /**
-   * Gets builds.
-   *
-   * @param appId            the app id
-   * @param artifactSourceId the artifact source id
-   * @param jenkinsConfig    the jenkins config
-   * @return the builds
-   */
-  List<BuildDetails> getBuilds(String appId, String artifactSourceId, JenkinsConfig jenkinsConfig);
+public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
+  @DelegateTaskType(TaskType.JENKINS_GET_BUILDS)
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config);
 
-  /**
-   * Gets jobs.
-   *
-   * @param jenkinsConfig the jenkins setting id
-   * @return the jobs
-   */
-  Set<String> getJobs(JenkinsConfig jenkinsConfig);
+  @DelegateTaskType(TaskType.JENKINS_GET_JOBS) List<String> getJobs(JenkinsConfig jenkinsConfig);
 
-  /**
-   * Gets artifact paths.
-   *
-   * @param jobName       the job name
-   * @param jenkinsConfig the jenkins config
-   * @return the artifact paths
-   */
-  Set<String> getArtifactPaths(String jobName, JenkinsConfig jenkinsConfig);
+  @DelegateTaskType(TaskType.JENKINS_GET_ARTIFACT_PATHS)
+  List<String> getArtifactPaths(String jobName, JenkinsConfig config);
 
-  /**
-   * Gets last successful build.
-   *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
-   * @param jenkinsConfig    the jenkins config
-   * @return the last successful build
-   */
-  BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, JenkinsConfig jenkinsConfig);
+  @DelegateTaskType(TaskType.JENKINS_LAST_SUCCESSFUL_BUILD)
+  BuildDetails getLastSuccessfulBuild(
+      String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config);
 
-  /**
-   * Gets plans.
-   *
-   * @param jenkinsConfig the jenkins config
-   * @return the plans
-   */
-  Map<String, String> getPlans(JenkinsConfig jenkinsConfig);
+  @DelegateTaskType(TaskType.JENKINS_GET_PLANS) Map<String, String> getPlans(JenkinsConfig config);
 }

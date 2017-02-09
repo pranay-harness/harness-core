@@ -3,7 +3,6 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -31,17 +30,14 @@ import javax.inject.Inject;
  */
 @RealMongo
 public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
-  private static final JenkinsArtifactStream artifactStream =
-      aJenkinsArtifactStream()
-          .withAppId(APP_ID)
-          .withSourceName("job1")
-          .withJobname("job1")
-          .withSettingId("JENKINS_SETTING_ID")
-          .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
-                                                           .withArtifactPathRegex("dist/svr-*.war")
-                                                           .withServiceIds(Arrays.asList(SERVICE_ID))
-                                                           .build()))
-          .build();
+  private static final JenkinsArtifactStream artifactStream = aJenkinsArtifactStream()
+                                                                  .withAppId(APP_ID)
+                                                                  .withSourceName("job1")
+                                                                  .withJobname("job1")
+                                                                  .withSettingId("JENKINS_SETTING_ID")
+                                                                  .withServiceId(SERVICE_ID)
+                                                                  .withArtifactPaths(Arrays.asList("dist/svr-*.war"))
+                                                                  .build();
 
   @Mock private JobScheduler jobScheduler;
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;

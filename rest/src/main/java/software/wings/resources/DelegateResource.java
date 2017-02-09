@@ -24,8 +24,10 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -98,6 +100,7 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.add(delegate));
   }
 
+  @Produces("application/x-kryo")
   @DelegateAuth
   @GET
   @Path("{delegateId}/tasks")
@@ -133,8 +136,28 @@ public class DelegateResource {
   @DelegateAuth
   @POST
   @Path("{delegateId}/tasks/{taskId}")
+  @Consumes("application/x-kryo")
   public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
     delegateService.processDelegateResponse(delegateTaskResponse);
+  }
+
+  @DelegateAuth
+  @PUT
+  @Produces("application/x-kryo")
+  @Path("{delegateId}/tasks/{taskId}/acquire")
+  public DelegateTask acquireDelegateTask(@PathParam("delegateId") String delegateId,
+      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
+  }
+
+  @DelegateAuth
+  @GET
+  @Path("{deletgateId}/upgrade")
+  public RestResponse<Delegate> checkForUpgrade(@Context HttpServletRequest request,
+      @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
+    return new RestResponse<>(delegateService.checkForUpgrade(
+        accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
   }
 }

@@ -1,13 +1,14 @@
 package software.wings.beans;
 
-import software.wings.api.HttpStateExecutionData;
+import static org.joor.Reflect.on;
+
 import software.wings.delegatetasks.BambooCollectionTask;
+import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsCollectionTask;
 import software.wings.delegatetasks.JenkinsTask;
-import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
-import software.wings.waitnotify.ListNotifyResponseData;
+import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -16,61 +17,33 @@ import java.util.function.Consumer;
  * Created by peeyushaggarwal on 12/8/16.
  */
 public enum TaskType {
-  HTTP {
-    private static final long serialVersionUID = 1L;
+  HTTP(HttpTask.class),
+  SPLUNK(HttpTask.class),
+  APP_DYNAMICS(HttpTask.class),
+  JENKINS(JenkinsTask.class),
+  JENKINS_COLLECTION(JenkinsCollectionTask.class),
+  BAMBOO_COLLECTION(BambooCollectionTask.class),
+  COMMAND(CommandTask.class),
+  JENKINS_GET_BUILDS(ServiceImplDelegateTask.class),
+  JENKINS_GET_JOBS(ServiceImplDelegateTask.class),
+  JENKINS_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
+  JENKINS_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
+  JENKINS_GET_PLANS(ServiceImplDelegateTask.class),
+  BAMBOO_GET_BUILDS(ServiceImplDelegateTask.class),
+  BAMBOO_GET_JOBS(ServiceImplDelegateTask.class),
+  BAMBOO_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
+  BAMBOO_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
+  BAMBOO_GET_PLANS(ServiceImplDelegateTask.class),
+  DOCKER_GET_BUILDS(ServiceImplDelegateTask.class);
 
-    @Override
-    public DelegateRunnableTask getDelegateRunnableTask(
-        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-      return new HttpTask(delegateId, delegateTask, (Consumer<HttpStateExecutionData>) consumer);
-    }
-  },
-  SPLUNK {
-    private static final long serialVersionUID = 1L;
+  private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
-    @Override
-    public DelegateRunnableTask getDelegateRunnableTask(
-        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-      return new HttpTask(delegateId, delegateTask, (Consumer<HttpStateExecutionData>) consumer);
-    }
-  },
-  APP_DYNAMICS {
-    private static final long serialVersionUID = 1L;
+  TaskType(Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass) {
+    this.delegateRunnableTaskClass = delegateRunnableTaskClass;
+  }
 
-    @Override
-    public DelegateRunnableTask getDelegateRunnableTask(
-        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-      return new HttpTask(delegateId, delegateTask, (Consumer<HttpStateExecutionData>) consumer);
-    }
-  },
-  JENKINS {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public DelegateRunnableTask getDelegateRunnableTask(
-        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-      return new JenkinsTask(delegateId, delegateTask, (Consumer<JenkinsExecutionResponse>) consumer);
-    }
-  },
-  JENKINS_COLLECTION {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public DelegateRunnableTask getDelegateRunnableTask(
-        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-      return new JenkinsCollectionTask(delegateId, delegateTask, (Consumer<ListNotifyResponseData>) consumer);
-    }
-  },
-  BAMBOO_COLLECTION {
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public DelegateRunnableTask getDelegateRunnableTask(
-        String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-      return new BambooCollectionTask(delegateId, delegateTask, (Consumer<ListNotifyResponseData>) consumer);
-    }
-  };
-
-  public abstract DelegateRunnableTask getDelegateRunnableTask(
-      String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer);
+  public DelegateRunnableTask getDelegateRunnableTask(
+      String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+    return on(delegateRunnableTaskClass).create(delegateId, delegateTask, consumer).get();
+  }
 }

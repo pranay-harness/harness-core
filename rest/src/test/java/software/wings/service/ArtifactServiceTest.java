@@ -10,7 +10,6 @@ import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -69,14 +68,12 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     when(appService.exist(APP_ID)).thenReturn(true);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
-        .thenReturn(
-            aJenkinsArtifactStream()
-                .withUuid(ARTIFACT_STREAM_ID)
-                .withAppId(APP_ID)
-                .withSourceName("ARTIFACT_SOURCE")
-                .withArtifactPathServices(asList(
-                    anArtifactPathServiceEntry().withArtifactPathRegex("*").withServiceIds(asList(SERVICE_ID)).build()))
-                .build());
+        .thenReturn(aJenkinsArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
   }
 
   /**

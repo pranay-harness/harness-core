@@ -7,7 +7,7 @@ package software.wings.common;
 import software.wings.api.HostElement;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.HostService;
 import software.wings.sm.ContextElementType;
@@ -53,7 +53,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    * @param applicationHost the applicationHost
    * @return the applicationHost element
    */
-  static HostElement convertToHostElement(ApplicationHost applicationHost) {
+  static HostElement convertToHostElement(Host applicationHost) {
     HostElement element = new HostElement();
     MapperUtils.mapObject(applicationHost, element);
     return element;
@@ -116,8 +116,8 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<HostElement> list() {
-    List<ApplicationHost> hosts = null;
-    PageRequest<ApplicationHost> pageRequest =
+    List<Host> hosts = null;
+    PageRequest<Host> pageRequest =
         PageRequest.Builder.aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
@@ -131,12 +131,12 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return convertToHostElements(hosts);
   }
 
-  private List<HostElement> convertToHostElements(List<ApplicationHost> hosts) {
+  private List<HostElement> convertToHostElements(List<Host> hosts) {
     if (hosts == null) {
       return null;
     }
     List<HostElement> hostElements = new ArrayList<>();
-    for (ApplicationHost applicationHost : hosts) {
+    for (Host applicationHost : hosts) {
       hostElements.add(convertToHostElement(applicationHost));
     }
     return hostElements;

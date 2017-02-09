@@ -16,7 +16,11 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,19 +42,13 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.utils.TimeoutManager;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -63,31 +61,13 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   /**
    * The Log service.
    */
-  protected LogService logService;
-  /**
-   * The Executor service.
-   */
-  @Inject ExecutorService executorService;
+  @Inject private DelegateLogService logService;
 
-  @Inject private TimeoutManager timeoutManager;
+  @Inject private TimeLimiter timeLimiter;
 
   @Inject private Injector injector;
 
-  @Inject private SettingsService settingsService;
-
-  private SshExecutorFactory sshExecutorFactory;
-
-  /**
-   * Instantiates a new ssh command unit executor service impl.
-   *
-   * @param sshExecutorFactory the ssh executor factory
-   * @param logService         the log service
-   */
-  @Inject
-  public SshCommandUnitExecutorServiceImpl(SshExecutorFactory sshExecutorFactory, LogService logService) {
-    this.sshExecutorFactory = sshExecutorFactory;
-    this.logService = logService;
-  }
+  @Inject private SshExecutorFactory sshExecutorFactory;
 
   @Override
   public void cleanup(String activityId, Host host) {
@@ -100,115 +80,117 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   @Override
   public ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
-    logService.save(aLog()
-                        .withAppId(context.getAppId())
-                        .withHostName(host.getHostName())
-                        .withActivityId(activityId)
-                        .withLogLevel(INFO)
-                        .withCommandUnitName(commandUnit.getName())
-                        .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
-                        .build());
+    logService.save(context.getAccountId(),
+        aLog()
+            .withAppId(context.getAppId())
+            .withHostName(host.getHostName())
+            .withActivityId(activityId)
+            .withLogLevel(INFO)
+            .withCommandUnitName(commandUnit.getName())
+            .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .build());
 
     ExecutionResult executionResult = FAILURE;
 
+    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
+    SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
+    executor.init(sshSessionConfig);
+
+    SshCommandExecutionContext sshCommandExecutionContext = new SshCommandExecutionContext(context);
+    sshCommandExecutionContext.setSshExecutor(executor);
+
+    injector.injectMembers(commandUnit);
+
     try {
-      SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
-      SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
-      executor.init(sshSessionConfig);
+      executionResult = timeLimiter.callWithTimeout(()
+                                                        -> commandUnit.execute(sshCommandExecutionContext),
+          commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS, true);
+    } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
+      logService.save(context.getAccountId(),
+          aLog()
+              .withAppId(context.getAppId())
+              .withActivityId(activityId)
+              .withHostName(host.getHostName())
+              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+              .withLogLine("Command execution timed out")
+              .withCommandUnitName(commandUnit.getName())
+              .withExecutionResult(executionResult)
+              .build());
+      throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof WingsException) {
+        WingsException ex = (WingsException) e.getCause();
+        String errorMessage =
+            Joiner.on(",").join(ex.getResponseMessageList()
+                                    .stream()
+                                    .map(responseMessage
+                                        -> ResponseCodeCache.getInstance()
+                                               .getResponseMessage(responseMessage.getCode(), ex.getParams())
+                                               .getMessage())
+                                    .collect(toList()));
+        logService.save(context.getAccountId(),
+            aLog()
+                .withAppId(context.getAppId())
+                .withActivityId(activityId)
+                .withHostName(host.getHostName())
+                .withCommandUnitName(commandUnit.getName())
+                .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                .withLogLine(errorMessage)
+                .withExecutionResult(executionResult)
+                .build());
+        throw(WingsException) e.getCause();
+      } else {
+        logService.save(context.getAccountId(),
+            aLog()
+                .withAppId(context.getAppId())
+                .withActivityId(activityId)
+                .withHostName(host.getHostName())
+                .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                .withLogLine("Unknown Error " + e.getCause().getMessage())
+                .withCommandUnitName(commandUnit.getName())
+                .withExecutionResult(executionResult)
+                .build());
 
-      SshCommandExecutionContext sshCommandExecutionContext = new SshCommandExecutionContext(context);
-      sshCommandExecutionContext.setSshExecutor(executor);
-
-      injector.injectMembers(commandUnit);
-
-      Future<ExecutionResult> executionResultFuture =
-          executorService.submit(() -> commandUnit.execute(sshCommandExecutionContext));
-
-      try {
-        executionResult = executionResultFuture.get(
-            commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
-      } catch (InterruptedException | TimeoutException e) {
-        logService.save(aLog()
-                            .withAppId(context.getAppId())
-                            .withActivityId(activityId)
-                            .withHostName(host.getHostName())
-                            .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                            .withLogLine("Command execution timed out")
-                            .withCommandUnitName(commandUnit.getName())
-                            .withExecutionResult(executionResult)
-                            .build());
-        throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
-      } catch (ExecutionException e) {
-        if (e.getCause() instanceof WingsException) {
-          WingsException ex = (WingsException) e.getCause();
-          String errorMessage =
-              Joiner.on(",").join(ex.getResponseMessageList()
-                                      .stream()
-                                      .map(responseMessage
-                                          -> ResponseCodeCache.getInstance()
-                                                 .getResponseMessage(responseMessage.getCode(), ex.getParams())
-                                                 .getMessage())
-                                      .collect(toList()));
-          logService.save(aLog()
-                              .withAppId(context.getAppId())
-                              .withActivityId(activityId)
-                              .withHostName(host.getHostName())
-                              .withCommandUnitName(commandUnit.getName())
-                              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                              .withLogLine(errorMessage)
-                              .withExecutionResult(executionResult)
-                              .build());
-          throw(WingsException) e.getCause();
-        } else {
-          logService.save(aLog()
-                              .withAppId(context.getAppId())
-                              .withActivityId(activityId)
-                              .withHostName(host.getHostName())
-                              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                              .withLogLine("Unknown Error " + e.getCause().getMessage())
-                              .withCommandUnitName(commandUnit.getName())
-                              .withExecutionResult(executionResult)
-                              .build());
-
-          throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", e);
-        }
+        throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", e);
       }
-
-      logService.save(aLog()
-                          .withAppId(context.getAppId())
-                          .withActivityId(activityId)
-                          .withHostName(host.getHostName())
-                          .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                          .withLogLine("Command execution finished with status " + executionResult)
-                          .withCommandUnitName(commandUnit.getName())
-                          .withExecutionResult(executionResult)
-                          .build());
-
-      commandUnit.setExecutionResult(executionResult);
-      return executionResult;
-
-    } catch (Exception ex) {
-      logger.error("Command execution failed with error " + ex);
-      logService.save(aLog()
-                          .withAppId(context.getAppId())
-                          .withActivityId(activityId)
-                          .withHostName(host.getHostName())
-                          .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                          .withLogLine("Command execution finished with status " + executionResult)
-                          .withCommandUnitName(commandUnit.getName())
-                          .withExecutionResult(executionResult)
-                          .build());
-      throw ex;
+    } catch (Exception e) {
+      logger.error("Error while executing command ", e);
+      logService.save(context.getAccountId(),
+          aLog()
+              .withAppId(context.getAppId())
+              .withActivityId(activityId)
+              .withHostName(host.getHostName())
+              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+              .withLogLine("Command execution failed")
+              .withCommandUnitName(commandUnit.getName())
+              .withExecutionResult(executionResult)
+              .build());
+      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
     }
+
+    logService.save(context.getAccountId(),
+        aLog()
+            .withAppId(context.getAppId())
+            .withActivityId(activityId)
+            .withHostName(host.getHostName())
+            .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+            .withLogLine("Command execution finished with status " + executionResult)
+            .withCommandUnitName(commandUnit.getName())
+            .withExecutionResult(executionResult)
+            .build());
+
+    commandUnit.setExecutionResult(executionResult);
+    return executionResult;
   }
 
   private SshSessionConfig getSshSessionConfig(Host host, CommandExecutionContext context, CommandUnit commandUnit) {
-    ExecutorType executorType = getExecutorType(context.getAppId(), host);
+    ExecutorType executorType = getExecutorType(context);
 
     SSHExecutionCredential sshExecutionCredential = (SSHExecutionCredential) context.getExecutionCredential();
 
     Builder builder = aSshSessionConfig()
-                          .withAppId(host.getAppId())
+                          .withAccountId(context.getAccountId())
+                          .withAppId(context.getAppId())
                           .withExecutionId(context.getActivityId())
                           .withExecutorType(executorType)
                           .withHost(host.getHostName())
@@ -220,7 +202,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                           .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase());
 
     if (executorType.equals(KEY_AUTH)) {
-      SettingAttribute settingAttribute = settingsService.get(host.getHostConnAttr());
+      SettingAttribute settingAttribute = context.getHostConnectionAttributes();
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       builder.withKey(hostConnectionAttributes.getKey())
           .withUserName(hostConnectionAttributes.getUserName())
@@ -229,7 +211,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     }
 
     if (!Strings.isNullOrEmpty(host.getBastionConnAttr())) {
-      SettingAttribute settingAttribute = settingsService.get(host.getBastionConnAttr());
+      SettingAttribute settingAttribute = context.getBastionConnectionAttributes();
       BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) settingAttribute.getValue();
       builder.withBastionHostConfig(aSshSessionConfig()
                                         .withHost(bastionAttrs.getHostName())
@@ -241,12 +223,12 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     return builder.build();
   }
 
-  private ExecutorType getExecutorType(String appId, Host host) {
+  private ExecutorType getExecutorType(CommandExecutionContext commandExecutionContext) {
     ExecutorType executorType;
-    if (!Strings.isNullOrEmpty(host.getBastionConnAttr())) {
+    if (commandExecutionContext.getBastionConnectionAttributes() != null) {
       executorType = BASTION_HOST;
     } else {
-      SettingAttribute settingAttribute = settingsService.get(host.getHostConnAttr());
+      SettingAttribute settingAttribute = commandExecutionContext.getHostConnectionAttributes();
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       AccessType accessType = hostConnectionAttributes.getAccessType();
       if (accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER)

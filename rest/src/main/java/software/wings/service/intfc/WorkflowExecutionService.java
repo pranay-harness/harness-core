@@ -1,14 +1,15 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.sm.ExecutionEvent;
+import software.wings.service.impl.WorkflowExecutionUpdate;
+import software.wings.sm.ExecutionInterrupt;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -91,12 +92,10 @@ public interface WorkflowExecutionService {
    * @param appId               the app id
    * @param workflowExecutionId the workflow execution id
    * @param expandedGroupIds    the expanded group ids
-   * @param requestedGroupId    the requested group id
-   * @param nodeOps             the node ops
    * @return the execution details
    */
-  WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId,
-      List<String> expandedGroupIds, String requestedGroupId, NodeOps nodeOps);
+  WorkflowExecution getExecutionDetails(
+      @NotNull String appId, @NotNull String workflowExecutionId, List<String> expandedGroupIds);
 
   /**
    * Gets execution details without graph.
@@ -106,6 +105,9 @@ public interface WorkflowExecutionService {
    * @return the execution details without graph
    */
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
+
+  WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
+      ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
 
   /**
    * Trigger env execution workflow execution.
@@ -120,10 +122,10 @@ public interface WorkflowExecutionService {
   /**
    * Trigger execution event
    *
-   * @param executionEvent the workflow execution event
+   * @param executionInterrupt the workflow execution event
    * @return execution event
    */
-  ExecutionEvent triggerExecutionEvent(@Valid ExecutionEvent executionEvent);
+  ExecutionInterrupt triggerExecutionInterrupt(@Valid ExecutionInterrupt executionInterrupt);
 
   /**
    * Increment in progress count.
@@ -188,4 +190,7 @@ public interface WorkflowExecutionService {
    * @param workflowId the workflow id
    */
   void deleteByWorkflow(String appId, String workflowId);
+
+  List<ElementExecutionSummary> getElementsSummary(
+      String appId, String executionUuid, String parentStateExecutionInstanceId);
 }

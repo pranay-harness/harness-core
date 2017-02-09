@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.common.collect.Lists;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
@@ -85,27 +86,28 @@ public class JenkinsImpl implements Jenkins {
     if (jobWithDetails == null) {
       return null;
     }
-    return jobWithDetails.getBuilds()
-        .parallelStream()
-        .limit(lastN)
-        .map(build -> {
-          try {
-            return build.details();
-          } catch (IOException e) {
-            return build;
-          }
-        })
-        .filter(build -> BuildWithDetails.class.isInstance(build))
-        .map(build -> (BuildWithDetails) build)
-        .filter(build
-            -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE)
-                && isNotEmpty(build.getArtifacts()))
-        .map(buildWithDetails
-            -> aBuildDetails()
-                   .withNumber(buildWithDetails.getNumber())
-                   .withRevision(extractRevision(buildWithDetails))
-                   .build())
-        .collect(toList());
+    return Lists.newArrayList(
+        jobWithDetails.getBuilds()
+            .parallelStream()
+            .limit(lastN)
+            .map(build -> {
+              try {
+                return build.details();
+              } catch (IOException e) {
+                return build;
+              }
+            })
+            .filter(build -> BuildWithDetails.class.isInstance(build))
+            .map(build -> (BuildWithDetails) build)
+            .filter(build
+                -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE)
+                    && isNotEmpty(build.getArtifacts()))
+            .map(buildWithDetails
+                -> aBuildDetails()
+                       .withNumber(String.valueOf(buildWithDetails.getNumber()))
+                       .withRevision(extractRevision(buildWithDetails))
+                       .build())
+            .collect(toList()));
   }
 
   @Override
@@ -122,7 +124,7 @@ public class JenkinsImpl implements Jenkins {
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
     return aBuildDetails()
-        .withNumber(buildWithDetails.getNumber())
+        .withNumber(String.valueOf(buildWithDetails.getNumber()))
         .withRevision(extractRevision(buildWithDetails))
         .build();
   }

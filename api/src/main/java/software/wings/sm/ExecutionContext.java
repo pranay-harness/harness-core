@@ -62,10 +62,20 @@ public interface ExecutionContext {
    * Gets context element.
    *
    * @param <T>                the type parameter
+   * @return the context element
+   */
+  <T extends ContextElement> T getContextElement();
+
+  /**
+   * Gets context element.
+   *
+   * @param <T>                the type parameter
    * @param contextElementType the context element type
    * @return the context element
    */
   <T extends ContextElement> T getContextElement(ContextElementType contextElementType);
+
+  <T extends ContextElement> T getContextElement(ContextElementType contextElementType, String name);
 
   /**
    * Gets context element list.
@@ -110,6 +120,8 @@ public interface ExecutionContext {
    * @return the state execution instance id
    */
   String getStateExecutionInstanceId();
+
+  String getAppId();
 
   /**
    * Gets state execution instance name.

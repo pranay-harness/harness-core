@@ -31,13 +31,13 @@ import java.util.Map;
 public class WorkflowStandardParams implements ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
 
-  @Inject private AppService appService;
+  @Transient @Inject private transient AppService appService;
 
-  @Inject private ArtifactService artifactService;
+  @Transient @Inject private transient ArtifactService artifactService;
 
-  @Inject private EnvironmentService environmentService;
+  @Transient @Inject private transient EnvironmentService environmentService;
 
-  @Inject private SettingsService settingsService;
+  @Transient @Inject private transient SettingsService settingsService;
 
   private String appId;
   private String envId;

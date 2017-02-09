@@ -17,7 +17,7 @@ public interface BuildSourceService {
    * @param settingId the jenkins setting id
    * @return the jobs
    */
-  Set<String> getJobs(@NotEmpty String settingId);
+  Set<String> getJobs(@NotEmpty String appId, @NotEmpty String settingId);
 
   /**
    * Gets plans.
@@ -25,7 +25,7 @@ public interface BuildSourceService {
    * @param settingId the setting id
    * @return the plans
    */
-  Map<String, String> getPlans(@NotEmpty String settingId);
+  Map<String, String> getPlans(@NotEmpty String appId, @NotEmpty String settingId);
 
   /**
    * Gets artifact paths.
@@ -34,7 +34,7 @@ public interface BuildSourceService {
    * @param settingId the setting id
    * @return the artifact paths
    */
-  Set<String> getArtifactPaths(@NotEmpty String jobName, @NotEmpty String settingId);
+  Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId);
 
   /**
    * Gets builds.

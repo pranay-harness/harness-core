@@ -11,8 +11,10 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerTask;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
@@ -38,6 +40,7 @@ import javax.ws.rs.QueryParam;
 @ExceptionMetered
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
+@PublicApi
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
 
@@ -195,5 +198,40 @@ public class ServiceResource {
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
     return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName));
+  }
+
+  @POST
+  @Path("{serviceId}/containers/tasks")
+  public RestResponse<ContainerTask> createContainerTask(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
+    containerTask.setAppId(appId);
+    containerTask.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createContainerTask(containerTask));
+  }
+
+  @GET
+  @Path("{serviceId}/containers/tasks")
+  public RestResponse<PageResponse<ContainerTask>> listContainerTask(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<ContainerTask> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("serviceId", serviceId, EQ);
+    return new RestResponse<>(serviceResourceService.listContainerTasks(pageRequest));
+  }
+
+  @PUT
+  @Path("{serviceId}/containers/tasks/{taskId}")
+  public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId, ContainerTask containerTask) {
+    containerTask.setAppId(appId);
+    containerTask.setServiceId(serviceId);
+    containerTask.setUuid(taskId);
+    return new RestResponse<>(serviceResourceService.updateContainerTask(containerTask));
+  }
+
+  @GET
+  @Path("{serviceId}/containers/tasks/stencils")
+  public RestResponse<List<Stencil>> listTaskStencils(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.getContainerTaskStencils(appId, serviceId));
   }
 }

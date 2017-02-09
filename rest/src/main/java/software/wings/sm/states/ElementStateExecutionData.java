@@ -1,18 +1,20 @@
 package software.wings.sm.states;
 
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.InstanceStatusSummary;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by rishi on 8/19/16.
  */
 public class ElementStateExecutionData extends StateExecutionData {
   private List<ElementExecutionSummary> elementStatusSummary = new ArrayList<>();
-  private List<InstanceStatusSummary> instanceStatusSummary;
+  private Map<String, ExecutionStatus> instanceIdStatusMap = new HashMap<>();
 
   /**
    * Gets element status summary.
@@ -32,21 +34,11 @@ public class ElementStateExecutionData extends StateExecutionData {
     this.elementStatusSummary = elementStatusSummary;
   }
 
-  /**
-   * Gets instance status summary.
-   *
-   * @return the instance status summary
-   */
-  public List<InstanceStatusSummary> getInstanceStatusSummary() {
-    return instanceStatusSummary;
+  public Map<String, ExecutionStatus> getInstanceIdStatusMap() {
+    return instanceIdStatusMap;
   }
 
-  /**
-   * Sets instance status summary.
-   *
-   * @param instanceStatusSummary the instance status summary
-   */
-  public void setInstanceStatusSummary(List<InstanceStatusSummary> instanceStatusSummary) {
-    this.instanceStatusSummary = instanceStatusSummary;
+  public void setInstanceIdStatusMap(Map<String, ExecutionStatus> instanceIdStatusMap) {
+    this.instanceIdStatusMap = instanceIdStatusMap;
   }
 }

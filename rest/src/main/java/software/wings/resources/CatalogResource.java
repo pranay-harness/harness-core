@@ -13,10 +13,11 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.RestResponse;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.util.HashMap;

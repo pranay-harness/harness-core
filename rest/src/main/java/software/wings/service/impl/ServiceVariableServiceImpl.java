@@ -7,9 +7,14 @@ import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
@@ -20,14 +25,17 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.utils.Validator;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
+@Singleton
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -39,7 +47,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
-    if (!Arrays.asList(SERVICE, EntityType.TAG, EntityType.HOST).contains(serviceVariable.getEntityType())) {
+    if (!Arrays.asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.SERVICE_TEMPLATE, EntityType.HOST)
+             .contains(serviceVariable.getEntityType())) {
       throw new WingsException(
           INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
@@ -63,7 +72,36 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable update(@Valid ServiceVariable serviceVariable) {
-    return wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable);
+    ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
+    Validator.notNullCheck("Service variable", savedServiceVariable);
+
+    if (savedServiceVariable.getEntityType().equals(SERVICE)
+        && !savedServiceVariable.getName().equals(serviceVariable.getName())) {
+      updateVariableNameForServiceAndOverrides(savedServiceVariable, serviceVariable.getName());
+    }
+
+    wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
+        ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()));
+
+    return get(serviceVariable.getAppId(), serviceVariable.getUuid());
+  }
+
+  private void updateVariableNameForServiceAndOverrides(ServiceVariable existingServiceVariable, String name) {
+    List<Object> templateIds = serviceTemplateService
+                                   .getTemplateRefKeysByService(
+                                       existingServiceVariable.getAppId(), existingServiceVariable.getEntityId(), null)
+                                   .stream()
+                                   .map(Key::getId)
+                                   .collect(Collectors.toList());
+
+    Query<ServiceVariable> query =
+        wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(existingServiceVariable.getAppId());
+    query.or(query.criteria("entityId").equal(existingServiceVariable.getEntityId()),
+        query.criteria("templateId").in(templateIds));
+
+    UpdateOperations<ServiceVariable> updateOperations =
+        wingsPersistence.createUpdateOperations(ServiceVariable.class).set("name", name);
+    wingsPersistence.update(query, updateOperations);
   }
 
   @Override

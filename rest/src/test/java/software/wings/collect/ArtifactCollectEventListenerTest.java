@@ -10,7 +10,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.BAMBOO_COLLECTION;
 import static software.wings.beans.TaskType.JENKINS_COLLECTION;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.BambooArtifactStream.Builder.aBambooArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
@@ -25,8 +24,6 @@ import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
-
-import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +44,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -98,8 +96,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                          .withAppId(APP_ID)
                                          .withSettingId(SETTING_ID)
                                          .withJobname(JOB_NAME)
-                                         .withArtifactPathServices(Lists.newArrayList(
-                                             anArtifactPathServiceEntry().withArtifactPathRegex(ARTIFACT_PATH).build()))
+                                         .withArtifactPaths(Arrays.asList(ARTIFACT_PATH))
                                          .build();
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
 
@@ -112,7 +109,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).sendTaskWaitNotify(delegateTaskArgumentCaptor.capture());
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
         .hasFieldOrPropertyWithValue("taskType", JENKINS_COLLECTION)
@@ -138,8 +135,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                          .withAppId(APP_ID)
                                          .withSettingId(SETTING_ID)
                                          .withJobname(JOB_NAME)
-                                         .withArtifactPathServices(Lists.newArrayList(
-                                             anArtifactPathServiceEntry().withArtifactPathRegex(ARTIFACT_PATH).build()))
+                                         .withArtifactPaths(Arrays.asList(ARTIFACT_PATH))
                                          .build();
 
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(ARTIFACT_SOURCE);
@@ -153,7 +149,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).sendTaskWaitNotify(delegateTaskArgumentCaptor.capture());
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())
         .isNotNull()
         .hasFieldOrPropertyWithValue("taskType", BAMBOO_COLLECTION)

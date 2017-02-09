@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import org.atmosphere.cpr.MetaBroadcaster;
+import com.google.inject.Singleton;
+
+import org.atmosphere.cpr.BroadcasterFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
 import software.wings.security.PermissionAttribute.PermissionScope;
@@ -13,18 +15,10 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
+@Singleton
 public class EventEmitter {
-  private MetaBroadcaster metaBroadcaster;
+  @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private AppService appService;
-
-  /**
-   * Instantiates a new Event emitter.
-   *
-   * @param metaBroadcaster the broadcaster factory
-   */
-  public EventEmitter(MetaBroadcaster metaBroadcaster) {
-    this.metaBroadcaster = metaBroadcaster;
-  }
 
   /**
    * Send.
@@ -37,13 +31,18 @@ public class EventEmitter {
       Application application = appService.get(event.getAppId());
       event.setOrgId(application.getAccountId());
     }
-    metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
-            + event.getServiceId() + "/" + channel.getChannelName(),
-        event);
+    broadcasterFactory
+        .lookup("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId() + "/"
+                + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName(),
+            true)
+        .broadcast(event);
     if (isNotBlank(event.getUuid())) {
-      metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
-              + event.getServiceId() + "/" + channel.getChannelName() + "/" + event.getUuid(),
-          event);
+      broadcasterFactory
+          .lookup("/stream/" + channel.getTarget() + "/" + event.getOrgId() + "/" + event.getAppId() + "/"
+                  + event.getEnvId() + "/" + event.getServiceId() + "/" + channel.getChannelName() + "/"
+                  + event.getUuid(),
+              true)
+          .broadcast(event);
     }
   }
 
@@ -54,26 +53,29 @@ public class EventEmitter {
     /**
      * Artifacts channel.
      */
-    ARTIFACTS("artifacts", "ARTIFACT:ALL"), /**
-                                             * Activities channel.
-                                             */
-    ACTIVITIES("activities", "ENVIRONMENT:ALL"),
+    ARTIFACTS("artifacts", "ui", "ARTIFACT:ALL"), /**
+                                                   * Activities channel.
+                                                   */
+    ACTIVITIES("activities", "ui", "ENVIRONMENT:ALL"),
 
-    DELEGATES("delegates", "");
+    DELEGATES("delegates", "ui", "");
 
     private String channelName;
     private String permission;
+    private String target;
     private PermissionScope scope = PermissionScope.APP;
 
-    Channel(String channelName, String permission) {
+    Channel(String channelName, String target, String permission) {
       this.channelName = channelName;
       this.permission = permission;
+      this.target = target;
     }
 
-    Channel(String channelName, String permission, PermissionScope scope) {
+    Channel(String channelName, String target, String permission, PermissionScope scope) {
       this.channelName = channelName;
       this.permission = permission;
       this.scope = scope;
+      this.target = target;
     }
 
     /**
@@ -125,6 +127,10 @@ public class EventEmitter {
      */
     public PermissionScope getScope() {
       return scope;
+    }
+
+    public String getTarget() {
+      return target;
     }
   }
 }

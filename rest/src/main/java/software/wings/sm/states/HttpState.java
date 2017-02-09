@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Http state which makes a call to http service.
@@ -58,9 +58,8 @@ public class HttpState extends State {
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
   @SchemaIgnore private int socketTimeoutMillis = 10000;
-  @Inject private DelegateService delegateService;
 
-  @Inject private ExecutorService executorService;
+  @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Inject @Transient private transient ActivityService activityService;
@@ -241,7 +240,7 @@ public class HttpState extends State {
     String finalEvaluatedBody = evaluatedBody;
     String finalEvaluatedHeader = evaluatedHeader;
 
-    delegateService.sendTaskWaitNotify(
+    delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
@@ -270,15 +269,17 @@ public class HttpState extends State {
     String errorMessage = executionData.getErrorMsg();
     executionData.setAssertionStatement(assertion);
 
-    boolean status = false;
-    try {
-      status = (boolean) context.evaluateExpression(assertion, executionData);
-      logger.info("assertion status: {}", status);
-    } catch (Exception e) {
-      errorMessage = getMessage(e);
-      executionData.setErrorMsg(errorMessage);
-      logger.error("Error in httpStateAssertion", e);
-      status = false;
+    boolean status = true;
+    if (StringUtils.isNotBlank(assertion)) {
+      try {
+        status = (boolean) context.evaluateExpression(assertion, executionData);
+        logger.info("assertion status: {}", status);
+      } catch (Exception e) {
+        errorMessage = getMessage(e);
+        executionData.setErrorMsg(errorMessage);
+        logger.error("Error in httpStateAssertion", e);
+        status = false;
+      }
     }
 
     ExecutionStatus executionStatus = status ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;

@@ -3,8 +3,6 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -68,7 +66,7 @@ public class JenkinsConfig extends SettingValue {
    *
    * @return the password
    */
-  @JsonIgnore
+  //@JsonIgnore
   public String getPassword() {
     return password;
   }
@@ -78,7 +76,7 @@ public class JenkinsConfig extends SettingValue {
    *
    * @param password the password
    */
-  @JsonProperty
+  //@JsonProperty
   public void setPassword(String password) {
     this.password = password;
   }

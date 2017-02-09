@@ -63,7 +63,7 @@ public interface AppContainerService {
    * @param appId          the app id
    * @param appContainerId the app container id
    */
-  void delete(@NotEmpty String appId, @NotEmpty String appContainerId);
+  void delete(String appId, @NotEmpty String appContainerId);
 
   /**
    * Delete by app id.

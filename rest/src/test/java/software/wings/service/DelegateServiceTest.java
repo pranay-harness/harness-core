@@ -1,6 +1,8 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -9,9 +11,10 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.google.common.io.CharStreams;
 
@@ -20,7 +23,8 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -34,6 +38,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Cache;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
@@ -62,6 +67,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private EventEmitter eventEmitter;
   @Mock private MainConfiguration mainConfiguration;
+  @Mock private BroadcasterFactory broadcasterFactory;
+  @Mock private Broadcaster broadcaster;
 
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
@@ -69,7 +76,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(mainConfiguration.getDelegateMetadataUrl())
-        .thenReturn("https://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
+        .thenReturn("http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
+    when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
   }
 
   @Test
@@ -134,7 +142,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
                                     .build();
-    delegateService.sendTaskWaitNotify(delegateTask);
+    delegateService.queueTask(delegateTask);
     assertThat(wingsPersistence.get(DelegateTask.class, aPageRequest().build())).isEqualTo(delegateTask);
   }
 
@@ -166,7 +174,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.processDelegateResponse(
         aDelegateTaskResponse()
             .withAccountId(ACCOUNT_ID)
-            .withTaskId(delegateTask.getUuid())
+            .withTask(delegateTask)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid())).isEmpty();
@@ -181,9 +189,9 @@ public class DelegateServiceTest extends WingsBaseTest {
     File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo("wings-delegate/");
+
       ZipArchiveEntry file = zipArchiveInputStream.getNextZipEntry();
       assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly("wings-delegate/run.sh");
-      System.out.println(ToStringBuilder.reflectionToString(file.getExtraFields(true)));
       assertThat(file)
           .extracting(ZipArchiveEntry::getExtraFields)
           .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
@@ -195,6 +203,114 @@ public class DelegateServiceTest extends WingsBaseTest {
       assertThat(new String(buffer))
           .isEqualTo(
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateRun.sh"))));
+
+      file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly("wings-delegate/stop.sh");
+      assertThat(file)
+          .extracting(ZipArchiveEntry::getExtraFields)
+          .flatExtracting(input -> Arrays.asList((ZipExtraField[]) input))
+          .extracting(o -> ((AsiExtraField) o).getMode())
+          .containsExactly(0755 | AsiExtraField.FILE_FLAG);
+
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(zipArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateStop.sh"))));
     }
+  }
+
+  @Test
+  public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws Exception {
+    wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    Delegate delegate = delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "0.0.0", "https://localhost:9090");
+    assertThat(delegate.isDoUpgrade()).isTrue();
+    assertThat(delegate.getUpgradeScript())
+        .isEqualTo(CharStreams.toString(
+            new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateUpgradeScript.sh"))));
+  }
+
+  @Test
+  public void shouldNotSignalForDelegateUpgradeWhenDelegateIsLatest() throws Exception {
+    wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    Delegate delegate = delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "999.0.0", "https://localhost:9090");
+    assertThat(delegate.isDoUpgrade()).isFalse();
+  }
+
+  @Cache
+  @Test
+  public void shouldAcquireTaskWhenQueued() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
+  }
+
+  @Cache
+  @Test
+  public void shouldNotAcquireTaskWhenAlreadyAcquired() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withDelegateId(DELEGATE_ID + "1")
+                                    .withStatus(DelegateTask.Status.STARTED)
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNull();
+  }
+
+  @Test
+  public void shouldFilterTaskForAccount() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID + "1")
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
+  }
+
+  @Test
+  public void shouldFilterTaskWhenDelegateIsDisabled() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(
+        Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withDelegateId(DELEGATE_ID)
+                                    .withStatus(DelegateTask.Status.STARTED)
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
+  }
+
+  @Test
+  public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() throws Exception {
+    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isTrue();
   }
 }

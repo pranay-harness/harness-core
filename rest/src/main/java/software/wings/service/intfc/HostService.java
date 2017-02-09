@@ -2,17 +2,12 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.ResponseMessage;
-import software.wings.beans.Tag;
-import software.wings.beans.infrastructure.ApplicationHost;
-import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.validation.Update;
 
-import java.io.File;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -27,7 +22,7 @@ public interface HostService {
    * @param req the req
    * @return the page response
    */
-  PageResponse<ApplicationHost> list(PageRequest<ApplicationHost> req);
+  PageResponse<Host> list(PageRequest<Host> req);
 
   /**
    * Gets the.
@@ -37,7 +32,7 @@ public interface HostService {
    * @param hostId the host id
    * @return the host
    */
-  ApplicationHost get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
+  Host get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Update.
@@ -46,7 +41,7 @@ public interface HostService {
    * @param host  the host
    * @return the host
    */
-  @ValidationGroups(Update.class) ApplicationHost update(String envId, @Valid Host host);
+  @ValidationGroups(Update.class) Host update(String envId, @Valid Host host);
 
   /**
    * Delete.
@@ -56,22 +51,6 @@ public interface HostService {
    * @param hostId the host id
    */
   void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
-
-  /**
-   * Delete by infra.
-   *
-   * @param infraId the infra id
-   */
-  void deleteByInfra(String infraId);
-
-  /**
-   * Export hosts.
-   *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @return the file
-   */
-  File exportHosts(@NotEmpty String appId, @NotEmpty String infraId);
 
   /**
    * Import hosts.
@@ -93,34 +72,7 @@ public interface HostService {
    * @param hostUuids the host uuids
    * @return the hosts by id
    */
-  List<ApplicationHost> getHostsByHostIds(
-      @NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> hostUuids);
-
-  /**
-   * Gets the hosts by tags.
-   *
-   * @param appId the app id
-   * @param envId the env id
-   * @param tags  the tags
-   * @return the hosts by tags
-   */
-  List<ApplicationHost> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
-
-  /**
-   * Sets tag.
-   *
-   * @param host the host
-   * @param tag  the tag
-   */
-  void setTag(@NotNull ApplicationHost host, @NotNull Tag tag);
-
-  /**
-   * Remove tag from host.
-   *
-   * @param host the host
-   * @param tag  the tag
-   */
-  void removeTagFromHost(@NotNull ApplicationHost host, @NotNull Tag tag);
+  List<Host> getHostsByHostIds(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> hostUuids);
 
   /**
    * Gets hosts by env.
@@ -129,7 +81,7 @@ public interface HostService {
    * @param envId the env id
    * @return the hosts by env
    */
-  List<ApplicationHost> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
+  List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Gets host by env.
@@ -139,42 +91,15 @@ public interface HostService {
    * @param hostId the host id
    * @return the host by env
    */
-  ApplicationHost getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
-
-  /**
-   * Bulk save.
-   *
-   * @param infraId  the env id
-   * @param envId    the env id
-   * @param baseHost the base host  @return the response message
-   * @return the response message
-   */
-  ResponseMessage bulkSave(String infraId, String envId, Host baseHost);
-
-  /**
-   * Gets host count by infrastructure.
-   *
-   * @param infraId the infra id
-   * @return the host count by infrastructure
-   */
-  int getInfraHostCount(String infraId);
-
-  /**
-   * Gets host usage by application for infrastructure.
-   *
-   * @param uuid the uuid
-   * @return the host usage by application for infrastructure
-   */
-  List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String uuid);
+  Host getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Save application host application host.
    *
    * @param appHost the app host
-   * @param tagId   the tag id
    * @return the application host
    */
-  ApplicationHost saveApplicationHost(ApplicationHost appHost, String tagId);
+  Host saveHost(Host appHost);
 
   /**
    * Exist boolean.
@@ -186,18 +111,36 @@ public interface HostService {
   boolean exist(String appId, String hostId);
 
   /**
-   * Gets mapped infra host count.
-   *
-   * @param infraId the infra id
-   * @return the mapped infra host count
-   */
-  int getMappedInfraHostCount(String infraId);
-
-  /**
    * Delete by environment.
    *
    * @param appId the app id
    * @param envId the env id
    */
   void deleteByEnvironment(String appId, String envId);
+
+  /**
+   * Delete by host name.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   * @param hostName       the host name
+   */
+  void deleteByHostName(String appId, String infraMappingId, String hostName);
+
+  /**
+   * Update host connection attr by infra mapping id.
+   *
+   * @param appId               the app id
+   * @param infraMappingId      the infra mapping id
+   * @param hostConnectionAttrs the host connection attrs
+   */
+  void updateHostConnectionAttrByInfraMappingId(String appId, String infraMappingId, String hostConnectionAttrs);
+
+  /**
+   * Delete by infra mapping id.
+   *
+   * @param appId          the app id
+   * @param infraMappingId the infra mapping id
+   */
+  void deleteByInfraMappingId(String appId, String infraMappingId);
 }

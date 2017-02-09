@@ -5,12 +5,15 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import com.google.inject.Singleton;
 
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
+import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ecs.AmazonECSClient;
 
 /**
  * Created by anubhaw on 12/15/16.
@@ -20,6 +23,22 @@ import com.amazonaws.services.ec2.model.Instance;
 public class AwsHelperService {
   public AmazonCloudWatchClient getAwsCloudWatchClient(String accessKey, String secretKey) {
     return new AmazonCloudWatchClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonECSClient getAmazonEcsClient(String accessKey, String secretKey) {
+    return new AmazonECSClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonEC2Client getAmazonEc2Client(String accessKey, String secretKey) {
+    return new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, String secretKey) {
+    return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, String secretKey) {
+    return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
   public String getInstanceId(String accessKey, String secretKey, String hostName) {

@@ -1,0 +1,19 @@
+package software.wings.beans;
+
+/**
+ * Created by rishi on 12/22/16.
+ */
+public enum PhaseStepType {
+  PROVISION_NODE,
+  DISABLE_SERVICE,
+  DEPLOY_SERVICE,
+  ENABLE_SERVICE,
+  VERIFY_SERVICE,
+  DEPROVISION_NODE,
+  WRAP_UP,
+  PRE_DEPLOYMENT,
+  POST_DEPLOYMENT,
+  STOP_SERVICE,
+  DE_PROVISION_NODE,
+  CONTAINER_SETUP;
+}

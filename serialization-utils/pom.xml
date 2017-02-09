@@ -60,6 +60,17 @@
             <version>3.20.0-GA</version>
         </dependency>
 
+        <dependency>
+            <groupId>info.jerrinot</groupId>
+            <artifactId>subzero-core</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
@@ -77,6 +88,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>de.javakaffee</groupId>
+            <artifactId>kryo-serializers</artifactId>
+            <version>0.41</version>
         </dependency>
     </dependencies>
 

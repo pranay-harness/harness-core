@@ -3,4 +3,12 @@ package software.wings.delegate.service;
 /**
  * Created by peeyushaggarwal on 11/29/16.
  */
-public interface DelegateService { void run(); }
+public interface DelegateService {
+  void run(boolean upgrade);
+
+  void pause();
+
+  void resume();
+
+  void stop();
+}

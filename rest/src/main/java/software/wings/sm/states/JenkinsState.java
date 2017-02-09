@@ -204,7 +204,7 @@ public class JenkinsState extends State {
       });
     }
 
-    delegateService.sendTaskWaitNotify(
+    delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
@@ -289,6 +289,8 @@ public class JenkinsState extends State {
     private String errorMessage;
     private String jobUrl;
     private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
+
+    public JenkinsExecutionResponse() {}
 
     /**
      * Getter for property 'jobUrl'.

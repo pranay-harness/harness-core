@@ -3,6 +3,8 @@ package software.wings.delegate.service;
 import static java.lang.System.currentTimeMillis;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import com.google.inject.Singleton;
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -24,6 +26,7 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 12/19/16.
  */
+@Singleton
 public class DelegateFileManagerImpl implements DelegateFileManager {
   @Inject private ManagerClient managerClient;
 
@@ -58,12 +61,18 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   }
 
   @Override
-  public DelegateFile downloadByFileId(FileBucket bucket, String fileId) {
-    return null;
+  public String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId)
+      throws IOException {
+    return managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId).execute().body().getResource();
   }
 
   @Override
-  public DelegateFile downloadByEntityId(FileBucket bucket, String entityId) {
-    return null;
+  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId) throws IOException {
+    return managerClient.downloadFile(fileId, bucket, accountId).execute().body().byteStream();
+  }
+
+  @Override
+  public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
+    return managerClient.getMetaInfo(fileId, fileBucket, accountId).execute().body().getResource();
   }
 }

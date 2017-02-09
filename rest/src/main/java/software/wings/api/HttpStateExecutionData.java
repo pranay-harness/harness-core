@@ -37,6 +37,8 @@ public class HttpStateExecutionData extends StateExecutionData implements Notify
 
   @Transient private transient Document document;
 
+  public HttpStateExecutionData() {}
+
   /**
    * Gets http url.
    *

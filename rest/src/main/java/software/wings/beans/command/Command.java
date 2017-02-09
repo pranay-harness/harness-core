@@ -3,7 +3,6 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -36,7 +35,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commands")
 public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
-  @SchemaIgnore @JsonTypeId private CommandUnitType commandUnitType;
+  @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private ExecutionResult executionResult;
 
   @SchemaIgnore private boolean artifactNeeded = false;
@@ -57,6 +56,8 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore private Long version;
 
   @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
+
+  private CommandType commandType = CommandType.OTHER;
 
   public Command() {
     this.commandUnitType = CommandUnitType.COMMAND;
@@ -232,6 +233,14 @@ public class Command extends Base implements CommandUnit {
     this.artifactType = artifactType;
   }
 
+  public CommandType getCommandType() {
+    return commandType;
+  }
+
+  public void setCommandType(CommandType commandType) {
+    this.commandType = commandType;
+  }
+
   /**
    * Transform graph.
    */
@@ -334,6 +343,7 @@ public class Command extends Base implements CommandUnit {
     private String name;
     private ExecutionResult executionResult;
     private boolean artifactNeeded;
+    private CommandType commandType = CommandType.OTHER;
 
     private Builder() {}
 
@@ -424,6 +434,17 @@ public class Command extends Base implements CommandUnit {
     }
 
     /**
+     * With command type
+     *
+     * @param commandType the command type
+     * @return the builder
+     */
+    public Builder withCommandType(CommandType commandType) {
+      this.commandType = commandType;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -435,7 +456,8 @@ public class Command extends Base implements CommandUnit {
           .withCommandUnits(commandUnits)
           .withName(name)
           .withExecutionResult(executionResult)
-          .withArtifactNeeded(artifactNeeded);
+          .withArtifactNeeded(artifactNeeded)
+          .withCommandType(commandType);
     }
 
     /**
@@ -451,6 +473,7 @@ public class Command extends Base implements CommandUnit {
       command.setName(name);
       command.setExecutionResult(executionResult);
       command.setArtifactNeeded(artifactNeeded);
+      command.setCommandType(commandType);
       return command;
     }
   }

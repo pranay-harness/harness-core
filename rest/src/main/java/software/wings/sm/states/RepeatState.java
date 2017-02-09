@@ -11,6 +11,7 @@ import com.google.common.base.Joiner;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
@@ -18,6 +19,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
@@ -31,7 +33,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.JsonUtils;
+import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 /**
  * The Class RepeatState.
@@ -57,6 +60,8 @@ public class RepeatState extends State {
   @SchemaIgnore private String executionStrategyExpression;
 
   @SchemaIgnore private String repeatTransitionStateName;
+
+  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   /**
    * Instantiates a new repeat state.
@@ -174,6 +179,8 @@ public class RepeatState extends State {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);
 
+      repeatStateExecutionData.setElementStatusSummary(workflowExecutionService.getElementsSummary(
+          context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
       executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     } else {
@@ -218,8 +225,7 @@ public class RepeatState extends State {
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
       SpawningExecutionResponse executionResponse, ContextElement repeatElement) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();
-    StateExecutionInstance childStateExecutionInstance =
-        JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+    StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
     childStateExecutionInstance.setPrevInstanceId(null);

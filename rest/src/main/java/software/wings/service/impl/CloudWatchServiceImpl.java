@@ -1,12 +1,14 @@
 package software.wings.service.impl;
 
+import com.google.inject.Singleton;
+
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.ListMetricsResult;
 import com.amazonaws.services.cloudwatch.model.Metric;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.AwsInfrastructureProviderConfig;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.StateExecutionException;
@@ -18,6 +20,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 12/14/16.
  */
+@Singleton
 public class CloudWatchServiceImpl implements CloudWatchService {
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
@@ -53,12 +56,10 @@ public class CloudWatchServiceImpl implements CloudWatchService {
 
   private AmazonCloudWatchClient getAmazonCloudWatchClient(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
-    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsInfrastructureProviderConfig)) {
+    if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
       throw new StateExecutionException("AWS account setting not found");
     }
-    AwsInfrastructureProviderConfig awsInfrastructureProviderConfig =
-        (AwsInfrastructureProviderConfig) settingAttribute.getValue();
-    return awsHelperService.getAwsCloudWatchClient(
-        awsInfrastructureProviderConfig.getAccessKey(), awsInfrastructureProviderConfig.getSecretKey());
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    return awsHelperService.getAwsCloudWatchClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
   }
 }

@@ -6,7 +6,6 @@ import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.artifact.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -16,9 +15,10 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
-import static software.wings.waitnotify.ListNotifyResponseData.ListNotifyResponseDataBuilder.aListNotifyResponseData;
+import static software.wings.waitnotify.ListNotifyResponseData.Builder.aListNotifyResponseData;
 
 import com.google.common.collect.Lists;
 
@@ -38,6 +38,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
 
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -57,16 +58,15 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   /**
    * The constant ARTIFACT_STREAM_NAME.
    */
-  private final ArtifactStream ARTIFACT_SOURCE =
-      aJenkinsArtifactStream()
-          .withSourceName(ARTIFACT_STREAM_NAME)
-          .withAppId(APP_ID)
-          .withSettingId(SETTING_ID)
-          .withJobname(JOB_NAME)
-          .withArtifactPathServices(
-              Lists.newArrayList(anArtifactPathServiceEntry().withArtifactPathRegex(ARTIFACT_PATH).build()))
-          .withAutoApproveForProduction(false)
-          .build();
+  private final ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactStream()
+                                                     .withSourceName(ARTIFACT_STREAM_NAME)
+                                                     .withAppId(APP_ID)
+                                                     .withSettingId(SETTING_ID)
+                                                     .withJobname(JOB_NAME)
+                                                     .withServiceId(SERVICE_ID)
+                                                     .withArtifactPaths(Arrays.asList(ARTIFACT_PATH))
+                                                     .withAutoApproveForProduction(false)
+                                                     .build();
 
   private final SettingAttribute SETTING_ATTRIBUTE =
       aSettingAttribute()
