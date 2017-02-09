@@ -28,7 +28,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.EcsContainerTask.SystemSpecification;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -135,11 +134,16 @@ public class ContainerSetup extends State {
     ContainerDefinition containerDefinition =
         new ContainerDefinition().withName(wingsContainerDefinition.getName()).withImage(imageName);
 
-    if (wingsContainerDefinition.getSystemSpecification() != null) {
-      SystemSpecification systemSpecification = wingsContainerDefinition.getSystemSpecification();
-      containerDefinition.setCpu(systemSpecification.getCpu());
-      containerDefinition.setMemory(systemSpecification.getMemory());
-      List<PortMapping> portMappings = systemSpecification.getPortMappings()
+    if (wingsContainerDefinition.getCpu() != null) {
+      containerDefinition.setCpu(wingsContainerDefinition.getCpu());
+    }
+
+    if (wingsContainerDefinition.getMemory() != null) {
+      containerDefinition.setMemory(wingsContainerDefinition.getMemory());
+    }
+
+    if (wingsContainerDefinition.getPortMappings() != null) {
+      List<PortMapping> portMappings = wingsContainerDefinition.getPortMappings()
                                            .stream()
                                            .map(portMapping
                                                -> new PortMapping()

@@ -32,12 +32,16 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public static class ContainerDefinition {
-    @Attributes(title = "Name", required = true) private String name;
+    @SchemaIgnore private String name;
     @Attributes(title = "Commands") private List<String> commands;
-    @Attributes(title = "SYSTEM SPECIFICATION") private SystemSpecification systemSpecification;
+    @Attributes(title = "CPU") private Integer cpu;
+    @Attributes(title = "MEMORY") private Integer memory;
+
+    @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
     @Attributes(title = "LOG CONFIGURATION") private LogConfiguration logConfiguration;
     @Attributes(title = "STORAGE/VOLUME") private List<StorageConfiguration> storageConfigurations;
 
+    @SchemaIgnore
     public String getName() {
       return name;
     }
@@ -52,14 +56,6 @@ public class EcsContainerTask extends ContainerTask {
 
     public void setCommands(List<String> commands) {
       this.commands = commands;
-    }
-
-    public SystemSpecification getSystemSpecification() {
-      return systemSpecification;
-    }
-
-    public void setSystemSpecification(SystemSpecification systemSpecification) {
-      this.systemSpecification = systemSpecification;
     }
 
     public LogConfiguration getLogConfiguration() {
@@ -77,12 +73,6 @@ public class EcsContainerTask extends ContainerTask {
     public void setStorageConfigurations(List<StorageConfiguration> storageConfigurations) {
       this.storageConfigurations = storageConfigurations;
     }
-  }
-
-  public static class SystemSpecification {
-    @Attributes(title = "CPU") private Integer cpu;
-    @Attributes(title = "MEMORY") private Integer memory;
-    @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
 
     public Integer getCpu() {
       return cpu;
@@ -110,8 +100,8 @@ public class EcsContainerTask extends ContainerTask {
   }
 
   public static class PortMapping {
-    @Attributes(title = "Host Port") private Integer containerPort;
-    @Attributes(title = "CPU") private Integer hostPort;
+    @Attributes(title = "Container port") private Integer containerPort;
+    @Attributes(title = "Host port") private Integer hostPort;
 
     public Integer getContainerPort() {
       return containerPort;
