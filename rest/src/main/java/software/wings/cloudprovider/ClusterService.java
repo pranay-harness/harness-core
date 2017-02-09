@@ -19,7 +19,8 @@ public interface ClusterService {
 
   /**
    * Resize cluster.
-   *  @param cloudProviderSetting the cloud provider setting
+   *
+   * @param cloudProviderSetting the cloud provider setting
    * @param clusterName          the cluster name
    * @param serviceName          the service name
    * @param desiredSize          the desired size
@@ -35,6 +36,16 @@ public interface ClusterService {
    * @param serviceName          the service name
    */
   void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+
+  /**
+   * Gets service desired count.
+   *
+   * @param cloudProviderSetting the cloud provider setting
+   * @param clusterName          the cluster name
+   * @param serviceName          the service name
+   * @return the service desired count
+   */
+  Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
 
   /**
    * Create service.

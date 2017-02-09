@@ -57,6 +57,11 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
+  public Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
+    return ecsService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
+  }
+
+  @Override
   public void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
     ecsService.createService(cloudProviderSetting, clusterConfiguration);
   }

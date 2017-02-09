@@ -919,6 +919,19 @@ public class EcsServiceImpl implements EcsService {
     return amazonECSClient.registerTaskDefinition(registerTaskDefinitionRequest).getTaskDefinition();
   }
 
+  @Override
+  public Integer getServiceDesiredCount(SettingAttribute settingAttribute, String clusterName, String serviceName) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(settingAttribute);
+    AmazonECSClient amazonECSClient =
+        awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    Service service =
+        amazonECSClient
+            .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+            .getServices()
+            .get(0);
+    return service.getDesiredCount();
+  }
+
   private AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
