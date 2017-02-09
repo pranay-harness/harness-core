@@ -211,9 +211,10 @@ public class ServiceResource {
 
   @GET
   @Path("{serviceId}/containers/tasks")
-  public RestResponse<PageResponse<ContainerTask>> listContainerTask(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<ContainerTask> pageRequest) {
+  public RestResponse<PageResponse<ContainerTask>> listContainerTask(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<ContainerTask> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("serviceId", serviceId, EQ);
     return new RestResponse<>(serviceResourceService.listContainerTasks(pageRequest));
   }
 
