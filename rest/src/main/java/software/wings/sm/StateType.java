@@ -25,6 +25,7 @@ import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
+import software.wings.sm.states.ContainerDeploy;
 import software.wings.sm.states.ContainerSetup;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EmailState;
@@ -157,12 +158,14 @@ public enum StateType implements StateTypeDescriptor {
    */
   PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
 
-  CONTAINER_SETUP(ContainerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
-
   /**
    * Phase state type.
    */
-  PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE);
+  PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
+
+  CONTAINER_SETUP(ContainerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  CONTAINER_DEPLOY(ContainerDeploy.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
