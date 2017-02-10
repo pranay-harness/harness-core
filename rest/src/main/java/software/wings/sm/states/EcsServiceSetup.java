@@ -1,7 +1,8 @@
 package software.wings.sm.states;
 
+import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.CONTAINER_SETUP;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.google.inject.Inject;
 
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
-public class ContainerSetup extends State {
+public class EcsServiceSetup extends State {
   @Attributes(title = "Load Balancer")
   @Expand(dataProvider = LoadBalancerDataProvider.class)
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
@@ -72,8 +73,8 @@ public class ContainerSetup extends State {
    *
    * @param name the name
    */
-  public ContainerSetup(String name) {
-    super(name, CONTAINER_SETUP.name());
+  public EcsServiceSetup(String name) {
+    super(name, ECS_SERVICE_SETUP.name());
   }
 
   @Override
@@ -92,7 +93,6 @@ public class ContainerSetup extends State {
     String clusterName = infrastructureMappingService.getClusterName(
         app.getUuid(), serviceId, env.getUuid()); // TODO:: remove this call with infrMapping get call
 
-    // TODO - elasticLoadBalancerConfig can pulled using settingsService for a given loadBalancerSettingId
     ElasticLoadBalancerConfig elasticLoadBalancerConfig =
         (ElasticLoadBalancerConfig) settingsService.get(loadBalancerSettingId).getValue();
     String loadBalancerName = elasticLoadBalancerConfig.getLoadBalancerName();
@@ -131,7 +131,11 @@ public class ContainerSetup extends State {
                     .withContainerName("containerName")
                     .withContainerPort(8080)));
 
-    return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS).build();
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .addElement(
+            anEcsServiceElement().withUuid(serviceId).withName(service.getName()).withClusterName(clusterName).build())
+        .build();
   }
 
   public ContainerDefinition createContainerDefinition(

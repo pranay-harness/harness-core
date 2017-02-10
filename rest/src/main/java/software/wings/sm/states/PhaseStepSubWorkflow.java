@@ -36,7 +36,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     super(name, StateType.PHASE_STEP.name());
   }
 
-  PhaseStepType phaseStepType;
+  private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
@@ -86,7 +86,13 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
     NotifyResponseData notifyResponseData = response.values().iterator().next();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    handleElementNotifyResponseData(context, phaseElement, notifyResponseData, executionResponse);
 
+    return super.handleAsyncResponse(context, response);
+  }
+
+  private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
+      NotifyResponseData notifyResponseData, ExecutionResponse executionResponse) {
     if (phaseElement.getDeploymentType() == DeploymentType.SSH && phaseStepType == PhaseStepType.PROVISION_NODE) {
       if (!(notifyResponseData instanceof ElementNotifyResponseData)) {
         throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
@@ -106,8 +112,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .build());
       executionResponse.setStateExecutionData(phaseStepSubWorkflowExecutionData);
     }
-
-    return super.handleAsyncResponse(context, response);
   }
 
   public boolean isStepsInParallel() {
@@ -150,5 +154,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   public void setRollbackPhaseStepName(String rollbackPhaseStepName) {
     this.rollbackPhaseStepName = rollbackPhaseStepName;
+  }
+
+  @SchemaIgnore
+  public PhaseStepType getPhaseStepType() {
+    return phaseStepType;
+  }
+
+  public void setPhaseStepType(PhaseStepType phaseStepType) {
+    this.phaseStepType = phaseStepType;
   }
 }

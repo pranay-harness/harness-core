@@ -13,8 +13,8 @@ import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
-import software.wings.service.intfc.LogService;
 
 import javax.validation.executable.ValidateOnExecution;
 
@@ -28,7 +28,7 @@ public class EcsCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   /**
    * The Log service.
    */
-  @Inject private LogService logService;
+  @Inject private DelegateLogService logService;
 
   @Inject private TimeLimiter timeLimiter;
 
