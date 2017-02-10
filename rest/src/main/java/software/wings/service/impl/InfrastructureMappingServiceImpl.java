@@ -483,7 +483,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                       .field("serviceTemplateId")
                                                       .equal(serviceTemplateId)
                                                       .field("computeProviderType")
-                                                      .equal(SettingVariableTypes.AWS.name())
+                                                      .equal(SettingVariableTypes.ECS.name())
                                                       .get();
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
 
