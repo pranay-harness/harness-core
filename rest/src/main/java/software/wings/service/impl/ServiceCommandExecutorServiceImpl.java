@@ -49,7 +49,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     CommandUnitExecutorService commandUnitExecutorService =
         commandUnitExecutorServiceMap.get(DeploymentType.ECS.name());
     try {
-      ExecutionResult executionResult = commandUnitExecutorService.execute(context.getHost(), command, context);
+      ExecutionResult executionResult = commandUnitExecutorService.execute(
+          context.getHost(), command.getCommandUnits().get(0), context); // TODO:: do it recursively
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return executionResult;
     } catch (Exception ex) {

@@ -81,7 +81,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * The Install.
    */
-  INSTALL(InstallCommandUnit.class, "Deploy Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER);
+  RESIZE(ResizeCommandUnit.class, "Resize Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

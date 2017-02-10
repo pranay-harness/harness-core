@@ -7,9 +7,9 @@ import software.wings.utils.Validator;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
-public class InstallCommandUnit extends ContainerOrcherstrationCommandUnit {
-  public InstallCommandUnit() {
-    super(CommandUnitType.INSTALL);
+public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
+  public ResizeCommandUnit() {
+    super(CommandUnitType.RESIZE);
   }
 
   @Override
