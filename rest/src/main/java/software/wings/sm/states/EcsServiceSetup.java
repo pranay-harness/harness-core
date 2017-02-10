@@ -4,12 +4,12 @@ import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEc
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
-import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
@@ -103,6 +103,13 @@ public class EcsServiceSetup extends State {
     EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
         app.getAppId(), serviceId, DeploymentType.ECS.name());
 
+    if (ecsContainerTask == null) {
+      ecsContainerTask = new EcsContainerTask();
+      EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
+      containerDefinition.setMemory(1024);
+      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    }
+
     List<ContainerDefinition> containerDefinitions =
         ecsContainerTask.getContainerDefinitions()
             .stream()
@@ -123,14 +130,11 @@ public class EcsServiceSetup extends State {
             .withDesiredCount(0)
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision())
-            .withLoadBalancers(
-                new LoadBalancer()
-                    .withLoadBalancerName(loadBalancerName)
-                    .withTargetGroupArn(
-                        "arn:aws:elasticloadbalancing:us-east-1:830767422336:targetgroup/testecsgroup/5840102c72984871")
-                    .withContainerName("containerName")
-                    .withContainerPort(8080)));
+            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
+    //            .withLoadBalancers(
+    //            new LoadBalancer().withLoadBalancerName(loadBalancerName)
+    //                .withTargetGroupArn("arn:aws:elasticloadbalancing:us-east-1:830767422336:targetgroup/testecsgroup/5840102c72984871")
+    //                .withContainerName("containerName").withContainerPort(8080)));
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -142,7 +146,7 @@ public class EcsServiceSetup extends State {
   public ContainerDefinition createContainerDefinition(
       String imageName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerDefinition containerDefinition =
-        new ContainerDefinition().withName(wingsContainerDefinition.getName()).withImage(imageName);
+        new ContainerDefinition().withName(imageName.replace('/', '_')).withImage(imageName);
 
     if (wingsContainerDefinition.getCpu() != null) {
       containerDefinition.setCpu(wingsContainerDefinition.getCpu());
