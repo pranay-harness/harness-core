@@ -118,6 +118,7 @@ public class EcsServiceSetup extends State {
 
     clusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
+            .withServiceName(ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()))
             .withCluster(clusterName)
             .withDesiredCount(0)
             .withDeploymentConfiguration(

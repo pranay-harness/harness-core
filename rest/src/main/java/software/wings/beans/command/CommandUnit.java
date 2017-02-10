@@ -34,25 +34,83 @@ public interface CommandUnit {
       return Collections.emptyList();
     }
 
+    /**
+     * Execute execution result.
+     *
+     * @param context the context
+     * @return the execution result
+     */
     ExecutionResult execute(CommandExecutionContext context);
 
+    /**
+     * Gets command unit type.
+     *
+     * @return the command unit type
+     */
     @SchemaIgnore CommandUnitType getCommandUnitType();
 
+    /**
+     * Sets command unit type.
+     *
+     * @param commandUnitType the command unit type
+     */
     void setCommandUnitType(CommandUnitType commandUnitType);
 
+    /**
+     * Gets execution result.
+     *
+     * @return the execution result
+     */
     @SchemaIgnore ExecutionResult getExecutionResult();
 
+    /**
+     * Sets execution result.
+     *
+     * @param executionResult the execution result
+     */
     void setExecutionResult(ExecutionResult executionResult);
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     @SchemaIgnore String getName();
 
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
     @SchemaIgnore void setName(String name);
 
+    /**
+     * Is artifact needed boolean.
+     *
+     * @return the boolean
+     */
     @SchemaIgnore boolean isArtifactNeeded();
 
-    @SchemaIgnore String deploymentType();
-
+    /**
+     * Sets artifact needed.
+     *
+     * @param artifactNeeded the artifact needed
+     */
     void setArtifactNeeded(boolean artifactNeeded);
+
+    /**
+     * Gets deployment type.
+     *
+     * @return the deployment type
+     */
+    @SchemaIgnore String getDeploymentType();
+
+    /**
+     * Sets deployment type.
+     *
+     * @param deploymentType the deployment type
+     */
+    void setDeploymentType(String deploymentType);
 
     /**
      * Gets command execution timeout.
