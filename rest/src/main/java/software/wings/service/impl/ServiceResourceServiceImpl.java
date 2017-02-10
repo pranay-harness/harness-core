@@ -46,6 +46,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -90,6 +91,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private HistoryService historyService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private CommandService commandService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   /**
    * {@inheritDoc}
@@ -238,6 +240,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                        .withTitle("Service " + service.getName() + " created")
                                        .build());
         serviceTemplateService.deleteByService(appId, serviceId);
+        artifactStreamService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
         serviceVariableService.deleteByEntityId(appId, serviceId);
       });
