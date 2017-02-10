@@ -116,8 +116,8 @@ public interface ArtifactStreamService {
   /**
    * Gets artifact stream schema.
    *
-   * @param appId the app id
-   * @param serviceId
+   * @param appId     the app id
+   * @param serviceId the service id
    * @return the artifact stream schema
    */
   List<Stencil> getArtifactStreamSchema(String appId, String serviceId);
@@ -130,4 +130,12 @@ public interface ArtifactStreamService {
    * @return the build source
    */
   Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId);
+
+  /**
+   * Delete by service.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   */
+  void deleteByService(String appId, String serviceId);
 }

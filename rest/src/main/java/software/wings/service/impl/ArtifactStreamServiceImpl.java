@@ -164,6 +164,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       jobScheduler.deleteJob(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid());
       artifactStream.getStreamActions().forEach(
           streamAction -> jobScheduler.deleteJob(artifactStreamId, streamAction.getWorkflowId()));
+      artifactService.deleteByArtifactStream(appId, artifactStreamId);
     }
     return deleted;
   }
@@ -390,6 +391,17 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
           ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name());
     }
+  }
+
+  @Override
+  public void deleteByService(String appId, String serviceId) {
+    wingsPersistence.createQuery(ArtifactStream.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .asList()
+        .forEach(artifactSource -> delete(appId, artifactSource.getUuid()));
   }
 
   @Override
