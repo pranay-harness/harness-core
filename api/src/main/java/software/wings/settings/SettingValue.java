@@ -81,7 +81,10 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Elastic Load Balancer Settings
      */
-    ELB,
+    ELB, /**
+          * Application load balancer setting variable types.
+          */
+    ALB,
 
     /**
      * Slack setting variable types.

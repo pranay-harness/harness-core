@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
@@ -161,10 +162,19 @@ public class PluginServiceImpl implements PluginService {
             .withSettingClass(ElasticLoadBalancerConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
-            .withDisplayName("Elastic Load Balancer")
+            .withDisplayName("Elastic Classic Load Balancer")
             .withType("ELB")
             .withPluginCategories(asList(LoadBalancer))
             .withUiSchema(readUiSchema("ELB"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ApplicationLoadBalancerConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Elastic Application Load Balancer")
+            .withType("ALB")
+            .withPluginCategories(asList(LoadBalancer))
+            .withUiSchema(readUiSchema("ALB"))
             .build());
   }
 
