@@ -123,9 +123,10 @@ public class EcsServiceSetup extends State {
 
     TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
+    String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
     clusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
-            .withServiceName(ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()))
+            .withServiceName(ecsServiceName)
             .withCluster(clusterName)
             .withDesiredCount(0)
             .withDeploymentConfiguration(
@@ -139,7 +140,7 @@ public class EcsServiceSetup extends State {
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .addElement(
-            anEcsServiceElement().withUuid(serviceId).withName(service.getName()).withClusterName(clusterName).build())
+            anEcsServiceElement().withUuid(serviceId).withName(ecsServiceName).withClusterName(clusterName).build())
         .build();
   }
 
