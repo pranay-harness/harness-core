@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -25,16 +24,14 @@ public class LoadBalancerDataProvider implements DataProvider {
   public Map<String, String> getData(String appId, String... params) {
     Map<String, String> elbMap = new HashMap<>();
     List<SettingAttribute> settingAttributesByType =
-        settingsService.getSettingAttributesByType(appId, SettingVariableTypes.ELB.name());
+        settingsService.getSettingAttributesByType(appId, SettingVariableTypes.ALB.name());
 
     if (settingAttributesByType == null && settingAttributesByType.isEmpty()) {
       return new HashMap<>();
     }
 
-    settingAttributesByType.forEach(settingAttribute -> {
-      ElasticLoadBalancerConfig elasticLoadBalancerConfig = (ElasticLoadBalancerConfig) settingAttribute.getValue();
-      elbMap.put(settingAttribute.getUuid(), elasticLoadBalancerConfig.getLoadBalancerName());
-    });
+    settingAttributesByType.forEach(
+        settingAttribute -> { elbMap.put(settingAttribute.getUuid(), settingAttribute.getName()); });
     return elbMap;
   }
 }
