@@ -38,7 +38,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public ExecutionResult execute(Command command, CommandExecutionContext context) {
-    if (command.getCommandType().equals(DeploymentType.ECS.name())) {
+    if (command.getDeploymentType().equals(DeploymentType.ECS.name())) {
       return executeEcsCommand(command, context);
     } else {
       return executeSshCommand(command, context);

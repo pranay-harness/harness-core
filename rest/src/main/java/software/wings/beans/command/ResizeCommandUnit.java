@@ -15,7 +15,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
   @Override
   public ExecutionResult execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
-    Validator.equalCheck(cloudProviderSetting.getValue().getType(), SettingVariableTypes.ECS.name());
+    Validator.equalCheck(cloudProviderSetting.getValue().getType(), SettingVariableTypes.AWS.name());
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();

@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
-import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
@@ -105,7 +104,7 @@ public class EcsServiceSetup extends State {
     if (ecsContainerTask == null) {
       ecsContainerTask = new EcsContainerTask();
       EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
-      containerDefinition.setMemory(1024);
+      containerDefinition.setMemory(256);
       ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
@@ -140,11 +139,7 @@ public class EcsServiceSetup extends State {
             .withDesiredCount(0)
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision())
-            .withLoadBalancers(new LoadBalancer()
-                                   .withTargetGroupArn(albConfig.getLoadBalancerTargetGroupArn())
-                                   .withContainerName(containerName)
-                                   .withContainerPort(containerPort)));
+            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
