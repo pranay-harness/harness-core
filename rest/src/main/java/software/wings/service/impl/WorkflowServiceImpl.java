@@ -959,7 +959,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP)
-                                   .withName("Container Setup")
+                                   .withName("Setup Container")
                                    .addStep(aNode()
                                                 .withId(getUuid())
                                                 .withType(StateType.ECS_SERVICE_SETUP.name())
@@ -968,8 +968,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .build());
 
     workflowPhase.addPhaseStep(
-        aPhaseStep(PhaseStepType.DEPLOY_SERVICE)
-            .withName("Deploy Service")
+        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY)
+            .withName("Deploy Containers")
             .addStep(
                 aNode().withId(getUuid()).withType(ECS_SERVICE_DEPLOY.name()).withName("ECS Sevice Deploy").build())
             .build());

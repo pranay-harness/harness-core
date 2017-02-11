@@ -52,14 +52,14 @@ public class EcsServiceDeploy extends State {
 
   @Inject @Transient private transient SettingsService settingsService;
 
-  @Inject @Transient private DelegateService delegateService;
+  @Inject @Transient private transient DelegateService delegateService;
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
   @Inject @Transient private transient ActivityService activityService;
 
   public EcsServiceDeploy(String name) {
-    super(name, StateType.HTTP.name());
+    super(name, StateType.ECS_SERVICE_DEPLOY.name());
   }
 
   @Override
@@ -85,6 +85,7 @@ public class EcsServiceDeploy extends State {
         aCommandExecutionContext().withAppId(app.getUuid()).withEnvId(env.getUuid()).build();
     commandExecutionContext.setClusterName(ecsServiceElement.getClusterName());
     commandExecutionContext.setServiceName(ecsServiceElement.getName());
+
     commandExecutionContext.setDesiredCount(instanceCount);
     commandExecutionContext.setCloudProviderSetting(settingsService.get(computeProviderId));
 
@@ -131,4 +132,20 @@ public class EcsServiceDeploy extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  public String getCommandName() {
+    return commandName;
+  }
+
+  public void setCommandName(String commandName) {
+    this.commandName = commandName;
+  }
+
+  public int getInstanceCount() {
+    return instanceCount;
+  }
+
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
 }
