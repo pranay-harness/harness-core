@@ -11,6 +11,7 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
+import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
@@ -101,10 +102,16 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public List<CommandUnit> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
-    Command command = serviceResourceService
-                          .getCommandByNameAndVersion(appId, activity.getServiceId(), activity.getCommandName(),
-                              activity.getCommandNameVersionMap().get(activity.getCommandName()))
-                          .getCommand();
+
+    int version = EntityVersion.INITIAL_VERSION;
+    if (activity.getCommandNameVersionMap() != null) {
+      version = activity.getCommandNameVersionMap().get(activity.getCommandName());
+    }
+
+    Command command =
+        serviceResourceService
+            .getCommandByNameAndVersion(appId, activity.getServiceId(), activity.getCommandName(), version)
+            .getCommand();
     List<CommandUnit> commandUnits =
         getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getCommandNameVersionMap(), command);
     if (commandUnits != null && commandUnits.size() > 0) {
