@@ -4,6 +4,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
+import java.util.List;
+
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
@@ -19,7 +21,8 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();
-    clusterService.resizeCluster(cloudProviderSetting, clusterName, serviceName, desiredCount);
+    List<String> containerInstanceArns =
+        clusterService.resizeCluster(cloudProviderSetting, clusterName, serviceName, desiredCount);
     return ExecutionResult.SUCCESS;
   }
 }
