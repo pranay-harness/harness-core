@@ -34,6 +34,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.EnumData;
 
 import java.util.Collections;
 
@@ -44,8 +45,7 @@ public class EcsServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(EcsServiceDeploy.class);
 
   @Attributes(title = "Command")
-  //  @Expand(dataProvider = CommandStateDataProvider.class)
-  //  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
+  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   private String commandName;
 
   @Attributes(title = "Number of instances") private int instanceCount;
