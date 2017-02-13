@@ -12,6 +12,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.EcsService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,10 +45,12 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public void resizeCluster(
+  public List<String> resizeCluster(
       SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize) {
-    ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize);
+    List<String> containerInstanceArns =
+        ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize);
     logger.info("Successfully resized the cluster to {} size", desiredSize);
+    return containerInstanceArns;
   }
 
   @Override

@@ -127,7 +127,8 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
 
   private void ensureAppContainerNotInUse(String appContainerId) {
     List<Service> services =
-        serviceResourceService.list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build())
+        serviceResourceService
+            .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false)
             .getResponse();
     if (services.size() > 0) {
       throw new WingsException(INVALID_REQUEST, "message",

@@ -5,6 +5,8 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 12/29/16.
  */
@@ -19,13 +21,12 @@ public interface ClusterService {
 
   /**
    * Resize cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
+   *  @param cloudProviderSetting the cloud provider setting
    * @param clusterName          the cluster name
    * @param serviceName          the service name
    * @param desiredSize          the desired size
    */
-  void resizeCluster(
+  List<String> resizeCluster(
       SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize);
 
   /**
