@@ -8,7 +8,6 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ECS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.base.Charsets;
@@ -25,7 +24,6 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
@@ -199,21 +197,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
     jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
 
-    infraStencils.put(PHYSICAL_DATA_CENTER.name(),
-        ImmutableMap.of("jsonSchema", physicalJsonSchema, "uiSchema", readUiSchema("PHYSICAL_DATA_CENTER")));
+    infraStencils.put(PHYSICAL_DATA_CENTER_SSH.name(),
+        ImmutableMap.of("jsonSchema", physicalJsonSchema, "uiSchema", readUiSchema(PHYSICAL_DATA_CENTER_SSH.name())));
 
     JsonNode awsJsonSchema = JsonUtils.jsonSchema(AwsInfrastructureMapping.class);
     jsonSchemaField = ((ObjectNode) awsJsonSchema.get("properties").get("hostConnectionAttrs"));
     jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
     jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
 
-    infraStencils.put(AWS.name(), ImmutableMap.of("jsonSchema", awsJsonSchema, "uiSchema", readUiSchema("AWS")));
-    infraStencils.put(ECS.name(),
-        ImmutableMap.of(
-            "jsonSchema", JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema", readUiSchema("ECS")));
-    infraStencils.put(KUBERNETES.name(),
-        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(KubernetesInfrastructureMapping.class), "uiSchema",
-            readUiSchema("KUBERNETES")));
+    infraStencils.put(
+        AWS_SSH.name(), ImmutableMap.of("jsonSchema", awsJsonSchema, "uiSchema", readUiSchema(AWS_SSH.name())));
+    infraStencils.put(AWS_ECS.name(),
+        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema",
+            readUiSchema(AWS_ECS.name())));
     return infraStencils;
   }
 
