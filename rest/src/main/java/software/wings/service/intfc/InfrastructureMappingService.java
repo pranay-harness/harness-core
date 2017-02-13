@@ -145,8 +145,18 @@ public interface InfrastructureMappingService {
    *
    * @param appId     the app id
    * @param serviceId the service id
-   * @param envId
+   * @param envId     the env id
    * @return the cluster name
    */
   String getClusterName(String appId, String serviceId, String envId);
+
+  /**
+   * List types map.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param serviceId
+   * @return the map
+   */
+  Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId);
 }

@@ -4,7 +4,6 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Objects;
@@ -12,7 +11,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 1/10/17.
  */
-@JsonTypeName("PHYSICAL_DATA_CENTER")
+@JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Host Names") private List<String> hostNames;
 
@@ -20,7 +19,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Infrastructure mapping.
    */
   public PhysicalInfrastructureMapping() {
-    super(SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+    super(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name());
   }
 
   /**

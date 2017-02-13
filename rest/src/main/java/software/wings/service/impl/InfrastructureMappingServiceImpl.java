@@ -1,5 +1,9 @@
 package software.wings.service.impl;
 
+import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -492,6 +496,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     return ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
+  }
+
+  @Override
+  public Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId) {
+    // TODO:: use serviceId and envId to narrow down list ??
+    Map<String, Map<String, String>> infraTypes = new HashMap<>();
+    infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
+    infraTypes.put(AWS.name(), ImmutableMap.of(ECS.name(), AWS_ECS.name(), SSH.name(), AWS_SSH.name()));
+    return infraTypes;
   }
 
   private Object readUiSchema(String type) {

@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.EnumData;
 
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 1/10/17.
  */
-@JsonTypeName("AWS")
+@JsonTypeName("AWS_SSH")
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Restrictions")
   @EnumData(enumDataProvider = AwsInfrastructureRestrictionProvider.class)
@@ -24,7 +23,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Aws infrastructure mapping.
    */
   public AwsInfrastructureMapping() {
-    super(SettingVariableTypes.AWS.name());
+    super(InfrastructureMappingType.AWS_SSH.name());
   }
 
   /**

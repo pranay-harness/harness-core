@@ -3,12 +3,11 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
  * Created by anubhaw on 1/10/17.
  */
-@JsonTypeName("ECS")
+@JsonTypeName("AWS_ECS")
 public class EcsInfrastructureMapping extends InfrastructureMapping {
   private String clusterName;
 
@@ -16,7 +15,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Infrastructure mapping.
    */
   public EcsInfrastructureMapping() {
-    super(SettingVariableTypes.ECS.name());
+    super(InfrastructureMappingType.AWS_ECS.name());
   }
 
   /**
