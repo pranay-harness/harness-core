@@ -27,7 +27,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
   public Map<String, String> getData(String appId, String... params) {
     List<Service> services =
         serviceResourceService
-            .list(aPageRequest().addFilter(aSearchFilter().withField("appId", EQ, appId).build()).build())
+            .list(aPageRequest().addFilter(aSearchFilter().withField("appId", EQ, appId).build()).build(), false)
             .getResponse();
 
     return services.stream()

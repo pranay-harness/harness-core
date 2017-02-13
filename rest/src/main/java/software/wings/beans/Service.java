@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
 
@@ -35,6 +36,7 @@ public class Service extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
 
   @Transient private List<ConfigFile> configFiles = Lists.newArrayList();
+  @Transient private List<ArtifactStream> artifactStreams = Lists.newArrayList();
 
   @Transient private Activity lastDeploymentActivity;
   @Transient private Activity lastProdDeploymentActivity;
@@ -268,6 +270,14 @@ public class Service extends Base {
         .add("lastDeploymentActivity", lastDeploymentActivity)
         .add("lastProdDeploymentActivity", lastProdDeploymentActivity)
         .toString();
+  }
+
+  public List<ArtifactStream> getArtifactStreams() {
+    return artifactStreams;
+  }
+
+  public void setArtifactStreams(List<ArtifactStream> artifactStreams) {
+    this.artifactStreams = artifactStreams;
   }
 
   /**

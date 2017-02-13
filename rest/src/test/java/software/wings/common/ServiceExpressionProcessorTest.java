@@ -7,6 +7,7 @@ package software.wings.common;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -96,7 +97,7 @@ public class ServiceExpressionProcessorTest {
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
 
-    when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -147,7 +148,7 @@ public class ServiceExpressionProcessorTest {
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
 
-    when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -202,7 +203,7 @@ public class ServiceExpressionProcessorTest {
 
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
-    when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);

@@ -1,6 +1,7 @@
 package software.wings.cloudprovider;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
@@ -30,6 +31,8 @@ import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersResult;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
+import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import org.junit.Before;
@@ -149,6 +152,10 @@ public class EcsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProvisionTasks() {
+    when(amazonECSClient.describeServices(any()))
+        .thenReturn(new DescribeServicesResult().withServices(
+            Arrays.asList(new Service().withDesiredCount(DESIRED_CAPACITY).withRunningCount(DESIRED_CAPACITY))));
+    when(amazonECSClient.describeTasks(any())).thenReturn(new DescribeTasksResult());
     ecsService.provisionTasks(connectorConfig, CLUSTER_NAME, SERVICE_NAME, DESIRED_CAPACITY);
     verify(awsHelperService).getAmazonEcsClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonECSClient)
@@ -156,5 +163,6 @@ public class EcsServiceTest extends WingsBaseTest {
                            .withCluster(CLUSTER_NAME)
                            .withService(SERVICE_NAME)
                            .withDesiredCount(DESIRED_CAPACITY));
+    verify(amazonECSClient).describeTasks(any(DescribeTasksRequest.class));
   }
 }
