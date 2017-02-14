@@ -39,7 +39,7 @@ public class ClusterServiceImpl implements ClusterService {
     logger.info("Successfully created cluster and provisioned desired number of nodes");
 
     ecsService.deployService(cloudProviderSetting, awsClusterConfiguration.getServiceDefinition());
-    logger.info("Service created succesfully ");
+    logger.info("Service created successfully");
     logger.info("Successfully deployed service");
   }
 
