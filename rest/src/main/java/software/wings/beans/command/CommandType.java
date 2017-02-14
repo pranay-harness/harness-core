@@ -11,5 +11,6 @@ public enum CommandType {
   ENABLE,
   DISABLE,
   VERIFY,
-  OTHER
+  OTHER,
+  RESIZE
 }

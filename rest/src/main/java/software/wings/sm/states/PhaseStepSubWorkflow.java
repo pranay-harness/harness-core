@@ -6,6 +6,7 @@ import static software.wings.sm.ServiceInstancesProvisionState.ServiceInstancesP
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
+import software.wings.api.EcsServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepSubWorkflowExecutionData;
 import software.wings.api.ServiceInstanceIdsParam;
@@ -21,6 +22,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ServiceInstancesProvisionState;
 import software.wings.sm.SpawningExecutionResponse;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -36,7 +38,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     super(name, StateType.PHASE_STEP.name());
   }
 
-  PhaseStepType phaseStepType;
+  private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
@@ -52,6 +54,33 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
     ExecutionResponse response = super.execute(contextIntf);
 
+    PhaseElement phaseElement = contextIntf.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+      List<ContextElement> elements = contextIntf.getContextElementList(ContextElementType.ECS_SERVICE);
+      if (elements == null) {
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ECS Service Setup not done");
+      }
+
+      EcsServiceElement ecsServiceElement = null;
+      for (ContextElement element : elements) {
+        if (!(elements.get(0) instanceof EcsServiceElement)) {
+          continue;
+        }
+        if (((EcsServiceElement) element).getUuid().equals(phaseElement.getServiceElement().getUuid())) {
+          ecsServiceElement = (EcsServiceElement) element;
+          break;
+        }
+      }
+
+      if (ecsServiceElement == null) {
+        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+      }
+
+      for (StateExecutionInstance instance : ((SpawningExecutionResponse) response).getStateExecutionInstanceList()) {
+        instance.getContextElements().push(ecsServiceElement);
+      }
+    }
     if ((phaseStepType == PhaseStepType.DEPLOY_SERVICE || phaseStepType == PhaseStepType.ENABLE_SERVICE
             || phaseStepType == PhaseStepType.DISABLE_SERVICE)
         && response instanceof SpawningExecutionResponse
@@ -86,16 +115,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
     NotifyResponseData notifyResponseData = response.values().iterator().next();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    handleElementNotifyResponseData(context, phaseElement, notifyResponseData, executionResponse);
 
+    return executionResponse;
+  }
+
+  private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
+      NotifyResponseData notifyResponseData, ExecutionResponse executionResponse) {
     if (phaseElement.getDeploymentType() == DeploymentType.SSH && phaseStepType == PhaseStepType.PROVISION_NODE) {
-      if (!(notifyResponseData instanceof ElementNotifyResponseData)) {
+      List<ContextElement> elements = notifiedElements(notifyResponseData);
+      if (!(elements.get(0) instanceof ServiceInstanceIdsParam)) {
         throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
       }
-      ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
-      List<ContextElement> elements = elementNotifyResponseData.getContextElements();
-      if (elements == null || elements.isEmpty() || !(elements.get(0) instanceof ServiceInstanceIdsParam)) {
-        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
-      }
+
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) elements.get(0);
       PhaseStepSubWorkflowExecutionData phaseStepSubWorkflowExecutionData =
           (PhaseStepSubWorkflowExecutionData) context.getStateExecutionData();
@@ -105,9 +137,33 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .withServiceId(serviceInstanceIdsParam.getServiceId())
               .build());
       executionResponse.setStateExecutionData(phaseStepSubWorkflowExecutionData);
-    }
+    } else if (phaseElement.getDeploymentType() == DeploymentType.ECS
+        && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
+      List<ContextElement> elements = notifiedElements(notifyResponseData);
+      if (!(elements.get(0) instanceof EcsServiceElement)) {
+        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+      }
 
-    return super.handleAsyncResponse(context, response);
+      EcsServiceElement ecsServiceElement = (EcsServiceElement) elements.get(0);
+      List<ContextElement> responseElements = executionResponse.getElements();
+      if (responseElements == null) {
+        responseElements = new ArrayList<>();
+        executionResponse.setElements(responseElements);
+      }
+      responseElements.add(ecsServiceElement);
+    }
+  }
+
+  private List<ContextElement> notifiedElements(NotifyResponseData notifyResponseData) {
+    if (!(notifyResponseData instanceof ElementNotifyResponseData)) {
+      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+    }
+    ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
+    List<ContextElement> elements = elementNotifyResponseData.getContextElements();
+    if (elements == null || elements.isEmpty()) {
+      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+    }
+    return elements;
   }
 
   public boolean isStepsInParallel() {
@@ -150,5 +206,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   public void setRollbackPhaseStepName(String rollbackPhaseStepName) {
     this.rollbackPhaseStepName = rollbackPhaseStepName;
+  }
+
+  @SchemaIgnore
+  public PhaseStepType getPhaseStepType() {
+    return phaseStepType;
+  }
+
+  public void setPhaseStepType(PhaseStepType phaseStepType) {
+    this.phaseStepType = phaseStepType;
   }
 }

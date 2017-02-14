@@ -223,4 +223,15 @@ public class ArtifactServiceImpl implements ArtifactService {
         .hasAnyOf(Arrays.asList(Status.RUNNING, Status.REJECTED, Status.WAITING, Status.READY, Status.APPROVED))
         .get();
   }
+
+  @Override
+  public void deleteByArtifactStream(String appId, String artifactStreamId) {
+    wingsPersistence.createQuery(Artifact.class)
+        .field("appId")
+        .equal(appId)
+        .field("artifactStreamId")
+        .equal(artifactStreamId)
+        .asList()
+        .forEach(artifact -> delete(appId, artifact.getUuid()));
+  }
 }

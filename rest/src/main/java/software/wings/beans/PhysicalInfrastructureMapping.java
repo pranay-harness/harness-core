@@ -42,6 +42,12 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Override
+  @Attributes(title = "Connection Type")
+  public String getHostConnectionAttrs() {
+    return super.getHostConnectionAttrs();
+  }
+
+  @Override
   public boolean equals(Object obj) {
     if (this == obj) {
       return true;

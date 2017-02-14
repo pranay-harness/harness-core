@@ -12,6 +12,7 @@ import static software.wings.beans.PluginCategory.Verification;
 
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
@@ -38,7 +39,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(13)
+        .hasSize(14)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -139,8 +140,16 @@ public class PluginServiceTest {
                 .withSettingClass(ElasticLoadBalancerConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("Elastic Load Balancer")
+                .withDisplayName("Elastic Classic Load Balancer")
                 .withType("ELB")
+                .withPluginCategories(asList(LoadBalancer))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(ApplicationLoadBalancerConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Elastic Application Load Balancer")
+                .withType("ALB")
                 .withPluginCategories(asList(LoadBalancer))
                 .build());
   }
@@ -150,8 +159,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(13)
+        .hasSize(14)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER",
-            "ECS", "KUBERNETES", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB");
+            "ECS", "KUBERNETES", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "ALB");
   }
 }

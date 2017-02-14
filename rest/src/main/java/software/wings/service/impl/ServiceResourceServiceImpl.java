@@ -34,18 +34,22 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EventType;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -66,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -90,20 +95,35 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private HistoryService historyService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private CommandService commandService;
+  @Inject private ArtifactStreamService artifactStreamService;
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Service> list(PageRequest<Service> request) {
+  public PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource) {
     PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
     pageResponse.getResponse().forEach(service -> {
-      service.setConfigFiles(
-          configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid()));
       service.getServiceCommands().forEach(serviceCommand
           -> serviceCommand.setCommand(commandService.getCommand(
               serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     });
+
+    SearchFilter appIdSearchFilter = request.getFilters()
+                                         .stream()
+                                         .filter(searchFilter -> searchFilter.getFieldName().equals("appId"))
+                                         .findFirst()
+                                         .orElse(null);
+    if (withBuildSource && appIdSearchFilter != null) {
+      List<ArtifactStream> artifactStreams =
+          artifactStreamService.list(Builder.aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
+      Map<String, List<ArtifactStream>> serviceToBuildSourceMap =
+          artifactStreams.stream().collect(Collectors.groupingBy(ArtifactStream::getServiceId));
+      if (serviceToBuildSourceMap != null) {
+        pageResponse.getResponse().forEach(service
+            -> service.setArtifactStreams(serviceToBuildSourceMap.getOrDefault(service.getUuid(), emptyList())));
+      }
+    }
     return pageResponse;
   }
 
@@ -238,6 +258,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                        .withTitle("Service " + service.getName() + " created")
                                        .build());
         serviceTemplateService.deleteByService(appId, serviceId);
+        artifactStreamService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
         serviceVariableService.deleteByEntityId(appId, serviceId);
       });
@@ -319,6 +340,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
+    if (command.getCommandUnits() != null && command.getCommandUnits().size() > 0) {
+      command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
+    }
 
     commandService.save(command);
 

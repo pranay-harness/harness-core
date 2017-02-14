@@ -23,6 +23,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.values;
@@ -915,6 +916,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
+    if (workflowPhase.getDeploymentType() == DeploymentType.ECS) {
+      requiredEntityTypes.add(EntityType.ARTIFACT);
+      return requiredEntityTypes;
+    }
+
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return requiredEntityTypes;
     }
@@ -953,18 +959,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP)
-                                   .withName("Container Setup")
-                                   .addStep(Node.Builder.aNode()
+                                   .withName("Setup Container")
+                                   .addStep(aNode()
                                                 .withId(getUuid())
-                                                .withType(StateType.CONTAINER_SETUP.name())
-                                                .withName("Container Setup")
+                                                .withType(StateType.ECS_SERVICE_SETUP.name())
+                                                .withName("ECS Service Setup")
                                                 .build())
                                    .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE)
-                                   .withName("Deploy Service")
-                                   .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY)
+            .withName("Deploy Containers")
+            .addStep(
+                aNode().withId(getUuid()).withType(ECS_SERVICE_DEPLOY.name()).withName("ECS Sevice Deploy").build())
+            .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE)
                                    .withName("Verify Service")
@@ -1035,19 +1043,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.SSH);
 
-    WorkflowPhase rollbackWorkflowPhase = aWorkflowPhase()
-                                              .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-                                              .withRollback(true)
-                                              .withServiceId(workflowPhase.getServiceId())
-                                              .withComputeProviderId(workflowPhase.getComputeProviderId())
-                                              .withRollbackPhaseName(workflowPhase.getName())
-                                              .withDeploymentType(workflowPhase.getDeploymentType())
-                                              .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
-                                              .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
-                                                                .withName("Stop Service")
-                                                                .addAllSteps(commandNodes(commandMap, CommandType.STOP))
-                                                                .build())
-                                              .build();
+    WorkflowPhase rollbackWorkflowPhase =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withRollbackPhaseName(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
+            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
+                              .withName("Stop Service")
+                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE))
+                              .build())
+            .build();
 
     return rollbackWorkflowPhase;
   }
@@ -1132,7 +1141,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     for (Command command : commands) {
-      nodes.add(Node.Builder.aNode()
+      nodes.add(aNode()
                     .withId(getUuid())
                     .withType(COMMAND.name())
                     .withName(command.getName())

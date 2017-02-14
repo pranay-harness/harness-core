@@ -1,14 +1,15 @@
 package software.wings.sm.states;
 
+import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.CONTAINER_SETUP;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
-import com.amazonaws.services.ecs.model.LoadBalancer;
 import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
@@ -17,9 +18,10 @@ import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.api.LoadBalancerConfig;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
-import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Service;
@@ -35,12 +37,14 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.EnumData;
 import software.wings.utils.ECSConvention;
 
 import java.util.List;
@@ -49,8 +53,10 @@ import java.util.stream.Collectors;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
-public class ContainerSetup extends State {
-  @Attributes(title = "Load Balancer") private String loadBalancerSettingId;
+public class EcsServiceSetup extends State {
+  @Attributes(title = "Load Balancer")
+  @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
+  private String loadBalancerSettingId;
 
   @Inject @Transient private transient ClusterService clusterService;
 
@@ -67,8 +73,8 @@ public class ContainerSetup extends State {
    *
    * @param name the name
    */
-  public ContainerSetup(String name) {
-    super(name, CONTAINER_SETUP.name());
+  public EcsServiceSetup(String name) {
+    super(name, ECS_SERVICE_SETUP.name());
   }
 
   @Override
@@ -87,21 +93,26 @@ public class ContainerSetup extends State {
     String clusterName = infrastructureMappingService.getClusterName(
         app.getUuid(), serviceId, env.getUuid()); // TODO:: remove this call with infrMapping get call
 
-    // TODO - elasticLoadBalancerConfig can pulled using settingsService for a given loadBalancerSettingId
-    ElasticLoadBalancerConfig elasticLoadBalancerConfig =
-        (ElasticLoadBalancerConfig) settingsService.get(loadBalancerSettingId).getValue();
-    String loadBalancerName = elasticLoadBalancerConfig.getLoadBalancerName();
-
     Service service = serviceResourceService.get(app.getAppId(), serviceId);
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
 
     EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
         app.getAppId(), serviceId, DeploymentType.ECS.name());
 
+    if (ecsContainerTask == null) {
+      ecsContainerTask = new EcsContainerTask();
+      EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
+      containerDefinition.setMemory(256);
+      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    }
+
+    String containerName = imageName.replace('/', '_');
+    Integer containerPort = 8080; // TODO: don't hardcode read from config
+
     List<ContainerDefinition> containerDefinitions =
         ecsContainerTask.getContainerDefinitions()
             .stream()
-            .map(containerDefinition -> createContainerDefinition(imageName, containerDefinition))
+            .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
             .collect(Collectors.toList());
 
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
@@ -111,28 +122,33 @@ public class ContainerSetup extends State {
 
     TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
+    LoadBalancerConfig loadBalancerConfig = (LoadBalancerConfig) settingsService.get(loadBalancerSettingId).getValue();
+    if (!loadBalancerConfig.getType().equals(SettingVariableTypes.ALB.name())) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    }
+    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerConfig;
+
+    String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
+
     clusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
+            .withServiceName(ecsServiceName)
             .withCluster(clusterName)
             .withDesiredCount(0)
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision())
-            .withLoadBalancers(
-                new LoadBalancer()
-                    .withLoadBalancerName(loadBalancerName)
-                    .withTargetGroupArn(
-                        "arn:aws:elasticloadbalancing:us-east-1:830767422336:targetgroup/testecsgroup/5840102c72984871")
-                    .withContainerName("containerName")
-                    .withContainerPort(8080)));
+            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
 
-    return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS).build();
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .addElement(
+            anEcsServiceElement().withUuid(serviceId).withName(ecsServiceName).withClusterName(clusterName).build())
+        .build();
   }
 
   public ContainerDefinition createContainerDefinition(
-      String imageName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
-    ContainerDefinition containerDefinition =
-        new ContainerDefinition().withName(wingsContainerDefinition.getName()).withImage(imageName);
+      String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
+    ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
 
     if (wingsContainerDefinition.getCpu() != null) {
       containerDefinition.setCpu(wingsContainerDefinition.getCpu());
