@@ -1,1 +1,3 @@
-{}
+{
+  "deploymentType": { "ui:widget": "hidden" }
+}

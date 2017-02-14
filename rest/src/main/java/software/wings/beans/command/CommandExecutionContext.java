@@ -37,6 +37,11 @@ public class CommandExecutionContext {
   private SettingAttribute hostConnectionAttributes;
   private SettingAttribute bastionConnectionAttributes;
   private ArtifactStreamAttributes artifactStreamAttributes;
+  private SettingAttribute cloudProviderSetting;
+  private String clusterName;
+  private String serviceName;
+  private Integer desiredCount;
+  private Integer desiredPercentage;
 
   /**
    * Instantiates a new Command execution context.
@@ -415,6 +420,96 @@ public class CommandExecutionContext {
         .add("bastionConnectionAttributes", bastionConnectionAttributes)
         .add("artifactStreamAttributes", artifactStreamAttributes)
         .toString();
+  }
+
+  /**
+   * Gets cloud provider setting.
+   *
+   * @return the cloud provider setting
+   */
+  public SettingAttribute getCloudProviderSetting() {
+    return cloudProviderSetting;
+  }
+
+  /**
+   * Sets cloud provider setting.
+   *
+   * @param cloudProviderSetting the cloud provider setting
+   */
+  public void setCloudProviderSetting(SettingAttribute cloudProviderSetting) {
+    this.cloudProviderSetting = cloudProviderSetting;
+  }
+
+  /**
+   * Gets cluster name.
+   *
+   * @return the cluster name
+   */
+  public String getClusterName() {
+    return clusterName;
+  }
+
+  /**
+   * Sets cluster name.
+   *
+   * @param clusterName the cluster name
+   */
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
+  }
+
+  /**
+   * Gets service name.
+   *
+   * @return the service name
+   */
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  /**
+   * Sets service name.
+   *
+   * @param serviceName the service name
+   */
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
+
+  /**
+   * Gets desired count.
+   *
+   * @return the desired count
+   */
+  public Integer getDesiredCount() {
+    return desiredCount;
+  }
+
+  /**
+   * Sets desired count.
+   *
+   * @param desiredCount the desired count
+   */
+  public void setDesiredCount(Integer desiredCount) {
+    this.desiredCount = desiredCount;
+  }
+
+  /**
+   * Gets desired percentage.
+   *
+   * @return the desired percentage
+   */
+  public Integer getDesiredPercentage() {
+    return desiredPercentage;
+  }
+
+  /**
+   * Sets desired percentage.
+   *
+   * @param desiredPercentage the desired percentage
+   */
+  public void setDesiredPercentage(Integer desiredPercentage) {
+    this.desiredPercentage = desiredPercentage;
   }
 
   /**

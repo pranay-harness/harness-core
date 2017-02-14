@@ -78,7 +78,10 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   PORT_CHECK_LISTENING(
       PortCheckListeningCommandUnit.class, "Port Listening", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
-  INSTALL(InstallCommandUnit.class, "Deploy Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER);
+  /**
+   * The Install.
+   */
+  RESIZE(ResizeCommandUnit.class, "Resize Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

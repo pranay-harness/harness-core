@@ -29,10 +29,12 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -44,21 +46,21 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
+import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.Map;
+
 /**
  * Created by anubhaw on 6/7/16.
  */
+@Ignore // TODO: move to delegate
 public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
-  /**
-   * The Command unit executor service.
-   */
-  @Mock private CommandUnitExecutorService commandUnitExecutorService;
-  /**
-   * The Cmd executor service.
-   */
+  @Mock private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
+  @Mock private SshCommandUnitExecutorServiceImpl sshCommandUnitExecutorService;
+
   @InjectMocks private ServiceCommandExecutorService cmdExecutorService = new ServiceCommandExecutorServiceImpl();
 
   private SettingAttribute hostConnAttrPwd =
@@ -96,7 +98,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteCommandForServiceInstance() {
-    when(commandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
+    when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
+    when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
+        .thenReturn(SUCCESS);
     ExecutionResult executionResult = cmdExecutorService.execute(command, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
@@ -107,7 +111,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").addCommandUnits(command).build();
-    when(commandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context))).thenReturn(SUCCESS);
+    when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
+    when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
+        .thenReturn(SUCCESS);
     ExecutionResult executionResult = cmdExecutorService.execute(nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }

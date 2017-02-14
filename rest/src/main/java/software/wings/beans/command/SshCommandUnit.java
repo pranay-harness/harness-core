@@ -1,15 +1,13 @@
 package software.wings.beans.command;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.api.DeploymentType;
+
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
 public abstract class SshCommandUnit extends AbstractCommandUnit {
-  /**
-   * Instantiates a new Command unit.
-   */
-  public SshCommandUnit() {
-    super();
-  }
+  @SchemaIgnore private String deploymentType;
 
   /**
    * Instantiates a new command unit.
@@ -18,6 +16,7 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
    */
   public SshCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
+    super.setDeploymentType(DeploymentType.SSH.name());
   }
 
   @Override

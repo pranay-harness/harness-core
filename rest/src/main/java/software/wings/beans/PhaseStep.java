@@ -114,6 +114,7 @@ public class PhaseStep {
         .withId(uuid)
         .withName(getName())
         .withType(StateType.PHASE_STEP.name())
+        .addProperty("phaseStepType", phaseStepType)
         .addProperty("stepsInParallel", stepsInParallel)
         .addProperty("failureStrategies", failureStrategies)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)

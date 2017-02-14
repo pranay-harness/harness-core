@@ -38,7 +38,7 @@ public class EcsContainerTask extends ContainerTask {
     @Attributes(title = "MEMORY") private Integer memory;
 
     @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
-    @Attributes(title = "LOG CONFIGURATION") private LogConfiguration logConfiguration;
+    @Attributes(title = "LOG CONFIGURATION") @SchemaIgnore private LogConfiguration logConfiguration;
     @Attributes(title = "STORAGE/VOLUME") private List<StorageConfiguration> storageConfigurations;
 
     @SchemaIgnore

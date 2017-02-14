@@ -5,7 +5,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
-import software.wings.beans.*;
+import software.wings.beans.AccountPlugin;
+import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ApplicationLoadBalancerConfig;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.EcsClusterConfig;
+import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.SlackConfig;
+import software.wings.beans.SplunkConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.PluginService;
@@ -143,10 +156,19 @@ public class PluginServiceImpl implements PluginService {
             .withSettingClass(ElasticLoadBalancerConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
-            .withDisplayName("Elastic Load Balancer")
+            .withDisplayName("Elastic Classic Load Balancer")
             .withType("ELB")
             .withPluginCategories(asList(LoadBalancer))
             .withUiSchema(readUiSchema("ELB"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ApplicationLoadBalancerConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Elastic Application Load Balancer")
+            .withType("ALB")
+            .withPluginCategories(asList(LoadBalancer))
+            .withUiSchema(readUiSchema("ALB"))
             .build());
   }
 

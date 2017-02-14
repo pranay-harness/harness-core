@@ -208,7 +208,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
           PageRequest.Builder.aPageRequest()
               .withLimit(PageRequest.UNLIMITED)
               .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, getAppId()).build());
-      List<Service> services = serviceResourceService.list(pageRequest.build());
+      List<Service> services = serviceResourceService.list(pageRequest.build(), false);
       selectedServices = convertToServiceElements(services);
     }
     return selectedServices;

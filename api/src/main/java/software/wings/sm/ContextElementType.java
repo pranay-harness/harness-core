@@ -54,5 +54,10 @@ public enum ContextElementType {
   /**
    * Fork context element type.
    */
-  FORK;
+  FORK,
+
+  /**
+   * Cluster context element type.
+   */
+  ECS_SERVICE;
 }

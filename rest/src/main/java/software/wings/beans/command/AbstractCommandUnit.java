@@ -15,6 +15,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   @SchemaIgnore private boolean artifactNeeded = false;
+  @SchemaIgnore private String deploymentType;
 
   /**
    * Instantiates a new Command unit.
@@ -116,6 +117,20 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   }
 
   @Override
+  public String getDeploymentType() {
+    return deploymentType;
+  }
+
+  /**
+   * Sets deployment type.
+   *
+   * @param deploymentType the deployment type
+   */
+  public void setDeploymentType(String deploymentType) {
+    this.deploymentType = deploymentType;
+  }
+
+  @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("name", name)
@@ -186,6 +201,9 @@ public abstract class AbstractCommandUnit implements CommandUnit {
 
       private String errorMessage;
 
+      /**
+       * Instantiates a new Execution result data.
+       */
       public ExecutionResultData() {}
 
       /**

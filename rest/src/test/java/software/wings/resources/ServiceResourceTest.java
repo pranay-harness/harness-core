@@ -63,7 +63,7 @@ public class ServiceResourceTest {
     PageResponse<Service> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(aSERVICE));
     pageResponse.setTotal(1);
-    when(RESOURCE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(RESOURCE_SERVICE.list(any(PageRequest.class), eq(true))).thenReturn(pageResponse);
     RestResponse<PageResponse<Service>> restResponse =
         RESOURCES.client()
             .target("/services/?appId=" + APP_ID)
@@ -73,7 +73,7 @@ public class ServiceResourceTest {
     pageRequest.setOffset("0");
     pageRequest.setLimit("50");
     pageRequest.addFilter("appId", APP_ID, Operator.EQ);
-    verify(RESOURCE_SERVICE).list(pageRequest);
+    verify(RESOURCE_SERVICE).list(pageRequest, true);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }

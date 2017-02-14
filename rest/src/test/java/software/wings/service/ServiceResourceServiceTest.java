@@ -155,7 +155,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", APP_ID, EQ);
     when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<Service>());
-    srs.list(request);
+    srs.list(request, false);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(wingsPersistence).query(eq(Service.class), argument.capture());
     SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);

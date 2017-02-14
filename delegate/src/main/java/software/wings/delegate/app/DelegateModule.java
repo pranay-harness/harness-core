@@ -5,10 +5,16 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import software.wings.api.DeploymentType;
+import software.wings.cloudprovider.ClusterService;
+import software.wings.cloudprovider.ClusterServiceImpl;
+import software.wings.cloudprovider.aws.EcsService;
+import software.wings.cloudprovider.aws.EcsServiceImpl;
 import software.wings.common.thread.ThreadPool;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.delegate.service.DelegateConfigServiceImpl;
@@ -30,6 +36,7 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.DockerBuildServiceImpl;
+import software.wings.service.impl.EcsCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
@@ -68,7 +75,6 @@ public class DelegateModule extends AbstractModule {
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class);
     bind(UpgradeService.class).to(UpgradeServiceImpl.class);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
-    bind(CommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);
     bind(DelegateLogService.class).to(DelegateLogServiceImpl.class);
@@ -80,5 +86,14 @@ public class DelegateModule extends AbstractModule {
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(AsyncHttpClient.class)
         .toInstance(new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build()));
+    bind(ClusterService.class).to(ClusterServiceImpl.class);
+    bind(EcsService.class).to(EcsServiceImpl.class);
+
+    MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
+    serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.ECS.name())
+        .to(EcsCommandUnitExecutorServiceImpl.class);
+    serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.SSH.name())
+        .to(SshCommandUnitExecutorServiceImpl.class);
   }
 }

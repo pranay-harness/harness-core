@@ -28,10 +28,14 @@ import com.amazonaws.services.ecs.model.DeleteServiceRequest;
 import com.amazonaws.services.ecs.model.DeleteServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
+import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -47,6 +51,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 12/28/16.
@@ -853,15 +858,15 @@ public class EcsServiceImpl implements EcsService {
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult = amazonECSClient.createService(createServiceRequest);
 
-    waitForTasksToBeInRunningState(amazonECSClient, createServiceRequest);
+    waitForTasksToBeInRunningState(
+        amazonECSClient, createServiceRequest.getCluster(), createServiceRequest.getServiceName());
 
     return createServiceResult.getService().getServiceArn();
   }
 
-  private void waitForTasksToBeInRunningState(
-      AmazonECSClient amazonECSClient, CreateServiceRequest createServiceRequest) {
+  private void waitForTasksToBeInRunningState(AmazonECSClient amazonECSClient, String clusterName, String serviceName) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRuning(amazonECSClient, createServiceRequest)) {
+    while (!allDesiredTaskRuning(amazonECSClient, clusterName, serviceName)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
@@ -869,13 +874,12 @@ public class EcsServiceImpl implements EcsService {
     }
   }
 
-  private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, CreateServiceRequest createServiceRequest) {
-    Service service = amazonECSClient
-                          .describeServices(new DescribeServicesRequest()
-                                                .withCluster(createServiceRequest.getCluster())
-                                                .withServices(createServiceRequest.getServiceName()))
-                          .getServices()
-                          .get(0);
+  private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, String clusterName, String serviceName) {
+    Service service =
+        amazonECSClient
+            .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+            .getServices()
+            .get(0);
 
     logger.info("Waiting for for pending tasks to finish. {}/{} running ...", service.getRunningCount(),
         service.getDesiredCount());
@@ -892,14 +896,21 @@ public class EcsServiceImpl implements EcsService {
   }
 
   @Override
-  public void provisionTasks(
+  public List<String> provisionTasks(
       SettingAttribute connectorConfig, String clusterName, String serviceName, Integer desiredCount) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
-    amazonECSClient.updateService(updateServiceRequest);
+    UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
+    waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName);
+    DescribeTasksResult describeTasksResult =
+        amazonECSClient.describeTasks(new DescribeTasksRequest().withCluster(clusterName)); // TODO: filter on service
+
+    List<String> containerInstances =
+        describeTasksResult.getTasks().stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
+    return containerInstances;
   }
 
   @Override
