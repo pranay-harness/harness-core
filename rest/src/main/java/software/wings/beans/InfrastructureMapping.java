@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.Objects;
 
@@ -23,6 +24,7 @@ public abstract class InfrastructureMapping extends Base {
   private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) private String deploymentType;
   @Attributes(title = "Connection Type") private String hostConnectionAttrs;
+  @Transient @SchemaIgnore private String displayName;
 
   /**
    * The enum Infra mapping type.
@@ -161,6 +163,15 @@ public abstract class InfrastructureMapping extends Base {
   @Override
   public String getUuid() {
     return super.getUuid();
+  }
+
+  @SchemaIgnore
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
   /**
