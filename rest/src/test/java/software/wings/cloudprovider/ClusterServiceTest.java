@@ -1,5 +1,7 @@
 package software.wings.cloudprovider;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -20,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsService;
 
 import java.util.Arrays;
@@ -57,8 +60,10 @@ public class ClusterServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldResizeCluster() {
-    clusterService.resizeCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5);
-    verify(ecsService).provisionTasks(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5);
+    clusterService.resizeCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5, new ExecutionLogCallback());
+    verify(ecsService)
+        .provisionTasks(
+            eq(cloudProviderSetting), eq(CLUSTER_NAME), eq(SERVICE_NAME), eq(5), any(ExecutionLogCallback.class));
   }
 
   @Test

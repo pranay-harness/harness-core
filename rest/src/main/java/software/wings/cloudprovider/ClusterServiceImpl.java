@@ -8,7 +8,9 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsService;
 
 import java.util.HashMap;
@@ -45,11 +47,15 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public List<String> resizeCluster(
-      SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize) {
+  public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
+      Integer desiredSize, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("Resized the cluster to " + desiredSize + " size", LogLevel.INFO);
+
     List<String> containerInstanceArns =
-        ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize);
+        ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     logger.info("Successfully resized the cluster to {} size", desiredSize);
+    executionLogCallback.saveExecutionLog(
+        "Successfully resized the cluster to " + desiredSize + " size", LogLevel.INFO);
     return containerInstanceArns;
   }
 
