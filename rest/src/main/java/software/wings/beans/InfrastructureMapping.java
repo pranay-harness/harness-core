@@ -8,7 +8,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
 
 import java.util.Objects;
 
@@ -25,7 +24,7 @@ public abstract class InfrastructureMapping extends Base {
   @NotEmpty private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @Attributes(title = "Connection Type") private String hostConnectionAttrs;
-  @Transient @SchemaIgnore private String displayName;
+  @SchemaIgnore private String displayName;
 
   /**
    * The enum Infra mapping type.

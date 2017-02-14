@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
@@ -7,7 +8,6 @@ import static software.wings.beans.InfrastructureMapping.InfrastructureMappingTy
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.ECS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.common.base.Charsets;

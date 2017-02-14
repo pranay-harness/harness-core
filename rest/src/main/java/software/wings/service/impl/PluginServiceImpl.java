@@ -22,11 +22,9 @@ import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.EcsClusterConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -130,24 +128,6 @@ public class PluginServiceImpl implements PluginService {
             .withType("PHYSICAL_DATA_CENTER")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("PHYSICAL_DATA_CENTER"))
-            .build(),
-        anAccountPlugin()
-            .withSettingClass(EcsClusterConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("ECS cluster config")
-            .withType("ECS")
-            .withPluginCategories(asList(CloudProvider))
-            .withUiSchema(readUiSchema("ECS"))
-            .build(),
-        anAccountPlugin()
-            .withSettingClass(KubernetesClusterConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("Kubernetes cluster config")
-            .withType("KUBERNETES")
-            .withPluginCategories(asList(CloudProvider))
-            .withUiSchema(readUiSchema("KUBERNETES"))
             .build(),
         anAccountPlugin()
             .withSettingClass(HostConnectionAttributes.class)
