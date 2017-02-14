@@ -7,31 +7,31 @@ CARD_VIEW_SORT_BY:
       value: alphabeticalDescending
       
 ARTIFACT_TYPE:
-    - name: JAR
+    - name: JAR File
       value: JAR
-    - name: TAR
+    - name: TAR File
       value: TAR
-    - name: WAR
+    - name: WAR File
       value: WAR
-    - name: ZIP
+    - name: ZIP File
       value: ZIP
-    - name: DOCKER
+    - name: Docker Image
       value: DOCKER
-    - name: OTHER
+    - name: Other
       value: OTHER
 
 ARTIFACT_SOURCE_TYPE:
-    - name: JENKINS
+    - name: Jenkins Server
       value: JENKINS
-    - name: BAMBOO
+    - name: Bamboo Server
       value: BAMBOO
-    - name: DOCKER
+    - name: Docker Repository
       value: DOCKER
 
 DEPLOYMENT_STRATEGY:
-    - name: SERIAL
+    - name: Serial
       value: SERIAL
-    - name: PARALLEL
+    - name: Parallel
       value: PARALLEL
 
 OS_TYPE:

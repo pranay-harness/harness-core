@@ -10,7 +10,7 @@ import software.wings.cloudprovider.ClusterService;
  * Created by peeyushaggarwal on 2/1/17.
  */
 public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandUnit {
-  @Inject @Transient protected ClusterService clusterService;
+  @Inject @Transient protected transient ClusterService clusterService;
 
   /**
    * Instantiates a new command unit.

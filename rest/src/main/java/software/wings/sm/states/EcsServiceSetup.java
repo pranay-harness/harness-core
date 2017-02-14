@@ -47,7 +47,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
-import software.wings.stencils.Expand;
 import software.wings.utils.ECSConvention;
 
 import java.util.List;
@@ -58,7 +57,6 @@ import java.util.stream.Collectors;
  */
 public class EcsServiceSetup extends State {
   @Attributes(title = "Load Balancer")
-  @Expand(dataProvider = LoadBalancerDataProvider.class)
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerSettingId;
 

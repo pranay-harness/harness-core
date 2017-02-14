@@ -42,7 +42,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.Misc;
@@ -858,15 +860,16 @@ public class EcsServiceImpl implements EcsService {
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult = amazonECSClient.createService(createServiceRequest);
 
-    waitForTasksToBeInRunningState(
-        amazonECSClient, createServiceRequest.getCluster(), createServiceRequest.getServiceName());
+    waitForTasksToBeInRunningState(amazonECSClient, createServiceRequest.getCluster(),
+        createServiceRequest.getServiceName(), new ExecutionLogCallback());
 
     return createServiceResult.getService().getServiceArn();
   }
 
-  private void waitForTasksToBeInRunningState(AmazonECSClient amazonECSClient, String clusterName, String serviceName) {
+  private void waitForTasksToBeInRunningState(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRuning(amazonECSClient, clusterName, serviceName)) {
+    while (!allDesiredTaskRuning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
@@ -874,7 +877,8 @@ public class EcsServiceImpl implements EcsService {
     }
   }
 
-  private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, String clusterName, String serviceName) {
+  private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback) {
     Service service =
         amazonECSClient
             .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
@@ -883,6 +887,10 @@ public class EcsServiceImpl implements EcsService {
 
     logger.info("Waiting for for pending tasks to finish. {}/{} running ...", service.getRunningCount(),
         service.getDesiredCount());
+
+    executionLogCallback.saveExecutionLog(String.format("Waiting for for pending tasks to finish. %s/%s running ...",
+                                              service.getRunningCount(), service.getDesiredCount()),
+        LogLevel.INFO);
     return service.getDesiredCount() == service.getRunningCount();
   }
 
@@ -896,15 +904,15 @@ public class EcsServiceImpl implements EcsService {
   }
 
   @Override
-  public List<String> provisionTasks(
-      SettingAttribute connectorConfig, String clusterName, String serviceName, Integer desiredCount) {
+  public List<String> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
+      Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
-    waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName);
+    waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName, executionLogCallback);
     DescribeTasksResult describeTasksResult =
         amazonECSClient.describeTasks(new DescribeTasksRequest().withCluster(clusterName)); // TODO: filter on service
 

@@ -41,6 +41,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.aws.EcsService;
 import software.wings.service.impl.AwsHelperService;
 
@@ -156,7 +157,8 @@ public class EcsServiceTest extends WingsBaseTest {
         .thenReturn(new DescribeServicesResult().withServices(
             Arrays.asList(new Service().withDesiredCount(DESIRED_CAPACITY).withRunningCount(DESIRED_CAPACITY))));
     when(amazonECSClient.describeTasks(any())).thenReturn(new DescribeTasksResult());
-    ecsService.provisionTasks(connectorConfig, CLUSTER_NAME, SERVICE_NAME, DESIRED_CAPACITY);
+    ecsService.provisionTasks(
+        connectorConfig, CLUSTER_NAME, SERVICE_NAME, DESIRED_CAPACITY, new ExecutionLogCallback());
     verify(awsHelperService).getAmazonEcsClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonECSClient)
         .updateService(new UpdateServiceRequest()
