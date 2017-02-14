@@ -212,8 +212,8 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
 
     awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
 
-    List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(app.getUuid(),
-        service.getUuid(), environment.getUuid(), computeProviderSetting.getUuid(), "DemoTargetHosts", 5);
+    List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(
+        app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(), "DemoTargetHosts", 5);
 
     System.out.println(serviceInstances.size());
     serviceInstances = infrastructureMappingService.selectServiceInstances(

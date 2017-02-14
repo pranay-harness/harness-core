@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -17,12 +18,12 @@ import java.util.Objects;
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
 @Entity(value = "infrastructureMapping")
 public abstract class InfrastructureMapping extends Base {
-  private String computeProviderSettingId;
-  private String envId;
-  private String serviceTemplateId;
-  private String computeProviderType;
-  private String infraMappingType;
-  @Attributes(title = "Deployment type", required = true) private String deploymentType;
+  @NotEmpty private String computeProviderSettingId;
+  @NotEmpty private String envId;
+  @NotEmpty private String serviceTemplateId;
+  @NotEmpty private String computeProviderType;
+  @NotEmpty private String infraMappingType;
+  @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @Attributes(title = "Connection Type") private String hostConnectionAttrs;
   @Transient @SchemaIgnore private String displayName;
 
@@ -217,15 +218,6 @@ public abstract class InfrastructureMapping extends Base {
    */
   public String getInfraMappingType() {
     return infraMappingType;
-  }
-
-  /**
-   * Sets infra mapping type.
-   *
-   * @param infraMappingType the infra mapping type
-   */
-  public void setInfraMappingType(String infraMappingType) {
-    this.infraMappingType = infraMappingType;
   }
 
   @Override

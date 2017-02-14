@@ -37,11 +37,10 @@ public interface InfrastructureMappingService {
    * Get infrastructure mapping.
    *
    * @param appId          the app id
-   * @param envId          the env id
    * @param infraMappingId the infra mapping id  @return the infrastructure mapping
    * @return the infrastructure mapping
    */
-  InfrastructureMapping get(String appId, String envId, String infraMappingId);
+  InfrastructureMapping get(String appId, String infraMappingId);
 
   /**
    * Update.
@@ -119,15 +118,14 @@ public interface InfrastructureMappingService {
    * Provision nodes list.
    *
    * @param appId              the app id
-   * @param serviceId          the service id
    * @param envId              the env id
-   * @param computeProviderId  the compute provider id
+   * @param infraMappingId     the infra mapping id
    * @param launcherConfigName the launcher config name
    * @param instanceCount      the instance count
    * @return the list
    */
-  List<ServiceInstance> provisionNodes(String appId, String serviceId, String envId, String computeProviderId,
-      String launcherConfigName, int instanceCount);
+  List<ServiceInstance> provisionNodes(
+      String appId, String envId, String infraMappingId, String launcherConfigName, int instanceCount);
 
   /**
    * De provision nodes.
@@ -141,22 +139,24 @@ public interface InfrastructureMappingService {
   void deProvisionNodes(String appId, String serviceId, String envId, String computeProviderId, List<String> hostNames);
 
   /**
-   * Gets cluster name.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   * @param envId     the env id
-   * @return the cluster name
-   */
-  String getClusterName(String appId, String serviceId, String envId);
-
-  /**
    * List types map.
    *
-   * @param appId the app id
-   * @param envId the env id
-   * @param serviceId
+   * @param appId     the app id
+   * @param envId     the env id
+   * @param serviceId the service id
    * @return the map
    */
   Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId);
+
+  /**
+   * Select service instances list.
+   *
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param infraMappingId  the infra mapping id
+   * @param selectionParams the selection params
+   * @return the list
+   */
+  List<ServiceInstance> selectServiceInstances(
+      String appId, String envId, String infraMappingId, Map<String, Object> selectionParams);
 }

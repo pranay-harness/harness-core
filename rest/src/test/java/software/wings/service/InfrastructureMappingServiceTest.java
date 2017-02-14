@@ -39,6 +39,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig.Builder;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -63,7 +64,6 @@ import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
@@ -79,15 +79,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
   @Mock private HostService hostService;
-  @Inject private ExecutorService executorService;
 
   @Mock private Query<InfrastructureMapping> query;
   @Mock private FieldEnd end;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
-
-  private SettingAttribute computeProviderSetting =
-      aSettingAttribute().withUuid(SETTING_ID).withValue(aPhysicalDataCenterConfig().build()).build();
 
   @Before
   public void setUp() throws Exception {
@@ -119,14 +115,18 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSave() {
-    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
-                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                                      .withComputeProviderSettingId(SETTING_ID)
-                                                                      .withAppId(APP_ID)
-                                                                      .withEnvId(ENV_ID)
-                                                                      .withServiceTemplateId(TEMPLATE_ID)
-                                                                      .withHostNames(asList(HOST_NAME))
-                                                                      .build();
+    PhysicalInfrastructureMapping physicalInfrastructureMapping =
+        aPhysicalInfrastructureMapping()
+            .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+            .withComputeProviderSettingId(SETTING_ID)
+            .withAppId(APP_ID)
+            .withEnvId(ENV_ID)
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+            .withDeploymentType(DeploymentType.SSH.name())
+            .withServiceTemplateId(TEMPLATE_ID)
+            .withHostNames(asList(HOST_NAME))
+            .build();
     PhysicalInfrastructureMapping savedPhysicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -134,14 +134,20 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withUuid(WingsTestConstants.INFRA_MAPPING_ID)
             .withAppId(APP_ID)
             .withEnvId(ENV_ID)
+            .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+            .withDeploymentType(DeploymentType.SSH.name())
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(asList(HOST_NAME))
             .build();
 
     when(wingsPersistence.saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping))
         .thenReturn(savedPhysicalInfrastructureMapping);
-    ServiceTemplate serviceTemplate = aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build();
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
+        .thenReturn(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build());
+    when(settingsService.get(COMPUTE_PROVIDER_ID))
+        .thenReturn(
+            aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build());
     Host host = aHost()
                     .withAppId(APP_ID)
                     .withEnvId(ENV_ID)
@@ -161,7 +167,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateField(InfrastructureMapping.class, INFRA_MAPPING_ID, "hostNames", asList(HOST_NAME));
     verify(staticInfrastructureProvider).saveHost(any(Host.class));
     verify(serviceInstanceService)
-        .updateInstanceMappings(serviceTemplate, savedPhysicalInfrastructureMapping, asList(host), asList());
+        .updateInstanceMappings(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build(),
+            savedPhysicalInfrastructureMapping, asList(host), asList());
   }
 
   @Test
@@ -179,7 +186,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
 
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(APP_ID, ENV_ID, INFRA_MAPPING_ID);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID);
     assertThat(infrastructureMapping.getUuid()).isEqualTo(INFRA_MAPPING_ID);
     verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
   }
@@ -189,7 +196,9 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
                                                    .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
                                                    .withComputeProviderSettingId(SETTING_ID)
+                                                   .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                    .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                                   .withDeploymentType(DeploymentType.SSH.name())
                                                    .withAppId(APP_ID)
                                                    .withEnvId(ENV_ID)
                                                    .withUuid(INFRA_MAPPING_ID)
@@ -200,7 +209,9 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
                                                      .withHostConnectionAttrs("HOST_CONN_ATTR_ID_1")
                                                      .withComputeProviderSettingId(SETTING_ID)
+                                                     .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                      .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                                     .withDeploymentType(DeploymentType.SSH.name())
                                                      .withAppId(APP_ID)
                                                      .withEnvId(ENV_ID)
                                                      .withUuid(INFRA_MAPPING_ID)
@@ -209,9 +220,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .build();
 
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID)).thenReturn(savedInfra);
-
-    ServiceTemplate serviceTemplate = aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build();
-    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
+    when(settingsService.get(COMPUTE_PROVIDER_ID))
+        .thenReturn(
+            aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build());
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
+        .thenReturn(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build());
     Host host = aHost()
                     .withAppId(APP_ID)
                     .withEnvId(ENV_ID)
@@ -234,7 +247,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .updateField(InfrastructureMapping.class, INFRA_MAPPING_ID, "hostNames", asList("HOST_NAME_1"));
     verify(staticInfrastructureProvider).saveHost(any(Host.class));
     verify(serviceInstanceService)
-        .updateInstanceMappings(serviceTemplate, updatedInfra, asList(host), asList(HOST_NAME));
+        .updateInstanceMappings(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build(), updatedInfra,
+            asList(host), asList(HOST_NAME));
   }
 
   @Test
@@ -451,12 +465,12 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withEnvId(ENV_ID)
                                                             .withComputeProviderType(AWS.name())
                                                             .withUuid(INFRA_MAPPING_ID)
+                                                            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
                                                             .build();
-    when(query.get()).thenReturn(awsInfrastructureMapping);
 
-    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
-        .thenReturn(asList(new Key<ServiceTemplate>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
+    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(awsInfrastructureMapping);
 
     SettingAttribute computeProviderSetting =
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
@@ -475,12 +489,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(
             aPageResponse().withResponse(asList(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build())).build());
 
-    List<ServiceInstance> serviceInstances = infrastructureMappingService.provisionNodes(
-        APP_ID, SERVICE_ID, ENV_ID, COMPUTE_PROVIDER_ID, "LAUNCH_CONFIG", 1);
+    List<ServiceInstance> serviceInstances =
+        infrastructureMappingService.provisionNodes(APP_ID, ENV_ID, INFRA_MAPPING_ID, "LAUNCH_CONFIG", 1);
 
     assertThat(serviceInstances).hasSize(1);
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
-    verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider).provisionHosts(computeProviderSetting, "LAUNCH_CONFIG", 1);
     verify(awsInfrastructureProvider).saveHost(provisionedHost);

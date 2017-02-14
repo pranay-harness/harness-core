@@ -123,13 +123,15 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    * The type Builder.
    */
   public static final class Builder {
+    private String restrictionType;
+    private String restrictionExpression;
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
     private String computeProviderType;
-    private String restrictionType;
+    private String deploymentType;
     private String hostConnectionAttrs;
-    private String restrictionExpression;
+    private String displayName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -146,6 +148,28 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public static Builder anAwsInfrastructureMapping() {
       return new Builder();
+    }
+
+    /**
+     * With restriction type builder.
+     *
+     * @param restrictionType the restriction type
+     * @return the builder
+     */
+    public Builder withRestrictionType(String restrictionType) {
+      this.restrictionType = restrictionType;
+      return this;
+    }
+
+    /**
+     * With restriction expression builder.
+     *
+     * @param restrictionExpression the restriction expression
+     * @return the builder
+     */
+    public Builder withRestrictionExpression(String restrictionExpression) {
+      this.restrictionExpression = restrictionExpression;
+      return this;
     }
 
     /**
@@ -193,13 +217,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With restriction type builder.
+     * With deployment type builder.
      *
-     * @param restrictionType the restriction type
+     * @param deploymentType the deployment type
      * @return the builder
      */
-    public Builder withRestrictionType(String restrictionType) {
-      this.restrictionType = restrictionType;
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
       return this;
     }
 
@@ -215,13 +239,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With restriction expression builder.
+     * With display name builder.
      *
-     * @param restrictionExpression the restriction expression
+     * @param displayName the display name
      * @return the builder
      */
-    public Builder withRestrictionExpression(String restrictionExpression) {
-      this.restrictionExpression = restrictionExpression;
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -298,13 +322,15 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder but() {
       return anAwsInfrastructureMapping()
+          .withRestrictionType(restrictionType)
+          .withRestrictionExpression(restrictionExpression)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withComputeProviderType(computeProviderType)
-          .withRestrictionType(restrictionType)
+          .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
-          .withRestrictionExpression(restrictionExpression)
+          .withDisplayName(displayName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -320,13 +346,15 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public AwsInfrastructureMapping build() {
       AwsInfrastructureMapping awsInfrastructureMapping = new AwsInfrastructureMapping();
+      awsInfrastructureMapping.setRestrictionType(restrictionType);
+      awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
       awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setEnvId(envId);
       awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       awsInfrastructureMapping.setComputeProviderType(computeProviderType);
-      awsInfrastructureMapping.setRestrictionType(restrictionType);
+      awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
+      awsInfrastructureMapping.setDisplayName(displayName);
       awsInfrastructureMapping.setUuid(uuid);
       awsInfrastructureMapping.setAppId(appId);
       awsInfrastructureMapping.setCreatedBy(createdBy);

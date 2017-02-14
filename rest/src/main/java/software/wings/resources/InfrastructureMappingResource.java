@@ -55,7 +55,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}")
   public RestResponse<InfrastructureMapping> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("infraMappingId") String infraMappingId) {
-    return new RestResponse<>(infrastructureMappingService.get(appId, envId, infraMappingId));
+    return new RestResponse<>(infrastructureMappingService.get(appId, infraMappingId));
   }
 
   @GET

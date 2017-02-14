@@ -52,6 +52,9 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     private String envId;
     private String serviceTemplateId;
     private String computeProviderType;
+    private String deploymentType;
+    private String hostConnectionAttrs;
+    private String displayName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -122,6 +125,39 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withComputeProviderType(String computeProviderType) {
       this.computeProviderType = computeProviderType;
+      return this;
+    }
+
+    /**
+     * With deployment type builder.
+     *
+     * @param deploymentType the deployment type
+     * @return the builder
+     */
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    /**
+     * With host connection attrs builder.
+     *
+     * @param hostConnectionAttrs the host connection attrs
+     * @return the builder
+     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    /**
+     * With display name builder.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -203,6 +239,9 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withComputeProviderType(computeProviderType)
+          .withDeploymentType(deploymentType)
+          .withHostConnectionAttrs(hostConnectionAttrs)
+          .withDisplayName(displayName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -223,6 +262,9 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
       ecsInfrastructureMapping.setEnvId(envId);
       ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      ecsInfrastructureMapping.setDeploymentType(deploymentType);
+      ecsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      ecsInfrastructureMapping.setDisplayName(displayName);
       ecsInfrastructureMapping.setUuid(uuid);
       ecsInfrastructureMapping.setAppId(appId);
       ecsInfrastructureMapping.setCreatedBy(createdBy);

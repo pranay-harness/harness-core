@@ -75,7 +75,9 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private String envId;
     private String serviceTemplateId;
     private String computeProviderType;
+    private String deploymentType;
     private String hostConnectionAttrs;
+    private String displayName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -150,6 +152,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With deployment type builder.
+     *
+     * @param deploymentType the deployment type
+     * @return the builder
+     */
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    /**
      * With host connection attrs builder.
      *
      * @param hostConnectionAttrs the host connection attrs
@@ -157,6 +170,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
       this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    /**
+     * With display name builder.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -238,7 +262,9 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
           .withComputeProviderType(computeProviderType)
+          .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
+          .withDisplayName(displayName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -259,7 +285,9 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setEnvId(envId);
       physicalInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
+      physicalInfrastructureMapping.setDeploymentType(deploymentType);
       physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      physicalInfrastructureMapping.setDisplayName(displayName);
       physicalInfrastructureMapping.setUuid(uuid);
       physicalInfrastructureMapping.setAppId(appId);
       physicalInfrastructureMapping.setCreatedBy(createdBy);
