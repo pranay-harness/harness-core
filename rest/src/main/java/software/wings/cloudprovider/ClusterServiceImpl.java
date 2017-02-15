@@ -49,11 +49,9 @@ public class ClusterServiceImpl implements ClusterService {
   @Override
   public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Resized the cluster to " + desiredSize + " size", LogLevel.INFO);
-
+    executionLogCallback.saveExecutionLog("Begin resizing the cluster to " + desiredSize + " size", LogLevel.INFO);
     List<String> containerInstanceArns =
         ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
-    logger.info("Successfully resized the cluster to {} size", desiredSize);
     executionLogCallback.saveExecutionLog(
         "Successfully resized the cluster to " + desiredSize + " size", LogLevel.INFO);
     return containerInstanceArns;
