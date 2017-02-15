@@ -21,8 +21,9 @@ public class WorkflowPhase {
   private String uuid = UUIDGenerator.getUuid();
   private String name;
   private @NotNull String serviceId;
-  private @NotNull DeploymentType deploymentType;
-  private @NotNull String computeProviderId;
+  private @NotNull String infraMappingId;
+  private DeploymentType deploymentType;
+  private String computeProviderId;
   private String deploymentMasterId;
 
   private boolean rollback;
@@ -126,6 +127,14 @@ public class WorkflowPhase {
     params.put("deploymentType", deploymentType);
     params.put("deploymentMasterId", deploymentMasterId);
     return params;
+  }
+
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
   }
 
   public static final class WorkflowPhaseBuilder {

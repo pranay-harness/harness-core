@@ -88,6 +88,7 @@ import software.wings.sm.TransitionType;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -585,6 +586,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     populateServices(orchestrationWorkflow);
     populatePhaseSteps(orchestrationWorkflow);
   }
+
   private void populateServices(OrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow.getWorkflowPhaseIdMap() == null) {
       return;
@@ -749,6 +751,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
+    workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+    workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+
     populatePhaseStepIds(workflowPhase);
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
