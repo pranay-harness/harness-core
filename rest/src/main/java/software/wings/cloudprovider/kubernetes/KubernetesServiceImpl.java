@@ -1,7 +1,17 @@
 package software.wings.cloudprovider.kubernetes;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.HttpStatusCodes;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.container.Container;
+import com.google.api.services.container.ContainerScopes;
+import com.google.api.services.container.model.Cluster;
+import com.google.api.services.container.model.CreateClusterRequest;
+import com.google.api.services.container.model.CreateNodePoolRequest;
+import com.google.api.services.container.model.MasterAuth;
+import com.google.api.services.container.model.Operation;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -18,6 +28,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -28,28 +41,161 @@ public class KubernetesServiceImpl implements KubernetesService {
   private static final int SLEEP_INTERVAL = 5 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   private KubernetesClient client;
-  private Service service;
 
-  public void createCluster(String masterUrl, Map<String, String> params) throws InterruptedException {
+  public void createCluster(Map<String, String> params) throws InterruptedException {
+    Container containerService = getContainerService(params.get("appName"));
+
+    Cluster cluster = null;
+    try {
+      cluster = containerService.projects()
+                    .zones()
+                    .clusters()
+                    .get(params.get("projectId"), params.get("zone"), params.get("name"))
+                    .execute();
+      logger.info("Cluster " + params.get("name") + " already exists in zone " + params.get("zone") + " for project "
+          + params.get("projectId"));
+    } catch (IOException e) {
+      boolean notFound = false;
+      if (e instanceof GoogleJsonResponseException) {
+        GoogleJsonResponseException ex = (GoogleJsonResponseException) e;
+        if (ex.getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+          notFound = true;
+          logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone")
+              + " for project " + params.get("projectId"));
+        }
+      }
+      if (!notFound) {
+        e.printStackTrace();
+      }
+    }
+
+    if (cluster == null) {
+      cluster = new Cluster()
+                    .setName(params.get("name"))
+                    .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
+                    .setMasterAuth(
+                        new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd")));
+
+      CreateClusterRequest content = new CreateClusterRequest().setCluster(cluster);
+
+      Operation response = null;
+      try {
+        response = containerService.projects()
+                       .zones()
+                       .clusters()
+                       .create(params.get("projectId"), params.get("zone"), content)
+                       .execute();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+      logger.info("Provisioning...");
+      int i = 0;
+      while (response.getStatus().equals("RUNNING")) {
+        Thread.sleep(SLEEP_INTERVAL);
+        try {
+          response = containerService.projects()
+                         .zones()
+                         .operations()
+                         .get(params.get("projectId"), params.get("zone"), response.getName())
+                         .execute();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+        i += 5;
+        logger.info("Provisioning... " + i);
+      }
+      logger.info("Provisioning: " + response.getStatus());
+
+      try {
+        cluster = containerService.projects()
+                      .zones()
+                      .clusters()
+                      .get(params.get("projectId"), params.get("zone"), params.get("name"))
+                      .execute();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    logger.info("Cluster status: " + cluster.getStatus());
+    logger.info("Master endpoint: " + cluster.getEndpoint());
+
     client = new DefaultKubernetesClient(new ConfigBuilder()
-                                             .withMasterUrl(masterUrl)
+                                             .withMasterUrl("https://" + cluster.getEndpoint())
                                              .withTrustCerts(true)
-                                             .withUsername(params.get("username"))
-                                             .withPassword(params.get("password"))
+                                             .withUsername(params.get("masterUser"))
+                                             .withPassword(params.get("masterPwd"))
                                              .withNamespace("default")
                                              .build());
+
+    logger.info("Connected to cluster");
   }
 
-  public void destroyCluster() throws InterruptedException {
-    client.services().delete();
-    client.replicationControllers().delete();
+  public void destroyCluster(Map<String, String> params) throws InterruptedException {
+    Container containerService = getContainerService(params.get("appName"));
+
+    Operation response = null;
+    try {
+      response = containerService.projects()
+                     .zones()
+                     .clusters()
+                     .delete(params.get("projectId"), params.get("zone"), params.get("name"))
+                     .execute();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    logger.info("Deleting cluster...");
+    int i = 0;
+    while (response.getStatus().equals("RUNNING")) {
+      Thread.sleep(SLEEP_INTERVAL);
+      try {
+        response = containerService.projects()
+                       .zones()
+                       .operations()
+                       .get(params.get("projectId"), params.get("zone"), response.getName())
+                       .execute();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      i += 5;
+      logger.info("Deleting cluster... " + i);
+    }
+    logger.info("Delete cluster: " + response.getStatus());
+  }
+
+  private Container getContainerService(String appName) {
+    GoogleCredential credential = null;
+    try {
+      credential = GoogleCredential.getApplicationDefault();
+      if (credential.createScopedRequired()) {
+        credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    Container containerService = null;
+    try {
+      containerService =
+          new Container
+              .Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential)
+              .setApplicationName(appName)
+              .build();
+    } catch (GeneralSecurityException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return containerService;
   }
 
   @Override
   public void provisionNodes(SettingAttribute connectorConfig, String autoScalingGroupName, Integer clusterSize) {
+    CreateNodePoolRequest request;
     KubernetesConfig kubernetesConfig = (KubernetesConfig) connectorConfig.getValue();
     Config config = new ConfigBuilder()
                         .withMasterUrl(kubernetesConfig.getApiServerUrl())
@@ -109,6 +255,7 @@ public class KubernetesServiceImpl implements KubernetesService {
         .addToSelector("tier", "frontend")
         .endSpec()
         .done();
+    logger.info("Created frontend service " + params.get("name") + " for " + params.get("appName"));
   }
 
   @Override
@@ -132,6 +279,7 @@ public class KubernetesServiceImpl implements KubernetesService {
         .addToSelector("tier", "backend")
         .endSpec()
         .done();
+    logger.info("Created backend service " + params.get("name") + " for " + params.get("appName"));
   }
 
   @Override
@@ -172,11 +320,13 @@ public class KubernetesServiceImpl implements KubernetesService {
                                    .build();
 
     client.replicationControllers().inNamespace("default").createOrReplace(rc);
+    logger.info("Created frontend controller " + params.get("name") + " for " + params.get("appName"));
   }
 
   @Override
   public void scaleFrontendController(String name, int number) {
     client.replicationControllers().withName(name).scale(number);
+    logger.info("Scaled frontend controller " + name + " to " + number + " instances");
   }
 
   @Override
@@ -215,45 +365,26 @@ public class KubernetesServiceImpl implements KubernetesService {
                                    .build();
 
     client.replicationControllers().inNamespace("default").createOrReplace(rc);
+    logger.info("Created backend controller " + params.get("name") + " for " + params.get("appName"));
   }
 
-  private void checkStatus(String rcName, String serviceName) {
+  public void checkStatus(String rcName, String serviceName) {
     ReplicationController rc = client.replicationControllers().inNamespace("default").withName(rcName).get();
-    System.out.println("rc = " + rc);
+    logger.info("Replication controller " + rcName + ": " + client.getMasterUrl()
+        + rc.getMetadata().getSelfLink().substring(1));
     Service service = client.services().withName(serviceName).get();
-    System.out.println("service = " + service);
+    logger.info(
+        "Service " + serviceName + ": " + client.getMasterUrl() + service.getMetadata().getSelfLink().substring(1));
   }
 
-  private void cleanup() {
-    client.services().delete();
+  public void cleanup() {
+    if (client.services().list().getItems() != null) {
+      client.services().delete();
+      logger.info("Deleted existing services");
+    }
     if (client.replicationControllers().list().getItems() != null) {
       client.replicationControllers().delete();
+      logger.info("Deleted existing replication controllers");
     }
-  }
-
-  public static void main(String... args) throws InterruptedException {
-    KubernetesServiceImpl kubernetesService = new KubernetesServiceImpl();
-    kubernetesService.createCluster(
-        "https://35.184.26.158", ImmutableMap.of("username", "admin", "password", "1rcbvCsbiTxIjw88"));
-
-    kubernetesService.cleanup();
-
-    kubernetesService.createBackendController(ImmutableMap.of("name", "backend-ctrl", "appName", "testApp",
-        "serverImage", "gcr.io/google-samples/node-hello", "port", "8080", "count", "2"));
-
-    kubernetesService.createBackendService(ImmutableMap.of("name", "backend-service", "appName", "testApp"));
-
-    kubernetesService.createFrontendController(
-        ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")),
-        ImmutableMap.of("name", "frontend-ctrl", "appName", "testApp", "webappImage",
-            "gcr.io/google-samples/node-hello", "port", "8080", "count", "2"));
-
-    kubernetesService.createFrontendService(
-        ImmutableMap.of("name", "frontend-service", "appName", "testApp", "type", "LoadBalancer"));
-
-    kubernetesService.scaleFrontendController("frontend-ctrl", 5);
-
-    kubernetesService.checkStatus("backend-ctrl", "backend-service");
-    kubernetesService.checkStatus("frontend-ctrl", "frontend-service");
   }
 }
