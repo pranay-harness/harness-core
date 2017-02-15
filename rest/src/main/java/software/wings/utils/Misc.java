@@ -3,12 +3,26 @@ package software.wings.utils;
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.common.Constants;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Miscellaneous utility class.
  *
  * @author Rishi
  */
 public class Misc {
+  private static Pattern wildCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
+
+  public static String normalizeExpression(String expression) {
+    return normalizeExpression(expression, "__");
+  }
+
+  public static String normalizeExpression(String expression, String replacement) {
+    Matcher matcher = wildCharPattern.matcher(expression);
+    return matcher.replaceAll(replacement);
+  }
+
   /**
    * sleep without throwing InterruptedExeception.
    *
