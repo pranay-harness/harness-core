@@ -22,7 +22,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ServiceInstancesProvisionState;
 import software.wings.sm.SpawningExecutionResponse;
-import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -75,10 +74,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
       if (ecsServiceElement == null) {
         throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
-      }
-
-      for (StateExecutionInstance instance : ((SpawningExecutionResponse) response).getStateExecutionInstanceList()) {
-        instance.getContextElements().push(ecsServiceElement);
       }
     }
     if ((phaseStepType == PhaseStepType.DEPLOY_SERVICE || phaseStepType == PhaseStepType.ENABLE_SERVICE

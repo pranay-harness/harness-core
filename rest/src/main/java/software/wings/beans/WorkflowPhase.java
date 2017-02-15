@@ -111,6 +111,7 @@ public class WorkflowPhase {
         .withId(uuid)
         .withName(name)
         .withType(StateType.PHASE.name())
+        .withRollback(rollback)
         .addProperty("serviceId", serviceId)
         .addProperty("deploymentType", deploymentType)
         .addProperty("computeProviderId", computeProviderId)

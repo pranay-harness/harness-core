@@ -1054,7 +1054,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
                               .withName("Stop Service")
-                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE))
+                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
+                              .withRollback(true)
                               .build())
             .build();
 
@@ -1076,15 +1077,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
             .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE)
                               .withName("Disable Service")
-                              .addAllSteps(commandNodes(commandMap, CommandType.DISABLE))
+                              .addAllSteps(commandNodes(commandMap, CommandType.DISABLE, true))
+                              .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
                               .withName("Stop Service")
-                              .addAllSteps(commandNodes(commandMap, CommandType.STOP))
+                              .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
+                              .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE)
                               .withName("Enable Service")
-                              .addAllSteps(commandNodes(commandMap, CommandType.ENABLE))
+                              .addAllSteps(commandNodes(commandMap, CommandType.ENABLE, true))
+                              .withRollback(true)
                               .build())
             .build();
 
@@ -1133,6 +1137,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private List<Node> commandNodes(Map<CommandType, List<Command>> commandMap, CommandType commandType) {
+    return commandNodes(commandMap, commandType, false);
+  }
+
+  private List<Node> commandNodes(
+      Map<CommandType, List<Command>> commandMap, CommandType commandType, boolean rollback) {
     List<Node> nodes = new ArrayList<>();
 
     List<Command> commands = commandMap.get(commandType);
@@ -1146,6 +1155,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                     .withType(COMMAND.name())
                     .withName(command.getName())
                     .addProperty("commandName", command.getName())
+                    .withRollback(rollback)
                     .build());
     }
     return nodes;

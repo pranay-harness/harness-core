@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -143,6 +144,11 @@ public class EcsServiceSetup extends State {
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .addElement(
             anEcsServiceElement().withUuid(serviceId).withName(ecsServiceName).withClusterName(clusterName).build())
+        .withStateExecutionData(anEcsServiceExecutionData()
+                                    .withEcsClusterName(clusterName)
+                                    .withEcsServiceName(ecsServiceName)
+                                    .withDockerImageName(imageName)
+                                    .build())
         .build();
   }
 
