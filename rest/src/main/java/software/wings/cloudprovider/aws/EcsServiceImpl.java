@@ -923,7 +923,7 @@ public class EcsServiceImpl implements EcsService {
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
-    executionLogCallback.saveExecutionLog("Successfully updated service with desired count", LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Service updated with desired count", LogLevel.INFO);
     waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName, executionLogCallback);
 
     ListTasksResult listTasksResult =
