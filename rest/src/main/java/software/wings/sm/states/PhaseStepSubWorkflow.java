@@ -20,6 +20,8 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.ServiceInstancesProvisionState;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateType;
@@ -112,12 +114,15 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     handleElementNotifyResponseData(context, phaseElement, notifyResponseData, executionResponse);
 
+    ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
+    executionResponse.setExecutionStatus(executionStatus);
     return executionResponse;
   }
 
   private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
       NotifyResponseData notifyResponseData, ExecutionResponse executionResponse) {
-    if (phaseElement.getDeploymentType() == DeploymentType.SSH && phaseStepType == PhaseStepType.PROVISION_NODE) {
+    if (phaseElement.getDeploymentType().equals(DeploymentType.SSH.name())
+        && phaseStepType == PhaseStepType.PROVISION_NODE) {
       List<ContextElement> elements = notifiedElements(notifyResponseData);
       if (!(elements.get(0) instanceof ServiceInstanceIdsParam)) {
         throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
@@ -132,7 +137,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .withServiceId(serviceInstanceIdsParam.getServiceId())
               .build());
       executionResponse.setStateExecutionData(phaseStepSubWorkflowExecutionData);
-    } else if (phaseElement.getDeploymentType() == DeploymentType.ECS
+    } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       List<ContextElement> elements = notifiedElements(notifyResponseData);
       if (!(elements.get(0) instanceof EcsServiceElement)) {

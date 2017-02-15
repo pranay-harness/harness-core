@@ -18,29 +18,71 @@ import com.amazonaws.services.ecs.AmazonECSClient;
 /**
  * Created by anubhaw on 12/15/16.
  */
-
 @Singleton
 public class AwsHelperService {
+  /**
+   * Gets aws cloud watch client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the aws cloud watch client
+   */
   public AmazonCloudWatchClient getAwsCloudWatchClient(String accessKey, String secretKey) {
     return new AmazonCloudWatchClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
+  /**
+   * Gets amazon ecs client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon ecs client
+   */
   public AmazonECSClient getAmazonEcsClient(String accessKey, String secretKey) {
     return new AmazonECSClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
+  /**
+   * Gets amazon ec 2 client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon ec 2 client
+   */
   public AmazonEC2Client getAmazonEc2Client(String accessKey, String secretKey) {
     return new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
   }
 
+  /**
+   * Gets amazon cloud formation client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon cloud formation client
+   */
   public AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, String secretKey) {
     return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
+  /**
+   * Gets amazon auto scaling client.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @return the amazon auto scaling client
+   */
   public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, String secretKey) {
     return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
+  /**
+   * Gets instance id.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @param hostName  the host name
+   * @return the instance id
+   */
   public String getInstanceId(String accessKey, String secretKey, String hostName) {
     AmazonEC2Client amazonEC2Client = new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
 
@@ -88,5 +130,15 @@ public class AwsHelperService {
                        .orElse(instanceId);
     }
     return instanceId;
+  }
+
+  /**
+   * Gets id from arn.
+   *
+   * @param arn the arn
+   * @return the id from arn
+   */
+  public String getIdFromArn(String arn) {
+    return arn.substring(arn.lastIndexOf('/') + 1);
   }
 }

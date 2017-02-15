@@ -46,18 +46,18 @@ public class DcNodeSelectState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    String computeProviderId = phaseElement.getComputeProviderId();
+    String infraMappingId = phaseElement.getInfraMappingId();
 
     logger.info(
-        "serviceId: {}, environmentId: {}, computeProviderId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
-        serviceId, envId, computeProviderId, instanceCount, specificHosts, hostNames);
+        "serviceId: {}, environmentId: {}, infraMappingId: {}, instanceCount: {}, specificHosts: {}, hostNames: {}",
+        serviceId, envId, infraMappingId, instanceCount, specificHosts, hostNames);
 
     List<ServiceInstance> serviceInstances;
     if (specificHosts) {
-      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
-          ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
+      serviceInstances = infrastructureMappingService.selectServiceInstances(
+          appId, envId, infraMappingId, ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
     } else {
-      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId, computeProviderId,
+      serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
           ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
     }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());

@@ -19,12 +19,12 @@ import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.api.LoadBalancerConfig;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationLoadBalancerConfig;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
@@ -38,7 +38,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -65,9 +64,9 @@ public class EcsServiceSetup extends State {
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
-  @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
-  @Inject @Transient private ArtifactStreamService artifactStreamService;
+  @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
   /**
    * Instantiates a new state.
@@ -82,7 +81,6 @@ public class EcsServiceSetup extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    String computeProviderId = phaseElement.getComputeProviderId();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Artifact artifact = workflowStandardParams.getArtifactForService(serviceId);
@@ -91,11 +89,16 @@ public class EcsServiceSetup extends State {
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
-    String clusterName = infrastructureMappingService.getClusterName(
-        app.getUuid(), serviceId, env.getUuid()); // TODO:: remove this call with infrMapping get call
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+    if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid infrastructure type");
+    }
+
+    String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
 
     Service service = serviceResourceService.get(app.getAppId(), serviceId);
-    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
         app.getAppId(), serviceId, DeploymentType.ECS.name());
@@ -123,12 +126,16 @@ public class EcsServiceSetup extends State {
 
     TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
-    LoadBalancerConfig loadBalancerConfig = (LoadBalancerConfig) settingsService.get(loadBalancerSettingId).getValue();
-    if (!loadBalancerConfig.getType().equals(SettingVariableTypes.ALB.name())) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
-    }
-    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerConfig;
+    /*
 
+    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
+
+    if (loadBalancerSetting == null ||
+    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
+    WingsException(ErrorCodes.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    }
+    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
+*/
     String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
     clusterService.createService(computeProviderSetting,

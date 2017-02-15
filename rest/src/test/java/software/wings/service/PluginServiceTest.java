@@ -16,11 +16,9 @@ import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.EcsClusterConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -39,7 +37,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(14)
+        .hasSize(12)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -113,22 +111,6 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
-                .withSettingClass(EcsClusterConfig.class)
-                .withAccountId(accountId)
-                .withIsEnabled(true)
-                .withDisplayName("ECS cluster config")
-                .withType("ECS")
-                .withPluginCategories(asList(CloudProvider))
-                .build(),
-            anAccountPlugin()
-                .withSettingClass(KubernetesClusterConfig.class)
-                .withAccountId(accountId)
-                .withIsEnabled(true)
-                .withDisplayName("Kubernetes cluster config")
-                .withType("KUBERNETES")
-                .withPluginCategories(asList(CloudProvider))
-                .build(),
-            anAccountPlugin()
                 .withSettingClass(HostConnectionAttributes.class)
                 .withAccountId(accountId)
                 .withIsEnabled(false)
@@ -159,8 +141,8 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(14)
+        .hasSize(12)
         .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "PHYSICAL_DATA_CENTER",
-            "ECS", "KUBERNETES", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "ALB");
+            "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "ALB");
   }
 }

@@ -54,7 +54,6 @@ import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
@@ -80,6 +79,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -88,6 +88,7 @@ import software.wings.sm.TransitionType;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -585,6 +586,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     populateServices(orchestrationWorkflow);
     populatePhaseSteps(orchestrationWorkflow);
   }
+
   private void populateServices(OrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow.getWorkflowPhaseIdMap() == null) {
       return;
@@ -688,6 +690,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase createWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
+    workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+    workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
     if (orchestrationWorkflow == null) {
@@ -749,6 +758,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+    Validator.notNullCheck("InfraMapping", infrastructureMapping);
+
+    workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
+    workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
+
     populatePhaseStepIds(workflowPhase);
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
@@ -983,8 +999,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseStepsForSSH(String appId, String envId, WorkflowPhase workflowPhase) {
     // For DC only - for other types it has to be customized
 
-    StateType stateType =
-        determineStateType(appId, envId, workflowPhase.getServiceId(), workflowPhase.getComputeProviderId());
+    StateType stateType = determineStateType(appId, workflowPhase.getInfraMappingId());
 
     if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
@@ -1051,7 +1066,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withRollbackPhaseName(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
-            .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
                               .withName("Stop Service")
                               .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
@@ -1074,7 +1088,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withRollbackPhaseName(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
-            .withDeploymentMasterId(workflowPhase.getDeploymentMasterId())
             .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE)
                               .withName("Disable Service")
                               .addAllSteps(commandNodes(commandMap, CommandType.DISABLE, true))
@@ -1161,14 +1174,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return nodes;
   }
 
-  private StateType determineStateType(String appId, String envId, String serviceId, String computeProviderId) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingService.getInfraMappingByComputeProviderAndServiceId(
-            appId, envId, serviceId, computeProviderId);
-
+  private StateType determineStateType(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     StateType stateType =
-        infrastructureMapping instanceof PhysicalInfrastructureMapping ? DC_NODE_SELECT : AWS_NODE_SELECT;
-
+        infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.PHYSICAL_DATA_CENTER)
+        ? DC_NODE_SELECT
+        : AWS_NODE_SELECT;
     return stateType;
   }
 
