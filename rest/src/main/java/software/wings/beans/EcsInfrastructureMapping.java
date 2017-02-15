@@ -51,6 +51,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
     private String deploymentType;
     private String hostConnectionAttrs;
@@ -114,6 +115,17 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withServiceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -238,6 +250,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
@@ -261,6 +274,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
       ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       ecsInfrastructureMapping.setEnvId(envId);
       ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      ecsInfrastructureMapping.setServiceId(serviceId);
       ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
       ecsInfrastructureMapping.setDeploymentType(deploymentType);
       ecsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);

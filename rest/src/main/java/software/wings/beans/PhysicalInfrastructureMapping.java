@@ -74,6 +74,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
     private String deploymentType;
     private String hostConnectionAttrs;
@@ -137,6 +138,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withServiceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -261,6 +273,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
@@ -284,6 +297,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       physicalInfrastructureMapping.setEnvId(envId);
       physicalInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      physicalInfrastructureMapping.setServiceId(serviceId);
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
       physicalInfrastructureMapping.setDeploymentType(deploymentType);
       physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);

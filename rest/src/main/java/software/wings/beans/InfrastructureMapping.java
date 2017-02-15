@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.utils.validation.Update;
 
 import java.util.Objects;
 
@@ -20,6 +21,9 @@ public abstract class InfrastructureMapping extends Base {
   @NotEmpty private String computeProviderSettingId;
   @NotEmpty private String envId;
   @NotEmpty private String serviceTemplateId;
+
+  @NotEmpty(groups = {Update.class}) @SchemaIgnore private String serviceId;
+
   @NotEmpty private String computeProviderType;
   @NotEmpty private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
@@ -127,6 +131,14 @@ public abstract class InfrastructureMapping extends Base {
    */
   public void setComputeProviderSettingId(String computeProviderSettingId) {
     this.computeProviderSettingId = computeProviderSettingId;
+  }
+
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
   }
 
   @SchemaIgnore

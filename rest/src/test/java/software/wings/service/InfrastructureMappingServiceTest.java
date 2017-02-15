@@ -127,6 +127,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(asList(HOST_NAME))
             .build();
+
     PhysicalInfrastructureMapping savedPhysicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -137,6 +138,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
             .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
             .withDeploymentType(DeploymentType.SSH.name())
+            .withServiceId(SERVICE_ID)
             .withServiceTemplateId(TEMPLATE_ID)
             .withHostNames(asList(HOST_NAME))
             .build();
@@ -144,7 +146,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(InfrastructureMapping.class, physicalInfrastructureMapping))
         .thenReturn(savedPhysicalInfrastructureMapping);
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build());
+        .thenReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build());
     when(settingsService.get(COMPUTE_PROVIDER_ID))
         .thenReturn(
             aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build());
@@ -167,7 +169,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateField(InfrastructureMapping.class, INFRA_MAPPING_ID, "hostNames", asList(HOST_NAME));
     verify(staticInfrastructureProvider).saveHost(any(Host.class));
     verify(serviceInstanceService)
-        .updateInstanceMappings(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build(),
+        .updateInstanceMappings(
+            aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build(),
             savedPhysicalInfrastructureMapping, asList(host), asList());
   }
 
@@ -201,6 +204,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                    .withDeploymentType(DeploymentType.SSH.name())
                                                    .withAppId(APP_ID)
                                                    .withEnvId(ENV_ID)
+                                                   .withServiceId(SERVICE_ID)
                                                    .withUuid(INFRA_MAPPING_ID)
                                                    .withServiceTemplateId(TEMPLATE_ID)
                                                    .withHostNames(asList(HOST_NAME))
@@ -215,6 +219,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                      .withAppId(APP_ID)
                                                      .withEnvId(ENV_ID)
                                                      .withUuid(INFRA_MAPPING_ID)
+                                                     .withServiceId(SERVICE_ID)
                                                      .withServiceTemplateId(TEMPLATE_ID)
                                                      .withHostNames(asList("HOST_NAME_1"))
                                                      .build();
@@ -224,7 +229,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(
             aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build());
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build());
+        .thenReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build());
     Host host = aHost()
                     .withAppId(APP_ID)
                     .withEnvId(ENV_ID)
@@ -247,7 +252,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .updateField(InfrastructureMapping.class, INFRA_MAPPING_ID, "hostNames", asList("HOST_NAME_1"));
     verify(staticInfrastructureProvider).saveHost(any(Host.class));
     verify(serviceInstanceService)
-        .updateInstanceMappings(aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build(), updatedInfra,
+        .updateInstanceMappings(
+            aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build(), updatedInfra,
             asList(host), asList(HOST_NAME));
   }
 

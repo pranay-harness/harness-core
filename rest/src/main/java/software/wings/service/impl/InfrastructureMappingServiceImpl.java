@@ -89,23 +89,25 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute computeProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
     Validator.notNullCheck("ComputeProvider", computeProviderSetting);
 
+    ServiceTemplate serviceTemplate =
+        serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
+    Validator.notNullCheck("ServiceTemplate", serviceTemplate);
+
+    infraMapping.setServiceId(serviceTemplate.getServiceId());
+
     infraMapping.setDisplayName(String.format("%s (%s) : %s", computeProviderSetting.getName(),
         infraMapping.getComputeProviderType(), infraMapping.getDeploymentType()));
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
     if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
-      savedInfraMapping = syncPhysicalHostsAndServiceInstances(savedInfraMapping, new ArrayList<>());
+      savedInfraMapping = syncPhysicalHostsAndServiceInstances(savedInfraMapping, serviceTemplate, new ArrayList<>());
     }
     return savedInfraMapping;
   }
 
   public InfrastructureMapping syncPhysicalHostsAndServiceInstances(
-      InfrastructureMapping infrastructureMapping, List<String> existingHostNames) {
-    ServiceTemplate serviceTemplate =
-        serviceTemplateService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceTemplateId());
-    Validator.notNullCheck("ServiceTemplate", serviceTemplate);
-
+      InfrastructureMapping infrastructureMapping, ServiceTemplate serviceTemplate, List<String> existingHostNames) {
     PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
 
     List<String> distinctHostNames = pyInfraMapping.getHostNames()
@@ -166,8 +168,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
+      ServiceTemplate serviceTemplate =
+          serviceTemplateService.get(savedInfraMapping.getAppId(), savedInfraMapping.getServiceTemplateId());
+      Validator.notNullCheck("ServiceTemplate", serviceTemplate);
+
       syncPhysicalHostsAndServiceInstances(
-          infrastructureMapping, ((PhysicalInfrastructureMapping) savedInfraMapping).getHostNames());
+          infrastructureMapping, serviceTemplate, ((PhysicalInfrastructureMapping) savedInfraMapping).getHostNames());
     }
     return get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
   }

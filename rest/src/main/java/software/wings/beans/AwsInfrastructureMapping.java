@@ -128,6 +128,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
     private String deploymentType;
     private String hostConnectionAttrs;
@@ -202,6 +203,17 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withServiceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
       return this;
     }
 
@@ -327,6 +339,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
@@ -351,6 +364,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setEnvId(envId);
       awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      awsInfrastructureMapping.setServiceId(serviceId);
       awsInfrastructureMapping.setComputeProviderType(computeProviderType);
       awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
