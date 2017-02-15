@@ -30,9 +30,10 @@ import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
+import com.amazonaws.services.ecs.model.ListTasksRequest;
+import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
@@ -60,12 +61,17 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class EcsServiceImpl implements EcsService {
-  private static final int SLEEP_INTERVAL = 5 * 1000;
+  private static final int SLEEP_INTERVAL = 10 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
+  /**
+   * Create cluster.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   public void createCluster() throws InterruptedException {
     AmazonCloudFormationClient amazonCloudFormationClient = awsHelperService.getAmazonCloudFormationClient(
         "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE");
@@ -407,6 +413,11 @@ public class EcsServiceImpl implements EcsService {
     stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
   }
 
+  /**
+   * Destroy cluster.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   public void destroyCluster() throws InterruptedException {
     AmazonCloudFormationClient amazonCloudFormationClient = awsHelperService.getAmazonCloudFormationClient(
         "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE");
@@ -913,11 +924,18 @@ public class EcsServiceImpl implements EcsService {
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
     waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName, executionLogCallback);
-    DescribeTasksResult describeTasksResult =
-        amazonECSClient.describeTasks(new DescribeTasksRequest().withCluster(clusterName)); // TODO: filter on service
 
-    List<String> containerInstances =
-        describeTasksResult.getTasks().stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
+    ListTasksResult listTasksResult =
+        amazonECSClient.listTasks(new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName));
+    List<String> taskIds =
+        listTasksResult.getTaskArns().stream().map(awsHelperService::getIdFromArn).collect(Collectors.toList());
+
+    DescribeTasksResult describeTasksResult =
+        amazonECSClient.describeTasks(new DescribeTasksRequest().withTasks(taskIds));
+    List<String> containerInstances = describeTasksResult.getTasks()
+                                          .stream()
+                                          .map(task -> awsHelperService.getIdFromArn(task.getContainerInstanceArn()))
+                                          .collect(Collectors.toList());
     return containerInstances;
   }
 
@@ -959,6 +977,12 @@ public class EcsServiceImpl implements EcsService {
     return (AwsConfig) connectorConfig.getValue();
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws InterruptedException the interrupted exception
+   */
   public static void main(String... args) throws InterruptedException {
     new EcsServiceImpl().createCluster();
   }

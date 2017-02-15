@@ -84,8 +84,11 @@ public class EcsServiceDeploy extends State {
 
     EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
 
-    CommandExecutionContext commandExecutionContext =
-        aCommandExecutionContext().withAppId(app.getUuid()).withEnvId(env.getUuid()).build();
+    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                          .withAccountId(app.getAccountId())
+                                                          .withAppId(app.getUuid())
+                                                          .withEnvId(env.getUuid())
+                                                          .build();
     commandExecutionContext.setClusterName(ecsServiceElement.getClusterName());
     commandExecutionContext.setServiceName(ecsServiceElement.getName());
 
@@ -121,8 +124,10 @@ public class EcsServiceDeploy extends State {
                                            .withServiceVariables(context.getServiceVariables());
 
     Activity activity = activityService.save(activityBuilder.build());
+    commandExecutionContext.setActivityId(activity.getUuid());
 
     executionDataBuilder.withActivityId(activity.getUuid());
+
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
                                   .withAppId(app.getAppId())

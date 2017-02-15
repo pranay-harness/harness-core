@@ -11,7 +11,7 @@ import software.wings.delegatetasks.DelegateLogService;
  * Created by anubhaw on 2/14/17.
  */
 public class ExecutionLogCallback {
-  private DelegateLogService logService;
+  private transient DelegateLogService logService;
   private CommandExecutionContext commandExecutionContext;
   private String commandName;
   private final Logger logger = LoggerFactory.getLogger(getClass());

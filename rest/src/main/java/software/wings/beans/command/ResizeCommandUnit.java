@@ -14,7 +14,7 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 2/3/17.
  */
 public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
-  @Inject private DelegateLogService logService;
+  @Inject private transient DelegateLogService logService;
 
   public ResizeCommandUnit() {
     super(CommandUnitType.RESIZE);

@@ -18,7 +18,11 @@ import com.amazonaws.services.ecs.model.CreateClusterResult;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
+import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListContainerInstancesRequest;
+import com.amazonaws.services.ecs.model.ListTasksRequest;
+import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
@@ -68,6 +72,15 @@ public class EcsIntegrationTest {
     CreateClusterRequest demo2 = new CreateClusterRequest().withClusterName("Demo2");
     CreateClusterResult demo2Cluster = ecsClient.createCluster(demo2);
     System.out.println(demo2Cluster);
+  }
+
+  @Test
+  public void shouldFetchContainerInstanceForService() {
+    ListTasksResult listTasksResult =
+        ecsClient.listTasks(new ListTasksRequest().withCluster("test2").withServiceName("Nix__docker__Development__6"));
+    List<String> taskArns = listTasksResult.getTaskArns();
+    DescribeTasksResult describeTasksResult = ecsClient.describeTasks(new DescribeTasksRequest().withTasks(taskArns));
+    System.out.println(taskArns);
   }
 
   @Test
