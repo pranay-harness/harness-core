@@ -24,7 +24,6 @@ public class WorkflowPhase {
   private @NotNull String infraMappingId;
   private DeploymentType deploymentType;
   private String computeProviderId;
-  private String deploymentMasterId;
 
   private boolean rollback;
   private String rollbackPhaseName;
@@ -71,14 +70,6 @@ public class WorkflowPhase {
     this.deploymentType = deploymentType;
   }
 
-  public String getDeploymentMasterId() {
-    return deploymentMasterId;
-  }
-
-  public void setDeploymentMasterId(String deploymentMasterId) {
-    this.deploymentMasterId = deploymentMasterId;
-  }
-
   public List<PhaseStep> getPhaseSteps() {
     return phaseSteps;
   }
@@ -116,7 +107,6 @@ public class WorkflowPhase {
         .addProperty("deploymentType", deploymentType)
         .addProperty("computeProviderId", computeProviderId)
         .addProperty("infraMappingId", infraMappingId)
-        .addProperty("deploymentMasterId", deploymentMasterId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
   }
@@ -127,7 +117,6 @@ public class WorkflowPhase {
     params.put("computeProviderId", computeProviderId);
     params.put("infraMappingId", infraMappingId);
     params.put("deploymentType", deploymentType);
-    params.put("deploymentMasterId", deploymentMasterId);
     return params;
   }
 
@@ -234,7 +223,6 @@ public class WorkflowPhase {
       workflowPhase.setInfraMappingId(infraMappingId);
       workflowPhase.setDeploymentType(deploymentType);
       workflowPhase.setComputeProviderId(computeProviderId);
-      workflowPhase.setDeploymentMasterId(deploymentMasterId);
       workflowPhase.setRollback(rollback);
       workflowPhase.setRollbackPhaseName(rollbackPhaseName);
       workflowPhase.setPhaseSteps(phaseSteps);

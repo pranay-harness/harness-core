@@ -62,7 +62,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
   public ExecutionResult executeSshCommand(Command command, CommandExecutionContext context) {
     CommandUnitExecutorService commandUnitExecutorService =
-        commandUnitExecutorServiceMap.get(DeploymentType.ECS.name());
+        commandUnitExecutorServiceMap.get(DeploymentType.SSH.name());
     try {
       InitSshCommandUnit initCommandUnit = new InitSshCommandUnit();
       initCommandUnit.setCommand(command);
