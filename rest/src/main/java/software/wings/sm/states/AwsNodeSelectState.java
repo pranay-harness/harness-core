@@ -56,22 +56,20 @@ public class AwsNodeSelectState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    String computeProviderId = phaseElement.getComputeProviderId();
-
-    logger.info("serviceId : {}, computeProviderId: {}", serviceId, computeProviderId);
 
     List<ServiceInstance> serviceInstances;
 
     if (provisionNode) {
       serviceInstances = infrastructureMappingService.provisionNodes(
-          appId, serviceId, envId, computeProviderId, launcherConfigName, instanceCount);
+          appId, envId, phaseElement.getInfraMappingId(), launcherConfigName, instanceCount);
     } else {
       if (specificHosts) {
-        serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId,
-            computeProviderId, ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
+        serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId,
+            phaseElement.getInfraMappingId(), ImmutableMap.of("specificHosts", specificHosts, "hostNames", hostNames));
       } else {
-        serviceInstances = infrastructureMappingService.selectServiceInstances(appId, serviceId, envId,
-            computeProviderId, ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
+        serviceInstances =
+            infrastructureMappingService.selectServiceInstances(appId, envId, phaseElement.getInfraMappingId(),
+                ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
       }
     }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());

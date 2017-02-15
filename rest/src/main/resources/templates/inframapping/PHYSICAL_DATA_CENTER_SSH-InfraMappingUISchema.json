@@ -1,5 +1,7 @@
 {
   "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
   "hostNames": { "ui:widget": "hostNamesWidget" },
   "ui:order": [ "*" , "computeProviderType", "hostNames", "hostConnectionAttrs"]
 }

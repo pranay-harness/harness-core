@@ -19,11 +19,8 @@ import java.util.Map;
 public class PhaseElement implements ContextElement {
   private String uuid;
   private ServiceElement serviceElement;
-  private String computeProviderId;
-  private DeploymentType deploymentType;
-
-  // Only relevant for custom kubernetes environment
-  private String deploymentMasterId;
+  private String infraMappingId;
+  private String deploymentType;
 
   @Override
   public ContextElementType getElementType() {
@@ -40,40 +37,31 @@ public class PhaseElement implements ContextElement {
     return Constants.PHASE_PARAM;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
 
+  /**
+   * Gets service element.
+   *
+   * @return the service element
+   */
   public ServiceElement getServiceElement() {
     return serviceElement;
   }
 
+  /**
+   * Sets service element.
+   *
+   * @param serviceElement the service element
+   */
   public void setServiceElement(ServiceElement serviceElement) {
     this.serviceElement = serviceElement;
-  }
-
-  public String getComputeProviderId() {
-    return computeProviderId;
-  }
-
-  public void setComputeProviderId(String computeProviderId) {
-    this.computeProviderId = computeProviderId;
-  }
-
-  public DeploymentType getDeploymentType() {
-    return deploymentType;
-  }
-
-  public void setDeploymentType(DeploymentType deploymentType) {
-    this.deploymentType = deploymentType;
-  }
-
-  public String getDeploymentMasterId() {
-    return deploymentMasterId;
-  }
-
-  public void setDeploymentMasterId(String deploymentMasterId) {
-    this.deploymentMasterId = deploymentMasterId;
   }
 
   @Override
@@ -83,52 +71,130 @@ public class PhaseElement implements ContextElement {
     return map;
   }
 
+  /**
+   * Gets infr mapping id.
+   *
+   * @return the infr mapping id
+   */
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  /**
+   * Sets infr mapping id.
+   *
+   * @param infraMappingId the infr mapping id
+   */
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
+  }
+
+  /**
+   * Gets deployment type.
+   *
+   * @return the deployment type
+   */
+  public String getDeploymentType() {
+    return deploymentType;
+  }
+
+  /**
+   * Sets deployment type.
+   *
+   * @param deploymentType the deployment type
+   */
+  public void setDeploymentType(String deploymentType) {
+    this.deploymentType = deploymentType;
+  }
+
+  /**
+   * The type Phase element builder.
+   */
   public static final class PhaseElementBuilder {
     private String uuid;
     private ServiceElement serviceElement;
-    private String computeProviderId;
-    private DeploymentType deploymentType;
-    // Only relevant for custom kubernetes environment
-    private String deploymentMasterId;
+    private String infraMappingId;
+    private String deploymentType;
 
     private PhaseElementBuilder() {}
 
+    /**
+     * A phase element phase element builder.
+     *
+     * @return the phase element builder
+     */
     public static PhaseElementBuilder aPhaseElement() {
       return new PhaseElementBuilder();
     }
 
+    /**
+     * With uuid phase element builder.
+     *
+     * @param uuid the uuid
+     * @return the phase element builder
+     */
     public PhaseElementBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With service element phase element builder.
+     *
+     * @param serviceElement the service element
+     * @return the phase element builder
+     */
     public PhaseElementBuilder withServiceElement(ServiceElement serviceElement) {
       this.serviceElement = serviceElement;
       return this;
     }
 
-    public PhaseElementBuilder withComputeProviderId(String computeProviderId) {
-      this.computeProviderId = computeProviderId;
+    /**
+     * With infra mapping id phase element builder.
+     *
+     * @param infraMappingId the infra mapping id
+     * @return the phase element builder
+     */
+    public PhaseElementBuilder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
       return this;
     }
 
-    public PhaseElementBuilder withDeploymentType(DeploymentType deploymentType) {
+    /**
+     * With deployment type phase element builder.
+     *
+     * @param deploymentType the deployment type
+     * @return the phase element builder
+     */
+    public PhaseElementBuilder withDeploymentType(String deploymentType) {
       this.deploymentType = deploymentType;
       return this;
     }
 
-    public PhaseElementBuilder withDeploymentMasterId(String deploymentMasterId) {
-      this.deploymentMasterId = deploymentMasterId;
-      return this;
+    /**
+     * But phase element builder.
+     *
+     * @return the phase element builder
+     */
+    public PhaseElementBuilder but() {
+      return aPhaseElement()
+          .withUuid(uuid)
+          .withServiceElement(serviceElement)
+          .withInfraMappingId(infraMappingId)
+          .withDeploymentType(deploymentType);
     }
 
+    /**
+     * Build phase element.
+     *
+     * @return the phase element
+     */
     public PhaseElement build() {
       PhaseElement phaseElement = new PhaseElement();
       phaseElement.setUuid(uuid);
       phaseElement.setServiceElement(serviceElement);
-      phaseElement.setComputeProviderId(computeProviderId);
+      phaseElement.setInfraMappingId(infraMappingId);
       phaseElement.setDeploymentType(deploymentType);
-      phaseElement.setDeploymentMasterId(deploymentMasterId);
       return phaseElement;
     }
   }

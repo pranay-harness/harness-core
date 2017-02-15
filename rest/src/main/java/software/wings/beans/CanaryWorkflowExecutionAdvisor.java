@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -22,23 +24,25 @@ import javax.inject.Inject;
  * Created by rishi on 1/24/17.
  */
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
+  private static final Logger logger = LoggerFactory.getLogger(CanaryWorkflowExecutionAdvisor.class);
+
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
   @Inject @Transient private transient WorkflowService workflowService;
 
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
-    if (executionEvent.getExecutionStatus() != ExecutionStatus.FAILED) {
-      return null;
-    }
     ExecutionContext context = executionEvent.getContext();
     State state = executionEvent.getState();
     ContextElement contextElement = context.getContextElement();
     if (!state.getStateType().equals(StateType.PHASE.name()) || !(state instanceof PhaseSubWorkflow)) {
       return null;
     }
-
     PhaseSubWorkflow phaseSubWorkflow = (PhaseSubWorkflow) state;
+    if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != ExecutionStatus.FAILED) {
+      return null;
+    }
+
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
     if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
@@ -49,31 +53,46 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return null;
       }
 
-      if (isRollbackStrategy(orchestrationWorkflow)) {
-        return ExecutionEventAdviceBuilder.anExecutionEventAdvice()
-            .withNextStateName(Constants.ROLLBACK_PREFIX + phaseSubWorkflow.getName())
-            .build();
+      RepairActionCode repairActionCode = rollbackStrategy(orchestrationWorkflow);
+      if (repairActionCode == null
+          || (repairActionCode == repairActionCode.ROLLBACK_PHASE && !phaseSubWorkflow.isRollback())) {
+        return null;
       }
+
+      if (phaseSubWorkflow.isRollback() && repairActionCode == repairActionCode.ROLLBACK_WORKFLOW) {
+        // TODO:: rollback previously successful phases
+        return null;
+      }
+      return ExecutionEventAdviceBuilder.anExecutionEventAdvice()
+          .withNextStateName(Constants.ROLLBACK_PREFIX + phaseSubWorkflow.getName())
+          .build();
     }
     return null;
   }
 
-  private boolean isRollbackStrategy(OrchestrationWorkflow orchestrationWorkflow) {
+  private RepairActionCode rollbackStrategy(OrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow.getFailureStrategies() == null) {
-      return false;
+      return null;
     }
     Optional<FailureStrategy> rollbackStrategy =
         orchestrationWorkflow.getFailureStrategies()
             .stream()
-            .filter(f
-                -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE
-                    || f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE)
+            .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_WORKFLOW)
             .findFirst();
 
     if (rollbackStrategy.isPresent()) {
-      return true;
+      return rollbackStrategy.get().getRepairActionCode();
     }
 
-    return false;
+    rollbackStrategy = orchestrationWorkflow.getFailureStrategies()
+                           .stream()
+                           .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_PHASE)
+                           .findFirst();
+
+    if (rollbackStrategy.isPresent()) {
+      return rollbackStrategy.get().getRepairActionCode();
+    }
+
+    return null;
   }
 }

@@ -55,7 +55,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}")
   public RestResponse<InfrastructureMapping> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("infraMappingId") String infraMappingId) {
-    return new RestResponse<>(infrastructureMappingService.get(appId, envId, infraMappingId));
+    return new RestResponse<>(infrastructureMappingService.get(appId, infraMappingId));
   }
 
   @GET
@@ -99,5 +99,12 @@ public class InfrastructureMappingResource {
   @Path("stencils")
   public RestResponse<Map<String, Map<String, Object>>> infrastructureMappingSchema(@QueryParam("appId") String appId) {
     return new RestResponse<>(infrastructureMappingService.getInfraMappingStencils(appId));
+  }
+
+  @GET
+  @Path("infra-types")
+  public RestResponse<Map<String, Map<String, String>>> infrastructureTypes(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(infrastructureMappingService.listInfraTypes(appId, envId, serviceId));
   }
 }

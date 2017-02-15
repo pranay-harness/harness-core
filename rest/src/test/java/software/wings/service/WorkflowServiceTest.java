@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -19,6 +20,7 @@ import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrate
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import org.junit.Test;
@@ -58,6 +60,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
@@ -678,8 +681,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateWorkflowPhase() {
     when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().withServiceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build();
 
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
@@ -699,13 +709,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateWorkflowPhase() {
     when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
 
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").withServiceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").withServiceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
 
@@ -730,9 +748,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateWorkflowPhaseRollback() {
     when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
 
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").withServiceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
 
@@ -838,13 +863,22 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldHaveGraph() {
     when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
-    WorkflowPhase workflowPhase = aWorkflowPhase().withName("phase1").withServiceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
 
-    WorkflowPhase workflowPhase2 = aWorkflowPhase().withName("phase2").withServiceId(SERVICE_ID).build();
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
 
@@ -924,6 +958,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateComplexWorkflow() {
     when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
     OrchestrationWorkflow orchestrationWorkflow =
         anOrchestrationWorkflow()
             .withAppId(APP_ID)
@@ -931,6 +972,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
+                                   .withInfraMappingId(INFRA_MAPPING_ID)
                                    .withComputeProviderId("computeProviderId1")
                                    .withServiceId(SERVICE_ID)
                                    .withDeploymentType(SSH)

@@ -3,12 +3,11 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
  * Created by anubhaw on 1/10/17.
  */
-@JsonTypeName("ECS")
+@JsonTypeName("AWS_ECS")
 public class EcsInfrastructureMapping extends InfrastructureMapping {
   private String clusterName;
 
@@ -16,7 +15,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Infrastructure mapping.
    */
   public EcsInfrastructureMapping() {
-    super(SettingVariableTypes.ECS.name());
+    super(InfrastructureMappingType.AWS_ECS.name());
   }
 
   /**
@@ -52,7 +51,11 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
+    private String deploymentType;
+    private String hostConnectionAttrs;
+    private String displayName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -116,6 +119,17 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
      * With compute provider type builder.
      *
      * @param computeProviderType the compute provider type
@@ -123,6 +137,39 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withComputeProviderType(String computeProviderType) {
       this.computeProviderType = computeProviderType;
+      return this;
+    }
+
+    /**
+     * With deployment type builder.
+     *
+     * @param deploymentType the deployment type
+     * @return the builder
+     */
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    /**
+     * With host connection attrs builder.
+     *
+     * @param hostConnectionAttrs the host connection attrs
+     * @return the builder
+     */
+    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
+      this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    /**
+     * With display name builder.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -203,7 +250,11 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
+          .withDeploymentType(deploymentType)
+          .withHostConnectionAttrs(hostConnectionAttrs)
+          .withDisplayName(displayName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -223,7 +274,11 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
       ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       ecsInfrastructureMapping.setEnvId(envId);
       ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      ecsInfrastructureMapping.setServiceId(serviceId);
       ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
+      ecsInfrastructureMapping.setDeploymentType(deploymentType);
+      ecsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      ecsInfrastructureMapping.setDisplayName(displayName);
       ecsInfrastructureMapping.setUuid(uuid);
       ecsInfrastructureMapping.setAppId(appId);
       ecsInfrastructureMapping.setCreatedBy(createdBy);

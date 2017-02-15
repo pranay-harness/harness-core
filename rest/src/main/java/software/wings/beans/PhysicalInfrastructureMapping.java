@@ -4,7 +4,6 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Objects;
@@ -12,7 +11,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 1/10/17.
  */
-@JsonTypeName("PHYSICAL_DATA_CENTER")
+@JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Host Names") private List<String> hostNames;
 
@@ -20,7 +19,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Infrastructure mapping.
    */
   public PhysicalInfrastructureMapping() {
-    super(SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
+    super(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name());
   }
 
   /**
@@ -75,8 +74,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
+    private String deploymentType;
     private String hostConnectionAttrs;
+    private String displayName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -140,6 +142,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
      * With compute provider type builder.
      *
      * @param computeProviderType the compute provider type
@@ -151,6 +164,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With deployment type builder.
+     *
+     * @param deploymentType the deployment type
+     * @return the builder
+     */
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
+    /**
      * With host connection attrs builder.
      *
      * @param hostConnectionAttrs the host connection attrs
@@ -158,6 +182,17 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
       this.hostConnectionAttrs = hostConnectionAttrs;
+      return this;
+    }
+
+    /**
+     * With display name builder.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -238,8 +273,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
+          .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
+          .withDisplayName(displayName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -259,8 +297,11 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
       physicalInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       physicalInfrastructureMapping.setEnvId(envId);
       physicalInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      physicalInfrastructureMapping.setServiceId(serviceId);
       physicalInfrastructureMapping.setComputeProviderType(computeProviderType);
+      physicalInfrastructureMapping.setDeploymentType(deploymentType);
       physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      physicalInfrastructureMapping.setDisplayName(displayName);
       physicalInfrastructureMapping.setUuid(uuid);
       physicalInfrastructureMapping.setAppId(appId);
       physicalInfrastructureMapping.setCreatedBy(createdBy);

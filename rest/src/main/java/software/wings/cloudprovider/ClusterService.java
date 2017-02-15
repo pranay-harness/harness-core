@@ -4,6 +4,7 @@ import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
 
 import java.util.List;
 
@@ -21,13 +22,14 @@ public interface ClusterService {
 
   /**
    * Resize cluster.
-   *  @param cloudProviderSetting the cloud provider setting
+   * @param cloudProviderSetting the cloud provider setting
    * @param clusterName          the cluster name
    * @param serviceName          the service name
    * @param desiredSize          the desired size
+   * @param executionLogCallback
    */
-  List<String> resizeCluster(
-      SettingAttribute cloudProviderSetting, String clusterName, String serviceName, Integer desiredSize);
+  List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
+      Integer desiredSize, ExecutionLogCallback executionLogCallback);
 
   /**
    * Destroy cluster.

@@ -8,13 +8,19 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.beans.Application;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.MapperUtils;
+import software.wings.utils.Validator;
 
 import javax.inject.Inject;
 
@@ -28,32 +34,41 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   private String uuid;
   private String serviceId;
-  private String computeProviderId;
-  private DeploymentType deploymentType;
-
-  // Only relevant for custom kubernetes environment
-  private String deploymentMasterId;
+  private String infraMappingId;
 
   // Only for rollback phase steps
   @SchemaIgnore private boolean rollback;
   @SchemaIgnore private String rollbackPhaseName;
 
-  @Inject @Transient private ServiceResourceService serviceResourceService;
+  @Inject @Transient private transient ServiceResourceService serviceResourceService;
+
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
   @Override
-  public ExecutionResponse execute(ExecutionContext contextIntf) {
-    ExecutionResponse response = super.execute(contextIntf);
-    response.setStateExecutionData(aPhaseSubWorkflowExecutionData()
-                                       .withComputeProviderId(computeProviderId)
-                                       .withDeploymentType(deploymentType)
-                                       .withServiceId(serviceId)
-                                       .withDeploymentMasterId(deploymentMasterId)
-                                       .build());
+  public ExecutionResponse execute(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
+    Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
+
+    ExecutionResponse response = super.execute(context);
+    response.setStateExecutionData(
+        aPhaseSubWorkflowExecutionData()
+            .withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
+            .withInfraMappingId(infraMappingId)
+            .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()))
+            .withServiceId(serviceId)
+            .build());
     return response;
   }
 
   @Override
   protected StateExecutionInstance getSpawningInstance(StateExecutionInstance stateExecutionInstance) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(stateExecutionInstance.getAppId(), infraMappingId);
+    Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
+
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
     ServiceElement serviceElement = new ServiceElement();
     Service service = serviceResourceService.get(stateExecutionInstance.getAppId(), serviceId, false);
@@ -61,9 +76,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     PhaseElement phaseElement = aPhaseElement()
                                     .withUuid(uuid)
                                     .withServiceElement(serviceElement)
-                                    .withComputeProviderId(computeProviderId)
-                                    .withDeploymentType(deploymentType)
-                                    .withDeploymentMasterId(deploymentMasterId)
+                                    .withDeploymentType(infrastructureMapping.getDeploymentType())
+                                    .withInfraMappingId(infraMappingId)
                                     .build();
     spawningInstance.getContextElements().push(phaseElement);
     spawningInstance.setContextElement(phaseElement);
@@ -77,30 +91,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
-  }
-
-  public String getComputeProviderId() {
-    return computeProviderId;
-  }
-
-  public void setComputeProviderId(String computeProviderId) {
-    this.computeProviderId = computeProviderId;
-  }
-
-  public DeploymentType getDeploymentType() {
-    return deploymentType;
-  }
-
-  public void setDeploymentType(DeploymentType deploymentType) {
-    this.deploymentType = deploymentType;
-  }
-
-  public String getDeploymentMasterId() {
-    return deploymentMasterId;
-  }
-
-  public void setDeploymentMasterId(String deploymentMasterId) {
-    this.deploymentMasterId = deploymentMasterId;
   }
 
   @SchemaIgnore
@@ -128,5 +118,13 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public void setRollbackPhaseName(String rollbackPhaseName) {
     this.rollbackPhaseName = rollbackPhaseName;
+  }
+
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
   }
 }

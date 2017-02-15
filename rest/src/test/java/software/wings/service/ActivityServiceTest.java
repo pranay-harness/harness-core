@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Builder;
 import software.wings.beans.Event.Type;
@@ -144,6 +145,7 @@ public class ActivityServiceTest extends WingsBaseTest {
             .addCommandUnits(
                 anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build())
             .build();
+    command.setDeploymentType(DeploymentType.SSH.name());
     when(serviceResourceService.getCommandByNameAndVersion(APP_ID, SERVICE_ID, COMMAND_NAME, 1))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
