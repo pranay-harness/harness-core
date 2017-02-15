@@ -18,10 +18,8 @@ import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.api.LoadBalancerConfig;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
@@ -39,7 +37,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -128,12 +125,16 @@ public class EcsServiceSetup extends State {
 
     TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
-    LoadBalancerConfig loadBalancerConfig = (LoadBalancerConfig) settingsService.get(loadBalancerSettingId).getValue();
-    if (!loadBalancerConfig.getType().equals(SettingVariableTypes.ALB.name())) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
-    }
-    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerConfig;
+    /*
 
+    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
+
+    if (loadBalancerSetting == null ||
+    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
+    WingsException(ErrorCodes.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    }
+    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
+*/
     String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
     clusterService.createService(computeProviderSetting,

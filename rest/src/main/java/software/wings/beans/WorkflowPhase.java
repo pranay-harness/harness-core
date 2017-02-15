@@ -115,6 +115,7 @@ public class WorkflowPhase {
         .addProperty("serviceId", serviceId)
         .addProperty("deploymentType", deploymentType)
         .addProperty("computeProviderId", computeProviderId)
+        .addProperty("infraMappingId", infraMappingId)
         .addProperty("deploymentMasterId", deploymentMasterId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
@@ -124,6 +125,7 @@ public class WorkflowPhase {
     Map<String, Object> params = new HashMap<>();
     params.put("serviceId", serviceId);
     params.put("computeProviderId", computeProviderId);
+    params.put("infraMappingId", infraMappingId);
     params.put("deploymentType", deploymentType);
     params.put("deploymentMasterId", deploymentMasterId);
     return params;
@@ -141,12 +143,13 @@ public class WorkflowPhase {
     private String uuid = UUIDGenerator.getUuid();
     private String name;
     private String serviceId;
-    private String computeProviderId;
+    private String infraMappingId;
     private DeploymentType deploymentType;
+    private String computeProviderId;
     private String deploymentMasterId;
-    private List<PhaseStep> phaseSteps = new ArrayList<>();
     private boolean rollback;
     private String rollbackPhaseName;
+    private List<PhaseStep> phaseSteps = new ArrayList<>();
 
     private WorkflowPhaseBuilder() {}
 
@@ -169,13 +172,18 @@ public class WorkflowPhase {
       return this;
     }
 
-    public WorkflowPhaseBuilder withComputeProviderId(String computeProviderId) {
-      this.computeProviderId = computeProviderId;
+    public WorkflowPhaseBuilder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
       return this;
     }
 
     public WorkflowPhaseBuilder withDeploymentType(DeploymentType deploymentType) {
       this.deploymentType = deploymentType;
+      return this;
+    }
+
+    public WorkflowPhaseBuilder withComputeProviderId(String computeProviderId) {
+      this.computeProviderId = computeProviderId;
       return this;
     }
 
@@ -194,9 +202,28 @@ public class WorkflowPhase {
       return this;
     }
 
+    public WorkflowPhaseBuilder withPhaseSteps(List<PhaseStep> phaseSteps) {
+      this.phaseSteps = phaseSteps;
+      return this;
+    }
+
     public WorkflowPhaseBuilder addPhaseStep(PhaseStep phaseStep) {
       this.phaseSteps.add(phaseStep);
       return this;
+    }
+
+    public WorkflowPhaseBuilder but() {
+      return aWorkflowPhase()
+          .withUuid(uuid)
+          .withName(name)
+          .withServiceId(serviceId)
+          .withInfraMappingId(infraMappingId)
+          .withDeploymentType(deploymentType)
+          .withComputeProviderId(computeProviderId)
+          .withDeploymentMasterId(deploymentMasterId)
+          .withRollback(rollback)
+          .withRollbackPhaseName(rollbackPhaseName)
+          .withPhaseSteps(phaseSteps);
     }
 
     public WorkflowPhase build() {
@@ -204,12 +231,13 @@ public class WorkflowPhase {
       workflowPhase.setUuid(uuid);
       workflowPhase.setName(name);
       workflowPhase.setServiceId(serviceId);
-      workflowPhase.setComputeProviderId(computeProviderId);
+      workflowPhase.setInfraMappingId(infraMappingId);
       workflowPhase.setDeploymentType(deploymentType);
+      workflowPhase.setComputeProviderId(computeProviderId);
       workflowPhase.setDeploymentMasterId(deploymentMasterId);
-      workflowPhase.setPhaseSteps(phaseSteps);
       workflowPhase.setRollback(rollback);
       workflowPhase.setRollbackPhaseName(rollbackPhaseName);
+      workflowPhase.setPhaseSteps(phaseSteps);
       return workflowPhase;
     }
   }

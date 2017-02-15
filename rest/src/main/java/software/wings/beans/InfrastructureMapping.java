@@ -133,6 +133,7 @@ public abstract class InfrastructureMapping extends Base {
     this.computeProviderSettingId = computeProviderSettingId;
   }
 
+  @SchemaIgnore
   public String getServiceId() {
     return serviceId;
   }
