@@ -41,6 +41,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   @SchemaIgnore private String rollbackPhaseName;
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
+
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
   @Override
