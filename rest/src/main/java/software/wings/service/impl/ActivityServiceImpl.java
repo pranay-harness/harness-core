@@ -10,6 +10,7 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Inject;
 
+import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment.EnvironmentType;
@@ -115,8 +116,10 @@ public class ActivityServiceImpl implements ActivityService {
     List<CommandUnit> commandUnits =
         getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getCommandNameVersionMap(), command);
     if (commandUnits != null && commandUnits.size() > 0) {
-      commandUnits.add(0, new InitSshCommandUnit());
-      commandUnits.add(new CleanupSshCommandUnit());
+      if (command.getDeploymentType().equals(DeploymentType.SSH.name())) {
+        commandUnits.add(0, new InitSshCommandUnit());
+        commandUnits.add(new CleanupSshCommandUnit());
+      }
       boolean markNextQueued = false;
       for (CommandUnit commandUnit : commandUnits) {
         ExecutionResult executionResult = ExecutionResult.QUEUED;

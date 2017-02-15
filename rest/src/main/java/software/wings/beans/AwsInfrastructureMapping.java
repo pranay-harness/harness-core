@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.EnumData;
 
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 1/10/17.
  */
-@JsonTypeName("AWS")
+@JsonTypeName("AWS_SSH")
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Restrictions")
   @EnumData(enumDataProvider = AwsInfrastructureRestrictionProvider.class)
@@ -24,7 +23,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Aws infrastructure mapping.
    */
   public AwsInfrastructureMapping() {
-    super(SettingVariableTypes.AWS.name());
+    super(InfrastructureMappingType.AWS_SSH.name());
   }
 
   /**
@@ -124,13 +123,16 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    * The type Builder.
    */
   public static final class Builder {
+    private String restrictionType;
+    private String restrictionExpression;
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
+    private String serviceId;
     private String computeProviderType;
-    private String restrictionType;
+    private String deploymentType;
     private String hostConnectionAttrs;
-    private String restrictionExpression;
+    private String displayName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -147,6 +149,28 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public static Builder anAwsInfrastructureMapping() {
       return new Builder();
+    }
+
+    /**
+     * With restriction type builder.
+     *
+     * @param restrictionType the restriction type
+     * @return the builder
+     */
+    public Builder withRestrictionType(String restrictionType) {
+      this.restrictionType = restrictionType;
+      return this;
+    }
+
+    /**
+     * With restriction expression builder.
+     *
+     * @param restrictionExpression the restriction expression
+     * @return the builder
+     */
+    public Builder withRestrictionExpression(String restrictionExpression) {
+      this.restrictionExpression = restrictionExpression;
+      return this;
     }
 
     /**
@@ -183,6 +207,17 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    /**
      * With compute provider type builder.
      *
      * @param computeProviderType the compute provider type
@@ -194,13 +229,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With restriction type builder.
+     * With deployment type builder.
      *
-     * @param restrictionType the restriction type
+     * @param deploymentType the deployment type
      * @return the builder
      */
-    public Builder withRestrictionType(String restrictionType) {
-      this.restrictionType = restrictionType;
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
       return this;
     }
 
@@ -216,13 +251,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With restriction expression builder.
+     * With display name builder.
      *
-     * @param restrictionExpression the restriction expression
+     * @param displayName the display name
      * @return the builder
      */
-    public Builder withRestrictionExpression(String restrictionExpression) {
-      this.restrictionExpression = restrictionExpression;
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -299,13 +334,16 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder but() {
       return anAwsInfrastructureMapping()
+          .withRestrictionType(restrictionType)
+          .withRestrictionExpression(restrictionExpression)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
-          .withRestrictionType(restrictionType)
+          .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
-          .withRestrictionExpression(restrictionExpression)
+          .withDisplayName(displayName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -321,13 +359,16 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
      */
     public AwsInfrastructureMapping build() {
       AwsInfrastructureMapping awsInfrastructureMapping = new AwsInfrastructureMapping();
+      awsInfrastructureMapping.setRestrictionType(restrictionType);
+      awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
       awsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       awsInfrastructureMapping.setEnvId(envId);
       awsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      awsInfrastructureMapping.setServiceId(serviceId);
       awsInfrastructureMapping.setComputeProviderType(computeProviderType);
-      awsInfrastructureMapping.setRestrictionType(restrictionType);
+      awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      awsInfrastructureMapping.setRestrictionExpression(restrictionExpression);
+      awsInfrastructureMapping.setDisplayName(displayName);
       awsInfrastructureMapping.setUuid(uuid);
       awsInfrastructureMapping.setAppId(appId);
       awsInfrastructureMapping.setCreatedBy(createdBy);

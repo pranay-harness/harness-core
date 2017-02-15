@@ -98,14 +98,8 @@ public abstract class SettingValue implements ExtensionPoint {
           * Docket registry setting variable types.
           */
     DOCKER, /**
-             * Ecs setting variable types.
+             * Physical data center setting variable types.
              */
-    ECS, /**
-          * Kubernetes setting variable types.
-          */
-    KUBERNETES, /**
-                 * Physical data center setting variable types.
-                 */
     PHYSICAL_DATA_CENTER
   }
 }

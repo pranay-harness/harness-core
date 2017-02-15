@@ -19,6 +19,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
@@ -26,6 +27,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
@@ -58,6 +60,8 @@ public class EcsServiceDeploy extends State {
 
   @Inject @Transient private transient ActivityService activityService;
 
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
   }
@@ -68,7 +72,6 @@ public class EcsServiceDeploy extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String serviceId = phaseElement.getServiceElement().getUuid();
-    String computeProviderId = phaseElement.getComputeProviderId();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
@@ -81,13 +84,21 @@ public class EcsServiceDeploy extends State {
 
     EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
 
-    CommandExecutionContext commandExecutionContext =
-        aCommandExecutionContext().withAppId(app.getUuid()).withEnvId(env.getUuid()).build();
+    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
+                                                          .withAccountId(app.getAccountId())
+                                                          .withAppId(app.getUuid())
+                                                          .withEnvId(env.getUuid())
+                                                          .build();
     commandExecutionContext.setClusterName(ecsServiceElement.getClusterName());
     commandExecutionContext.setServiceName(ecsServiceElement.getName());
 
     commandExecutionContext.setDesiredCount(instanceCount);
-    commandExecutionContext.setCloudProviderSetting(settingsService.get(computeProviderId));
+
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
+
+    commandExecutionContext.setCloudProviderSetting(
+        settingsService.get(infrastructureMapping.getComputeProviderSettingId()));
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -113,8 +124,10 @@ public class EcsServiceDeploy extends State {
                                            .withServiceVariables(context.getServiceVariables());
 
     Activity activity = activityService.save(activityBuilder.build());
+    commandExecutionContext.setActivityId(activity.getUuid());
 
     executionDataBuilder.withActivityId(activity.getUuid());
+
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
                                   .withAppId(app.getAppId())

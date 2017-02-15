@@ -13,6 +13,7 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
+import com.amazonaws.services.ecs.AmazonECSClient;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -92,7 +93,7 @@ public class ClusterServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldResizeCluster() {
-    clusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3);
+    clusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
   }
 
   @Test

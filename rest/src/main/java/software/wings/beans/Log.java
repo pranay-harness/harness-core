@@ -2,9 +2,6 @@ package software.wings.beans;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 
 import java.util.Objects;
@@ -14,11 +11,10 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 5/27/16.
  */
 @Entity(value = "commandLogs", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("activityId")
-                           , @Field("hostName") }))
+//@Indexes(@Index(fields = {@Field("activityId"), @Field("hostName")})) //TODO: uncomment
 public class Log extends Base {
   @NotEmpty private String activityId;
-  @NotEmpty private String hostName;
+  private String hostName;
   @NotEmpty private String commandUnitName;
   private String logLine;
   @NotNull private LogLevel logLevel;
