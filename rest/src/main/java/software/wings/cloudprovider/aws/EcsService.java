@@ -2,6 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -15,11 +16,13 @@ import java.util.List;
 public interface EcsService extends ContainerService {
   /**
    * Provision tasks.
-   * @param connectorConfig the connector config
-   * @param clusterName     the cluster name
-   * @param serviceName     the service name
-   * @param desiredCount    the desired count
-   * @param executionLogCallback
+   *
+   * @param connectorConfig      the connector config
+   * @param clusterName          the cluster name
+   * @param serviceName          the service name
+   * @param desiredCount         the desired count
+   * @param executionLogCallback the execution log callback
+   * @return the list
    */
   List<String> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
       Integer desiredCount, ExecutionLogCallback executionLogCallback);
@@ -43,12 +46,11 @@ public interface EcsService extends ContainerService {
       SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
 
   /**
-   * Gets service desired count.
+   * Gets services.
    *
    * @param cloudProviderSetting the cloud provider setting
    * @param clusterName          the cluster name
-   * @param serviceName          the service name
-   * @return the service desired count
+   * @return the services
    */
-  Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+  List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName);
 }

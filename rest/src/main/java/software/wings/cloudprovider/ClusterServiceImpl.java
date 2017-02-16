@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +65,8 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    return ecsService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
+  public List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName) {
+    return ecsService.getServices(cloudProviderSetting, clusterName);
   }
 
   @Override

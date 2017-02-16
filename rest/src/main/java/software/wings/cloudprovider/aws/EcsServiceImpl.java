@@ -29,11 +29,11 @@ import com.amazonaws.services.ecs.model.DeleteServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
-import com.amazonaws.services.ecs.model.DescribeTasksResult;
+import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
-import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
@@ -926,17 +926,14 @@ public class EcsServiceImpl implements EcsService {
     executionLogCallback.saveExecutionLog("Service updated with desired count", LogLevel.INFO);
     waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName, executionLogCallback);
 
-    ListTasksResult listTasksResult =
-        amazonECSClient.listTasks(new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName));
-    List<String> taskIds =
-        listTasksResult.getTaskArns().stream().map(awsHelperService::getIdFromArn).collect(Collectors.toList());
-
-    DescribeTasksResult describeTasksResult =
-        amazonECSClient.describeTasks(new DescribeTasksRequest().withTasks(taskIds));
-    List<String> containerInstances = describeTasksResult.getTasks()
-                                          .stream()
-                                          .map(task -> awsHelperService.getIdFromArn(task.getContainerInstanceArn()))
-                                          .collect(Collectors.toList());
+    List<String> taskArns =
+        amazonECSClient.listTasks(new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
+            .getTaskArns();
+    if (taskArns == null || taskArns.size() == 0) {
+      return Arrays.asList();
+    }
+    List<Task> tasks = amazonECSClient.describeTasks(new DescribeTasksRequest().withTasks(taskArns)).getTasks();
+    List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
     return containerInstances;
   }
 
@@ -958,16 +955,18 @@ public class EcsServiceImpl implements EcsService {
   }
 
   @Override
-  public Integer getServiceDesiredCount(SettingAttribute settingAttribute, String clusterName, String serviceName) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(settingAttribute);
+  public List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(cloudProviderSetting);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    Service service =
-        amazonECSClient
-            .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-            .getServices()
-            .get(0);
-    return service.getDesiredCount();
+    List<String> serviceArns =
+        amazonECSClient.listServices(new ListServicesRequest().withCluster(clusterName)).getServiceArns();
+    if (serviceArns == null || serviceArns.size() == 0) {
+      return Arrays.asList();
+    }
+    return amazonECSClient
+        .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceArns))
+        .getServices();
   }
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
