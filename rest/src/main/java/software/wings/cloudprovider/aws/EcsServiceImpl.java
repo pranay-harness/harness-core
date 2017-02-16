@@ -920,10 +920,11 @@ public class EcsServiceImpl implements EcsService {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
-    executionLogCallback.saveExecutionLog("Service updated with desired count", LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
     waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName, executionLogCallback);
 
     List<String> taskArns =
