@@ -83,23 +83,36 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Elastic Load Balancer Settings
      */
-    ELB, /**
-          * Application load balancer setting variable types.
-          */
+    ELB,
+
+    /**
+     * Application load balancer setting variable types.
+     */
     ALB,
 
     /**
      * Slack setting variable types.
      */
-    SLACK, /**
-            * Aws setting variable types.
-            */
-    AWS, /**
-          * Docket registry setting variable types.
-          */
-    DOCKER, /**
-             * Physical data center setting variable types.
-             */
-    PHYSICAL_DATA_CENTER
+    SLACK,
+
+    /**
+     * Aws setting variable types.
+     */
+    AWS,
+
+    /**
+     * Docker registry setting variable types.
+     */
+    DOCKER,
+
+    /**
+     * Physical data center setting variable types.
+     */
+    PHYSICAL_DATA_CENTER,
+
+    /**
+     * Kubernetes setting variable types.
+     */
+    KUBERNETES,
   }
 }
