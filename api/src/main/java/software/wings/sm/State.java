@@ -21,6 +21,8 @@ public abstract class State {
 
   @SchemaIgnore private String stateType;
 
+  @SchemaIgnore private boolean rollback;
+
   /**
    * Instantiates a new state.
    *
@@ -110,6 +112,15 @@ public abstract class State {
   @SchemaIgnore
   public void setStateType(String stateType) {
     this.stateType = stateType;
+  }
+
+  @SchemaIgnore
+  public boolean isRollback() {
+    return rollback;
+  }
+
+  public void setRollback(boolean rollback) {
+    this.rollback = rollback;
   }
 
   /**

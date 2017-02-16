@@ -127,6 +127,7 @@ public class GraphRenderer {
     node.setId(instance.getUuid());
     node.setName(instance.getStateName());
     node.setType(instance.getStateType());
+    node.setRollback(instance.isRollback());
     node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
     if (instance.getStateExecutionData() != null) {
       StateExecutionData executionData = instance.getStateExecutionData();
