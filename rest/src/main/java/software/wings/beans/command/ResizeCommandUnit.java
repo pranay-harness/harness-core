@@ -1,7 +1,5 @@
 package software.wings.beans.command;
 
-import static software.wings.beans.command.CommandType.RESIZE;
-
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -27,7 +25,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, RESIZE.name());
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     List<String> containerInstanceArns = clusterService.resizeCluster(
         cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);

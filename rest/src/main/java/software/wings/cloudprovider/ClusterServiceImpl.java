@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,11 +50,9 @@ public class ClusterServiceImpl implements ClusterService {
   @Override
   public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Resized the cluster to " + desiredSize + " size", LogLevel.INFO);
-
+    executionLogCallback.saveExecutionLog("Begin resizing the cluster to " + desiredSize + " size", LogLevel.INFO);
     List<String> containerInstanceArns =
         ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
-    logger.info("Successfully resized the cluster to {} size", desiredSize);
     executionLogCallback.saveExecutionLog(
         "Successfully resized the cluster to " + desiredSize + " size", LogLevel.INFO);
     return containerInstanceArns;
@@ -66,8 +65,8 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    return ecsService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
+  public List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName) {
+    return ecsService.getServices(cloudProviderSetting, clusterName);
   }
 
   @Override
