@@ -38,6 +38,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig.Builder;
@@ -81,6 +82,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private HostService hostService;
 
   @Mock private Query<InfrastructureMapping> query;
+  @Mock private UpdateOperations<InfrastructureMapping> updateOperations;
   @Mock private FieldEnd end;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
@@ -90,6 +92,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(infrastructureProviders.get(SettingVariableTypes.AWS.name())).thenReturn(awsInfrastructureProvider);
     when(infrastructureProviders.get(PHYSICAL_DATA_CENTER.name())).thenReturn(staticInfrastructureProvider);
     when(wingsPersistence.createQuery(InfrastructureMapping.class)).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(InfrastructureMapping.class)).thenReturn(updateOperations);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
   }
@@ -242,19 +245,17 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
 
-    verify(wingsPersistence)
-        .updateField(InfrastructureMapping.class, INFRA_MAPPING_ID, "hostConnectionAttrs", "HOST_CONN_ATTR_ID_1");
     verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
 
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
-    verify(wingsPersistence)
-        .updateField(InfrastructureMapping.class, INFRA_MAPPING_ID, "hostNames", asList("HOST_NAME_1"));
+    verify(wingsPersistence).update(any(InfrastructureMapping.class), any(UpdateOperations.class));
     verify(staticInfrastructureProvider).saveHost(any(Host.class));
     verify(serviceInstanceService)
         .updateInstanceMappings(
             aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build(), updatedInfra,
             asList(host), asList(HOST_NAME));
+    verify(updateOperations).set("hostConnectionAttrs", "HOST_CONN_ATTR_ID_1");
   }
 
   @Test

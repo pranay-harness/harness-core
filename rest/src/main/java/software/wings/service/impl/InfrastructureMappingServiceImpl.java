@@ -18,12 +18,14 @@ import com.google.inject.Singleton;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
@@ -160,19 +162,28 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public InfrastructureMapping update(@Valid InfrastructureMapping infrastructureMapping) {
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    UpdateOperations<InfrastructureMapping> updateOperations =
+        wingsPersistence.createUpdateOperations(InfrastructureMapping.class);
+
     if (savedInfraMapping.getHostConnectionAttrs() != null
         && !savedInfraMapping.getHostConnectionAttrs().equals(infrastructureMapping.getHostConnectionAttrs())) {
       getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType())
           .updateHostConnAttrs(infrastructureMapping, infrastructureMapping.getHostConnectionAttrs());
-      wingsPersistence.updateField(InfrastructureMapping.class, infrastructureMapping.getUuid(), "hostConnectionAttrs",
-          infrastructureMapping.getHostConnectionAttrs());
+      updateOperations.set("hostConnectionAttrs", infrastructureMapping.getHostConnectionAttrs());
     }
+
+    if (infrastructureMapping instanceof EcsInfrastructureMapping) {
+      updateOperations.set("clusterName", ((EcsInfrastructureMapping) infrastructureMapping).getClusterName());
+    } else if (infrastructureMapping instanceof KubernetesInfrastructureMapping) {
+      updateOperations.set("clusterName", ((KubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+    }
+
+    wingsPersistence.update(savedInfraMapping, updateOperations);
 
     if (savedInfraMapping instanceof PhysicalInfrastructureMapping) {
       ServiceTemplate serviceTemplate =
           serviceTemplateService.get(savedInfraMapping.getAppId(), savedInfraMapping.getServiceTemplateId());
       Validator.notNullCheck("ServiceTemplate", serviceTemplate);
-
       syncPhysicalHostsAndServiceInstances(
           infrastructureMapping, serviceTemplate, ((PhysicalInfrastructureMapping) savedInfraMapping).getHostNames());
     }
