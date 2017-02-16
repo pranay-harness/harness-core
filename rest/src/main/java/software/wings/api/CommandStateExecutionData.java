@@ -31,6 +31,8 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String artifactId;
   private String artifactName;
   private CountsByStatuses countsByStatuses;
+  private String newContainerServiceName;
+  private String oldContainerServiceName;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -232,6 +234,22 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.countsByStatuses = countsByStatuses;
   }
 
+  public String getNewContainerServiceName() {
+    return newContainerServiceName;
+  }
+
+  public void setNewContainerServiceName(String newContainerServiceName) {
+    this.newContainerServiceName = newContainerServiceName;
+  }
+
+  public String getOldContainerServiceName() {
+    return oldContainerServiceName;
+  }
+
+  public void setOldContainerServiceName(String oldContainerServiceName) {
+    this.oldContainerServiceName = oldContainerServiceName;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
@@ -322,6 +340,8 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String activityId;
     private String artifactId;
     private String artifactName;
+    private String newContainerServiceName;
+    private String oldContainerServiceName;
 
     private Builder() {}
 
@@ -511,6 +531,28 @@ public class CommandStateExecutionData extends StateExecutionData {
     }
 
     /**
+     * With newContainerServiceName builder.
+     *
+     * @param newContainerServiceName the newContainerServiceName
+     * @return the builder
+     */
+    public Builder withNewContainerServiceName(String newContainerServiceName) {
+      this.newContainerServiceName = newContainerServiceName;
+      return this;
+    }
+
+    /**
+     * With artifact name builder.
+     *
+     * @param oldContainerServiceName the oldContainerServiceName
+     * @return the builder
+     */
+    public Builder withOldContainerServiceName(String oldContainerServiceName) {
+      this.oldContainerServiceName = oldContainerServiceName;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -532,7 +574,9 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withTemplateId(templateId)
           .withActivityId(activityId)
           .withArtifactId(artifactId)
-          .withArtifactName(artifactName);
+          .withArtifactName(artifactName)
+          .withNewContainerServiceName(newContainerServiceName)
+          .withOldContainerServiceName(oldContainerServiceName);
     }
 
     /**
@@ -558,6 +602,8 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setActivityId(activityId);
       commandStateExecutionData.setArtifactId(artifactId);
       commandStateExecutionData.setArtifactName(artifactName);
+      commandStateExecutionData.setNewContainerServiceName(newContainerServiceName);
+      commandStateExecutionData.setOldContainerServiceName(oldContainerServiceName);
       return commandStateExecutionData;
     }
   }

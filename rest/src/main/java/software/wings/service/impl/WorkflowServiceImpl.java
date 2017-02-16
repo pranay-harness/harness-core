@@ -983,20 +983,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .build())
                                    .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY)
-                                   .withName("Deploy Containers")
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(ECS_SERVICE_DEPLOY.name())
-                                                .withName("Add New Version Containers")
-                                                .build())
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(ECS_SERVICE_DEPLOY.name())
-                                                .withName("Remove Old Version Containers")
-                                                .addProperty("reduceOldVersion", true)
-                                                .build())
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PhaseStepType.CONTAINER_DEPLOY)
+            .withName("Deploy Containers")
+            .addStep(
+                aNode().withId(getUuid()).withType(ECS_SERVICE_DEPLOY.name()).withName("Upgrade Containers").build())
+            .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE)
                                    .withName("Verify Service")

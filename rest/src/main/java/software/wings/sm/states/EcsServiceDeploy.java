@@ -19,7 +19,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -28,7 +27,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -42,9 +40,11 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -59,8 +59,6 @@ public class EcsServiceDeploy extends State {
   private String commandName;
 
   @Attributes(title = "Number of instances") private int instanceCount;
-
-  @Attributes(title = "Remove Old Containers") private boolean reduceOldVersion;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -86,7 +84,6 @@ public class EcsServiceDeploy extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
@@ -96,56 +93,19 @@ public class EcsServiceDeploy extends State {
 
     EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
 
-    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                          .withAccountId(app.getAccountId())
-                                                          .withAppId(app.getUuid())
-                                                          .withEnvId(env.getUuid())
-                                                          .build();
-    commandExecutionContext.setClusterName(ecsServiceElement.getClusterName());
-
-    String ecsServiceName;
-    if (reduceOldVersion) {
-      ecsServiceName = ecsServiceElement.getOldName();
-      if (reduceOldVersion && ecsServiceName == null) {
-        logger.warn("No old ECS Service found to be undeployed");
-        return new ExecutionResponse();
-      }
-    } else {
-      ecsServiceName = ecsServiceElement.getName();
-    }
-
-    commandExecutionContext.setServiceName(ecsServiceName);
+    String ecsServiceName = ecsServiceElement.getName();
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    commandExecutionContext.setCloudProviderSetting(settingAttribute);
 
     List<com.amazonaws.services.ecs.model.Service> services =
         clusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
     Optional<com.amazonaws.services.ecs.model.Service> ecsService =
         services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
-    if (!ecsService.isPresent()) {
-      if (reduceOldVersion) {
-        logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
-        return new ExecutionResponse();
-      } else {
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ECS Service not setup");
-      }
-    }
-    int desiredCount;
-    if (reduceOldVersion) {
-      desiredCount = ecsService.get().getDesiredCount() - instanceCount;
-    } else {
-      desiredCount = ecsService.get().getDesiredCount() + instanceCount;
-    }
-    if (desiredCount < 0) {
-      desiredCount = 0;
-    }
 
+    int desiredCount = ecsService.get().getDesiredCount() + instanceCount;
     logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
-    commandExecutionContext.setDesiredCount(desiredCount);
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -171,9 +131,10 @@ public class EcsServiceDeploy extends State {
                                            .withServiceVariables(context.getServiceVariables());
 
     Activity activity = activityService.save(activityBuilder.build());
-    commandExecutionContext.setActivityId(activity.getUuid());
 
-    executionDataBuilder.withActivityId(activity.getUuid());
+    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(),
+        ecsServiceElement.getClusterName(), ecsServiceName, desiredCount, activity.getUuid(), settingAttribute);
+    executionDataBuilder.withActivityId(activity.getUuid()).withNewContainerServiceName(ecsServiceName);
 
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
@@ -188,6 +149,82 @@ public class EcsServiceDeploy extends State {
         .withCorrelationIds(Collections.singletonList(activity.getUuid()))
         .withStateExecutionData(executionDataBuilder.build())
         .build();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
+    CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
+    if (commandStateExecutionData.getOldContainerServiceName() == null) {
+      String ecsServiceName = ecsServiceElement.getOldName();
+
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(commandStateExecutionData.getAppId(), phaseElement.getInfraMappingId());
+      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      List<com.amazonaws.services.ecs.model.Service> services =
+          clusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
+      Optional<com.amazonaws.services.ecs.model.Service> ecsService =
+          services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
+      if (!ecsService.isPresent()) {
+        logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
+        return super.handleAsyncResponse(context, response);
+      }
+
+      commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
+
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Application app = workflowStandardParams.getApp();
+      Environment env = workflowStandardParams.getEnv();
+
+      String serviceId = phaseElement.getServiceElement().getUuid();
+
+      Command command = serviceResourceService
+                            .getCommandByName(commandStateExecutionData.getAppId(),
+                                commandStateExecutionData.getServiceId(), env.getUuid(), commandName)
+                            .getCommand();
+
+      int desiredCount = ecsService.get().getDesiredCount() - instanceCount;
+      logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
+
+      if (desiredCount < 0) {
+        desiredCount = 0;
+      }
+      CommandExecutionContext commandExecutionContext =
+          buildCommandExecutionContext(app, env.getUuid(), ecsServiceElement.getClusterName(), ecsServiceName,
+              desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
+
+      delegateService.queueTask(aDelegateTask()
+                                    .withAccountId(app.getAccountId())
+                                    .withAppId(app.getAppId())
+                                    .withTaskType(TaskType.COMMAND)
+                                    .withWaitId(commandStateExecutionData.getActivityId())
+                                    .withParameters(new Object[] {command, commandExecutionContext})
+                                    .build());
+
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Collections.singletonList(commandStateExecutionData.getActivityId()))
+          .withStateExecutionData(commandStateExecutionData)
+          .build();
+
+    } else {
+      return super.handleAsyncResponse(context, response);
+    }
+  }
+
+  private CommandExecutionContext buildCommandExecutionContext(Application app, String envId, String clusterName,
+      String ecsServiceName, int desiredCount, String activityId, SettingAttribute settingAttribute) {
+    CommandExecutionContext commandExecutionContext =
+        aCommandExecutionContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).withEnvId(envId).build();
+    commandExecutionContext.setClusterName(clusterName);
+
+    commandExecutionContext.setServiceName(ecsServiceName);
+    commandExecutionContext.setActivityId(activityId);
+    commandExecutionContext.setCloudProviderSetting(settingAttribute);
+    commandExecutionContext.setDesiredCount(desiredCount);
+
+    return commandExecutionContext;
   }
 
   @Override
@@ -207,13 +244,5 @@ public class EcsServiceDeploy extends State {
 
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
-  }
-
-  public boolean isReduceOldVersion() {
-    return reduceOldVersion;
-  }
-
-  public void setReduceOldVersion(boolean reduceOldVersion) {
-    this.reduceOldVersion = reduceOldVersion;
   }
 }
