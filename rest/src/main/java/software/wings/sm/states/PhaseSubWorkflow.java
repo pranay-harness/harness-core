@@ -37,7 +37,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private String infraMappingId;
 
   // Only for rollback phase steps
-  @SchemaIgnore private boolean rollback;
   @SchemaIgnore private String rollbackPhaseName;
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
@@ -100,15 +99,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   public void setUuid(String uuid) {
     this.uuid = uuid;
-  }
-
-  @SchemaIgnore
-  public boolean isRollback() {
-    return rollback;
-  }
-
-  public void setRollback(boolean rollback) {
-    this.rollback = rollback;
   }
 
   @SchemaIgnore

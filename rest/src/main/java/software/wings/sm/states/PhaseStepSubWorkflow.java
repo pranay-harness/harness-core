@@ -45,7 +45,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   // Only for rollback phases
-  @SchemaIgnore private boolean rollback;
   @SchemaIgnore private String rollbackPhaseStepName;
 
   @Override
@@ -188,15 +187,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
     this.failureStrategies = failureStrategies;
-  }
-
-  @SchemaIgnore
-  public boolean isRollback() {
-    return rollback;
-  }
-
-  public void setRollback(boolean rollback) {
-    this.rollback = rollback;
   }
 
   @SchemaIgnore

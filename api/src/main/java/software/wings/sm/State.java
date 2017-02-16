@@ -114,7 +114,6 @@ public abstract class State {
     this.stateType = stateType;
   }
 
-  @SchemaIgnore
   public boolean isRollback() {
     return rollback;
   }
