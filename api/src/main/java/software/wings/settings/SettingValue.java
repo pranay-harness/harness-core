@@ -57,12 +57,16 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Smtp setting variable types.
      */
-    SMTP, /**
-           * Jenkins setting variable types.
-           */
-    JENKINS, /**
-              * Bamboo setting variable types.
-              */
+    SMTP,
+
+    /**
+     * Jenkins setting variable types.
+     */
+    JENKINS,
+
+    /**
+     * Bamboo setting variable types.
+     */
     BAMBOO,
 
     /**
