@@ -9,7 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
  */
 @JsonTypeName("AWS_KUBERNETES")
 public class KubernetesInfrastructureMapping extends InfrastructureMapping {
-  private String clusterName;
+  @Attributes(title = "Service cluster name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.

@@ -9,7 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
  */
 @JsonTypeName("AWS_ECS")
 public class EcsInfrastructureMapping extends InfrastructureMapping {
-  private String clusterName;
+  @Attributes(title = "Service cluster name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.
