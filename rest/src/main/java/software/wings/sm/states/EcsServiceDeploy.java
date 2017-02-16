@@ -19,12 +19,16 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.cloudprovider.ClusterService;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -36,9 +40,12 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by rishi on 2/8/17.
@@ -48,9 +55,12 @@ public class EcsServiceDeploy extends State {
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
+  @DefaultValue("Resize Service Cluster")
   private String commandName;
 
   @Attributes(title = "Number of instances") private int instanceCount;
+
+  @Attributes(title = "Remove Old Containers") private boolean reduceOldVersion;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -61,6 +71,8 @@ public class EcsServiceDeploy extends State {
   @Inject @Transient private transient ActivityService activityService;
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+
+  @Inject @Transient private transient ClusterService clusterService;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -90,15 +102,50 @@ public class EcsServiceDeploy extends State {
                                                           .withEnvId(env.getUuid())
                                                           .build();
     commandExecutionContext.setClusterName(ecsServiceElement.getClusterName());
-    commandExecutionContext.setServiceName(ecsServiceElement.getName());
 
-    commandExecutionContext.setDesiredCount(instanceCount);
+    String ecsServiceName;
+    if (reduceOldVersion) {
+      ecsServiceName = ecsServiceElement.getOldName();
+      if (reduceOldVersion && ecsServiceName == null) {
+        logger.warn("No old ECS Service found to be undeployed");
+        return new ExecutionResponse();
+      }
+    } else {
+      ecsServiceName = ecsServiceElement.getName();
+    }
+
+    commandExecutionContext.setServiceName(ecsServiceName);
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
 
-    commandExecutionContext.setCloudProviderSetting(
-        settingsService.get(infrastructureMapping.getComputeProviderSettingId()));
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    commandExecutionContext.setCloudProviderSetting(settingAttribute);
+
+    List<com.amazonaws.services.ecs.model.Service> services =
+        clusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
+    Optional<com.amazonaws.services.ecs.model.Service> ecsService =
+        services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
+    if (!ecsService.isPresent()) {
+      if (reduceOldVersion) {
+        logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
+        return new ExecutionResponse();
+      } else {
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ECS Service not setup");
+      }
+    }
+    int desiredCount;
+    if (reduceOldVersion) {
+      desiredCount = ecsService.get().getDesiredCount() - instanceCount;
+    } else {
+      desiredCount = ecsService.get().getDesiredCount() + instanceCount;
+    }
+    if (desiredCount < 0) {
+      desiredCount = 0;
+    }
+
+    logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
+    commandExecutionContext.setDesiredCount(desiredCount);
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -160,5 +207,13 @@ public class EcsServiceDeploy extends State {
 
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
+  }
+
+  public boolean isReduceOldVersion() {
+    return reduceOldVersion;
+  }
+
+  public void setReduceOldVersion(boolean reduceOldVersion) {
+    this.reduceOldVersion = reduceOldVersion;
   }
 }

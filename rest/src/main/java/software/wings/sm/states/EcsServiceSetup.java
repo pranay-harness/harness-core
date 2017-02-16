@@ -147,16 +147,44 @@ public class EcsServiceSetup extends State {
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
 
+    String lastEcsServiceName = lastECSService(
+        computeProviderSetting, clusterName, ECSConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addElement(
-            anEcsServiceElement().withUuid(serviceId).withName(ecsServiceName).withClusterName(clusterName).build())
+        .addElement(anEcsServiceElement()
+                        .withUuid(serviceId)
+                        .withName(ecsServiceName)
+                        .withOldName(lastEcsServiceName)
+                        .withClusterName(clusterName)
+                        .build())
         .withStateExecutionData(anEcsServiceExecutionData()
                                     .withEcsClusterName(clusterName)
                                     .withEcsServiceName(ecsServiceName)
                                     .withDockerImageName(imageName)
                                     .build())
         .build();
+  }
+
+  private String lastECSService(SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
+    List<com.amazonaws.services.ecs.model.Service> services =
+        clusterService.getServices(computeProviderSetting, clusterName);
+    if (services == null) {
+      return null;
+    }
+    com.amazonaws.services.ecs.model.Service lastECSService = null;
+    for (com.amazonaws.services.ecs.model.Service service : services) {
+      if (lastECSService == null
+          || (service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0
+                 && service.getCreatedAt().compareTo(lastECSService.getCreatedAt()) > 0)) {
+        lastECSService = service;
+      }
+    }
+    String lastECSServiceName = null;
+    if (lastECSService != null) {
+      lastECSServiceName = lastECSService.getServiceName();
+    }
+    return lastECSServiceName;
   }
 
   public ContainerDefinition createContainerDefinition(

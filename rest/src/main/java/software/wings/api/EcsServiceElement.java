@@ -13,6 +13,7 @@ import java.util.Map;
 public class EcsServiceElement implements ContextElement {
   private String uuid;
   private String name;
+  private String oldName;
   private String clusterName;
 
   @Override
@@ -38,6 +39,14 @@ public class EcsServiceElement implements ContextElement {
     this.name = name;
   }
 
+  public String getOldName() {
+    return oldName;
+  }
+
+  public void setOldName(String oldName) {
+    this.oldName = oldName;
+  }
+
   @Override
   public Map<String, Object> paramMap() {
     return null;
@@ -54,6 +63,7 @@ public class EcsServiceElement implements ContextElement {
   public static final class EcsServiceElementBuilder {
     private String uuid;
     private String name;
+    private String oldName;
     private String clusterName;
 
     private EcsServiceElementBuilder() {}
@@ -72,6 +82,11 @@ public class EcsServiceElement implements ContextElement {
       return this;
     }
 
+    public EcsServiceElementBuilder withOldName(String oldName) {
+      this.oldName = oldName;
+      return this;
+    }
+
     public EcsServiceElementBuilder withClusterName(String clusterName) {
       this.clusterName = clusterName;
       return this;
@@ -81,6 +96,7 @@ public class EcsServiceElement implements ContextElement {
       EcsServiceElement ecsServiceElement = new EcsServiceElement();
       ecsServiceElement.setUuid(uuid);
       ecsServiceElement.setName(name);
+      ecsServiceElement.setOldName(oldName);
       ecsServiceElement.setClusterName(clusterName);
       return ecsServiceElement;
     }
