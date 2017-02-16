@@ -104,6 +104,7 @@ public class WorkflowPhase {
         .withName(name)
         .withType(StateType.PHASE.name())
         .addProperty("serviceId", serviceId)
+        .withRollback(rollback)
         .addProperty("deploymentType", deploymentType)
         .addProperty("computeProviderId", computeProviderId)
         .addProperty("infraMappingId", infraMappingId)

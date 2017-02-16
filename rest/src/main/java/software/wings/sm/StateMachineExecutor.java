@@ -147,9 +147,10 @@ public class StateMachineExecutor {
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());
     stateExecutionInstance.setStateMachineId(stateMachine.getUuid());
-    stateExecutionInstance.setStateType(
-        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName())
-            .getStateType());
+    State state =
+        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    stateExecutionInstance.setRollback(state.isRollback());
+    stateExecutionInstance.setStateType(state.getStateType());
     if (stateExecutionInstance.getUuid() != null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateExecutionInstance was already created");
     }
