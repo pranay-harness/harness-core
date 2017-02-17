@@ -6,13 +6,9 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -74,17 +70,19 @@ public class SshSessionFactory {
     session.setUserInfo(new SshUserInfo(config.getPassword()));
     session.setTimeout(config.getSshSessionTimeout());
     session.setServerAliveInterval(10 * 1000); // Send noop packet every 10 sec
-    Socket client = new Socket();
-    try {
-      client.connect(new InetSocketAddress(config.getHost(), config.getPort()), config.getSocketConnectTimeout());
-      client.close();
-    } catch (IOException e) {
-      logger.error(e.getMessage());
-      e.printStackTrace();
-      throw new JSchException("timeout: socket is not established", e);
-    } finally {
-      IOUtils.closeQuietly(client);
-    }
+
+    //    Socket client = new Socket();
+    //    config.setSocketConnectTimeout(30*1000);
+    //    try {
+    //      client.connect(new InetSocketAddress(config.getHost(), config.getPort()), config.getSocketConnectTimeout());
+    //      client.close();
+    //    } catch (IOException e) {
+    //      logger.error(e.getMessage());
+    //      e.printStackTrace();
+    //      throw new JSchException("timeout: socket is not established", e);
+    //    } finally {
+    //      IOUtils.closeQuietly(client);
+    //    }
     session.connect(config.getSshConnectionTimeout());
 
     return session;
