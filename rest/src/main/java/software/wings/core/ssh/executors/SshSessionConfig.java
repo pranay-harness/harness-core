@@ -18,7 +18,7 @@ public class SshSessionConfig {
   @NotEmpty private String executionId;
   @NotEmpty private String commandUnitName;
   private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(30);
-  private Integer sshConnectionTimeout = (int) TimeUnit.SECONDS.toMillis(60);
+  private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(2);
   private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
   private Integer retryInterval;
   @NotEmpty private String host;
@@ -440,7 +440,7 @@ public class SshSessionConfig {
     private String executionId;
     private String commandUnitName;
     private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(30);
-    private Integer sshConnectionTimeout = (int) TimeUnit.SECONDS.toMillis(60);
+    private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(2);
     private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
     private Integer retryInterval;
     private String host;
