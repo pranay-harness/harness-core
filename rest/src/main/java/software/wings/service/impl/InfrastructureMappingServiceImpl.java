@@ -28,6 +28,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -41,9 +42,11 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
@@ -75,6 +78,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private SettingsService settingsService;
   @Inject private HostService hostService;
   @Inject private ExecutorService executorService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -97,8 +101,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
 
-    infraMapping.setDisplayName(String.format("%s (%s) : %s", computeProviderSetting.getName(),
-        infraMapping.getComputeProviderType(), infraMapping.getDeploymentType()));
+    String computeProviderType =
+        SettingVariableTypes.PHYSICAL_DATA_CENTER.name().equals(infraMapping.getComputeProviderType())
+        ? "Data Center"
+        : infraMapping.getComputeProviderType();
+    infraMapping.setDisplayName(String.format("%s (Cloud provider: %s, Deployment type: %s)",
+        computeProviderSetting.getName(), computeProviderType, infraMapping.getDeploymentType()));
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
@@ -253,6 +261,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     return selectServiceInstancesByInfraMapping(
         appId, infrastructureMapping.getServiceTemplateId(), infrastructureMapping.getUuid(), selectionParams);
+  }
+
+  @Override
+  public List<String> listClusters(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listClusterNames(computeProviderSetting);
+    }
+    return new ArrayList<>();
   }
 
   @Override
@@ -505,9 +526,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId) {
     // TODO:: use serviceId and envId to narrow down list ??
+
+    Service service = serviceResourceService.get(appId, serviceId);
+    ArtifactType artifactType = service.getArtifactType();
     Map<String, Map<String, String>> infraTypes = new HashMap<>();
-    infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
-    infraTypes.put(AWS.name(), ImmutableMap.of(ECS.name(), AWS_ECS.name(), SSH.name(), AWS_SSH.name()));
+
+    if (artifactType.equals(ArtifactType.DOCKER)) {
+      infraTypes.put(AWS.name(), ImmutableMap.of(ECS.name(), AWS_ECS.name()));
+    } else {
+      infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
+      infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name()));
+    }
     return infraTypes;
   }
 

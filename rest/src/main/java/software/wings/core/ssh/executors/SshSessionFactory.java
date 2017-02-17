@@ -79,6 +79,8 @@ public class SshSessionFactory {
       client.connect(new InetSocketAddress(config.getHost(), config.getPort()), config.getSocketConnectTimeout());
       client.close();
     } catch (IOException e) {
+      logger.error(e.getMessage());
+      e.printStackTrace();
       throw new JSchException("timeout: socket is not established", e);
     } finally {
       IOUtils.closeQuietly(client);
