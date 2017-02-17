@@ -51,7 +51,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private HostService hostService;
   private final Logger logger = LoggerFactory.getLogger(AwsInfrastructureProvider.class);
 
-  private static final int SLEEP_INTERVAL = 5 * 1000;
+  private static final int SLEEP_INTERVAL = 30 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
 
   @Override
