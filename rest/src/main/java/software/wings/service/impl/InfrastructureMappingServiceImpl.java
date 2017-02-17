@@ -260,6 +260,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public List<String> listClusters(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listClusterNames(computeProviderSetting);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
   public List<ServiceInstance> selectServiceInstances(
       String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams) {
     String serviceTemplateId =

@@ -107,4 +107,11 @@ public class InfrastructureMappingResource {
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(infrastructureMappingService.listInfraTypes(appId, envId, serviceId));
   }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/clusters")
+  public RestResponse<List<String>> getClusterNames(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listClusters(appId, deploymentType, computeProviderId));
+  }
 }
