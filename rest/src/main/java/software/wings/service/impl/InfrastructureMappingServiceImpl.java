@@ -97,8 +97,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
 
-    infraMapping.setDisplayName(String.format("%s (%s) : %s", computeProviderSetting.getName(),
-        infraMapping.getComputeProviderType(), infraMapping.getDeploymentType()));
+    String computeProviderType =
+        SettingVariableTypes.PHYSICAL_DATA_CENTER.name().equals(infraMapping.getComputeProviderType())
+        ? "Data Center"
+        : infraMapping.getComputeProviderType();
+    infraMapping.setDisplayName(String.format("%s (Cloud provider: %s, Deployment type: %s)",
+        computeProviderSetting.getName(), computeProviderType, infraMapping.getDeploymentType()));
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
