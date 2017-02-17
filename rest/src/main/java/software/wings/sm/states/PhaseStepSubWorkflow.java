@@ -20,8 +20,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.ServiceInstancesProvisionState;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateType;
@@ -113,8 +111,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     handleElementNotifyResponseData(context, phaseElement, notifyResponseData, executionResponse);
 
-    ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
-    executionResponse.setExecutionStatus(executionStatus);
+    super.handleStatusSummary(context, response, executionResponse);
     return executionResponse;
   }
 
