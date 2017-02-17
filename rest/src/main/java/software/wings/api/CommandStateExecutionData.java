@@ -10,6 +10,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private String newContainerServiceName;
   private String oldContainerServiceName;
+  private List<InstanceStatusSummary> instanceStatusSummaries;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -250,6 +252,14 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.oldContainerServiceName = oldContainerServiceName;
   }
 
+  public List<InstanceStatusSummary> getInstanceStatusSummaries() {
+    return instanceStatusSummaries;
+  }
+
+  public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
+    this.instanceStatusSummaries = instanceStatusSummaries;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
@@ -342,6 +352,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String artifactName;
     private String newContainerServiceName;
     private String oldContainerServiceName;
+    private List<InstanceStatusSummary> instanceStatusSummaries;
 
     private Builder() {}
 
@@ -553,6 +564,17 @@ public class CommandStateExecutionData extends StateExecutionData {
     }
 
     /**
+     * With artifact name builder.
+     *
+     * @param instanceStatusSummaries the instanceStatusSummaries
+     * @return the builder
+     */
+    public Builder withInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
+      this.instanceStatusSummaries = instanceStatusSummaries;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -576,7 +598,8 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
           .withNewContainerServiceName(newContainerServiceName)
-          .withOldContainerServiceName(oldContainerServiceName);
+          .withOldContainerServiceName(oldContainerServiceName)
+          .withInstanceStatusSummaries(instanceStatusSummaries);
     }
 
     /**
@@ -604,6 +627,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setArtifactName(artifactName);
       commandStateExecutionData.setNewContainerServiceName(newContainerServiceName);
       commandStateExecutionData.setOldContainerServiceName(oldContainerServiceName);
+      commandStateExecutionData.setInstanceStatusSummaries(instanceStatusSummaries);
       return commandStateExecutionData;
     }
   }

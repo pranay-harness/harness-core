@@ -20,6 +20,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -1095,6 +1096,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .filter(e -> e.getInstanceStatusSummaries() != null)
                                              .flatMap(l -> l.getInstanceStatusSummaries().stream())
                                              .collect(Collectors.toList()));
+        } else if (StateType.ECS_SERVICE_DEPLOY.name().equals(next.getStateType())) {
+          CommandStateExecutionData commandStateExecutionData =
+              (CommandStateExecutionData) next.getStateExecutionData();
+          instanceStatusSummaries.addAll(commandStateExecutionData.getInstanceStatusSummaries());
         }
         last = next;
       }

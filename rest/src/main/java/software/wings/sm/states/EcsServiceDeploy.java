@@ -1,10 +1,12 @@
 package software.wings.sm.states;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.inject.Inject;
 
@@ -27,6 +29,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -35,6 +38,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -42,10 +47,12 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * Created by rishi on 2/8/17.
@@ -155,6 +162,9 @@ public class EcsServiceDeploy extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
+
+    commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
+
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       String ecsServiceName = ecsServiceElement.getOldName();
 
@@ -168,7 +178,10 @@ public class EcsServiceDeploy extends State {
           services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
       if (!ecsService.isPresent()) {
         logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
-        return super.handleAsyncResponse(context, response);
+        return anExecutionResponse()
+            .withStateExecutionData(commandStateExecutionData)
+            .withExecutionStatus(ExecutionStatus.SUCCESS)
+            .build();
       }
 
       commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
@@ -209,8 +222,27 @@ public class EcsServiceDeploy extends State {
           .build();
 
     } else {
-      return super.handleAsyncResponse(context, response);
+      return anExecutionResponse()
+          .withStateExecutionData(commandStateExecutionData)
+          .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .build();
     }
+  }
+
+  private List<InstanceStatusSummary> buildInstanceStatusSummaries(
+      ExecutionContext context, Map<String, NotifyResponseData> response) {
+    // TODO: set actual containers
+
+    List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+    IntStream.range(0, instanceCount).parallel().forEach(value -> {
+      String uuid = UUIDGenerator.getUuid();
+      instanceStatusSummaries.add(
+          anInstanceStatusSummary()
+              .withStatus(ExecutionStatus.SUCCESS)
+              .withInstanceElement(anInstanceElement().withUuid(uuid).withDisplayName(uuid).build())
+              .build());
+    });
+    return instanceStatusSummaries;
   }
 
   private CommandExecutionContext buildCommandExecutionContext(Application app, String envId, String clusterName,
