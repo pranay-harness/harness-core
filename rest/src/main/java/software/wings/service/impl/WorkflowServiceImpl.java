@@ -661,7 +661,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PhaseStep updatePreDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep);
+    Graph workflowOuterStepsGraph = generateGraph(null, phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("preDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
@@ -676,7 +676,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PhaseStep updatePostDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep);
+    Graph workflowOuterStepsGraph = generateGraph(null, phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("postDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
@@ -1228,7 +1228,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     preDeploymentNode.setOrigin(true);
     Builder graphBuilder = aGraph()
                                .addNodes(preDeploymentNode)
-                               .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps()));
+                               .addSubworkflow(id1, generateGraph(null, orchestrationWorkflow.getPreDeploymentSteps()));
 
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
 
@@ -1254,7 +1254,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     id2 = orchestrationWorkflow.getPostDeploymentSteps().getUuid();
     graphBuilder.addNodes(orchestrationWorkflow.getPostDeploymentSteps().generatePhaseStepNode())
         .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
-        .addSubworkflow(id2, generateGraph(orchestrationWorkflow.getPostDeploymentSteps()));
+        .addSubworkflow(id2, generateGraph(null, orchestrationWorkflow.getPostDeploymentSteps()));
 
     return graphBuilder.build();
   }
@@ -1277,7 +1277,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
       }
       id1 = id2;
-      Graph stepsGraph = generateGraph(phaseStep);
+      Graph stepsGraph = generateGraph(workflowPhase, phaseStep);
       graphs.put(phaseStep.getUuid(), stepsGraph);
     }
 
@@ -1285,7 +1285,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return graphs;
   }
 
-  private Graph generateGraph(PhaseStep phaseStep) {
+  private Graph generateGraph(WorkflowPhase workflowPhase, PhaseStep phaseStep) {
     Builder graphBuilder = aGraph().withGraphName(phaseStep.getName());
     if (phaseStep == null || phaseStep.getSteps() == null || phaseStep.getSteps().isEmpty()) {
       return graphBuilder.build();
@@ -1293,10 +1293,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Node originNode = null;
     Node repeatNode = null;
-    if (phaseStep.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE
-        || phaseStep.getPhaseStepType() == PhaseStepType.DISABLE_SERVICE
-        || phaseStep.getPhaseStepType() == PhaseStepType.ENABLE_SERVICE
-        || phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE) {
+    if (workflowPhase != null && workflowPhase.getDeploymentType() == DeploymentType.SSH
+        && (phaseStep.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE
+               || phaseStep.getPhaseStepType() == PhaseStepType.DISABLE_SERVICE
+               || phaseStep.getPhaseStepType() == PhaseStepType.ENABLE_SERVICE
+               || phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)) {
       // TODO - only meant for physical DC
       // introduce repeat node
 
