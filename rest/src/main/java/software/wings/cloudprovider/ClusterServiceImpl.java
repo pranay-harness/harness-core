@@ -57,7 +57,7 @@ public class ClusterServiceImpl implements ClusterService {
     List<String> containerInstanceArns =
         ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     executionLogCallback.saveExecutionLog(
-        String.format("Successfully completed resize operation.\n%s", DASH_STRING), LogLevel.INFO);
+        String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
     return containerInstanceArns;
   }
 

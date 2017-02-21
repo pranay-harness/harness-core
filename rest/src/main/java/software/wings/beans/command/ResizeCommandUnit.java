@@ -1,7 +1,15 @@
 package software.wings.beans.command;
 
+import static java.lang.String.format;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
@@ -27,8 +35,18 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     Integer desiredCount = context.getDesiredCount();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
-    List<String> containerInstanceArns = clusterService.resizeCluster(
-        cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
-    return ExecutionResult.SUCCESS;
+
+    executionLogCallback.saveExecutionLog(format("Begin execution of command: %s", getName()), INFO);
+    ExecutionResult executionResult = FAILURE;
+
+    try {
+      List<String> containerInstanceArns = clusterService.resizeCluster(
+          cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
+      executionResult = SUCCESS;
+    } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog("Command execution failed", ERROR);
+      throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", ex);
+    }
+    return executionResult;
   }
 }
