@@ -17,12 +17,11 @@
 package software.wings.integration;
 
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.kubernetes.api.model.Quantity;
-import software.wings.cloudprovider.kubernetes.KubernetesServiceImpl;
+import software.wings.cloudprovider.kubernetes.KubernetesContainerServiceImpl;
 
 public class kube {
   public static void main(String[] args) throws InterruptedException {
-    KubernetesServiceImpl kubernetesService = new KubernetesServiceImpl();
+    KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
     kubernetesService.createCluster(ImmutableMap.<String, String>builder()
                                         .put("name", "foo-bar")
@@ -36,20 +35,37 @@ public class kube {
 
     kubernetesService.cleanup();
 
-    kubernetesService.createBackendController(ImmutableMap.of("name", "backend-ctrl", "appName", "testApp",
-        "serverImage", "gcr.io/google-samples/node-hello", "port", "8080", "count", "2"));
+    kubernetesService.createController(ImmutableMap.<String, String>builder()
+                                           .put("name", "backend-ctrl")
+                                           .put("appName", "testApp")
+                                           .put("containerName", "server")
+                                           .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-server")
+                                           .put("tier", "backend")
+                                           .put("cpu", "100m")
+                                           .put("memory", "100Mi")
+                                           .put("port", "8080")
+                                           .put("count", "2")
+                                           .build());
 
-    kubernetesService.createBackendService(ImmutableMap.of("name", "backend-service", "appName", "testApp"));
+    kubernetesService.createService(
+        ImmutableMap.of("name", "backend-service", "appName", "testApp", "tier", "backend"));
 
-    kubernetesService.createFrontendController(
-        ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")),
-        ImmutableMap.of("name", "frontend-ctrl", "appName", "testApp", "webappImage",
-            "gcr.io/google-samples/node-hello", "port", "8080", "count", "2"));
+    kubernetesService.createController(ImmutableMap.<String, String>builder()
+                                           .put("name", "frontend-ctrl")
+                                           .put("appName", "testApp")
+                                           .put("containerName", "webapp")
+                                           .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-webapp")
+                                           .put("tier", "frontend")
+                                           .put("cpu", "100m")
+                                           .put("memory", "100Mi")
+                                           .put("port", "8080")
+                                           .put("count", "2")
+                                           .build());
 
-    kubernetesService.createFrontendService(
-        ImmutableMap.of("name", "frontend-service", "appName", "testApp", "type", "LoadBalancer"));
+    kubernetesService.createService(
+        ImmutableMap.of("name", "frontend-service", "appName", "testApp", "tier", "frontend", "type", "LoadBalancer"));
 
-    kubernetesService.scaleFrontendController("frontend-ctrl", 5);
+    kubernetesService.setControllerPodCount("frontend-ctrl", 5);
 
     kubernetesService.checkStatus("backend-ctrl", "backend-service");
     kubernetesService.checkStatus("frontend-ctrl", "frontend-service");

@@ -4,7 +4,7 @@ import org.junit.Before;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.kubernetes.KubernetesService;
+import software.wings.cloudprovider.kubernetes.KubernetesContainerService;
 
 import javax.inject.Inject;
 
@@ -20,7 +20,7 @@ public class KubernetesServiceTest extends WingsBaseTest {
   public static final String API_SERVER_URL = "apiServerUrl";
   public static final String USERNAME = "username";
 
-  @Inject @InjectMocks private KubernetesService kubernetesService;
+  @Inject @InjectMocks private KubernetesContainerService kubernetesContainerService;
 
   private SettingAttribute connectorConfig = aSettingAttribute()
                                                  .withValue(aKubernetesConfig()
