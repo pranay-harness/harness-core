@@ -626,11 +626,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
     orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow));
 
+    Set<String> serviceIds = new HashSet<>();
+
     int i = 0;
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
-      generateNewWorkflowPhaseSteps(
-          orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, i);
+      generateNewWorkflowPhaseSteps(orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(),
+          workflowPhase, serviceIds.contains(workflowPhase.getServiceId()));
       populatePhaseStepIds(workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
 
@@ -638,6 +640,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           generateRollbackWorkflowPhase(orchestrationWorkflow.getAppId(), workflowPhase);
       orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(rollbackWorkflowPhase));
+      serviceIds.add(workflowPhase.getServiceId());
     }
     orchestrationWorkflow = wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
 
@@ -714,12 +717,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
 
-    int phaseIndex = 0;
-    if (orchestrationWorkflow.getWorkflowPhases() != null) {
-      phaseIndex = orchestrationWorkflow.getWorkflowPhases().size();
+    boolean serviceRepeat = false;
+    if (orchestrationWorkflow.getWorkflowPhaseIds() != null) {
+      for (String phaseId : orchestrationWorkflow.getWorkflowPhaseIds()) {
+        if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId).getServiceId().equals(
+                workflowPhase.getServiceId())) {
+          serviceRepeat = true;
+          break;
+        }
+      }
     }
     generateNewWorkflowPhaseSteps(
-        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, phaseIndex);
+        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, serviceRepeat);
     populatePhaseStepIds(workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
@@ -960,29 +969,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase, int phaseIndex) {
+  private void generateNewWorkflowPhaseSteps(
+      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceRepeat) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == DeploymentType.ECS) {
-      generateNewWorkflowPhaseStepsForECS(appId, envId, workflowPhase, phaseIndex == 0);
+      generateNewWorkflowPhaseStepsForECS(appId, envId, workflowPhase, !serviceRepeat);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, envId, workflowPhase);
     }
   }
 
   private void generateNewWorkflowPhaseStepsForECS(
-      String appId, String envId, WorkflowPhase workflowPhase, boolean includeContainer) {
+      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP)
-                                   .withName("Setup Container")
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(StateType.ECS_SERVICE_SETUP.name())
-                                                .withName("ECS Service Setup")
-                                                .build())
-                                   .build());
-
+    if (serviceSetupRequired) {
+      workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP)
+                                     .withName("Setup Container")
+                                     .addStep(aNode()
+                                                  .withId(getUuid())
+                                                  .withType(StateType.ECS_SERVICE_SETUP.name())
+                                                  .withName("ECS Service Setup")
+                                                  .build())
+                                     .build());
+    }
     workflowPhase.addPhaseStep(
         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY)
             .withName("Deploy Containers")

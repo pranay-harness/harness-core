@@ -21,6 +21,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -30,6 +31,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.cloudprovider.ClusterService;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -110,6 +112,11 @@ public class EcsServiceDeploy extends State {
         clusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
     Optional<com.amazonaws.services.ecs.model.Service> ecsService =
         services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
+
+    if (!ecsService.isPresent()) {
+      throw new WingsException(
+          ErrorCodes.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + ecsServiceName);
+    }
 
     int desiredCount = ecsService.get().getDesiredCount() + instanceCount;
     logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);

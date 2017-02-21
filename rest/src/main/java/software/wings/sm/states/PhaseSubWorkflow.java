@@ -21,7 +21,9 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
+import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -82,6 +84,11 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     spawningInstance.setContextElement(phaseElement);
 
     return spawningInstance;
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    return super.handleAsyncResponse(context, response);
   }
 
   public String getServiceId() {

@@ -72,7 +72,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       }
 
       if (ecsServiceElement == null) {
-        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ecsServiceElement not present");
       }
     }
     if ((phaseStepType == PhaseStepType.DEPLOY_SERVICE || phaseStepType == PhaseStepType.ENABLE_SERVICE
