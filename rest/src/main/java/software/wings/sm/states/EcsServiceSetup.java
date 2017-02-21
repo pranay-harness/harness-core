@@ -31,7 +31,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.cloudprovider.ClusterService;
+import software.wings.cloudprovider.aws.EcsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -58,7 +58,7 @@ public class EcsServiceSetup extends State {
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerSettingId;
 
-  @Inject @Transient private transient ClusterService clusterService;
+  @Inject @Transient private transient EcsClusterService ecsClusterService;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -124,7 +124,7 @@ public class EcsServiceSetup extends State {
             .withContainerDefinitions(containerDefinitions)
             .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
 
-    TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
+    TaskDefinition taskDefinition = ecsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
     /*
 
@@ -138,7 +138,7 @@ public class EcsServiceSetup extends State {
 */
     String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
-    clusterService.createService(computeProviderSetting,
+    ecsClusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
             .withCluster(clusterName)

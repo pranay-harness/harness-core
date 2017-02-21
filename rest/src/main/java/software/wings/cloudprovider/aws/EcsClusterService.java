@@ -1,17 +1,18 @@
-package software.wings.cloudprovider;
+package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.ClusterConfiguration;
 
 import java.util.List;
 
 /**
  * Created by anubhaw on 12/29/16.
  */
-public interface ClusterService {
+public interface EcsClusterService {
   /**
    * Create cluster.
    *

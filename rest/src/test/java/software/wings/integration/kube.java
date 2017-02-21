@@ -17,60 +17,65 @@
 package software.wings.integration;
 
 import com.google.common.collect.ImmutableMap;
+import software.wings.beans.KubernetesConfig;
+import software.wings.cloudprovider.kubernetes.GkeClusterServiceImpl;
 import software.wings.cloudprovider.kubernetes.KubernetesContainerServiceImpl;
 
 public class kube {
   public static void main(String[] args) throws InterruptedException {
+    GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
-    kubernetesService.createCluster(ImmutableMap.<String, String>builder()
-                                        .put("name", "foo-bar")
-                                        .put("projectId", "kubernetes-test-158122")
-                                        .put("appName", "testApp")
-                                        .put("zone", "us-west1-a")
-                                        .put("nodeCount", "1")
-                                        .put("masterUser", "master")
-                                        .put("masterPwd", "foo!!bar$$")
-                                        .build());
+    KubernetesConfig config = gkeClusterService.createCluster(ImmutableMap.<String, String>builder()
+                                                                  .put("name", "foo-bar")
+                                                                  .put("projectId", "kubernetes-test-158122")
+                                                                  .put("appName", "testApp")
+                                                                  .put("zone", "us-west1-a")
+                                                                  .put("nodeCount", "1")
+                                                                  .put("masterUser", "master")
+                                                                  .put("masterPwd", "foo!!bar$$")
+                                                                  .build());
 
-    kubernetesService.cleanup();
+    kubernetesService.cleanup(config);
 
-    kubernetesService.createController(ImmutableMap.<String, String>builder()
-                                           .put("name", "backend-ctrl")
-                                           .put("appName", "testApp")
-                                           .put("containerName", "server")
-                                           .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-server")
-                                           .put("tier", "backend")
-                                           .put("cpu", "100m")
-                                           .put("memory", "100Mi")
-                                           .put("port", "8080")
-                                           .put("count", "2")
-                                           .build());
-
-    kubernetesService.createService(
-        ImmutableMap.of("name", "backend-service", "appName", "testApp", "tier", "backend"));
-
-    kubernetesService.createController(ImmutableMap.<String, String>builder()
-                                           .put("name", "frontend-ctrl")
-                                           .put("appName", "testApp")
-                                           .put("containerName", "webapp")
-                                           .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-webapp")
-                                           .put("tier", "frontend")
-                                           .put("cpu", "100m")
-                                           .put("memory", "100Mi")
-                                           .put("port", "8080")
-                                           .put("count", "2")
-                                           .build());
+    kubernetesService.createController(config,
+        ImmutableMap.<String, String>builder()
+            .put("name", "backend-ctrl")
+            .put("appName", "testApp")
+            .put("containerName", "server")
+            .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-server")
+            .put("tier", "backend")
+            .put("cpu", "100m")
+            .put("memory", "100Mi")
+            .put("port", "8080")
+            .put("count", "2")
+            .build());
 
     kubernetesService.createService(
+        config, ImmutableMap.of("name", "backend-service", "appName", "testApp", "tier", "backend"));
+
+    kubernetesService.createController(config,
+        ImmutableMap.<String, String>builder()
+            .put("name", "frontend-ctrl")
+            .put("appName", "testApp")
+            .put("containerName", "webapp")
+            .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-webapp")
+            .put("tier", "frontend")
+            .put("cpu", "100m")
+            .put("memory", "100Mi")
+            .put("port", "8080")
+            .put("count", "2")
+            .build());
+
+    kubernetesService.createService(config,
         ImmutableMap.of("name", "frontend-service", "appName", "testApp", "tier", "frontend", "type", "LoadBalancer"));
 
-    kubernetesService.setControllerPodCount("frontend-ctrl", 5);
+    kubernetesService.setControllerPodCount(config, "frontend-ctrl", 5);
 
-    kubernetesService.checkStatus("backend-ctrl", "backend-service");
-    kubernetesService.checkStatus("frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
 
-    //    kubernetesService.destroyCluster(
+    //    kubernetesService.deleteCluster(config,
     //        ImmutableMap.of(
     //            "name", "foo-bar",
     //            "projectId", "kubernetes-test-158122",

@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.kubernetes;
 
+import software.wings.beans.KubernetesConfig;
+
 import java.util.Map;
 
 /**
@@ -7,18 +9,13 @@ import java.util.Map;
  */
 public interface KubernetesContainerService {
   /**
-   * Create service.
-   *
-   * @param params map of parameters
-   */
-  void createService(Map<String, String> params);
-
-  /**
    * Create a replication controller.
    *
    * @param params map of parameters
    */
-  void createController(Map<String, String> params);
+  void createController(KubernetesConfig config, Map<String, String> params);
+
+  void deleteController(KubernetesConfig config, Map<String, String> params);
 
   /**
    * Scale controller to specified number of nodes.
@@ -26,5 +23,16 @@ public interface KubernetesContainerService {
    * @param name frontend controller name
    * @param number number of nodes
    */
-  void setControllerPodCount(String name, int number);
+  void setControllerPodCount(KubernetesConfig config, String name, int number);
+
+  int getControllerPodCount(KubernetesConfig config, String name);
+
+  /**
+   * Create service.
+   *
+   * @param params map of parameters
+   */
+  void createService(KubernetesConfig config, Map<String, String> params);
+
+  void deleteService(KubernetesConfig config, Map<String, String> params);
 }

@@ -1,17 +1,16 @@
-package software.wings.cloudprovider;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.aws.EcsService;
+import software.wings.cloudprovider.ClusterConfiguration;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +20,8 @@ import java.util.Map;
  * Created by anubhaw on 12/29/16.
  */
 @Singleton
-public class ClusterServiceImpl implements ClusterService {
-  @Inject private EcsService ecsService;
+public class EcsClusterServiceImpl implements EcsClusterService {
+  @Inject private EcsContainerService ecsContainerService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
@@ -36,12 +35,12 @@ public class ClusterServiceImpl implements ClusterService {
     params.put("clusterName", clusterConfiguration.getName());
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
-    ecsService.provisionNodes(cloudProviderSetting, awsClusterConfiguration.getSize(),
+    ecsContainerService.provisionNodes(cloudProviderSetting, awsClusterConfiguration.getSize(),
         awsClusterConfiguration.getLauncherConfiguration(), params);
 
     logger.info("Successfully created cluster and provisioned desired number of nodes");
 
-    ecsService.deployService(cloudProviderSetting, awsClusterConfiguration.getServiceDefinition());
+    ecsContainerService.deployService(cloudProviderSetting, awsClusterConfiguration.getServiceDefinition());
     logger.info("Service created successfully");
     logger.info("Successfully deployed service");
   }
@@ -50,8 +49,8 @@ public class ClusterServiceImpl implements ClusterService {
   public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Begin resizing the cluster to " + desiredSize + " size", LogLevel.INFO);
-    List<String> containerInstanceArns =
-        ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
+    List<String> containerInstanceArns = ecsContainerService.provisionTasks(
+        cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     executionLogCallback.saveExecutionLog(
         "Successfully resized the cluster to " + desiredSize + " size", LogLevel.INFO);
     return containerInstanceArns;
@@ -59,23 +58,23 @@ public class ClusterServiceImpl implements ClusterService {
 
   @Override
   public void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    ecsService.deleteService(cloudProviderSetting, clusterName, serviceName);
+    ecsContainerService.deleteService(cloudProviderSetting, clusterName, serviceName);
     logger.info("Successfully deleted service {}", serviceName);
   }
 
   @Override
   public Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    return ecsService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
+    return ecsContainerService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
   }
 
   @Override
   public void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
-    ecsService.createService(cloudProviderSetting, clusterConfiguration);
+    ecsContainerService.createService(cloudProviderSetting, clusterConfiguration);
   }
 
   @Override
   public TaskDefinition createTask(
       SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
-    return ecsService.createTask(settingAttribute, registerTaskDefinitionRequest);
+    return ecsContainerService.createTask(settingAttribute, registerTaskDefinitionRequest);
   }
 }

@@ -1,10 +1,9 @@
-package software.wings.cloudprovider;
+package software.wings.cloudprovider.kubernetes;
 
 import org.junit.Before;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.kubernetes.KubernetesContainerService;
 
 import javax.inject.Inject;
 

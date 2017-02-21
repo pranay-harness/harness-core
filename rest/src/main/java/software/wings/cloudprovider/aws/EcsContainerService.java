@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Created by anubhaw on 12/28/16.
  */
-public interface EcsService {
+public interface EcsContainerService {
   /**
    * Provision nodes.
    *

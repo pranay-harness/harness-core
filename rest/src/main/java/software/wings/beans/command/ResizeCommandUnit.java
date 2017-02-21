@@ -27,7 +27,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     Integer desiredCount = context.getDesiredCount();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
-    List<String> containerInstanceArns = clusterService.resizeCluster(
+    List<String> containerInstanceArns = ecsClusterService.resizeCluster(
         cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
     return ExecutionResult.SUCCESS;
   }

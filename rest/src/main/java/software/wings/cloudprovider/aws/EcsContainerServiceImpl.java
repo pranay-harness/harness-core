@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 12/28/16.
  */
 @Singleton
-public class EcsServiceImpl implements EcsService {
+public class EcsContainerServiceImpl implements EcsContainerService {
   private static final int SLEEP_INTERVAL = 10 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -985,6 +985,6 @@ public class EcsServiceImpl implements EcsService {
    * @throws InterruptedException the interrupted exception
    */
   public static void main(String... args) throws InterruptedException {
-    new EcsServiceImpl().createCluster();
+    new EcsContainerServiceImpl().createCluster();
   }
 }
