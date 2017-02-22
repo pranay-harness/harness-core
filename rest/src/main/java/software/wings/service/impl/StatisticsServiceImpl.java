@@ -133,7 +133,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .field("appId")
             .in(appIds)
             .field("workflowType")
-            .in(asList(ORCHESTRATION, SIMPLE))
+            .in(asList(ORCHESTRATION_WORKFLOW, SIMPLE))
             .retrievedFields(true, "appId", "environmentType", "serviceInstanceId", "artifactId", "workflowExecutionId")
             .asList();
 
