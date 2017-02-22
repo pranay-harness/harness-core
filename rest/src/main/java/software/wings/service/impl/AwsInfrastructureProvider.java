@@ -17,6 +17,9 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
 import com.amazonaws.services.ec2.model.TerminateInstancesResult;
+import com.amazonaws.services.ecs.AmazonECSClient;
+import com.amazonaws.services.ecs.model.ListClustersRequest;
+import com.amazonaws.services.ecs.model.ListClustersResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -48,7 +51,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   @Inject private HostService hostService;
   private final Logger logger = LoggerFactory.getLogger(AwsInfrastructureProvider.class);
 
-  private static final int SLEEP_INTERVAL = 5 * 1000;
+  private static final int SLEEP_INTERVAL = 30 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
 
   @Override
@@ -193,5 +196,16 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     // TODO:: remove direct usage of LaunchConfiguration
     return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
+  }
+
+  public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    AmazonECSClient amazonEcsClient =
+        awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    ListClustersResult listClustersResult = amazonEcsClient.listClusters(new ListClustersRequest());
+    return listClustersResult.getClusterArns()
+        .stream()
+        .map(awsHelperService::getIdFromArn)
+        .collect(Collectors.toList());
   }
 }

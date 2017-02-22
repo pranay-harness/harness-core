@@ -20,8 +20,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.ServiceInstancesProvisionState;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateType;
@@ -45,7 +43,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   // Only for rollback phases
-  @SchemaIgnore private boolean rollback;
   @SchemaIgnore private String rollbackPhaseStepName;
 
   @Override
@@ -75,7 +72,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       }
 
       if (ecsServiceElement == null) {
-        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ecsServiceElement not present");
       }
     }
     if ((phaseStepType == PhaseStepType.DEPLOY_SERVICE || phaseStepType == PhaseStepType.ENABLE_SERVICE
@@ -114,8 +111,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     handleElementNotifyResponseData(context, phaseElement, notifyResponseData, executionResponse);
 
-    ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
-    executionResponse.setExecutionStatus(executionStatus);
+    super.handleStatusSummary(context, response, executionResponse);
     return executionResponse;
   }
 
@@ -188,15 +184,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   public void setFailureStrategies(List<FailureStrategy> failureStrategies) {
     this.failureStrategies = failureStrategies;
-  }
-
-  @SchemaIgnore
-  public boolean isRollback() {
-    return rollback;
-  }
-
-  public void setRollback(boolean rollback) {
-    this.rollback = rollback;
   }
 
   @SchemaIgnore

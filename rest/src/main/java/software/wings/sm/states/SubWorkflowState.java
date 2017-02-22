@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -17,12 +19,15 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 
 /**
  * Created by rishi on 12/16/16.
  */
 public class SubWorkflowState extends State {
   private static final Logger logger = LoggerFactory.getLogger(SubWorkflowState.class);
+
+  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   /**
    * Instantiates a new repeat state.
@@ -79,6 +84,12 @@ public class SubWorkflowState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
+    handleStatusSummary(context, response, executionResponse);
+    return executionResponse;
+  }
+
+  protected void handleStatusSummary(
+      ExecutionContext context, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
     ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponse.setExecutionStatus(executionStatus);
@@ -87,7 +98,9 @@ public class SubWorkflowState extends State {
         ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
         executionResponse.getExecutionStatus());
 
-    return executionResponse;
+    ElementStateExecutionData stateExecutionData = (ElementStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setElementStatusSummary(workflowExecutionService.getElementsSummary(
+        context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
   }
 
   @Override

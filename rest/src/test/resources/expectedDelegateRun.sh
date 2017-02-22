@@ -34,19 +34,19 @@ vercomp () {
     echo "0"
 }
 
-JRE_DIR=jre1.8.0_112
+JRE_DIR=jre1.8.0_121
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
   solaris*)
-    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-solaris-x64.tar.gz
+    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jre-8u121-solaris-x64.tar.gz
     ;;
   darwin*)
-    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b16/jre-8u112-macosx-x64.tar.gz
-    JRE_DIR=jre1.8.0_112.jre
+    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jre-8u121-macosx-x64.tar.gz
+    JRE_DIR=jre1.8.0_121.jre
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jre-8u112-linux-x64.tar.gz
+    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jre-8u121-linux-x64.tar.gz
     ;;
   bsd*)
     echo "freebsd not supported."

@@ -342,7 +342,7 @@ public class Graph {
     private String name;
     private String type;
     private boolean newBranch;
-    private Boolean rollback;
+    private boolean rollback;
     private String status;
     private int x;
     private int y;
@@ -417,11 +417,11 @@ public class Graph {
       this.type = type;
     }
 
-    public Boolean getRollback() {
+    public boolean getRollback() {
       return rollback;
     }
 
-    public void setRollback(Boolean rollback) {
+    public void setRollback(boolean rollback) {
       this.rollback = rollback;
     }
 
@@ -796,7 +796,7 @@ public class Graph {
       private int width;
       private int height;
       private boolean origin;
-      private Boolean rollback;
+      private boolean rollback;
       private Map<String, Object> properties = new HashMap<>();
 
       private Builder() {}
@@ -938,7 +938,7 @@ public class Graph {
        * @param rollback the origin
        * @return the builder
        */
-      public Builder withRollback(Boolean rollback) {
+      public Builder withRollback(boolean rollback) {
         this.rollback = rollback;
         return this;
       }

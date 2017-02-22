@@ -21,6 +21,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -77,9 +78,10 @@ public class StencilPostProcessor {
         if (enumData != null) {
           DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
           Map<String, String> data = dataProvider.getData(appId, args);
-          if (!isEmpty(data)) {
-            stencil = addEnumDataToNode(stencil, data, field.getName());
+          if (data == null) {
+            data = new HashMap<>();
           }
+          stencil = addEnumDataToNode(stencil, data, field.getName());
         }
       }
 

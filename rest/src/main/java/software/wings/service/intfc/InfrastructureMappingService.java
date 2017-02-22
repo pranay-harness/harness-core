@@ -159,4 +159,14 @@ public interface InfrastructureMappingService {
    */
   List<ServiceInstance> selectServiceInstances(
       String appId, String envId, String infraMappingId, Map<String, Object> selectionParams);
+
+  /**
+   * List clusters list.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @return the list
+   */
+  List<String> listClusters(String appId, String deploymentType, String computeProviderId);
 }

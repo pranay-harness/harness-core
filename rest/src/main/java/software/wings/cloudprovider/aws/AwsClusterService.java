@@ -2,6 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -23,11 +24,13 @@ public interface AwsClusterService {
 
   /**
    * Resize cluster.
+   *
    * @param cloudProviderSetting the cloud provider setting
    * @param clusterName          the cluster name
    * @param serviceName          the service name
    * @param desiredSize          the desired size
-   * @param executionLogCallback
+   * @param executionLogCallback the execution log callback
+   * @return the list
    */
   List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback);
@@ -42,14 +45,13 @@ public interface AwsClusterService {
   void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
 
   /**
-   * Gets service desired count.
+   * Gets services.
    *
    * @param cloudProviderSetting the cloud provider setting
    * @param clusterName          the cluster name
-   * @param serviceName          the service name
-   * @return the service desired count
+   * @return the services
    */
-  Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+  List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName);
 
   /**
    * Create service.

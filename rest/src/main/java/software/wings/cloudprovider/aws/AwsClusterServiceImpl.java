@@ -2,9 +2,11 @@ package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hazelcast.internal.cluster.impl.ClusterServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class AwsClusterServiceImpl implements AwsClusterService {
   @Inject private EcsContainerService ecsContainerService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  public static final String DASH_STRING = "----------";
 
   @Override
   public void createCluster(SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration) {
@@ -48,11 +51,13 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   @Override
   public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Begin resizing the cluster to " + desiredSize + " size", LogLevel.INFO);
+    executionLogCallback.saveExecutionLog(
+        String.format("Resize service [%s] in cluster [%s] to %s instances", serviceName, clusterName, desiredSize),
+        LogLevel.INFO);
     List<String> containerInstanceArns = ecsContainerService.provisionTasks(
         cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     executionLogCallback.saveExecutionLog(
-        "Successfully resized the cluster to " + desiredSize + " size", LogLevel.INFO);
+        String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
     return containerInstanceArns;
   }
 
@@ -63,8 +68,8 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   }
 
   @Override
-  public Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    return ecsContainerService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
+  public List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName) {
+    return ecsContainerService.getServices(cloudProviderSetting, clusterName);
   }
 
   @Override

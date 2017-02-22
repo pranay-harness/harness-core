@@ -200,6 +200,14 @@ public class StateExecutionInstance extends Base {
     this.executionEventAdvisors = executionEventAdvisors;
   }
 
+  public boolean isRollback() {
+    return rollback;
+  }
+
+  public void setRollback(boolean rollback) {
+    this.rollback = rollback;
+  }
+
   /**
    * Gets start ts.
    *
