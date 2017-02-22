@@ -626,11 +626,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
     orchestrationWorkflow.setGraph(generateMainGraph(orchestrationWorkflow));
 
+    Set<String> serviceIds = new HashSet<>();
+
     int i = 0;
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
-      generateNewWorkflowPhaseSteps(
-          orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, i);
+      generateNewWorkflowPhaseSteps(orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(),
+          workflowPhase, serviceIds.contains(workflowPhase.getServiceId()));
       populatePhaseStepIds(workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
 
@@ -638,6 +640,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           generateRollbackWorkflowPhase(orchestrationWorkflow.getAppId(), workflowPhase);
       orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(rollbackWorkflowPhase));
+      serviceIds.add(workflowPhase.getServiceId());
     }
     orchestrationWorkflow = wingsPersistence.saveAndGet(OrchestrationWorkflow.class, orchestrationWorkflow);
 
@@ -661,7 +664,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PhaseStep updatePreDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep);
+    Graph workflowOuterStepsGraph = generateGraph(null, phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("preDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
@@ -676,7 +679,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public PhaseStep updatePostDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep) {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
-    Graph workflowOuterStepsGraph = generateGraph(phaseStep);
+    Graph workflowOuterStepsGraph = generateGraph(null, phaseStep);
     Map<String, Object> map = new HashMap<>();
     map.put("postDeploymentSteps", phaseStep);
     map.put("graph.subworkflows." + phaseStep.getUuid(), workflowOuterStepsGraph);
@@ -714,12 +717,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                              .field(ID_KEY)
                                              .equal(orchestrationWorkflowId);
 
-    int phaseIndex = 0;
-    if (orchestrationWorkflow.getWorkflowPhases() != null) {
-      phaseIndex = orchestrationWorkflow.getWorkflowPhases().size();
+    boolean serviceRepeat = false;
+    if (orchestrationWorkflow.getWorkflowPhaseIds() != null) {
+      for (String phaseId : orchestrationWorkflow.getWorkflowPhaseIds()) {
+        if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId).getServiceId().equals(
+                workflowPhase.getServiceId())) {
+          serviceRepeat = true;
+          break;
+        }
+      }
     }
     generateNewWorkflowPhaseSteps(
-        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, phaseIndex);
+        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, serviceRepeat);
     populatePhaseStepIds(workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
@@ -960,34 +969,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private void generateNewWorkflowPhaseSteps(String appId, String envId, WorkflowPhase workflowPhase, int phaseIndex) {
+  private void generateNewWorkflowPhaseSteps(
+      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceRepeat) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == DeploymentType.ECS) {
-      generateNewWorkflowPhaseStepsForECS(appId, envId, workflowPhase, phaseIndex == 0);
+      generateNewWorkflowPhaseStepsForECS(appId, envId, workflowPhase, !serviceRepeat);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, envId, workflowPhase);
     }
   }
 
   private void generateNewWorkflowPhaseStepsForECS(
-      String appId, String envId, WorkflowPhase workflowPhase, boolean includeContainer) {
+      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP)
-                                   .withName("Setup Container")
-                                   .addStep(aNode()
-                                                .withId(getUuid())
-                                                .withType(StateType.ECS_SERVICE_SETUP.name())
-                                                .withName("ECS Service Setup")
-                                                .build())
-                                   .build());
-
+    if (serviceSetupRequired) {
+      workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP)
+                                     .withName("Setup Container")
+                                     .addStep(aNode()
+                                                  .withId(getUuid())
+                                                  .withType(StateType.ECS_SERVICE_SETUP.name())
+                                                  .withName("ECS Service Setup")
+                                                  .build())
+                                     .build());
+    }
     workflowPhase.addPhaseStep(
         aPhaseStep(PhaseStepType.CONTAINER_DEPLOY)
             .withName("Deploy Containers")
             .addStep(
-                aNode().withId(getUuid()).withType(ECS_SERVICE_DEPLOY.name()).withName("ECS Sevice Deploy").build())
+                aNode().withId(getUuid()).withType(ECS_SERVICE_DEPLOY.name()).withName("Upgrade Containers").build())
             .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE)
@@ -1228,7 +1239,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     preDeploymentNode.setOrigin(true);
     Builder graphBuilder = aGraph()
                                .addNodes(preDeploymentNode)
-                               .addSubworkflow(id1, generateGraph(orchestrationWorkflow.getPreDeploymentSteps()));
+                               .addSubworkflow(id1, generateGraph(null, orchestrationWorkflow.getPreDeploymentSteps()));
 
     List<WorkflowPhase> workflowPhases = orchestrationWorkflow.getWorkflowPhases();
 
@@ -1254,7 +1265,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     id2 = orchestrationWorkflow.getPostDeploymentSteps().getUuid();
     graphBuilder.addNodes(orchestrationWorkflow.getPostDeploymentSteps().generatePhaseStepNode())
         .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
-        .addSubworkflow(id2, generateGraph(orchestrationWorkflow.getPostDeploymentSteps()));
+        .addSubworkflow(id2, generateGraph(null, orchestrationWorkflow.getPostDeploymentSteps()));
 
     return graphBuilder.build();
   }
@@ -1277,7 +1288,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
       }
       id1 = id2;
-      Graph stepsGraph = generateGraph(phaseStep);
+      Graph stepsGraph = generateGraph(workflowPhase, phaseStep);
       graphs.put(phaseStep.getUuid(), stepsGraph);
     }
 
@@ -1285,7 +1296,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return graphs;
   }
 
-  private Graph generateGraph(PhaseStep phaseStep) {
+  private Graph generateGraph(WorkflowPhase workflowPhase, PhaseStep phaseStep) {
     Builder graphBuilder = aGraph().withGraphName(phaseStep.getName());
     if (phaseStep == null || phaseStep.getSteps() == null || phaseStep.getSteps().isEmpty()) {
       return graphBuilder.build();
@@ -1293,10 +1304,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Node originNode = null;
     Node repeatNode = null;
-    if (phaseStep.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE
-        || phaseStep.getPhaseStepType() == PhaseStepType.DISABLE_SERVICE
-        || phaseStep.getPhaseStepType() == PhaseStepType.ENABLE_SERVICE
-        || phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE) {
+    if (workflowPhase != null && workflowPhase.getDeploymentType() == DeploymentType.SSH
+        && (phaseStep.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE
+               || phaseStep.getPhaseStepType() == PhaseStepType.DISABLE_SERVICE
+               || phaseStep.getPhaseStepType() == PhaseStepType.ENABLE_SERVICE
+               || phaseStep.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)) {
       // TODO - only meant for physical DC
       // introduce repeat node
 

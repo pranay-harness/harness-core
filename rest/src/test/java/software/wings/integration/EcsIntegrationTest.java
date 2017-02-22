@@ -18,13 +18,16 @@ import com.amazonaws.services.ecs.model.CreateClusterResult;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
+import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListContainerInstancesRequest;
+import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionResult;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -200,5 +203,17 @@ public class EcsIntegrationTest {
   public void shouldWaitTillAllInstanceaAreReady() {
     AmazonAutoScalingClient amazonAutoScalingClient = new AmazonAutoScalingClient(
         new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
+  }
+
+  @Test
+  public void shouldReturnServices() {
+    AmazonECSClient amazonECSClient = new AmazonECSClient(
+        new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
+
+    List<String> serviceArns =
+        amazonECSClient.listServices(new ListServicesRequest().withCluster("test2")).getServiceArns();
+    List<Service> test2 =
+        amazonECSClient.describeServices(new DescribeServicesRequest().withCluster("test2").withServices(serviceArns))
+            .getServices();
   }
 }

@@ -138,6 +138,9 @@ public class EcsServiceSetup extends State {
 */
     String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
+    String lastEcsServiceName = lastECSService(
+        computeProviderSetting, clusterName, ECSConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+
     clusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
@@ -149,8 +152,12 @@ public class EcsServiceSetup extends State {
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addElement(
-            anEcsServiceElement().withUuid(serviceId).withName(ecsServiceName).withClusterName(clusterName).build())
+        .addElement(anEcsServiceElement()
+                        .withUuid(serviceId)
+                        .withName(ecsServiceName)
+                        .withOldName(lastEcsServiceName)
+                        .withClusterName(clusterName)
+                        .build())
         .withStateExecutionData(anEcsServiceExecutionData()
                                     .withEcsClusterName(clusterName)
                                     .withEcsServiceName(ecsServiceName)
@@ -159,6 +166,35 @@ public class EcsServiceSetup extends State {
         .build();
   }
 
+  private String lastECSService(SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
+    List<com.amazonaws.services.ecs.model.Service> services =
+        clusterService.getServices(computeProviderSetting, clusterName);
+    if (services == null) {
+      return null;
+    }
+    List<com.amazonaws.services.ecs.model.Service> serviceList =
+        services.stream()
+            .filter(
+                service -> (service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0))
+            .collect(Collectors.toList());
+
+    com.amazonaws.services.ecs.model.Service lastECSService = null;
+    for (com.amazonaws.services.ecs.model.Service service : serviceList) {
+      if (lastECSService == null || service.getCreatedAt().compareTo(lastECSService.getCreatedAt()) > 0) {
+        lastECSService = service;
+      }
+    }
+    return lastECSService != null ? lastECSService.getServiceName() : null;
+  }
+
+  /**
+   * Create container definition container definition.
+   *
+   * @param imageName                the image name
+   * @param containerName            the container name
+   * @param wingsContainerDefinition the wings container definition
+   * @return the container definition
+   */
   public ContainerDefinition createContainerDefinition(
       String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
@@ -202,6 +238,12 @@ public class EcsServiceSetup extends State {
     return containerDefinition;
   }
 
+  /**
+   * Fetch artifact image name string.
+   *
+   * @param artifact the artifact
+   * @return the string
+   */
   public String fetchArtifactImageName(Artifact artifact) {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
@@ -218,10 +260,20 @@ public class EcsServiceSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
+  /**
+   * Gets load balancer setting id.
+   *
+   * @return the load balancer setting id
+   */
   public String getLoadBalancerSettingId() {
     return loadBalancerSettingId;
   }
 
+  /**
+   * Sets load balancer setting id.
+   *
+   * @param loadBalancerSettingId the load balancer setting id
+   */
   public void setLoadBalancerSettingId(String loadBalancerSettingId) {
     this.loadBalancerSettingId = loadBalancerSettingId;
   }

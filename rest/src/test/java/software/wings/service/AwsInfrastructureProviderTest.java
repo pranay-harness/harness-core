@@ -138,6 +138,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     when(amazonEC2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
         .thenReturn(new DescribeInstancesResult().withReservations(
             new Reservation().withInstances(new Instance()
+                                                .withPrivateDnsName(HOST_NAME)
                                                 .withPublicDnsName(HOST_NAME)
                                                 .withInstanceId("INSTANCE_ID")
                                                 .withState(new InstanceState().withName("running")))));

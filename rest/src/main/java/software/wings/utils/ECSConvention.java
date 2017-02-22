@@ -13,4 +13,8 @@ public class ECSConvention {
   public static String getServiceName(String family, Integer revision) {
     return Misc.normalizeExpression(family + DELIMETER + revision);
   }
+
+  public static String getServiceNamePrefix(String family) {
+    return Misc.normalizeExpression(family + DELIMETER);
+  }
 }

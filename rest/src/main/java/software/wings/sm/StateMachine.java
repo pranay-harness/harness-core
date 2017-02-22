@@ -236,6 +236,7 @@ public class StateMachine extends Base {
         properties = new HashMap<>();
       }
       properties.put("id", node.getId());
+      state.setRollback(node.getRollback());
 
       // populate properties
       MapperUtils.mapObject(properties, state);

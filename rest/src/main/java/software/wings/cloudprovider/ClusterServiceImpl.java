@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
+import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class ClusterServiceImpl implements ClusterService {
   @Inject private EcsService ecsService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  public static final String DASH_STRING = "----------";
 
   @Override
   public void createCluster(SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration) {
@@ -42,18 +44,20 @@ public class ClusterServiceImpl implements ClusterService {
     logger.info("Successfully created cluster and provisioned desired number of nodes");
 
     ecsService.deployService(cloudProviderSetting, awsClusterConfiguration.getServiceDefinition());
-    logger.info("Service created succesfully ");
+    logger.info("Service created successfully ");
     logger.info("Successfully deployed service");
   }
 
   @Override
   public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog("Begin resizing the cluster to " + desiredSize + " size", LogLevel.INFO);
+    executionLogCallback.saveExecutionLog(
+        String.format("Resize service [%s] in cluster [%s] to %s instances", serviceName, clusterName, desiredSize),
+        LogLevel.INFO);
     List<String> containerInstanceArns =
         ecsService.provisionTasks(cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     executionLogCallback.saveExecutionLog(
-        "Successfully resized the cluster to " + desiredSize + " size", LogLevel.INFO);
+        String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
     return containerInstanceArns;
   }
 
@@ -64,8 +68,8 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public Integer getServiceDesiredCount(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    return ecsService.getServiceDesiredCount(cloudProviderSetting, clusterName, serviceName);
+  public List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName) {
+    return ecsService.getServices(cloudProviderSetting, clusterName);
   }
 
   @Override

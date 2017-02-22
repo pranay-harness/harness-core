@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.EnumData;
 
@@ -16,8 +17,9 @@ import java.util.stream.Collectors;
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Restrictions")
   @EnumData(enumDataProvider = AwsInfrastructureRestrictionProvider.class)
+  @SchemaIgnore
   private String restrictionType;
-  @Attributes(title = "Expression") private String restrictionExpression;
+  @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
 
   /**
    * Instantiates a new Aws infrastructure mapping.

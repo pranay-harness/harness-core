@@ -117,6 +117,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   }
 
   @Override
+  @SchemaIgnore
   public String getDeploymentType() {
     return deploymentType;
   }
