@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.kubernetes;
+package software.wings.cloudprovider.gke;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;

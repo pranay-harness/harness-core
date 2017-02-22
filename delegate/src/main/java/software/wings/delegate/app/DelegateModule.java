@@ -11,10 +11,14 @@ import com.google.inject.name.Names;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import software.wings.api.DeploymentType;
-import software.wings.cloudprovider.aws.EcsClusterService;
-import software.wings.cloudprovider.aws.EcsClusterServiceImpl;
+import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
+import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
+import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.thread.ThreadPool;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.delegate.service.DelegateConfigServiceImpl;
@@ -86,8 +90,10 @@ public class DelegateModule extends AbstractModule {
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(AsyncHttpClient.class)
         .toInstance(new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setAcceptAnyCertificate(true).build()));
-    bind(EcsClusterService.class).to(EcsClusterServiceImpl.class);
+    bind(AwsClusterService.class).to(AwsClusterServiceImpl.class);
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
+    bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
+    bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

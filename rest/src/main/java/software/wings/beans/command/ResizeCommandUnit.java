@@ -5,8 +5,8 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
-import java.util.List;
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -27,7 +27,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     Integer desiredCount = context.getDesiredCount();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
-    List<String> containerInstanceArns = ecsClusterService.resizeCluster(
+    List<String> containerInstanceArns = awsClusterService.resizeCluster(
         cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
     return ExecutionResult.SUCCESS;
   }

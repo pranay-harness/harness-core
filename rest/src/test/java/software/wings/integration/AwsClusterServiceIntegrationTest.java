@@ -20,7 +20,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterConfiguration;
-import software.wings.cloudprovider.aws.EcsClusterService;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
 
@@ -33,8 +33,8 @@ import java.util.Map;
  * Created by anubhaw on 12/29/16.
  */
 @Ignore
-public class EcsClusterServiceIntegrationTest extends WingsBaseTest {
-  @Inject private EcsClusterService ecsClusterService;
+public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
+  @Inject private AwsClusterService awsClusterService;
   @Inject private EcsContainerService ecsContainerService;
   @Inject private AwsHelperService awsHelperService;
 
@@ -85,14 +85,14 @@ public class EcsClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("TASK_TEMPLATE", "tomcat:7");
 
     AwsClusterConfiguration awsClusterConfiguration = getAwsClusterConfiguration(params);
-    ecsClusterService.createCluster(awsConnectorSetting, awsClusterConfiguration);
-    // ecsClusterService.destroyCluster(awsConnectorSetting, (String) params.get("CLUSTER_NAME"), (String)
+    awsClusterService.createCluster(awsConnectorSetting, awsClusterConfiguration);
+    // awsClusterService.destroyCluster(awsConnectorSetting, (String) params.get("CLUSTER_NAME"), (String)
     // params.get("SERVICE_NAME" + "_" + "SERVICE_VERSION"));
   }
 
   @Test
   public void shouldResizeCluster() {
-    ecsClusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
+    awsClusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
   }
 
   @Test

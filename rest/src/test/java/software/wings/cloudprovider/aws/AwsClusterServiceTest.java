@@ -28,9 +28,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 /**
  * Created by anubhaw on 1/3/17.
  */
-public class EcsClusterServiceTest extends WingsBaseTest {
+public class AwsClusterServiceTest extends WingsBaseTest {
   @Mock private EcsContainerService ecsContainerService;
-  @Inject @InjectMocks private EcsClusterService ecsClusterService;
+  @Inject @InjectMocks private AwsClusterService awsClusterService;
 
   private SettingAttribute cloudProviderSetting =
       aSettingAttribute().withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build()).build();
@@ -46,7 +46,7 @@ public class EcsClusterServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateCluster() {
-    ecsClusterService.createCluster(cloudProviderSetting, clusterConfiguration);
+    awsClusterService.createCluster(cloudProviderSetting, clusterConfiguration);
 
     ImmutableMap<String, Object> params =
         ImmutableMap.of("autoScalingGroupName", AUTO_SCALING_GROUP_NAME, "clusterName", CLUSTER_NAME,
@@ -58,7 +58,7 @@ public class EcsClusterServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldResizeCluster() {
-    ecsClusterService.resizeCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5, new ExecutionLogCallback());
+    awsClusterService.resizeCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME, 5, new ExecutionLogCallback());
     verify(ecsContainerService)
         .provisionTasks(
             eq(cloudProviderSetting), eq(CLUSTER_NAME), eq(SERVICE_NAME), eq(5), any(ExecutionLogCallback.class));
@@ -66,7 +66,7 @@ public class EcsClusterServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDestroyCluster() {
-    ecsClusterService.destroyCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME);
+    awsClusterService.destroyCluster(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME);
     verify(ecsContainerService).deleteService(cloudProviderSetting, CLUSTER_NAME, SERVICE_NAME);
   }
 }

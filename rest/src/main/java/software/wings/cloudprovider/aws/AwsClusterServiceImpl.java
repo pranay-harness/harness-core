@@ -20,7 +20,7 @@ import java.util.Map;
  * Created by anubhaw on 12/29/16.
  */
 @Singleton
-public class EcsClusterServiceImpl implements EcsClusterService {
+public class AwsClusterServiceImpl implements AwsClusterService {
   @Inject private EcsContainerService ecsContainerService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 

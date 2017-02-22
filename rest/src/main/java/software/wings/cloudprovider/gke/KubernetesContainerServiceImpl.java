@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.kubernetes;
+package software.wings.cloudprovider.gke;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;

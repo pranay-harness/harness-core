@@ -1,4 +1,4 @@
-package software.wings.cloudprovider.kubernetes;
+package software.wings.cloudprovider.gke;
 
 import org.junit.Before;
 import org.mockito.InjectMocks;

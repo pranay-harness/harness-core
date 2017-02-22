@@ -18,8 +18,8 @@ package software.wings.integration;
 
 import com.google.common.collect.ImmutableMap;
 import software.wings.beans.KubernetesConfig;
-import software.wings.cloudprovider.kubernetes.GkeClusterServiceImpl;
-import software.wings.cloudprovider.kubernetes.KubernetesContainerServiceImpl;
+import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
+import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 
 public class kube {
   public static void main(String[] args) throws InterruptedException {

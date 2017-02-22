@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 12/29/16.
  */
-public interface EcsClusterService {
+public interface AwsClusterService {
   /**
    * Create cluster.
    *
