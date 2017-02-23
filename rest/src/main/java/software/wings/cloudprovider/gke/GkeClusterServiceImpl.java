@@ -39,16 +39,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                     .clusters()
                     .get(params.get("projectId"), params.get("zone"), params.get("name"))
                     .execute();
-      logger.info("Cluster " + params.get("name") + " already exists in zone " + params.get("zone") + " for project "
-          + params.get("projectId"));
+      logger.info(String.format("Cluster %s already exists in zone %s for project %s", params.get("name"),
+          params.get("zone"), params.get("projectId")));
     } catch (IOException e) {
       if (e instanceof GoogleJsonResponseException
           && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-        logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone") + " for project "
-            + params.get("projectId"));
+        logger.info(String.format("Cluster %s does not exist in zone %s for project %s", params.get("name"),
+            params.get("zone"), params.get("projectId")));
       } else {
-        logger.error("Error getting cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
-                + params.get("projectId"),
+        logger.error(String.format("Error getting cluster %s in zone %s for project %s", params.get("name"),
+                         params.get("zone"), params.get("projectId")),
             e);
       }
     }
@@ -70,8 +70,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                        .create(params.get("projectId"), params.get("zone"), content)
                        .execute();
       } catch (IOException e) {
-        logger.error("Error creating cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
-                + params.get("projectId"),
+        logger.error(String.format("Error creating cluster %s in zone %s for project %s", params.get("name"),
+                         params.get("zone"), params.get("projectId")),
             e);
       }
 
@@ -85,8 +85,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                       .get(params.get("projectId"), params.get("zone"), params.get("name"))
                       .execute();
       } catch (IOException e) {
-        logger.error("Error getting newly created cluster " + params.get("name") + " in zone " + params.get("zone")
-                + " for project " + params.get("projectId"),
+        logger.error(String.format("Error getting newly created cluster %s in zone %s for project %s",
+                         params.get("name"), params.get("zone"), params.get("projectId")),
             e);
       }
     }
@@ -113,8 +113,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                      .delete(params.get("projectId"), params.get("zone"), params.get("name"))
                      .execute();
     } catch (IOException e) {
-      logger.error("Error deleting cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
-              + params.get("projectId"),
+      logger.error(String.format("Error deleting cluster %s in zone %s for project %s", params.get("name"),
+                       params.get("zone"), params.get("projectId")),
           e);
     }
 
@@ -153,16 +153,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                     .clusters()
                     .get(params.get("projectId"), params.get("zone"), params.get("name"))
                     .execute();
-      logger.info("Found cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
-          + params.get("projectId"));
+      logger.info(String.format("Found cluster %s in zone %s for project %s", params.get("name"), params.get("zone"),
+          params.get("projectId")));
     } catch (IOException e) {
       if (e instanceof GoogleJsonResponseException
           && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-        logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone") + " for project "
-            + params.get("projectId"));
+        logger.info(String.format("Cluster %s does not exist in zone %s for project %s", params.get("name"),
+            params.get("zone"), params.get("projectId")));
       } else {
-        logger.error("Error getting cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
-                + params.get("projectId"),
+        logger.error(String.format("Error getting cluster %s in zone %s for project %s", params.get("name"),
+                         params.get("zone"), params.get("projectId")),
             e);
       }
       return null;

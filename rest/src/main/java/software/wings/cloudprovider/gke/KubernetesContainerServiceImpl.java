@@ -75,8 +75,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
              .replicationControllers()
              .inNamespace("default")
              .createOrReplace(rc);
-    logger.info(
-        "Created " + params.get("tier") + " controller " + params.get("name") + " for " + params.get("appName"));
+    logger.info(String.format(
+        "Created %s controller %s for %s", params.get("tier"), params.get("name"), params.get("appName")));
     return rc;
   }
 
@@ -108,7 +108,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                           .addToSelector("tier", params.get("tier"))
                           .endSpec()
                           .done();
-    logger.info("Created " + params.get("tier") + " service " + params.get("name") + " for " + params.get("appName"));
+    logger.info(
+        String.format("Created %s service %s for %s", params.get("tier"), params.get("name"), params.get("appName")));
     return service;
   }
 
@@ -118,7 +119,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void setControllerPodCount(SettingAttribute settingAttribute, String name, int number) {
     kubernetesHelperService.getKubernetesClient(settingAttribute).replicationControllers().withName(name).scale(number);
-    logger.info("Scaled controller " + name + " to " + number + " instances");
+    logger.info(String.format("Scaled controller %s to %d instances", name, number));
   }
 
   @Override
@@ -128,12 +129,19 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   public void checkStatus(SettingAttribute settingAttribute, String rcName, String serviceName) {
     KubernetesClient client = kubernetesHelperService.getKubernetesClient(settingAttribute);
-    ReplicationController rc = client.replicationControllers().inNamespace("default").withName(rcName).get();
-    logger.info("Replication controller " + rcName + ": " + client.getMasterUrl()
-        + rc.getMetadata().getSelfLink().substring(1));
-    Service service = client.services().withName(serviceName).get();
-    logger.info(
-        "Service " + serviceName + ": " + client.getMasterUrl() + service.getMetadata().getSelfLink().substring(1));
+    String masterUrl = client.getMasterUrl().toString();
+    String rcLink = masterUrl
+        + client.replicationControllers()
+              .inNamespace("default")
+              .withName(rcName)
+              .get()
+              .getMetadata()
+              .getSelfLink()
+              .substring(1);
+    String serviceLink =
+        masterUrl + client.services().withName(serviceName).get().getMetadata().getSelfLink().substring(1);
+    logger.info(String.format("Replication controller %s: %s", rcName, rcLink));
+    logger.info(String.format("Service %s: %s", serviceName, serviceLink));
   }
 
   public void cleanup(SettingAttribute settingAttribute) {
