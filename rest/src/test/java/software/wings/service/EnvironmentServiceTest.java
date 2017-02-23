@@ -228,9 +228,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldCreateDefaultEnvironments() {
     doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));
     spyEnvService.createDefaultEnvironments(APP_ID);
-    verify(spyEnvService, times(4)).save(environmentArgumentCaptor.capture());
+    verify(spyEnvService, times(3)).save(environmentArgumentCaptor.capture());
     assertThat(environmentArgumentCaptor.getAllValues())
         .extracting(Environment::getName)
-        .containsExactly(Constants.DEV_ENV, Constants.QA_ENV, Constants.UAT_ENV, Constants.PROD_ENV);
+        .containsExactly(Constants.DEV_ENV, Constants.QA_ENV, Constants.PROD_ENV);
   }
 }

@@ -83,7 +83,7 @@ public class HttpStateTest extends WingsBaseTest {
                                                               .withApplicationName(APP_NAME)
                                                               .withEnvironmentId(ENV_ID)
                                                               .withEnvironmentName(ENV_NAME)
-                                                              .withEnvironmentType(EnvironmentType.OTHER)
+                                                              .withEnvironmentType(EnvironmentType.NON_PROD)
                                                               .withCommandName("healthCheck1")
                                                               .withType(Type.Verification)
                                                               .withStateExecutionInstanceId(STATE_EXECUTION_ID)
@@ -113,7 +113,7 @@ public class HttpStateTest extends WingsBaseTest {
     when(workflowStandardParams.getApp()).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(workflowStandardParams.getEnv())
         .thenReturn(
-            anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withEnvironmentType(EnvironmentType.OTHER).build());
+            anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withEnvironmentType(EnvironmentType.NON_PROD).build());
 
     when(workflowStandardParams.getElementType()).thenReturn(ContextElementType.STANDARD);
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
