@@ -6,6 +6,8 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.HostValidationResponse;
+import software.wings.beans.HostValidationRequest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -113,5 +115,14 @@ public class InfrastructureMappingResource {
   public RestResponse<List<String>> getClusterNames(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listClusters(appId, deploymentType, computeProviderId));
+  }
+
+  @POST
+  @Path("validate-hosts")
+  public RestResponse<List<HostValidationResponse>> get(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, HostValidationRequest validationRequest) {
+    validationRequest.setAppId(appId);
+    validationRequest.setEnvId(envId);
+    return new RestResponse<>(infrastructureMappingService.validateHost(validationRequest));
   }
 }

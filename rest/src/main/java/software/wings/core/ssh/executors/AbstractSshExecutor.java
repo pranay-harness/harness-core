@@ -4,23 +4,15 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
-import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_EXECUTION_ID;
-import static software.wings.beans.ErrorCodes.INVALID_KEY;
-import static software.wings.beans.ErrorCodes.INVALID_KEYPATH;
-import static software.wings.beans.ErrorCodes.INVALID_PORT;
-import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_ERROR;
-import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
-import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
-import static software.wings.beans.ErrorCodes.UNREACHABLE_HOST;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
+import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.common.base.Strings;
 
@@ -33,7 +25,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -47,11 +38,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ConnectException;
-import java.net.NoRouteToHostException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -365,48 +351,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       cahcedSession = sessions.merge(key, cahcedSession, (session1, session2) -> getSession(this.config));
     }
     return cahcedSession;
-  }
-
-  /**
-   * Normalize error.
-   *
-   * @param jschexception the jschexception
-   * @return the string
-   */
-  protected ErrorCodes normalizeError(JSchException jschexception) {
-    String message = jschexception.getMessage();
-    Throwable cause = jschexception.getCause();
-
-    ErrorCodes errorConst = UNKNOWN_ERROR;
-
-    if (cause != null) { // TODO: Refactor use enums, maybe ?
-      if (cause instanceof NoRouteToHostException) {
-        errorConst = UNREACHABLE_HOST;
-      } else if (cause instanceof UnknownHostException) {
-        errorConst = UNKNOWN_HOST;
-      } else if (cause instanceof SocketTimeoutException) {
-        errorConst = SOCKET_CONNECTION_TIMEOUT;
-      } else if (cause instanceof ConnectException) {
-        errorConst = INVALID_PORT;
-      } else if (cause instanceof SocketException) {
-        errorConst = SOCKET_CONNECTION_ERROR;
-      } else if (cause instanceof FileNotFoundException) {
-        errorConst = INVALID_KEYPATH;
-      }
-    } else {
-      if (message.startsWith("invalid privatekey")) {
-        errorConst = INVALID_KEY;
-      } else if (message.contains("Auth fail") || message.contains("Auth cancel") || message.contains("USERAUTH fail")
-          || message.contains("authentication failure")) {
-        errorConst = INVALID_CREDENTIAL;
-      } else if (message.startsWith("timeout: socket is not established")
-          || message.contains("SocketTimeoutException")) {
-        errorConst = SOCKET_CONNECTION_TIMEOUT;
-      } else if (message.equals("session is down")) {
-        errorConst = SSH_SESSION_TIMEOUT;
-      }
-    }
-    return errorConst;
   }
 
   private ExecutionResult scpOneFile(String remoteFilePath, FileProvider fileProvider) {

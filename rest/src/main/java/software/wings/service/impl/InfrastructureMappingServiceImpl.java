@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.HostValidationResponse;
+import software.wings.beans.HostValidationRequest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -274,6 +276,23 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listClusterNames(computeProviderSetting);
     }
     return new ArrayList<>();
+  }
+
+  @Override
+  public List<HostValidationResponse> validateHost(@Valid HostValidationRequest validationRequest) {
+    SettingAttribute computeProviderSetting = settingsService.get(validationRequest.getComputeProviderSettingId());
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid infrastructure provider");
+    }
+    StaticInfrastructureProvider infrastructureProvider =
+        (StaticInfrastructureProvider) getInfrastructureProviderByComputeProviderType(PHYSICAL_DATA_CENTER.name());
+
+    SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
+
+    return Arrays.asList(infrastructureProvider.validateHost(
+        validationRequest.getHostNames().get(0), hostConnectionSetting, validationRequest.getExecutionCredential()));
   }
 
   @Override

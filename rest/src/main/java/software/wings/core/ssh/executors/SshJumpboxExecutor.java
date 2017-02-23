@@ -1,5 +1,7 @@
 package software.wings.core.ssh.executors;
 
+import static software.wings.utils.SshHelperUtil.normalizeError;
+
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import software.wings.delegatetasks.DelegateFileManager;
