@@ -14,7 +14,7 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsConfig extends SettingValue {
-  @Attributes(title = "Jenkins Url") @URL private String jenkinsUrl;
+  @Attributes(title = "Jenkins URL") @URL private String jenkinsUrl;
   @Attributes(title = "Username") @NotEmpty private String username;
   @Attributes(title = "Password") @NotEmpty private String password;
 

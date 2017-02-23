@@ -19,7 +19,7 @@ public class AppDynamicsConfig extends SettingValue {
   @Attributes(title = "User Name") private String username;
   @Attributes(title = "Account Name") private String accountname;
   @Attributes(title = "Password") private String password;
-  @Attributes(title = "Controller Url") private String controllerUrl;
+  @Attributes(title = "Controller URL") private String controllerUrl;
 
   /**
    * Instantiates a new App dynamics config.
