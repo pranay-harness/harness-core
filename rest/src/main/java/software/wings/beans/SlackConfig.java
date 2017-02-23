@@ -9,7 +9,7 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("SLACK")
 public class SlackConfig extends SettingValue {
-  @Attributes(title = "Slack Webhook Url") private String outgoingWebhookUrl;
+  @Attributes(title = "Slack Webhook URL") private String outgoingWebhookUrl;
 
   /**
    * Instantiates a new setting value.

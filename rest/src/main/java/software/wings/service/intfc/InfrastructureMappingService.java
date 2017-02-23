@@ -2,6 +2,8 @@ package software.wings.service.intfc;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.HostValidationResponse;
+import software.wings.beans.HostValidationRequest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.dl.PageRequest;
@@ -169,4 +171,12 @@ public interface InfrastructureMappingService {
    * @return the list
    */
   List<String> listClusters(String appId, String deploymentType, String computeProviderId);
+
+  /**
+   * Validate host host name validation response.
+   *
+   * @param validationRequest the validation request
+   * @return the host name validation response
+   */
+  List<HostValidationResponse> validateHost(@Valid HostValidationRequest validationRequest);
 }

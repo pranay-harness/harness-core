@@ -26,7 +26,6 @@ public abstract class SettingValue implements ExtensionPoint {
    *
    * @return the type
    */
-  @JsonIgnore
   public String getType() {
     return type;
   }
