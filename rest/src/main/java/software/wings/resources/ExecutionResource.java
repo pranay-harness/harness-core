@@ -5,7 +5,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
@@ -77,7 +77,7 @@ public class ExecutionResource {
       PageRequest<Application> applicationPageRequest = aPageRequest().addFieldsIncluded("uuid").build();
       PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
       if (res == null || res.isEmpty()) {
-        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "No applications");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "No applications");
       }
       List<String> appIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
       filter.setFieldValues(appIds.toArray());

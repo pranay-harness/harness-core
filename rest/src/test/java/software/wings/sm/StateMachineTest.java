@@ -10,7 +10,7 @@ import com.google.inject.Injector;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.common.UUIDGenerator;
@@ -70,7 +70,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.DUPLICATE_STATE_NAMES.getCode());
+      assertThat(exception).hasMessage(ErrorCode.DUPLICATE_STATE_NAMES.getCode());
     }
   }
 
@@ -91,7 +91,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.TRANSITION_TYPE_NULL.getCode());
+      assertThat(exception).hasMessage(ErrorCode.TRANSITION_TYPE_NULL.getCode());
     }
   }
 
@@ -121,7 +121,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.TRANSITION_NOT_LINKED.getCode());
+      assertThat(exception).hasMessage(ErrorCode.TRANSITION_NOT_LINKED.getCode());
     }
   }
 
@@ -153,7 +153,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.TRANSITION_TO_INCORRECT_STATE.getCode());
+      assertThat(exception).hasMessage(ErrorCode.TRANSITION_TO_INCORRECT_STATE.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("invalidStateNames");
       assertThat(exception.getParams().get("invalidStateNames")).asString().contains("StateC").contains("StateD");
@@ -198,7 +198,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.STATES_WITH_DUP_TRANSITIONS.getCode());
+      assertThat(exception).hasMessage(ErrorCode.STATES_WITH_DUP_TRANSITIONS.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("statesWithDupTransitions");
       assertThat(exception.getParams().get("statesWithDupTransitions"))
@@ -250,7 +250,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.NON_FORK_STATES.getCode());
+      assertThat(exception).hasMessage(ErrorCode.NON_FORK_STATES.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("nonForkStates");
       assertThat(exception.getParams().get("nonForkStates")).asString().contains("StateB").contains("StateC");
@@ -299,7 +299,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCodes.NON_REPEAT_STATES.getCode());
+      assertThat(exception).hasMessage(ErrorCode.NON_REPEAT_STATES.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("nonRepeatStates");
       assertThat(exception.getParams().get("nonRepeatStates")).asString().contains("StateB").contains("StateC");

@@ -5,12 +5,14 @@ import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
+import com.google.common.base.CaseFormat;
+
 import javax.ws.rs.core.Response.Status;
 
 /**
  * The enum Error codes.
  */
-public enum ErrorCodes {
+public enum ErrorCode {
   /**
    * Default error code error codes.
    */
@@ -69,12 +71,12 @@ public enum ErrorCodes {
   /**
    * Invalid credential error codes.
    */
-  INVALID_CREDENTIAL("INVALID_CREDENTIAL", UNAUTHORIZED),
+  INVALID_CREDENTIAL("INVALID_CREDENTIAL", UNAUTHORIZED, "Invalid credentials"),
 
   /**
    * Invalid key error codes.
    */
-  INVALID_KEY("INVALID_KEY"),
+  INVALID_KEY("INVALID_KEY", "Invalid key"),
 
   /**
    * Invalid keypath error codes.
@@ -84,12 +86,12 @@ public enum ErrorCodes {
   /**
    * Unknown host error codes.
    */
-  UNKNOWN_HOST("UNKNOWN_HOST"),
+  UNKNOWN_HOST("UNKNOWN_HOST", "Invalid hostname"),
 
   /**
    * Unreachable host error codes.
    */
-  UNREACHABLE_HOST("UNREACHABLE_HOST"),
+  UNREACHABLE_HOST("UNREACHABLE_HOST", "Unreachable hostname"),
 
   /**
    * Invalid port error codes.
@@ -104,12 +106,12 @@ public enum ErrorCodes {
   /**
    * Socket connection error error codes.
    */
-  SOCKET_CONNECTION_ERROR("SOCKET_CONNECTION_ERROR"),
+  SOCKET_CONNECTION_ERROR("SOCKET_CONNECTION_ERROR", "Connection error"),
 
   /**
    * Socket connection timeout error codes.
    */
-  SOCKET_CONNECTION_TIMEOUT("SOCKET_CONNECTION_TIMEOUT"),
+  SOCKET_CONNECTION_TIMEOUT("SOCKET_CONNECTION_TIMEOUT", "Connection timeout"),
 
   /**
    * Invalid execution id error codes.
@@ -280,14 +282,26 @@ public enum ErrorCodes {
   public static final String ARGS_NAME = "ARGS_NAME";
   private String code;
   private Status status = BAD_REQUEST;
+  private String description;
 
-  ErrorCodes(String code) {
+  ErrorCode(String code) {
     this.code = code;
   }
 
-  ErrorCodes(String code, Status status) {
+  ErrorCode(String code, Status status) {
     this.code = code;
     this.status = status;
+  }
+
+  ErrorCode(String code, String description) {
+    this.code = code;
+    this.description = description;
+  }
+
+  ErrorCode(String code, Status status, String description) {
+    this.code = code;
+    this.status = status;
+    this.description = description;
   }
 
   /**
@@ -306,5 +320,9 @@ public enum ErrorCodes {
    */
   public Status getStatus() {
     return status;
+  }
+
+  public String getDescription() {
+    return description != null ? description : CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, code);
   }
 }

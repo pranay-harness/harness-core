@@ -1,15 +1,15 @@
 package software.wings.utils;
 
-import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCodes.INVALID_KEY;
-import static software.wings.beans.ErrorCodes.INVALID_KEYPATH;
-import static software.wings.beans.ErrorCodes.INVALID_PORT;
-import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_ERROR;
-import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
-import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
-import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
-import static software.wings.beans.ErrorCodes.UNREACHABLE_HOST;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCode.INVALID_KEY;
+import static software.wings.beans.ErrorCode.INVALID_KEYPATH;
+import static software.wings.beans.ErrorCode.INVALID_PORT;
+import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_ERROR;
+import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
+import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
+import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
@@ -19,7 +19,7 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import com.jcraft.jsch.JSchException;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SSHExecutionCredential;
@@ -64,11 +64,11 @@ public class SshHelperUtil {
    * @param jschexception the jschexception
    * @return the string
    */
-  public static ErrorCodes normalizeError(JSchException jschexception) {
+  public static ErrorCode normalizeError(JSchException jschexception) {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();
 
-    ErrorCodes errorConst = UNKNOWN_ERROR;
+    ErrorCode errorConst = UNKNOWN_ERROR;
 
     if (cause != null) { // TODO: Refactor use enums, maybe ?
       if (cause instanceof NoRouteToHostException) {

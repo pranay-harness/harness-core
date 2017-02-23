@@ -43,7 +43,7 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Builder;
@@ -703,7 +703,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
     if (orchestrationWorkflow == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "orchestrationWorkflowId");
     }
 
     if (orchestrationWorkflow.getWorkflowPhases() == null) {
@@ -826,12 +826,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, orchestrationWorkflowId);
 
     if (orchestrationWorkflow == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "orchestrationWorkflowId");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "orchestrationWorkflowId");
     }
 
     List<String> phaseIds = orchestrationWorkflow.getWorkflowPhaseIds();
     if (orchestrationWorkflow == null || phaseIds == null || !phaseIds.contains(phaseId)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "phaseId");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "phaseId");
     }
 
     phaseIds.remove(phaseId);
@@ -1013,7 +1013,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     StateType stateType = determineStateType(appId, workflowPhase.getInfraMappingId());
 
     if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
     }
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());

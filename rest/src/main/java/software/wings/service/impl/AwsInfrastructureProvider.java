@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCodes.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 

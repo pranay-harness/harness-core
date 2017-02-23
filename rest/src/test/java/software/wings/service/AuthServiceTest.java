@@ -45,7 +45,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Role;
 import software.wings.beans.User.Builder;
 import software.wings.dl.GenericDbCache;
@@ -183,7 +183,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldThrowInvalidTokenExceptionForInvalidToken() {
     assertThatThrownBy(() -> authService.validateToken(INVALID_TOKEN))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.INVALID_TOKEN.name());
+        .hasMessage(ErrorCode.INVALID_TOKEN.name());
   }
 
   /**
@@ -193,7 +193,7 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldThrowExpiredTokenExceptionForExpiredToken() {
     assertThatThrownBy(() -> authService.validateToken(EXPIRED_TOKEN))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.EXPIRED_TOKEN.name());
+        .hasMessage(ErrorCode.EXPIRED_TOKEN.name());
   }
 
   /**
@@ -217,7 +217,7 @@ public class AuthServiceTest extends WingsBaseTest {
                                userBuilder.but().withRoles(asList(envAllResourceAllActionRole)).build(),
                                asList(new PermissionAttribute("APPLICATION:READ", APP)), PageRequestType.OTHER))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+        .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -241,7 +241,7 @@ public class AuthServiceTest extends WingsBaseTest {
                                userBuilder.but().withRoles(asList(envAllResourceAllActionRole)).build(),
                                asList(new PermissionAttribute("APPLICATION:WRITE", APP)), PageRequestType.OTHER))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+        .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -265,7 +265,7 @@ public class AuthServiceTest extends WingsBaseTest {
                                userBuilder.but().withRoles(asList(appAllResourceAllActionRole)).build(),
                                asList(new PermissionAttribute("ENVIRONMENT:READ", ENV)), PageRequestType.OTHER))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+        .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -289,7 +289,7 @@ public class AuthServiceTest extends WingsBaseTest {
                                userBuilder.but().withRoles(asList(appAllResourceAllActionRole)).build(),
                                asList(new PermissionAttribute("ENVIRONMENT:WRITE", ENV)), PageRequestType.OTHER))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+        .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
 
   @Test
@@ -301,21 +301,21 @@ public class AuthServiceTest extends WingsBaseTest {
   public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID + "1", getDelegateToken(accountKey)))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.ACCESS_DENIED.name());
+        .hasMessage(ErrorCode.ACCESS_DENIED.name());
   }
 
   @Test
   public void shouldThrowThrowInavlidTokenForDelegate() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.INVALID_TOKEN.name());
+        .hasMessage(ErrorCode.INVALID_TOKEN.name());
   }
 
   @Test
   public void shouldThrowExceptionWhenUnableToDecryptToken() {
     assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCodes.INVALID_TOKEN.name());
+        .hasMessage(ErrorCode.INVALID_TOKEN.name());
   }
 
   private String getDelegateToken() {
@@ -323,7 +323,7 @@ public class AuthServiceTest extends WingsBaseTest {
     try {
       keyGen = KeyGenerator.getInstance("AES");
     } catch (NoSuchAlgorithmException e) {
-      throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
     keyGen.init(128);
     SecretKey secretKey = keyGen.generateKey();

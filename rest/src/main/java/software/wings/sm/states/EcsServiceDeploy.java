@@ -12,7 +12,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -114,7 +114,7 @@ public class EcsServiceDeploy extends State {
 
     if (!ecsService.isPresent()) {
       throw new WingsException(
-          ErrorCodes.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + ecsServiceName);
+          ErrorCode.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + ecsServiceName);
     }
 
     int desiredCount = ecsService.get().getDesiredCount() + instanceCount;

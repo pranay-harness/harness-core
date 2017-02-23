@@ -9,7 +9,7 @@ import software.wings.sm.ExecutionStatus;
 public class InstanceExecutionHistory {
   private int intanceCount;
   private String stateName;
-  private ErrorCodes errorCodes;
+  private ErrorCode errorCode;
   private ExecutionInterruptType executionInterruptType;
   private ExecutionStatus status;
   private String message;
@@ -55,17 +55,17 @@ public class InstanceExecutionHistory {
    *
    * @return the error codes
    */
-  public ErrorCodes getErrorCodes() {
-    return errorCodes;
+  public ErrorCode getErrorCode() {
+    return errorCode;
   }
 
   /**
    * Sets error codes.
    *
-   * @param errorCodes the error codes
+   * @param errorCode the error codes
    */
-  public void setErrorCodes(ErrorCodes errorCodes) {
-    this.errorCodes = errorCodes;
+  public void setErrorCode(ErrorCode errorCode) {
+    this.errorCode = errorCode;
   }
 
   /**
@@ -128,7 +128,7 @@ public class InstanceExecutionHistory {
   public static final class InstanceExecutionHistoryBuilder {
     private int intanceCount;
     private String stateName;
-    private ErrorCodes errorCodes;
+    private ErrorCode errorCode;
     private ExecutionInterruptType executionInterruptType;
     private ExecutionStatus status;
     private String message;
@@ -169,11 +169,11 @@ public class InstanceExecutionHistory {
     /**
      * With error codes instance execution history builder.
      *
-     * @param errorCodes the error codes
+     * @param errorCode the error codes
      * @return the instance execution history builder
      */
-    public InstanceExecutionHistoryBuilder withErrorCodes(ErrorCodes errorCodes) {
-      this.errorCodes = errorCodes;
+    public InstanceExecutionHistoryBuilder withErrorCodes(ErrorCode errorCode) {
+      this.errorCode = errorCode;
       return this;
     }
 
@@ -219,7 +219,7 @@ public class InstanceExecutionHistory {
       InstanceExecutionHistory instanceExecutionHistory = new InstanceExecutionHistory();
       instanceExecutionHistory.setIntanceCount(intanceCount);
       instanceExecutionHistory.setStateName(stateName);
-      instanceExecutionHistory.setErrorCodes(errorCodes);
+      instanceExecutionHistory.setErrorCode(errorCode);
       instanceExecutionHistory.setExecutionInterruptType(executionInterruptType);
       instanceExecutionHistory.setStatus(status);
       instanceExecutionHistory.setMessage(message);

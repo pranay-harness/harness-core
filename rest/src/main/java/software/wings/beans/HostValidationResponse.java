@@ -6,7 +6,8 @@ package software.wings.beans;
 public class HostValidationResponse {
   private String hostName;
   private String status;
-  private String error;
+  private String errorCode;
+  private String errorDescription;
 
   /**
    * Gets host name.
@@ -45,21 +46,39 @@ public class HostValidationResponse {
   }
 
   /**
-   * Gets error.
+   * Gets error code.
    *
-   * @return the error
+   * @return the error code
    */
-  public String getError() {
-    return error;
+  public String getErrorCode() {
+    return errorCode;
   }
 
   /**
-   * Sets error.
+   * Sets error code.
    *
-   * @param error the error
+   * @param errorCode the error code
    */
-  public void setError(String error) {
-    this.error = error;
+  public void setErrorCode(String errorCode) {
+    this.errorCode = errorCode;
+  }
+
+  /**
+   * Gets error description.
+   *
+   * @return the error description
+   */
+  public String getErrorDescription() {
+    return errorDescription;
+  }
+
+  /**
+   * Sets error description.
+   *
+   * @param errorDescription the error description
+   */
+  public void setErrorDescription(String errorDescription) {
+    this.errorDescription = errorDescription;
   }
 
   /**
@@ -68,16 +87,17 @@ public class HostValidationResponse {
   public static final class Builder {
     private String hostName;
     private String status;
-    private String error;
+    private String errorCode;
+    private String errorDescription;
 
     private Builder() {}
 
     /**
-     * A host name validation response builder.
+     * A host validation response builder.
      *
      * @return the builder
      */
-    public static Builder aHostNameValidationResponse() {
+    public static Builder aHostValidationResponse() {
       return new Builder();
     }
 
@@ -104,13 +124,24 @@ public class HostValidationResponse {
     }
 
     /**
-     * With error builder.
+     * With error code builder.
      *
-     * @param error the error
+     * @param errorCode the error code
      * @return the builder
      */
-    public Builder withError(String error) {
-      this.error = error;
+    public Builder withErrorCode(String errorCode) {
+      this.errorCode = errorCode;
+      return this;
+    }
+
+    /**
+     * With error description builder.
+     *
+     * @param errorDescription the error description
+     * @return the builder
+     */
+    public Builder withErrorDescription(String errorDescription) {
+      this.errorDescription = errorDescription;
       return this;
     }
 
@@ -120,19 +151,24 @@ public class HostValidationResponse {
      * @return the builder
      */
     public Builder but() {
-      return aHostNameValidationResponse().withHostName(hostName).withStatus(status).withError(error);
+      return aHostValidationResponse()
+          .withHostName(hostName)
+          .withStatus(status)
+          .withErrorCode(errorCode)
+          .withErrorDescription(errorDescription);
     }
 
     /**
-     * Build host name validation response.
+     * Build host validation response.
      *
-     * @return the host name validation response
+     * @return the host validation response
      */
     public HostValidationResponse build() {
       HostValidationResponse hostValidationResponse = new HostValidationResponse();
       hostValidationResponse.setHostName(hostName);
       hostValidationResponse.setStatus(status);
-      hostValidationResponse.setError(error);
+      hostValidationResponse.setErrorCode(errorCode);
+      hostValidationResponse.setErrorDescription(errorDescription);
       return hostValidationResponse;
     }
   }

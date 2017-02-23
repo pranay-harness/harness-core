@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.EventType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -82,7 +82,7 @@ public class HostServiceImpl implements HostService {
     Host savedHost = get(host.getAppId(), envId, host.getUuid());
 
     if (savedHost == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Host doesn't exist");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Host doesn't exist");
     }
 
     ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder().put("hostConnAttr", host.getHostConnAttr());

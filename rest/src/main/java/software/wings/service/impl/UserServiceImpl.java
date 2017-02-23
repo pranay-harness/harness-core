@@ -4,12 +4,12 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCodes.DOMAIN_NOT_ALLOWED_TO_REGISTER;
-import static software.wings.beans.ErrorCodes.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
-import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
-import static software.wings.beans.ErrorCodes.ROLE_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCodes.USER_ALREADY_REGISTERED;
-import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
+import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.USER_ALREADY_REGISTERED;
+import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 

@@ -17,7 +17,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -91,7 +91,7 @@ public class EcsServiceSetup extends State {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid infrastructure type");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
     String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
@@ -131,7 +131,7 @@ public class EcsServiceSetup extends State {
 
     if (loadBalancerSetting == null ||
     !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
-    WingsException(ErrorCodes.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
     }
     ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
 */
@@ -247,7 +247,7 @@ public class EcsServiceSetup extends State {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
     if (!(artifactStream instanceof DockerArtifactStream)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           artifactStream.getArtifactStreamType() + " artifact source can't be used for Containers");
     }
 

@@ -17,7 +17,7 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
@@ -104,7 +104,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
               .withCommandUnitName(commandUnit.getName())
               .withExecutionResult(executionResult)
               .build());
-      throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
+      throw new WingsException(ErrorCode.SOCKET_CONNECTION_TIMEOUT);
     } catch (ExecutionException e) {
       if (e.getCause() instanceof WingsException) {
         WingsException ex = (WingsException) e.getCause();
@@ -139,7 +139,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                 .withExecutionResult(executionResult)
                 .build());
 
-        throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", e);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
       }
     } catch (Exception e) {
       logger.error("Error while executing command ", e);
@@ -153,7 +153,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
               .withCommandUnitName(commandUnit.getName())
               .withExecutionResult(executionResult)
               .build());
-      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR);
     }
 
     logService.save(context.getAccountId(),

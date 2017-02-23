@@ -2,9 +2,9 @@ package software.wings.app;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
-import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
-import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.INVALID_TOKEN;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
@@ -111,18 +111,18 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
     }
   }
 
-  private void sendError(AtmosphereResource resource, ErrorCodes errorCodes) throws IOException {
+  private void sendError(AtmosphereResource resource, ErrorCode errorCode) throws IOException {
     switch (resource.transport()) {
       case JSONP:
       case LONG_POLLING:
-        resource.getResponse().sendError(errorCodes.getStatus().getStatusCode());
+        resource.getResponse().sendError(errorCode.getStatus().getStatusCode());
         break;
       case WEBSOCKET:
         break;
       case STREAMING:
         break;
     }
-    resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCodes)));
+    resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCode)));
     resource.close();
   }
 }

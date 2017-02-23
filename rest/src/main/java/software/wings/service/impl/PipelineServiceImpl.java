@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -145,7 +145,7 @@ public class PipelineServiceImpl implements PipelineService {
         // do nothing
       } else {
         throw new WingsException(
-            ErrorCodes.UNKNOWN_ERROR, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
+            ErrorCode.UNKNOWN_ERROR, "message", "Unknown stateType " + stateExecutionInstance.getStateType());
       }
       List<State> nextStates = stateMachine.getNextStates(currState.getName());
       currState = nextStates != null ? nextStates.get(0) : null;
@@ -290,11 +290,11 @@ public class PipelineServiceImpl implements PipelineService {
   private void validatePipeline(Pipeline pipeline) {
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().size() == 0) {
-        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Invalid pipeline stage");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Invalid pipeline stage");
       }
 
       if (pipelineStage.getPipelineStageElements().size() > 1) {
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
             "Pipeline with more than one execution in one stage in not supported");
       }
 
@@ -303,7 +303,7 @@ public class PipelineServiceImpl implements PipelineService {
             && (isNullOrEmpty((String) stageElement.getProperties().get("envId"))
                    || isNullOrEmpty((String) stageElement.getProperties().get("workflowId")))) {
           throw new WingsException(
-              ErrorCodes.INVALID_ARGUMENT, "args", "Workflow or Environment can not be null for Environment state");
+              ErrorCode.INVALID_ARGUMENT, "args", "Workflow or Environment can not be null for Environment state");
         }
       }
     }

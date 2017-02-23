@@ -17,7 +17,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersionCollection;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -120,7 +120,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
     if (updated == null || updated.getUpdatedCount() != 1) {
       logger.error("updateEntityData failed for appId: {}, entityVersionUuid: {}- entityData: {}", appId,
           entityVersionUuid, entityData);
-      throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
   }
 }

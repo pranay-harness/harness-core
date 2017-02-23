@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.InfrastructureMapping;
@@ -284,7 +284,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("ComputeProvider", computeProviderSetting);
 
     if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid infrastructure provider");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure provider");
     }
     StaticInfrastructureProvider infrastructureProvider =
         (StaticInfrastructureProvider) getInfrastructureProviderByComputeProviderType(PHYSICAL_DATA_CENTER.name());
@@ -503,7 +503,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
     } else {
       throw new WingsException(
-          ErrorCodes.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infra mapping");
+          ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infra mapping");
     }
   }
 
@@ -538,7 +538,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateHostsAndServiceInstances(infrastructureMapping, Arrays.asList(), hostNames);
     } else {
       throw new WingsException(
-          ErrorCodes.INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
+          ErrorCode.INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
     }
   }
 

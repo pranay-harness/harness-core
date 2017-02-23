@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;

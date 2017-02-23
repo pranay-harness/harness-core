@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class ResponseMessage implements Serializable {
   private static final long serialVersionUID = 7669895652860634550L;
 
-  private ErrorCodes code;
+  private ErrorCode code;
   private ResponseTypeEnum errorType;
   private String message;
 
@@ -19,7 +19,7 @@ public class ResponseMessage implements Serializable {
    *
    * @return the code
    */
-  public ErrorCodes getCode() {
+  public ErrorCode getCode() {
     return code;
   }
 
@@ -28,7 +28,7 @@ public class ResponseMessage implements Serializable {
    *
    * @param code the code
    */
-  public void setCode(ErrorCodes code) {
+  public void setCode(ErrorCode code) {
     this.code = code;
   }
 
@@ -102,7 +102,7 @@ public class ResponseMessage implements Serializable {
    * The type Builder.
    */
   public static final class Builder {
-    private ErrorCodes code;
+    private ErrorCode code;
     private ResponseTypeEnum errorType;
     private String message;
 
@@ -126,7 +126,7 @@ public class ResponseMessage implements Serializable {
      * @param code the code
      * @return the builder
      */
-    public Builder withCode(ErrorCodes code) {
+    public Builder withCode(ErrorCode code) {
       this.code = code;
       return this;
     }

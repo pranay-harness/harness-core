@@ -1,7 +1,7 @@
 package software.wings.common;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 
 import java.util.Map;
@@ -61,7 +61,7 @@ public class NotificationMessageResolver {
    */
   public static String getDecoratedNotificationMessage(String templateText, Map<String, String> params) {
     if (templateText == null) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "message", "Template text can not be null");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Template text can not be null");
     }
     templateText = StrSubstitutor.replace(templateText, params);
     validate(templateText);
@@ -70,7 +70,7 @@ public class NotificationMessageResolver {
 
   private static void validate(String templateText) {
     if (placeHolderPattern.matcher(templateText).find()) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "message", "Incomplete placeholder replacement.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Incomplete placeholder replacement.");
     }
   }
 }

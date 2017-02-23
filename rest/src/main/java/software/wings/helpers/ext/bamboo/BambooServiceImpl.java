@@ -16,7 +16,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -178,7 +178,7 @@ public class BambooServiceImpl implements BambooService {
     try {
       return ImmutablePair.of(artifactPath.getKey(), new URL(artifactPath.getValue()).openStream());
     } catch (IOException ex) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
     }
   }
 

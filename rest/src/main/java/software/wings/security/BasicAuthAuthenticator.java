@@ -1,9 +1,9 @@
 package software.wings.security;
 
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
-import static software.wings.beans.ErrorCodes.EMAIL_NOT_VERIFIED;
-import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 
 import com.google.inject.Inject;
 

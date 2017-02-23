@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
@@ -112,7 +112,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .build();
       }
 
-      default: { throw new WingsException(ErrorCodes.UNKNOWN_ARTIFACT_TYPE); }
+      default: { throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE); }
     }
   }
 }

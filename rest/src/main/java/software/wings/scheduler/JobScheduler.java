@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.app.SchedulerConfig;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.dl.MongoConfig;
 import software.wings.exception.WingsException;
 
@@ -60,7 +60,7 @@ public class JobScheduler {
       scheduler.start();
       return scheduler;
     } catch (SchedulerException e) {
-      throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "message", "Could not initialize cron scheduler");
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Could not initialize cron scheduler");
     }
   }
 

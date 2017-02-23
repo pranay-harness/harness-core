@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SearchFilter.Operator;
@@ -105,7 +105,7 @@ public class StateMachineExecutionSimulator {
     PageResponse<ServiceInstance> res = serviceInstanceService.list(pageRequest);
     if (res == null || res.isEmpty()) {
       logger.error("No service instance found for the ids: {}", serviceInstanceIds);
-      throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
     }
 
     Set<AccessType> accessTypes = new HashSet<>();

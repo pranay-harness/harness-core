@@ -1,6 +1,6 @@
 package software.wings.app;
 
-import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AuthService;
@@ -106,18 +106,18 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
     }
   }
 
-  private void sendError(AtmosphereResource resource, ErrorCodes errorCodes) throws IOException {
+  private void sendError(AtmosphereResource resource, ErrorCode errorCode) throws IOException {
     switch (resource.transport()) {
       case JSONP:
       case LONG_POLLING:
-        resource.getResponse().sendError(errorCodes.getStatus().getStatusCode());
+        resource.getResponse().sendError(errorCode.getStatus().getStatusCode());
         break;
       case WEBSOCKET:
         break;
       case STREAMING:
         break;
     }
-    resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCodes)));
+    resource.write(JsonUtils.asJson(ResponseCodeCache.getInstance().getResponseMessage(errorCode)));
     resource.close();
   }
 }

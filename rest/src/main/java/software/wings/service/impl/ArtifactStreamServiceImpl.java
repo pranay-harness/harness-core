@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -218,7 +218,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     try {
       CronScheduleBuilder.cronSchedule(cronExpression);
     } catch (Exception ex) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Invalid cron expression");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Invalid cron expression");
     }
   }
 
