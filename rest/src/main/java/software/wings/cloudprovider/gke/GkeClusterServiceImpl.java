@@ -23,7 +23,8 @@ import java.util.Map;
  */
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
-  private static final int SLEEP_INTERVAL = 5 * 1000;
+  private static final int SLEEP_INTERVAL_S = 5;
+  private static final int SLEEP_INTERVAL_MS = SLEEP_INTERVAL_S * 1000;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
@@ -41,17 +42,14 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       logger.info("Cluster " + params.get("name") + " already exists in zone " + params.get("zone") + " for project "
           + params.get("projectId"));
     } catch (IOException e) {
-      boolean notFound = false;
-      if (e instanceof GoogleJsonResponseException) {
-        GoogleJsonResponseException ex = (GoogleJsonResponseException) e;
-        if (ex.getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-          notFound = true;
-          logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone")
-              + " for project " + params.get("projectId"));
-        }
-      }
-      if (!notFound) {
-        e.printStackTrace();
+      if (e instanceof GoogleJsonResponseException
+          && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+        logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone") + " for project "
+            + params.get("projectId"));
+      } else {
+        logger.error("Error getting cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
+                + params.get("projectId"),
+            e);
       }
     }
 
@@ -72,28 +70,13 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                        .create(params.get("projectId"), params.get("zone"), content)
                        .execute();
       } catch (IOException e) {
-        e.printStackTrace();
+        logger.error("Error creating cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
+                + params.get("projectId"),
+            e);
       }
 
-      logger.info("Provisioning...");
-      int i = 0;
-      while (response.getStatus().equals("RUNNING")) {
-        try {
-          Thread.sleep(SLEEP_INTERVAL);
-          response = gkeContainerService.projects()
-                         .zones()
-                         .operations()
-                         .get(params.get("projectId"), params.get("zone"), response.getName())
-                         .execute();
-        } catch (IOException e) {
-          e.printStackTrace();
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        i += 5;
-        logger.info("Provisioning... " + i);
-      }
-      logger.info("Provisioning: " + response.getStatus());
+      waitForOperationToComplete(
+          response, gkeContainerService, params.get("projectId"), params.get("zone"), "Provisioning");
 
       try {
         cluster = gkeContainerService.projects()
@@ -102,7 +85,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                       .get(params.get("projectId"), params.get("zone"), params.get("name"))
                       .execute();
       } catch (IOException e) {
-        e.printStackTrace();
+        logger.error("Error getting newly created cluster " + params.get("name") + " in zone " + params.get("zone")
+                + " for project " + params.get("projectId"),
+            e);
       }
     }
 
@@ -128,35 +113,40 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                      .delete(params.get("projectId"), params.get("zone"), params.get("name"))
                      .execute();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("Error deleting cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
+              + params.get("projectId"),
+          e);
     }
 
-    logger.info("Deleting cluster...");
+    waitForOperationToComplete(
+        response, gkeContainerService, params.get("projectId"), params.get("zone"), "Deleting cluster");
+  }
+
+  private void waitForOperationToComplete(
+      Operation operation, Container gkeContainerService, String projectId, String zone, String operationLogMessage) {
+    logger.info(operationLogMessage + "...");
     int i = 0;
-    while (response.getStatus().equals("RUNNING")) {
+    while (operation.getStatus().equals("RUNNING")) {
       try {
-        Thread.sleep(SLEEP_INTERVAL);
-        response = gkeContainerService.projects()
-                       .zones()
-                       .operations()
-                       .get(params.get("projectId"), params.get("zone"), response.getName())
-                       .execute();
+        Thread.sleep(SLEEP_INTERVAL_MS);
+        operation =
+            gkeContainerService.projects().zones().operations().get(projectId, zone, operation.getName()).execute();
       } catch (IOException e) {
-        e.printStackTrace();
+        logger.error("Error checking operation status", e);
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        logger.warn("Interrupted while waiting for operation to complete", e);
       }
-      i += 5;
-      logger.info("Deleting cluster... " + i);
+      i += SLEEP_INTERVAL_S;
+      logger.info(operationLogMessage + "... " + i);
     }
-    logger.info("Delete cluster: " + response.getStatus());
+    logger.info(operationLogMessage + ": " + operation.getStatus());
   }
 
   @Override
   public KubernetesConfig getCluster(Map<String, String> params) {
     Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
 
-    Cluster cluster = null;
+    Cluster cluster;
     try {
       cluster = gkeContainerService.projects()
                     .zones()
@@ -166,19 +156,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       logger.info("Found cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
           + params.get("projectId"));
     } catch (IOException e) {
-      boolean notFound = false;
-      if (e instanceof GoogleJsonResponseException) {
-        GoogleJsonResponseException ex = (GoogleJsonResponseException) e;
-        if (ex.getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-          notFound = true;
-          logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone")
-              + " for project " + params.get("projectId"));
-        }
+      if (e instanceof GoogleJsonResponseException
+          && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
+        logger.info("Cluster " + params.get("name") + " does not exist in zone " + params.get("zone") + " for project "
+            + params.get("projectId"));
+      } else {
+        logger.error("Error getting cluster " + params.get("name") + " in zone " + params.get("zone") + " for project "
+                + params.get("projectId"),
+            e);
       }
-      if (!notFound) {
-        e.printStackTrace();
-        return null;
-      }
+      return null;
     }
 
     logger.info("Cluster status: " + cluster.getStatus());
