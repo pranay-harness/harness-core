@@ -18,6 +18,7 @@ package software.wings.integration;
 
 import com.google.common.collect.ImmutableMap;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 
@@ -36,9 +37,11 @@ public class kube {
                                                                   .put("masterPwd", "foo!!bar$$")
                                                                   .build());
 
-    kubernetesService.cleanup(config);
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withValue(config).build();
 
-    kubernetesService.createController(config,
+    kubernetesService.cleanup(settingAttribute);
+
+    kubernetesService.createController(settingAttribute,
         ImmutableMap.<String, String>builder()
             .put("name", "backend-ctrl")
             .put("appName", "testApp")
@@ -51,10 +54,16 @@ public class kube {
             .put("count", "2")
             .build());
 
-    kubernetesService.createService(
-        config, ImmutableMap.of("name", "backend-service", "appName", "testApp", "tier", "backend"));
+    kubernetesService.createService(settingAttribute,
+        ImmutableMap.<String, String>builder()
+            .put("name", "backend-service")
+            .put("appName", "testApp")
+            .put("tier", "backend")
+            .put("port", "80")
+            .put("targetPort", "8080")
+            .build());
 
-    kubernetesService.createController(config,
+    kubernetesService.createController(settingAttribute,
         ImmutableMap.<String, String>builder()
             .put("name", "frontend-ctrl")
             .put("appName", "testApp")
@@ -67,15 +76,22 @@ public class kube {
             .put("count", "2")
             .build());
 
-    kubernetesService.createService(config,
-        ImmutableMap.of("name", "frontend-service", "appName", "testApp", "tier", "frontend", "type", "LoadBalancer"));
+    kubernetesService.createService(settingAttribute,
+        ImmutableMap.<String, String>builder()
+            .put("name", "frontend-service")
+            .put("appName", "testApp")
+            .put("tier", "frontend")
+            .put("type", "LoadBalancer")
+            .put("port", "80")
+            .put("targetPort", "8080")
+            .build());
 
-    kubernetesService.setControllerPodCount(config, "frontend-ctrl", 5);
+    kubernetesService.setControllerPodCount(settingAttribute, "frontend-ctrl", 5);
 
-    kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
-    kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
+    kubernetesService.checkStatus(settingAttribute, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(settingAttribute, "frontend-ctrl", "frontend-service");
 
-    //    kubernetesService.deleteCluster(config,
+    //    gkeClusterService.deleteCluster(
     //        ImmutableMap.of(
     //            "name", "foo-bar",
     //            "projectId", "kubernetes-test-158122",

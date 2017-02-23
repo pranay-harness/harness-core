@@ -1,16 +1,7 @@
 package software.wings.sm.states;
 
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +19,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.cloudprovider.ClusterService;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
@@ -56,6 +47,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+
 /**
  * Created by rishi on 2/8/17.
  */
@@ -79,7 +78,7 @@ public class EcsServiceDeploy extends State {
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
-  @Inject @Transient private transient ClusterService clusterService;
+  @Inject @Transient private transient AwsClusterService awsClusterService;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -109,7 +108,7 @@ public class EcsServiceDeploy extends State {
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     List<com.amazonaws.services.ecs.model.Service> services =
-        clusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
+        awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
     Optional<com.amazonaws.services.ecs.model.Service> ecsService =
         services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
 
@@ -180,7 +179,7 @@ public class EcsServiceDeploy extends State {
           infrastructureMappingService.get(commandStateExecutionData.getAppId(), phaseElement.getInfraMappingId());
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       List<com.amazonaws.services.ecs.model.Service> services =
-          clusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
+          awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
       Optional<com.amazonaws.services.ecs.model.Service> ecsService =
           services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
       if (!ecsService.isPresent()) {

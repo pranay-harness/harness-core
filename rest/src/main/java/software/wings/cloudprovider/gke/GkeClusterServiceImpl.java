@@ -1,24 +1,20 @@
 package software.wings.cloudprovider.gke;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
-import com.google.api.services.container.ContainerScopes;
 import com.google.api.services.container.model.Cluster;
 import com.google.api.services.container.model.CreateClusterRequest;
 import com.google.api.services.container.model.MasterAuth;
 import com.google.api.services.container.model.Operation;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.service.impl.KubernetesHelperService;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,42 +24,12 @@ import java.util.Map;
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
   private static final int SLEEP_INTERVAL = 5 * 1000;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  /**
-   *
-   * @param appName
-   */
-  private Container getGkeContainerService(String appName) {
-    GoogleCredential credential = null;
-    try {
-      credential = GoogleCredential.getApplicationDefault();
-      if (credential.createScopedRequired()) {
-        credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    Container containerService = null;
-    try {
-      containerService =
-          new Container
-              .Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential)
-              .setApplicationName(appName)
-              .build();
-    } catch (GeneralSecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return containerService;
-  }
+  @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
   @Override
   public KubernetesConfig createCluster(Map<String, String> params) {
-    Container gkeContainerService = getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
 
     Cluster cluster = null;
     try {
@@ -152,7 +118,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public void deleteCluster(Map<String, String> params) {
-    Container gkeContainerService = getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
 
     Operation response = null;
     try {
@@ -188,7 +154,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig getCluster(Map<String, String> params) {
-    Container gkeContainerService = getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
 
     Cluster cluster = null;
     try {
