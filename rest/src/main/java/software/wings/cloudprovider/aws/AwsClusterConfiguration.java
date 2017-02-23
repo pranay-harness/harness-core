@@ -1,4 +1,6 @@
-package software.wings.cloudprovider;
+package software.wings.cloudprovider.aws;
+
+import software.wings.cloudprovider.ClusterConfiguration;
 
 import java.util.List;
 

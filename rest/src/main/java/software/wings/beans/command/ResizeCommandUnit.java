@@ -13,8 +13,8 @@ import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
-import java.util.List;
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -40,7 +40,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     ExecutionResult executionResult = FAILURE;
 
     try {
-      List<String> containerInstanceArns = clusterService.resizeCluster(
+      List<String> containerInstanceArns = awsClusterService.resizeCluster(
           cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
       executionResult = SUCCESS;
     } catch (Exception ex) {

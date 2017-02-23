@@ -1,72 +1,31 @@
 package software.wings.cloudprovider;
 
-import com.amazonaws.services.ecs.model.CreateServiceRequest;
-import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
-import com.amazonaws.services.ecs.model.Service;
-import com.amazonaws.services.ecs.model.TaskDefinition;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.KubernetesConfig;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Created by anubhaw on 12/29/16.
+ * Created by bzane on 2/22/17.
  */
 public interface ClusterService {
   /**
-   * Create cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterConfiguration the cluster configuration
+   * Creates a new cluster unless a cluster with the given name already exists
    */
-  void createCluster(SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration);
+  KubernetesConfig createCluster(Map<String, String> params);
 
   /**
-   * Resize cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterName          the cluster name
-   * @param serviceName          the service name
-   * @param desiredSize          the desired size
-   * @param executionLogCallback the execution log callback
-   * @return the list
+   * Deletes the given cluster
    */
-  List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
-      Integer desiredSize, ExecutionLogCallback executionLogCallback);
+  void deleteCluster(Map<String, String> params);
 
   /**
-   * Destroy cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterName          the cluster name
-   * @param serviceName          the service name
+   * Gets the details about a cluster
    */
-  void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+  KubernetesConfig getCluster(Map<String, String> params);
 
   /**
-   * Gets services.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterName          the cluster name
-   * @return the services
+   * Lists the available clusters
    */
-  List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName);
-
-  /**
-   * Create service.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterConfiguration the cluster configuration
-   */
-  void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
-
-  /**
-   * Create task task definition.
-   *
-   * @param settingAttribute              the setting attribute
-   * @param registerTaskDefinitionRequest the register task definition request
-   * @return the task definition
-   */
-  TaskDefinition createTask(
-      SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
+  List<String> listClusters(Map<String, String> params);
 }

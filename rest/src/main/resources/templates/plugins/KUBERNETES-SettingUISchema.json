@@ -1,3 +1,5 @@
 {
-  "type": { "ui:widget": "hidden" }
+  "password": { "ui:widget": "password" },
+  "type": { "ui:widget": "hidden" },
+  "ui:order": [ "type", "apiServerUrl",  "username", "password" ]
 }
