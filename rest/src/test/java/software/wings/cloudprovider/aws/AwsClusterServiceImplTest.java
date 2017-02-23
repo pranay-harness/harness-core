@@ -28,7 +28,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 /**
  * Created by anubhaw on 1/3/17.
  */
-public class AwsClusterServiceTest extends WingsBaseTest {
+public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Mock private EcsContainerService ecsContainerService;
   @Inject @InjectMocks private AwsClusterService awsClusterService;
 

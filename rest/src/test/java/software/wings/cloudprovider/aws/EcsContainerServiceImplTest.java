@@ -53,7 +53,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 /**
  * Created by anubhaw on 1/3/17.
  */
-public class EcsContainerServiceTest extends WingsBaseTest {
+public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private AmazonAutoScalingClient amazonAutoScalingClient;
   @Mock private AmazonECSClient amazonECSClient;
