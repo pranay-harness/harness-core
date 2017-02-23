@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.Environment.EnvironmentType.OTHER;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
 public class Environment extends Base {
   @NotEmpty private String name;
   private String description;
-  @NotNull private EnvironmentType environmentType = OTHER;
+  @NotNull private EnvironmentType environmentType = NON_PROD;
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private List<Orchestration> orchestrations;
@@ -187,20 +187,8 @@ public class Environment extends Base {
      * Prod environment type.
      */
     PROD, /**
-           * Dev environment type.
+           * Non prod environment type.
            */
-    DEV, /**
-          * Qa environment type.
-          */
-    QA, /**
-         * Uat environment type.
-         */
-    UAT, /**
-          * Other environment type.
-          */
-    OTHER, /**
-            * All environment type.
-            */
     NON_PROD, /**
                * All environment type.
                */
@@ -213,7 +201,7 @@ public class Environment extends Base {
   public static final class Builder {
     private String name;
     private String description;
-    private EnvironmentType environmentType = OTHER;
+    private EnvironmentType environmentType = NON_PROD;
     private List<ConfigFile> configFiles;
     private String uuid;
     private String appId;

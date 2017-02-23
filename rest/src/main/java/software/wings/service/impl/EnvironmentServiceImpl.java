@@ -3,10 +3,8 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.DEV;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.Environment.EnvironmentType.QA;
-import static software.wings.beans.Environment.EnvironmentType.UAT;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -210,9 +208,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    save(anEnvironment().withAppId(appId).withName(Constants.DEV_ENV).withEnvironmentType(DEV).build());
-    save(anEnvironment().withAppId(appId).withName(Constants.QA_ENV).withEnvironmentType(QA).build());
-    save(anEnvironment().withAppId(appId).withName(Constants.UAT_ENV).withEnvironmentType(UAT).build());
+    save(anEnvironment().withAppId(appId).withName(Constants.DEV_ENV).withEnvironmentType(NON_PROD).build());
+    save(anEnvironment().withAppId(appId).withName(Constants.QA_ENV).withEnvironmentType(NON_PROD).build());
     save(anEnvironment().withAppId(appId).withName(Constants.PROD_ENV).withEnvironmentType(PROD).build());
   }
 

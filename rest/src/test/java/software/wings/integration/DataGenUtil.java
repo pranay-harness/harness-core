@@ -14,7 +14,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.DEV;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
@@ -308,7 +308,7 @@ private void addDefaultRoleAndUsers() {
                            aPermission()
                                .withPermissionScope(ENV)
                                .withAppId(GLOBAL_APP_ID)
-                               .withEnvironmentType(DEV)
+                               .withEnvironmentType(NON_PROD)
                                .withResourceType(ANY)
                                .withAction(ALL)
                                .build()))
@@ -346,7 +346,7 @@ private void addDefaultRoleAndUsers() {
                          aPermission()
                              .withPermissionScope(ENV)
                              .withAppId(GLOBAL_APP_ID)
-                             .withEnvironmentType(EnvironmentType.QA)
+                             .withEnvironmentType(EnvironmentType.NON_PROD)
                              .withResourceType(ANY)
                              .withAction(ALL)
                              .build()))

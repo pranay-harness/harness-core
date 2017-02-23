@@ -1,21 +1,10 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.PluginCategory.Artifact;
-import static software.wings.beans.PluginCategory.CloudProvider;
-import static software.wings.beans.PluginCategory.Collaboration;
-import static software.wings.beans.PluginCategory.ConnectionAttributes;
-import static software.wings.beans.PluginCategory.LoadBalancer;
-import static software.wings.beans.PluginCategory.Verification;
-
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
-
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApplicationLoadBalancerConfig;
@@ -37,6 +26,11 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.PluginCategory.*;
 
 /**
  * Created by peeyushaggarwal on 10/20/16.

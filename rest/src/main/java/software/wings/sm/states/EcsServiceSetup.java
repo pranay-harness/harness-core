@@ -1,13 +1,5 @@
 package software.wings.sm.states;
 
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
-import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
-
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
@@ -17,6 +9,8 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -31,7 +25,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.cloudprovider.ClusterService;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -50,6 +44,11 @@ import software.wings.utils.ECSConvention;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
@@ -58,7 +57,7 @@ public class EcsServiceSetup extends State {
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerSettingId;
 
-  @Inject @Transient private transient ClusterService clusterService;
+  @Inject @Transient private transient AwsClusterService awsClusterService;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -124,7 +123,7 @@ public class EcsServiceSetup extends State {
             .withContainerDefinitions(containerDefinitions)
             .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
 
-    TaskDefinition taskDefinition = clusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
+    TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
     /*
 
@@ -141,7 +140,7 @@ public class EcsServiceSetup extends State {
     String lastEcsServiceName = lastECSService(
         computeProviderSetting, clusterName, ECSConvention.getServiceNamePrefix(taskDefinition.getFamily()));
 
-    clusterService.createService(computeProviderSetting,
+    awsClusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
             .withCluster(clusterName)
@@ -168,7 +167,7 @@ public class EcsServiceSetup extends State {
 
   private String lastECSService(SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
     List<com.amazonaws.services.ecs.model.Service> services =
-        clusterService.getServices(computeProviderSetting, clusterName);
+        awsClusterService.getServices(computeProviderSetting, clusterName);
     if (services == null) {
       return null;
     }

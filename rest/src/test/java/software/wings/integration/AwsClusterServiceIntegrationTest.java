@@ -2,7 +2,7 @@ package software.wings.integration;
 
 import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.cloudprovider.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
+import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.anAwsClusterConfiguration;
 
 import com.google.inject.Inject;
 
@@ -13,16 +13,15 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.IamInstanceProfileSpecification;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
-import com.amazonaws.services.ecs.AmazonECSClient;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.AwsClusterConfiguration;
-import software.wings.cloudprovider.ClusterService;
-import software.wings.cloudprovider.aws.EcsService;
+import software.wings.cloudprovider.aws.AwsClusterConfiguration;
+import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Arrays;
@@ -34,9 +33,9 @@ import java.util.Map;
  * Created by anubhaw on 12/29/16.
  */
 @Ignore
-public class ClusterServiceIntegrationTest extends WingsBaseTest {
-  @Inject private ClusterService clusterService;
-  @Inject private EcsService ecsService;
+public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
+  @Inject private AwsClusterService awsClusterService;
+  @Inject private EcsContainerService ecsContainerService;
   @Inject private AwsHelperService awsHelperService;
 
   private SettingAttribute awsConnectorSetting =
@@ -86,14 +85,14 @@ public class ClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("TASK_TEMPLATE", "tomcat:7");
 
     AwsClusterConfiguration awsClusterConfiguration = getAwsClusterConfiguration(params);
-    clusterService.createCluster(awsConnectorSetting, awsClusterConfiguration);
-    // clusterService.destroyCluster(awsConnectorSetting, (String) params.get("CLUSTER_NAME"), (String)
+    awsClusterService.createCluster(awsConnectorSetting, awsClusterConfiguration);
+    // awsClusterService.destroyCluster(awsConnectorSetting, (String) params.get("CLUSTER_NAME"), (String)
     // params.get("SERVICE_NAME" + "_" + "SERVICE_VERSION"));
   }
 
   @Test
   public void shouldResizeCluster() {
-    clusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
+    awsClusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
   }
 
   @Test
@@ -117,7 +116,7 @@ public class ClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("clusterName", clusterConfiguration.getName());
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
-    ecsService.provisionNodes(awsConnectorSetting, 5, "wins_demo_launchconfig_v1", params);
+    ecsContainerService.provisionNodes(awsConnectorSetting, 5, "wins_demo_launchconfig_v1", params);
   }
 
   @Test

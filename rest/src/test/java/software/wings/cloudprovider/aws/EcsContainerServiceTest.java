@@ -1,17 +1,4 @@
-package software.wings.cloudprovider;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
-import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
-import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
-import static software.wings.utils.WingsTestConstants.SECRET_KEY;
-import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
@@ -43,24 +30,36 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.cloudprovider.aws.EcsService;
 import software.wings.service.impl.AwsHelperService;
 
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
+import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
+import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 /**
  * Created by anubhaw on 1/3/17.
  */
-public class EcsServiceTest extends WingsBaseTest {
+public class EcsContainerServiceTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private AmazonAutoScalingClient amazonAutoScalingClient;
   @Mock private AmazonECSClient amazonECSClient;
   @Mock private AmazonEC2Client amazonEC2Client;
 
-  @Inject @InjectMocks private EcsService ecsService;
+  @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
       aSettingAttribute().withValue(anAwsConfig().withAccessKey(ACCESS_KEY).withSecretKey(SECRET_KEY).build()).build();
@@ -76,7 +75,7 @@ public class EcsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProvisionNodesWithExistingAutoScalingGroup() {
-    ecsService.provisionNodes(connectorConfig, AUTO_SCALING_GROUP_NAME, DESIRED_CAPACITY);
+    ecsContainerService.provisionNodes(connectorConfig, AUTO_SCALING_GROUP_NAME, DESIRED_CAPACITY);
     verify(awsHelperService).getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonAutoScalingClient)
         .setDesiredCapacity(new SetDesiredCapacityRequest()
@@ -102,7 +101,7 @@ public class EcsServiceTest extends WingsBaseTest {
     params.put("availabilityZones", Arrays.asList("AZ1", "AZ2"));
     params.put("vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
-    ecsService.provisionNodes(connectorConfig, DESIRED_CAPACITY, LAUNCHER_TEMPLATE_NAME, params);
+    ecsContainerService.provisionNodes(connectorConfig, DESIRED_CAPACITY, LAUNCHER_TEMPLATE_NAME, params);
 
     verify(awsHelperService).getAmazonEcsClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonECSClient).createCluster(new CreateClusterRequest().withClusterName(CLUSTER_NAME));
@@ -137,7 +136,7 @@ public class EcsServiceTest extends WingsBaseTest {
              new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(SERVICE_NAME)))
         .thenReturn(new DescribeServicesResult().withServices(
             new Service().withRunningCount(DESIRED_CAPACITY).withDesiredCount(DESIRED_CAPACITY)));
-    String serviceArn = ecsService.deployService(connectorConfig, serviceJson);
+    String serviceArn = ecsContainerService.deployService(connectorConfig, serviceJson);
 
     verify(awsHelperService).getAmazonEcsClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonECSClient).createService(createServiceRequest);
@@ -146,7 +145,7 @@ public class EcsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteService() {
-    ecsService.deleteService(connectorConfig, CLUSTER_NAME, SERVICE_NAME);
+    ecsContainerService.deleteService(connectorConfig, CLUSTER_NAME, SERVICE_NAME);
     verify(awsHelperService).getAmazonEcsClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonECSClient)
         .deleteService(new DeleteServiceRequest().withCluster(CLUSTER_NAME).withService(SERVICE_NAME));
@@ -159,7 +158,7 @@ public class EcsServiceTest extends WingsBaseTest {
         .thenReturn(new DescribeServicesResult().withServices(
             Arrays.asList(new Service().withDesiredCount(DESIRED_CAPACITY).withRunningCount(DESIRED_CAPACITY))));
     when(amazonECSClient.describeTasks(any())).thenReturn(new DescribeTasksResult());
-    ecsService.provisionTasks(
+    ecsContainerService.provisionTasks(
         connectorConfig, CLUSTER_NAME, SERVICE_NAME, DESIRED_CAPACITY, new ExecutionLogCallback());
     verify(awsHelperService).getAmazonEcsClient(ACCESS_KEY, SECRET_KEY);
     verify(amazonECSClient)
