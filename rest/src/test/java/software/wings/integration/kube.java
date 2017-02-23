@@ -17,12 +17,16 @@
 package software.wings.integration;
 
 import com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 
 public class kube {
+  private static final Logger logger = LoggerFactory.getLogger(kube.class);
+
   public static void main(String[] args) throws InterruptedException {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
@@ -88,12 +92,27 @@ public class kube {
 
     kubernetesService.setControllerPodCount(settingAttribute, "frontend-ctrl", 5);
 
+    int backendCount = kubernetesService.getControllerPodCount(settingAttribute, "backend-ctrl");
+    int frontendCount = kubernetesService.getControllerPodCount(settingAttribute, "frontend-ctrl");
+    logger.info(String.format("Controller backend-ctrl has %d instances", backendCount));
+    logger.info(String.format("Controller frontend-ctrl has %d instances", frontendCount));
+
+    kubernetesService.checkStatus(settingAttribute, "backend-ctrl", "backend-service");
+    kubernetesService.checkStatus(settingAttribute, "frontend-ctrl", "frontend-service");
+
+    kubernetesService.deleteService(settingAttribute, "frontend-service");
+    kubernetesService.deleteService(settingAttribute, "backend-service");
+
+    kubernetesService.deleteController(settingAttribute, "frontend-ctrl");
+    kubernetesService.deleteController(settingAttribute, "backend-ctrl");
+
     kubernetesService.checkStatus(settingAttribute, "backend-ctrl", "backend-service");
     kubernetesService.checkStatus(settingAttribute, "frontend-ctrl", "frontend-service");
 
     //    gkeClusterService.deleteCluster(
     //        ImmutableMap.of(
     //            "name", "foo-bar",
+    //            "appName", "testApp",
     //            "projectId", "kubernetes-test-158122",
     //            "zone", "us-west1-a"));
   }

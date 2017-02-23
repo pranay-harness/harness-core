@@ -18,7 +18,7 @@ public interface KubernetesContainerService {
   /**
    * Deletes a replication controller.
    */
-  void deleteController(SettingAttribute settingAttribute, Map<String, String> params);
+  void deleteController(SettingAttribute settingAttribute, String name);
 
   /**
    * Scales controller to specified number of nodes.
@@ -38,5 +38,5 @@ public interface KubernetesContainerService {
   /**
    * Deletes a service.
    */
-  void deleteService(SettingAttribute settingAttribute, Map<String, String> params);
+  void deleteService(SettingAttribute settingAttribute, String name);
 }
