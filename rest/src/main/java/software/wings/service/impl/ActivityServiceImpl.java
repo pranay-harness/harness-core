@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 

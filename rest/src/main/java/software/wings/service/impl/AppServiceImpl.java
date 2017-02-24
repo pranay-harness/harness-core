@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;

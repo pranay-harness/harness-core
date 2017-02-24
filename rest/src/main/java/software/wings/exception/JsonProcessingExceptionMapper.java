@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 
 import javax.ws.rs.core.Response;
@@ -33,7 +33,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
-                                                              .withCode(ErrorCodes.DEFAULT_ERROR_CODE)
+                                                              .withCode(ErrorCode.DEFAULT_ERROR_CODE)
                                                               .withMessage("Error generating response")
                                                               .withErrorType(ResponseTypeEnum.ERROR)
                                                               .build()))
@@ -52,7 +52,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
       return Response.serverError()
           .entity(aRestResponse()
                       .withResponseMessages(singletonList(aResponseMessage()
-                                                              .withCode(ErrorCodes.DEFAULT_ERROR_CODE)
+                                                              .withCode(ErrorCode.DEFAULT_ERROR_CODE)
                                                               .withMessage("Error reading request")
                                                               .withErrorType(ResponseTypeEnum.ERROR)
                                                               .build()))
@@ -67,7 +67,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
     return Response.status(BAD_REQUEST)
         .entity(aRestResponse()
                     .withResponseMessages(singletonList(aResponseMessage()
-                                                            .withCode(ErrorCodes.DEFAULT_ERROR_CODE)
+                                                            .withCode(ErrorCode.DEFAULT_ERROR_CODE)
                                                             .withMessage("Unable to process JSON " + message)
                                                             .withErrorType(ResponseTypeEnum.ERROR)
                                                             .build()))

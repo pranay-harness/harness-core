@@ -5,7 +5,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;

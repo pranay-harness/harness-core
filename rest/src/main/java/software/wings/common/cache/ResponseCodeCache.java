@@ -2,7 +2,7 @@ package software.wings.common.cache;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.exception.WingsException;
@@ -50,7 +50,7 @@ public class ResponseCodeCache {
    * @param errorCode errorCode for which message is needed.
    * @return ResponseMessage Object.
    */
-  public ResponseMessage getResponseMessage(ErrorCodes errorCode) {
+  public ResponseMessage getResponseMessage(ErrorCode errorCode) {
     String message = messages.getProperty(errorCode.getCode());
     if (message == null) {
       return null;
@@ -58,7 +58,7 @@ public class ResponseCodeCache {
     return getResponseMessage(errorCode, message);
   }
 
-  private ResponseMessage getResponseMessage(ErrorCodes errorCode, String message) {
+  private ResponseMessage getResponseMessage(ErrorCode errorCode, String message) {
     ResponseMessage responseMessage = new ResponseMessage();
     responseMessage.setCode(errorCode);
     responseMessage.setMessage(message);
@@ -73,7 +73,7 @@ public class ResponseCodeCache {
    * @param params    for substituting in ResponseMessage
    * @return ResponseMessage object.
    */
-  public ResponseMessage getResponseMessage(ErrorCodes errorCode, Map<String, Object> params) {
+  public ResponseMessage getResponseMessage(ErrorCode errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode.getCode());
     if (message == null) {
       message = errorCode.name();

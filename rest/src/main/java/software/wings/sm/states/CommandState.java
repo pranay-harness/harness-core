@@ -6,7 +6,7 @@ import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;

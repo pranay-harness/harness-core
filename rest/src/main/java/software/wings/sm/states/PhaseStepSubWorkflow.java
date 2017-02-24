@@ -10,7 +10,7 @@ import software.wings.api.EcsServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepSubWorkflowExecutionData;
 import software.wings.api.ServiceInstanceIdsParam;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
@@ -48,7 +48,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     if (phaseStepType == null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "null phaseStepType");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "null phaseStepType");
     }
     ExecutionResponse response = super.execute(contextIntf);
 
@@ -57,7 +57,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
       List<ContextElement> elements = contextIntf.getContextElementList(ContextElementType.ECS_SERVICE);
       if (elements == null) {
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ECS Service Setup not done");
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ECS Service Setup not done");
       }
 
       EcsServiceElement ecsServiceElement = null;
@@ -72,7 +72,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       }
 
       if (ecsServiceElement == null) {
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "ecsServiceElement not present");
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ecsServiceElement not present");
       }
     }
     if ((phaseStepType == PhaseStepType.DEPLOY_SERVICE || phaseStepType == PhaseStepType.ENABLE_SERVICE
@@ -121,7 +121,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         && phaseStepType == PhaseStepType.PROVISION_NODE) {
       List<ContextElement> elements = notifiedElements(notifyResponseData);
       if (!(elements.get(0) instanceof ServiceInstanceIdsParam)) {
-        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR);
       }
 
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) elements.get(0);
@@ -137,7 +137,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       List<ContextElement> elements = notifiedElements(notifyResponseData);
       if (!(elements.get(0) instanceof EcsServiceElement)) {
-        throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+        throw new WingsException(ErrorCode.UNKNOWN_ERROR);
       }
 
       EcsServiceElement ecsServiceElement = (EcsServiceElement) elements.get(0);
@@ -152,12 +152,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private List<ContextElement> notifiedElements(NotifyResponseData notifyResponseData) {
     if (!(notifyResponseData instanceof ElementNotifyResponseData)) {
-      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR);
     }
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (elements == null || elements.isEmpty()) {
-      throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR);
     }
     return elements;
   }

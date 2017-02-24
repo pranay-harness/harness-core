@@ -12,7 +12,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
@@ -89,7 +89,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
     if (!appService.exist(artifact.getAppId())) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("artifactStream", artifactStream);

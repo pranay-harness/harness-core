@@ -6,7 +6,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
@@ -45,7 +45,7 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
       executionResult = SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);
-      throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);
     }
     return executionResult;
   }

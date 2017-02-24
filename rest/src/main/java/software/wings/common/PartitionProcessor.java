@@ -10,7 +10,7 @@ import static org.eclipse.jetty.util.LazyList.isEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PartitionElement;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
 
@@ -90,19 +90,19 @@ public interface PartitionProcessor {
       String[] percentages = getPercentages();
       String[] counts = getCounts();
       if (isEmpty(breakdowns) && isEmpty(percentages) && isEmpty(counts)) {
-        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "breakdowns, percentages, counts");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "breakdowns, percentages, counts");
       }
       List<Integer> finalCounts = null;
       try {
         finalCounts = computeCounts(elements.size());
         if (isEmpty(finalCounts)) {
-          throw new WingsException(ErrorCodes.INVALID_REQUEST, "messages",
+          throw new WingsException(ErrorCode.INVALID_REQUEST, "messages",
               "Incorrect partition breakdown expressions- breakdowns:" + Arrays.toString(breakdowns)
                   + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
         }
       } catch (Exception e) {
         log().error(e.getMessage(), e);
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "messages",
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "messages",
             "Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
                 + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts),
             e);

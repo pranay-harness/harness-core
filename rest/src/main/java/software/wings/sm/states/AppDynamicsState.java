@@ -12,7 +12,7 @@ import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
@@ -114,7 +114,7 @@ public class AppDynamicsState extends HttpState {
     try {
       return URLEncoder.encode(queryString, "UTF-8");
     } catch (UnsupportedEncodingException ex) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
     }
   }
 

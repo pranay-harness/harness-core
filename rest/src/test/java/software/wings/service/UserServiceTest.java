@@ -10,7 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;

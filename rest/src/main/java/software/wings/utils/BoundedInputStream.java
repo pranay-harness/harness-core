@@ -1,8 +1,8 @@
 package software.wings.utils;
 
 import static java.lang.String.format;
-import static software.wings.beans.ErrorCodes.FILE_DOWNLOAD_FAILED;
-import static software.wings.beans.ErrorCodes.INVALID_URL;
+import static software.wings.beans.ErrorCode.FILE_DOWNLOAD_FAILED;
+import static software.wings.beans.ErrorCode.INVALID_URL;
 
 import software.wings.exception.WingsException;
 

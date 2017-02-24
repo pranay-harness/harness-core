@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;

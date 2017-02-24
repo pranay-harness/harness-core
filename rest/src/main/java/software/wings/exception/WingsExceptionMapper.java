@@ -6,7 +6,7 @@ import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
 
@@ -40,7 +40,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   }
 
   private Status resolveHttpStatus(List<ResponseMessage> responseMessageList) {
-    ErrorCodes errorCode = null;
+    ErrorCode errorCode = null;
     if (responseMessageList != null && responseMessageList.size() > 0) {
       errorCode = responseMessageList.get(responseMessageList.size() - 1).getCode();
     }

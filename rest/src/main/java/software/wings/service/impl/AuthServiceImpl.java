@@ -3,10 +3,10 @@ package software.wings.service.impl;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
-import static software.wings.beans.ErrorCodes.ACCESS_DENIED;
-import static software.wings.beans.ErrorCodes.DEFAULT_ERROR_CODE;
-import static software.wings.beans.ErrorCodes.EXPIRED_TOKEN;
-import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
+import static software.wings.beans.ErrorCode.ACCESS_DENIED;
+import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 

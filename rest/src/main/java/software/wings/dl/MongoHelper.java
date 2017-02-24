@@ -19,7 +19,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.exception.WingsException;
@@ -95,7 +95,7 @@ public class MongoHelper {
           for (Object opFilter : filter.getFieldValues()) {
             if (opFilter == null || !(opFilter instanceof SearchFilter)) {
               logger.error("OR/AND operator can only be used with SearchFiter values");
-              throw new WingsException(ErrorCodes.DEFAULT_ERROR_CODE);
+              throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
             }
             SearchFilter opSearchFilter = (SearchFilter) opFilter;
             criterias.add(applyOperator(query.criteria(opSearchFilter.getFieldName()), opSearchFilter));
@@ -134,7 +134,7 @@ public class MongoHelper {
 
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
     if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
     if (op == null) {

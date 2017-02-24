@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 

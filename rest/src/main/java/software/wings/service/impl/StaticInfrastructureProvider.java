@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.HostValidationResponse.Builder.aHostNameValidationResponse;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
@@ -9,7 +8,7 @@ import com.google.inject.Singleton;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
@@ -66,15 +65,18 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
                                                           .build();
     SshSessionConfig sshSessionConfig =
         SshHelperUtil.getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", commandExecutionContext);
-    HostValidationResponse response =
-        aHostNameValidationResponse().withHostName(hostName).withStatus(ExecutionStatus.SUCCESS.name()).build();
+    HostValidationResponse response = HostValidationResponse.Builder.aHostValidationResponse()
+                                          .withHostName(hostName)
+                                          .withStatus(ExecutionStatus.SUCCESS.name())
+                                          .build();
     try {
       Session sshSession = SshSessionFactory.getSSHSession(sshSessionConfig);
       sshSession.disconnect();
     } catch (JSchException jschEx) {
-      ErrorCodes errorCode = normalizeError(jschEx);
+      ErrorCode errorCode = normalizeError(jschEx);
       response.setStatus(ExecutionStatus.FAILED.name());
-      response.setError(errorCode.getCode()); // add meaningful strings
+      response.setErrorCode(errorCode.getCode());
+      response.setErrorDescription(errorCode.getDescription());
     }
     return response;
   }

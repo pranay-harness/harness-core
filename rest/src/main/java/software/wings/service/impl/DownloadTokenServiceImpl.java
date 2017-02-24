@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DownloadTokenService;
@@ -30,7 +30,7 @@ public class DownloadTokenServiceImpl implements DownloadTokenService {
     Cache<String, String> cache = CacheHelper.getCache("downloadTokenCache", String.class, String.class);
     String cachedResource = cache.get(token);
     if (!equalsIgnoreCase(cachedResource, resource)) {
-      throw new WingsException(ErrorCodes.INVALID_TOKEN);
+      throw new WingsException(ErrorCode.INVALID_TOKEN);
     } else {
       cache.remove(token, resource);
     }

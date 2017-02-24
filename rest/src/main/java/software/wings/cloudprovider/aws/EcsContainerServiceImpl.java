@@ -1,6 +1,6 @@
 package software.wings.cloudprovider.aws;
 
-import static software.wings.beans.ErrorCodes.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -42,7 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -973,7 +973,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
     }
     return (AwsConfig) connectorConfig.getValue();
   }

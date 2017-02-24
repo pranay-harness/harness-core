@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;

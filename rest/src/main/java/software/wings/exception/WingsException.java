@@ -1,6 +1,6 @@
 package software.wings.exception;
 
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ public class WingsException extends WingsApiException {
    *
    * @param errorCode the error code
    */
-  public WingsException(ErrorCodes errorCode) {
+  public WingsException(ErrorCode errorCode) {
     this(errorCode, (Throwable) null);
   }
 
@@ -73,7 +73,7 @@ public class WingsException extends WingsApiException {
    * @param key       the key
    * @param value     the value
    */
-  public WingsException(ErrorCodes errorCode, String key, Object value) {
+  public WingsException(ErrorCode errorCode, String key, Object value) {
     this(errorCode, key, value, (Throwable) null);
   }
 
@@ -85,7 +85,7 @@ public class WingsException extends WingsApiException {
    * @param value     the value
    * @param cause     the cause
    */
-  public WingsException(ErrorCodes errorCode, String key, Object value, Throwable cause) {
+  public WingsException(ErrorCode errorCode, String key, Object value, Throwable cause) {
     this(errorCode, cause);
     addParam(key, value);
   }
@@ -96,7 +96,7 @@ public class WingsException extends WingsApiException {
    * @param errorCode the error code
    * @param cause     the cause
    */
-  public WingsException(ErrorCodes errorCode, Throwable cause) {
+  public WingsException(ErrorCode errorCode, Throwable cause) {
     this(errorCode, errorCode.getCode(), cause);
   }
 
@@ -107,7 +107,7 @@ public class WingsException extends WingsApiException {
    * @param message   the message
    * @param cause     the cause
    */
-  public WingsException(ErrorCodes errorCode, String message, Throwable cause) {
+  public WingsException(ErrorCode errorCode, String message, Throwable cause) {
     super(message, cause);
     ResponseMessage responseMessage = new ResponseMessage();
     responseMessage.setCode(errorCode);
@@ -121,7 +121,7 @@ public class WingsException extends WingsApiException {
    * @param params    the params
    * @param errorCode the error code
    */
-  public WingsException(Map<String, Object> params, ErrorCodes errorCode) {
+  public WingsException(Map<String, Object> params, ErrorCode errorCode) {
     this(errorCode, (Throwable) null);
     this.params = params;
   }

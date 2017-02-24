@@ -34,7 +34,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
@@ -290,14 +290,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     if (pipeline == null) {
-      throw new WingsException(ErrorCodes.NON_EXISTING_PIPELINE);
+      throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
     if (runningWorkflowExecutions != null) {
       for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
         if (workflowExecution.getStatus() == ExecutionStatus.NEW) {
-          throw new WingsException(ErrorCodes.PIPELINE_ALREADY_TRIGGERED, "pilelineName", pipeline.getName());
+          throw new WingsException(ErrorCode.PIPELINE_ALREADY_TRIGGERED, "pilelineName", pipeline.getName());
         }
         if (workflowExecution.getStatus() == ExecutionStatus.RUNNING) {
           // Analyze if pipeline is in initial stage
@@ -462,7 +462,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
           logger.error("Service instances argument and valid service instance retrieved size not matching");
-          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid service instances");
+          throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid service instances");
         }
         workflowExecution.getExecutionArgs().setServiceInstanceIdNames(
             serviceInstances.stream().collect(Collectors.toMap(ServiceInstance::getUuid,
@@ -484,7 +484,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         if (artifacts == null || artifacts.size() != artifactIds.size()) {
           logger.error("Artifact argument and valid artifact retrieved size not matching");
-          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact");
+          throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact");
         }
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
@@ -623,25 +623,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
         throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
+            ErrorCode.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
       return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs);
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.debug("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
         logger.error("serviceId is null for a simple execution");
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
       }
       if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
         logger.error("serviceInstances are empty for a simple execution");
         throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
+            ErrorCode.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
       }
 
       return triggerSimpleExecution(appId, envId, executionArgs, workflowExecutionUpdate);
 
     } else {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "workflowType");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "workflowType");
     }
   }
 
@@ -740,7 +740,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.get(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
       throw new WingsException(
-          ErrorCodes.INVALID_ARGUMENT, "args", "no workflowExecution for executionUuid:" + executionUuid);
+          ErrorCode.INVALID_ARGUMENT, "args", "no workflowExecution for executionUuid:" + executionUuid);
     }
 
     return executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
@@ -750,7 +750,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
     if (executionArgs.getWorkflowType() == null) {
       logger.error("workflowType is null");
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowType is null");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "workflowType is null");
     }
 
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION
@@ -759,7 +759,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
         throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
+            ErrorCode.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
 
       OrchestrationWorkflow orchestration =
@@ -767,12 +767,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (orchestration == null) {
         logger.error("Invalid orchestrationId");
         throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
+            ErrorCode.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
       }
 
       StateMachine stateMachine = workflowService.readLatest(appId, executionArgs.getOrchestrationId());
       if (stateMachine == null) {
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Associated state machine not found");
       }
 
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
@@ -784,12 +784,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       logger.debug("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
         logger.error("serviceId is null for a simple execution");
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
       }
       if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
         logger.error("serviceInstances are empty for a simple execution");
         throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
+            ErrorCode.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
       }
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       if (StringUtils.isNotBlank(executionArgs.getCommandName())) {

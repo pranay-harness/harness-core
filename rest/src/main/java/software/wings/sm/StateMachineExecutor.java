@@ -13,7 +13,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
@@ -80,7 +80,7 @@ public class StateMachineExecutor {
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
     }
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -110,15 +110,15 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance execute(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateExecutionInstance");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ErrorCode.ARGS_NAME, "stateExecutionInstance");
     }
     if (stateMachine == null) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "rootStateMachine");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ErrorCode.ARGS_NAME, "rootStateMachine");
     }
     if (stateExecutionInstance.getChildStateMachineId() != null
         && !stateExecutionInstance.getChildStateMachineId().equals(stateMachine.getUuid())
         && stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()) == null) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateMachine");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ErrorCode.ARGS_NAME, "stateMachine");
     }
     StateMachine sm;
     if (stateExecutionInstance.getChildStateMachineId() == null) {
@@ -142,7 +142,7 @@ public class StateMachineExecutor {
    */
   StateExecutionInstance triggerExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getStateName() == null) {
-      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateName");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ErrorCode.ARGS_NAME, "stateName");
     }
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());
@@ -152,7 +152,7 @@ public class StateMachineExecutor {
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
     if (stateExecutionInstance.getUuid() != null) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateExecutionInstance was already created");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "StateExecutionInstance was already created");
     }
 
     stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
@@ -412,7 +412,7 @@ public class StateMachineExecutor {
         Lists.newArrayList(
             ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING, ExecutionStatus.PAUSED));
     if (!updated) {
-      throw new WingsException(ErrorCodes.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
+      throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
     }
 
     abortMarkedInstance(context, stateExecutionInstance);
@@ -436,7 +436,7 @@ public class StateMachineExecutor {
       logger.error("Error in aborting", e);
     }
     if (!updated) {
-      throw new WingsException(ErrorCodes.STATE_ABORT_FAILED, "stateName", stateExecutionInstance.getStateName());
+      throw new WingsException(ErrorCode.STATE_ABORT_FAILED, "stateName", stateExecutionInstance.getStateName());
     }
   }
 
@@ -794,7 +794,7 @@ public class StateMachineExecutor {
       logger.warn("clearStateExecutionData could not be completed for the stateExecutionInstance: {}",
           stateExecutionInstance.getUuid());
 
-      throw new WingsException(ErrorCodes.RETRY_FAILED, "stateName", stateExecutionInstance.getStateName());
+      throw new WingsException(ErrorCode.RETRY_FAILED, "stateName", stateExecutionInstance.getStateName());
     }
   }
 

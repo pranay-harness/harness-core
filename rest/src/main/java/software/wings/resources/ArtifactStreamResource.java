@@ -10,7 +10,7 @@ import net.redhogs.cronparser.CronExpressionDescriptor;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -225,7 +225,7 @@ public class ArtifactStreamResource {
       return new RestResponse<>(CronExpressionDescriptor.getDescription(
           DescriptionTypeEnum.FULL, inputMap.get("expression"), new Options(), I18nMessages.DEFAULT_LOCALE));
     } catch (ParseException e) {
-      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Incorrect cron expression");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Incorrect cron expression");
     }
   }
 

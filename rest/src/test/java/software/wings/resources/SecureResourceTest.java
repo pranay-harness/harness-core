@@ -50,7 +50,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.User;
@@ -209,7 +209,7 @@ public class SecureResourceTest {
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCodes.INVALID_TOKEN.name());
+        .hasStackTraceContaining(ErrorCode.INVALID_TOKEN.name());
   }
 
   /**
@@ -270,7 +270,7 @@ public class SecureResourceTest {
                                        .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                                        .get())
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
+        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -288,7 +288,7 @@ public class SecureResourceTest {
                                        .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                                        .post(ENTITY))
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
+        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -339,7 +339,7 @@ public class SecureResourceTest {
                        .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                        .get())
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
+        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -358,7 +358,7 @@ public class SecureResourceTest {
                        .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                        .post(ENTITY))
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
+        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
 
   /**
@@ -445,7 +445,7 @@ public class SecureResourceTest {
                        .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                        .post(ENTITY))
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
+        .hasStackTraceContaining(ErrorCode.ACCESS_DENIED.name());
   }
 
   @Test

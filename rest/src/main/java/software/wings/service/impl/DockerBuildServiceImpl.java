@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.DockerConfig;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
@@ -34,26 +34,22 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public List<String> getJobs(DockerConfig jenkinsConfig) {
-    throw new WingsException(
-        ErrorCodes.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public List<String> getArtifactPaths(String jobName, DockerConfig config) {
-    throw new WingsException(
-        ErrorCodes.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, DockerConfig dockerConfig) {
-    throw new WingsException(
-        ErrorCodes.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public Map<String, String> getPlans(DockerConfig config) {
-    throw new WingsException(
-        ErrorCodes.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 }

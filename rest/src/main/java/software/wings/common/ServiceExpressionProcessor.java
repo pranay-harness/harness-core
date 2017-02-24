@@ -8,7 +8,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.api.ServiceElement;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -198,7 +198,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     if (selectedServices == null) {
       WorkflowStandardParams stdParams = context.getContextElement(ContextElementType.STANDARD);
       if (stdParams == null) {
-        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Standard params is null");
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Standard params is null");
       }
       selectedServices = stdParams.getServices();
     }

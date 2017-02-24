@@ -42,7 +42,7 @@ import software.wings.app.StaticConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
@@ -1789,7 +1789,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
           .isInstanceOf(String.class)
           .asString()
           .startsWith("no workflowExecution for executionUuid");
-      assertThat(exception).hasMessage(ErrorCodes.INVALID_ARGUMENT.getCode());
+      assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
     }
   }
 
