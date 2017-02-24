@@ -371,6 +371,17 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldNotGetNodePoolAutoscalingIfNodePoolNotExists() throws Exception {
+    when(clustersGet.execute()).thenReturn(CLUSTER_1);
+
+    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(
+        ImmutableMap.<String, String>builder().putAll(CLUSTER_PARAMS).put("nodePoolId", "node-pool-missing").build());
+
+    verify(clusters).get(anyString(), anyString(), anyString());
+    assertThat(autoscaling).isNull();
+  }
+
+  @Test
   public void shouldFailOnMissingNodePoolIdWhenMultiplePools() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
