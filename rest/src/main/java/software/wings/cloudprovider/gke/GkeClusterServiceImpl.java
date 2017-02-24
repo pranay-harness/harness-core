@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.KubernetesHelperService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,8 +31,6 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
-  private static final int SLEEP_INTERVAL_S = 5;
-  private static final int SLEEP_INTERVAL_MS = SLEEP_INTERVAL_S * 1000;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
@@ -117,15 +116,13 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     int i = 0;
     while (operation.getStatus().equals("RUNNING")) {
       try {
-        Thread.sleep(SLEEP_INTERVAL_MS);
+        Misc.quietSleep(kubernetesHelperService.getSleepIntervalMs());
         operation =
             gkeContainerService.projects().zones().operations().get(projectId, zone, operation.getName()).execute();
       } catch (IOException e) {
         logger.error("Error checking operation status", e);
-      } catch (InterruptedException e) {
-        logger.warn("Interrupted while waiting for operation to complete", e);
       }
-      i += SLEEP_INTERVAL_S;
+      i += kubernetesHelperService.getSleepIntervalMs() / 1000;
       logger.info(operationLogMessage + "... " + i);
     }
     logger.info(operationLogMessage + ": " + operation.getStatus());

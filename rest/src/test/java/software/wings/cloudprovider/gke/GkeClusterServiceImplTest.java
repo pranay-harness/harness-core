@@ -84,6 +84,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(kubernetesHelperService.getGkeContainerService(anyString())).thenReturn(container);
+    when(kubernetesHelperService.getSleepIntervalMs()).thenReturn(0);
     when(container.projects()).thenReturn(projects);
     when(projects.zones()).thenReturn(zones);
     when(zones.clusters()).thenReturn(clusters);

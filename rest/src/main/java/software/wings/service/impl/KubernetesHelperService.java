@@ -26,6 +26,8 @@ import java.util.Map;
  */
 @Singleton
 public class KubernetesHelperService {
+  private static final int SLEEP_INTERVAL_MS = 5 * 1000;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Map<String, KubernetesClient> clientCacheMap = new HashMap<>();
 
@@ -85,5 +87,9 @@ public class KubernetesHelperService {
       clientCacheMap.put(masterUrl, clientCached);
     }
     return clientCached;
+  }
+
+  public int getSleepIntervalMs() {
+    return SLEEP_INTERVAL_MS;
   }
 }
