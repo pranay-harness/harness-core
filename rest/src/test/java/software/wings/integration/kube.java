@@ -16,6 +16,7 @@
 
 package software.wings.integration;
 
+import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 
+import java.util.List;
+
 public class kube {
   private static final Logger logger = LoggerFactory.getLogger(kube.class);
 
@@ -31,15 +34,32 @@ public class kube {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
-    KubernetesConfig config = gkeClusterService.createCluster(ImmutableMap.<String, String>builder()
-                                                                  .put("name", "foo-bar")
-                                                                  .put("projectId", "kubernetes-test-158122")
-                                                                  .put("appName", "testApp")
-                                                                  .put("zone", "us-west1-a")
-                                                                  .put("nodeCount", "1")
-                                                                  .put("masterUser", "master")
-                                                                  .put("masterPwd", "foo!!bar$$")
-                                                                  .build());
+    ImmutableMap<String, String> projectParams = ImmutableMap.<String, String>builder()
+                                                     .put("projectId", "kubernetes-test-158122")
+                                                     .put("appName", "testApp")
+                                                     .put("zone", "us-west1-a")
+                                                     .build();
+
+    ImmutableMap<String, String> clusterParams =
+        ImmutableMap.<String, String>builder().putAll(projectParams).put("name", "baz-qux").build();
+
+    List<String> clusters = gkeClusterService.listClusters(projectParams);
+    logger.info("Available clusters: " + clusters);
+
+    //    KubernetesConfig config = gkeClusterService.createCluster(
+    //        ImmutableMap.<String, String>builder()
+    //            .putAll(clusterParams)
+    //            .put("nodeCount", "1")
+    //            .put("masterUser", "master")
+    //            .put("masterPwd", "foo!!bar$$")
+    //            .build());
+
+    KubernetesConfig config = gkeClusterService.getCluster(clusterParams);
+
+    //    gkeClusterService.setNodePoolAutoscaling(true, 4, 8, clusterParams);
+
+    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(clusterParams);
+    logger.info("Autoscale setting: " + autoscaling);
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withValue(config).build();
 
