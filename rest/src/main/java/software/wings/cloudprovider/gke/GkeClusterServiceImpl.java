@@ -32,15 +32,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public KubernetesConfig createCluster(Map<String, String> params) {
     Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
 
-    Cluster cluster = null;
+    // See if the cluster already exists
     try {
-      cluster = gkeContainerService.projects()
-                    .zones()
-                    .clusters()
-                    .get(params.get("projectId"), params.get("zone"), params.get("name"))
-                    .execute();
+      Cluster cluster = gkeContainerService.projects()
+                            .zones()
+                            .clusters()
+                            .get(params.get("projectId"), params.get("zone"), params.get("name"))
+                            .execute();
       logger.info(String.format("Cluster %s already exists in zone %s for project %s", params.get("name"),
           params.get("zone"), params.get("projectId")));
+      return configFromCluster(cluster);
     } catch (IOException e) {
       if (e instanceof GoogleJsonResponseException
           && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
@@ -53,51 +54,42 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       }
     }
 
-    if (cluster == null) {
-      cluster = new Cluster()
-                    .setName(params.get("name"))
-                    .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
-                    .setMasterAuth(
-                        new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd")));
-
-      CreateClusterRequest content = new CreateClusterRequest().setCluster(cluster);
-
-      Operation response = null;
-      try {
-        response = gkeContainerService.projects()
-                       .zones()
-                       .clusters()
-                       .create(params.get("projectId"), params.get("zone"), content)
-                       .execute();
-      } catch (IOException e) {
-        logger.error(String.format("Error creating cluster %s in zone %s for project %s", params.get("name"),
-                         params.get("zone"), params.get("projectId")),
-            e);
-      }
-
+    // Cluster doesn't exist. Create it.
+    try {
+      CreateClusterRequest content = new CreateClusterRequest().setCluster(
+          new Cluster()
+              .setName(params.get("name"))
+              .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
+              .setMasterAuth(
+                  new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd"))));
+      Operation createOperation = gkeContainerService.projects()
+                                      .zones()
+                                      .clusters()
+                                      .create(params.get("projectId"), params.get("zone"), content)
+                                      .execute();
       waitForOperationToComplete(
-          response, gkeContainerService, params.get("projectId"), params.get("zone"), "Provisioning");
-
-      try {
-        cluster = gkeContainerService.projects()
-                      .zones()
-                      .clusters()
-                      .get(params.get("projectId"), params.get("zone"), params.get("name"))
-                      .execute();
-      } catch (IOException e) {
-        logger.error(String.format("Error getting newly created cluster %s in zone %s for project %s",
-                         params.get("name"), params.get("zone"), params.get("projectId")),
-            e);
-      }
+          createOperation, gkeContainerService, params.get("projectId"), params.get("zone"), "Provisioning");
+      Cluster cluster = gkeContainerService.projects()
+                            .zones()
+                            .clusters()
+                            .get(params.get("projectId"), params.get("zone"), params.get("name"))
+                            .execute();
+      logger.info("Cluster status: " + cluster.getStatus());
+      logger.info("Master endpoint: " + cluster.getEndpoint());
+      return configFromCluster(cluster);
+    } catch (IOException e) {
+      logger.error(String.format("Error creating cluster %s in zone %s for project %s", params.get("name"),
+                       params.get("zone"), params.get("projectId")),
+          e);
     }
+    return null;
+  }
 
-    logger.info("Cluster status: " + cluster.getStatus());
-    logger.info("Master endpoint: " + cluster.getEndpoint());
-
+  private KubernetesConfig configFromCluster(Cluster cluster) {
     return KubernetesConfig.Builder.aKubernetesConfig()
         .withApiServerUrl("https://" + cluster.getEndpoint() + "/")
-        .withUsername(params.get("masterUser"))
-        .withPassword(params.get("masterPwd"))
+        .withUsername(cluster.getMasterAuth().getUsername())
+        .withPassword(cluster.getMasterAuth().getPassword())
         .build();
   }
 
@@ -112,14 +104,13 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                      .clusters()
                      .delete(params.get("projectId"), params.get("zone"), params.get("name"))
                      .execute();
+      waitForOperationToComplete(
+          response, gkeContainerService, params.get("projectId"), params.get("zone"), "Deleting cluster");
     } catch (IOException e) {
       logger.error(String.format("Error deleting cluster %s in zone %s for project %s", params.get("name"),
                        params.get("zone"), params.get("projectId")),
           e);
     }
-
-    waitForOperationToComplete(
-        response, gkeContainerService, params.get("projectId"), params.get("zone"), "Deleting cluster");
   }
 
   private void waitForOperationToComplete(
@@ -146,15 +137,17 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public KubernetesConfig getCluster(Map<String, String> params) {
     Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
 
-    Cluster cluster;
     try {
-      cluster = gkeContainerService.projects()
-                    .zones()
-                    .clusters()
-                    .get(params.get("projectId"), params.get("zone"), params.get("name"))
-                    .execute();
+      Cluster cluster = gkeContainerService.projects()
+                            .zones()
+                            .clusters()
+                            .get(params.get("projectId"), params.get("zone"), params.get("name"))
+                            .execute();
       logger.info(String.format("Found cluster %s in zone %s for project %s", params.get("name"), params.get("zone"),
           params.get("projectId")));
+      logger.info("Cluster status: " + cluster.getStatus());
+      logger.info("Master endpoint: " + cluster.getEndpoint());
+      return configFromCluster(cluster);
     } catch (IOException e) {
       if (e instanceof GoogleJsonResponseException
           && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
@@ -165,17 +158,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                          params.get("zone"), params.get("projectId")),
             e);
       }
-      return null;
     }
-
-    logger.info("Cluster status: " + cluster.getStatus());
-    logger.info("Master endpoint: " + cluster.getEndpoint());
-
-    return KubernetesConfig.Builder.aKubernetesConfig()
-        .withApiServerUrl("https://" + cluster.getEndpoint() + "/")
-        .withUsername(params.get("masterUser"))
-        .withPassword(params.get("masterPwd"))
-        .build();
+    return null;
   }
 
   @Override
