@@ -1,19 +1,24 @@
 package software.wings.cloudprovider.gke;
 
+import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;
 import com.google.api.services.container.model.CreateClusterRequest;
 import com.google.api.services.container.model.ListClustersResponse;
 import com.google.api.services.container.model.MasterAuth;
+import com.google.api.services.container.model.NodePool;
+import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -25,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -51,6 +57,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Mock private HttpHeaders httpHeaders;
 
   @Inject @InjectMocks private GkeClusterService gkeClusterService;
+  private GoogleJsonResponseException notFoundException;
 
   private static final ImmutableMap<String, String> PROJECT_PARAMS = ImmutableMap.<String, String>builder()
                                                                          .put("projectId", "project-a")
@@ -72,14 +79,26 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
           .setInitialNodeCount(5)
           .setStatus("RUNNING")
           .setEndpoint("1.1.1.1")
-          .setMasterAuth((new MasterAuth().setUsername("master1").setPassword("password1")));
+          .setMasterAuth((new MasterAuth().setUsername("master1").setPassword("password1")))
+          .setNodePools(ImmutableList.of(
+              new NodePool()
+                  .setName("node-pool1.1")
+                  .setAutoscaling(new NodePoolAutoscaling().setEnabled(false).setMinNodeCount(1).setMaxNodeCount(2)),
+              new NodePool()
+                  .setName("node-pool1.2")
+                  .setAutoscaling((new NodePoolAutoscaling().setEnabled(true).setMinNodeCount(1).setMaxNodeCount(3)))));
+
   private static final Cluster CLUSTER_2 =
       new Cluster()
           .setName("cluster-name-2")
           .setInitialNodeCount(5)
           .setStatus("RUNNING")
           .setEndpoint("1.1.1.2")
-          .setMasterAuth((new MasterAuth().setUsername("master2").setPassword("password2")));
+          .setMasterAuth((new MasterAuth().setUsername("master2").setPassword("password2")))
+          .setNodePools(ImmutableList.of(
+              new NodePool()
+                  .setName("node-pool2")
+                  .setAutoscaling(new NodePoolAutoscaling().setEnabled(true).setMinNodeCount(5).setMaxNodeCount(10))));
 
   @Before
   public void setUp() throws Exception {
@@ -96,18 +115,21 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
         .thenReturn(clustersUpdate);
     when(clusters.delete(anyString(), anyString(), anyString())).thenReturn(clustersDelete);
     when(operations.get(anyString(), anyString(), anyString())).thenReturn(operationsGet);
+
+    GoogleJsonError googleJsonError = new GoogleJsonError();
+    googleJsonError.setCode(HttpStatusCodes.STATUS_CODE_NOT_FOUND);
+    notFoundException = new GoogleJsonResponseException(
+        new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders),
+        googleJsonError);
   }
 
   @Test
   public void shouldCreateCluster() throws Exception {
-    IOException e =
-        new GoogleJsonResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders)
-            .build();
     final List<Boolean> firstTime = new ArrayList<>(1);
     when(clustersGet.execute()).thenAnswer(invocation -> {
       if (firstTime.isEmpty()) {
         firstTime.add(true);
-        throw e;
+        throw notFoundException;
       }
       return CLUSTER_1;
     });
@@ -136,6 +158,30 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldNotCreateClusterIfError() throws Exception {
+    when(clustersGet.execute()).thenThrow(notFoundException);
+    when(clustersCreate.execute()).thenThrow(new IOException());
+
+    KubernetesConfig config = gkeClusterService.createCluster(CREATE_CLUSTER_PARAMS);
+
+    verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
+    assertThat(config).isNull();
+  }
+
+  @Test
+  public void shouldNotCreateClusterIfOperationQueryFailed() throws Exception {
+    when(clustersGet.execute()).thenThrow(notFoundException);
+    Operation pendingOperation = new Operation().setStatus("RUNNING");
+    when(clustersCreate.execute()).thenReturn(pendingOperation);
+    when(operationsGet.execute()).thenThrow(new IOException());
+
+    KubernetesConfig config = gkeClusterService.createCluster(CREATE_CLUSTER_PARAMS);
+
+    verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
+    assertThat(config).isNull();
+  }
+
+  @Test
   public void shouldDeleteCluster() throws Exception {
     Operation pendingOperation = new Operation().setStatus("RUNNING");
     when(clustersDelete.execute()).thenReturn(pendingOperation);
@@ -150,10 +196,32 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotDeleteClusterIfNotExists() throws Exception {
-    when(clustersDelete.execute())
-        .thenThrow(
-            new GoogleJsonResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders)
-                .build());
+    when(clustersDelete.execute()).thenThrow(notFoundException);
+
+    boolean success = gkeClusterService.deleteCluster(CLUSTER_PARAMS);
+
+    verify(clusters).delete(anyString(), anyString(), anyString());
+    assertThat(success).isFalse();
+  }
+
+  @Test
+  public void shouldNotDeleteClusterIfOperationFailed() throws Exception {
+    Operation pendingOperation = new Operation().setStatus("RUNNING");
+    when(clustersDelete.execute()).thenReturn(pendingOperation);
+    Operation doneOperation = new Operation().setStatus("FAILED");
+    when(operationsGet.execute()).thenReturn(doneOperation);
+
+    boolean success = gkeClusterService.deleteCluster(CLUSTER_PARAMS);
+
+    verify(clusters).delete(anyString(), anyString(), anyString());
+    assertThat(success).isFalse();
+  }
+
+  @Test
+  public void shouldNotDeleteClusterIfOperationQueryFailed() throws Exception {
+    Operation pendingOperation = new Operation().setStatus("RUNNING");
+    when(clustersDelete.execute()).thenReturn(pendingOperation);
+    when(operationsGet.execute()).thenThrow(new IOException());
 
     boolean success = gkeClusterService.deleteCluster(CLUSTER_PARAMS);
 
@@ -175,10 +243,17 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldNotGetClusterIfNotExists() throws Exception {
-    when(clustersGet.execute())
-        .thenThrow(
-            new GoogleJsonResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders)
-                .build());
+    when(clustersGet.execute()).thenThrow(notFoundException);
+
+    KubernetesConfig config = gkeClusterService.getCluster(CLUSTER_PARAMS);
+
+    verify(clusters).get(anyString(), anyString(), anyString());
+    assertThat(config).isNull();
+  }
+
+  @Test
+  public void shouldNotGetClusterIfError() throws Exception {
+    when(clustersGet.execute()).thenThrow(new IOException());
 
     KubernetesConfig config = gkeClusterService.getCluster(CLUSTER_PARAMS);
 
@@ -221,6 +296,22 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldSetNodePoolAutoscalingWithPoolId() throws Exception {
+    Operation pendingOperation = new Operation().setStatus("RUNNING");
+    when(clustersUpdate.execute()).thenReturn(pendingOperation);
+    Operation doneOperation = new Operation().setStatus("DONE");
+    when(operationsGet.execute()).thenReturn(doneOperation);
+
+    boolean success = gkeClusterService.setNodePoolAutoscaling(
+        true, 2, 4, ImmutableMap.<String, String>builder().putAll(CLUSTER_PARAMS).put("nodePoolId", "pool-id").build());
+
+    ArgumentCaptor<UpdateClusterRequest> args = ArgumentCaptor.forClass(UpdateClusterRequest.class);
+    verify(clusters).update(anyString(), anyString(), anyString(), args.capture());
+    assertThat(success).isTrue();
+    assertThat(args.getValue().getUpdate().getDesiredNodePoolId()).isEqualTo("pool-id");
+  }
+
+  @Test
   public void shouldNotSetNodePoolAutoscalingIfError() throws Exception {
     when(clustersUpdate.execute()).thenThrow(new IOException());
 
@@ -228,5 +319,67 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
     verify(clusters).update(anyString(), anyString(), anyString(), any(UpdateClusterRequest.class));
     assertThat(success).isFalse();
+  }
+
+  @Test
+  public void shouldNotSetNodePoolAutoscalingIfOperationQueryFailed() throws Exception {
+    Operation pendingOperation = new Operation().setStatus("RUNNING");
+    when(clustersUpdate.execute()).thenReturn(pendingOperation);
+    when(operationsGet.execute()).thenThrow(new IOException());
+
+    boolean success = gkeClusterService.setNodePoolAutoscaling(true, 2, 4, CLUSTER_PARAMS);
+
+    verify(clusters).update(anyString(), anyString(), anyString(), any(UpdateClusterRequest.class));
+    assertThat(success).isFalse();
+  }
+
+  @Test
+  public void shouldGetNodePoolAutoscaling() throws Exception {
+    when(clustersGet.execute()).thenReturn(CLUSTER_2);
+
+    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(CLUSTER_PARAMS);
+
+    verify(clusters).get(anyString(), anyString(), anyString());
+    assertThat(autoscaling).isNotNull();
+    assertThat(autoscaling.getEnabled()).isTrue();
+    assertThat(autoscaling.getMinNodeCount()).isEqualTo(5);
+    assertThat(autoscaling.getMaxNodeCount()).isEqualTo(10);
+  }
+
+  @Test
+  public void shouldGetNodePoolAutoscalingWithPoolId() throws Exception {
+    when(clustersGet.execute()).thenReturn(CLUSTER_1);
+
+    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(
+        ImmutableMap.<String, String>builder().putAll(CLUSTER_PARAMS).put("nodePoolId", "node-pool1.2").build());
+
+    verify(clusters).get(anyString(), anyString(), anyString());
+    assertThat(autoscaling).isNotNull();
+    assertThat(autoscaling.getEnabled()).isTrue();
+    assertThat(autoscaling.getMinNodeCount()).isEqualTo(1);
+    assertThat(autoscaling.getMaxNodeCount()).isEqualTo(3);
+  }
+
+  @Test
+  public void shouldNotGetNodePoolAutoscalingIfNotExists() throws Exception {
+    when(clustersGet.execute()).thenThrow(notFoundException);
+
+    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(CLUSTER_PARAMS);
+
+    verify(clusters).get(anyString(), anyString(), anyString());
+    assertThat(autoscaling).isNull();
+  }
+
+  @Test
+  public void shouldFailOnMissingNodePoolIdWhenMultiplePools() throws Exception {
+    when(clustersGet.execute()).thenReturn(CLUSTER_1);
+
+    try {
+      gkeClusterService.getNodePoolAutoscaling(CLUSTER_PARAMS);
+      fail();
+    } catch (IllegalArgumentException e) {
+      // Expected
+      assertThat(e.getMessage()).startsWith("expected one element but was:");
+    }
   }
 }
