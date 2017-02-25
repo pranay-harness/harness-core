@@ -190,6 +190,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .extracting(
             AppDeployment::getAppId, AppDeployment::getAppName, appDeployment -> appDeployment.getDeployments().size())
         .containsExactly(tuple(APP_ID, APP_NAME, 2));
+    UserThreadLocal.unset();
   }
 
   @Test
