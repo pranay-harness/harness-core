@@ -1,5 +1,7 @@
 package software.wings.beans.stats;
 
+import java.util.Objects;
+
 /**
  * Created by anubhaw on 10/19/16.
  */
@@ -7,6 +9,25 @@ public class NotificationCount extends WingsStatistics {
   private int pendingNotificationsCount;
   private int completedNotificationsCount;
   private int failureCount;
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(pendingNotificationsCount, completedNotificationsCount, failureCount);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final NotificationCount other = (NotificationCount) obj;
+    return Objects.equals(this.pendingNotificationsCount, other.pendingNotificationsCount)
+        && Objects.equals(this.completedNotificationsCount, other.completedNotificationsCount)
+        && Objects.equals(this.failureCount, other.failureCount);
+  }
 
   /**
    * Instantiates a new Notification counter.

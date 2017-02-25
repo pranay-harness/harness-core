@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -15,14 +14,11 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.ORCHESTRATION_WORKFLOW;
 import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
-import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.RUNNING;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -43,12 +39,9 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown;
-import software.wings.beans.stats.DayActivityStatistics;
-import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
-import software.wings.beans.stats.KeyStatistics;
 import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
@@ -104,24 +97,6 @@ public class StatisticsServiceImpl implements StatisticsService {
         getTopConsumerForPastXDays(30).stream().filter(tc -> appIdMap.containsKey(tc.getAppId())).collect(toList());
     topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
     return new TopConsumersStatistics(topConsumers);
-  }
-
-  @Override
-  public List<WingsStatistics> getKeyStats() {
-    List<Activity> activities = wingsPersistence.createQuery(Activity.class)
-                                    .field("createdAt")
-                                    .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
-                                    .retrievedFields(true, "appId", "environmentType", "artifactId")
-                                    .asList();
-
-    Map<EnvironmentType, List<Activity>> activityByEnvType =
-        activities.stream()
-            .filter(activity -> activity.getEnvironmentType() != null)
-            .collect(groupingBy(activity -> PROD.equals(activity.getEnvironmentType()) ? PROD : NON_PROD));
-    List<WingsStatistics> keyStats = new ArrayList<>();
-    keyStats.add(getKeyStatsForEnvType(PROD, activityByEnvType.get(PROD)));
-    keyStats.add(getKeyStatsForEnvType(NON_PROD, activityByEnvType.get(NON_PROD)));
-    return keyStats;
   }
 
   @Override
@@ -185,19 +160,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
-  public DeploymentActivityStatistics getDeploymentActivities(Integer numOfDays, Long endDate) {
-    if (numOfDays == null || numOfDays <= 0) {
-      numOfDays = 30;
-    }
-    if (endDate == null || endDate <= 0) {
-      endDate = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    }
-
-    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * (numOfDays - 1);
-    return getDeploymentActivitiesForXDaysStartingFrom(numOfDays, fromDateEpochMilli);
-  }
-
-  @Override
   public UserStatistics getUserStats() {
     User user = UserThreadLocal.get();
     if (user == null) {
@@ -230,7 +192,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     });
 
     int deploymentCount =
-        (int) appDeployments.stream().map(appDeployment -> appDeployment.getDeployments().size()).count();
+        (int) appDeployments.stream().mapToInt(appDeployment -> appDeployment.getDeployments().size()).sum();
 
     executorService.submit(() -> userService.updateStatsFetchedOnForUser(user));
     return anUserStatistics()
@@ -366,67 +328,6 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     return new AggregatedDayStats(aggTotalCount, aggFailureCount, aggInstanceCount, dayStats);
-  }
-
-  private DeploymentActivityStatistics getDeploymentActivitiesForXDaysStartingFrom(
-      Integer numOfDays, Long fromDateEpochMilli) {
-    PageRequest pageRequest =
-        aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(
-                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
-            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-            .build();
-
-    List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
-    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(numOfDays);
-
-    Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =
-        workflowExecutions.parallelStream().collect(groupingBy(
-            wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt())), groupingBy(WorkflowExecution::getStatus, counting())));
-
-    IntStream.range(0, numOfDays).forEach(idx -> {
-      int successCount = 0;
-      int failureCount = 0;
-      int runningCount = 0;
-      Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
-      Map<ExecutionStatus, Long> executionStatusCountMap = executionStatusCountByDay.get(timeOffset);
-      if (executionStatusCountMap != null) {
-        successCount = executionStatusCountMap.getOrDefault(SUCCESS, 0L).intValue();
-        failureCount = executionStatusCountMap.getOrDefault(FAILED, 0L).intValue();
-        runningCount = executionStatusCountMap.getOrDefault(RUNNING, 0L).intValue();
-      }
-      int total = successCount + failureCount + runningCount;
-      dayActivityStatisticsList.add(DayActivityStatistics.Builder.aDayActivityStatistics()
-                                        .withDate(timeOffset)
-                                        .withSuccessCount(successCount)
-                                        .withFailureCount(failureCount)
-                                        .withRunningCount(runningCount)
-                                        .withTotalCount(total)
-                                        .build());
-    });
-    return new DeploymentActivityStatistics(dayActivityStatisticsList);
-  }
-
-  private KeyStatistics getKeyStatsForEnvType(EnvironmentType environmentType, List<Activity> activities) {
-    int appCount = 0;
-    int artifactCount = 0;
-    int instanceCount = 0;
-
-    if (activities != null && activities.size() > 0) {
-      appCount = (int) activities.stream().map(Activity::getAppId).filter(Objects::nonNull).distinct().count();
-      artifactCount =
-          (int) activities.stream().map(Activity::getArtifactId).filter(Objects::nonNull).distinct().count();
-      instanceCount = activities.size();
-    }
-    return aKeyStatistics()
-        .withApplicationCount(appCount)
-        .withArtifactCount(artifactCount)
-        .withInstanceCount(instanceCount)
-        .withEnvironmentType(environmentType)
-        .build();
   }
 
   private List<TopConsumer> getTopConsumerForPastXDays(int days) {

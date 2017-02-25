@@ -1,6 +1,10 @@
 package software.wings.beans.stats;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Id;
+
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 8/16/16.
@@ -100,6 +104,37 @@ public class TopConsumer {
    */
   public void setTotalCount(int totalCount) {
     this.totalCount = totalCount;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("appId", appId)
+        .add("appName", appName)
+        .add("successfulActivityCount", successfulActivityCount)
+        .add("failedActivityCount", failedActivityCount)
+        .add("totalCount", totalCount)
+        .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(appId, appName, successfulActivityCount, failedActivityCount, totalCount);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final TopConsumer other = (TopConsumer) obj;
+    return Objects.equals(this.appId, other.appId) && Objects.equals(this.appName, other.appName)
+        && Objects.equals(this.successfulActivityCount, other.successfulActivityCount)
+        && Objects.equals(this.failedActivityCount, other.failedActivityCount)
+        && Objects.equals(this.totalCount, other.totalCount);
   }
 
   /**

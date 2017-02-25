@@ -1,10 +1,13 @@
 package software.wings.beans.stats;
 
+import com.google.common.base.MoreObjects;
+
 import software.wings.beans.Environment.EnvironmentType;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 8/15/16.
@@ -211,6 +214,34 @@ public class DeploymentStatistics extends WingsStatistics {
        */
       public void setDate(Long date) {
         this.date = date;
+      }
+
+      @Override
+      public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("totalCount", totalCount)
+            .add("failedCount", failedCount)
+            .add("instancesCount", instancesCount)
+            .add("date", date)
+            .toString();
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(totalCount, failedCount, instancesCount, date);
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (this == obj) {
+          return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+          return false;
+        }
+        final DayStat other = (DayStat) obj;
+        return Objects.equals(this.totalCount, other.totalCount) && Objects.equals(this.failedCount, other.failedCount)
+            && Objects.equals(this.instancesCount, other.instancesCount) && Objects.equals(this.date, other.date);
       }
     }
   }

@@ -1,7 +1,6 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.stats.AppKeyStatistics;
-import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.UserStatistics;
@@ -22,13 +21,6 @@ public interface StatisticsService {
   WingsStatistics getTopConsumers();
 
   /**
-   * Gets key stats.
-   *
-   * @return the key stats
-   */
-  List<WingsStatistics> getKeyStats();
-
-  /**
    * Gets application key stats.
    *
    * @param appIds    the app id
@@ -36,15 +28,6 @@ public interface StatisticsService {
    * @return the application key stats
    */
   Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays);
-
-  /**
-   * Gets deployment activities.
-   *
-   * @param numOfDays the num of days
-   * @param endDate   the end date
-   * @return the deployment activities
-   */
-  DeploymentActivityStatistics getDeploymentActivities(Integer numOfDays, Long endDate);
 
   /**
    * Gets user stats.

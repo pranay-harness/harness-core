@@ -62,6 +62,11 @@ public class ActivityStatusAggregation {
     private ExecutionStatus status;
     private int count;
 
+    public StatusCount(ExecutionStatus status, int count) {
+      this.status = status;
+      this.count = count;
+    }
+
     /**
      * Gets status.
      *
@@ -101,6 +106,38 @@ public class ActivityStatusAggregation {
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this).add("status", status).add("count", count).toString();
+    }
+  }
+
+  public static final class Builder {
+    private String appId;
+    private List<StatusCount> status;
+
+    private Builder() {}
+
+    public static Builder anActivityStatusAggregation() {
+      return new Builder();
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withStatus(List<StatusCount> status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder but() {
+      return anActivityStatusAggregation().withAppId(appId).withStatus(status);
+    }
+
+    public ActivityStatusAggregation build() {
+      ActivityStatusAggregation activityStatusAggregation = new ActivityStatusAggregation();
+      activityStatusAggregation.setAppId(appId);
+      activityStatusAggregation.setStatus(status);
+      return activityStatusAggregation;
     }
   }
 }

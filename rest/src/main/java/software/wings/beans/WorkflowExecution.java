@@ -435,6 +435,7 @@ public class WorkflowExecution extends Base {
     private String envId;
     private String appName;
     private String envName;
+    private EnvironmentType envType;
     private WorkflowType workflowType;
     private ExecutionStatus status = ExecutionStatus.NEW;
     private Graph graph;
@@ -446,12 +447,12 @@ public class WorkflowExecution extends Base {
     private CountsByStatuses breakdown;
     private ExecutionArgs executionArgs;
     private List<ElementExecutionSummary> serviceExecutionSummaries;
-    private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap;
-    private Long startTs;
-    private Long endTs;
     private String uuid;
+    private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap;
     private String appId;
     private EmbeddedUser createdBy;
+    private Long startTs;
+    private Long endTs;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
@@ -484,6 +485,11 @@ public class WorkflowExecution extends Base {
 
     public WorkflowExecutionBuilder withEnvName(String envName) {
       this.envName = envName;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEnvType(EnvironmentType envType) {
+      this.envType = envType;
       return this;
     }
 
@@ -543,24 +549,14 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
     public WorkflowExecutionBuilder withStatusInstanceBreakdownMap(
         LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
       this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
-      return this;
-    }
-
-    public WorkflowExecutionBuilder withStartTs(Long startTs) {
-      this.startTs = startTs;
-      return this;
-    }
-
-    public WorkflowExecutionBuilder withEndTs(Long endTs) {
-      this.endTs = endTs;
-      return this;
-    }
-
-    public WorkflowExecutionBuilder withUuid(String uuid) {
-      this.uuid = uuid;
       return this;
     }
 
@@ -571,6 +567,16 @@ public class WorkflowExecution extends Base {
 
     public WorkflowExecutionBuilder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withStartTs(Long startTs) {
+      this.startTs = startTs;
+      return this;
+    }
+
+    public WorkflowExecutionBuilder withEndTs(Long endTs) {
+      this.endTs = endTs;
       return this;
     }
 
@@ -589,6 +595,36 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
+    public WorkflowExecutionBuilder but() {
+      return aWorkflowExecution()
+          .withWorkflowId(workflowId)
+          .withStateMachineId(stateMachineId)
+          .withEnvId(envId)
+          .withAppName(appName)
+          .withEnvName(envName)
+          .withEnvType(envType)
+          .withWorkflowType(workflowType)
+          .withStatus(status)
+          .withGraph(graph)
+          .withExpandedGroupIds(expandedGroupIds)
+          .withExecutionNode(executionNode)
+          .withErrorStrategy(errorStrategy)
+          .withName(name)
+          .withTotal(total)
+          .withBreakdown(breakdown)
+          .withExecutionArgs(executionArgs)
+          .withServiceExecutionSummaries(serviceExecutionSummaries)
+          .withUuid(uuid)
+          .withStatusInstanceBreakdownMap(statusInstanceBreakdownMap)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withStartTs(startTs)
+          .withEndTs(endTs)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt);
+    }
+
     public WorkflowExecution build() {
       WorkflowExecution workflowExecution = new WorkflowExecution();
       workflowExecution.setWorkflowId(workflowId);
@@ -596,6 +632,7 @@ public class WorkflowExecution extends Base {
       workflowExecution.setEnvId(envId);
       workflowExecution.setAppName(appName);
       workflowExecution.setEnvName(envName);
+      workflowExecution.setEnvType(envType);
       workflowExecution.setWorkflowType(workflowType);
       workflowExecution.setStatus(status);
       workflowExecution.setGraph(graph);
@@ -607,12 +644,12 @@ public class WorkflowExecution extends Base {
       workflowExecution.setBreakdown(breakdown);
       workflowExecution.setExecutionArgs(executionArgs);
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
-      workflowExecution.setStatusInstanceBreakdownMap(statusInstanceBreakdownMap);
-      workflowExecution.setStartTs(startTs);
-      workflowExecution.setEndTs(endTs);
       workflowExecution.setUuid(uuid);
+      workflowExecution.setStatusInstanceBreakdownMap(statusInstanceBreakdownMap);
       workflowExecution.setAppId(appId);
       workflowExecution.setCreatedBy(createdBy);
+      workflowExecution.setStartTs(startTs);
+      workflowExecution.setEndTs(endTs);
       workflowExecution.setCreatedAt(createdAt);
       workflowExecution.setLastUpdatedBy(lastUpdatedBy);
       workflowExecution.setLastUpdatedAt(lastUpdatedAt);

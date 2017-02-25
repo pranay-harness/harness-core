@@ -1,9 +1,12 @@
 package software.wings.beans.stats;
 
+import com.google.common.base.MoreObjects;
+
 import software.wings.beans.Environment.EnvironmentType;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 10/13/16.
@@ -24,6 +27,28 @@ public class AppKeyStatistics extends WingsStatistics {
 
   public void setStatsMap(Map<EnvironmentType, AppKeyStatsBreakdown> statsMap) {
     this.statsMap = statsMap;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("statsMap", statsMap).toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(statsMap);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final AppKeyStatistics other = (AppKeyStatistics) obj;
+    return Objects.equals(this.statsMap, other.statsMap);
   }
 
   public static class AppKeyStatsBreakdown {
@@ -83,6 +108,34 @@ public class AppKeyStatistics extends WingsStatistics {
      */
     public void setInstanceCount(int instanceCount) {
       this.instanceCount = instanceCount;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("deploymentCount", deploymentCount)
+          .add("artifactCount", artifactCount)
+          .add("instanceCount", instanceCount)
+          .toString();
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(deploymentCount, artifactCount, instanceCount);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      final AppKeyStatsBreakdown other = (AppKeyStatsBreakdown) obj;
+      return Objects.equals(this.deploymentCount, other.deploymentCount)
+          && Objects.equals(this.artifactCount, other.artifactCount)
+          && Objects.equals(this.instanceCount, other.instanceCount);
     }
 
     /**
