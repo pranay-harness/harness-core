@@ -5,7 +5,6 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -21,8 +20,6 @@ import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
-import software.wings.beans.EntityType;
-import software.wings.beans.EventType;
 import software.wings.beans.Notification;
 import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter.Operator;
@@ -40,7 +37,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -78,7 +74,6 @@ public class AppServiceImpl implements AppService {
   @Inject private SetupService setupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationService notificationService;
-  @Inject private HistoryService historyService;
   @Inject private WorkflowService workflowService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
@@ -101,16 +96,6 @@ public class AppServiceImpl implements AppService {
             .build());
     workflowService.createWorkflow(Orchestration.class, getDefaultCanaryDeploymentObject(application.getUuid()));
 
-    historyService.createAsync(aHistory()
-                                   .withEventType(EventType.CREATED)
-                                   .withAppId(app.getUuid())
-                                   .withEntityType(EntityType.APPLICATION)
-                                   .withEntityId(app.getUuid())
-                                   .withEntityName(application.getName())
-                                   .withEntityNewValue(application)
-                                   .withShortDescription("Application " + application.getName() + " created")
-                                   .withTitle("Application " + application.getName() + " created")
-                                   .build());
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
@@ -325,7 +310,6 @@ public class AppServiceImpl implements AppService {
         workflowService.deleteWorkflowByApplication(appId);
         workflowService.deleteStateMachinesByApplication(appId);
         appContainerService.deleteByAppId(appId);
-        historyService.deleteByApplication(appId);
       });
       notificationService.sendNotificationAsync(
           anInformationNotification()
@@ -334,17 +318,6 @@ public class AppServiceImpl implements AppService {
                   ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
               .build());
     }
-
-    historyService.createAsync(aHistory()
-                                   .withEventType(EventType.DELETED)
-                                   .withAppId(application.getUuid())
-                                   .withEntityType(EntityType.APPLICATION)
-                                   .withEntityId(application.getUuid())
-                                   .withEntityName(application.getName())
-                                   .withEntityNewValue(application)
-                                   .withShortDescription("Application " + application.getName() + " created")
-                                   .withTitle("Application " + application.getName() + " created")
-                                   .build());
   }
 
   @Override

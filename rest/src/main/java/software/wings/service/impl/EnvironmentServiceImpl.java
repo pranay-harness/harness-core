@@ -6,7 +6,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -14,9 +13,7 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import com.google.common.collect.ImmutableMap;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.EventType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Setup.SetupStatus;
@@ -28,7 +25,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -56,7 +52,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private WorkflowService workflowService;
   @Inject private SetupService setupService;
   @Inject private NotificationService notificationService;
-  @Inject private HistoryService historyService;
   @Inject private HostService hostService;
   @Inject private ActivityService activityService;
 
@@ -137,16 +132,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
             .build());
-    historyService.createAsync(aHistory()
-                                   .withEventType(EventType.CREATED)
-                                   .withAppId(environment.getAppId())
-                                   .withEntityType(EntityType.ENVIRONMENT)
-                                   .withEntityId(environment.getUuid())
-                                   .withEntityName(environment.getName())
-                                   .withEntityNewValue(environment)
-                                   .withShortDescription("Environment " + environment.getName() + " created")
-                                   .withTitle("Environment " + environment.getName() + " created")
-                                   .build());
     return environment;
   }
 
@@ -184,17 +169,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
                 .build());
-        historyService.createAsync(aHistory()
-                                       .withEventType(EventType.DELETED)
-                                       .withAppId(environment.getAppId())
-                                       .withEntityType(EntityType.ENVIRONMENT)
-                                       .withEntityId(environment.getUuid())
-                                       .withEntityName(environment.getName())
-                                       .withEntityNewValue(environment)
-                                       .withShortDescription("Environment " + environment.getName() + " created")
-                                       .withTitle("Environment " + environment.getName() + " created")
-                                       .build());
-
       });
     }
   }

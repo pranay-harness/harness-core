@@ -53,7 +53,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.EventType;
 import software.wings.beans.Graph;
 import software.wings.beans.History;
 import software.wings.beans.Notification;
@@ -71,11 +70,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -116,10 +113,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(configService, wingsPersistence);
     }
   };
-  @Mock private AppService appService;
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
-  @Mock private HistoryService historyService;
   @Mock private SetupService setupService;
   @Mock private EntityVersionService entityVersionService;
   @Mock private CommandService commandService;
@@ -186,14 +181,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                 command -> asList("Start", "Stop", "Install").contains(command.getCommand().getGraph().getGraphName()))
             .count())
         .isEqualTo(3);
-    verify(historyService).createAsync(historyArgumentCaptor.capture());
-    assertThat(historyArgumentCaptor.getValue())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("eventType", EventType.CREATED)
-        .hasFieldOrPropertyWithValue("entityType", EntityType.SERVICE)
-        .hasFieldOrPropertyWithValue("entityId", service.getUuid())
-        .hasFieldOrPropertyWithValue("entityName", service.getName())
-        .hasFieldOrPropertyWithValue("entityNewValue", service);
   }
 
   /**
@@ -276,14 +263,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
     inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(historyService).createAsync(historyArgumentCaptor.capture());
-    assertThat(historyArgumentCaptor.getValue())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("eventType", EventType.DELETED)
-        .hasFieldOrPropertyWithValue("entityType", EntityType.SERVICE)
-        .hasFieldOrPropertyWithValue("entityId", SERVICE_ID)
-        .hasFieldOrProperty("entityName")
-        .hasFieldOrProperty("entityNewValue");
   }
 
   /**

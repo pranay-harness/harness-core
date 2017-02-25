@@ -60,7 +60,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -114,7 +113,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private ArtifactService artifactService;
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
-  @Inject private HistoryService historyService;
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
 

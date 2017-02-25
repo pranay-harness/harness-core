@@ -10,7 +10,6 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -33,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.EventType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -53,7 +51,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -92,7 +89,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ActivityService activityService;
   @Inject private SetupService setupService;
   @Inject private NotificationService notificationService;
-  @Inject private HistoryService historyService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private CommandService commandService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -141,16 +137,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .withDisplayText(getDecoratedNotificationMessage(ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName())))
             .build());
-    historyService.createAsync(aHistory()
-                                   .withEventType(EventType.CREATED)
-                                   .withAppId(service.getAppId())
-                                   .withEntityType(EntityType.SERVICE)
-                                   .withEntityId(service.getUuid())
-                                   .withEntityName(service.getName())
-                                   .withEntityNewValue(service)
-                                   .withShortDescription("Service " + service.getName() + " created")
-                                   .withTitle("Service " + service.getName() + " created")
-                                   .build());
     return savedService;
   }
 
@@ -247,16 +233,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName())))
                 .build());
-        historyService.createAsync(aHistory()
-                                       .withEventType(EventType.DELETED)
-                                       .withAppId(service.getAppId())
-                                       .withEntityType(EntityType.SERVICE)
-                                       .withEntityId(service.getUuid())
-                                       .withEntityName(service.getName())
-                                       .withEntityNewValue(service)
-                                       .withShortDescription("Service " + service.getName() + " created")
-                                       .withTitle("Service " + service.getName() + " created")
-                                       .build());
         serviceTemplateService.deleteByService(appId, serviceId);
         artifactStreamService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);

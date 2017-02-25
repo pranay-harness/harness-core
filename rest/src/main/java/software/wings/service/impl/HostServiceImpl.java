@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -13,10 +12,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.EventType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -24,7 +21,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.utils.BoundedInputStream;
@@ -48,7 +44,6 @@ public class HostServiceImpl implements HostService {
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private NotificationService notificationService;
   @Inject private EnvironmentService environmentService;
-  @Inject private HistoryService historyService;
   @Inject private ConfigService configService;
   @Inject private ExecutorService executorService;
 
@@ -178,16 +173,6 @@ public class HostServiceImpl implements HostService {
               .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
                   ImmutableMap.of("HOST_NAME", applicationHost.getHostName(), "ENV_NAME", environment.getName())))
               .build());
-      historyService.createAsync(aHistory()
-                                     .withEventType(EventType.DELETED)
-                                     .withAppId(applicationHost.getAppId())
-                                     .withEntityType(EntityType.HOST)
-                                     .withEntityId(applicationHost.getUuid())
-                                     .withEntityName(applicationHost.getHostName())
-                                     .withEntityNewValue(applicationHost)
-                                     .withShortDescription("Host " + applicationHost.getHostName() + " deleted")
-                                     .withTitle("Host " + applicationHost.getHostName() + " deleted")
-                                     .build());
     }
   }
 

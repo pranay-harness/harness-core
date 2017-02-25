@@ -33,10 +33,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.EventType;
-import software.wings.beans.History;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
@@ -48,7 +45,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -76,9 +72,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
   @Captor private ArgumentCaptor<Environment> environmentArgumentCaptor;
-
-  @Mock private HistoryService historyService;
-  @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
 
   /**
    * Sets up.
@@ -155,14 +148,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Environment.class, environment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
-    verify(historyService).createAsync(historyArgumentCaptor.capture());
-    assertThat(historyArgumentCaptor.getValue())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("eventType", EventType.CREATED)
-        .hasFieldOrPropertyWithValue("entityType", EntityType.ENVIRONMENT)
-        .hasFieldOrPropertyWithValue("entityId", savedEnvironment.getUuid())
-        .hasFieldOrPropertyWithValue("entityName", savedEnvironment.getName())
-        .hasFieldOrPropertyWithValue("entityNewValue", savedEnvironment);
   }
 
   /**
@@ -198,14 +183,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     inOrder.verify(wingsPersistence).delete(any(Query.class));
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any());
-    verify(historyService).createAsync(historyArgumentCaptor.capture());
-    assertThat(historyArgumentCaptor.getValue())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("eventType", EventType.DELETED)
-        .hasFieldOrPropertyWithValue("entityType", EntityType.ENVIRONMENT)
-        .hasFieldOrPropertyWithValue("entityId", ENV_ID)
-        .hasFieldOrProperty("entityName")
-        .hasFieldOrProperty("entityNewValue");
   }
 
   /**
