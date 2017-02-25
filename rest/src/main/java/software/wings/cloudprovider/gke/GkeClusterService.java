@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.gke;
 
+import com.google.api.services.container.model.NodePoolAutoscaling;
 import software.wings.beans.KubernetesConfig;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public interface GkeClusterService {
   /**
    * Deletes the given cluster
    */
-  void deleteCluster(Map<String, String> params);
+  boolean deleteCluster(Map<String, String> params);
 
   /**
    * Gets the details about a cluster
@@ -31,10 +32,10 @@ public interface GkeClusterService {
   /**
    * Sets whether node pool autoscaling is enabled
    */
-  void setNodePoolAutoscaling(boolean enabled, int min, int max);
+  boolean setNodePoolAutoscaling(boolean enabled, int min, int max, Map<String, String> params);
 
   /**
    * Gets the node pool autoscaling settings
    */
-  boolean getNodePoolAutoscaling();
+  NodePoolAutoscaling getNodePoolAutoscaling(Map<String, String> params);
 }

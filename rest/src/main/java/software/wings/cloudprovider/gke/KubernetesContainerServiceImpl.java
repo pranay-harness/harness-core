@@ -81,7 +81,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteController(SettingAttribute settingAttribute, Map<String, String> params) {}
+  public void deleteController(SettingAttribute settingAttribute, String name) {
+    kubernetesHelperService.getKubernetesClient(settingAttribute).replicationControllers().withName(name).delete();
+    logger.info(String.format("Deleted controller %s", name));
+  }
 
   @Override
   public Service createService(SettingAttribute settingAttribute, Map<String, String> params) {
@@ -114,7 +117,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteService(SettingAttribute settingAttribute, Map<String, String> params) {}
+  public void deleteService(SettingAttribute settingAttribute, String name) {
+    kubernetesHelperService.getKubernetesClient(settingAttribute).services().withName(name).delete();
+    logger.info(String.format("Deleted service %s", name));
+  }
 
   @Override
   public void setControllerPodCount(SettingAttribute settingAttribute, String name, int number) {
@@ -124,24 +130,31 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public int getControllerPodCount(SettingAttribute settingAttribute, String name) {
-    return 0;
+    return kubernetesHelperService.getKubernetesClient(settingAttribute)
+        .replicationControllers()
+        .withName(name)
+        .get()
+        .getSpec()
+        .getReplicas();
   }
 
   public void checkStatus(SettingAttribute settingAttribute, String rcName, String serviceName) {
     KubernetesClient client = kubernetesHelperService.getKubernetesClient(settingAttribute);
     String masterUrl = client.getMasterUrl().toString();
-    String rcLink = masterUrl
-        + client.replicationControllers()
-              .inNamespace("default")
-              .withName(rcName)
-              .get()
-              .getMetadata()
-              .getSelfLink()
-              .substring(1);
-    String serviceLink =
-        masterUrl + client.services().withName(serviceName).get().getMetadata().getSelfLink().substring(1);
-    logger.info(String.format("Replication controller %s: %s", rcName, rcLink));
-    logger.info(String.format("Service %s: %s", serviceName, serviceLink));
+    ReplicationController rc = client.replicationControllers().inNamespace("default").withName(rcName).get();
+    if (rc != null) {
+      String rcLink = masterUrl + rc.getMetadata().getSelfLink().substring(1);
+      logger.info(String.format("Replication controller %s: %s", rcName, rcLink));
+    } else {
+      logger.info(String.format("Replication controller %s does not exist", rcName));
+    }
+    Service service = client.services().withName(serviceName).get();
+    if (service != null) {
+      String serviceLink = masterUrl + service.getMetadata().getSelfLink().substring(1);
+      logger.info(String.format("Service %s: %s", serviceName, serviceLink));
+    } else {
+      logger.info(String.format("Service %s does not exist", serviceName));
+    }
   }
 
   public void cleanup(SettingAttribute settingAttribute) {
