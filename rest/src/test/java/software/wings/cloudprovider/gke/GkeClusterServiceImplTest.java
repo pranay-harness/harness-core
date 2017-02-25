@@ -262,6 +262,21 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldNotGetClusterIfOtherJsonError() throws Exception {
+    GoogleJsonError googleJsonError = new GoogleJsonError();
+    googleJsonError.setCode(HttpStatusCodes.STATUS_CODE_FORBIDDEN);
+    when(clustersGet.execute())
+        .thenThrow(new GoogleJsonResponseException(
+            new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_FORBIDDEN, "forbidden", httpHeaders),
+            googleJsonError));
+
+    KubernetesConfig config = gkeClusterService.getCluster(CLUSTER_PARAMS);
+
+    verify(clusters).get(anyString(), anyString(), anyString());
+    assertThat(config).isNull();
+  }
+
+  @Test
   public void shouldListClusters() throws Exception {
     List<Cluster> clusterList = ImmutableList.of(CLUSTER_1, CLUSTER_2);
     when(clustersList.execute()).thenReturn(new ListClustersResponse().setClusters(clusterList));

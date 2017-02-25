@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceFluent;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.ClientResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
@@ -118,7 +119,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void deleteService(SettingAttribute settingAttribute, String name) {
-    kubernetesHelperService.getKubernetesClient(settingAttribute).services().withName(name).delete();
+    ClientResource<Service, DoneableService> service =
+        kubernetesHelperService.getKubernetesClient(settingAttribute).services().withName(name);
+    service.delete();
     logger.info(String.format("Deleted service %s", name));
   }
 
