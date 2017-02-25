@@ -121,6 +121,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
             gkeContainerService.projects().zones().operations().get(projectId, zone, operation.getName()).execute();
       } catch (IOException e) {
         logger.error("Error checking operation status", e);
+        break;
       }
       i += kubernetesHelperService.getSleepIntervalMs() / 1000;
       logger.info(operationLogMessage + "... " + i);

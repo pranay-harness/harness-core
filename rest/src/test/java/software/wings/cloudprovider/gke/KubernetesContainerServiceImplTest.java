@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
@@ -23,7 +24,7 @@ import software.wings.service.impl.KubernetesHelperService;
 
 import javax.inject.Inject;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +53,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   @Mock
   private ClientRollableScallableResource<ReplicationController, DoneableReplicationController>
       scalableReplicationController;
+  @Mock private ClientResource<Service, DoneableService> serviceResource;
 
   @Inject @InjectMocks private KubernetesContainerService kubernetesContainerService;
 
@@ -71,10 +73,11 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     when(kubernetesClient.services()).thenReturn(services);
     when(services.createOrReplaceWithNew()).thenReturn(new DoneableService(item -> item));
     when(replicationControllers.withName(anyString())).thenReturn(scalableReplicationController);
+    when(services.withName(anyString())).thenReturn(serviceResource);
   }
 
   @Test
-  public void shouldCreateController() {
+  public void shouldCreateBackendController() {
     kubernetesContainerService.createController(connectorConfig,
         ImmutableMap.of("name", "ctrl", "appName", "unit-test", "tier", "backend", "count", "4", "port", "9999"));
 
@@ -87,12 +90,44 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
     assertThat(rc.getSpec().getReplicas()).isEqualTo(4);
     assertThat(rc.getSpec().getTemplate().getMetadata().getLabels().get("app")).isEqualTo("unit-test");
     assertThat(rc.getSpec().getTemplate().getMetadata().getLabels().get("tier")).isEqualTo("backend");
+    assertThat(rc.getSpec().getTemplate().getSpec().getContainers().get(0).getArgs()).contains("9999");
     assertThat(rc.getSpec().getTemplate().getSpec().getContainers().get(0).getPorts().get(0).getContainerPort())
         .isEqualTo(9999);
   }
 
   @Test
-  public void shouldCreateService() {
+  public void shouldCreateFrontendController() {
+    kubernetesContainerService.createController(connectorConfig,
+        ImmutableMap.of("name", "ctrl", "appName", "unit-test", "tier", "frontend", "count", "4", "port", "9999"));
+
+    ArgumentCaptor<ReplicationController> args = ArgumentCaptor.forClass(ReplicationController.class);
+    verify(defaultNamespace).createOrReplace(args.capture());
+    ReplicationController rc = args.getValue();
+    assertThat(rc.getMetadata().getName()).isEqualTo("ctrl");
+    assertThat(rc.getMetadata().getLabels().get("app")).isEqualTo("unit-test");
+    assertThat(rc.getMetadata().getLabels().get("tier")).isEqualTo("frontend");
+    assertThat(rc.getSpec().getReplicas()).isEqualTo(4);
+    assertThat(rc.getSpec().getTemplate().getMetadata().getLabels().get("app")).isEqualTo("unit-test");
+    assertThat(rc.getSpec().getTemplate().getMetadata().getLabels().get("tier")).isEqualTo("frontend");
+    assertThat(rc.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().get(0).getName())
+        .isEqualTo("GET_HOSTS_FROM");
+    assertThat(rc.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().get(0).getValue()).isEqualTo("dns");
+    assertThat(rc.getSpec().getTemplate().getSpec().getContainers().get(0).getPorts().get(0).getContainerPort())
+        .isEqualTo(9999);
+  }
+
+  @Test
+  public void shouldDeleteController() {
+    kubernetesContainerService.deleteController(connectorConfig, "ctrl");
+
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(replicationControllers).withName(args.capture());
+    assertThat(args.getValue().equals("ctrl"));
+    verify(scalableReplicationController).delete();
+  }
+
+  @Test
+  public void shouldCreateFrontendService() {
     Service service = kubernetesContainerService.createService(connectorConfig,
         ImmutableMap.<String, String>builder()
             .put("name", "srvc")
@@ -114,11 +149,51 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldCreateBackendService() {
+    Service service = kubernetesContainerService.createService(connectorConfig,
+        ImmutableMap.<String, String>builder()
+            .put("name", "srvc")
+            .put("appName", "unit-test")
+            .put("tier", "backend")
+            .put("port", "80")
+            .put("targetPort", "8080")
+            .build());
+
+    assertThat(service.getMetadata().getName()).isEqualTo("srvc");
+    assertThat(service.getMetadata().getLabels().get("app")).isEqualTo("unit-test");
+    assertThat(service.getMetadata().getLabels().get("tier")).isEqualTo("backend");
+    assertThat(service.getSpec().getPorts().get(0).getPort()).isEqualTo(80);
+    assertThat(service.getSpec().getPorts().get(0).getTargetPort().getIntVal()).isEqualTo(8080);
+    assertThat(service.getSpec().getSelector().get("app")).isEqualTo("unit-test");
+    assertThat(service.getSpec().getSelector().get("tier")).isEqualTo("backend");
+  }
+
+  @Test
+  public void shouldDeleteService() {
+    kubernetesContainerService.deleteService(connectorConfig, "service");
+
+    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
+    verify(services).withName(args.capture());
+    assertThat(args.getValue().equals("service"));
+    verify(serviceResource).delete();
+  }
+
+  @Test
   public void shouldSetControllerPodCount() {
     kubernetesContainerService.setControllerPodCount(connectorConfig, "foo", 10);
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());
     assertThat(args.getValue()).isEqualTo(10);
+  }
+
+  @Test
+  public void shouldGetControllerPodCount() {
+    when(scalableReplicationController.get())
+        .thenReturn(new ReplicationControllerBuilder().withNewSpec().withReplicas(8).endSpec().build());
+
+    int count = kubernetesContainerService.getControllerPodCount(connectorConfig, "foo");
+
+    assertThat(count).isEqualTo(8);
   }
 }
