@@ -126,6 +126,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
     }
 
+    handlePostExecution();
+  }
+
+  protected void handlePostExecution() {
     try {
       workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
     } catch (Exception e) {

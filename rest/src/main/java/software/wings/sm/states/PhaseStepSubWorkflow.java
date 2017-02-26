@@ -1,8 +1,9 @@
 package software.wings.sm.states;
 
 import static software.wings.api.PhaseStepSubWorkflowExecutionData.PhaseStepSubWorkflowExecutionDataBuilder.aPhaseStepSubWorkflowExecutionData;
-import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.sm.ServiceInstancesProvisionState.ServiceInstancesProvisionStateBuilder.aServiceInstancesProvisionState;
+
+import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
@@ -20,8 +21,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ServiceInstancesProvisionState;
-import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -54,51 +53,49 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
     PhaseElement phaseElement = contextIntf.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
-    if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
-      List<ContextElement> elements = contextIntf.getContextElementList(ContextElementType.ECS_SERVICE);
-      if (elements == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ECS Service Setup not done");
+    switch (phaseStepType) {
+      case CONTAINER_DEPLOY: {
+        validateECSServiceElement(contextIntf, phaseElement);
+        break;
       }
-
-      EcsServiceElement ecsServiceElement = null;
-      for (ContextElement element : elements) {
-        if (!(elements.get(0) instanceof EcsServiceElement)) {
-          continue;
-        }
-        if (((EcsServiceElement) element).getUuid().equals(phaseElement.getServiceElement().getUuid())) {
-          ecsServiceElement = (EcsServiceElement) element;
-          break;
-        }
-      }
-
-      if (ecsServiceElement == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ecsServiceElement not present");
+      case DEPLOY_SERVICE:
+      case ENABLE_SERVICE:
+      case DISABLE_SERVICE: {
+        validateServiceInstanceIdsParams(contextIntf);
+        break;
       }
     }
-    if ((phaseStepType == PhaseStepType.DEPLOY_SERVICE || phaseStepType == PhaseStepType.ENABLE_SERVICE
-            || phaseStepType == PhaseStepType.DISABLE_SERVICE)
-        && response instanceof SpawningExecutionResponse
-        && !((SpawningExecutionResponse) response).getStateExecutionInstanceList().isEmpty()) {
-      ServiceInstancesProvisionState serviceInstancesProvisionState =
-          (ServiceInstancesProvisionState) contextIntf.evaluateExpression(Constants.WINGS_VARIABLE_PREFIX
-              + Constants.PROVISION_NODE_NAME + ".phaseStepExecutionState" + Constants.WINGS_VARIABLE_SUFFIX);
 
-      ServiceInstanceIdsParam serviceInstanceIdsParam =
-          aServiceInstanceIdsParam()
-              .withServiceId(serviceInstancesProvisionState.getServiceId())
-              .withInstanceIds(serviceInstancesProvisionState.getInstanceIds())
-              .build();
-
-      ((SpawningExecutionResponse) response).getStateExecutionInstanceList().forEach(instance -> {
-        instance.getContextElements().push(serviceInstanceIdsParam);
-      });
-    }
     response.setStateExecutionData(aPhaseStepSubWorkflowExecutionData()
                                        .withStepsInParallel(stepsInParallel)
                                        .withDefaultFailureStrategy(defaultFailureStrategy)
                                        .withFailureStrategies(failureStrategies)
                                        .build());
     return response;
+  }
+
+  private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
+
+  private void validateECSServiceElement(ExecutionContext context, PhaseElement phaseElement) {
+    List<ContextElement> elements = context.getContextElementList(ContextElementType.ECS_SERVICE);
+    if (elements == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ECS Service Setup not done");
+    }
+
+    EcsServiceElement ecsServiceElement = null;
+    for (ContextElement element : elements) {
+      if (!(elements.get(0) instanceof EcsServiceElement)) {
+        continue;
+      }
+      if ((element).getUuid().equals(phaseElement.getServiceElement().getUuid())) {
+        ecsServiceElement = (EcsServiceElement) element;
+        break;
+      }
+    }
+
+    if (ecsServiceElement == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ecsServiceElement not present");
+    }
   }
 
   @Override
@@ -119,12 +116,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       NotifyResponseData notifyResponseData, ExecutionResponse executionResponse) {
     if (phaseElement.getDeploymentType().equals(DeploymentType.SSH.name())
         && phaseStepType == PhaseStepType.PROVISION_NODE) {
-      List<ContextElement> elements = notifiedElements(notifyResponseData);
-      if (!(elements.get(0) instanceof ServiceInstanceIdsParam)) {
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR);
-      }
+      ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
+          notifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
-      ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) elements.get(0);
       PhaseStepSubWorkflowExecutionData phaseStepSubWorkflowExecutionData =
           (PhaseStepSubWorkflowExecutionData) context.getStateExecutionData();
       phaseStepSubWorkflowExecutionData.setPhaseStepExecutionState(
@@ -133,33 +127,30 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .withServiceId(serviceInstanceIdsParam.getServiceId())
               .build());
       executionResponse.setStateExecutionData(phaseStepSubWorkflowExecutionData);
+      executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      List<ContextElement> elements = notifiedElements(notifyResponseData);
-      if (!(elements.get(0) instanceof EcsServiceElement)) {
-        throw new WingsException(ErrorCode.UNKNOWN_ERROR);
-      }
-
-      EcsServiceElement ecsServiceElement = (EcsServiceElement) elements.get(0);
-      List<ContextElement> responseElements = executionResponse.getElements();
-      if (responseElements == null) {
-        responseElements = new ArrayList<>();
-        executionResponse.setElements(responseElements);
-      }
-      responseElements.add(ecsServiceElement);
+      EcsServiceElement ecsServiceElement =
+          (EcsServiceElement) notifiedElement(notifyResponseData, EcsServiceElement.class, "Missing ECSServiceElement");
+      executionResponse.setContextElements(Lists.newArrayList(ecsServiceElement));
     }
   }
 
-  private List<ContextElement> notifiedElements(NotifyResponseData notifyResponseData) {
+  private ContextElement notifiedElement(
+      NotifyResponseData notifyResponseData, Class<? extends ContextElement> cls, String message) {
     if (!(notifyResponseData instanceof ElementNotifyResponseData)) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
     }
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (elements == null || elements.isEmpty()) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
     }
-    return elements;
+    if (!(cls.isInstance(elements.get(0)))) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
+    }
+
+    return elements.get(0);
   }
 
   public boolean isStepsInParallel() {

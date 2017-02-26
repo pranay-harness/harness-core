@@ -270,7 +270,7 @@ public class StateMachineExecutor {
       }
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          ExecutionStatus.RUNNING, null, executionResponse.getElements());
+          ExecutionStatus.RUNNING, null, executionResponse.getContextElements(), executionResponse.getNotifyElements());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -279,7 +279,8 @@ public class StateMachineExecutor {
 
     } else {
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          status, executionResponse.getErrorMessage(), executionResponse.getElements());
+          status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
+          executionResponse.getNotifyElements());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -325,7 +326,7 @@ public class StateMachineExecutor {
     logger.info("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
         stateExecutionInstance.getUuid(), exception);
 
-    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage(), null);
+    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED, exception.getMessage(), null, null);
 
     try {
       return failedTransition(context, exception);
@@ -428,7 +429,7 @@ public class StateMachineExecutor {
       injector.injectMembers(currentState);
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
-          Lists.newArrayList(ExecutionStatus.ABORTING), null);
+          Lists.newArrayList(ExecutionStatus.ABORTING), null, null);
       invokedvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
@@ -553,13 +554,16 @@ public class StateMachineExecutor {
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
-      StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements) {
-    return updateStateExecutionData(stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements);
+      StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
+      List<ContextElement> notifyElements) {
+    return updateStateExecutionData(
+        stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements, notifyElements);
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
-      List<ExecutionStatus> runningStatusLists, List<ContextElement> elements) {
+      List<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
+      List<ContextElement> notifyElements) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
       stateExecutionMap = new HashMap<>();
@@ -588,23 +592,19 @@ public class StateMachineExecutor {
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
 
-    if (elements != null && !elements.isEmpty()) {
-      List<ContextElement> notifyElements = stateExecutionInstance.getNotifyElements();
-      if (notifyElements == null) {
-        notifyElements = new ArrayList<>();
-      }
-      for (ContextElement e : elements) {
-        if (e != null) {
-          stateExecutionInstance.getContextElements().push(e);
-          notifyElements.add(e);
-        }
-      }
-
+    if (contextElements != null && !contextElements.isEmpty()) {
+      contextElements.forEach(contextElement -> stateExecutionInstance.getContextElements().push(contextElement));
       ops.set("contextElements", stateExecutionInstance.getContextElements());
-
-      stateExecutionInstance.setNotifyElements(notifyElements);
-      ops.set("notifyElements", notifyElements);
     }
+
+    if (notifyElements != null && !notifyElements.isEmpty()) {
+      if (stateExecutionInstance.getNotifyElements() == null) {
+        stateExecutionInstance.setNotifyElements(new ArrayList<>());
+      }
+      stateExecutionInstance.getNotifyElements().addAll(notifyElements);
+      ops.set("notifyElements", stateExecutionInstance.getNotifyElements());
+    }
+
     stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
     if (stateExecutionInstance.getEndTs() != null) {
       stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());

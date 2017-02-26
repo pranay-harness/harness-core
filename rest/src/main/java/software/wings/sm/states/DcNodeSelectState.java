@@ -13,6 +13,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.ServiceInstance;
 import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -61,8 +62,11 @@ public class DcNodeSelectState extends State {
           ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
     }
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
+    ContextElement serviceIdParamElement =
+        aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
     return anExecutionResponse()
-        .addElement(aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build())
+        .addContextElement(serviceIdParamElement)
+        .addNotifyElement(serviceIdParamElement)
         .build();
   }
 

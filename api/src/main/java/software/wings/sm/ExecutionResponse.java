@@ -4,8 +4,6 @@ import static java.util.Arrays.asList;
 
 import com.google.common.collect.Lists;
 
-import software.wings.waitnotify.NotifyResponseData;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +18,8 @@ public class ExecutionResponse {
   private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
   private String errorMessage;
   private StateExecutionData stateExecutionData;
-  private NotifyResponseData notifyResponseData;
-  private List<ContextElement> elements;
+  private List<ContextElement> notifyElements;
+  private List<ContextElement> contextElements;
 
   /**
    * Is asynch boolean.
@@ -113,30 +111,20 @@ public class ExecutionResponse {
     this.errorMessage = errorMessage;
   }
 
-  /**
-   * Gets notify response data.
-   *
-   * @return the notify response data
-   */
-  public NotifyResponseData getNotifyResponseData() {
-    return notifyResponseData;
+  public List<ContextElement> getNotifyElements() {
+    return notifyElements;
   }
 
-  /**
-   * Sets notify response data.
-   *
-   * @param notifyResponseData the notify response data
-   */
-  public void setNotifyResponseData(NotifyResponseData notifyResponseData) {
-    this.notifyResponseData = notifyResponseData;
+  public void setNotifyElements(List<ContextElement> notifyElements) {
+    this.notifyElements = notifyElements;
   }
 
-  public List<ContextElement> getElements() {
-    return elements;
+  public List<ContextElement> getContextElements() {
+    return contextElements;
   }
 
-  public void setElements(List<ContextElement> elements) {
-    this.elements = elements;
+  public void setContextElements(List<ContextElement> contextElements) {
+    this.contextElements = contextElements;
   }
 
   /**
@@ -148,7 +136,8 @@ public class ExecutionResponse {
     private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     private String errorMessage;
     private StateExecutionData stateExecutionData;
-    private List<ContextElement> elements;
+    private List<ContextElement> contextElements;
+    private List<ContextElement> notifyElements;
 
     private Builder() {}
 
@@ -233,11 +222,25 @@ public class ExecutionResponse {
      * @param contextElement the contextElement
      * @return the builder
      */
-    public Builder addElement(ContextElement contextElement) {
-      if (this.elements == null) {
-        this.elements = new ArrayList<>();
+    public Builder addContextElement(ContextElement contextElement) {
+      if (this.contextElements == null) {
+        this.contextElements = new ArrayList<>();
       }
-      this.elements.add(contextElement);
+      this.contextElements.add(contextElement);
+      return this;
+    }
+
+    /**
+     * Add param.
+     *
+     * @param notifyElement the contextElement to notify
+     * @return the builder
+     */
+    public Builder addNotifyElement(ContextElement notifyElement) {
+      if (this.notifyElements == null) {
+        this.notifyElements = new ArrayList<>();
+      }
+      this.notifyElements.add(notifyElement);
       return this;
     }
 
@@ -267,7 +270,8 @@ public class ExecutionResponse {
       executionResponse.setExecutionStatus(executionStatus);
       executionResponse.setErrorMessage(errorMessage);
       executionResponse.setStateExecutionData(stateExecutionData);
-      executionResponse.setElements(elements);
+      executionResponse.setContextElements(contextElements);
+      executionResponse.setNotifyElements(notifyElements);
       return executionResponse;
     }
   }

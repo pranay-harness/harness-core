@@ -1,5 +1,13 @@
 package software.wings.sm.states;
 
+import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+
 import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
@@ -9,10 +17,9 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
-import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.api.EcsServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -43,11 +50,6 @@ import software.wings.utils.ECSConvention;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
-import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -149,14 +151,16 @@ public class EcsServiceSetup extends State {
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
 
+    EcsServiceElement ecsServiceElement = anEcsServiceElement()
+                                              .withUuid(serviceId)
+                                              .withName(ecsServiceName)
+                                              .withOldName(lastEcsServiceName)
+                                              .withClusterName(clusterName)
+                                              .build();
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addElement(anEcsServiceElement()
-                        .withUuid(serviceId)
-                        .withName(ecsServiceName)
-                        .withOldName(lastEcsServiceName)
-                        .withClusterName(clusterName)
-                        .build())
+        .addContextElement(ecsServiceElement)
+        .addNotifyElement(ecsServiceElement)
         .withStateExecutionData(anEcsServiceExecutionData()
                                     .withEcsClusterName(clusterName)
                                     .withEcsServiceName(ecsServiceName)

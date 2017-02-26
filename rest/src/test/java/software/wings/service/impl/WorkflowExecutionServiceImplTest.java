@@ -5,12 +5,11 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -74,35 +73,21 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
-import software.wings.service.StaticMap;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineTest;
-import software.wings.sm.StateMachineTest.StateAsync;
-import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
-import software.wings.sm.Transition;
-import software.wings.sm.TransitionType;
-import software.wings.sm.states.ForkState;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -113,7 +98,6 @@ import javax.inject.Inject;
  */
 @Listeners(NotifyEventListener.class)
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
-  private static Map<String, CountDownLatch> workflowExecutionSignals = new HashMap<>();
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
@@ -123,601 +107,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Mock @Inject private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
-
-  /**
-   * Should trigger.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTrigger() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, smId, executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateB.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateC.getName())).isNotNull();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateB.getName()))
-        .as("StateA executed before StateB")
-        .isEqualTo(true);
-    assertThat((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateC.getName()))
-        .as("StateB executed before StateC")
-        .isEqualTo(true);
-  }
-
-  /**
-   * Should trigger failed transition.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerFailedTransition() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000), true);
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-    StateSync stateD = new StateSync("stateD" + new Random().nextInt(10000));
-    sm.addState(stateD);
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.FAILURE)
-                         .withToState(stateD)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, smId, executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateB.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateC.getName())).isNull();
-    assertThat(StaticMap.getValue(stateD.getName())).isNotNull();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateB.getName()))
-        .as("StateA executed before StateB")
-        .isEqualTo(true);
-    assertThat(StaticMap.getValue(stateC.getName())).isNull();
-    assertThat((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateD.getName()))
-        .as("StateB executed before StateD")
-        .isEqualTo(true);
-  }
-
-  /**
-   * Should trigger and fail.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerAndFail() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000), true);
-    sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + new Random().nextInt(10000));
-    sm.addState(stateD);
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateC)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateD)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, smId, executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateB.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateC.getName())).isNull();
-    assertThat(StaticMap.getValue(stateD.getName())).isNull();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateB.getName()))
-        .as("StateA executed before StateB")
-        .isEqualTo(true);
-    assertThat(StaticMap.getValue(stateC.getName())).isNull();
-    assertThat(StaticMap.getValue(stateD.getName())).isNull();
-  }
-
-  /**
-   * Should trigger asynch.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerAsync() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + nextInt(0, 10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + nextInt(0, 10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + nextInt(0, 10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateAsync("StateAB" + nextInt(0, 10000), 2000);
-    sm.addState(stateAB);
-    State stateBC = new StateAsync("StateBC" + nextInt(0, 10000), 1000);
-    sm.addState(stateBC);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateBC)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateBC)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
-        .as("StateA executed before StateAB")
-        .isEqualTo(true);
-    assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateB.getName()))
-        .as("StateAB executed before StateB")
-        .isEqualTo(true);
-    assertThat((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateBC.getName()))
-        .as("StateB executed before StateBC")
-        .isEqualTo(true);
-    assertThat((long) StaticMap.getValue(stateBC.getName()) < (long) StaticMap.getValue(stateC.getName()))
-        .as("StateBC executed before StateC")
-        .isEqualTo(true);
-  }
-
-  /**
-   * Should trigger failed asynch.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerFailedAsync() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 600, true);
-    sm.addState(stateAB);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.FAILURE)
-                         .withToState(stateC)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateB.getName())).isNull();
-    assertThat(StaticMap.getValue(stateC.getName())).isNotNull();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
-        .as("StateA executed before StateAB")
-        .isEqualTo(true);
-    assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateC.getName()))
-        .as("StateAB executed before StateC")
-        .isEqualTo(true);
-  }
-
-  /**
-   * Should trigger and fail asynch.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerAndFailAsync() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 500, true);
-    sm.addState(stateAB);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateB.getName())).isNull();
-    assertThat(StaticMap.getValue(stateC.getName())).isNull();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
-        .as("StateA executed before StateAB")
-        .isEqualTo(true);
-  }
-
-  /**
-   * Should fail after exception
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldFailAfterException() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 500, false, true);
-    sm.addState(stateAB);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.FAILURE)
-                         .withToState(stateC)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-
-    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
-    assertThat(StaticMap.getValue(stateAB.getName())).isNull();
-    assertThat(StaticMap.getValue(stateB.getName())).isNull();
-    assertThat(StaticMap.getValue(stateC.getName())).isNotNull();
-
-    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateC.getName()))
-        .as("StateA executed before StateC")
-        .isEqualTo(true);
-  }
-
-  private StateMachine createAsyncSM(WorkflowService svc, String appId) {
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateAsync("StateAB", 2000);
-    sm.addState(stateAB);
-    State stateBC = new StateAsync("StateBC", 500);
-    sm.addState(stateBC);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateBC)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateBC)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-
-    sm = svc.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-    return sm;
-  }
-
-  /**
-   * Should trigger simple fork.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerSimpleFork() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    ForkState fork1 = new ForkState("fork1");
-    List<String> forkStates = new ArrayList<String>();
-    forkStates.add(stateB.getName());
-    forkStates.add(stateC.getName());
-    fork1.setForkStateNames(forkStates);
-    sm.addState(fork1);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(fork1)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-  }
-
-  /**
-   * Should trigger mixed fork.
-   *
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void shouldTriggerMixedFork() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
-    StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
-    sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
-    sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
-    sm.addState(stateC);
-
-    State stateAB = new StateAsync("StateAB", 1000);
-    sm.addState(stateAB);
-    State stateBC = new StateAsync("StateBC", 100);
-    sm.addState(stateBC);
-
-    ForkState fork1 = new ForkState("fork1");
-    List<String> forkStates = new ArrayList<String>();
-    forkStates.add(stateB.getName());
-    forkStates.add(stateBC.getName());
-    fork1.setForkStateNames(forkStates);
-    sm.addState(fork1);
-
-    sm.setInitialStateName(stateA.getName());
-
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateA)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateAB)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(stateAB)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(fork1)
-                         .build());
-    sm.addTransition(Transition.Builder.aTransition()
-                         .withFromState(fork1)
-                         .withTransitionType(TransitionType.SUCCESS)
-                         .withToState(stateC)
-                         .build());
-
-    sm = workflowService.create(sm);
-    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
-    String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
-    workflowExecutionService.trigger(appId, sm.getUuid(), executionUuid, executionUuid);
-
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId, appId, executionUuid);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowExecutionServiceImpl) workflowExecutionService)
-        .trigger(appId, smId, executionUuid, executionUuid, callback);
-    workflowExecutionSignals.get(signalId).await();
-  }
 
   /**
    * Should read simple workflow.
@@ -811,13 +200,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
     impl.setStaticConfiguration(staticConfiguration);
 
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecutionServiceImpl workflowExecutionServiceImpl = (WorkflowExecutionServiceImpl) workflowExecutionService;
     WorkflowExecution workflowExecution =
         workflowExecutionServiceImpl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getUuid()).isNotNull();
@@ -950,13 +337,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
     impl.setStaticConfiguration(staticConfiguration);
 
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecutionServiceImpl workflowExecutionServiceImpl = (WorkflowExecutionServiceImpl) workflowExecutionService;
     WorkflowExecution workflowExecution =
         workflowExecutionServiceImpl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getUuid()).isNotNull();
@@ -1130,13 +515,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1326,12 +709,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, ExecutionArgs executionArgs)
       throws InterruptedException {
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerPipelineExecution(appId, pipeline.getUuid(), executionArgs, callback);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1435,13 +816,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Orchestration orchestration = createExecutableOrchestration(appId, env);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution =
         ((WorkflowExecutionServiceImpl) workflowExecutionService)
             .triggerOrchestrationExecution(appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -1561,9 +940,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
@@ -1599,7 +976,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withExecutionInterruptType(ExecutionInterruptType.RESUME)
             .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -1674,9 +1051,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration).isNotNull();
     assertThat(orchestration.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
@@ -1736,7 +1111,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -1841,9 +1216,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
@@ -1879,7 +1252,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withExecutionInterruptType(ExecutionInterruptType.ABORT)
             .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -1951,9 +1324,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration).isNotNull();
     assertThat(orchestration.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
@@ -2086,9 +1457,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
@@ -2200,7 +1569,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                              .withExecutionInterruptType(ExecutionInterruptType.RESUME)
                              .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -2305,9 +1674,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(orchestration.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
@@ -2416,7 +1783,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                              .withExecutionInterruptType(ExecutionInterruptType.RESUME)
                              .build();
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -2495,13 +1862,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId, env, service, computeProvider);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
-    String signalId = UUIDGenerator.getUuid();
-    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
-    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationWorkflowExecution(
                                           appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
-    workflowExecutionSignals.get(signalId).await();
+    callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
@@ -2564,62 +1929,5 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
 
     return orchestrationWorkflow4;
-  }
-
-  /**
-   * The type Workflow execution update mock.
-   */
-  public static class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
-    private String signalId;
-
-    /**
-     * Instantiates a new Workflow execution update mock.
-     */
-    public WorkflowExecutionUpdateMock() {}
-
-    /**
-     * Instantiates a new Workflow execution update mock.
-     *
-     * @param signalId the signal id
-     */
-    public WorkflowExecutionUpdateMock(String signalId) {
-      super();
-      this.signalId = signalId;
-    }
-
-    /**
-     * Instantiates a new Workflow execution update mock.
-     *
-     * @param signalId the signal id
-     */
-    public WorkflowExecutionUpdateMock(String signalId, String appId, String workflowExecutionId) {
-      super(appId, workflowExecutionId);
-      this.signalId = signalId;
-    }
-
-    @Override
-    public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-      System.out.println(status);
-      super.callback(context, status, ex);
-      workflowExecutionSignals.get(signalId).countDown();
-    }
-
-    /**
-     * Gets signal id.
-     *
-     * @return the signal id
-     */
-    public String getSignalId() {
-      return signalId;
-    }
-
-    /**
-     * Sets signal id.
-     *
-     * @param signalId the signal id
-     */
-    public void setSignalId(String signalId) {
-      this.signalId = signalId;
-    }
   }
 }
