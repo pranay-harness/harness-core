@@ -16,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import com.google.common.collect.Lists;
 
 import org.joor.Reflect;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -54,12 +53,6 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   private List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams().withAppId(APP_ID).build();
-
-  /**
-   * Set up.
-   */
-  @Before
-  public void setup() {}
 
   @Test
   public void shouldExecutePreDeployStep() {

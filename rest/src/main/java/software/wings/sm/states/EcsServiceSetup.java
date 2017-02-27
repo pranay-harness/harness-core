@@ -98,7 +98,7 @@ public class EcsServiceSetup extends State {
 
     String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
 
-    Service service = serviceResourceService.get(app.getAppId(), serviceId);
+    Service service = serviceResourceService.get(app.getUuid(), serviceId);
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
@@ -198,7 +198,7 @@ public class EcsServiceSetup extends State {
    * @param wingsContainerDefinition the wings container definition
    * @return the container definition
    */
-  public ContainerDefinition createContainerDefinition(
+  private ContainerDefinition createContainerDefinition(
       String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
 
@@ -247,7 +247,7 @@ public class EcsServiceSetup extends State {
    * @param artifact the artifact
    * @return the string
    */
-  public String fetchArtifactImageName(Artifact artifact) {
+  private String fetchArtifactImageName(Artifact artifact) {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
     if (!(artifactStream instanceof DockerArtifactStream)) {
