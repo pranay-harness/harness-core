@@ -27,6 +27,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by rishi on 1/12/17.
@@ -55,7 +56,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
     switch (phaseStepType) {
       case CONTAINER_DEPLOY: {
-        validateECSServiceElement(contextIntf, phaseElement);
+        validateEcsServiceElement(contextIntf, phaseElement);
         break;
       }
       case DEPLOY_SERVICE:
@@ -76,25 +77,22 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
-  private void validateECSServiceElement(ExecutionContext context, PhaseElement phaseElement) {
+  private void validateEcsServiceElement(ExecutionContext context, PhaseElement phaseElement) {
     List<ContextElement> elements = context.getContextElementList(ContextElementType.ECS_SERVICE);
-    if (elements == null) {
+    if (elements == null || elements.isEmpty()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ECS Service Setup not done");
     }
 
-    EcsServiceElement ecsServiceElement = null;
-    for (ContextElement element : elements) {
-      if (!(elements.get(0) instanceof EcsServiceElement)) {
-        continue;
-      }
-      if ((element).getUuid().equals(phaseElement.getServiceElement().getUuid())) {
-        ecsServiceElement = (EcsServiceElement) element;
-        break;
-      }
-    }
+    Optional<ContextElement> ecsServiceElement =
+        elements.parallelStream()
+            .filter(contextElement
+                -> contextElement instanceof EcsServiceElement && contextElement.getUuid() != null
+                    && contextElement.getUuid().equals(phaseElement.getServiceElement().getUuid()))
+            .findFirst();
 
-    if (ecsServiceElement == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ecsServiceElement not present");
+    if (!ecsServiceElement.isPresent()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+          "ecsServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
     }
   }
 
@@ -104,20 +102,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
       return executionResponse;
     }
-    NotifyResponseData notifyResponseData = response.values().iterator().next();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    handleElementNotifyResponseData(context, phaseElement, notifyResponseData, executionResponse);
+    handleElementNotifyResponseData(context, phaseElement, response, executionResponse);
 
     super.handleStatusSummary(context, response, executionResponse);
     return executionResponse;
   }
 
   private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
-      NotifyResponseData notifyResponseData, ExecutionResponse executionResponse) {
+      Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
     if (phaseElement.getDeploymentType().equals(DeploymentType.SSH.name())
         && phaseStepType == PhaseStepType.PROVISION_NODE) {
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
-          notifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
+          response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
       PhaseStepSubWorkflowExecutionData phaseStepSubWorkflowExecutionData =
           (PhaseStepSubWorkflowExecutionData) context.getStateExecutionData();
@@ -131,17 +128,22 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       EcsServiceElement ecsServiceElement =
-          (EcsServiceElement) notifiedElement(notifyResponseData, EcsServiceElement.class, "Missing ECSServiceElement");
+          (EcsServiceElement) notifiedElement(response, EcsServiceElement.class, "Missing ECSServiceElement");
       executionResponse.setContextElements(Lists.newArrayList(ecsServiceElement));
     }
   }
 
   private ContextElement notifiedElement(
-      NotifyResponseData notifyResponseData, Class<? extends ContextElement> cls, String message) {
-    if (!(notifyResponseData instanceof ElementNotifyResponseData)) {
+      Map<String, NotifyResponseData> response, Class<? extends ContextElement> cls, String message) {
+    if (response == null || response.isEmpty()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
     }
-    ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
+    NotifyResponseData notifiedResponseData = response.values().iterator().next();
+
+    if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
+    }
+    ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (elements == null || elements.isEmpty()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);

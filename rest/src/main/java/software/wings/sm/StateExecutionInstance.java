@@ -585,6 +585,29 @@ public class StateExecutionInstance extends Base {
     }
 
     /**
+     * With context elements builder.
+     *
+     * @param contextElement the context element
+     * @return the builder
+     */
+    public Builder addContextElement(ContextElement contextElement) {
+      this.contextElements.add(contextElement);
+      return this;
+    }
+
+    /**
+     * With state execution map builder.
+     *
+     * @param stateName the state name
+     * @param stateExecutionData the state execution data
+     * @return the builder
+     */
+    public Builder addStateExecutionData(String stateName, StateExecutionData stateExecutionData) {
+      this.stateExecutionMap.put(stateName, stateExecutionData);
+      return this;
+    }
+
+    /**
      * With state execution map builder.
      *
      * @param stateExecutionMap the state execution map
@@ -592,6 +615,17 @@ public class StateExecutionInstance extends Base {
      */
     public Builder withStateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
       this.stateExecutionMap = stateExecutionMap;
+      return this;
+    }
+
+    /**
+     * With state execution map builder.
+     *
+     * @param stateExecutionData the state execution data
+     * @return the builder
+     */
+    public Builder addStateExecutionData(StateExecutionData stateExecutionData) {
+      this.stateExecutionMap.put(stateName, stateExecutionData);
       return this;
     }
 
