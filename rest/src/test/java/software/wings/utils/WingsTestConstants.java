@@ -364,4 +364,8 @@ public class WingsTestConstants {
   public static final Integer TASK_DEF_REVISION = 1;
 
   public static final String ECS_SERVICE_NAME = "ECS_SERVICE_NAME";
+
+  public static final String ECS_SERVICE_OLD_NAME = "ECS_SERVICE_OLD_NAME";
+
+  public static final String PHASE_STEP = "PHASE_STEP";
 }

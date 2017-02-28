@@ -12,6 +12,7 @@ import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotif
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
 import com.google.common.collect.Lists;
 
@@ -68,7 +69,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     List<FailureStrategy> failureStrategies = new ArrayList<>();
     phaseStepSubWorkflow.setFailureStrategies(failureStrategies);
@@ -99,7 +100,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
               .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
               .build();
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
       phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
       ExecutionResponse response = phaseStepSubWorkflow.execute(context);
       assertThat(response).isNotNull();
@@ -129,7 +130,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
               .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
               .build();
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
       phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
       ExecutionResponse response = phaseStepSubWorkflow.execute(context);
       assertThat(response).isNotNull();
@@ -157,7 +158,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
             .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
             .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
     ExecutionResponse response = phaseStepSubWorkflow.execute(context);
     assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
@@ -167,7 +168,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   public void shouldThrowNullPhaseType() {
     try {
       ExecutionContextImpl context = new ExecutionContextImpl(null);
-      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
       ExecutionResponse response = phaseStepSubWorkflow.execute(context);
       assertThat(response).isNotNull();
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -182,7 +183,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   @Test
   public void shouldHandleAsyncPreDeploy() {
     ExecutionContextImpl context = new ExecutionContextImpl(null);
-    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
@@ -215,7 +216,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PROVISION_NODE);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", anElementNotifyResponseData().addContextElement(serviceInstanceIdsParam).build());
@@ -260,7 +261,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", anElementNotifyResponseData().addContextElement(ecsServiceElement).build());
@@ -292,7 +293,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                         .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
                                                         .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow("step1");
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     try {

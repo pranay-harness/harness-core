@@ -158,8 +158,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("message");
+      assertThat(exception.getParams()).hasSize(1).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Invalid infrastructure type");
     }
   }
