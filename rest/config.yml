@@ -23,7 +23,7 @@ logging:
   appenders:
     - type: console
       threshold: TRACE
-      target: stdout
+      target: STDOUT
 #    - type: rsyslog-tcp-ssl
 #      threshold: TRACE
 #      host: logs5.papertrailapp.com
@@ -49,3 +49,57 @@ portal:
   allowedDomains: wings.software
   companyName: Wings Software
   authTokenExpiryInMillis: 86400000
+
+awsEcsAMIByRegion:
+  us-east-1: ami-b2df2ca4
+  us-east-2: ami-832b0ee6
+  us-west-1: ami-dd104dbd
+  us-west-2: ami-022b9262
+  eu-west-1: ami-a7f2acc1
+  eu-west-2: ami-3fb6bc5b
+  eu-central-1: ami-ec2be583
+  ap-northeast-1: ami-c393d6a4
+  ap-southeast-1: ami-a88530cb
+  ap-southeast-2: ami-8af8ffe9
+  ca-central-1: ami-ead5688e
+
+awsInstanceTypes:
+  - t2.nano
+  - t2.micro
+  - t2.small
+  - t2.medium
+  - t2.large
+  - m3.medium
+  - m3.large
+  - m3.xlarge
+  - m3.2xlarge
+  - m4.large
+  - m4.xlarge
+  - m4.2xlarge
+  - m4.4xlarge
+  - m4.10xlarge
+  - c4.large
+  - c4.xlarge
+  - c4.2xlarge
+  - c4.4xlarge
+  - c4.8xlarge
+  - c3.large
+  - c3.xlarge
+  - c3.2xlarge
+  - c3.4xlarge
+  - c3.8xlarge
+  - r3.large
+  - r3.xlarge
+  - r3.2xlarge
+  - r3.4xlarge
+  - r3.8xlarge
+  - g2.2xlarge
+  - g2.8xlarge
+  - i2.xlarge
+  - i2.2xlarge
+  - i2.4xlarge
+  - i2.8xlarge
+  - d2.xlarge
+  - d2.2xlarge
+  - d2.4xlarge
+  - d2.8xlarge

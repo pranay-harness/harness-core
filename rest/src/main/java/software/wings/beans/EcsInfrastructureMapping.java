@@ -4,12 +4,32 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeName("AWS_ECS")
 public class EcsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Service cluster name") private String clusterName;
+
+  @SchemaIgnore private String region;
+
+  @SchemaIgnore private String vpc;
+
+  @SchemaIgnore private List<String> subnet;
+
+  @SchemaIgnore private String securityGroup;
+
+  @SchemaIgnore private String type;
+
+  @SchemaIgnore private String role;
+
+  @SchemaIgnore private int diskSize;
+
+  @SchemaIgnore private String ami;
+
+  @SchemaIgnore private int numberOfNodes;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -41,6 +61,168 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
     return super.getHostConnectionAttrs();
+  }
+
+  /**
+   * Getter for property 'region'.
+   *
+   * @return Value for property 'region'.
+   */
+  public String getRegion() {
+    return region;
+  }
+
+  /**
+   * Setter for property 'region'.
+   *
+   * @param region Value to set for property 'region'.
+   */
+  public void setRegion(String region) {
+    this.region = region;
+  }
+
+  /**
+   * Getter for property 'vpc'.
+   *
+   * @return Value for property 'vpc'.
+   */
+  public String getVpc() {
+    return vpc;
+  }
+
+  /**
+   * Setter for property 'vpc'.
+   *
+   * @param vpc Value to set for property 'vpc'.
+   */
+  public void setVpc(String vpc) {
+    this.vpc = vpc;
+  }
+
+  /**
+   * Getter for property 'subnet'.
+   *
+   * @return Value for property 'subnet'.
+   */
+  public List<String> getSubnet() {
+    return subnet;
+  }
+
+  /**
+   * Setter for property 'subnet'.
+   *
+   * @param subnet Value to set for property 'subnet'.
+   */
+  public void setSubnet(List<String> subnet) {
+    this.subnet = subnet;
+  }
+
+  /**
+   * Getter for property 'securityGroup'.
+   *
+   * @return Value for property 'securityGroup'.
+   */
+  public String getSecurityGroup() {
+    return securityGroup;
+  }
+
+  /**
+   * Setter for property 'securityGroup'.
+   *
+   * @param securityGroup Value to set for property 'securityGroup'.
+   */
+  public void setSecurityGroup(String securityGroup) {
+    this.securityGroup = securityGroup;
+  }
+
+  /**
+   * Getter for property 'type'.
+   *
+   * @return Value for property 'type'.
+   */
+  public String getType() {
+    return type;
+  }
+
+  /**
+   * Setter for property 'type'.
+   *
+   * @param type Value to set for property 'type'.
+   */
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  /**
+   * Getter for property 'role'.
+   *
+   * @return Value for property 'role'.
+   */
+  public String getRole() {
+    return role;
+  }
+
+  /**
+   * Setter for property 'role'.
+   *
+   * @param role Value to set for property 'role'.
+   */
+  public void setRole(String role) {
+    this.role = role;
+  }
+
+  /**
+   * Getter for property 'diskSize'.
+   *
+   * @return Value for property 'diskSize'.
+   */
+  public int getDiskSize() {
+    return diskSize;
+  }
+
+  /**
+   * Setter for property 'diskSize'.
+   *
+   * @param diskSize Value to set for property 'diskSize'.
+   */
+  public void setDiskSize(int diskSize) {
+    this.diskSize = diskSize;
+  }
+
+  /**
+   * Getter for property 'ami'.
+   *
+   * @return Value for property 'ami'.
+   */
+  public String getAmi() {
+    return ami;
+  }
+
+  /**
+   * Setter for property 'ami'.
+   *
+   * @param ami Value to set for property 'ami'.
+   */
+  public void setAmi(String ami) {
+    this.ami = ami;
+  }
+
+  /**
+   * Getter for property 'numberOfNodes'.
+   *
+   * @return Value for property 'numberOfNodes'.
+   */
+  public int getNumberOfNodes() {
+    return numberOfNodes;
+  }
+
+  /**
+   * Setter for property 'numberOfNodes'.
+   *
+   * @param numberOfNodes Value to set for property 'numberOfNodes'.
+   */
+  public void setNumberOfNodes(int numberOfNodes) {
+    this.numberOfNodes = numberOfNodes;
   }
 
   /**

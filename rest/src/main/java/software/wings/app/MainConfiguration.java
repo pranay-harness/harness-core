@@ -22,6 +22,7 @@ import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import software.wings.dl.MongoConfig;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,6 +46,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
   @JsonProperty("delegateMetadataUrl") private String delegateMetadataUrl;
+  @JsonProperty("awsEcsAMIByRegion") private Map<String, String> awsEcsAMIByRegion;
+  @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
 
   /**
    * Instantiates a new Main configuration.
@@ -238,6 +241,22 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setSchedulerConfig(SchedulerConfig schedulerConfig) {
     this.schedulerConfig = schedulerConfig;
+  }
+
+  public Map<String, String> getAwsEcsAMIByRegion() {
+    return awsEcsAMIByRegion;
+  }
+
+  public void setAwsEcsAMIByRegion(Map<String, String> awsEcsAMIByRegion) {
+    this.awsEcsAMIByRegion = awsEcsAMIByRegion;
+  }
+
+  public List<String> getAwsInstanceTypes() {
+    return awsInstanceTypes;
+  }
+
+  public void setAwsInstanceTypes(List<String> awsInstanceTypes) {
+    this.awsInstanceTypes = awsInstanceTypes;
   }
 
   /**

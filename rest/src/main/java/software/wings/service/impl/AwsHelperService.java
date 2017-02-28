@@ -14,6 +14,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.AmazonECSClient;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 
 /**
  * Created by anubhaw on 12/15/16.
@@ -51,6 +52,10 @@ public class AwsHelperService {
    */
   public AmazonEC2Client getAmazonEc2Client(String accessKey, String secretKey) {
     return new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, String secretKey) {
+    return new AmazonIdentityManagementClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
   /**
