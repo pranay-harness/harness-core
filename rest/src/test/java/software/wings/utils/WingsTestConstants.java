@@ -350,4 +350,18 @@ public class WingsTestConstants {
   public static final String INFRA_MAPPING_ID = "INFRA_MAPPING_ID";
 
   public static final String COMPUTE_PROVIDER_ID = "COMPUTE_PROVIDER_ID";
+
+  public static final String STATE_NAME = "STATE_NAME";
+
+  public static final String DOCKER_IMAGE = "DOCKER_IMAGE";
+
+  public static final String TASK_FAMILY = "TASK_FAMILY";
+
+  public static final Integer TASK_REVISION = 100;
+
+  public static final String TASK_DEF_FAMILY = "TASK_DEF_FAMILY";
+
+  public static final Integer TASK_DEF_REVISION = 1;
+
+  public static final String ECS_SERVICE_NAME = "ECS_SERVICE_NAME";
 }
