@@ -51,6 +51,7 @@ public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
 
   private AccountService accountService;
+
   /**
    * Instantiates a new Auth service.
    *
@@ -76,6 +77,9 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes,
       PageRequestType requestType) {
+    if (user.isAdmin()) {
+      return;
+    }
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(appId, envId, permissionAttribute, user.getRoles(), requestType)) {
         throw new WingsException(ACCESS_DENIED);
@@ -131,6 +135,9 @@ public class AuthServiceImpl implements AuthService {
 
   private boolean roleAuthorizedWithAccessType(
       Role role, PermissionAttribute permissionAttribute, String appId, String envId, PageRequestType requestType) {
+    if (role.isAdminRole()) {
+      return true;
+    }
     ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
     boolean requiresEnvironmentPermission = permissionAttribute.getScope().equals(PermissionScope.ENV);
@@ -165,8 +172,9 @@ public class AuthServiceImpl implements AuthService {
     if (envId != null) {
       Environment environment = dbCache.get(Environment.class, envId);
       return hasAccessByEnvType(environment, permission) || hasAccessByEnvId(environment, permission);
+    } else {
+      return hasAccessByEnvType(null, permission);
     }
-    return false;
   }
 
   private boolean hasAccessByEnvId(Environment environment, Permission permission) {

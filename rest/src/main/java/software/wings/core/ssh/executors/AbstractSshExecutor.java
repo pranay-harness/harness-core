@@ -133,8 +133,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   public ExecutionResult executeCommandString(String command, StringBuffer output) {
     ExecutionResult executionResult = FAILURE;
     Channel channel = null;
+    long start = System.currentTimeMillis();
     try {
       channel = getCachedSession(this.config).openChannel("exec");
+      logger.error("Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+
       ((ChannelExec) channel).setPty(true);
       OutputStream outputStream = channel.getOutputStream();
       InputStream inputStream = channel.getInputStream();
@@ -179,6 +182,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         quietSleep(1000);
       }
     } catch (JSchException | IOException ex) {
+      logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       if (ex instanceof JSchException) {
         logger.error("Command execution failed with error " + ex.getMessage());
         saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));

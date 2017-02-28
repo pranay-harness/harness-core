@@ -199,7 +199,6 @@ public abstract class AbstractCommandUnit implements CommandUnit {
      */
     public static class ExecutionResultData implements NotifyResponseData {
       private ExecutionResult result;
-
       private String errorMessage;
 
       /**
