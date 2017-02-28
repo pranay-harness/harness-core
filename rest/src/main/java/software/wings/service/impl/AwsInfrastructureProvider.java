@@ -20,7 +20,6 @@ import com.amazonaws.services.ec2.model.TerminateInstancesResult;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -37,9 +36,6 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.Misc;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -154,7 +150,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     for (Instance instance : readyInstances) {
       int retryCount = 10;
-      while (!canConnectToHost(instance.getPublicDnsName())) {
+      while (!awsHelperService.canConnectToHost(instance.getPublicDnsName(), 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
           throw new WingsException(INIT_TIMEOUT, "message", "Couldn't connect to provisioned host");
         }
@@ -167,21 +163,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance -> anAwsHost().withHostName(instance.getPublicDnsName()).withInstance(instance).build())
         .collect(Collectors.toList());
-  }
-
-  public boolean canConnectToHost(String hostName) {
-    Socket client = new Socket();
-    try {
-      client.connect(new InetSocketAddress(hostName, 22), SLEEP_INTERVAL);
-      client.close();
-      return true;
-    } catch (IOException e) {
-      logger.error(e.getMessage());
-      e.printStackTrace();
-      return false;
-    } finally {
-      IOUtils.closeQuietly(client);
-    }
   }
 
   public void deProvisionHosts(

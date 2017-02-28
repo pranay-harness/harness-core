@@ -14,12 +14,21 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.AmazonECSClient;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 /**
  * Created by anubhaw on 12/15/16.
  */
 @Singleton
 public class AwsHelperService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   /**
    * Gets aws cloud watch client.
    *
@@ -140,5 +149,28 @@ public class AwsHelperService {
    */
   public String getIdFromArn(String arn) {
     return arn.substring(arn.lastIndexOf('/') + 1);
+  }
+
+  /**
+   * Can connect to host boolean.
+   *
+   * @param hostName the host name
+   * @param port     the port
+   * @param timeout  the timeout
+   * @return the boolean
+   */
+  public boolean canConnectToHost(String hostName, int port, int timeout) {
+    Socket client = new Socket();
+    try {
+      client.connect(new InetSocketAddress(hostName, port), timeout);
+      client.close();
+      return true;
+    } catch (IOException e) {
+      logger.error(e.getMessage());
+      e.printStackTrace();
+      return false;
+    } finally {
+      IOUtils.closeQuietly(client);
+    }
   }
 }
