@@ -176,10 +176,12 @@ public class EcsServiceDeploy extends State {
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       String ecsServiceName = ecsServiceElement.getOldName();
 
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(commandStateExecutionData.getAppId(), phaseElement.getInfraMappingId());
-      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+          infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
+      SettingAttribute settingAttribute =
+          settingsService.get(workflowStandardParams.getAppId(), infrastructureMapping.getComputeProviderSettingId());
       List<com.amazonaws.services.ecs.model.Service> services =
           awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
       Optional<com.amazonaws.services.ecs.model.Service> ecsService =
@@ -194,15 +196,12 @@ public class EcsServiceDeploy extends State {
 
       commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
 
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = workflowStandardParams.getApp();
       Environment env = workflowStandardParams.getEnv();
 
-      String serviceId = phaseElement.getServiceElement().getUuid();
-
       Command command = serviceResourceService
-                            .getCommandByName(commandStateExecutionData.getAppId(),
-                                commandStateExecutionData.getServiceId(), env.getUuid(), commandName)
+                            .getCommandByName(workflowStandardParams.getAppId(),
+                                phaseElement.getServiceElement().getUuid(), env.getUuid(), commandName)
                             .getCommand();
 
       int desiredCount = ecsService.get().getDesiredCount() - instanceCount;

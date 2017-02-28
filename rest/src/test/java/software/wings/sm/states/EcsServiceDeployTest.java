@@ -1,10 +1,12 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
@@ -16,9 +18,11 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.EcsServiceDeploy.EcsServiceDeployBuilder.anEcsServiceDeploy;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -26,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ECS_SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.ECS_SERVICE_OLD_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -39,6 +44,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.CommandStateExecutionData;
+import software.wings.api.EcsServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepSubWorkflowExecutionData;
 import software.wings.api.ServiceElement;
@@ -46,6 +53,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -53,6 +61,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.VariableProcessor;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -62,10 +71,14 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by rishi on 2/27/17.
@@ -101,10 +114,10 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(ECS_SERVICE_NAME)
+                                 .withOldName(ECS_SERVICE_OLD_NAME)
                                  .build())
           .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
           .build();
-  private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
@@ -131,8 +144,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
 
-    on(context).set("variableProcessor", variableProcessor);
-
     on(ecsServiceDeploy).set("settingsService", settingsService);
     on(ecsServiceDeploy).set("delegateService", delegateService);
     on(ecsServiceDeploy).set("serviceResourceService", serviceResourceService);
@@ -146,8 +157,16 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 
-    Activity activity = Activity.Builder.anActivity().withUuid(getUuid()).build();
+    Activity activity = Activity.Builder.anActivity().withUuid(ACTIVITY_ID).build();
     when(activityService.save(any(Activity.class))).thenReturn(activity);
+
+    when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
+  }
+
+  @Test
+  public void shouldExecute() {
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("variableProcessor", variableProcessor);
 
     com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
     ecsService.setServiceName(ECS_SERVICE_NAME);
@@ -155,14 +174,91 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ecsService.setDesiredCount(0);
     when(awsClusterService.getServices(computeProvider, CLUSTER_NAME)).thenReturn(Lists.newArrayList(ecsService));
 
-    when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
+    ExecutionResponse response = ecsServiceDeploy.execute(context);
+    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
+    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
+    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
+    verify(activityService).save(any(Activity.class));
+    verify(delegateService).queueTask(any(DelegateTask.class));
   }
 
   @Test
-  public void shouldExecute() {
-    ExecutionResponse response = ecsServiceDeploy.execute(context);
-    assertThat(response).isNotNull();
-    verify(activityService).save(any(Activity.class));
+  public void shouldExecuteThrowInvalidRequest() {
+    try {
+      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+      ecsServiceDeploy.execute(context);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).hasSize(1).containsKey("message");
+      assertThat(exception.getParams().get("message"))
+          .asString()
+          .contains("ECS Service setup not done, ecsServiceName");
+    }
+  }
+
+  @Test
+  public void shouldExecuteAsync() {
+    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    EcsServiceElement ecsServiceElement = anEcsServiceElement()
+                                              .withUuid(serviceElement.getUuid())
+                                              .withClusterName(CLUSTER_NAME)
+                                              .withName(ECS_SERVICE_NAME)
+                                              .build();
+    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(ecsServiceElement).build());
+
+    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(),
+        aCommandStateExecutionData().withOldContainerServiceName("oldService").build());
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+
+    ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
+    assertThat(response)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("async", false)
+        .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  public void shouldExecuteAsyncWithOldService() {
+    com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
+    ecsService.setServiceName(ECS_SERVICE_OLD_NAME);
+    ecsService.setCreatedAt(new Date());
+    ecsService.setDesiredCount(1);
+    when(awsClusterService.getServices(computeProvider, CLUSTER_NAME)).thenReturn(Lists.newArrayList(ecsService));
+
+    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    notifyResponse.put("key", anElementNotifyResponseData().build());
+
+    CommandStateExecutionData commandStateExecutionData =
+        aCommandStateExecutionData().withActivityId(ACTIVITY_ID).build();
+    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+
+    ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
+    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
+    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1).contains(ACTIVITY_ID);
+    assertThat(response.getStateExecutionData()).isNotNull().isEqualTo(commandStateExecutionData);
     verify(delegateService).queueTask(any(DelegateTask.class));
+  }
+
+  @Test
+  public void shouldExecuteAsyncWithOldServiceWithNoInstance() {
+    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    EcsServiceElement ecsServiceElement = anEcsServiceElement()
+                                              .withUuid(serviceElement.getUuid())
+                                              .withClusterName(CLUSTER_NAME)
+                                              .withName(ECS_SERVICE_NAME)
+                                              .build();
+    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(ecsServiceElement).build());
+
+    stateExecutionInstance.getStateExecutionMap().put(
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+
+    ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
+    assertThat(response)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("async", false)
+        .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
   }
 }
