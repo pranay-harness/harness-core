@@ -61,7 +61,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
@@ -85,11 +85,11 @@ public class InitSshCommandUnit extends SshCommandUnit {
 
     launcherScriptFileName = "wingslauncher" + activityId + ".sh";
 
-    ExecutionResult executionResult = context.executeCommandString(preInitCommand);
+    CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
     try {
-      executionResult = executionResult == ExecutionResult.SUCCESS
+      commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
           ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
-          : executionResult;
+          : commandExecutionStatus;
     } catch (IOException e) {
       e.printStackTrace();
     } catch (TemplateException e) {
@@ -98,35 +98,35 @@ public class InitSshCommandUnit extends SshCommandUnit {
     try {
       List<String> commandUnitFiles = getCommandUnitFiles();
       if (!isEmpty(commandUnitFiles)) {
-        executionResult = executionResult == ExecutionResult.SUCCESS
+        commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
             ? context.copyFiles(executionStagingDir, commandUnitFiles)
-            : executionResult;
+            : commandExecutionStatus;
       }
     } catch (IOException e) {
-      executionResult = ExecutionResult.FAILURE;
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
       e.printStackTrace();
     } catch (TemplateException e) {
-      executionResult = ExecutionResult.FAILURE;
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
       e.printStackTrace();
     }
-    executionResult = executionResult == ExecutionResult.SUCCESS
+    commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("chmod 0744 " + executionStagingDir + "/*")
-        : executionResult;
+        : commandExecutionStatus;
     StringBuffer envVariablesFromHost = new StringBuffer();
-    executionResult = executionResult == ExecutionResult.SUCCESS
+    commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("printenv", envVariablesFromHost)
-        : executionResult;
+        : commandExecutionStatus;
     Properties properties = new Properties();
     try {
       properties.load(new StringReader(envVariablesFromHost.toString()));
       context.addEnvVariables(
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
-      executionResult = ExecutionResult.FAILURE;
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
       e.printStackTrace();
     }
     context.addEnvVariables(envVariables);
-    return executionResult;
+    return commandExecutionStatus;
   }
 
   /**

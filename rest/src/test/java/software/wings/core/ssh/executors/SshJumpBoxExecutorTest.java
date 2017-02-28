@@ -26,7 +26,7 @@ public class SshJumpBoxExecutorTest {
     //    SshExecutor executor = SshExecutorFactory.getExecutor(config);
     //    //        executor.execute("ls && whoami");
     //    String fileName = "mvim";
-    //    SshExecutor.ExecutionResult result =
+    //    SshExecutor.CommandExecutionStatus result =
     //        executor.execute("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
     //    System.out.println(result);
   }

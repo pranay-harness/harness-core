@@ -114,7 +114,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     return context.executeCommandString(preparedCommand);
   }
 

@@ -1,17 +1,16 @@
 package software.wings.delegatetasks;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 
 import com.google.common.base.Joiner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -22,24 +21,24 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 1/6/17.
  */
-public class CommandTask extends AbstractDelegateRunnableTask<ExecutionResultData> {
+public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionResult> {
   private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);
 
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
-  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<ExecutionResultData> consumer) {
+  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<CommandExecutionResult> consumer) {
     super(delegateId, delegateTask, consumer);
   }
 
   @Override
-  public ExecutionResultData run(Object[] parameters) {
+  public CommandExecutionResult run(Object[] parameters) {
     return run((Command) parameters[0], (CommandExecutionContext) parameters[1]);
   }
 
-  private ExecutionResultData run(Command command, CommandExecutionContext commandExecutionContext) {
-    ExecutionResult executionResult = ExecutionResult.SUCCESS;
+  private CommandExecutionResult run(Command command, CommandExecutionContext commandExecutionContext) {
+    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
     String errorMessage = null;
     try {
-      executionResult = serviceCommandExecutorService.execute(command, commandExecutionContext);
+      commandExecutionStatus = serviceCommandExecutorService.execute(command, commandExecutionContext);
     } catch (Exception e) {
       logger.warn("Exception: ", e);
       if (e instanceof WingsException) {
@@ -54,9 +53,12 @@ public class CommandTask extends AbstractDelegateRunnableTask<ExecutionResultDat
       } else {
         errorMessage = e.getMessage();
       }
-      executionResult = ExecutionResult.FAILURE;
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
 
-    return anExecutionResultData().withResult(executionResult).withErrorMessage(errorMessage).build();
+    return CommandExecutionResult.Builder.aCommandExecutionResult()
+        .withStatus(commandExecutionStatus)
+        .withErrorMessage(errorMessage)
+        .build();
   }
 }

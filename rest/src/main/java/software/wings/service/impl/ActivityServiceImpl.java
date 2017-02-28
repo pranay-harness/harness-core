@@ -15,7 +15,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -122,14 +122,15 @@ public class ActivityServiceImpl implements ActivityService {
       }
       boolean markNextQueued = false;
       for (CommandUnit commandUnit : commandUnits) {
-        ExecutionResult executionResult = ExecutionResult.QUEUED;
+        CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
         if (!markNextQueued) {
-          executionResult = logService.getUnitExecutionResult(appId, activityId, commandUnit.getName());
-          if (executionResult == ExecutionResult.FAILURE || executionResult == ExecutionResult.RUNNING) {
+          commandExecutionStatus = logService.getUnitExecutionResult(appId, activityId, commandUnit.getName());
+          if (commandExecutionStatus == CommandExecutionStatus.FAILURE
+              || commandExecutionStatus == CommandExecutionStatus.RUNNING) {
             markNextQueued = true;
           }
         }
-        commandUnit.setExecutionResult(executionResult);
+        commandUnit.setCommandExecutionStatus(commandExecutionStatus);
       }
     }
     return commandUnits;

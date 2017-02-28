@@ -5,8 +5,8 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus.SUCCESS;
 
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -18,7 +18,7 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.SshCommandExecutionContext;
@@ -65,7 +65,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+  public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
     logService.save(context.getAccountId(),
         aLog()
@@ -77,7 +77,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
             .build());
 
-    ExecutionResult executionResult = FAILURE;
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     SshSessionConfig sshSessionConfig =
         SshHelperUtil.getSshSessionConfig(host.getHostName(), commandUnit.getName(), context);
@@ -90,8 +90,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     injector.injectMembers(commandUnit);
 
     try {
-      executionResult = timeLimiter.callWithTimeout(()
-                                                        -> commandUnit.execute(sshCommandExecutionContext),
+      commandExecutionStatus = timeLimiter.callWithTimeout(()
+                                                               -> commandUnit.execute(sshCommandExecutionContext),
           commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS, true);
 
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
@@ -100,10 +100,10 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
               .withAppId(context.getAppId())
               .withActivityId(activityId)
               .withHostName(host.getHostName())
-              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+              .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
               .withLogLine("Command execution timed out")
               .withCommandUnitName(commandUnit.getName())
-              .withExecutionResult(executionResult)
+              .withExecutionResult(commandExecutionStatus)
               .build());
       throw new WingsException(ErrorCode.SOCKET_CONNECTION_TIMEOUT);
     } catch (ExecutionException e) {
@@ -123,9 +123,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                 .withActivityId(activityId)
                 .withHostName(host.getHostName())
                 .withCommandUnitName(commandUnit.getName())
-                .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine(errorMessage)
-                .withExecutionResult(executionResult)
+                .withExecutionResult(commandExecutionStatus)
                 .build());
         throw(WingsException) e.getCause();
       } else {
@@ -134,10 +134,10 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                 .withAppId(context.getAppId())
                 .withActivityId(activityId)
                 .withHostName(host.getHostName())
-                .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine("Unknown Error " + e.getCause().getMessage())
                 .withCommandUnitName(commandUnit.getName())
-                .withExecutionResult(executionResult)
+                .withExecutionResult(commandExecutionStatus)
                 .build());
 
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
@@ -149,10 +149,10 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
               .withAppId(context.getAppId())
               .withActivityId(activityId)
               .withHostName(host.getHostName())
-              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+              .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
               .withLogLine("Command execution failed")
               .withCommandUnitName(commandUnit.getName())
-              .withExecutionResult(executionResult)
+              .withExecutionResult(commandExecutionStatus)
               .build());
       throw new WingsException(ErrorCode.UNKNOWN_ERROR);
     }
@@ -162,13 +162,13 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             .withAppId(context.getAppId())
             .withActivityId(activityId)
             .withHostName(host.getHostName())
-            .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-            .withLogLine("Command execution finished with status " + executionResult)
+            .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
+            .withLogLine("Command execution finished with status " + commandExecutionStatus)
             .withCommandUnitName(commandUnit.getName())
-            .withExecutionResult(executionResult)
+            .withExecutionResult(commandExecutionStatus)
             .build());
 
-    commandUnit.setExecutionResult(executionResult);
-    return executionResult;
+    commandUnit.setCommandExecutionStatus(commandExecutionStatus);
+    return commandExecutionStatus;
   }
 }

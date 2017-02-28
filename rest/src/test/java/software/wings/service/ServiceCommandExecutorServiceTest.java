@@ -11,7 +11,7 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -40,8 +40,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.AbstractCommandUnit;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
@@ -101,8 +101,8 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
     when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
         .thenReturn(SUCCESS);
-    ExecutionResult executionResult = cmdExecutorService.execute(command, context);
-    assertThat(executionResult).isEqualTo(SUCCESS);
+    CommandExecutionStatus commandExecutionStatus = cmdExecutorService.execute(command, context);
+    assertThat(commandExecutionStatus).isEqualTo(SUCCESS);
   }
 
   /**
@@ -114,7 +114,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(commandUnitExecutorServiceMap.get(DeploymentType.SSH.name())).thenReturn(sshCommandUnitExecutorService);
     when(sshCommandUnitExecutorService.execute(eq(host), any(AbstractCommandUnit.class), eq(context)))
         .thenReturn(SUCCESS);
-    ExecutionResult executionResult = cmdExecutorService.execute(nestedCommand, context);
-    assertThat(executionResult).isEqualTo(SUCCESS);
+    CommandExecutionStatus commandExecutionStatus = cmdExecutorService.execute(nestedCommand, context);
+    assertThat(commandExecutionStatus).isEqualTo(SUCCESS);
   }
 }

@@ -50,7 +50,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnitType;
@@ -278,8 +278,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(ExecutionResult.SUCCESS);
-    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(ExecutionResult.SUCCESS);
+    when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
 
     sshCommandUnitExecutorService.execute(host, commandUnit,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
@@ -330,8 +330,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
-    when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(ExecutionResult.SUCCESS);
-    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(ExecutionResult.SUCCESS);
+    when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
     sshCommandUnitExecutorService.execute(host, commandUnit,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
 

@@ -12,7 +12,7 @@ import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
@@ -36,7 +36,7 @@ import javax.validation.constraints.NotNull;
 public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
-  @SchemaIgnore private ExecutionResult executionResult;
+  @SchemaIgnore private CommandExecutionStatus commandExecutionStatus;
 
   @SchemaIgnore private boolean artifactNeeded = false;
   @SchemaIgnore private String deploymentType;
@@ -68,7 +68,7 @@ public class Command extends Base implements CommandUnit {
    * Instantiates a new command.
    */
   @Override
-  public ExecutionResult execute(CommandExecutionContext context) {
+  public CommandExecutionStatus execute(CommandExecutionContext context) {
     throw new UnsupportedOperationException();
   }
 
@@ -82,14 +82,12 @@ public class Command extends Base implements CommandUnit {
     this.commandUnitType = commandUnitType;
   }
 
-  @Override
-  public ExecutionResult getExecutionResult() {
-    return executionResult;
+  public CommandExecutionStatus getCommandExecutionStatus() {
+    return commandExecutionStatus;
   }
 
-  @Override
-  public void setExecutionResult(ExecutionResult executionResult) {
-    this.executionResult = executionResult;
+  public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
+    this.commandExecutionStatus = commandExecutionStatus;
   }
 
   @Override
@@ -355,7 +353,7 @@ public class Command extends Base implements CommandUnit {
     private Graph graph;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
-    private ExecutionResult executionResult;
+    private CommandExecutionStatus commandExecutionStatus;
     private boolean artifactNeeded;
     private CommandType commandType = CommandType.OTHER;
 
@@ -428,11 +426,11 @@ public class Command extends Base implements CommandUnit {
     /**
      * With execution result builder.
      *
-     * @param executionResult the execution result
+     * @param commandExecutionStatus the execution result
      * @return the builder
      */
-    public Builder withExecutionResult(ExecutionResult executionResult) {
-      this.executionResult = executionResult;
+    public Builder withExecutionResult(CommandExecutionStatus commandExecutionStatus) {
+      this.commandExecutionStatus = commandExecutionStatus;
       return this;
     }
 
@@ -469,7 +467,7 @@ public class Command extends Base implements CommandUnit {
           .withGraph(graph)
           .withCommandUnits(commandUnits)
           .withName(name)
-          .withExecutionResult(executionResult)
+          .withExecutionResult(commandExecutionStatus)
           .withArtifactNeeded(artifactNeeded)
           .withCommandType(commandType);
     }
@@ -485,7 +483,7 @@ public class Command extends Base implements CommandUnit {
       command.setGraph(graph);
       command.setCommandUnits(commandUnits);
       command.setName(name);
-      command.setExecutionResult(executionResult);
+      command.setCommandExecutionStatus(commandExecutionStatus);
       command.setArtifactNeeded(artifactNeeded);
       command.setCommandType(commandType);
       return command;

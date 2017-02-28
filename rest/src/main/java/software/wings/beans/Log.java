@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -18,7 +18,7 @@ public class Log extends Base {
   @NotEmpty private String commandUnitName;
   private String logLine;
   @NotNull private LogLevel logLevel;
-  private ExecutionResult executionResult;
+  private CommandExecutionStatus commandExecutionStatus;
 
   /**
    * Gets activity id.
@@ -115,23 +115,23 @@ public class Log extends Base {
    *
    * @return the execution result
    */
-  public ExecutionResult getExecutionResult() {
-    return executionResult;
+  public CommandExecutionStatus getCommandExecutionStatus() {
+    return commandExecutionStatus;
   }
 
   /**
    * Sets execution result.
    *
-   * @param executionResult the execution result
+   * @param commandExecutionStatus the execution result
    */
-  public void setExecutionResult(ExecutionResult executionResult) {
-    this.executionResult = executionResult;
+  public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
+    this.commandExecutionStatus = commandExecutionStatus;
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(activityId, hostName, commandUnitName, logLine, logLevel, executionResult);
+        + Objects.hash(activityId, hostName, commandUnitName, logLine, logLevel, commandExecutionStatus);
   }
 
   @Override
@@ -148,7 +148,8 @@ public class Log extends Base {
     final Log other = (Log) obj;
     return Objects.equals(this.activityId, other.activityId) && Objects.equals(this.hostName, other.hostName)
         && Objects.equals(this.commandUnitName, other.commandUnitName) && Objects.equals(this.logLine, other.logLine)
-        && Objects.equals(this.logLevel, other.logLevel) && Objects.equals(this.executionResult, other.executionResult);
+        && Objects.equals(this.logLevel, other.logLevel)
+        && Objects.equals(this.commandExecutionStatus, other.commandExecutionStatus);
   }
 
   /**
@@ -182,7 +183,7 @@ public class Log extends Base {
     private String commandUnitName;
     private String logLine;
     private LogLevel logLevel;
-    private ExecutionResult executionResult;
+    private CommandExecutionStatus commandExecutionStatus;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -259,11 +260,11 @@ public class Log extends Base {
     /**
      * With execution result builder.
      *
-     * @param executionResult the execution result
+     * @param commandExecutionStatus the execution result
      * @return the builder
      */
-    public Builder withExecutionResult(ExecutionResult executionResult) {
-      this.executionResult = executionResult;
+    public Builder withExecutionResult(CommandExecutionStatus commandExecutionStatus) {
+      this.commandExecutionStatus = commandExecutionStatus;
       return this;
     }
 
@@ -345,7 +346,7 @@ public class Log extends Base {
           .withCommandUnitName(commandUnitName)
           .withLogLine(logLine)
           .withLogLevel(logLevel)
-          .withExecutionResult(executionResult)
+          .withExecutionResult(commandExecutionStatus)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -366,7 +367,7 @@ public class Log extends Base {
       log.setCommandUnitName(commandUnitName);
       log.setLogLine(logLine);
       log.setLogLevel(logLevel);
-      log.setExecutionResult(executionResult);
+      log.setCommandExecutionStatus(commandExecutionStatus);
       log.setUuid(uuid);
       log.setAppId(appId);
       log.setCreatedBy(createdBy);

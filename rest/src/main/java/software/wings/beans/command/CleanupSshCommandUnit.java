@@ -20,7 +20,7 @@ public class CleanupSshCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  public ExecutionResult executeInternal(SshCommandExecutionContext context) {
+  public CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     return context.executeCommandString("rm -rf " + new File("/tmp", context.getActivityId()).getAbsolutePath());
   }
 }

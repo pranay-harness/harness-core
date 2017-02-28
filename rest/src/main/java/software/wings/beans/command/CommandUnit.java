@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.template.TemplateException;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -40,7 +40,7 @@ public interface CommandUnit {
      * @param context the context
      * @return the execution result
      */
-    ExecutionResult execute(CommandExecutionContext context);
+    CommandExecutionStatus execute(CommandExecutionContext context);
 
     /**
      * Gets command unit type.
@@ -61,14 +61,14 @@ public interface CommandUnit {
      *
      * @return the execution result
      */
-    @SchemaIgnore ExecutionResult getExecutionResult();
+    @SchemaIgnore CommandExecutionStatus getCommandExecutionStatus();
 
     /**
      * Sets execution result.
      *
-     * @param executionResult the execution result
+     * @param commandExecutionStatus the execution result
      */
-    void setExecutionResult(ExecutionResult executionResult);
+    void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus);
 
     /**
      * Gets name.

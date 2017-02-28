@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -22,20 +22,20 @@ public class SshCommandExecutionContext extends CommandExecutionContext {
     super(other);
   }
 
-  public ExecutionResult copyGridFsFiles(
+  public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     return sshExecutor.copyGridFsFiles(evaluateVariable(destinationDirectoryPath), fileBucket, fileNamesIds);
   }
 
-  public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
+  public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
     return sshExecutor.copyFiles(evaluateVariable(destinationDirectoryPath), files);
   }
 
-  public ExecutionResult executeCommandString(String commandString) {
+  public CommandExecutionStatus executeCommandString(String commandString) {
     return sshExecutor.executeCommandString(commandString);
   }
 
-  public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
+  public CommandExecutionStatus executeCommandString(String commandString, StringBuffer output) {
     return sshExecutor.executeCommandString(commandString, output);
   }
 

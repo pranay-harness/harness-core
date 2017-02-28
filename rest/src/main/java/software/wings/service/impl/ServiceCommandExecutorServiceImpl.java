@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Singleton;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -37,7 +37,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    * software.wings.beans.command.Command)
    */
   @Override
-  public ExecutionResult execute(Command command, CommandExecutionContext context) {
+  public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
     if (command.getDeploymentType().equals(DeploymentType.ECS.name())) {
       return executeEcsCommand(command, context);
     } else {
@@ -45,14 +45,14 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  private ExecutionResult executeEcsCommand(Command command, CommandExecutionContext context) {
+  private CommandExecutionStatus executeEcsCommand(Command command, CommandExecutionContext context) {
     CommandUnitExecutorService commandUnitExecutorService =
         commandUnitExecutorServiceMap.get(DeploymentType.ECS.name());
     try {
-      ExecutionResult executionResult = commandUnitExecutorService.execute(
+      CommandExecutionStatus commandExecutionStatus = commandUnitExecutorService.execute(
           context.getHost(), command.getCommandUnits().get(0), context); // TODO:: do it recursively
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      return executionResult;
+      return commandExecutionStatus;
     } catch (Exception ex) {
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       ex.printStackTrace();
@@ -60,7 +60,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  public ExecutionResult executeSshCommand(Command command, CommandExecutionContext context) {
+  public CommandExecutionStatus executeSshCommand(Command command, CommandExecutionContext context) {
     CommandUnitExecutorService commandUnitExecutorService =
         commandUnitExecutorServiceMap.get(DeploymentType.SSH.name());
     try {
@@ -68,9 +68,9 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       initCommandUnit.setCommand(command);
       command.getCommandUnits().add(0, initCommandUnit);
       command.getCommandUnits().add(new CleanupSshCommandUnit());
-      ExecutionResult executionResult = executeSshCommand(commandUnitExecutorService, command, context);
+      CommandExecutionStatus commandExecutionStatus = executeSshCommand(commandUnitExecutorService, command, context);
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
-      return executionResult;
+      return commandExecutionStatus;
     } catch (Exception ex) {
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       ex.printStackTrace();
@@ -78,21 +78,21 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  private ExecutionResult executeSshCommand(
+  private CommandExecutionStatus executeSshCommand(
       CommandUnitExecutorService commandUnitExecutorService, Command command, CommandExecutionContext context) {
     List<CommandUnit> commandUnits = command.getCommandUnits();
 
-    ExecutionResult executionResult = ExecutionResult.FAILURE;
+    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.FAILURE;
 
     for (CommandUnit commandUnit : commandUnits) {
-      executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
+      commandExecutionStatus = COMMAND.equals(commandUnit.getCommandUnitType())
           ? executeSshCommand(commandUnitExecutorService, (Command) commandUnit, context)
           : commandUnitExecutorService.execute(context.getHost(), commandUnit, context);
-      if (FAILURE == executionResult) {
+      if (FAILURE == commandExecutionStatus) {
         break;
       }
     }
 
-    return executionResult;
+    return commandExecutionStatus;
   }
 }

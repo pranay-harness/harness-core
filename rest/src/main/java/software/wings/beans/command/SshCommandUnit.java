@@ -6,7 +6,7 @@ import software.wings.api.DeploymentType;
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
-public abstract class SshCommandUnit extends AbstractCommandUnit {
+public abstract class SshCommandUnit extends CommandExecutionResult.AbstractCommandUnit {
   @SchemaIgnore private String deploymentType;
 
   /**
@@ -20,9 +20,9 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
   }
 
   @Override
-  public final ExecutionResult execute(CommandExecutionContext context) {
+  public final CommandExecutionStatus execute(CommandExecutionContext context) {
     return executeInternal((SshCommandExecutionContext) context);
   }
 
-  protected abstract ExecutionResult executeInternal(SshCommandExecutionContext context);
+  protected abstract CommandExecutionStatus executeInternal(SshCommandExecutionContext context);
 }
