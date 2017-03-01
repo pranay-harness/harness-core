@@ -268,7 +268,7 @@ public class CommandStateExecutionData extends StateExecutionData {
         List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
         countsByStatuses = new CountsByStatuses();
         commandUnits.stream().forEach(commandUnit -> {
-          switch (commandUnit.getExecutionResult()) {
+          switch (commandUnit.getCommandExecutionStatus()) {
             case SUCCESS:
               countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
               break;

@@ -19,6 +19,7 @@ import freemarker.template.TemplateException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -114,7 +115,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     return context.executeCommandString(preparedCommand);
   }
 

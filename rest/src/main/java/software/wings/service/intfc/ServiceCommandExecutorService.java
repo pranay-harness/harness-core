@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 
@@ -15,5 +15,5 @@ public interface ServiceCommandExecutorService {
    * @param context         the context
    * @return the execution result
    */
-  ExecutionResult execute(Command command, CommandExecutionContext context);
+  CommandExecutionStatus execute(Command command, CommandExecutionContext context);
 }

@@ -3,13 +3,14 @@ package software.wings.service.impl;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.RUNNING;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import software.wings.beans.Log;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -52,7 +53,7 @@ public class LogServiceImpl implements LogService {
   }
 
   @Override
-  public ExecutionResult getUnitExecutionResult(String appId, String activityId, String name) {
+  public CommandExecutionStatus getUnitExecutionResult(String appId, String activityId, String name) {
     Log log = wingsPersistence.createQuery(Log.class)
                   .field("activityId")
                   .equal(activityId)
@@ -60,11 +61,11 @@ public class LogServiceImpl implements LogService {
                   .equal(appId)
                   .field("commandUnitName")
                   .equal(name)
-                  .field("executionResult")
+                  .field("commandExecutionStatus")
                   .exists()
                   .order("-lastUpdatedAt")
                   .get();
-    return log != null && log.getExecutionResult() != null ? log.getExecutionResult() : RUNNING;
+    return log != null && log.getCommandExecutionStatus() != null ? log.getCommandExecutionStatus() : RUNNING;
   }
 
   @Override

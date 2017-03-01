@@ -13,6 +13,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AppContainer;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DataProvider;
@@ -43,7 +44,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected ExecutionResult executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     FileBucket fileBucket = null;
     switch (fileCategory) {
@@ -176,7 +177,7 @@ public class ScpCommandUnit extends SshCommandUnit {
     private String destinationDirectoryPath;
     private String name;
     private CommandUnitType commandUnitType;
-    private ExecutionResult executionResult;
+    private CommandExecutionStatus commandExecutionStatus;
     private boolean artifactNeeded = false;
 
     private Builder() {}
@@ -237,11 +238,11 @@ public class ScpCommandUnit extends SshCommandUnit {
     /**
      * With execution result builder.
      *
-     * @param executionResult the execution result
+     * @param commandExecutionStatus the execution result
      * @return the builder
      */
-    public Builder withExecutionResult(ExecutionResult executionResult) {
-      this.executionResult = executionResult;
+    public Builder withExecutionResult(CommandExecutionStatus commandExecutionStatus) {
+      this.commandExecutionStatus = commandExecutionStatus;
       return this;
     }
 
@@ -267,7 +268,7 @@ public class ScpCommandUnit extends SshCommandUnit {
           .withDestinationDirectoryPath(destinationDirectoryPath)
           .withName(name)
           .withCommandUnitType(commandUnitType)
-          .withExecutionResult(executionResult)
+          .withExecutionResult(commandExecutionStatus)
           .withArtifactNeeded(artifactNeeded);
     }
 
@@ -282,7 +283,7 @@ public class ScpCommandUnit extends SshCommandUnit {
       scpCommandUnit.setDestinationDirectoryPath(destinationDirectoryPath);
       scpCommandUnit.setName(name);
       scpCommandUnit.setCommandUnitType(commandUnitType);
-      scpCommandUnit.setExecutionResult(executionResult);
+      scpCommandUnit.setCommandExecutionStatus(commandExecutionStatus);
       scpCommandUnit.setArtifactNeeded(artifactNeeded);
       return scpCommandUnit;
     }

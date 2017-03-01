@@ -142,6 +142,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                 .withPublicDnsName(HOST_NAME)
                                                 .withInstanceId("INSTANCE_ID")
                                                 .withState(new InstanceState().withName("running")))));
+    when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
 
     List<Host> hosts = infrastructureProvider.provisionHosts(awsSetting, "LAUNCH_CONFIG", 1);
 
@@ -153,9 +154,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
     verify(awsHelperService).getAmazonEc2Client(ACCESS_KEY, SECRET_KEY);
     verify(awsHelperService).getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY);
+    verify(awsHelperService).canConnectToHost(HOST_NAME, 22, 30000);
     verify(amazonAutoScalingClient).describeLaunchConfigurations(any(DescribeLaunchConfigurationsRequest.class));
     verify(amazonEC2Client).runInstances(any(RunInstancesRequest.class));
-    verify(amazonEC2Client, times(2)).describeInstances(any(DescribeInstancesRequest.class));
+    verify(amazonEC2Client, times(3)).describeInstances(any(DescribeInstancesRequest.class));
   }
 
   @Test

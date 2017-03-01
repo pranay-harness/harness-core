@@ -12,8 +12,8 @@ import static software.wings.beans.ErrorCode.INVALID_PORT;
 import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
@@ -33,7 +33,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -160,7 +160,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     executor.init(sshSessionConfig);
     String fileName = getUuid();
-    ExecutionResult execute = executor.executeCommandString(String.format("touch %s && rm %s", fileName, fileName));
+    CommandExecutionStatus execute =
+        executor.executeCommandString(String.format("touch %s && rm %s", fileName, fileName));
     assertThat(execute).isEqualTo(SUCCESS);
   }
 
@@ -170,7 +171,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(configBuilder.build());
-    ExecutionResult execute = executor.executeCommandString(String.format("rm %s", "FILE_DOES_NOT_EXIST"));
+    CommandExecutionStatus execute = executor.executeCommandString(String.format("rm %s", "FILE_DOES_NOT_EXIST"));
     assertThat(execute).isEqualTo(FAILURE);
   }
 

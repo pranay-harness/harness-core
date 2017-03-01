@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
@@ -17,7 +17,7 @@ public interface CommandUnitExecutorService {
    * @param context     the context
    * @return the execution result
    */
-  ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context);
+  CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context);
 
   /**
    * Clenup any resource blocked execution optimization

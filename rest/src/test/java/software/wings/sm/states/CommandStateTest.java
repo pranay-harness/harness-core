@@ -24,8 +24,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
@@ -221,7 +221,7 @@ public class CommandStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = commandState.execute(context);
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
-        context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
+        context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
@@ -320,7 +320,7 @@ public class CommandStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = commandState.execute(context);
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
-        context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
+        context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);

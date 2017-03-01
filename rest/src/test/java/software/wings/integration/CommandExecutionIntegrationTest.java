@@ -10,9 +10,9 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -35,9 +35,9 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
@@ -144,9 +144,10 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteCommand() {
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(command, context);
-    command.getCommandUnits().forEach(commandUnit -> assertThat(commandUnit.getExecutionResult()).isEqualTo(SUCCESS));
-    assertThat(executionResult).isEqualTo(SUCCESS);
+    CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);
+    command.getCommandUnits().forEach(
+        commandUnit -> assertThat(commandUnit.getCommandExecutionStatus()).isEqualTo(SUCCESS));
+    assertThat(commandExecutionStatus).isEqualTo(SUCCESS);
   }
 
   /**
@@ -155,11 +156,11 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldCaptureFailedExecutionCommandUnit() {
     ((ExecCommandUnit) command.getCommandUnits().get(6)).setCommandString("INVALID_COMMAND");
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(command, context);
+    CommandExecutionStatus commandExecutionStatus = serviceCommandExecutorService.execute(command, context);
     for (int i = 0; i < command.getCommandUnits().size() - 1; i++) {
-      assertThat(command.getCommandUnits().get(i).getExecutionResult()).isEqualTo(SUCCESS);
+      assertThat(command.getCommandUnits().get(i).getCommandExecutionStatus()).isEqualTo(SUCCESS);
     }
-    assertThat(command.getCommandUnits().get(6).getExecutionResult()).isEqualTo(FAILURE);
-    assertThat(executionResult).isEqualTo(FAILURE);
+    assertThat(command.getCommandUnits().get(6).getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(commandExecutionStatus).isEqualTo(FAILURE);
   }
 }

@@ -98,7 +98,7 @@ public class EcsServiceSetup extends State {
 
     String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
 
-    Service service = serviceResourceService.get(app.getAppId(), serviceId);
+    Service service = serviceResourceService.get(app.getUuid(), serviceId);
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     EcsContainerTask ecsContainerTask = (EcsContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
@@ -198,7 +198,7 @@ public class EcsServiceSetup extends State {
    * @param wingsContainerDefinition the wings container definition
    * @return the container definition
    */
-  public ContainerDefinition createContainerDefinition(
+  private ContainerDefinition createContainerDefinition(
       String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
 
@@ -247,7 +247,7 @@ public class EcsServiceSetup extends State {
    * @param artifact the artifact
    * @return the string
    */
-  public String fetchArtifactImageName(Artifact artifact) {
+  private String fetchArtifactImageName(Artifact artifact) {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
     if (!(artifactStream instanceof DockerArtifactStream)) {
@@ -279,5 +279,86 @@ public class EcsServiceSetup extends State {
    */
   public void setLoadBalancerSettingId(String loadBalancerSettingId) {
     this.loadBalancerSettingId = loadBalancerSettingId;
+  }
+
+  public static final class EcsServiceSetupBuilder {
+    private String id;
+    private String name;
+    private ContextElementType requiredContextElementType;
+    private boolean rollback;
+    private String loadBalancerSettingId;
+    private transient AwsClusterService awsClusterService;
+    private transient SettingsService settingsService;
+    private transient ServiceResourceService serviceResourceService;
+    private transient InfrastructureMappingService infrastructureMappingService;
+    private transient ArtifactStreamService artifactStreamService;
+
+    private EcsServiceSetupBuilder(String name) {
+      this.name = name;
+    }
+
+    public static EcsServiceSetupBuilder anEcsServiceSetup(String name) {
+      return new EcsServiceSetupBuilder(name);
+    }
+
+    public EcsServiceSetupBuilder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
+      this.requiredContextElementType = requiredContextElementType;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withLoadBalancerSettingId(String loadBalancerSettingId) {
+      this.loadBalancerSettingId = loadBalancerSettingId;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withAwsClusterService(AwsClusterService awsClusterService) {
+      this.awsClusterService = awsClusterService;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withSettingsService(SettingsService settingsService) {
+      this.settingsService = settingsService;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withServiceResourceService(ServiceResourceService serviceResourceService) {
+      this.serviceResourceService = serviceResourceService;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withInfrastructureMappingService(
+        InfrastructureMappingService infrastructureMappingService) {
+      this.infrastructureMappingService = infrastructureMappingService;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withArtifactStreamService(ArtifactStreamService artifactStreamService) {
+      this.artifactStreamService = artifactStreamService;
+      return this;
+    }
+
+    public EcsServiceSetup build() {
+      EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(name);
+      ecsServiceSetup.setId(id);
+      ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
+      ecsServiceSetup.setRollback(rollback);
+      ecsServiceSetup.setLoadBalancerSettingId(loadBalancerSettingId);
+      ecsServiceSetup.settingsService = this.settingsService;
+      ecsServiceSetup.artifactStreamService = this.artifactStreamService;
+      ecsServiceSetup.serviceResourceService = this.serviceResourceService;
+      ecsServiceSetup.awsClusterService = this.awsClusterService;
+      ecsServiceSetup.infrastructureMappingService = this.infrastructureMappingService;
+      return ecsServiceSetup;
+    }
   }
 }

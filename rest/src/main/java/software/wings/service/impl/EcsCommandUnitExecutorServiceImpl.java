@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
@@ -43,22 +43,22 @@ public class EcsCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+  public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
     //    logService.save(context.getAccountId(),
     //    aLog().withAppId(context.getAppId()).withHostName(host.getHostName()).withActivityId(activityId).withLogLevel(INFO)
     //        .withCommandUnitName(commandUnit.getName()).withLogLine(format("Begin execution of command: %s",
     //        commandUnit.getName())).build());
 
-    ExecutionResult executionResult = FAILURE;
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
     injector.injectMembers(commandUnit);
 
     try {
-      executionResult = commandUnit.execute(context);
+      commandExecutionStatus = commandUnit.execute(context);
     } catch (Exception ex) {
       ex.printStackTrace();
     }
-    commandUnit.setExecutionResult(executionResult);
-    return executionResult;
+    commandUnit.setCommandExecutionStatus(commandExecutionStatus);
+    return commandExecutionStatus;
   }
 }

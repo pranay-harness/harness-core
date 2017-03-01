@@ -20,6 +20,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
@@ -48,6 +49,7 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.Orchestration;
@@ -59,6 +61,7 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -77,6 +80,7 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -138,6 +142,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private EntityVersionService entityVersionService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private SettingsService settingsService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -949,6 +954,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return requiredEntityTypes;
     }
+
+    if (workflowPhase.getInfraMappingId() != null) {
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+      if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
+        SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getHostConnectionAttrs());
+        if (settingAttribute != null) {
+          HostConnectionAttributes connectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+          populateRequiredEntityTypesByAccessType(requiredEntityTypes, connectionAttributes.getAccessType());
+        }
+      }
+    }
+
     String serviceId = workflowPhase.getServiceId();
 
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {

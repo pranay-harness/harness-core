@@ -125,4 +125,41 @@ public class InfrastructureMappingResource {
     validationRequest.setEnvId(envId);
     return new RestResponse<>(infrastructureMappingService.validateHost(validationRequest));
   }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/images")
+  public RestResponse<List<String>> getImages(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId,
+      @QueryParam("region") String region) {
+    return new RestResponse<>(
+        infrastructureMappingService.listImages(appId, deploymentType, computeProviderId, region));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/instanceTypes")
+  public RestResponse<List<String>> getInstanceTypes(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listInstanceTypes(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/regions")
+  public RestResponse<List<String>> getRegions(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listRegions(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/roles")
+  public RestResponse<List<String>> getRoles(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listRoles(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/networks")
+  public RestResponse<List<String>> getNetworks(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listNetworks(appId, deploymentType, computeProviderId));
+  }
 }

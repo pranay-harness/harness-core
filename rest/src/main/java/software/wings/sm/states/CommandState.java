@@ -7,8 +7,8 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
@@ -40,9 +40,9 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
@@ -345,25 +345,25 @@ public class CommandState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
 
-    ExecutionResultData executionResultData = null;
+    CommandExecutionResult commandExecutionResult = null;
     String activityId = null;
     for (Object status : response.values()) {
-      executionResultData = ((ExecutionResultData) status);
+      commandExecutionResult = ((CommandExecutionResult) status);
     }
 
     for (String key : response.keySet()) {
       activityId = key;
     }
 
-    if (executionResultData.getResult() != SUCCESS && isNotEmpty(executionResultData.getErrorMessage())) {
+    if (commandExecutionResult.getStatus() != SUCCESS && isNotEmpty(commandExecutionResult.getErrorMessage())) {
       handleCommandException(context, activityId, appId);
     }
 
     activityService.updateStatus(activityId, appId,
-        executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
+        commandExecutionResult.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
 
     ExecutionStatus executionStatus =
-        executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+        commandExecutionResult.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     updateWorkflowExecutionStats(executionStatus, context);
 
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
@@ -374,7 +374,7 @@ public class CommandState extends State {
 
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
-        .withErrorMessage(executionResultData.getErrorMessage())
+        .withErrorMessage(commandExecutionResult.getErrorMessage())
         .withStateExecutionData(commandStateExecutionData)
         .build();
   }

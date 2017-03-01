@@ -131,34 +131,36 @@ public class StateMachineExecutionSimulator {
     }
 
     Set<EntityType> entityTypes = new HashSet<>();
-    accessTypes.forEach(accessType -> {
-      switch (accessType) {
-        case USER_PASSWORD: {
-          entityTypes.add(EntityType.SSH_USER);
-          entityTypes.add(EntityType.SSH_PASSWORD);
-          break;
-        }
-        case USER_PASSWORD_SU_APP_USER: {
-          entityTypes.add(EntityType.SSH_USER);
-          entityTypes.add(EntityType.SSH_PASSWORD);
-          entityTypes.add(EntityType.SSH_APP_ACCOUNT);
-          entityTypes.add(EntityType.SSH_APP_ACCOUNT_PASSOWRD);
-          break;
-        }
-        case USER_PASSWORD_SUDO_APP_USER: {
-          entityTypes.add(EntityType.SSH_USER);
-          entityTypes.add(EntityType.SSH_PASSWORD);
-          entityTypes.add(EntityType.SSH_APP_ACCOUNT);
-          break;
-        }
-        case KEY: {
-          entityTypes.add(EntityType.SSH_KEY_PASSPHRASE);
-          break;
-        }
-      }
-    });
+    accessTypes.forEach(accessType -> { populateRequiredEntityTypesByAccessType(entityTypes, accessType); });
 
     return entityTypes;
+  }
+
+  public static void populateRequiredEntityTypesByAccessType(Set<EntityType> entityTypes, AccessType accessType) {
+    switch (accessType) {
+      case USER_PASSWORD: {
+        entityTypes.add(EntityType.SSH_USER);
+        entityTypes.add(EntityType.SSH_PASSWORD);
+        break;
+      }
+      case USER_PASSWORD_SU_APP_USER: {
+        entityTypes.add(EntityType.SSH_USER);
+        entityTypes.add(EntityType.SSH_PASSWORD);
+        entityTypes.add(EntityType.SSH_APP_ACCOUNT);
+        entityTypes.add(EntityType.SSH_APP_ACCOUNT_PASSOWRD);
+        break;
+      }
+      case USER_PASSWORD_SUDO_APP_USER: {
+        entityTypes.add(EntityType.SSH_USER);
+        entityTypes.add(EntityType.SSH_PASSWORD);
+        entityTypes.add(EntityType.SSH_APP_ACCOUNT);
+        break;
+      }
+      case KEY: {
+        entityTypes.add(EntityType.SSH_KEY_PASSPHRASE);
+        break;
+      }
+    }
   }
 
   private void extrapolateProgress(CountsByStatuses countsByStatuses, ExecutionContextImpl context,

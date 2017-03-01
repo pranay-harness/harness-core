@@ -14,6 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.reinert.jjschema.v1.JsonSchemaFactory;
 import com.github.reinert.jjschema.v1.JsonSchemaV4Factory;
 import com.jayway.jsonpath.Configuration;
@@ -42,9 +45,9 @@ public class JsonUtils {
    * The constant mapperForCloning.
    */
   public static final ObjectMapper mapperForCloning;
+  public static final ObjectMapper mapperForInternalUse;
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
-  public static final ObjectMapper mapperForInternalUse;
 
   static {
     // json-path initialization
@@ -73,6 +76,9 @@ public class JsonUtils {
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(Include.NON_NULL);
     mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
+    mapper.registerModule(new Jdk8Module());
+    mapper.registerModule(new GuavaModule());
+    mapper.registerModule(new JavaTimeModule());
 
     mapperForCloning = new ObjectMapper();
     mapperForCloning.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -80,12 +86,18 @@ public class JsonUtils {
     mapperForCloning.setSerializationInclusion(Include.NON_NULL);
     mapperForCloning.enableDefaultTyping();
     mapperForCloning.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
+    mapperForCloning.registerModule(new Jdk8Module());
+    mapperForCloning.registerModule(new GuavaModule());
+    mapperForCloning.registerModule(new JavaTimeModule());
 
     mapperForInternalUse = new ObjectMapper();
     mapperForInternalUse.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapperForInternalUse.setSerializationInclusion(Include.NON_NULL);
     mapperForInternalUse.enableDefaultTyping();
     mapperForInternalUse.setSubtypeResolver(new JsonSubtypeResolver(mapperForCloning.getSubtypeResolver()));
+    mapperForInternalUse.registerModule(new Jdk8Module());
+    mapperForInternalUse.registerModule(new GuavaModule());
+    mapperForInternalUse.registerModule(new JavaTimeModule());
   }
 
   /**

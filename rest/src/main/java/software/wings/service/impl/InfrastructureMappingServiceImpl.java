@@ -286,6 +286,71 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public List<String> listImages(String appId, String deploymentType, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listAMIs(computeProviderSetting, region);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<String> listRegions(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listRegions(computeProviderSetting);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<String> listInstanceTypes(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listInstanceTypes(computeProviderSetting);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<String> listRoles(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listIAMRoles(computeProviderSetting);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<String> listNetworks(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listVPCs(computeProviderSetting);
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
   public List<HostValidationResponse> validateHost(@Valid HostValidationRequest validationRequest) {
     SettingAttribute computeProviderSetting = settingsService.get(validationRequest.getComputeProviderSettingId());
     Validator.notNullCheck("ComputeProvider", computeProviderSetting);

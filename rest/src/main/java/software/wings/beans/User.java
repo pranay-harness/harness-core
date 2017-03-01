@@ -64,6 +64,11 @@ public class User extends Base implements Principal {
     return publicUser;
   }
 
+  @JsonIgnore
+  public boolean isAdmin() {
+    return roles != null && roles.stream().anyMatch(Role::isAdminRole);
+  }
+
   @Override
   public String getName() {
     return name;

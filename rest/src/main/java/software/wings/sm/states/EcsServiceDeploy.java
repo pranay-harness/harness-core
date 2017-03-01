@@ -1,7 +1,16 @@
 package software.wings.sm.states;
 
-import com.github.reinert.jjschema.Attributes;
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+
 import com.google.inject.Inject;
+
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +28,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionData;
+import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -45,15 +56,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
-
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 /**
  * Created by rishi on 2/8/17.
@@ -95,7 +97,7 @@ public class EcsServiceDeploy extends State {
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
-    Service service = serviceResourceService.get(app.getAppId(), serviceId);
+    Service service = serviceResourceService.get(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), commandName).getCommand();
 
@@ -174,9 +176,10 @@ public class EcsServiceDeploy extends State {
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       String ecsServiceName = ecsServiceElement.getOldName();
 
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(commandStateExecutionData.getAppId(), phaseElement.getInfraMappingId());
+          infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       List<com.amazonaws.services.ecs.model.Service> services =
           awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
@@ -192,15 +195,12 @@ public class EcsServiceDeploy extends State {
 
       commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
 
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = workflowStandardParams.getApp();
       Environment env = workflowStandardParams.getEnv();
 
-      String serviceId = phaseElement.getServiceElement().getUuid();
-
       Command command = serviceResourceService
-                            .getCommandByName(commandStateExecutionData.getAppId(),
-                                commandStateExecutionData.getServiceId(), env.getUuid(), commandName)
+                            .getCommandByName(workflowStandardParams.getAppId(),
+                                phaseElement.getServiceElement().getUuid(), env.getUuid(), commandName)
                             .getCommand();
 
       int desiredCount = ecsService.get().getDesiredCount() - instanceCount;
@@ -237,17 +237,21 @@ public class EcsServiceDeploy extends State {
 
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(
       ExecutionContext context, Map<String, NotifyResponseData> response) {
-    // TODO: set actual containers
-
+    CommandExecutionData commandExecutionData =
+        ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    IntStream.range(0, instanceCount).parallel().forEach(value -> {
-      String uuid = UUIDGenerator.getUuid();
-      instanceStatusSummaries.add(
-          anInstanceStatusSummary()
-              .withStatus(ExecutionStatus.SUCCESS)
-              .withInstanceElement(anInstanceElement().withUuid(uuid).withDisplayName(uuid).build())
-              .build());
-    });
+
+    if (commandExecutionData instanceof ResizeCommandUnitExecutionData) {
+      ((ResizeCommandUnitExecutionData) commandExecutionData)
+          .getContainerIds()
+          .forEach(containerId
+              -> instanceStatusSummaries.add(
+                  anInstanceStatusSummary()
+                      .withStatus(ExecutionStatus.SUCCESS)
+                      .withInstanceElement(
+                          anInstanceElement().withUuid(containerId).withDisplayName(containerId).build())
+                      .build()));
+    }
     return instanceStatusSummaries;
   }
 
@@ -282,5 +286,62 @@ public class EcsServiceDeploy extends State {
 
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
+  }
+
+  public static final class EcsServiceDeployBuilder {
+    private String id;
+    private String name;
+    private ContextElementType requiredContextElementType;
+    private boolean rollback;
+    private String commandName;
+    private int instanceCount;
+
+    private EcsServiceDeployBuilder(String name) {
+      this.name = name;
+    }
+
+    public static EcsServiceDeployBuilder anEcsServiceDeploy(String name) {
+      return new EcsServiceDeployBuilder(name);
+    }
+
+    public EcsServiceDeployBuilder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public EcsServiceDeployBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public EcsServiceDeployBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
+      this.requiredContextElementType = requiredContextElementType;
+      return this;
+    }
+
+    public EcsServiceDeployBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public EcsServiceDeployBuilder withCommandName(String commandName) {
+      this.commandName = commandName;
+      return this;
+    }
+
+    public EcsServiceDeployBuilder withInstanceCount(int instanceCount) {
+      this.instanceCount = instanceCount;
+      return this;
+    }
+
+    public EcsServiceDeploy build() {
+      EcsServiceDeploy ecsServiceDeploy = new EcsServiceDeploy(name);
+      ecsServiceDeploy.setId(id);
+      ecsServiceDeploy.setRequiredContextElementType(requiredContextElementType);
+      ecsServiceDeploy.setRollback(rollback);
+      ecsServiceDeploy.setCommandName(commandName);
+      ecsServiceDeploy.setInstanceCount(instanceCount);
+      return ecsServiceDeploy;
+    }
   }
 }

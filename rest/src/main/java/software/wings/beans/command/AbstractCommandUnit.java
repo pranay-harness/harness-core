@@ -3,9 +3,7 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.waitnotify.NotifyResponseData;
-
-import java.util.Objects;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -13,7 +11,7 @@ import java.util.Objects;
 public abstract class AbstractCommandUnit implements CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
-  private ExecutionResult executionResult;
+  private CommandExecutionStatus commandExecutionStatus;
   @SchemaIgnore private boolean artifactNeeded = false;
   @SchemaIgnore private String deploymentType;
 
@@ -53,24 +51,22 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   }
 
   /**
-   * Gets execution result.
+   * Gets execution status.
    *
-   * @return the execution result
+   * @return the execution status
    */
-  @Override
   @SchemaIgnore
-  public ExecutionResult getExecutionResult() {
-    return executionResult;
+  public CommandExecutionStatus getCommandExecutionStatus() {
+    return commandExecutionStatus;
   }
 
   /**
-   * Sets execution result.
+   * Sets execution status.
    *
-   * @param executionResult the execution result
+   * @param commandExecutionStatus the execution status
    */
-  @Override
-  public void setExecutionResult(ExecutionResult executionResult) {
-    this.executionResult = executionResult;
+  public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
+    this.commandExecutionStatus = commandExecutionStatus;
   }
 
   /**
@@ -136,196 +132,41 @@ public abstract class AbstractCommandUnit implements CommandUnit {
     return MoreObjects.toStringHelper(this)
         .add("name", name)
         .add("commandUnitType", commandUnitType)
-        .add("executionResult", executionResult)
+        .add("commandExecutionStatus", commandExecutionStatus)
         .add("artifactNeeded", artifactNeeded)
         .toString();
   }
 
   /**
-   * The enum Command unit execution result.
+   * The enum Command unit execution status.
    */
   public enum CommandUnitExecutionResult {
     /**
-     * Stop command unit execution result.
+     * Stop command unit execution status.
      */
     STOP, /**
-           * Continue command unit execution result.
+           * Continue command unit execution status.
            */
     CONTINUE;
 
-    private ExecutionResult executionResult = ExecutionResult.SUCCESS;
+    private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
 
     /**
-     * Gets execution result.
+     * Gets execution status.
      *
-     * @return the execution result
+     * @return the execution status
      */
-    public ExecutionResult getExecutionResult() {
-      return executionResult;
+    public CommandExecutionStatus getCommandExecutionStatus() {
+      return commandExecutionStatus;
     }
 
     /**
-     * Sets execution result.
+     * Sets execution status.
      *
-     * @param executionResult the execution result
+     * @param commandExecutionStatus the execution status
      */
-    public void setExecutionResult(ExecutionResult executionResult) {
-      this.executionResult = executionResult;
-    }
-  }
-
-  /**
-   * The Enum ExecutionResult.
-   */
-  public enum ExecutionResult {
-    /**
-     * Success execution result.
-     */
-    SUCCESS, /**
-              * Failure execution result.
-              */
-    FAILURE, /**
-              * Running execution result.
-              */
-    RUNNING,
-
-    /**
-     * Queued execution result.
-     */
-    QUEUED;
-
-    /**
-     * Created by peeyushaggarwal on 7/8/16.
-     */
-    public static class ExecutionResultData implements NotifyResponseData {
-      private ExecutionResult result;
-
-      private String errorMessage;
-
-      /**
-       * Instantiates a new Execution result data.
-       */
-      public ExecutionResultData() {}
-
-      /**
-       * Gets result.
-       *
-       * @return the result
-       */
-      public ExecutionResult getResult() {
-        return result;
-      }
-
-      /**
-       * Sets result.
-       *
-       * @param result the result
-       */
-      public void setResult(ExecutionResult result) {
-        this.result = result;
-      }
-
-      /**
-       * Gets error message.
-       *
-       * @return the error message
-       */
-      public String getErrorMessage() {
-        return errorMessage;
-      }
-
-      /**
-       * Sets error message.
-       *
-       * @param errorMessage the error message
-       */
-      public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-      }
-
-      @Override
-      public String toString() {
-        return MoreObjects.toStringHelper(this).add("result", result).add("errorMessage", errorMessage).toString();
-      }
-
-      @Override
-      public int hashCode() {
-        return Objects.hash(result, errorMessage);
-      }
-
-      @Override
-      public boolean equals(Object obj) {
-        if (this == obj) {
-          return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-          return false;
-        }
-        final ExecutionResultData other = (ExecutionResultData) obj;
-        return Objects.equals(this.result, other.result) && Objects.equals(this.errorMessage, other.errorMessage);
-      }
-
-      /**
-       * The type Builder.
-       */
-      public static final class Builder {
-        private ExecutionResult result;
-        private String errorMessage;
-
-        private Builder() {}
-
-        /**
-         * An execution result data builder.
-         *
-         * @return the builder
-         */
-        public static Builder anExecutionResultData() {
-          return new Builder();
-        }
-
-        /**
-         * With result builder.
-         *
-         * @param result the result
-         * @return the builder
-         */
-        public Builder withResult(ExecutionResult result) {
-          this.result = result;
-          return this;
-        }
-
-        /**
-         * With error message builder.
-         *
-         * @param errorMessage the error message
-         * @return the builder
-         */
-        public Builder withErrorMessage(String errorMessage) {
-          this.errorMessage = errorMessage;
-          return this;
-        }
-
-        /**
-         * But builder.
-         *
-         * @return the builder
-         */
-        public Builder but() {
-          return anExecutionResultData().withResult(result).withErrorMessage(errorMessage);
-        }
-
-        /**
-         * Build execution result data.
-         *
-         * @return the execution result data
-         */
-        public ExecutionResultData build() {
-          ExecutionResultData executionResultData = new ExecutionResultData();
-          executionResultData.setResult(result);
-          executionResultData.setErrorMessage(errorMessage);
-          return executionResultData;
-        }
-      }
+    public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
+      this.commandExecutionStatus = commandExecutionStatus;
     }
   }
 }

@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -53,7 +54,7 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  public ExecutionResult executeInternal(SshCommandExecutionContext context) {
+  public CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     ServiceTemplate serviceTemplate = context.getServiceTemplate();
 
     List<ConfigFile> configFiles = null;
@@ -71,10 +72,10 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               .withLogLine("Unable to fetch config file information")
               .build());
       logger.error("Unable to fetch log file information ", e);
-      return ExecutionResult.FAILURE;
+      return CommandExecutionStatus.FAILURE;
     }
 
-    ExecutionResult result = ExecutionResult.SUCCESS;
+    CommandExecutionStatus result = CommandExecutionStatus.SUCCESS;
     if (!isEmpty(configFiles)) {
       for (ConfigFile configFile : configFiles) {
         File destFile = new File(configFile.getRelativeFilePath());
@@ -96,15 +97,15 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
                   .withCommandUnitName(getName())
                   .withLogLine(message)
                   .build());
-          result = ExecutionResult.FAILURE;
+          result = CommandExecutionStatus.FAILURE;
           break;
         }
         result = (context).copyGridFsFiles(
                      path, FileBucket.CONFIGS, Collections.singletonList(Pair.of(fileId, destFile.getName())))
-                == ExecutionResult.FAILURE
-            ? ExecutionResult.FAILURE
-            : ExecutionResult.SUCCESS;
-        if (ExecutionResult.FAILURE == result) {
+                == CommandExecutionStatus.FAILURE
+            ? CommandExecutionStatus.FAILURE
+            : CommandExecutionStatus.SUCCESS;
+        if (CommandExecutionStatus.FAILURE == result) {
           break;
         }
       }

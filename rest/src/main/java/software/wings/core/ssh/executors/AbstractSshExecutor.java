@@ -9,8 +9,8 @@ import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.AbstractCommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
@@ -25,7 +25,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -125,16 +125,19 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   @Override
-  public ExecutionResult executeCommandString(String command) {
+  public CommandExecutionStatus executeCommandString(String command) {
     return executeCommandString(command, null);
   }
 
   @Override
-  public ExecutionResult executeCommandString(String command, StringBuffer output) {
-    ExecutionResult executionResult = FAILURE;
+  public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
+    long start = System.currentTimeMillis();
     try {
       channel = getCachedSession(this.config).openChannel("exec");
+      logger.error("Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+
       ((ChannelExec) channel).setPty(true);
       OutputStream outputStream = channel.getOutputStream();
       InputStream inputStream = channel.getInputStream();
@@ -172,13 +175,14 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         }
 
         if (channel.isClosed()) {
-          executionResult = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
-          saveExecutionLog("Command finished with status " + executionResult);
-          return executionResult;
+          commandExecutionStatus = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
+          saveExecutionLog("Command finished with status " + commandExecutionStatus);
+          return commandExecutionStatus;
         }
         quietSleep(1000);
       }
     } catch (JSchException | IOException ex) {
+      logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       if (ex instanceof JSchException) {
         logger.error("Command execution failed with error " + ex.getMessage());
         saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
@@ -186,7 +190,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         logger.error("Exception in reading InputStream " + ex.getMessage());
         saveExecutionLog("Command execution failed with error " + UNKNOWN_ERROR);
       }
-      return executionResult;
+      return commandExecutionStatus;
     } finally {
       if (channel != null && !channel.isClosed()) {
         logger.info("Disconnect channel if still open post execution command");
@@ -196,7 +200,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   @Override
-  public ExecutionResult copyGridFsFiles(
+  public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     return fileNamesIds.stream()
         .map(fileNamesId
@@ -219,13 +223,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                     }
                   }
                 }))
-        .filter(executionResult -> executionResult == ExecutionResult.FAILURE)
+        .filter(commandExecutionStatus -> commandExecutionStatus == CommandExecutionStatus.FAILURE)
         .findFirst()
-        .orElse(ExecutionResult.SUCCESS);
+        .orElse(CommandExecutionStatus.SUCCESS);
   }
 
   @Override
-  public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
+  public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
     return files.stream()
         .map(file
             -> scpOneFile(destinationDirectoryPath,
@@ -243,9 +247,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                     }
                   }
                 }))
-        .filter(executionResult -> executionResult == ExecutionResult.FAILURE)
+        .filter(commandExecutionStatus -> commandExecutionStatus == CommandExecutionStatus.FAILURE)
         .findFirst()
-        .orElse(ExecutionResult.SUCCESS);
+        .orElse(CommandExecutionStatus.SUCCESS);
   }
 
   private void passwordPromptResponder(String line, OutputStream outputStream) throws IOException {
@@ -353,8 +357,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return cahcedSession;
   }
 
-  private ExecutionResult scpOneFile(String remoteFilePath, FileProvider fileProvider) {
-    ExecutionResult executionResult = FAILURE;
+  private CommandExecutionStatus scpOneFile(String remoteFilePath, FileProvider fileProvider) {
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
     try {
       Pair<String, Long> fileInfo = fileProvider.getInfo();
@@ -383,7 +387,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       out.flush();
       if (checkAck(in) != 0) {
         saveExecutionLogError("SCP connection initiation failed");
-        return executionResult;
+        return commandExecutionStatus;
       }
       saveExecutionLog("Begin file transfer " + fileInfo.getKey() + " to " + config.getHost() + ":" + remoteFilePath);
       fileProvider.downloadToStream(out);
@@ -392,9 +396,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
       if (checkAck(in) != 0) {
         saveExecutionLogError("File transfer failed");
-        return executionResult;
+        return commandExecutionStatus;
       }
-      executionResult = SUCCESS;
+      commandExecutionStatus = SUCCESS;
       saveExecutionLog("File successfully transferred");
       out.close();
       channel.disconnect();
@@ -407,14 +411,14 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       } else {
         throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS, ex);
       }
-      return executionResult;
+      return commandExecutionStatus;
     } finally {
       if (channel != null && !channel.isClosed()) {
         logger.info("Disconnect channel if still open post execution command");
         channel.disconnect();
       }
     }
-    return executionResult;
+    return commandExecutionStatus;
   }
 
   /**

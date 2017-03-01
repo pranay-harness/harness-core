@@ -1,7 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public interface SshExecutor {
    * @param command the command
    * @return the execution result
    */
-  ExecutionResult executeCommandString(String command);
+  CommandExecutionStatus executeCommandString(String command);
 
   /**
    * Execute command string execution result.
@@ -33,7 +33,7 @@ public interface SshExecutor {
    * @param output  the output
    * @return the execution result
    */
-  ExecutionResult executeCommandString(String command, StringBuffer output);
+  CommandExecutionStatus executeCommandString(String command, StringBuffer output);
 
   /**
    * Scp grid fs files execution result.
@@ -43,7 +43,7 @@ public interface SshExecutor {
    * @param fileNamesIds             the grid fs file id
    * @return the execution result
    */
-  ExecutionResult copyGridFsFiles(
+  CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds);
 
   /**
@@ -53,7 +53,7 @@ public interface SshExecutor {
    * @param files                    the files
    * @return the execution result
    */
-  ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files);
+  CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files);
 
   /**
    * The Enum ExecutorType.

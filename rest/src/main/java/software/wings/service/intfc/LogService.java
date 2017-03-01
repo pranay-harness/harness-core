@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Log;
-import software.wings.beans.command.AbstractCommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -39,7 +39,8 @@ public interface LogService {
    * @param name       the name
    * @return the unit execution result
    */
-  ExecutionResult getUnitExecutionResult(@NotEmpty String appId, @NotEmpty String activityId, @NotEmpty String name);
+  CommandExecutionStatus getUnitExecutionResult(
+      @NotEmpty String appId, @NotEmpty String activityId, @NotEmpty String name);
 
   /**
    * Export logs file.

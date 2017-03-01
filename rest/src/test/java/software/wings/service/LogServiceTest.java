@@ -84,7 +84,7 @@ public class LogServiceTest extends WingsBaseTest {
     logService.getUnitExecutionResult(APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME);
     assertThat(logQuery.getQueryObject().get("appId")).isEqualTo(APP_ID);
     assertThat(logQuery.getQueryObject().get("activityId")).isEqualTo(ACTIVITY_ID);
-    assertThat(logQuery.getQueryObject().get("executionResult")).isEqualTo(new BasicDBObject("$exists", true));
+    assertThat(logQuery.getQueryObject().get("commandExecutionStatus")).isEqualTo(new BasicDBObject("$exists", true));
     assertThat(logQuery.getSortObject().get("lastUpdatedAt")).isEqualTo(-1);
   }
 }
