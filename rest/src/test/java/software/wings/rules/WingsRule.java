@@ -157,8 +157,10 @@ public class WingsRule implements MethodRule {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     datastore = morphia.createDatastore(mongoClient, "wings");
-    distributedLockSvc = new ManagedDistributedLockSvc(
-        new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, "wings", "locks")).getLockSvc());
+    DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, "wings", "locks");
+    distributedLockSvcOptions.setEnableHistory(false);
+    distributedLockSvc =
+        new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
     if (!distributedLockSvc.isRunning()) {
       distributedLockSvc.startup();
     }

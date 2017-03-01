@@ -36,15 +36,11 @@ import java.util.Map;
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class DatabaseModule extends AbstractModule {
-  private Datastore primaryDatastore;
-
-  private Datastore secondaryDatastore;
-
-  private DistributedLockSvc distributedLockSvc;
-
-  private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  private Datastore primaryDatastore;
+  private Datastore secondaryDatastore;
+  private DistributedLockSvc distributedLockSvc;
+  private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
 
   /**
    * Creates a guice module for portal app.
@@ -64,9 +60,11 @@ public class DatabaseModule extends AbstractModule {
     morphia.getMapper().getOptions().setMapSubPackages(true);
     MongoClient mongoClient = new MongoClient(serverAddresses);
     this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
-    distributedLockSvc = new ManagedDistributedLockSvc(
-        new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks"))
-            .getLockSvc());
+    DistributedLockSvcOptions distributedLockSvcOptions =
+        new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks");
+    distributedLockSvcOptions.setEnableHistory(false);
+    distributedLockSvc =
+        new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
 
     if (hosts.size() > 1) {
       mongoClient = new MongoClient(
@@ -81,6 +79,23 @@ public class DatabaseModule extends AbstractModule {
 
     datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
+  }
+
+  /**
+   * Instantiates a new database module.
+   *
+   * @param primaryDatastore   the primary datastore
+   * @param secondaryDatastore the secondary datastore
+   * @param distributedLockSvc the distributed lock svc
+   */
+  public DatabaseModule(
+      Datastore primaryDatastore, Datastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
+    this.primaryDatastore = primaryDatastore;
+    this.secondaryDatastore = secondaryDatastore;
+
+    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
+    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
+    this.distributedLockSvc = distributedLockSvc;
   }
 
   private void ensureIndex(Morphia morphia) {
@@ -119,23 +134,6 @@ public class DatabaseModule extends AbstractModule {
         }
       }
     });
-  }
-
-  /**
-   * Instantiates a new database module.
-   *
-   * @param primaryDatastore   the primary datastore
-   * @param secondaryDatastore the secondary datastore
-   * @param distributedLockSvc the distributed lock svc
-   */
-  public DatabaseModule(
-      Datastore primaryDatastore, Datastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
-    this.primaryDatastore = primaryDatastore;
-    this.secondaryDatastore = secondaryDatastore;
-
-    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
-    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
-    this.distributedLockSvc = distributedLockSvc;
   }
 
   /* (non-Javadoc)
