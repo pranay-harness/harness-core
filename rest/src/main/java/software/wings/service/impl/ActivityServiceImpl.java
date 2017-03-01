@@ -15,7 +15,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;

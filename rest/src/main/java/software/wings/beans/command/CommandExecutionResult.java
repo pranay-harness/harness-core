@@ -2,8 +2,6 @@ package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
 
-import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Objects;
@@ -55,6 +53,14 @@ public class CommandExecutionResult implements NotifyResponseData {
    */
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
+  }
+
+  public CommandExecutionData getCommandExecutionData() {
+    return commandExecutionData;
+  }
+
+  public void setCommandExecutionData(CommandExecutionData commandExecutionData) {
+    this.commandExecutionData = commandExecutionData;
   }
 
   @Override
@@ -164,189 +170,23 @@ public class CommandExecutionResult implements NotifyResponseData {
   }
 
   /**
-   * Created by anubhaw on 5/25/16.
+   * The Enum CommandExecutionStatus.
    */
-  public abstract static class AbstractCommandUnit implements CommandUnit {
-    @SchemaIgnore private String name;
-    private CommandUnitType commandUnitType;
-    private CommandExecutionStatus commandExecutionStatus;
-    @SchemaIgnore private boolean artifactNeeded = false;
-    @SchemaIgnore private String deploymentType;
+  public enum CommandExecutionStatus {
+    /**
+     * Success execution status.
+     */
+    SUCCESS, /**
+              * Failure execution status.
+              */
+    FAILURE, /**
+              * Running execution status.
+              */
+    RUNNING,
 
     /**
-     * Instantiates a new Command unit.
+     * Queued execution status.
      */
-    public AbstractCommandUnit() {}
-
-    /**
-     * Instantiates a new command unit.
-     *
-     * @param commandUnitType the command unit type
-     */
-    public AbstractCommandUnit(CommandUnitType commandUnitType) {
-      this.commandUnitType = commandUnitType;
-    }
-
-    /**
-     * Gets command unit type.
-     *
-     * @return the command unit type
-     */
-    @Override
-    @SchemaIgnore
-    public CommandUnitType getCommandUnitType() {
-      return commandUnitType;
-    }
-
-    /**
-     * Sets command unit type.
-     *
-     * @param commandUnitType the command unit type
-     */
-    @Override
-    public void setCommandUnitType(CommandUnitType commandUnitType) {
-      this.commandUnitType = commandUnitType;
-    }
-
-    /**
-     * Gets execution status.
-     *
-     * @return the execution status
-     */
-    @SchemaIgnore
-    public CommandExecutionStatus getCommandExecutionStatus() {
-      return commandExecutionStatus;
-    }
-
-    /**
-     * Sets execution status.
-     *
-     * @param commandExecutionStatus the execution status
-     */
-    public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
-      this.commandExecutionStatus = commandExecutionStatus;
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    @Override
-    @SchemaIgnore
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    @Override
-    @SchemaIgnore
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    /**
-     * Is artifact needed boolean.
-     *
-     * @return the boolean
-     */
-    @Override
-    @SchemaIgnore
-    public boolean isArtifactNeeded() {
-      return artifactNeeded;
-    }
-
-    /**
-     * Sets artifact needed.
-     *
-     * @param artifactNeeded the artifact needed
-     */
-    @Override
-    public void setArtifactNeeded(boolean artifactNeeded) {
-      this.artifactNeeded = artifactNeeded;
-    }
-
-    @Override
-    @SchemaIgnore
-    public String getDeploymentType() {
-      return deploymentType;
-    }
-
-    /**
-     * Sets deployment type.
-     *
-     * @param deploymentType the deployment type
-     */
-    public void setDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this)
-          .add("name", name)
-          .add("commandUnitType", commandUnitType)
-          .add("commandExecutionStatus", commandExecutionStatus)
-          .add("artifactNeeded", artifactNeeded)
-          .toString();
-    }
-
-    /**
-     * The enum Command unit execution status.
-     */
-    public enum CommandUnitExecutionResult {
-      /**
-       * Stop command unit execution status.
-       */
-      STOP, /**
-             * Continue command unit execution status.
-             */
-      CONTINUE;
-
-      private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-
-      /**
-       * Gets execution status.
-       *
-       * @return the execution status
-       */
-      public CommandExecutionStatus getCommandExecutionStatus() {
-        return commandExecutionStatus;
-      }
-
-      /**
-       * Sets execution status.
-       *
-       * @param commandExecutionStatus the execution status
-       */
-      public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
-        this.commandExecutionStatus = commandExecutionStatus;
-      }
-    }
-
-    /**
-     * The Enum CommandExecutionStatus.
-     */
-    public enum CommandExecutionStatus {
-      /**
-       * Success execution status.
-       */
-      SUCCESS, /**
-                * Failure execution status.
-                */
-      FAILURE, /**
-                * Running execution status.
-                */
-      RUNNING,
-
-      /**
-       * Queued execution status.
-       */
-      QUEUED
-    }
+    QUEUED
   }
 }

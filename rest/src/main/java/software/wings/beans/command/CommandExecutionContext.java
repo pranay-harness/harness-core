@@ -42,6 +42,7 @@ public class CommandExecutionContext {
   private String serviceName;
   private Integer desiredCount;
   private Integer desiredPercentage;
+  private CommandExecutionData commandExecutionData;
 
   /**
    * Instantiates a new Command execution context.
@@ -513,6 +514,24 @@ public class CommandExecutionContext {
   }
 
   /**
+   * Gets command execution data.
+   *
+   * @return the command execution data
+   */
+  public CommandExecutionData getCommandExecutionData() {
+    return commandExecutionData;
+  }
+
+  /**
+   * Sets command execution data.
+   *
+   * @param commandExecutionData the command execution data
+   */
+  public void setCommandExecutionData(CommandExecutionData commandExecutionData) {
+    this.commandExecutionData = commandExecutionData;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -532,6 +551,12 @@ public class CommandExecutionContext {
     private SettingAttribute hostConnectionAttributes;
     private SettingAttribute bastionConnectionAttributes;
     private ArtifactStreamAttributes artifactStreamAttributes;
+    private SettingAttribute cloudProviderSetting;
+    private String clusterName;
+    private String serviceName;
+    private Integer desiredCount;
+    private Integer desiredPercentage;
+    private CommandExecutionData commandExecutionData;
 
     private Builder() {}
 
@@ -721,6 +746,72 @@ public class CommandExecutionContext {
     }
 
     /**
+     * With cloud provider setting builder.
+     *
+     * @param cloudProviderSetting the cloud provider setting
+     * @return the builder
+     */
+    public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
+      this.cloudProviderSetting = cloudProviderSetting;
+      return this;
+    }
+
+    /**
+     * With cluster name builder.
+     *
+     * @param clusterName the cluster name
+     * @return the builder
+     */
+    public Builder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
+      return this;
+    }
+
+    /**
+     * With service name builder.
+     *
+     * @param serviceName the service name
+     * @return the builder
+     */
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
+
+    /**
+     * With desired count builder.
+     *
+     * @param desiredCount the desired count
+     * @return the builder
+     */
+    public Builder withDesiredCount(Integer desiredCount) {
+      this.desiredCount = desiredCount;
+      return this;
+    }
+
+    /**
+     * With desired percentage builder.
+     *
+     * @param desiredPercentage the desired percentage
+     * @return the builder
+     */
+    public Builder withDesiredPercentage(Integer desiredPercentage) {
+      this.desiredPercentage = desiredPercentage;
+      return this;
+    }
+
+    /**
+     * With command execution data builder.
+     *
+     * @param commandExecutionData the command execution data
+     * @return the builder
+     */
+    public Builder withCommandExecutionData(CommandExecutionData commandExecutionData) {
+      this.commandExecutionData = commandExecutionData;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -742,7 +833,13 @@ public class CommandExecutionContext {
           .withEnvVariables(envVariables)
           .withHostConnectionAttributes(hostConnectionAttributes)
           .withBastionConnectionAttributes(bastionConnectionAttributes)
-          .withArtifactStreamAttributes(artifactStreamAttributes);
+          .withArtifactStreamAttributes(artifactStreamAttributes)
+          .withCloudProviderSetting(cloudProviderSetting)
+          .withClusterName(clusterName)
+          .withServiceName(serviceName)
+          .withDesiredCount(desiredCount)
+          .withDesiredPercentage(desiredPercentage)
+          .withCommandExecutionData(commandExecutionData);
     }
 
     /**
@@ -767,6 +864,12 @@ public class CommandExecutionContext {
       commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
       commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
       commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
+      commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
+      commandExecutionContext.setClusterName(clusterName);
+      commandExecutionContext.setServiceName(serviceName);
+      commandExecutionContext.setDesiredCount(desiredCount);
+      commandExecutionContext.setDesiredPercentage(desiredPercentage);
+      commandExecutionContext.setCommandExecutionData(commandExecutionData);
       commandExecutionContext.envVariables = this.envVariables;
       return commandExecutionContext;
     }

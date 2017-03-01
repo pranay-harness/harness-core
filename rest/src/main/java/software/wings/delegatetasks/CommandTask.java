@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 
 import com.google.common.base.Joiner;
 
@@ -10,7 +11,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -25,6 +26,7 @@ public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionRe
   private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);
 
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
+
   public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<CommandExecutionResult> consumer) {
     super(delegateId, delegateTask, consumer);
   }
@@ -56,9 +58,10 @@ public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionRe
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
 
-    return CommandExecutionResult.Builder.aCommandExecutionResult()
+    return aCommandExecutionResult()
         .withStatus(commandExecutionStatus)
         .withErrorMessage(errorMessage)
+        .withCommandExecutionData(commandExecutionContext.getCommandExecutionData())
         .build();
   }
 }

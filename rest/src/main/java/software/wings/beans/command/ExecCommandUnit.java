@@ -19,6 +19,7 @@ import freemarker.template.TemplateException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;

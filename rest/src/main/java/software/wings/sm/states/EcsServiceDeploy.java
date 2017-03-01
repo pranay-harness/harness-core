@@ -28,9 +28,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionData;
+import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -54,7 +56,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 /**
  * Created by rishi on 2/8/17.
@@ -106,8 +107,7 @@ public class EcsServiceDeploy extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    SettingAttribute settingAttribute =
-        settingsService.get(app.getUuid(), infrastructureMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     List<com.amazonaws.services.ecs.model.Service> services =
         awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
@@ -180,8 +180,7 @@ public class EcsServiceDeploy extends State {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
-      SettingAttribute settingAttribute =
-          settingsService.get(workflowStandardParams.getAppId(), infrastructureMapping.getComputeProviderSettingId());
+      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       List<com.amazonaws.services.ecs.model.Service> services =
           awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
       Optional<com.amazonaws.services.ecs.model.Service> ecsService =
@@ -238,17 +237,21 @@ public class EcsServiceDeploy extends State {
 
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(
       ExecutionContext context, Map<String, NotifyResponseData> response) {
-    // TODO: set actual containers
-
+    CommandExecutionData commandExecutionData =
+        ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    IntStream.range(0, instanceCount).parallel().forEach(value -> {
-      String uuid = UUIDGenerator.getUuid();
-      instanceStatusSummaries.add(
-          anInstanceStatusSummary()
-              .withStatus(ExecutionStatus.SUCCESS)
-              .withInstanceElement(anInstanceElement().withUuid(uuid).withDisplayName(uuid).build())
-              .build());
-    });
+
+    if (commandExecutionData instanceof ResizeCommandUnitExecutionData) {
+      ((ResizeCommandUnitExecutionData) commandExecutionData)
+          .getContainerIds()
+          .forEach(containerId
+              -> instanceStatusSummaries.add(
+                  anInstanceStatusSummary()
+                      .withStatus(ExecutionStatus.SUCCESS)
+                      .withInstanceElement(
+                          anInstanceElement().withUuid(containerId).withDisplayName(containerId).build())
+                      .build()));
+    }
     return instanceStatusSummaries;
   }
 

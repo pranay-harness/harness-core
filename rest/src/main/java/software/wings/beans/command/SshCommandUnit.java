@@ -2,11 +2,12 @@ package software.wings.beans.command;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
-public abstract class SshCommandUnit extends CommandExecutionResult.AbstractCommandUnit {
+public abstract class SshCommandUnit extends AbstractCommandUnit {
   @SchemaIgnore private String deploymentType;
 
   /**

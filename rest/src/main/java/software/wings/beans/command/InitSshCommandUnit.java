@@ -17,6 +17,7 @@ import freemarker.template.TemplateException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;

@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 import java.util.Objects;
 import javax.validation.constraints.NotNull;

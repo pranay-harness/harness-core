@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import org.apache.commons.lang3.tuple.Pair;
-import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit.CommandExecutionStatus;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.service.intfc.FileService.FileBucket;
 

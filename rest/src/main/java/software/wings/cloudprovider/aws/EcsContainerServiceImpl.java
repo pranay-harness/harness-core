@@ -933,7 +933,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     if (taskArns == null || taskArns.size() == 0) {
       return Arrays.asList();
     }
-    List<Task> tasks = amazonECSClient.describeTasks(new DescribeTasksRequest().withTasks(taskArns)).getTasks();
+    List<Task> tasks =
+        amazonECSClient.describeTasks(new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
+            .getTasks();
     List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
     return containerInstances;
   }

@@ -32,7 +32,7 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.command.CommandExecutionResult.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
