@@ -252,6 +252,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraStencils.put(AWS_ECS.name(),
         ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema",
             readUiSchema(AWS_ECS.name())));
+    infraStencils.put(GKE_KUBERNETES.name(),
+        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(GkeKubernetesInfrastructureMapping.class), "uiSchema",
+            readUiSchema(GKE_KUBERNETES.name())));
     return infraStencils;
   }
 
