@@ -5,17 +5,17 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 
 /**
- * Created by anubhaw on 1/10/17.
+ * Created by brett on 2/27/17
  */
-@JsonTypeName("AWS_KUBERNETES")
-public class KubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Service cluster name") private String clusterName;
+@JsonTypeName("GKE_KUBERNETES")
+public class GkeKubernetesInfrastructureMapping extends InfrastructureMapping {
+  @Attributes(title = "Cluster name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.
    */
-  public KubernetesInfrastructureMapping() {
-    super(InfrastructureMappingType.AWS_KUBERNETES.name());
+  public GkeKubernetesInfrastructureMapping() {
+    super(InfrastructureMappingType.GKE_KUBERNETES.name());
   }
 
   /**
@@ -66,11 +66,11 @@ public class KubernetesInfrastructureMapping extends InfrastructureMapping {
     private Builder() {}
 
     /**
-     * A kubernetes infrastructure mapping builder.
+     * A GKE kubernetes infrastructure mapping builder.
      *
      * @return the builder
      */
-    public static Builder aKubernetesInfrastructureMapping() {
+    public static Builder aGkeKubernetesInfrastructureMapping() {
       return new Builder();
     }
 
@@ -245,7 +245,7 @@ public class KubernetesInfrastructureMapping extends InfrastructureMapping {
      * @return the builder
      */
     public Builder but() {
-      return aKubernetesInfrastructureMapping()
+      return aGkeKubernetesInfrastructureMapping()
           .withClusterName(clusterName)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
@@ -268,24 +268,24 @@ public class KubernetesInfrastructureMapping extends InfrastructureMapping {
      *
      * @return the kubernetes infrastructure mapping
      */
-    public KubernetesInfrastructureMapping build() {
-      KubernetesInfrastructureMapping kubernetesInfrastructureMapping = new KubernetesInfrastructureMapping();
-      kubernetesInfrastructureMapping.setClusterName(clusterName);
-      kubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
-      kubernetesInfrastructureMapping.setEnvId(envId);
-      kubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
-      kubernetesInfrastructureMapping.setServiceId(serviceId);
-      kubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
-      kubernetesInfrastructureMapping.setDeploymentType(deploymentType);
-      kubernetesInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      kubernetesInfrastructureMapping.setDisplayName(displayName);
-      kubernetesInfrastructureMapping.setUuid(uuid);
-      kubernetesInfrastructureMapping.setAppId(appId);
-      kubernetesInfrastructureMapping.setCreatedBy(createdBy);
-      kubernetesInfrastructureMapping.setCreatedAt(createdAt);
-      kubernetesInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
-      kubernetesInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
-      return kubernetesInfrastructureMapping;
+    public GkeKubernetesInfrastructureMapping build() {
+      GkeKubernetesInfrastructureMapping gkeKubernetesInfrastructureMapping = new GkeKubernetesInfrastructureMapping();
+      gkeKubernetesInfrastructureMapping.setClusterName(clusterName);
+      gkeKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      gkeKubernetesInfrastructureMapping.setEnvId(envId);
+      gkeKubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      gkeKubernetesInfrastructureMapping.setServiceId(serviceId);
+      gkeKubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
+      gkeKubernetesInfrastructureMapping.setDeploymentType(deploymentType);
+      gkeKubernetesInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      gkeKubernetesInfrastructureMapping.setDisplayName(displayName);
+      gkeKubernetesInfrastructureMapping.setUuid(uuid);
+      gkeKubernetesInfrastructureMapping.setAppId(appId);
+      gkeKubernetesInfrastructureMapping.setCreatedBy(createdBy);
+      gkeKubernetesInfrastructureMapping.setCreatedAt(createdAt);
+      gkeKubernetesInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
+      gkeKubernetesInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      return gkeKubernetesInfrastructureMapping;
     }
   }
 }

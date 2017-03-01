@@ -1,20 +1,9 @@
 package software.wings.sm;
 
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.joor.Reflect.on;
-import static software.wings.sm.StateTypeScope.NONE;
-import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
-import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
-import static software.wings.stencils.StencilCategory.CLOUD;
-import static software.wings.stencils.StencilCategory.VERIFICATIONS;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
@@ -25,14 +14,18 @@ import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
+import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceSetup;
-import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
+import software.wings.sm.states.GkeAutoScaleProvisionState;
+import software.wings.sm.states.GkeNodeSelectState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
+import software.wings.sm.states.KubernetesServiceDeploy;
+import software.wings.sm.states.KubernetesServiceSetup;
 import software.wings.sm.states.LoadBalancerState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
@@ -50,6 +43,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.joor.Reflect.on;
+import static software.wings.sm.StateTypeScope.NONE;
+import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
+import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.stencils.StencilCategory.CLOUD;
+import static software.wings.stencils.StencilCategory.COMMANDS;
+import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 /**
  * Represents type of state.
@@ -148,6 +152,10 @@ public enum StateType implements StateTypeDescriptor {
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
 
+  GKE_NODE_SELECT(GkeNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  GKE_AUTOSCALE_PROVISION(GkeAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
+
   /**
    * Phase state type.
    */
@@ -165,7 +173,11 @@ public enum StateType implements StateTypeDescriptor {
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS);
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS),
+
+  KUBERNETES_SERVICE_SETUP(KubernetesServiceSetup.class, CLOUD, ORCHESTRATION_STENCILS),
+
+  KUBERNETES_SERVICE_DEPLOY(KubernetesServiceDeploy.class, COMMANDS, ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

@@ -1,10 +1,5 @@
 package software.wings.service.impl;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.container.Container;
-import com.google.api.services.container.ContainerScopes;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -15,9 +10,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,40 +18,8 @@ import java.util.Map;
  */
 @Singleton
 public class KubernetesHelperService {
-  private static final int SLEEP_INTERVAL_MS = 5 * 1000;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final Map<String, KubernetesClient> clientCacheMap = new HashMap<>();
-
-  /**
-   * Gets a GKE container service.
-   *
-   */
-  public Container getGkeContainerService(String appName) {
-    GoogleCredential credential = null;
-    try {
-      credential = GoogleCredential.getApplicationDefault();
-      if (credential.createScopedRequired()) {
-        credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    Container containerService = null;
-    try {
-      containerService =
-          new Container
-              .Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential)
-              .setApplicationName(appName)
-              .build();
-    } catch (GeneralSecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return containerService;
-  }
 
   /**
    * Gets a Kubernetes client.
@@ -67,7 +27,7 @@ public class KubernetesHelperService {
   public KubernetesClient getKubernetesClient(SettingAttribute settingAttribute) {
     KubernetesConfig kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
     KubernetesClient clientCached = null;
-    String masterUrl = kubernetesConfig.getApiServerUrl();
+    String masterUrl = kubernetesConfig.getMasterUrl();
     if (clientCacheMap.containsKey(masterUrl)) {
       Config config = clientCacheMap.get(masterUrl).getConfiguration();
       if (kubernetesConfig.getUsername().equals(config.getUsername())
@@ -83,13 +43,9 @@ public class KubernetesHelperService {
                                                      .withPassword(kubernetesConfig.getPassword())
                                                      .withNamespace("default")
                                                      .build());
-      logger.info("Connected to cluster " + masterUrl);
+      logger.info("Connected to cluster {}", masterUrl);
       clientCacheMap.put(masterUrl, clientCached);
     }
     return clientCached;
-  }
-
-  public int getSleepIntervalMs() {
-    return SLEEP_INTERVAL_MS;
   }
 }

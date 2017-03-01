@@ -7,12 +7,12 @@ import com.github.reinert.jjschema.Attributes;
 import software.wings.settings.SettingValue;
 
 /**
- * Created by anubhaw on 12/22/16.
+ * Created by bzane on 2/28/17
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesConfig extends SettingValue {
-  @Attributes(title = "API server url") private String apiServerUrl;
-  @Attributes(title = "User Name") private String username;
+  @Attributes(title = "Cluster master URL") private String masterUrl;
+  @Attributes(title = "Username") private String username;
   @Attributes(title = "Password") private String password;
 
   /**
@@ -27,17 +27,17 @@ public class KubernetesConfig extends SettingValue {
    *
    * @return the api server url
    */
-  public String getApiServerUrl() {
-    return apiServerUrl;
+  public String getMasterUrl() {
+    return masterUrl;
   }
 
   /**
    * Sets api server url.
    *
-   * @param apiServerUrl the api server url
+   * @param masterUrl the api server url
    */
-  public void setApiServerUrl(String apiServerUrl) {
-    this.apiServerUrl = apiServerUrl;
+  public void setMasterUrl(String masterUrl) {
+    this.masterUrl = masterUrl;
   }
 
   /**
@@ -82,7 +82,7 @@ public class KubernetesConfig extends SettingValue {
    * The type Builder.
    */
   public static final class Builder {
-    private String apiServerUrl;
+    private String masterUrl;
     private String username;
     private String password;
 
@@ -100,11 +100,11 @@ public class KubernetesConfig extends SettingValue {
     /**
      * With api server url builder.
      *
-     * @param apiServerUrl the api server url
+     * @param masterUrl the api server url
      * @return the builder
      */
-    public Builder withApiServerUrl(String apiServerUrl) {
-      this.apiServerUrl = apiServerUrl;
+    public Builder withMasterUrl(String masterUrl) {
+      this.masterUrl = masterUrl;
       return this;
     }
 
@@ -136,7 +136,7 @@ public class KubernetesConfig extends SettingValue {
      * @return the builder
      */
     public Builder but() {
-      return aKubernetesConfig().withApiServerUrl(apiServerUrl).withUsername(username).withPassword(password);
+      return aKubernetesConfig().withMasterUrl(masterUrl).withUsername(username).withPassword(password);
     }
 
     /**
@@ -146,7 +146,7 @@ public class KubernetesConfig extends SettingValue {
      */
     public KubernetesConfig build() {
       KubernetesConfig kubernetesConfig = new KubernetesConfig();
-      kubernetesConfig.setApiServerUrl(apiServerUrl);
+      kubernetesConfig.setMasterUrl(masterUrl);
       kubernetesConfig.setUsername(username);
       kubernetesConfig.setPassword(password);
       return kubernetesConfig;

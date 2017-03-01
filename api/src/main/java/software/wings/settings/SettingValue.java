@@ -1,6 +1,5 @@
 package software.wings.settings;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import ro.fortsoft.pf4j.ExtensionPoint;
@@ -99,9 +98,14 @@ public abstract class SettingValue implements ExtensionPoint {
     SLACK,
 
     /**
-     * Aws setting variable types.
+     * AWS setting variable types.
      */
     AWS,
+
+    /**
+     * GKE setting variable types.
+     */
+    GKE,
 
     /**
      * Docker registry setting variable types.

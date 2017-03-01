@@ -36,7 +36,7 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
  * Created by brett on 2/10/17.
  */
 public class KubernetesContainerServiceImplTest extends WingsBaseTest {
-  public static final String API_SERVER_URL = "apiServerUrl";
+  public static final String MASTER_URL = "masterUrl";
   public static final String USERNAME = "username";
 
   @Mock private KubernetesHelperService kubernetesHelperService;
@@ -57,13 +57,11 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Inject @InjectMocks private KubernetesContainerService kubernetesContainerService;
 
-  private SettingAttribute connectorConfig = aSettingAttribute()
-                                                 .withValue(aKubernetesConfig()
-                                                                .withApiServerUrl(API_SERVER_URL)
-                                                                .withUsername(USERNAME)
-                                                                .withPassword(PASSWORD)
-                                                                .build())
-                                                 .build();
+  private SettingAttribute connectorConfig =
+      aSettingAttribute()
+          .withValue(
+              aKubernetesConfig().withMasterUrl(MASTER_URL).withUsername(USERNAME).withPassword(PASSWORD).build())
+          .build();
 
   @Before
   public void setUp() throws Exception {

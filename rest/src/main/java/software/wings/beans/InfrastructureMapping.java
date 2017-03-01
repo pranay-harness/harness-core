@@ -37,16 +37,23 @@ public abstract class InfrastructureMapping extends Base {
     /**
      * Physical data center ssh infra mapping type.
      */
-    PHYSICAL_DATA_CENTER_SSH, /**
-                               * Aws ssh infra mapping type.
-                               */
-    AWS_SSH, /**
-              * Aws ecs infra mapping type.
-              */
-    AWS_ECS, /**
-              * Aws kubernetes infra mapping type.
-              */
-    AWS_KUBERNETES
+    PHYSICAL_DATA_CENTER_SSH,
+    /**
+     * Aws ssh infra mapping type.
+     */
+    AWS_SSH,
+    /**
+     * Aws ecs infra mapping type.
+     */
+    AWS_ECS,
+    /**
+     * Aws kubernetes infra mapping type.
+     */
+    AWS_KUBERNETES,
+    /**
+     * Gke kubernetes infra mapping type.
+     */
+    GKE_KUBERNETES
   }
 
   /**

@@ -24,7 +24,7 @@ import software.wings.service.impl.KubernetesHelperService;
 import java.util.Map;
 
 /**
- * Created by brett on 2/9/17.
+ * Created by brett on 2/9/17
  */
 @Singleton
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
@@ -76,15 +76,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
              .replicationControllers()
              .inNamespace("default")
              .createOrReplace(rc);
-    logger.info(String.format(
-        "Created %s controller %s for %s", params.get("tier"), params.get("name"), params.get("appName")));
+    logger.info("Created {} controller {} for {}", params.get("tier"), params.get("name"), params.get("appName"));
     return rc;
   }
 
   @Override
   public void deleteController(SettingAttribute settingAttribute, String name) {
     kubernetesHelperService.getKubernetesClient(settingAttribute).replicationControllers().withName(name).delete();
-    logger.info(String.format("Deleted controller %s", name));
+    logger.info("Deleted controller {}", name);
   }
 
   @Override
@@ -112,8 +111,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                           .addToSelector("tier", params.get("tier"))
                           .endSpec()
                           .done();
-    logger.info(
-        String.format("Created %s service %s for %s", params.get("tier"), params.get("name"), params.get("appName")));
+    logger.info("Created {} service {} for {}", params.get("tier"), params.get("name"), params.get("appName"));
     return service;
   }
 
@@ -122,13 +120,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     ClientResource<Service, DoneableService> service =
         kubernetesHelperService.getKubernetesClient(settingAttribute).services().withName(name);
     service.delete();
-    logger.info(String.format("Deleted service %s", name));
+    logger.info("Deleted service {}", name);
   }
 
   @Override
   public void setControllerPodCount(SettingAttribute settingAttribute, String name, int number) {
     kubernetesHelperService.getKubernetesClient(settingAttribute).replicationControllers().withName(name).scale(number);
-    logger.info(String.format("Scaled controller %s to %d instances", name, number));
+    logger.info("Scaled controller {} to {} instances", name, number);
   }
 
   @Override
@@ -147,16 +145,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     ReplicationController rc = client.replicationControllers().inNamespace("default").withName(rcName).get();
     if (rc != null) {
       String rcLink = masterUrl + rc.getMetadata().getSelfLink().substring(1);
-      logger.info(String.format("Replication controller %s: %s", rcName, rcLink));
+      logger.info("Replication controller {}: {}", rcName, rcLink);
     } else {
-      logger.info(String.format("Replication controller %s does not exist", rcName));
+      logger.info("Replication controller {} does not exist", rcName);
     }
     Service service = client.services().withName(serviceName).get();
     if (service != null) {
       String serviceLink = masterUrl + service.getMetadata().getSelfLink().substring(1);
-      logger.info(String.format("Service %s: %s", serviceName, serviceLink));
+      logger.info("Service %s: {}", serviceName, serviceLink);
     } else {
-      logger.info(String.format("Service %s does not exist", serviceName));
+      logger.info("Service {} does not exist", serviceName);
     }
   }
 

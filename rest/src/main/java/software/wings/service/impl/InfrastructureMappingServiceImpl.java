@@ -1,33 +1,23 @@
 package software.wings.service.impl;
 
-import static software.wings.api.DeploymentType.ECS;
-import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
-
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
-
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.HostValidationResponse;
+import software.wings.beans.GkeKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
+import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -52,6 +42,9 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,9 +55,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.executable.ValidateOnExecution;
+
+import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.GKE_KUBERNETES;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GKE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -184,8 +187,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       updateOperations.set("clusterName", ((EcsInfrastructureMapping) infrastructureMapping).getClusterName());
-    } else if (infrastructureMapping instanceof KubernetesInfrastructureMapping) {
-      updateOperations.set("clusterName", ((KubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+    } else if (infrastructureMapping instanceof AwsKubernetesInfrastructureMapping) {
+      updateOperations.set(
+          "clusterName", ((AwsKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+      updateOperations.set(
+          "clusterName", ((GkeKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
     }
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
@@ -424,6 +431,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .stream()
           .map(Host::getHostName)
           .collect(Collectors.toList());
+    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+      GkeInfrastructureProvider infrastructureProvider =
+          (GkeInfrastructureProvider) getInfrastructureProviderByComputeProviderType((GKE.name()));
+      // TODO(brett): Implement
     }
     return new ArrayList<>();
   }
@@ -501,9 +512,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           infrastructureMapping.getUuid(),
           ImmutableMap.of(
               "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
+    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+      // TODO(brett): Implement
+      return null;
     } else {
       throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS infra mapping");
+          ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GKE infra mapping");
     }
   }
 
@@ -536,6 +550,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       awsInfrastructureProvider.deProvisionHosts(
           appId, infrastructureMapping.getUuid(), computeProviderSetting, hostNames);
       updateHostsAndServiceInstances(infrastructureMapping, Arrays.asList(), hostNames);
+    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+      // TODO(brett): Implement
     } else {
       throw new WingsException(
           ErrorCode.INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
@@ -552,6 +568,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (artifactType.equals(ArtifactType.DOCKER)) {
       infraTypes.put(AWS.name(), ImmutableMap.of(ECS.name(), AWS_ECS.name()));
+      infraTypes.put(GKE.name(), ImmutableMap.of(KUBERNETES.name(), GKE_KUBERNETES.name()));
     } else {
       infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
       infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name()));
@@ -573,7 +590,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      throw new WingsException("Error in reasing ui schema - " + file, exception);
+      throw new WingsException("Error reading ui schema - " + file, exception);
     }
   }
 }

@@ -12,6 +12,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.GkeConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -30,7 +31,12 @@ import java.util.Map;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.PluginCategory.*;
+import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.CloudProvider;
+import static software.wings.beans.PluginCategory.Collaboration;
+import static software.wings.beans.PluginCategory.ConnectionAttributes;
+import static software.wings.beans.PluginCategory.LoadBalancer;
+import static software.wings.beans.PluginCategory.Verification;
 
 /**
  * Created by peeyushaggarwal on 10/20/16.
@@ -115,6 +121,15 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema("AWS"))
             .build(),
         anAccountPlugin()
+            .withSettingClass(GkeConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("GKE")
+            .withType("GKE")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("GKE"))
+            .build(),
+        anAccountPlugin()
             .withSettingClass(PhysicalDataCenterConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
@@ -177,7 +192,7 @@ public class PluginServiceImpl implements PluginService {
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      throw new WingsException("Error in reasing ui schema - " + file, exception);
+      throw new WingsException("Error reading ui schema - " + file, exception);
     }
   }
 }

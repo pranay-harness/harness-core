@@ -23,7 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
-import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.impl.GkeHelperService;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
  * Created by brett on 2/10/17.
  */
 public class GkeClusterServiceImplTest extends WingsBaseTest {
-  @Mock private KubernetesHelperService kubernetesHelperService;
+  @Mock private GkeHelperService gkeHelperService;
   @Mock private Container container;
   @Mock private Container.Projects projects;
   @Mock private Container.Projects.Zones zones;
@@ -102,8 +102,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(kubernetesHelperService.getGkeContainerService(anyString())).thenReturn(container);
-    when(kubernetesHelperService.getSleepIntervalMs()).thenReturn(0);
+    when(gkeHelperService.getGkeContainerService(anyString())).thenReturn(container);
+    when(gkeHelperService.getSleepIntervalMs()).thenReturn(0);
     when(container.projects()).thenReturn(projects);
     when(projects.zones()).thenReturn(zones);
     when(zones.clusters()).thenReturn(clusters);
@@ -141,7 +141,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     KubernetesConfig config = gkeClusterService.createCluster(CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
-    assertThat(config.getApiServerUrl()).isEqualTo("https://1.1.1.1/");
+    assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
     assertThat(config.getUsername()).isEqualTo("master1");
     assertThat(config.getPassword()).isEqualTo("password1");
   }
@@ -152,7 +152,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     KubernetesConfig config = gkeClusterService.createCluster(CREATE_CLUSTER_PARAMS);
 
     verify(clusters, times(0)).create(anyString(), anyString(), any(CreateClusterRequest.class));
-    assertThat(config.getApiServerUrl()).isEqualTo("https://1.1.1.1/");
+    assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
     assertThat(config.getUsername()).isEqualTo("master1");
     assertThat(config.getPassword()).isEqualTo("password1");
   }
@@ -236,7 +236,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     KubernetesConfig config = gkeClusterService.getCluster(CLUSTER_PARAMS);
 
     verify(clusters).get(anyString(), anyString(), anyString());
-    assertThat(config.getApiServerUrl()).isEqualTo("https://1.1.1.1/");
+    assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
     assertThat(config.getUsername()).isEqualTo("master1");
     assertThat(config.getPassword()).isEqualTo("password1");
   }

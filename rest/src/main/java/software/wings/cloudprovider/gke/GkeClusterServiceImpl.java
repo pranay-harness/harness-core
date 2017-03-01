@@ -18,7 +18,7 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
-import software.wings.service.impl.KubernetesHelperService;
+import software.wings.service.impl.GkeHelperService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
@@ -27,16 +27,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Created by bzane on 2/21/17.
+ * Created by bzane on 2/21/17
  */
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
+  @Inject private GkeHelperService gkeHelperService = new GkeHelperService();
 
   @Override
   public KubernetesConfig createCluster(Map<String, String> params) {
-    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
     // See if the cluster already exists
     try {
       Cluster cluster = gkeContainerService.projects()
@@ -44,8 +44,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                             .clusters()
                             .get(params.get("projectId"), params.get("zone"), params.get("name"))
                             .execute();
-      logger.info(String.format("Cluster %s already exists in zone %s for project %s", params.get("name"),
-          params.get("zone"), params.get("projectId")));
+      logger.info("Cluster {} already exists in zone {} for project {}", params.get("name"), params.get("zone"),
+          params.get("projectId"));
       return configFromCluster(cluster);
     } catch (IOException e) {
       logNotFoundOrError(e, params, "getting");
@@ -84,7 +84,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   private KubernetesConfig configFromCluster(Cluster cluster) {
     return KubernetesConfig.Builder.aKubernetesConfig()
-        .withApiServerUrl("https://" + cluster.getEndpoint() + "/")
+        .withMasterUrl("https://" + cluster.getEndpoint() + "/")
         .withUsername(cluster.getMasterAuth().getUsername())
         .withPassword(cluster.getMasterAuth().getPassword())
         .build();
@@ -92,7 +92,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public boolean deleteCluster(Map<String, String> params) {
-    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
     try {
       Operation deleteOperation = gkeContainerService.projects()
                                       .zones()
@@ -116,14 +116,14 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     int i = 0;
     while (operation.getStatus().equals("RUNNING")) {
       try {
-        Misc.quietSleep(kubernetesHelperService.getSleepIntervalMs());
+        Misc.quietSleep(gkeHelperService.getSleepIntervalMs());
         operation =
             gkeContainerService.projects().zones().operations().get(projectId, zone, operation.getName()).execute();
       } catch (IOException e) {
         logger.error("Error checking operation status", e);
         break;
       }
-      i += kubernetesHelperService.getSleepIntervalMs() / 1000;
+      i += gkeHelperService.getSleepIntervalMs() / 1000;
       logger.info(operationLogMessage + "... " + i);
     }
     logger.info(operationLogMessage + ": " + operation.getStatus());
@@ -132,15 +132,15 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig getCluster(Map<String, String> params) {
-    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
     try {
       Cluster cluster = gkeContainerService.projects()
                             .zones()
                             .clusters()
                             .get(params.get("projectId"), params.get("zone"), params.get("name"))
                             .execute();
-      logger.info(String.format("Found cluster %s in zone %s for project %s", params.get("name"), params.get("zone"),
-          params.get("projectId")));
+      logger.info("Found cluster {} in zone {} for project {}", params.get("name"), params.get("zone"),
+          params.get("projectId"));
       logger.info("Cluster status: " + cluster.getStatus());
       logger.info("Master endpoint: " + cluster.getEndpoint());
       return configFromCluster(cluster);
@@ -152,21 +152,20 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public List<String> listClusters(Map<String, String> params) {
-    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
     try {
       ListClustersResponse response =
           gkeContainerService.projects().zones().clusters().list(params.get("projectId"), params.get("zone")).execute();
       return response.getClusters().stream().map(Cluster::getName).collect(Collectors.toList());
     } catch (IOException e) {
-      logger.error(String.format(
-          "Error listing clusters for project %s in zone %s", params.get("projectId"), params.get("zone")));
+      logger.error("Error listing clusters for project {} in zone {}", params.get("projectId"), params.get("zone"));
     }
     return null;
   }
 
   @Override
   public boolean setNodePoolAutoscaling(boolean enabled, int min, int max, Map<String, String> params) {
-    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
     try {
       ClusterUpdate clusterUpdate = new ClusterUpdate();
       if (params.containsKey("nodePoolId")) {
@@ -193,18 +192,17 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   private void logNotFoundOrError(IOException e, Map<String, String> params, String actionVerb) {
     if (e instanceof GoogleJsonResponseException
         && ((GoogleJsonResponseException) e).getDetails().getCode() == HttpStatusCodes.STATUS_CODE_NOT_FOUND) {
-      logger.warn(String.format("Cluster %s does not exist in zone %s for project %s", params.get("name"),
-          params.get("zone"), params.get("projectId")));
+      logger.warn("Cluster {} does not exist in zone {} for project {}", params.get("name"), params.get("zone"),
+          params.get("projectId"));
     } else {
-      logger.error(String.format("Error %s cluster %s in zone %s for project %s", actionVerb, params.get("name"),
-                       params.get("zone"), params.get("projectId")),
-          e);
+      logger.error("Error {} cluster {} in zone {} for project {}", actionVerb, params.get("name"), params.get("zone"),
+          params.get("projectId"), e);
     }
   }
 
   @Override
   public NodePoolAutoscaling getNodePoolAutoscaling(Map<String, String> params) {
-    Container gkeContainerService = kubernetesHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
     try {
       Cluster cluster = gkeContainerService.projects()
                             .zones()

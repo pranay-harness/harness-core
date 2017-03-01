@@ -44,7 +44,7 @@ public class kube {
         ImmutableMap.<String, String>builder().putAll(projectParams).put("name", "baz-qux").build();
 
     List<String> clusters = gkeClusterService.listClusters(projectParams);
-    logger.info("Available clusters: " + clusters);
+    logger.info("Available clusters: {}", clusters);
 
     //    KubernetesConfig config = gkeClusterService.createCluster(
     //        ImmutableMap.<String, String>builder()
@@ -59,7 +59,7 @@ public class kube {
     //    gkeClusterService.setNodePoolAutoscaling(true, 4, 8, clusterParams);
 
     NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(clusterParams);
-    logger.info("Autoscale setting: " + autoscaling);
+    logger.info("Autoscale setting: {}", autoscaling);
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withValue(config).build();
 
@@ -114,8 +114,8 @@ public class kube {
 
     int backendCount = kubernetesService.getControllerPodCount(settingAttribute, "backend-ctrl");
     int frontendCount = kubernetesService.getControllerPodCount(settingAttribute, "frontend-ctrl");
-    logger.info(String.format("Controller backend-ctrl has %d instances", backendCount));
-    logger.info(String.format("Controller frontend-ctrl has %d instances", frontendCount));
+    logger.info("Controller backend-ctrl has {} instances", backendCount);
+    logger.info("Controller frontend-ctrl has {} instances", frontendCount);
 
     kubernetesService.checkStatus(settingAttribute, "backend-ctrl", "backend-service");
     kubernetesService.checkStatus(settingAttribute, "frontend-ctrl", "frontend-service");
