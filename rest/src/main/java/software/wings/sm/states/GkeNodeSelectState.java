@@ -26,6 +26,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 /**
  * Created by brett on 3/1/17
+ * TODO(brett): Implement
  */
 public class GkeNodeSelectState extends State {
   private static final Logger logger = LoggerFactory.getLogger(GkeNodeSelectState.class);
@@ -46,7 +47,7 @@ public class GkeNodeSelectState extends State {
    * @param name the name
    */
   public GkeNodeSelectState(String name) {
-    super(name, StateType.AWS_NODE_SELECT.name());
+    super(name, StateType.GKE_NODE_SELECT.name());
   }
 
   @Override

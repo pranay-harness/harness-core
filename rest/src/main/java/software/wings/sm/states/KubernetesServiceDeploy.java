@@ -6,23 +6,21 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
-import software.wings.api.EcsServiceElement;
+import software.wings.api.KubernetesServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -44,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -56,14 +53,15 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 /**
- * Created by rishi on 2/8/17.
+ * Created by brett on 3/1/17
+ * TODO(brett): Implement
  */
 public class KubernetesServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesServiceDeploy.class);
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Resize Service Cluster")
+  @DefaultValue("Resize Cluster")
   private String commandName;
 
   @Attributes(title = "Number of instances") private int instanceCount;
@@ -78,10 +76,10 @@ public class KubernetesServiceDeploy extends State {
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
-  @Inject @Transient private transient AwsClusterService awsClusterService;
+  @Inject @Transient private transient GkeClusterService gkeClusterService;
 
   public KubernetesServiceDeploy(String name) {
-    super(name, StateType.ECS_SERVICE_DEPLOY.name());
+    super(name, StateType.KUBERNETES_SERVICE_DEPLOY.name());
   }
 
   @Override
@@ -99,26 +97,17 @@ public class KubernetesServiceDeploy extends State {
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), commandName).getCommand();
 
-    EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
+    KubernetesServiceElement kubernetesServiceElement =
+        context.getContextElement(ContextElementType.KUBERNETES_SERVICE);
 
-    String ecsServiceName = ecsServiceElement.getName();
+    String kubernetesServiceName = kubernetesServiceElement.getName();
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
-    List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
-    Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-        services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
-
-    if (!ecsService.isPresent()) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + ecsServiceName);
-    }
-
-    int desiredCount = ecsService.get().getDesiredCount() + instanceCount;
-    logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
+    // TODO(brett): Implement
+    int desiredCount = 0;
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -145,9 +134,10 @@ public class KubernetesServiceDeploy extends State {
 
     Activity activity = activityService.save(activityBuilder.build());
 
-    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(),
-        ecsServiceElement.getClusterName(), ecsServiceName, desiredCount, activity.getUuid(), settingAttribute);
-    executionDataBuilder.withActivityId(activity.getUuid()).withNewContainerServiceName(ecsServiceName);
+    CommandExecutionContext commandExecutionContext =
+        buildCommandExecutionContext(app, env.getUuid(), kubernetesServiceElement.getClusterName(),
+            kubernetesServiceName, desiredCount, activity.getUuid(), settingAttribute);
+    executionDataBuilder.withActivityId(activity.getUuid()).withNewContainerServiceName(kubernetesServiceName);
 
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
@@ -166,29 +156,21 @@ public class KubernetesServiceDeploy extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
+    KubernetesServiceElement kubernetesServiceElement =
+        context.getContextElement(ContextElementType.KUBERNETES_SERVICE);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
     commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
 
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
-      String ecsServiceName = ecsServiceElement.getOldName();
+      String ecsServiceName = kubernetesServiceElement.getOldName();
 
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(commandStateExecutionData.getAppId(), phaseElement.getInfraMappingId());
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-      List<com.amazonaws.services.ecs.model.Service> services =
-          awsClusterService.getServices(settingAttribute, ecsServiceElement.getClusterName());
-      Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-          services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
-      if (!ecsService.isPresent()) {
-        logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
-        return anExecutionResponse()
-            .withStateExecutionData(commandStateExecutionData)
-            .withExecutionStatus(ExecutionStatus.SUCCESS)
-            .build();
-      }
+
+      // TODO(brett): Implement
 
       commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
 
@@ -203,14 +185,16 @@ public class KubernetesServiceDeploy extends State {
                                 commandStateExecutionData.getServiceId(), env.getUuid(), commandName)
                             .getCommand();
 
-      int desiredCount = ecsService.get().getDesiredCount() - instanceCount;
+      // TODO(brett): Implement
+      int desiredCount = 0;
+
       logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
 
       if (desiredCount < 0) {
         desiredCount = 0;
       }
       CommandExecutionContext commandExecutionContext =
-          buildCommandExecutionContext(app, env.getUuid(), ecsServiceElement.getClusterName(), ecsServiceName,
+          buildCommandExecutionContext(app, env.getUuid(), kubernetesServiceElement.getClusterName(), ecsServiceName,
               desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
 
       delegateService.queueTask(aDelegateTask()
