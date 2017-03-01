@@ -3,6 +3,9 @@ package software.wings.managerclient;
 import com.google.inject.Provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
@@ -46,11 +49,15 @@ public ManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
 
 @Override
 public ManagerClient get() {
+  ObjectMapper objectMapper = new ObjectMapper();
+  objectMapper.registerModule(new Jdk8Module());
+  objectMapper.registerModule(new GuavaModule());
+  objectMapper.registerModule(new JavaTimeModule());
   Retrofit retrofit = new Retrofit.Builder()
                           .baseUrl(baseUrl)
                           .client(getUnsafeOkHttpClient())
                           .addConverterFactory(new KryoConverterFactory())
-                          .addConverterFactory(JacksonConverterFactory.create(new ObjectMapper()))
+                          .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                           .build();
   return retrofit.create(ManagerClient.class);
 }
