@@ -6,10 +6,10 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import com.google.inject.Singleton;
 
 import software.wings.api.DeploymentType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.service.intfc.CommandUnitExecutorService;
@@ -38,7 +38,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public CommandExecutionStatus execute(Command command, CommandExecutionContext context) {
-    if (command.getDeploymentType().equals(DeploymentType.ECS.name())) {
+    if (DeploymentType.ECS.name().equals(command.getDeploymentType())) {
       return executeEcsCommand(command, context);
     } else {
       return executeSshCommand(command, context);
