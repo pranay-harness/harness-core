@@ -305,8 +305,8 @@ public class DelegateServiceImpl implements DelegateService {
         injector.injectMembers(delegateRunnableTask);
         executorService.submit(delegateRunnableTask);
       } else {
-        logger.info("DelegateTask excecuting on some other delegate - uuid: {}, accountId: {}, taskType: {}",
-            delegateTask.getUuid(), delegateTask.getAccountId(), delegateTask.getTaskType());
+        logger.info("DelegateTask excecuting on some other delegate - uuid: {}, accountId: {}",
+            delegateTaskEvent.getDelegateTaskId(), delegateTaskEvent.getAccountId());
       }
     } catch (IOException e) {
       logger.error("Unable to acquire task ", e);
