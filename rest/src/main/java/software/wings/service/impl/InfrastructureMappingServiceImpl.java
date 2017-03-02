@@ -280,9 +280,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("ComputeProvider", computeProviderSetting);
 
-    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+    String type = computeProviderSetting.getValue().getType();
+    if (AWS.name().equals(type)) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listClusterNames(computeProviderSetting);
+    } else if (GKE.name().equals(type)) {
+      GkeInfrastructureProvider infrastructureProvider =
+          (GkeInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GKE.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting);
     }
     return new ArrayList<>();
@@ -499,10 +504,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .stream()
           .map(Host::getHostName)
           .collect(Collectors.toList());
-    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
-      GkeInfrastructureProvider infrastructureProvider =
-          (GkeInfrastructureProvider) getInfrastructureProviderByComputeProviderType((GKE.name()));
-      // TODO(brett): Implement
     }
     return new ArrayList<>();
   }
