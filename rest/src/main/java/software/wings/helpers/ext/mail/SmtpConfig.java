@@ -6,7 +6,9 @@ import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
 
@@ -20,7 +22,7 @@ public class SmtpConfig extends SettingValue {
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password") private String password;
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") private String password;
 
   /**
    * Instantiates a new smtp config.

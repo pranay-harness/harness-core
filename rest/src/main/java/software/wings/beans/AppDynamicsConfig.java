@@ -3,8 +3,10 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import ro.fortsoft.pf4j.Extension;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
@@ -18,7 +20,7 @@ import java.util.Objects;
 public class AppDynamicsConfig extends SettingValue {
   @Attributes(title = "User Name") private String username;
   @Attributes(title = "Account Name") private String accountname;
-  @Attributes(title = "Password") private String password;
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") private String password;
   @Attributes(title = "Controller URL") private String controllerUrl;
 
   /**

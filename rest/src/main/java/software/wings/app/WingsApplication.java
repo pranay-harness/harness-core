@@ -49,6 +49,7 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.health.WingsHealthCheck;
+import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthResponseFilter;
@@ -113,6 +114,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     bootstrap.getObjectMapper().addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
     bootstrap.getObjectMapper().setSubtypeResolver(
         new JsonSubtypeResolver(bootstrap.getObjectMapper().getSubtypeResolver()));
+    bootstrap.getObjectMapper().setConfig(
+        bootstrap.getObjectMapper().getSerializationConfig().withView(JsonViews.Public.class));
 
     logger.info("bootstrapping done.");
   }
@@ -142,6 +145,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     Caching.getCachingProvider().getCacheManager().createCache(
         "delegateSyncCache", new Configuration<String, DelegateTask>() {
           public static final long serialVersionUID = 1l;
+
           @Override
           public Class<String> getKeyType() {
             return String.class;

@@ -3,9 +3,11 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 
 import java.util.Objects;
@@ -17,7 +19,7 @@ import java.util.Objects;
 public class BambooConfig extends SettingValue {
   @Attributes(title = "Bamboo URL") @URL private String bambooUrl;
   @Attributes(title = "Username") @NotEmpty private String username;
-  @Attributes(title = "Password") @NotEmpty private String password;
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @NotEmpty private String password;
 
   /**
    * Instantiates a new BambooService config.
