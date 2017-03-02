@@ -1110,6 +1110,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == DeploymentType.ECS) {
       return generateRollbackWorkflowPhaseForECS(appId, workflowPhase);
+    } else if (deploymentType == DeploymentType.KUBERNETES) {
+      return generateRollbackWorkflowPhaseForKubernetes(appId, workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
@@ -1117,7 +1119,30 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase generateRollbackWorkflowPhaseForECS(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.SSH);
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
+
+    WorkflowPhase rollbackWorkflowPhase =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withRollbackPhaseName(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withInfraMappingId(workflowPhase.getInfraMappingId())
+            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE)
+                              .withName("Stop Service")
+                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
+                              .withRollback(true)
+                              .build())
+            .build();
+
+    return rollbackWorkflowPhase;
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(String appId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.KUBERNETES);
 
     WorkflowPhase rollbackWorkflowPhase =
         aWorkflowPhase()
