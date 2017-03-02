@@ -6,3 +6,4 @@
   "specificHosts": { "ui:widget": "radio", "classNames": "__specificHosts"  },
   "ui:order": ["*" , "specificHosts", "instanceCount", "hostNames"]
 }
+
