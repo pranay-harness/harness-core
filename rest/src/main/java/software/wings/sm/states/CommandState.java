@@ -124,7 +124,8 @@ public class CommandState extends State {
   @Inject @Transient private transient WaitNotifyEngine waitNotifyEngine;
 
   @Attributes(title = "Command")
-  @Expand(dataProvider = CommandStateDataProvider.class)
+  //@Expand(dataProvider = CommandStateDataProvider.class)
+  @Expand(dataProvider = CommandStateEnumDataProvider.class)
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   private String commandName;
 
