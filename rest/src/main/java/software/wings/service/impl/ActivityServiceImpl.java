@@ -116,7 +116,7 @@ public class ActivityServiceImpl implements ActivityService {
     List<CommandUnit> commandUnits =
         getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getCommandNameVersionMap(), command);
     if (commandUnits != null && commandUnits.size() > 0) {
-      if (command.getDeploymentType().equals(DeploymentType.SSH.name())) {
+      if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
         commandUnits.add(0, new InitSshCommandUnit());
         commandUnits.add(new CleanupSshCommandUnit());
       }

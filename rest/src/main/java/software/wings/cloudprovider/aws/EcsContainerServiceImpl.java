@@ -30,6 +30,7 @@ import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
+import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
@@ -51,6 +52,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -962,11 +964,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = validateAndGetAwsConfig(cloudProviderSetting);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    List<String> serviceArns =
-        amazonECSClient.listServices(new ListServicesRequest().withCluster(clusterName)).getServiceArns();
-    if (serviceArns == null || serviceArns.size() == 0) {
-      return Arrays.asList();
-    }
+
+    List<String> serviceArns = new ArrayList<>();
+    ListServicesResult listServicesResult;
+    ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
+    do {
+      listServicesResult = amazonECSClient.listServices(listServicesRequest);
+      serviceArns.addAll(listServicesResult.getServiceArns());
+      listServicesRequest.setNextToken(listServicesResult.getNextToken());
+    } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
+
     return amazonECSClient
         .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceArns))
         .getServices();

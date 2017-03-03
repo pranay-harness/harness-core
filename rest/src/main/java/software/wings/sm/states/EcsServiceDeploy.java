@@ -170,9 +170,8 @@ public class EcsServiceDeploy extends State {
     EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
-    commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
-
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
+      commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
       String ecsServiceName = ecsServiceElement.getOldName();
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -240,7 +239,8 @@ public class EcsServiceDeploy extends State {
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
-    if (commandExecutionData instanceof ResizeCommandUnitExecutionData) {
+    if (commandExecutionData instanceof ResizeCommandUnitExecutionData
+        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerIds() != null) {
       ((ResizeCommandUnitExecutionData) commandExecutionData)
           .getContainerIds()
           .forEach(containerId

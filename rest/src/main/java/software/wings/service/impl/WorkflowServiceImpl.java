@@ -602,8 +602,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                  .stream()
                                  .map(WorkflowPhase::getServiceId)
                                  .collect(Collectors.toSet());
-    serviceIds.forEach(
-        serviceId -> { services.add(serviceResourceService.get(orchestrationWorkflow.getAppId(), serviceId, false)); });
+    serviceIds.forEach(serviceId -> {
+      // TODO: services should not be allowed to delete unless workflows are deleted as well
+      try {
+        services.add(serviceResourceService.get(orchestrationWorkflow.getAppId(), serviceId, false));
+      } catch (WingsException e) {
+        logger.error("Service ID : {} doesn't exist", serviceId);
+      }
+    });
     orchestrationWorkflow.setServices(services);
   }
 
@@ -1407,6 +1413,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (phaseStep.isStepsInParallel()) {
       Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(phaseStep.getName() + "-FORK").build();
+      graphBuilder.addNodes(forkNode);
       for (Node step : phaseStep.getSteps()) {
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()

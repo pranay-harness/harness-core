@@ -1,12 +1,13 @@
 package software.wings.beans.command;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by anubhaw on 2/28/17.
  */
 public class ResizeCommandUnitExecutionData extends CommandExecutionData {
-  private List<String> containerIds;
+  private List<String> containerIds = new ArrayList<>();
 
   /**
    * Gets container ids.

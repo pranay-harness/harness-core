@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.api.client.repackaged.com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
@@ -87,6 +88,12 @@ public class AwsHelperService {
    */
   public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, String secretKey) {
     return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
+
+  public String getHostnameFromDnsName(String dnsName) {
+    return (!isNullOrEmpty(dnsName) && dnsName.endsWith(".ec2.internal"))
+        ? dnsName.substring(0, dnsName.length() - ".ec2.internal".length())
+        : dnsName;
   }
 
   /**

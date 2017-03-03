@@ -159,7 +159,7 @@ echo " "
 echo -e "${r"${bold}"}Starting tail log verification${r"${normal}"}"
 
 #Wait for tail outputs.
-TAIL_TIMEOUT=30
+TAIL_TIMEOUT=120
 TAIL_COUNT=${tailPatterns?size}
 while [ "$TAIL_TIMEOUT" -gt 0 -a "$TAIL_COUNT" -gt 0 ]
 do
@@ -214,8 +214,8 @@ then
   <#list tailPatterns as tailPattern>
   if [ ! -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
   then
-    echo "File: '${tailPattern.pattern}'"
-    echo "Pattern: '$TAIL_FILE_PATH'"
+    echo "File    : '$TAIL_FILE_PATH'"
+    echo "Pattern : '${tailPattern.pattern}'"
   fi
 </#list>
 fi

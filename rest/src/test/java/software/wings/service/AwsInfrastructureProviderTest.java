@@ -143,6 +143,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                 .withInstanceId("INSTANCE_ID")
                                                 .withState(new InstanceState().withName("running")))));
     when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
+    when(awsHelperService.getHostnameFromDnsName(HOST_NAME)).thenReturn(HOST_NAME);
 
     List<Host> hosts = infrastructureProvider.provisionHosts(awsSetting, "LAUNCH_CONFIG", 1);
 

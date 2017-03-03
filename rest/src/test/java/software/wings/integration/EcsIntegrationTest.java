@@ -201,8 +201,12 @@ public class EcsIntegrationTest {
 
   @Test
   public void shouldWaitTillAllInstanceaAreReady() {
-    AmazonAutoScalingClient amazonAutoScalingClient = new AmazonAutoScalingClient(
-        new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
+    //    AmazonAutoScalingClient amazonAutoScalingClient =
+    //        new AmazonAutoScalingClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ",
+    //        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
+
+    System.out.println(
+        "curl --data \"name=wings&password=wings123&password2=wings123\" http://localhost:${PORT}/todolist/register\ncurl -b cookies.txt -c cookies.txt --data \"name=wings&password=wings123\" http://localhost:${PORT}/todolist/requestLogin\ncurl -IL -b cookies.txt -c cookies.txt http://localhost:${PORT}/todolist/inside/display\nfor i in $(seq 10)\ndo\n    curl -IL -b cookies.txt -c cookies.txt \"http://localhost:${PORT}/todolist/inside/addTask?priority=1&task=task\"$i\n    sleep 0.1\ndone\nrm cookies.txt\n");
   }
 
   @Test

@@ -1,5 +1,15 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.CloudProvider;
+import static software.wings.beans.PluginCategory.Collaboration;
+import static software.wings.beans.PluginCategory.ConnectionAttributes;
+import static software.wings.beans.PluginCategory.LoadBalancer;
+import static software.wings.beans.PluginCategory.Verification;
+
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApplicationLoadBalancerConfig;
@@ -16,16 +26,6 @@ import software.wings.beans.SplunkConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.intfc.PluginService;
-
-import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.PluginCategory.Artifact;
-import static software.wings.beans.PluginCategory.CloudProvider;
-import static software.wings.beans.PluginCategory.Collaboration;
-import static software.wings.beans.PluginCategory.ConnectionAttributes;
-import static software.wings.beans.PluginCategory.LoadBalancer;
-import static software.wings.beans.PluginCategory.Verification;
 
 /**
  * Created by peeyushaggarwal on 10/21/16.
