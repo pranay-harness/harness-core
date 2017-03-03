@@ -22,7 +22,7 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
-import software.wings.utils.KryoUtils;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
@@ -494,7 +494,7 @@ public class StateMachineExecutor {
    *@param nextState  @return
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
-    StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+    StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
     cloned.setUuid(null);
     cloned.setStateName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
