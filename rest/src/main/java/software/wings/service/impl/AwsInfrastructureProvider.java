@@ -214,11 +214,13 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
             .collect(Collectors.toList());
 
     for (Instance instance : readyInstances) {
-      int retryCount = 10;
-      while (!awsHelperService.canConnectToHost(instance.getPublicDnsName(), 22, SLEEP_INTERVAL)) {
+      int retryCount = RETRY_COUNTER;
+      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
+      while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
           throw new WingsException(INIT_TIMEOUT, "message", "Couldn't connect to provisioned host");
         }
+        logger.info("Couldn't connect to host {}. {} retry attempts left ", hostname, retryCount);
       }
     }
 
