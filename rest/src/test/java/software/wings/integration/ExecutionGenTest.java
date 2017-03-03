@@ -24,7 +24,7 @@ import java.util.Random;
  */
 @Integration
 @Ignore
-public class ExecutionGen extends WingsBaseTest {
+public class ExecutionGenTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
