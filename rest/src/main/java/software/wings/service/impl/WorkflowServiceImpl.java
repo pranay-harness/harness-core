@@ -1406,6 +1406,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (phaseStep.isStepsInParallel()) {
       Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(phaseStep.getName() + "-FORK").build();
+      graphBuilder.addNodes(forkNode);
       for (Node step : phaseStep.getSteps()) {
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()
