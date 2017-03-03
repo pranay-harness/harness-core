@@ -1,16 +1,7 @@
 package software.wings.sm.states;
 
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-
-import com.google.inject.Inject;
-
 import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +47,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 /**
  * Created by rishi on 2/8/17.

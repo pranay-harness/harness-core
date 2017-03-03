@@ -25,7 +25,7 @@ import software.wings.sm.states.GkeNodeSelectState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesServiceDeploy;
-import software.wings.sm.states.KubernetesServiceSetup;
+import software.wings.sm.states.KubernetesReplicationControllerSetup;
 import software.wings.sm.states.LoadBalancerState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
@@ -175,7 +175,7 @@ public enum StateType implements StateTypeDescriptor {
 
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SERVICE_SETUP(KubernetesServiceSetup.class, CLOUD, ORCHESTRATION_STENCILS),
+  KUBERNETES_SERVICE_SETUP(KubernetesReplicationControllerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
 
   KUBERNETES_SERVICE_DEPLOY(KubernetesServiceDeploy.class, COMMANDS, ORCHESTRATION_STENCILS);
 

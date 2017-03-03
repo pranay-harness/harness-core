@@ -99,7 +99,7 @@ public class PluginServiceTest {
                 .withSettingClass(AwsConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("AWS")
+                .withDisplayName("Amazon Web Services")
                 .withType("AWS")
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
@@ -107,7 +107,7 @@ public class PluginServiceTest {
                 .withSettingClass(GkeConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("GKE")
+                .withDisplayName("Google Cloud")
                 .withType("GKE")
                 .withPluginCategories(asList(CloudProvider))
                 .build(),

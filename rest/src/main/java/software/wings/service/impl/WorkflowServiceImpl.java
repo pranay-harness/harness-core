@@ -4,34 +4,7 @@
 
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.nullToEmpty;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
-import static software.wings.sm.StateType.AWS_NODE_SELECT;
-import static software.wings.sm.StateType.COMMAND;
-import static software.wings.sm.StateType.DC_NODE_SELECT;
-import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.FORK;
-import static software.wings.sm.StateType.KUBERNETES_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.REPEAT;
-import static software.wings.sm.StateType.values;
-
 import com.google.inject.Singleton;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -95,6 +68,9 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -107,9 +83,32 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.executable.ValidateOnExecution;
+
+import static com.google.common.base.Strings.nullToEmpty;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
+import static software.wings.sm.StateType.AWS_NODE_SELECT;
+import static software.wings.sm.StateType.COMMAND;
+import static software.wings.sm.StateType.DC_NODE_SELECT;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.FORK;
+import static software.wings.sm.StateType.KUBERNETES_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.StateType.values;
 
 /**
  * The Class WorkflowServiceImpl.
@@ -1039,6 +1038,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .addStep(aNode()
                                                   .withId(getUuid())
                                                   .withType(StateType.KUBERNETES_SERVICE_SETUP.name())
+                                                  .withName("Kubernetes Replication Controller Setup")
+                                                  .build())
+                                     .build());
+      workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE)
+                                     .withName("Setup Load Balancer Service")
+                                     .addStep(aNode()
+                                                  .withId(getUuid())
+                                                  .withType(StateType.KUBERNETES_SERVICE_SETUP.name())
                                                   .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());
@@ -1053,7 +1060,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.VERIFY_SERVICE)
-                                   .withName("Verify Service")
+                                   .withName("Verify Replication Controller")
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
   }

@@ -1,5 +1,12 @@
 package software.wings.utils;
 
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandType;
+import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
+import software.wings.common.UUIDGenerator;
+
+import java.util.List;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -13,13 +20,6 @@ import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED
 import static software.wings.beans.command.CommandUnitType.RESIZE;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
-
-import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandType;
-import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
-import software.wings.common.UUIDGenerator;
-
-import java.util.List;
 
 /**
  * The Enum ArtifactType.
@@ -192,9 +192,10 @@ public enum ArtifactType {
                   .buildPipeline())
           .build();
     }
-  }, /**
-      * War artifact type.
-      */
+  },
+  /**
+   * War artifact type.
+   */
   WAR {
     public static final long serialVersionUID = 2932493038229748527L;
 
@@ -237,9 +238,10 @@ public enum ArtifactType {
                       .buildPipeline())
               .build());
     }
-  }, /**
-      * Tar artifact type.
-      */
+  },
+  /**
+   * Tar artifact type.
+   */
   TAR {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -291,9 +293,10 @@ public enum ArtifactType {
                       .buildPipeline())
               .build());
     }
-  }, /**
-      * Zip artifact type.
-      */
+  },
+  /**
+   * Zip artifact type.
+   */
   ZIP {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -346,6 +349,9 @@ public enum ArtifactType {
               .build());
     }
   },
+  /**
+   * Docker artifact type.
+   */
   DOCKER {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -360,15 +366,17 @@ public enum ArtifactType {
                                                      .withX(50)
                                                      .withY(50)
                                                      .withId(UUIDGenerator.graphIdGenerator("node"))
-                                                     .withName("Resize Service")
+                                                     .withName("Resize ECS Service")
                                                      .withType(RESIZE.name())
                                                      .build())
+                                       // TODO(brett): Handle kubernetes
                                        .buildPipeline())
                         .build());
     }
-  }, /**
-      * Other artifact type.
-      */
+  },
+  /**
+   * Other artifact type.
+   */
   OTHER {
     private static final long serialVersionUID = 2932493038229748527L;
 
