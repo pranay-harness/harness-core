@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.TaskType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.TaskType;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
@@ -212,5 +212,10 @@ public class AppDynamicsState extends HttpState {
   @Override
   public String getUrl() {
     return super.getUrl();
+  }
+
+  @Attributes(title = "Assertion")
+  public String getAssertion() {
+    return super.getAssertion();
   }
 }

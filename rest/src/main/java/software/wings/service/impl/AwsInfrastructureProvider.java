@@ -226,7 +226,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .getReservations()
         .stream()
         .flatMap(reservation -> reservation.getInstances().stream())
-        .map(instance -> anAwsHost().withHostName(instance.getPrivateDnsName()).withInstance(instance).build())
+        .map(instance
+            -> anAwsHost()
+                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
+                   .withInstance(instance)
+                   .build())
         .collect(toList());
   }
 
