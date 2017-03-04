@@ -220,8 +220,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         if (retryCount-- <= 0) {
           throw new WingsException(INIT_TIMEOUT, "message", "Couldn't connect to provisioned host");
         }
+        Misc.quietSleep(SLEEP_INTERVAL);
         logger.info("Couldn't connect to host {}. {} retry attempts left ", hostname, retryCount);
       }
+      logger.info("Successfully connected to host {} in {} retry attempts", hostname, RETRY_COUNTER - retryCount);
     }
 
     return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instancesIds))
