@@ -105,4 +105,5 @@ then
   ln -s $JRE_DIR jre
 fi
 
+export HOSTNAME
 $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml upgrade
