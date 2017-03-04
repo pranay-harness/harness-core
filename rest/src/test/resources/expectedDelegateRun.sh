@@ -111,6 +111,7 @@ if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
   echo "Delegate already running."
 else
+  export HOSTNAME
   nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
   echo "Delegate started."
 fi

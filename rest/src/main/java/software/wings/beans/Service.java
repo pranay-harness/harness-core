@@ -36,6 +36,7 @@ public class Service extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
 
   @Transient private List<ConfigFile> configFiles = Lists.newArrayList();
+  @Transient private List<ServiceVariable> serviceVariables = Lists.newArrayList();
   @Transient private List<ArtifactStream> artifactStreams = Lists.newArrayList();
 
   @Transient private Activity lastDeploymentActivity;
@@ -220,6 +221,24 @@ public class Service extends Base {
    */
   public void setVersion(long version) {
     this.version = version;
+  }
+
+  /**
+   * Getter for property 'serviceVariables'.
+   *
+   * @return Value for property 'serviceVariables'.
+   */
+  public List<ServiceVariable> getServiceVariables() {
+    return serviceVariables;
+  }
+
+  /**
+   * Setter for property 'serviceVariables'.
+   *
+   * @param serviceVariables Value to set for property 'serviceVariables'.
+   */
+  public void setServiceVariables(List<ServiceVariable> serviceVariables) {
+    this.serviceVariables = serviceVariables;
   }
 
   /**

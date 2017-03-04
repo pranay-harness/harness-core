@@ -31,7 +31,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
-import software.wings.utils.KryoUtils;
+import software.wings.utils.JsonUtils;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -183,7 +183,7 @@ public class StateMachineExecutionSimulator {
       }
       State repeat = stateMachine.getState(null, ((RepeatState) state).getRepeatTransitionStateName());
       repeatElements.forEach(repeatElement -> {
-        StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+        StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(repeat.getName());
         cloned.setContextElement(repeatElement);
         ExecutionContextImpl childContext =
@@ -195,7 +195,7 @@ public class StateMachineExecutionSimulator {
     } else if (state instanceof ForkState) {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
         State child = stateMachine.getState(null, childStateName);
-        StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+        StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(child.getName());
         cloned.setContextElement(
             aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());

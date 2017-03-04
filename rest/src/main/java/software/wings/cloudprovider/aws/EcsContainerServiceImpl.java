@@ -965,18 +965,20 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
-    List<String> serviceArns = new ArrayList<>();
+    List<Service> services = new ArrayList<>();
     ListServicesResult listServicesResult;
     ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
     do {
       listServicesResult = amazonECSClient.listServices(listServicesRequest);
-      serviceArns.addAll(listServicesResult.getServiceArns());
+      services.addAll(amazonECSClient
+                          .describeServices(new DescribeServicesRequest()
+                                                .withCluster(clusterName)
+                                                .withServices(listServicesResult.getServiceArns()))
+                          .getServices());
       listServicesRequest.setNextToken(listServicesResult.getNextToken());
     } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
 
-    return amazonECSClient
-        .describeServices(new DescribeServicesRequest().withCluster(clusterName).withServices(serviceArns))
-        .getServices();
+    return services;
   }
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute connectorConfig) {

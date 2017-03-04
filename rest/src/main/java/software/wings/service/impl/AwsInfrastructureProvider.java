@@ -214,12 +214,23 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
             .collect(Collectors.toList());
 
     for (Instance instance : readyInstances) {
-      int retryCount = 10;
-      while (!awsHelperService.canConnectToHost(instance.getPublicDnsName(), 22, SLEEP_INTERVAL)) {
+      int retryCount = RETRY_COUNTER;
+      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
+      while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
+          logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
+          try {
+            amazonEc2Client.terminateInstances(new TerminateInstancesRequest(instancesIds));
+            logger.error("Terminated provisioned instances [{}] ", instancesIds);
+          } catch (Exception ignoredException) {
+            ignoredException.printStackTrace();
+          }
           throw new WingsException(INIT_TIMEOUT, "message", "Couldn't connect to provisioned host");
         }
+        Misc.quietSleep(SLEEP_INTERVAL);
+        logger.info("Couldn't connect to host {}. {} retry attempts left ", hostname, retryCount);
       }
+      logger.info("Successfully connected to host {} in {} retry attempts", hostname, RETRY_COUNTER - retryCount);
     }
 
     return amazonEc2Client.describeInstances(new DescribeInstancesRequest().withInstanceIds(instancesIds))

@@ -1,7 +1,16 @@
 package software.wings.sm.states;
 
-import com.github.reinert.jjschema.Attributes;
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+
 import com.google.inject.Inject;
+
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,14 +56,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 /**
  * Created by rishi on 2/8/17.
@@ -185,6 +186,8 @@ public class EcsServiceDeploy extends State {
           services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
       if (!ecsService.isPresent()) {
         logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
+        activityService.updateStatus(commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(),
+            commandStateExecutionData.getStatus());
         return anExecutionResponse()
             .withStateExecutionData(commandStateExecutionData)
             .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -226,6 +229,8 @@ public class EcsServiceDeploy extends State {
           .build();
 
     } else {
+      activityService.updateStatus(commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(),
+          commandStateExecutionData.getStatus());
       return anExecutionResponse()
           .withStateExecutionData(commandStateExecutionData)
           .withExecutionStatus(ExecutionStatus.SUCCESS)
