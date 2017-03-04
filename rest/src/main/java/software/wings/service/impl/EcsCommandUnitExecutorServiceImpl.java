@@ -1,5 +1,9 @@
 package software.wings.service.impl;
 
+import static java.lang.String.format;
+import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -9,8 +13,8 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateLogService;
@@ -45,10 +49,14 @@ public class EcsCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   @Override
   public CommandExecutionStatus execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
-    //    logService.save(context.getAccountId(),
-    //    aLog().withAppId(context.getAppId()).withHostName(host.getHostName()).withActivityId(activityId).withLogLevel(INFO)
-    //        .withCommandUnitName(commandUnit.getName()).withLogLine(format("Begin execution of command: %s",
-    //        commandUnit.getName())).build());
+    logService.save(context.getAccountId(),
+        aLog()
+            .withAppId(context.getAppId())
+            .withActivityId(activityId)
+            .withLogLevel(INFO)
+            .withCommandUnitName(commandUnit.getName())
+            .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     injector.injectMembers(commandUnit);
@@ -57,7 +65,28 @@ public class EcsCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       commandExecutionStatus = commandUnit.execute(context);
     } catch (Exception ex) {
       ex.printStackTrace();
+      logger.error("Error while executing command ", ex);
+      logService.save(context.getAccountId(),
+          aLog()
+              .withAppId(context.getAppId())
+              .withActivityId(activityId)
+              .withLogLevel(ERROR)
+              .withLogLine("Command execution failed")
+              .withCommandUnitName(commandUnit.getName())
+              .withExecutionResult(commandExecutionStatus)
+              .build());
     }
+
+    logService.save(context.getAccountId(),
+        aLog()
+            .withAppId(context.getAppId())
+            .withActivityId(activityId)
+            .withLogLevel(INFO)
+            .withLogLine("Command execution finished with status " + commandExecutionStatus)
+            .withCommandUnitName(commandUnit.getName())
+            .withExecutionResult(commandExecutionStatus)
+            .build());
+
     commandUnit.setCommandExecutionStatus(commandExecutionStatus);
     return commandExecutionStatus;
   }

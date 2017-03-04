@@ -218,11 +218,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       String hostname = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
       while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
-          List<String> instanceIds = readyInstances.stream().map(Instance::getInstanceId).collect(toList());
-          logger.error("Could not verify connection to newly provisioned instances [{}] " + instanceIds);
+          logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
           try {
-            amazonEc2Client.terminateInstances(new TerminateInstancesRequest(instanceIds));
-            logger.error("Terminated provisioned instances [{}] " + instanceIds);
+            amazonEc2Client.terminateInstances(new TerminateInstancesRequest(instancesIds));
+            logger.error("Terminated provisioned instances [{}] ", instancesIds);
           } catch (Exception ignoredException) {
             ignoredException.printStackTrace();
           }
