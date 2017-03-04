@@ -5,7 +5,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
@@ -188,7 +187,7 @@ public class EcsServiceDeploy extends State {
       if (!ecsService.isPresent()) {
         logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
         activityService.updateStatus(commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(),
-            commandStateExecutionData.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
+            commandStateExecutionData.getStatus());
         return anExecutionResponse()
             .withStateExecutionData(commandStateExecutionData)
             .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -231,7 +230,7 @@ public class EcsServiceDeploy extends State {
 
     } else {
       activityService.updateStatus(commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(),
-          commandStateExecutionData.getStatus().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
+          commandStateExecutionData.getStatus());
       return anExecutionResponse()
           .withStateExecutionData(commandStateExecutionData)
           .withExecutionStatus(ExecutionStatus.SUCCESS)
