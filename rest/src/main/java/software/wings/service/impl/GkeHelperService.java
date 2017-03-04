@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.ContainerScopes;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 
@@ -26,30 +28,21 @@ public class GkeHelperService {
    * Gets a GKE container service.
    *
    */
-  public Container getGkeContainerService(String appName) {
-    GoogleCredential credential = null;
+  public Container getGkeContainerService(String appName, InputStream credentialStream) {
     try {
-      credential = GoogleCredential.getApplicationDefault();
+      JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+      NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+      GoogleCredential credential = GoogleCredential.fromStream(credentialStream);
       if (credential.createScopedRequired()) {
         credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
       }
-    } catch (IOException e) {
-      logger.error("Error getting Google credential.", e);
-    }
-
-    Container containerService = null;
-    try {
-      containerService =
-          new Container
-              .Builder(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance(), credential)
-              .setApplicationName(appName)
-              .build();
+      return new Container.Builder(transport, jsonFactory, credential).setApplicationName(appName).build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service.", e);
     } catch (IOException e) {
       logger.error("Error getting Google container service.", e);
     }
-    return containerService;
+    return null;
   }
 
   public int getSleepIntervalMs() {

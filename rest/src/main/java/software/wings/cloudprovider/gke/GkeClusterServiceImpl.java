@@ -21,7 +21,9 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.GkeHelperService;
 import software.wings.utils.Misc;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,7 +38,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig createCluster(Map<String, String> params) {
-    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = getContainerService(params);
     // See if the cluster already exists
     try {
       Cluster cluster = gkeContainerService.projects()
@@ -82,6 +84,11 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return null;
   }
 
+  private Container getContainerService(Map<String, String> params) {
+    return gkeHelperService.getGkeContainerService(
+        params.get("appName"), new ByteArrayInputStream(params.get("credentials").getBytes(StandardCharsets.UTF_8)));
+  }
+
   private KubernetesConfig configFromCluster(Cluster cluster) {
     return KubernetesConfig.Builder.aKubernetesConfig()
         .withMasterUrl("https://" + cluster.getEndpoint() + "/")
@@ -92,7 +99,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public boolean deleteCluster(Map<String, String> params) {
-    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = getContainerService(params);
     try {
       Operation deleteOperation = gkeContainerService.projects()
                                       .zones()
@@ -132,7 +139,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public KubernetesConfig getCluster(Map<String, String> params) {
-    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = getContainerService(params);
     try {
       Cluster cluster = gkeContainerService.projects()
                             .zones()
@@ -152,7 +159,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public List<String> listClusters(Map<String, String> params) {
-    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = getContainerService(params);
     try {
       ListClustersResponse response =
           gkeContainerService.projects().zones().clusters().list(params.get("projectId"), params.get("zone")).execute();
@@ -165,7 +172,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public boolean setNodePoolAutoscaling(boolean enabled, int min, int max, Map<String, String> params) {
-    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = getContainerService(params);
     try {
       ClusterUpdate clusterUpdate = new ClusterUpdate();
       if (params.containsKey("nodePoolId")) {
@@ -202,7 +209,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public NodePoolAutoscaling getNodePoolAutoscaling(Map<String, String> params) {
-    Container gkeContainerService = gkeHelperService.getGkeContainerService(params.get("appName"));
+    Container gkeContainerService = getContainerService(params);
     try {
       Cluster cluster = gkeContainerService.projects()
                             .zones()

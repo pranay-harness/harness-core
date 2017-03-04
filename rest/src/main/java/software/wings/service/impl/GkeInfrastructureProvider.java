@@ -84,7 +84,7 @@ public class GkeInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
     GkeConfig gkeConfig = validateAndGetGkeConfig(computeProviderSetting);
-    return gkeClusterService.listClusters(ImmutableMap.of(
-        "projectId", gkeConfig.getProjectId(), "appName", gkeConfig.getAppName(), "zone", gkeConfig.getZone()));
+    return gkeClusterService.listClusters(ImmutableMap.of("credentials", "???", "projectId", gkeConfig.getProjectId(),
+        "appName", gkeConfig.getAppName(), "zone", gkeConfig.getZone()));
   }
 }

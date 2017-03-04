@@ -27,6 +27,7 @@ import software.wings.service.impl.GkeHelperService;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +61,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   private GoogleJsonResponseException notFoundException;
 
   private static final ImmutableMap<String, String> PROJECT_PARAMS = ImmutableMap.<String, String>builder()
+                                                                         .put("credentials", "creds")
                                                                          .put("projectId", "project-a")
                                                                          .put("appName", "app-a")
                                                                          .put("zone", "zone-a")
@@ -102,7 +104,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(gkeHelperService.getGkeContainerService(anyString())).thenReturn(container);
+    when(gkeHelperService.getGkeContainerService(anyString(), any(InputStream.class))).thenReturn(container);
     when(gkeHelperService.getSleepIntervalMs()).thenReturn(0);
     when(container.projects()).thenReturn(projects);
     when(projects.zones()).thenReturn(zones);
