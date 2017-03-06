@@ -30,7 +30,6 @@ public class GcpConfig extends SettingValue {
    */
   public static final class GcpConfigBuilder {
     private String serviceAccountKeyFileContent;
-    private String type;
 
     private GcpConfigBuilder() {}
 
@@ -43,19 +42,13 @@ public class GcpConfig extends SettingValue {
       return this;
     }
 
-    public GcpConfigBuilder withType(String type) {
-      this.type = type;
-      return this;
-    }
-
     public GcpConfigBuilder but() {
-      return aGcpConfig().withServiceAccountKeyFileContent(serviceAccountKeyFileContent).withType(type);
+      return aGcpConfig().withServiceAccountKeyFileContent(serviceAccountKeyFileContent);
     }
 
     public GcpConfig build() {
       GcpConfig gcpConfig = new GcpConfig();
       gcpConfig.setServiceAccountKeyFileContent(serviceAccountKeyFileContent);
-      gcpConfig.setType(type);
       return gcpConfig;
     }
   }
