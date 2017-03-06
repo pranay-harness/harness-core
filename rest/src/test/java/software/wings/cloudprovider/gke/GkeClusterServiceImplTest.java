@@ -27,7 +27,6 @@ import software.wings.service.impl.GcpHelperService;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +37,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
 /**
  * Created by brett on 2/10/17.
@@ -60,14 +60,13 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private GkeClusterService gkeClusterService;
   private GoogleJsonResponseException notFoundException;
 
-  private static final ImmutableMap<String, String> PROJECT_PARAMS = ImmutableMap.<String, String>builder()
-                                                                         .put("credentials", "creds")
-                                                                         .put("projectId", "project-a")
-                                                                         .put("appName", "app-a")
-                                                                         .put("zone", "zone-a")
-                                                                         .build();
+  private static final ImmutableMap<String, String> PROJECT_PARAMS =
+      ImmutableMap.<String, String>builder()
+          .put("credentials", "{\"project_id\": \"project-a\"}")
+          .put("appName", "app-a")
+          .build();
   private static final ImmutableMap<String, String> CLUSTER_PARAMS =
-      ImmutableMap.<String, String>builder().putAll(PROJECT_PARAMS).put("name", "foo-bar").build();
+      ImmutableMap.<String, String>builder().putAll(PROJECT_PARAMS).put("name", "zone-a/foo-bar").build();
   private static final ImmutableMap<String, String> CREATE_CLUSTER_PARAMS = ImmutableMap.<String, String>builder()
                                                                                 .putAll(CLUSTER_PARAMS)
                                                                                 .put("nodeCount", "1")
@@ -78,6 +77,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   private static final Cluster CLUSTER_1 =
       new Cluster()
           .setName("cluster-name-1")
+          .setZone("zone-a")
           .setInitialNodeCount(5)
           .setStatus("RUNNING")
           .setEndpoint("1.1.1.1")
@@ -93,6 +93,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   private static final Cluster CLUSTER_2 =
       new Cluster()
           .setName("cluster-name-2")
+          .setZone("zone-b")
           .setInitialNodeCount(5)
           .setStatus("RUNNING")
           .setEndpoint("1.1.1.2")
@@ -104,7 +105,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(gcpHelperService.getGkeContainerService(anyString(), any(InputStream.class))).thenReturn(container);
+    when(gcpHelperService.getGkeContainerService(anyString(), anyString())).thenReturn(container);
     when(gcpHelperService.getSleepIntervalMs()).thenReturn(0);
     when(container.projects()).thenReturn(projects);
     when(projects.zones()).thenReturn(zones);
@@ -286,7 +287,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     List<String> result = gkeClusterService.listClusters(PROJECT_PARAMS);
 
     verify(clusters).list(anyString(), anyString());
-    assertThat(result).containsExactlyInAnyOrder(CLUSTER_1.getName(), CLUSTER_2.getName());
+    assertThat(result).containsExactlyInAnyOrder(CLUSTER_1.getZone() + ZONE_DELIMITER + CLUSTER_1.getName(),
+        CLUSTER_2.getZone() + ZONE_DELIMITER + CLUSTER_2.getName());
   }
 
   @Test

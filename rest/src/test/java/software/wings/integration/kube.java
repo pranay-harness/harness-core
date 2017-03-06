@@ -27,6 +27,8 @@ import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 
 import java.util.List;
 
+import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+
 public class kube {
   private static final Logger logger = LoggerFactory.getLogger(kube.class);
 
@@ -73,15 +75,13 @@ public class kube {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
-    ImmutableMap<String, String> projectParams = ImmutableMap.<String, String>builder()
-                                                     .put("credentials", CREDS)
-                                                     .put("projectId", "kubernetes-test-158122")
-                                                     .put("appName", "testApp")
-                                                     .put("zone", "us-west1-a")
-                                                     .build();
+    ImmutableMap<String, String> projectParams =
+        ImmutableMap.<String, String>builder().put("credentials", CREDS).put("appName", "testApp").build();
 
-    ImmutableMap<String, String> clusterParams =
-        ImmutableMap.<String, String>builder().putAll(projectParams).put("name", "baz-qux").build();
+    ImmutableMap<String, String> clusterParams = ImmutableMap.<String, String>builder()
+                                                     .putAll(projectParams)
+                                                     .put("name", "us-west1-a" + ZONE_DELIMITER + "baz-qux")
+                                                     .build();
 
     List<String> clusters = gkeClusterService.listClusters(projectParams);
     logger.info("Available clusters: {}", clusters);

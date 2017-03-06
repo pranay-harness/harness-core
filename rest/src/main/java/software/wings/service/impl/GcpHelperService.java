@@ -7,11 +7,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.ContainerScopes;
 import com.google.inject.Singleton;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 
@@ -20,6 +20,9 @@ import java.util.Collections;
  */
 @Singleton
 public class GcpHelperService {
+  public static final String ZONE_DELIMITER = "/";
+  public static final String ALL_ZONES = "-";
+
   private static final int SLEEP_INTERVAL_MS = 5 * 1000;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -28,11 +31,11 @@ public class GcpHelperService {
    * Gets a GCP container service.
    *
    */
-  public Container getGkeContainerService(String appName, InputStream credentialStream) {
+  public Container getGkeContainerService(String credentials, String appName) {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
-      GoogleCredential credential = GoogleCredential.fromStream(credentialStream);
+      GoogleCredential credential = GoogleCredential.fromStream(IOUtils.toInputStream(credentials));
       if (credential.createScopedRequired()) {
         credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
       }

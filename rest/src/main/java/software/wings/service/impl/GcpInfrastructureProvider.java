@@ -35,7 +35,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
-    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
     // TODO(brett): Implement
     return PageResponse.Builder.aPageResponse().withResponse(null).build();
   }
@@ -55,7 +55,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
     // TODO(brett): Implement
   }
 
-  private GcpConfig validateAndGetGkeConfig(SettingAttribute computeProviderSetting) {
+  private GcpConfig validateAndGetGcpConfig(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
     }
@@ -71,20 +71,20 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   public List<Host> provisionHosts(
       SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
-    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
     // TODO(brett): Implement
     return null;
   }
 
   public void deProvisionHosts(
       String appId, String infraMappingId, SettingAttribute computeProviderSetting, List<String> hostNames) {
-    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
     // TODO(brett): Implement
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
-    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
     return gkeClusterService.listClusters(ImmutableMap.of(
-        "credentials", gcpConfig.getServiceAccountKeyFileContent(), "projectId", "", "appName", "", "zone", ""));
+        "credentials", gcpConfig.getServiceAccountKeyFileContent(), "appName", computeProviderSetting.getAppId()));
   }
 }

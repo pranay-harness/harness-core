@@ -123,13 +123,18 @@ public class SettingResource {
    */
   @PUT
   @Path("{attrId}")
-  public RestResponse<SettingAttribute> update(
-      @QueryParam("appId") String appId, @PathParam("attrId") String attrId, SettingAttribute variable) {
+  public RestResponse<SettingAttribute> update(@QueryParam("appId") String appId, @PathParam("attrId") String attrId,
+      SettingAttribute variable, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
     variable.setUuid(attrId);
     variable.setAppId(appId);
+    if (variable.getValue().getType().equals(GCP.name())) {
+      String content = IOUtils.toString(uploadedInputStream);
+      ((GcpConfig) variable.getValue()).setServiceAccountKeyFileContent(content);
+    }
     return new RestResponse<>(attributeService.update(variable));
   }
 
