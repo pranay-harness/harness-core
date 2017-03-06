@@ -6,6 +6,7 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_ALREADY_REGISTERED;
@@ -31,6 +32,7 @@ import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -75,10 +77,27 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
 
-    if (userAlreadyRegistered(user)) {
+    return getUserByEmail(user.getEmail()) != null
+        ? addAccountToExistingUser(getUserByEmail(user.getEmail()), user.getCompanyName())
+        : registerNewUser(user);
+  }
+
+  private User addAccountToExistingUser(User existingUser, String companyName) {
+    if (isBlank(companyName)) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Company Name Can't be empty");
+    } else if (existingUser.getAccounts().stream().anyMatch(account -> account.getCompanyName().equals(companyName))) {
       throw new WingsException(USER_ALREADY_REGISTERED);
     }
 
+    Account account = accountService.findOrCreate(companyName);
+    wingsPersistence.addToList(User.class, existingUser.getAppId(), existingUser.getUuid(),
+        wingsPersistence.createQuery(User.class), "accounts", account);
+    User user = get(existingUser.getUuid());
+    executorService.execute(() -> sendVerificationEmail(user));
+    return user;
+  }
+
+  private User registerNewUser(User user) {
     String companyName =
         isBlank(user.getCompanyName()) ? configuration.getPortal().getCompanyName() : user.getCompanyName();
     Account account = accountService.findOrCreate(companyName);
@@ -94,6 +113,10 @@ public class UserServiceImpl implements UserService {
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
     executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
+  }
+
+  private User getUserByEmail(String email) {
+    return wingsPersistence.createQuery(User.class).field("email").equal(email).get();
   }
 
   private boolean domainAllowedToRegister(String email) {
@@ -151,12 +174,29 @@ public class UserServiceImpl implements UserService {
         User.class, user.getUuid(), ImmutableMap.of("statsFetchedOn", user.getStatsFetchedOn()));
   }
 
+  @Override
+  public UserInvite inviteUser(UserInvite userInvite) {
+    User user = getUserByEmail(userInvite.getEmail());
+
+    if (user != null
+        && user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(userInvite.getAccountId()))) {
+      userInvite.getRoles().forEach(role -> addRole(user.getUuid(), role.getUuid()));
+      userInvite.setComplete(true);
+    }
+    return wingsPersistence.saveAndGet(UserInvite.class, userInvite);
+  }
+
+  @Override
+  public PageResponse<UserInvite> listInvites(PageRequest<UserInvite> pageRequest) {
+    return wingsPersistence.query(UserInvite.class, pageRequest);
+  }
+
   private boolean userAlreadyRegistered(User user) {
     return wingsPersistence.createQuery(User.class)
-               .field("appId")
-               .equal(user.getAppId())
                .field("email")
                .equal(user.getEmail())
+               .field("accounts")
+               .equal(user)
                .get()
         != null;
   }
