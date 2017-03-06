@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.UserThreadLocal;
@@ -21,7 +22,9 @@ import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -174,5 +177,18 @@ public class UserResource {
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.revokeRole(userId, roleId));
+  }
+
+  @GET
+  @Path("invites")
+  public RestResponse<PageResponse<UserInvite>> listInvites(@BeanParam PageRequest<UserInvite> pageRequest) {
+    return new RestResponse<>(userService.listInvites(pageRequest));
+  }
+
+  @POST
+  @Path("invites")
+  public RestResponse<List<UserInvite>> inviteUsers(@NotNull UserInvite userInvite) {
+    userInvite.setAppId(GLOBAL_APP_ID);
+    return new RestResponse<>(userService.inviteUsers(userInvite));
   }
 }

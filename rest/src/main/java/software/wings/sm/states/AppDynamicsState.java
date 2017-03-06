@@ -228,9 +228,13 @@ public class AppDynamicsState extends HttpState {
 
     String controllerUrl = appdConfig.getControllerUrl();
 
+    String evaluatedMetricPath = context.renderExpression(metricPath);
+    String evaluatedAppName = context.renderExpression(applicationName);
+    String evaluatedTimeDuration = context.renderExpression(timeDuration);
+
     return String.format(
         "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=%s",
-        controllerUrl, urlEncodeString(applicationName), urlEncodeString(metricPath), timeDuration);
+        controllerUrl, urlEncodeString(evaluatedAppName), urlEncodeString(evaluatedMetricPath), evaluatedTimeDuration);
   }
 
   @Attributes(title = "Assertion")
