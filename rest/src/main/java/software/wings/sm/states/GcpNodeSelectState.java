@@ -28,8 +28,8 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
  * Created by brett on 3/1/17
  * TODO(brett): Implement
  */
-public class GkeNodeSelectState extends State {
-  private static final Logger logger = LoggerFactory.getLogger(GkeNodeSelectState.class);
+public class GcpNodeSelectState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(GcpNodeSelectState.class);
 
   @Attributes(title = "Number of instances") private int instanceCount;
 
@@ -42,12 +42,12 @@ public class GkeNodeSelectState extends State {
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
   /**
-   * Instantiates a new Aws node select state.
+   * Instantiates a new GCP node select state.
    *
    * @param name the name
    */
-  public GkeNodeSelectState(String name) {
-    super(name, StateType.GKE_NODE_SELECT.name());
+  public GcpNodeSelectState(String name) {
+    super(name, StateType.GCP_NODE_SELECT.name());
   }
 
   @Override

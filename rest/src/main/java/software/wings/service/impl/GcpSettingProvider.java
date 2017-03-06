@@ -16,12 +16,12 @@ import static java.util.stream.Collectors.toMap;
  * TODO(brett): Implement
  */
 @Singleton
-public class GkeSettingProvider implements DataProvider {
+public class GcpSettingProvider implements DataProvider {
   @Inject private SettingsService settingsService;
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.GKE.name())
+    return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.GCP.name())
         .stream()
         .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
   }

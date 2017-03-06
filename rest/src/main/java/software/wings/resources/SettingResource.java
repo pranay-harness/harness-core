@@ -1,26 +1,21 @@
 package software.wings.resources;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
-
-import com.google.inject.Inject;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.app.MainConfiguration;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
-import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -31,6 +26,18 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -43,6 +50,7 @@ import javax.ws.rs.QueryParam;
 @Produces(APPLICATION_JSON)
 public class SettingResource {
   @Inject private SettingsService attributeService;
+  @Inject private MainConfiguration configuration;
 
   /**
    * List.
@@ -74,11 +82,18 @@ public class SettingResource {
    * @return the rest response
    */
   @POST
-  public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable) {
+  public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable,
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
     variable.setAppId(appId);
+    if (variable.getValue().getType().equals(GCP.name())) {
+      String content = IOUtils.toString(uploadedInputStream);
+      ((GcpConfig) variable.getValue()).setServiceAccountKeyFileContent(content);
+    }
+
     return new RestResponse<>(attributeService.save(variable));
   }
 

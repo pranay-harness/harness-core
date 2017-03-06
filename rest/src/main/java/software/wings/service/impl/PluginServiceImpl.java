@@ -23,7 +23,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
-import software.wings.beans.GkeConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -122,13 +122,13 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema("AWS"))
             .build(),
         anAccountPlugin()
-            .withSettingClass(GkeConfig.class)
+            .withSettingClass(GcpConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
             .withDisplayName("Google Cloud")
-            .withType("GKE")
+            .withType("GCP")
             .withPluginCategories(asList(CloudProvider))
-            .withUiSchema(readUiSchema("GKE"))
+            .withUiSchema(readUiSchema("GCP"))
             .build(),
         anAccountPlugin()
             .withSettingClass(PhysicalDataCenterConfig.class)

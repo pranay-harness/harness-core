@@ -19,13 +19,13 @@ import java.util.Collections;
  * Created by bzane on 2/22/17
  */
 @Singleton
-public class GkeHelperService {
+public class GcpHelperService {
   private static final int SLEEP_INTERVAL_MS = 5 * 1000;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
-   * Gets a GKE container service.
+   * Gets a GCP container service.
    *
    */
   public Container getGkeContainerService(String appName, InputStream credentialStream) {

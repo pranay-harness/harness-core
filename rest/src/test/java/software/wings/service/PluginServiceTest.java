@@ -17,7 +17,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
-import software.wings.beans.GkeConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -104,11 +104,11 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
-                .withSettingClass(GkeConfig.class)
+                .withSettingClass(GcpConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
                 .withDisplayName("Google Cloud")
-                .withType("GKE")
+                .withType("GCP")
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
@@ -151,7 +151,7 @@ public class PluginServiceTest {
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
         .hasSize(13)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GKE",
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GCP",
             "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "ALB");
   }
 }

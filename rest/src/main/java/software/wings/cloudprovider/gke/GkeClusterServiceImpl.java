@@ -18,7 +18,7 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
-import software.wings.service.impl.GkeHelperService;
+import software.wings.service.impl.GcpHelperService;
 import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class GkeClusterServiceImpl implements GkeClusterService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  @Inject private GkeHelperService gkeHelperService = new GkeHelperService();
+  @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
 
   @Override
   public KubernetesConfig createCluster(Map<String, String> params) {
@@ -85,7 +85,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   private Container getContainerService(Map<String, String> params) {
-    return gkeHelperService.getGkeContainerService(
+    return gcpHelperService.getGkeContainerService(
         params.get("appName"), new ByteArrayInputStream(params.get("credentials").getBytes(StandardCharsets.UTF_8)));
   }
 
@@ -123,14 +123,14 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     int i = 0;
     while (operation.getStatus().equals("RUNNING")) {
       try {
-        Misc.quietSleep(gkeHelperService.getSleepIntervalMs());
+        Misc.quietSleep(gcpHelperService.getSleepIntervalMs());
         operation =
             gkeContainerService.projects().zones().operations().get(projectId, zone, operation.getName()).execute();
       } catch (IOException e) {
         logger.error("Error checking operation status", e);
         break;
       }
-      i += gkeHelperService.getSleepIntervalMs() / 1000;
+      i += gcpHelperService.getSleepIntervalMs() / 1000;
       logger.info(operationLogMessage + "... " + i);
     }
     logger.info(operationLogMessage + ": " + operation.getStatus());

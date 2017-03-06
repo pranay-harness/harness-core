@@ -21,7 +21,7 @@ import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.GkeAutoScaleProvisionState;
-import software.wings.sm.states.GkeNodeSelectState;
+import software.wings.sm.states.GcpNodeSelectState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesServiceDeploy;
@@ -152,7 +152,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
 
-  GKE_NODE_SELECT(GkeNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+  GCP_NODE_SELECT(GcpNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
 
   GKE_AUTOSCALE_PROVISION(GkeAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
 

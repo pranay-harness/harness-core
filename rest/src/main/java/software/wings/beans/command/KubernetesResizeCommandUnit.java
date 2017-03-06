@@ -32,7 +32,7 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
-    Validator.equalCheck(cloudProviderSetting.getValue().getType(), SettingVariableTypes.GKE.name());
+    Validator.equalCheck(cloudProviderSetting.getValue().getType(), SettingVariableTypes.GCP.name());
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();

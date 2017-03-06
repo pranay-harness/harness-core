@@ -51,9 +51,9 @@ public abstract class InfrastructureMapping extends Base {
      */
     AWS_KUBERNETES,
     /**
-     * Gke kubernetes infra mapping type.
+     * Gcp kubernetes infra mapping type.
      */
-    GKE_KUBERNETES
+    GCP_KUBERNETES
   }
 
   /**

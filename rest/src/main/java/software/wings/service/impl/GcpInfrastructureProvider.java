@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.GkeConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -24,18 +24,18 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
  * TODO(brett): Implement
  */
 @Singleton
-public class GkeInfrastructureProvider implements InfrastructureProvider {
+public class GcpInfrastructureProvider implements InfrastructureProvider {
   private static final int SLEEP_INTERVAL = 30 * 1000;
   private static final int RETRY_COUNTER = (10 * 60 * 1000) / SLEEP_INTERVAL; // 10 minutes
 
-  private final Logger logger = LoggerFactory.getLogger(GkeInfrastructureProvider.class);
+  private final Logger logger = LoggerFactory.getLogger(GcpInfrastructureProvider.class);
 
-  @Inject private GkeHelperService gkeHelperService;
+  @Inject private GcpHelperService gcpHelperService;
   @Inject private GkeClusterService gkeClusterService;
 
   @Override
   public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
-    GkeConfig gkeConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
     // TODO(brett): Implement
     return PageResponse.Builder.aPageResponse().withResponse(null).build();
   }
@@ -55,12 +55,12 @@ public class GkeInfrastructureProvider implements InfrastructureProvider {
     // TODO(brett): Implement
   }
 
-  private GkeConfig validateAndGetGkeConfig(SettingAttribute computeProviderSetting) {
-    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GkeConfig)) {
+  private GcpConfig validateAndGetGkeConfig(SettingAttribute computeProviderSetting) {
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
       throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
     }
 
-    return (GkeConfig) computeProviderSetting.getValue();
+    return (GcpConfig) computeProviderSetting.getValue();
   }
 
   @Override
@@ -71,20 +71,20 @@ public class GkeInfrastructureProvider implements InfrastructureProvider {
 
   public List<Host> provisionHosts(
       SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
-    GkeConfig gkeConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
     // TODO(brett): Implement
     return null;
   }
 
   public void deProvisionHosts(
       String appId, String infraMappingId, SettingAttribute computeProviderSetting, List<String> hostNames) {
-    GkeConfig gkeConfig = validateAndGetGkeConfig(computeProviderSetting);
+    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
     // TODO(brett): Implement
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
-    GkeConfig gkeConfig = validateAndGetGkeConfig(computeProviderSetting);
-    return gkeClusterService.listClusters(ImmutableMap.of("credentials", "???", "projectId", gkeConfig.getProjectId(),
-        "appName", gkeConfig.getAppName(), "zone", gkeConfig.getZone()));
+    GcpConfig gcpConfig = validateAndGetGkeConfig(computeProviderSetting);
+    return gkeClusterService.listClusters(ImmutableMap.of(
+        "credentials", gcpConfig.getServiceAccountKeyFileContent(), "projectId", "", "appName", "", "zone", ""));
   }
 }
