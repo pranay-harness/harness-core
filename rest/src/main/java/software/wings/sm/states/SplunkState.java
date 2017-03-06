@@ -150,7 +150,9 @@ public class SplunkState extends HttpState {
 
   @Override
   protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
-    return toPostBody(of("search", "search " + query, "exec_mode", "oneshot"));
+    String evaluatedQuery = context.renderExpression(query);
+    logger.info("evaluatedQuery: {}", evaluatedQuery);
+    return toPostBody(of("search", "search " + evaluatedQuery, "exec_mode", "oneshot"));
   }
 
   @Override
