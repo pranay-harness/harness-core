@@ -9,6 +9,7 @@ import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -102,7 +103,7 @@ public interface UserService {
    * @param userInvite the user invite
    * @return the user invite
    */
-  UserInvite inviteUser(UserInvite userInvite);
+  List<UserInvite> inviteUsers(UserInvite userInvite);
 
   /**
    * List invites page response.

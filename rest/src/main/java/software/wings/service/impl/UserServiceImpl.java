@@ -46,7 +46,9 @@ import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -175,7 +177,17 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserInvite inviteUser(UserInvite userInvite) {
+  public List<UserInvite> inviteUsers(UserInvite userInvite) {
+    return userInvite.getEmails()
+        .stream()
+        .map(email -> {
+          userInvite.setEmail(email);
+          return inviteUser(userInvite);
+        })
+        .collect(Collectors.toList());
+  }
+
+  private UserInvite inviteUser(UserInvite userInvite) {
     User user = getUserByEmail(userInvite.getEmail());
 
     if (user != null

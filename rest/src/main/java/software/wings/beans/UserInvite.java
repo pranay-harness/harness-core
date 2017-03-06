@@ -1,8 +1,13 @@
 package software.wings.beans;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.utils.validation.Update;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +16,14 @@ import java.util.List;
  * Created by anubhaw on 3/6/17.
  */
 @Entity(value = "userInvites", noClassnameStored = true)
-//@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true)))
+//@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
+//handle update with insert and then uncomment
 public class UserInvite extends Base {
   @NotEmpty private String accountId;
-  @NotEmpty private String email;
+  @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   private boolean complete = false;
+  @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
 
   /**
    * Gets account id.
@@ -88,5 +95,13 @@ public class UserInvite extends Base {
    */
   public void setComplete(boolean complete) {
     this.complete = complete;
+  }
+
+  public List<String> getEmails() {
+    return emails;
+  }
+
+  public void setEmails(List<String> emails) {
+    this.emails = emails;
   }
 }
