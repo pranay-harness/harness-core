@@ -103,9 +103,9 @@ public abstract class SettingValue implements ExtensionPoint {
     AWS,
 
     /**
-     * GKE setting variable types.
+     * GCP setting variable types.
      */
-    GKE,
+    GCP,
 
     /**
      * Docker registry setting variable types.

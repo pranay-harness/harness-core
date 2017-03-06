@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static com.google.common.collect.ImmutableSortedMap.of;
 import static software.wings.api.SplunkStateExecutionData.Builder.aSplunkStateExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
@@ -14,14 +13,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.SplunkStateExecutionData;
-import software.wings.beans.TaskType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.TaskType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -55,28 +53,6 @@ public class SplunkState extends HttpState {
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     String evaluatedQuery = context.renderExpression(query);
     logger.info("evaluatedQuery: {}", evaluatedQuery);
-
-    SettingAttribute splunkSettingAttribute =
-        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK.name()).get(0);
-    SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
-
-    setUrl("https://" + splunkConfig.getHost() + ":" + splunkConfig.getPort() + "/services/search/jobs");
-    setMethod("POST");
-    try {
-      setBody(toPostBody(of("search", "search " + evaluatedQuery, "exec_mode", "oneshot")));
-    } catch (UnsupportedEncodingException e) {
-      logger.error("Exception: ", e);
-      return anExecutionResponse()
-          .withErrorMessage(e.getMessage())
-          .withExecutionStatus(ExecutionStatus.ERROR)
-          .withStateExecutionData(
-              aSplunkStateExecutionData().withQuery(evaluatedQuery).withAssertionStatement(getAssertion()).build())
-          .build();
-    }
-
-    setHeader("Authorization: Basic "
-        + Base64.encodeBase64URLSafeString(
-              (splunkConfig.getUsername() + ":" + splunkConfig.getPassword()).getBytes(StandardCharsets.UTF_8)));
 
     ExecutionResponse executionResponse = super.executeInternal(context, activityId);
 
@@ -155,6 +131,36 @@ public class SplunkState extends HttpState {
   @Override
   protected TaskType getTaskType() {
     return TaskType.SPLUNK;
+  }
+
+  @Override
+  protected String getFinalMethod(ExecutionContext context) {
+    return "POST";
+  }
+
+  @Override
+  protected String getFinalHeader(ExecutionContext context) {
+    SettingAttribute splunkSettingAttribute =
+        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK.name()).get(0);
+    SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
+    return "Authorization: Basic "
+        + Base64.encodeBase64URLSafeString(
+              (splunkConfig.getUsername() + ":" + splunkConfig.getPassword()).getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Override
+  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
+    String evaluatedQuery = context.renderExpression(query);
+    logger.info("evaluatedQuery: {}", evaluatedQuery);
+    return toPostBody(of("search", "search " + evaluatedQuery, "exec_mode", "oneshot"));
+  }
+
+  @Override
+  protected String getFinalUrl(ExecutionContext context) {
+    SettingAttribute splunkSettingAttribute =
+        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK.name()).get(0);
+    SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
+    return "https://" + splunkConfig.getHost() + ":" + splunkConfig.getPort() + "/services/search/jobs";
   }
 
   private String toPostBody(Map<String, String> params) throws UnsupportedEncodingException {

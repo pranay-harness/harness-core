@@ -8,15 +8,15 @@ import com.github.reinert.jjschema.SchemaIgnore;
  * Created by brett on 2/27/17
  * TODO(brett): Implement
  */
-@JsonTypeName("GKE_KUBERNETES")
-public class GkeKubernetesInfrastructureMapping extends InfrastructureMapping {
+@JsonTypeName("GCP_KUBERNETES")
+public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Cluster name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.
    */
-  public GkeKubernetesInfrastructureMapping() {
-    super(InfrastructureMappingType.GKE_KUBERNETES.name());
+  public GcpKubernetesInfrastructureMapping() {
+    super(InfrastructureMappingType.GCP_KUBERNETES.name());
   }
 
   /**
@@ -67,7 +67,7 @@ public class GkeKubernetesInfrastructureMapping extends InfrastructureMapping {
     private Builder() {}
 
     /**
-     * A GKE kubernetes infrastructure mapping builder.
+     * A GCP kubernetes infrastructure mapping builder.
      *
      * @return the builder
      */
@@ -269,24 +269,24 @@ public class GkeKubernetesInfrastructureMapping extends InfrastructureMapping {
      *
      * @return the kubernetes infrastructure mapping
      */
-    public GkeKubernetesInfrastructureMapping build() {
-      GkeKubernetesInfrastructureMapping gkeKubernetesInfrastructureMapping = new GkeKubernetesInfrastructureMapping();
-      gkeKubernetesInfrastructureMapping.setClusterName(clusterName);
-      gkeKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
-      gkeKubernetesInfrastructureMapping.setEnvId(envId);
-      gkeKubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
-      gkeKubernetesInfrastructureMapping.setServiceId(serviceId);
-      gkeKubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
-      gkeKubernetesInfrastructureMapping.setDeploymentType(deploymentType);
-      gkeKubernetesInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      gkeKubernetesInfrastructureMapping.setDisplayName(displayName);
-      gkeKubernetesInfrastructureMapping.setUuid(uuid);
-      gkeKubernetesInfrastructureMapping.setAppId(appId);
-      gkeKubernetesInfrastructureMapping.setCreatedBy(createdBy);
-      gkeKubernetesInfrastructureMapping.setCreatedAt(createdAt);
-      gkeKubernetesInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
-      gkeKubernetesInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
-      return gkeKubernetesInfrastructureMapping;
+    public GcpKubernetesInfrastructureMapping build() {
+      GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping = new GcpKubernetesInfrastructureMapping();
+      gcpKubernetesInfrastructureMapping.setClusterName(clusterName);
+      gcpKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
+      gcpKubernetesInfrastructureMapping.setEnvId(envId);
+      gcpKubernetesInfrastructureMapping.setServiceTemplateId(serviceTemplateId);
+      gcpKubernetesInfrastructureMapping.setServiceId(serviceId);
+      gcpKubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
+      gcpKubernetesInfrastructureMapping.setDeploymentType(deploymentType);
+      gcpKubernetesInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
+      gcpKubernetesInfrastructureMapping.setDisplayName(displayName);
+      gcpKubernetesInfrastructureMapping.setUuid(uuid);
+      gcpKubernetesInfrastructureMapping.setAppId(appId);
+      gcpKubernetesInfrastructureMapping.setCreatedBy(createdBy);
+      gcpKubernetesInfrastructureMapping.setCreatedAt(createdAt);
+      gcpKubernetesInfrastructureMapping.setLastUpdatedBy(lastUpdatedBy);
+      gcpKubernetesInfrastructureMapping.setLastUpdatedAt(lastUpdatedAt);
+      return gcpKubernetesInfrastructureMapping;
     }
   }
 }

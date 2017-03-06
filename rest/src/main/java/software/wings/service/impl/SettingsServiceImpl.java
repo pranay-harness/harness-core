@@ -1,5 +1,19 @@
 package software.wings.service.impl;
 
+import com.google.common.collect.ImmutableMap;
+import software.wings.beans.BaseFile;
+import software.wings.beans.SettingAttribute;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.SettingsService;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
+import java.io.InputStream;
+import java.util.List;
+
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -11,19 +25,8 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
-
-import com.google.common.collect.ImmutableMap;
-
-import software.wings.beans.SettingAttribute;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.SettingsService;
-
-import java.util.List;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.validation.executable.ValidateOnExecution;
+import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
 /**
  * Created by anubhaw on 5/17/16.

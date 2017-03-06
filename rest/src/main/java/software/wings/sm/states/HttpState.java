@@ -35,6 +35,7 @@ import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -223,15 +224,20 @@ public class HttpState extends State {
    * @return the execution response
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    String evaluatedUrl = context.renderExpression(url);
+    String evaluatedUrl = context.renderExpression(getFinalUrl(context));
     logger.info("evaluatedUrl: {}", evaluatedUrl);
-    String evaluatedBody = body;
+    String evaluatedBody = null;
+    try {
+      evaluatedBody = getFinalBody(context);
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
     if (evaluatedBody != null) {
       evaluatedBody = context.renderExpression(evaluatedBody);
       logger.info("evaluatedBody: {}", evaluatedBody);
     }
 
-    String evaluatedHeader = header;
+    String evaluatedHeader = getFinalHeader(context);
     if (evaluatedHeader != null) {
       evaluatedHeader = context.renderExpression(evaluatedHeader);
       logger.info("evaluatedHeader: {}", evaluatedHeader);
@@ -240,23 +246,39 @@ public class HttpState extends State {
     String finalEvaluatedBody = evaluatedBody;
     String finalEvaluatedHeader = evaluatedHeader;
 
-    delegateService.queueTask(
-        aDelegateTask()
-            .withTaskType(getTaskType())
-            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .withWaitId(activityId)
-            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(new Object[] {method, evaluatedUrl, evaluatedBody, evaluatedHeader, socketTimeoutMillis})
-            .build());
+    delegateService.queueTask(aDelegateTask()
+                                  .withTaskType(getTaskType())
+                                  .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                  .withWaitId(activityId)
+                                  .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                  .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl, evaluatedBody,
+                                      evaluatedHeader, socketTimeoutMillis})
+                                  .build());
 
     HttpStateExecutionData.Builder executionDataBuilder =
-        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(method);
+        aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(getFinalMethod(context));
 
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withStateExecutionData(executionDataBuilder.build())
         .build();
+  }
+
+  protected String getFinalMethod(ExecutionContext context) {
+    return method;
+  }
+
+  protected String getFinalHeader(ExecutionContext context) {
+    return header;
+  }
+
+  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
+    return body;
+  }
+
+  protected String getFinalUrl(ExecutionContext context) {
+    return url;
   }
 
   protected TaskType getTaskType() {

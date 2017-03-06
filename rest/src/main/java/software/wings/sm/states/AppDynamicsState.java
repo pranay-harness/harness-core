@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.codec.binary.Base64;
@@ -57,20 +55,8 @@ public class AppDynamicsState extends HttpState {
     AppDynamicsConfig appdConfig =
         (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
 
-    String controllerUrl = appdConfig.getControllerUrl();
-
     String evaluatedMetricPath = context.renderExpression(metricPath);
     String evaluatedAppName = context.renderExpression(applicationName);
-    String evaluatedTimeDuration = isNullOrEmpty(timeDuration) ? "10" : context.renderExpression(timeDuration);
-
-    setUrl(String.format(
-        "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=%s",
-        controllerUrl, urlEncodeString(evaluatedAppName), urlEncodeString(evaluatedMetricPath), evaluatedTimeDuration));
-    setMethod("GET");
-    setHeader("Authorization: Basic "
-        + Base64.encodeBase64String(
-              String.format("%s@%s:%s", appdConfig.getUsername(), appdConfig.getAccountname(), appdConfig.getPassword())
-                  .getBytes(StandardCharsets.UTF_8)));
 
     ExecutionResponse executionResponse = super.executeInternal(context, activityId);
 
@@ -212,6 +198,43 @@ public class AppDynamicsState extends HttpState {
   @Override
   public String getUrl() {
     return super.getUrl();
+  }
+
+  @Override
+  protected String getFinalMethod(ExecutionContext context) {
+    return "GET";
+  }
+
+  @Override
+  protected String getFinalHeader(ExecutionContext context) {
+    AppDynamicsConfig appdConfig =
+        (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
+
+    return "Authorization: Basic "
+        + Base64.encodeBase64String(
+              String.format("%s@%s:%s", appdConfig.getUsername(), appdConfig.getAccountname(), appdConfig.getPassword())
+                  .getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Override
+  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
+    return "";
+  }
+
+  @Override
+  protected String getFinalUrl(ExecutionContext context) {
+    AppDynamicsConfig appdConfig =
+        (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
+
+    String controllerUrl = appdConfig.getControllerUrl();
+
+    String evaluatedMetricPath = context.renderExpression(metricPath);
+    String evaluatedAppName = context.renderExpression(applicationName);
+    String evaluatedTimeDuration = context.renderExpression(timeDuration);
+
+    return String.format(
+        "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=%s",
+        controllerUrl, urlEncodeString(evaluatedAppName), urlEncodeString(evaluatedMetricPath), evaluatedTimeDuration);
   }
 
   @Attributes(title = "Assertion")

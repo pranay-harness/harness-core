@@ -4,8 +4,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-import java.util.List;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * Created by anubhaw on 5/17/16.

@@ -23,7 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
-import software.wings.service.impl.GkeHelperService;
+import software.wings.service.impl.GcpHelperService;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
  * Created by brett on 2/10/17.
  */
 public class GkeClusterServiceImplTest extends WingsBaseTest {
-  @Mock private GkeHelperService gkeHelperService;
+  @Mock private GcpHelperService gcpHelperService;
   @Mock private Container container;
   @Mock private Container.Projects projects;
   @Mock private Container.Projects.Zones zones;
@@ -104,8 +104,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(gkeHelperService.getGkeContainerService(anyString(), any(InputStream.class))).thenReturn(container);
-    when(gkeHelperService.getSleepIntervalMs()).thenReturn(0);
+    when(gcpHelperService.getGkeContainerService(anyString(), any(InputStream.class))).thenReturn(container);
+    when(gcpHelperService.getSleepIntervalMs()).thenReturn(0);
     when(container.projects()).thenReturn(projects);
     when(projects.zones()).thenReturn(zones);
     when(zones.clusters()).thenReturn(clusters);

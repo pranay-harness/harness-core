@@ -1,5 +1,22 @@
 package software.wings.service;
 
+import org.junit.Test;
+import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ApplicationLoadBalancerConfig;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
+import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.PhysicalDataCenterConfig;
+import software.wings.beans.SlackConfig;
+import software.wings.beans.SplunkConfig;
+import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.impl.PluginServiceImpl;
+import software.wings.service.intfc.PluginService;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
@@ -9,23 +26,6 @@ import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
 import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.Verification;
-
-import org.junit.Test;
-import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.ApplicationLoadBalancerConfig;
-import software.wings.beans.AwsConfig;
-import software.wings.beans.BambooConfig;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.ElasticLoadBalancerConfig;
-import software.wings.beans.GkeConfig;
-import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.PhysicalDataCenterConfig;
-import software.wings.beans.SlackConfig;
-import software.wings.beans.SplunkConfig;
-import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.service.impl.PluginServiceImpl;
-import software.wings.service.intfc.PluginService;
 
 /**
  * Created by peeyushaggarwal on 10/21/16.
@@ -104,11 +104,11 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
-                .withSettingClass(GkeConfig.class)
+                .withSettingClass(GcpConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("Google Cloud")
-                .withType("GKE")
+                .withDisplayName("Google Cloud Platform")
+                .withType("GCP")
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
@@ -151,7 +151,7 @@ public class PluginServiceTest {
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
         .hasSize(13)
-        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GKE",
+        .containsOnlyKeys("APP_DYNAMICS", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "AWS", "GCP",
             "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "ALB");
   }
 }

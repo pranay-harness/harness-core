@@ -14,7 +14,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.GkeKubernetesInfrastructureMapping;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
@@ -61,12 +61,12 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.GKE_KUBERNETES;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GKE;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 /**
@@ -190,9 +190,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((AwsKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
-    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+    } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       updateOperations.set(
-          "clusterName", ((GkeKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
+          "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
     }
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
@@ -252,9 +252,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     infraStencils.put(AWS_ECS.name(),
         ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema",
             readUiSchema(AWS_ECS.name())));
-    infraStencils.put(GKE_KUBERNETES.name(),
-        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(GkeKubernetesInfrastructureMapping.class), "uiSchema",
-            readUiSchema(GKE_KUBERNETES.name())));
+    infraStencils.put(GCP_KUBERNETES.name(),
+        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(GcpKubernetesInfrastructureMapping.class), "uiSchema",
+            readUiSchema(GCP_KUBERNETES.name())));
     return infraStencils;
   }
 
@@ -285,9 +285,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting);
-    } else if (GKE.name().equals(type)) {
-      GkeInfrastructureProvider infrastructureProvider =
-          (GkeInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GKE.name());
+    } else if (GCP.name().equals(type)) {
+      GcpInfrastructureProvider infrastructureProvider =
+          (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting);
     }
     return new ArrayList<>();
@@ -581,12 +581,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           infrastructureMapping.getUuid(),
           ImmutableMap.of(
               "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
-    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+    } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       // TODO(brett): Implement
       return null;
     } else {
       throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GKE infra mapping");
+          ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
     }
   }
 
@@ -619,7 +619,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       awsInfrastructureProvider.deProvisionHosts(
           appId, infrastructureMapping.getUuid(), computeProviderSetting, hostNames);
       updateHostsAndServiceInstances(infrastructureMapping, Arrays.asList(), hostNames);
-    } else if (infrastructureMapping instanceof GkeKubernetesInfrastructureMapping) {
+    } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       // TODO(brett): Implement
     } else {
       throw new WingsException(
@@ -637,7 +637,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (artifactType.equals(ArtifactType.DOCKER)) {
       infraTypes.put(AWS.name(), ImmutableMap.of(ECS.name(), AWS_ECS.name()));
-      infraTypes.put(GKE.name(), ImmutableMap.of(KUBERNETES.name(), GKE_KUBERNETES.name()));
+      infraTypes.put(GCP.name(), ImmutableMap.of(KUBERNETES.name(), GCP_KUBERNETES.name()));
     } else {
       infraTypes.put(PHYSICAL_DATA_CENTER.name(), ImmutableMap.of(SSH.name(), PHYSICAL_DATA_CENTER_SSH.name()));
       infraTypes.put(AWS.name(), ImmutableMap.of(SSH.name(), AWS_SSH.name()));
