@@ -104,8 +104,7 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<SettingAttribute> saveUpload(@FormDataParam("appId") String appId,
       @FormDataParam("accountId") String accountId, @FormDataParam("type") String type,
-      @FormDataParam("name") String name, @FormDataParam("pluginSetting") boolean pluginSetting,
-      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("name") String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
@@ -113,7 +112,6 @@ public class SettingResource {
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setAccountId(accountId);
     settingAttribute.setAppId(appId);
-    settingAttribute.setPluginSetting(pluginSetting);
     settingAttribute.setName(name);
     if (type.equals(GCP.name())) {
       settingAttribute.setValue(
