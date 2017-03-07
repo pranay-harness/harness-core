@@ -4,6 +4,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -155,6 +156,24 @@ public class ElementExecutionSummary {
   public void setStatus(ExecutionStatus status) {
     this.status = status;
   }
+
+  public static Comparator<? super ElementExecutionSummary> startTsComparator =
+      new Comparator<ElementExecutionSummary>() {
+        @Override
+        public int compare(ElementExecutionSummary o1, ElementExecutionSummary o2) {
+          if (o2.getStatus() == ExecutionStatus.QUEUED) {
+            return -1;
+          } else if (o1.getStatus() == ExecutionStatus.QUEUED) {
+            return 1;
+          } else if (o2.getStartTs() == null) {
+            return -1;
+          } else if (o1.getStartTs() == null) {
+            return 1;
+          } else {
+            return o1.getStartTs().compareTo(o2.getStartTs());
+          }
+        }
+      };
 
   /**
    * The type Element execution summary builder.

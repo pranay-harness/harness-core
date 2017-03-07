@@ -82,6 +82,7 @@ import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -890,6 +891,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     populateServiceSummary(serviceExecutionSummaryMap, workflowExecution);
 
     if (!serviceExecutionSummaryMap.isEmpty()) {
+      Collections.sort(serviceExecutionSummaries, ElementExecutionSummary.startTsComparator);
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
 
       if (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
