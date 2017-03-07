@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GcpConfig;
@@ -84,7 +83,6 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
     GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
-    return gkeClusterService.listClusters(ImmutableMap.of(
-        "credentials", gcpConfig.getServiceAccountKeyFileContent(), "appName", computeProviderSetting.getAppId()));
+    return gkeClusterService.listClusters(gcpConfig.getServiceAccountKeyFileContent());
   }
 }

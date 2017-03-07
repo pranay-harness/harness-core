@@ -24,11 +24,12 @@ logging:
     - type: console
       threshold: TRACE
       target: STDOUT
-#    - type: rsyslog-tcp-ssl
-#      threshold: TRACE
-#      host: logs5.papertrailapp.com
-#      port: 13747
-#      programName: manager-saas
+    - type: rsyslog-tcp-ssl
+      threshold: TRACE
+      host: syslog-a.logdna.com
+      port: 6514
+      key: b623cc9c1ee668fffc89730c5adedc8f
+      programName: manager-saas
 
 mongo:
   host: localhost

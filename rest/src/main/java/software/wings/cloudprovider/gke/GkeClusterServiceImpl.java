@@ -23,11 +23,13 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.utils.Misc;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
@@ -40,10 +42,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
 
   @Override
-  public KubernetesConfig createCluster(Map<String, String> params) {
-    Container gkeContainerService = getContainerService(params);
-    String projectId = getProjectIdFromCredentials(params.get("credentials"));
-    String[] zoneCluster = params.get("name").split(ZONE_DELIMITER);
+  public KubernetesConfig createCluster(String credentials, String zoneClusterName, Map<String, String> params) {
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
+    String projectId = getProjectIdFromCredentials(credentials);
+    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
     // See if the cluster already exists
@@ -79,10 +81,6 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return null;
   }
 
-  private Container getContainerService(Map<String, String> params) {
-    return gcpHelperService.getGkeContainerService(params.get("credentials"), params.get("appName"));
-  }
-
   private KubernetesConfig configFromCluster(Cluster cluster) {
     return KubernetesConfig.Builder.aKubernetesConfig()
         .withMasterUrl("https://" + cluster.getEndpoint() + "/")
@@ -92,10 +90,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public boolean deleteCluster(Map<String, String> params) {
-    Container gkeContainerService = getContainerService(params);
-    String projectId = getProjectIdFromCredentials(params.get("credentials"));
-    String[] zoneCluster = params.get("name").split(ZONE_DELIMITER);
+  public boolean deleteCluster(String credentials, String zoneClusterName) {
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
+    String projectId = getProjectIdFromCredentials(credentials);
+    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
     try {
@@ -133,10 +131,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public KubernetesConfig getCluster(Map<String, String> params) {
-    Container gkeContainerService = getContainerService(params);
-    String projectId = getProjectIdFromCredentials(params.get("credentials"));
-    String[] zoneCluster = params.get("name").split(ZONE_DELIMITER);
+  public KubernetesConfig getCluster(String credentials, String zoneClusterName) {
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
+    String projectId = getProjectIdFromCredentials(credentials);
+    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
     try {
@@ -152,9 +150,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public List<String> listClusters(Map<String, String> params) {
-    Container gkeContainerService = getContainerService(params);
-    String projectId = getProjectIdFromCredentials(params.get("credentials"));
+  public List<String> listClusters(String credentials) {
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
+    String projectId = getProjectIdFromCredentials(credentials);
     try {
       ListClustersResponse response =
           gkeContainerService.projects().zones().clusters().list(projectId, ALL_ZONES).execute();
@@ -173,16 +171,17 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public boolean setNodePoolAutoscaling(boolean enabled, int min, int max, Map<String, String> params) {
-    Container gkeContainerService = getContainerService(params);
-    String projectId = getProjectIdFromCredentials(params.get("credentials"));
-    String[] zoneCluster = params.get("name").split(ZONE_DELIMITER);
+  public boolean setNodePoolAutoscaling(
+      String credentials, String zoneClusterName, @Nullable String nodePoolId, boolean enabled, int min, int max) {
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
+    String projectId = getProjectIdFromCredentials(credentials);
+    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
     try {
       ClusterUpdate clusterUpdate = new ClusterUpdate();
-      if (params.containsKey("nodePoolId")) {
-        clusterUpdate.setDesiredNodePoolId(params.get("nodePoolId"));
+      if (!isNullOrEmpty(nodePoolId)) {
+        clusterUpdate.setDesiredNodePoolId(nodePoolId);
       }
       UpdateClusterRequest update = new UpdateClusterRequest().setUpdate(clusterUpdate.setDesiredNodePoolAutoscaling(
           new NodePoolAutoscaling().setEnabled(enabled).setMinNodeCount(min).setMaxNodeCount(max)));
@@ -209,16 +208,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public NodePoolAutoscaling getNodePoolAutoscaling(Map<String, String> params) {
-    Container gkeContainerService = getContainerService(params);
-    String projectId = getProjectIdFromCredentials(params.get("credentials"));
-    String[] zoneCluster = params.get("name").split(ZONE_DELIMITER);
+  public NodePoolAutoscaling getNodePoolAutoscaling(
+      String credentials, String zoneClusterName, @Nullable String nodePoolId) {
+    Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
+    String projectId = getProjectIdFromCredentials(credentials);
+    String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
     String zone = zoneCluster[0];
     String clusterName = zoneCluster[1];
     try {
       Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
-      if (params.containsKey("nodePoolId")) {
-        String nodePoolId = params.get("nodePoolId");
+      if (!isNullOrEmpty(nodePoolId)) {
         for (NodePool nodePool : cluster.getNodePools()) {
           if (nodePool.getName().equals(nodePoolId)) {
             return nodePool.getAutoscaling();

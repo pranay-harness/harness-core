@@ -71,34 +71,27 @@ public class kube {
       + "  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/752449710621-compute%40developer.gserviceaccount.com\"\n"
       + "}";
 
+  private static final String ZONE_CLUSTER = "us-west1-a" + ZONE_DELIMITER + "baz-qux";
+
   public static void main(String[] args) throws InterruptedException {
     GkeClusterServiceImpl gkeClusterService = new GkeClusterServiceImpl();
     KubernetesContainerServiceImpl kubernetesService = new KubernetesContainerServiceImpl();
 
-    ImmutableMap<String, String> projectParams =
-        ImmutableMap.<String, String>builder().put("credentials", CREDS).put("appName", "testApp").build();
-
-    ImmutableMap<String, String> clusterParams = ImmutableMap.<String, String>builder()
-                                                     .putAll(projectParams)
-                                                     .put("name", "us-west1-a" + ZONE_DELIMITER + "baz-qux")
-                                                     .build();
-
-    List<String> clusters = gkeClusterService.listClusters(projectParams);
+    List<String> clusters = gkeClusterService.listClusters(CREDS);
     logger.info("Available clusters: {}", clusters);
 
-    //    KubernetesConfig config = gkeClusterService.createCluster(
+    //    KubernetesConfig config = gkeClusterService.createCluster(CREDS, ZONE_CLUSTER,
     //        ImmutableMap.<String, String>builder()
-    //            .putAll(clusterParams)
     //            .put("nodeCount", "1")
     //            .put("masterUser", "master")
     //            .put("masterPwd", "foo!!bar$$")
     //            .build());
 
-    KubernetesConfig config = gkeClusterService.getCluster(clusterParams);
+    KubernetesConfig config = gkeClusterService.getCluster(CREDS, ZONE_CLUSTER);
 
     //    gkeClusterService.setNodePoolAutoscaling(true, 4, 8, clusterParams);
 
-    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(clusterParams);
+    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(CREDS, ZONE_CLUSTER, null);
     logger.info("Autoscale setting: {}", autoscaling);
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withValue(config).build();

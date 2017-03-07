@@ -1,11 +1,10 @@
-package software.wings.utils;
+package software.wings.logging;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.DeferredProcessingAware;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.papertrailapp.logback.Syslog4jAppender;
 import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
@@ -26,6 +25,8 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
   @NotNull private int port;
 
   @NotNull private String programName;
+
+  @NotNull private String key;
 
   @NotNull private int maxMessageLength = 128000;
 
@@ -129,20 +130,39 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
     this.maxMessageLength = maxMessageLength;
   }
 
+  /**
+   * Getter for property 'key'.
+   *
+   * @return Value for property 'key'.
+   */
+  @JsonProperty
+  public String getKey() {
+    return key;
+  }
+
+  /**
+   * Setter for property 'key'.
+   *
+   * @param key Value to set for property 'key'.
+   */
+  @JsonProperty
+  public void setKey(String key) {
+    this.key = key;
+  }
+
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
-    Syslog4jAppender appender = new Syslog4jAppender();
+    Syslog4jAppender appender = new Syslog4jAppender(programName, key);
     appender.setName(name);
 
     appender.setContext(context);
     appender.setLayout(buildLayout(context, layoutFactory));
-
     appender.addFilter(levelFilterFactory.build(threshold));
     getFilterFactories().stream().forEach(f -> appender.addFilter(f.build()));
 
     SSLTCPNetSyslogConfig config = new SSLTCPNetSyslogConfig(host, port);
-    config.setIdent(programName);
+    config.setUseStructuredData(true);
     config.setMaxMessageLength(maxMessageLength);
 
     appender.setSyslogConfig(config);

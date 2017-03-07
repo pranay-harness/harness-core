@@ -1885,7 +1885,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     OrchestrationWorkflow orchestrationWorkflow =
         anOrchestrationWorkflow()
             .withAppId(appId)
-            .withEnvironmentId(env.getUuid())
+            .withEnvId(env.getUuid())
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
