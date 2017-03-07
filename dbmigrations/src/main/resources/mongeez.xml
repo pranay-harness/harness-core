@@ -12,4 +12,5 @@
     <file path="config-version-migration.js"/>
     <file path="command-version-migration.js"/>
     <file path="command-target-to-all-env-migration.js"/>
+    <file path="settings-category-migration.js"/>
 </changeFiles>
