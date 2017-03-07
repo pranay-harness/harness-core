@@ -169,7 +169,7 @@ public class SettingResource {
    * @return the rest response
    */
   @PUT
-  @Path("upload/{attrId}")
+  @Path("{attrId}/upload")
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<SettingAttribute> update(@QueryParam("appId") String appId, @PathParam("attrId") String attrId,
       SettingAttribute variable, @FormDataParam("file") InputStream uploadedInputStream,
