@@ -181,6 +181,8 @@ public class ConfigServiceImpl implements ConfigService {
     Map<String, Object> updateMap = new HashMap<>();
     String oldFileId = savedConfigFile.getFileUuid();
 
+    inputConfigFile.setEntityType(savedConfigFile.getEntityType());
+
     if (uploadedInputStream != null) {
       String fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
