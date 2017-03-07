@@ -83,6 +83,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -400,7 +401,7 @@ private void createGlobalSettings() {
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("Wings Jenkins")
-                        .withIsPluginSetting(true)
+                        .withCategory(Category.CONNECTOR)
                         .withAccountId(accountId)
                         .withValue(aJenkinsConfig()
                                        .withJenkinsUrl("http://ec2-54-174-51-35.compute-1.amazonaws.com/")
@@ -414,7 +415,7 @@ private void createGlobalSettings() {
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("Wings BambooService")
-                        .withIsPluginSetting(true)
+                        .withCategory(Category.CONNECTOR)
                         .withAccountId(accountId)
                         .withValue(BambooConfig.Builder.aBambooConfig()
                                        .withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/")
@@ -426,7 +427,7 @@ private void createGlobalSettings() {
       new GenericType<RestResponse<SettingAttribute>>() {});
 
   getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
-                                                          .withIsPluginSetting(true)
+                                                          .withCategory(Category.CONNECTOR)
                                                           .withName("SMTP")
                                                           .withAccountId(accountId)
                                                           .withValue(aSmtpConfig()
@@ -442,7 +443,7 @@ private void createGlobalSettings() {
       new GenericType<RestResponse<SettingAttribute>>() {});
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
-                        .withIsPluginSetting(true)
+                        .withCategory(Category.CONNECTOR)
                         .withName("Splunk")
                         .withAccountId(accountId)
                         .withValue(aSplunkConfig()
@@ -457,7 +458,7 @@ private void createGlobalSettings() {
 
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
-                        .withIsPluginSetting(true)
+                        .withCategory(Category.CONNECTOR)
                         .withName("AppDynamics")
                         .withAccountId(accountId)
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
