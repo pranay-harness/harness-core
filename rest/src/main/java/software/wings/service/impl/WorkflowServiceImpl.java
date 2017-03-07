@@ -642,8 +642,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     int i = 0;
     for (WorkflowPhase workflowPhase : orchestrationWorkflow.getWorkflowPhases()) {
       workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
-      generateNewWorkflowPhaseSteps(orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(),
-          workflowPhase, serviceIds.contains(workflowPhase.getServiceId()));
+      generateNewWorkflowPhaseSteps(orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvId(), workflowPhase,
+          serviceIds.contains(workflowPhase.getServiceId()));
       populatePhaseStepIds(workflowPhase);
       orchestrationWorkflow.getGraph().getSubworkflows().putAll(generateGraph(workflowPhase));
 
@@ -739,7 +739,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     generateNewWorkflowPhaseSteps(
-        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvironmentId(), workflowPhase, serviceRepeat);
+        orchestrationWorkflow.getAppId(), orchestrationWorkflow.getEnvId(), workflowPhase, serviceRepeat);
     populatePhaseStepIds(workflowPhase);
     orchestrationWorkflow.getWorkflowPhaseIds().add(workflowPhase.getUuid());
     orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
