@@ -31,7 +31,7 @@ public class GcpHelperService {
    * Gets a GCP container service.
    *
    */
-  public Container getGkeContainerService(String credentials, String appName) {
+  public Container getGkeContainerService(String credentials) {
     try {
       JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
       NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
@@ -39,7 +39,7 @@ public class GcpHelperService {
       if (credential.createScopedRequired()) {
         credential = credential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
       }
-      return new Container.Builder(transport, jsonFactory, credential).setApplicationName(appName).build();
+      return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Wings").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service.", e);
     } catch (IOException e) {

@@ -35,6 +35,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -92,10 +93,8 @@ public class SettingResource {
   }
 
   /**
-   * Save.
+   * Save uploaded GCP service account key file.
    *
-   * @param appId    the app id
-   * @param variable the variable
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
    * @return the rest response
@@ -103,23 +102,21 @@ public class SettingResource {
   @POST
   @Path("upload")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable,
+  public RestResponse<SettingAttribute> saveUpload(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, @QueryParam("type") String type,
       @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
-    variable.setAppId(appId);
-    if (variable.getValue().getType().equals(GCP.name())) {
-      try {
-        String content = IOUtils.toString(uploadedInputStream);
-        ((GcpConfig) variable.getValue()).setServiceAccountKeyFileContent(content);
-      } catch (IOException e) {
-        // Ignore
-      }
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setAccountId(accountId);
+    settingAttribute.setAppId(appId);
+    if (type.equals(GCP.name())) {
+      settingAttribute.setValue(
+          aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build());
     }
-
-    return new RestResponse<>(attributeService.save(variable));
+    return new RestResponse<>(attributeService.save(settingAttribute));
   }
 
   /**
@@ -173,19 +170,14 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<SettingAttribute> update(@QueryParam("appId") String appId, @PathParam("attrId") String attrId,
       SettingAttribute variable, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
     variable.setUuid(attrId);
     variable.setAppId(appId);
     if (variable.getValue().getType().equals(GCP.name())) {
-      try {
-        String content = IOUtils.toString(uploadedInputStream);
-        ((GcpConfig) variable.getValue()).setServiceAccountKeyFileContent(content);
-      } catch (IOException e) {
-        // Ignore
-      }
+      ((GcpConfig) variable.getValue()).setServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream));
     }
     return new RestResponse<>(attributeService.update(variable));
   }

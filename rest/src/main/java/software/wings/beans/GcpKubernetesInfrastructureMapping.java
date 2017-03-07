@@ -10,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
  */
 @JsonTypeName("GCP_KUBERNETES")
 public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Zone") private String zone;
   @Attributes(title = "Cluster name") private String clusterName;
 
   /**
@@ -18,23 +17,6 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
    */
   public GcpKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.GCP_KUBERNETES.name());
-  }
-
-  /**
-   * Gets zone.
-   *
-   * @return the zone
-   */
-  public String getZone() {
-    return zone;
-  }
-
-  /**
-   * Sets zone.
-   * @param zone the zone
-   */
-  public void setZone(String zone) {
-    this.zone = zone;
   }
 
   /**
@@ -66,7 +48,6 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
    * The type Builder.
    */
   public static final class Builder {
-    private String zone;
     private String clusterName;
     private String computeProviderSettingId;
     private String envId;
@@ -92,17 +73,6 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
      */
     public static Builder aGcpKubernetesInfrastructureMapping() {
       return new Builder();
-    }
-
-    /**
-     * With zone builder.
-     *
-     * @param zone the zone
-     * @return the builder
-     */
-    public Builder withZone(String zone) {
-      this.zone = zone;
-      return this;
     }
 
     /**
@@ -277,7 +247,6 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder but() {
       return aGcpKubernetesInfrastructureMapping()
-          .withZone(zone)
           .withClusterName(clusterName)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
@@ -302,7 +271,6 @@ public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {
      */
     public GcpKubernetesInfrastructureMapping build() {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping = new GcpKubernetesInfrastructureMapping();
-      gcpKubernetesInfrastructureMapping.setZone(zone);
       gcpKubernetesInfrastructureMapping.setClusterName(clusterName);
       gcpKubernetesInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       gcpKubernetesInfrastructureMapping.setEnvId(envId);
