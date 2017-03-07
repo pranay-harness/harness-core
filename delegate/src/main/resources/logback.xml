@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <jmxConfigurator />
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>delegate.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -14,6 +13,7 @@
         </rollingPolicy>
 
         <withJansi>true</withJansi>
+
         <encoder>
             <pattern>%date{ISO8601} %boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
