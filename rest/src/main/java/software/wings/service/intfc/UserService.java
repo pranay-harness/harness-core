@@ -112,4 +112,13 @@ public interface UserService {
    * @return the page response
    */
   PageResponse<UserInvite> listInvites(PageRequest<UserInvite> pageRequest);
+
+  /**
+   * Delete invite user invite.
+   *
+   * @param accountId the account id
+   * @param inviteId  the invite id
+   * @return the user invite
+   */
+  UserInvite deleteInvite(String accountId, String inviteId);
 }

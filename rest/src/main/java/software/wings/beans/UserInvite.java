@@ -22,7 +22,7 @@ public class UserInvite extends Base {
   @NotEmpty private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
-  private boolean complete = false;
+  private boolean completed = false;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
 
   /**
@@ -84,17 +84,17 @@ public class UserInvite extends Base {
    *
    * @return the boolean
    */
-  public boolean isComplete() {
-    return complete;
+  public boolean isCompleted() {
+    return completed;
   }
 
   /**
    * Sets complete.
    *
-   * @param complete the complete
+   * @param completed the complete
    */
-  public void setComplete(boolean complete) {
-    this.complete = complete;
+  public void setCompleted(boolean completed) {
+    this.completed = completed;
   }
 
   public List<String> getEmails() {
