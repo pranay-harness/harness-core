@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.ws.rs.BeanParam;
@@ -39,6 +40,7 @@ import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
 /**
@@ -109,15 +111,18 @@ public class SettingResource {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
-    SettingAttribute settingAttribute = new SettingAttribute();
-    settingAttribute.setAccountId(accountId);
-    settingAttribute.setAppId(appId);
-    settingAttribute.setName(name);
-    if (type.equals(GCP.name())) {
-      settingAttribute.setValue(
-          aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build());
+    SettingValue value = null;
+    if (GCP.name().equals(type)) {
+      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
     }
-    return new RestResponse<>(attributeService.save(settingAttribute));
+    if (isNullOrEmpty(name)) {
+      String fileName = fileDetail.getFileName();
+      name = fileName.substring(0,
+          fileName.contains("-") ? fileName.lastIndexOf("-")
+                                 : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
+    }
+    return new RestResponse<>(attributeService.save(
+        aSettingAttribute().withAccountId(accountId).withAppId(appId).withName(name).withValue(value).build()));
   }
 
   /**
