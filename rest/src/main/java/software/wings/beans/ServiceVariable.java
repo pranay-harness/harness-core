@@ -41,6 +41,8 @@ public class ServiceVariable extends Base {
 
   @Transient private ServiceVariable overriddenServiceVariable;
 
+  private OverrideType overrideType;
+
   private String name;
   private String value;
 
@@ -191,11 +193,29 @@ public class ServiceVariable extends Base {
     this.overriddenServiceVariable = overriddenServiceVariable;
   }
 
+  /**
+   * Getter for property 'overrideType'.
+   *
+   * @return Value for property 'overrideType'.
+   */
+  public OverrideType getOverrideType() {
+    return overrideType;
+  }
+
+  /**
+   * Setter for property 'overrideType'.
+   *
+   * @param overrideType Value to set for property 'overrideType'.
+   */
+  public void setOverrideType(OverrideType overrideType) {
+    this.overrideType = overrideType;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(templateId, envId, entityType, entityId, parentServiceVariableId, overriddenServiceVariable,
-              name, value, type);
+              overrideType, name, value, type);
   }
 
   @Override
@@ -214,8 +234,8 @@ public class ServiceVariable extends Base {
         && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
         && Objects.equals(this.parentServiceVariableId, other.parentServiceVariableId)
         && Objects.equals(this.overriddenServiceVariable, other.overriddenServiceVariable)
-        && Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value)
-        && Objects.equals(this.type, other.type);
+        && Objects.equals(this.overrideType, other.overrideType) && Objects.equals(this.name, other.name)
+        && Objects.equals(this.value, other.value) && Objects.equals(this.type, other.type);
   }
 
   @Override
@@ -227,6 +247,7 @@ public class ServiceVariable extends Base {
         .add("entityId", entityId)
         .add("parentServiceVariableId", parentServiceVariableId)
         .add("overriddenServiceVariable", overriddenServiceVariable)
+        .add("overrideType", overrideType)
         .add("name", name)
         .add("value", value)
         .add("type", type)
@@ -263,220 +284,161 @@ public class ServiceVariable extends Base {
     }
   }
 
-  /**
-   * The type Builder.
-   */
+  public enum OverrideType {
+    /**
+     * All  override type.
+     */
+    ALL, /**
+          * Instances override type.
+          */
+    INSTANCES, /**
+                * Custom override type.
+                */
+    CUSTOM
+  }
+
   public static final class Builder {
-    private String templateId;
+    private String templateId = DEFAULT_TEMPLATE_ID;
     private String envId;
     private EntityType entityType;
     private String entityId;
-    private String name;
-    private String value;
-    private Type type;
     private String uuid;
+    private String parentServiceVariableId;
     private String appId;
     private EmbeddedUser createdBy;
+    private ServiceVariable overriddenServiceVariable;
     private long createdAt;
+    private OverrideType overrideType;
     private EmbeddedUser lastUpdatedBy;
+    private String name;
     private long lastUpdatedAt;
+    private String value;
+    private Type type;
 
     private Builder() {}
 
-    /**
-     * A service variable builder.
-     *
-     * @return the builder
-     */
     public static Builder aServiceVariable() {
       return new Builder();
     }
 
-    /**
-     * With template id builder.
-     *
-     * @param templateId the template id
-     * @return the builder
-     */
     public Builder withTemplateId(String templateId) {
       this.templateId = templateId;
       return this;
     }
 
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    /**
-     * With entity type builder.
-     *
-     * @param entityType the entity type
-     * @return the builder
-     */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
-    /**
-     * With entity id builder.
-     *
-     * @param entityId the entity id
-     * @return the builder
-     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    /**
-     * With value builder.
-     *
-     * @param value the value
-     * @return the builder
-     */
-    public Builder withValue(String value) {
-      this.value = value;
-      return this;
-    }
-
-    /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
-    public Builder withType(Type type) {
-      this.type = type;
-      return this;
-    }
-
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
+    public Builder withParentServiceVariableId(String parentServiceVariableId) {
+      this.parentServiceVariableId = parentServiceVariableId;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
+    public Builder withOverriddenServiceVariable(ServiceVariable overriddenServiceVariable) {
+      this.overriddenServiceVariable = overriddenServiceVariable;
+      return this;
+    }
+
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
+    public Builder withOverrideType(OverrideType overrideType) {
+      this.overrideType = overrideType;
+      return this;
+    }
+
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withValue(String value) {
+      this.value = value;
+      return this;
+    }
+
+    public Builder withType(Type type) {
+      this.type = type;
+      return this;
+    }
+
     public Builder but() {
       return aServiceVariable()
           .withTemplateId(templateId)
           .withEnvId(envId)
           .withEntityType(entityType)
           .withEntityId(entityId)
-          .withName(name)
-          .withValue(value)
-          .withType(type)
           .withUuid(uuid)
+          .withParentServiceVariableId(parentServiceVariableId)
           .withAppId(appId)
           .withCreatedBy(createdBy)
+          .withOverriddenServiceVariable(overriddenServiceVariable)
           .withCreatedAt(createdAt)
+          .withOverrideType(overrideType)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withName(name)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withValue(value)
+          .withType(type);
     }
 
-    /**
-     * Build service variable.
-     *
-     * @return the service variable
-     */
     public ServiceVariable build() {
       ServiceVariable serviceVariable = new ServiceVariable();
       serviceVariable.setTemplateId(templateId);
       serviceVariable.setEnvId(envId);
       serviceVariable.setEntityType(entityType);
       serviceVariable.setEntityId(entityId);
-      serviceVariable.setName(name);
-      serviceVariable.setValue(value);
-      serviceVariable.setType(type);
       serviceVariable.setUuid(uuid);
+      serviceVariable.setParentServiceVariableId(parentServiceVariableId);
       serviceVariable.setAppId(appId);
       serviceVariable.setCreatedBy(createdBy);
+      serviceVariable.setOverriddenServiceVariable(overriddenServiceVariable);
       serviceVariable.setCreatedAt(createdAt);
+      serviceVariable.setOverrideType(overrideType);
       serviceVariable.setLastUpdatedBy(lastUpdatedBy);
+      serviceVariable.setName(name);
       serviceVariable.setLastUpdatedAt(lastUpdatedAt);
+      serviceVariable.setValue(value);
+      serviceVariable.setType(type);
       return serviceVariable;
     }
   }

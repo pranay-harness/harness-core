@@ -1,6 +1,25 @@
 package software.wings.beans;
 
+import static java.util.Arrays.stream;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ALB;
+import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
+import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.ELB;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SLACK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.STRING;
+
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -9,6 +28,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Objects;
@@ -169,7 +189,26 @@ public class SettingAttribute extends Base {
         .toString();
   }
 
-  public enum Category { CLOUD_PROVIDER, CONNECTOR, SETTING }
+  public enum Category {
+    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP, KUBERNETES)),
+
+    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, APP_DYNAMICS, ELB, ALB, SLACK, DOCKER)),
+
+    SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
+
+    private List<SettingVariableTypes> settingVariableTypes;
+
+    Category(List<SettingVariableTypes> settingVariableTypes) {
+      this.settingVariableTypes = settingVariableTypes;
+    }
+
+    public static Category getCategory(SettingVariableTypes settingVariableType) {
+      return stream(Category.values())
+          .filter(category -> category.settingVariableTypes.contains(settingVariableType))
+          .findFirst()
+          .orElse(null);
+    }
+  }
 
   public static final class Builder {
     private String envId = GLOBAL_ENV_ID;

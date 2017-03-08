@@ -1888,12 +1888,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withEnvId(env.getUuid())
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
             .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
-            .addWorkflowPhases(aWorkflowPhase()
-                                   .withName("Phase1")
-                                   .withComputeProviderId(computeProvider.getUuid())
-                                   .withServiceId(service.getUuid())
-                                   .withDeploymentType(SSH)
-                                   .build())
+            .addWorkflowPhases(
+                aWorkflowPhase().withName("Phase1").withServiceId(service.getUuid()).withDeploymentType(SSH).build())
             .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
             .build();
 
