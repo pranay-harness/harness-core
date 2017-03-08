@@ -973,7 +973,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
                                    .withInfraMappingId(INFRA_MAPPING_ID)
-                                   .withComputeProviderId("computeProviderId1")
                                    .withServiceId(SERVICE_ID)
                                    .withDeploymentType(SSH)
                                    .build())

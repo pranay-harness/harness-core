@@ -21,9 +21,11 @@ public class WorkflowPhase {
   private String uuid = UUIDGenerator.getUuid();
   private String name;
   private @NotNull String serviceId;
-  private @NotNull String infraMappingId;
+
+  @NotNull private String infraMappingId;
+
   private DeploymentType deploymentType;
-  private String computeProviderId;
+  private String infraMappingName;
 
   private boolean rollback;
   private String rollbackPhaseName;
@@ -54,20 +56,20 @@ public class WorkflowPhase {
     this.serviceId = serviceId;
   }
 
-  public String getComputeProviderId() {
-    return computeProviderId;
-  }
-
-  public void setComputeProviderId(String computeProviderId) {
-    this.computeProviderId = computeProviderId;
-  }
-
   public DeploymentType getDeploymentType() {
     return deploymentType;
   }
 
   public void setDeploymentType(DeploymentType deploymentType) {
     this.deploymentType = deploymentType;
+  }
+
+  public String getInfraMappingName() {
+    return infraMappingName;
+  }
+
+  public void setInfraMappingName(String infraMappingName) {
+    this.infraMappingName = infraMappingName;
   }
 
   public List<PhaseStep> getPhaseSteps() {
@@ -106,7 +108,7 @@ public class WorkflowPhase {
         .addProperty("serviceId", serviceId)
         .withRollback(rollback)
         .addProperty("deploymentType", deploymentType)
-        .addProperty("computeProviderId", computeProviderId)
+        .addProperty("infraMappingName", infraMappingName)
         .addProperty("infraMappingId", infraMappingId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
@@ -115,7 +117,7 @@ public class WorkflowPhase {
   public Map<String, Object> params() {
     Map<String, Object> params = new HashMap<>();
     params.put("serviceId", serviceId);
-    params.put("computeProviderId", computeProviderId);
+    params.put("infraMappingName", infraMappingName);
     params.put("infraMappingId", infraMappingId);
     params.put("deploymentType", deploymentType);
     return params;
@@ -135,8 +137,7 @@ public class WorkflowPhase {
     private String serviceId;
     private String infraMappingId;
     private DeploymentType deploymentType;
-    private String computeProviderId;
-    private String deploymentMasterId;
+    private String infraMappingName;
     private boolean rollback;
     private String rollbackPhaseName;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
@@ -172,13 +173,8 @@ public class WorkflowPhase {
       return this;
     }
 
-    public WorkflowPhaseBuilder withComputeProviderId(String computeProviderId) {
-      this.computeProviderId = computeProviderId;
-      return this;
-    }
-
-    public WorkflowPhaseBuilder withDeploymentMasterId(String deploymentMasterId) {
-      this.deploymentMasterId = deploymentMasterId;
+    public WorkflowPhaseBuilder withInfraMappingName(String infraMappingName) {
+      this.infraMappingName = infraMappingName;
       return this;
     }
 
@@ -209,8 +205,7 @@ public class WorkflowPhase {
           .withServiceId(serviceId)
           .withInfraMappingId(infraMappingId)
           .withDeploymentType(deploymentType)
-          .withComputeProviderId(computeProviderId)
-          .withDeploymentMasterId(deploymentMasterId)
+          .withInfraMappingName(infraMappingName)
           .withRollback(rollback)
           .withRollbackPhaseName(rollbackPhaseName)
           .withPhaseSteps(phaseSteps);
@@ -223,7 +218,7 @@ public class WorkflowPhase {
       workflowPhase.setServiceId(serviceId);
       workflowPhase.setInfraMappingId(infraMappingId);
       workflowPhase.setDeploymentType(deploymentType);
-      workflowPhase.setComputeProviderId(computeProviderId);
+      workflowPhase.setInfraMappingName(infraMappingName);
       workflowPhase.setRollback(rollback);
       workflowPhase.setRollbackPhaseName(rollbackPhaseName);
       workflowPhase.setPhaseSteps(phaseSteps);

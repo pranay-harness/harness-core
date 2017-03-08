@@ -5,5 +5,7 @@ package software.wings.beans;
  */
 public enum WorkflowOrchestrationType {
   CANARY,
-  BLUE_GREEN;
+  BLUE_GREEN,
+  ROLLING_UPGRADE,
+  CUSTOM;
 }
