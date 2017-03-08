@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.GcpHelperService;
 
 import javax.inject.Inject;
@@ -37,6 +38,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
 /**
@@ -60,7 +63,10 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private GkeClusterService gkeClusterService;
   private GoogleJsonResponseException notFoundException;
 
-  private static final String CREDENTIALS = "{\"project_id\": \"project-a\"}";
+  private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
+      aSettingAttribute()
+          .withValue(aGcpConfig().withServiceAccountKeyFileContent("{\"project_id\": \"project-a\"}").build())
+          .build();
   private static final String ZONE_CLUSTER = "zone-a/foo-bar";
   private static final ImmutableMap<String, String> CREATE_CLUSTER_PARAMS = ImmutableMap.<String, String>builder()
                                                                                 .put("nodeCount", "1")
@@ -135,7 +141,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     Operation doneOperation = new Operation().setStatus("DONE");
     when(operationsGet.execute()).thenReturn(doneOperation);
 
-    KubernetesConfig config = gkeClusterService.createCluster(CREDENTIALS, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+    KubernetesConfig config =
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -146,7 +153,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldNotCreateClusterIfExists() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
-    KubernetesConfig config = gkeClusterService.createCluster(CREDENTIALS, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+    KubernetesConfig config =
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
 
     verify(clusters, times(0)).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -159,7 +167,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenThrow(notFoundException);
     when(clustersCreate.execute()).thenThrow(new IOException());
 
-    KubernetesConfig config = gkeClusterService.createCluster(CREDENTIALS, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+    KubernetesConfig config =
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config).isNull();
@@ -172,7 +181,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersCreate.execute()).thenReturn(pendingOperation);
     when(operationsGet.execute()).thenThrow(new IOException());
 
-    KubernetesConfig config = gkeClusterService.createCluster(CREDENTIALS, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
+    KubernetesConfig config =
+        gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, CREATE_CLUSTER_PARAMS);
 
     verify(clusters).create(anyString(), anyString(), any(CreateClusterRequest.class));
     assertThat(config).isNull();
@@ -185,7 +195,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     Operation doneOperation = new Operation().setStatus("DONE");
     when(operationsGet.execute()).thenReturn(doneOperation);
 
-    boolean success = gkeClusterService.deleteCluster(CREDENTIALS, ZONE_CLUSTER);
+    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).delete(anyString(), anyString(), anyString());
     assertThat(success).isTrue();
@@ -195,7 +205,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotDeleteClusterIfNotExists() throws Exception {
     when(clustersDelete.execute()).thenThrow(notFoundException);
 
-    boolean success = gkeClusterService.deleteCluster(CREDENTIALS, ZONE_CLUSTER);
+    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).delete(anyString(), anyString(), anyString());
     assertThat(success).isFalse();
@@ -208,7 +218,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     Operation doneOperation = new Operation().setStatus("FAILED");
     when(operationsGet.execute()).thenReturn(doneOperation);
 
-    boolean success = gkeClusterService.deleteCluster(CREDENTIALS, ZONE_CLUSTER);
+    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).delete(anyString(), anyString(), anyString());
     assertThat(success).isFalse();
@@ -220,7 +230,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersDelete.execute()).thenReturn(pendingOperation);
     when(operationsGet.execute()).thenThrow(new IOException());
 
-    boolean success = gkeClusterService.deleteCluster(CREDENTIALS, ZONE_CLUSTER);
+    boolean success = gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).delete(anyString(), anyString(), anyString());
     assertThat(success).isFalse();
@@ -230,7 +240,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldGetCluster() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
-    KubernetesConfig config = gkeClusterService.getCluster(CREDENTIALS, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
@@ -242,7 +252,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotGetClusterIfNotExists() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
 
-    KubernetesConfig config = gkeClusterService.getCluster(CREDENTIALS, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config).isNull();
@@ -252,7 +262,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotGetClusterIfError() throws Exception {
     when(clustersGet.execute()).thenThrow(new IOException());
 
-    KubernetesConfig config = gkeClusterService.getCluster(CREDENTIALS, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config).isNull();
@@ -267,7 +277,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
             new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_FORBIDDEN, "forbidden", httpHeaders),
             googleJsonError));
 
-    KubernetesConfig config = gkeClusterService.getCluster(CREDENTIALS, ZONE_CLUSTER);
+    KubernetesConfig config = gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(config).isNull();
@@ -278,7 +288,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     List<Cluster> clusterList = ImmutableList.of(CLUSTER_1, CLUSTER_2);
     when(clustersList.execute()).thenReturn(new ListClustersResponse().setClusters(clusterList));
 
-    List<String> result = gkeClusterService.listClusters(CREDENTIALS);
+    List<String> result = gkeClusterService.listClusters(COMPUTE_PROVIDER_SETTING);
 
     verify(clusters).list(anyString(), anyString());
     assertThat(result).containsExactlyInAnyOrder(CLUSTER_1.getZone() + ZONE_DELIMITER + CLUSTER_1.getName(),
@@ -289,7 +299,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotListClustersIfError() throws Exception {
     when(clustersList.execute()).thenThrow(new IOException());
 
-    List<String> result = gkeClusterService.listClusters(CREDENTIALS);
+    List<String> result = gkeClusterService.listClusters(COMPUTE_PROVIDER_SETTING);
 
     verify(clusters).list(anyString(), anyString());
     assertThat(result).isNull();
@@ -302,7 +312,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     Operation doneOperation = new Operation().setStatus("DONE");
     when(operationsGet.execute()).thenReturn(doneOperation);
 
-    boolean success = gkeClusterService.setNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, null, true, 2, 4);
+    boolean success =
+        gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 2, 4);
 
     verify(clusters).update(anyString(), anyString(), anyString(), any(UpdateClusterRequest.class));
     assertThat(success).isTrue();
@@ -315,7 +326,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     Operation doneOperation = new Operation().setStatus("DONE");
     when(operationsGet.execute()).thenReturn(doneOperation);
 
-    boolean success = gkeClusterService.setNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, "pool-id", true, 2, 4);
+    boolean success =
+        gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "pool-id", true, 2, 4);
 
     ArgumentCaptor<UpdateClusterRequest> args = ArgumentCaptor.forClass(UpdateClusterRequest.class);
     verify(clusters).update(anyString(), anyString(), anyString(), args.capture());
@@ -327,7 +339,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotSetNodePoolAutoscalingIfError() throws Exception {
     when(clustersUpdate.execute()).thenThrow(new IOException());
 
-    boolean success = gkeClusterService.setNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, null, true, 2, 4);
+    boolean success =
+        gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 2, 4);
 
     verify(clusters).update(anyString(), anyString(), anyString(), any(UpdateClusterRequest.class));
     assertThat(success).isFalse();
@@ -339,7 +352,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersUpdate.execute()).thenReturn(pendingOperation);
     when(operationsGet.execute()).thenThrow(new IOException());
 
-    boolean success = gkeClusterService.setNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, null, true, 2, 4);
+    boolean success =
+        gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 2, 4);
 
     verify(clusters).update(anyString(), anyString(), anyString(), any(UpdateClusterRequest.class));
     assertThat(success).isFalse();
@@ -349,7 +363,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldGetNodePoolAutoscaling() throws Exception {
     when(clustersGet.execute()).thenReturn(CLUSTER_2);
 
-    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, null);
+    NodePoolAutoscaling autoscaling =
+        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null);
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(autoscaling).isNotNull();
@@ -363,7 +378,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
     NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, "node-pool1.2");
+        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "node-pool1.2");
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(autoscaling).isNotNull();
@@ -376,7 +391,8 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotGetNodePoolAutoscalingIfNotExists() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
 
-    NodePoolAutoscaling autoscaling = gkeClusterService.getNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, null);
+    NodePoolAutoscaling autoscaling =
+        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null);
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(autoscaling).isNull();
@@ -387,7 +403,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
     NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, "node-pool-missing");
+        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, "node-pool-missing");
 
     verify(clusters).get(anyString(), anyString(), anyString());
     assertThat(autoscaling).isNull();
@@ -398,7 +414,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
     try {
-      gkeClusterService.getNodePoolAutoscaling(CREDENTIALS, ZONE_CLUSTER, null);
+      gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null);
       fail();
     } catch (IllegalArgumentException e) {
       // Expected

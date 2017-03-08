@@ -24,7 +24,7 @@ import software.wings.sm.states.GkeAutoScaleProvisionState;
 import software.wings.sm.states.GcpNodeSelectState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
-import software.wings.sm.states.KubernetesServiceDeploy;
+import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
 import software.wings.sm.states.LoadBalancerState;
 import software.wings.sm.states.PauseState;
@@ -177,7 +177,8 @@ public enum StateType implements StateTypeDescriptor {
 
   KUBERNETES_SERVICE_SETUP(KubernetesReplicationControllerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SERVICE_DEPLOY(KubernetesServiceDeploy.class, COMMANDS, ORCHESTRATION_STENCILS);
+  KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(
+      KubernetesReplicationControllerDeploy.class, COMMANDS, ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

@@ -19,7 +19,10 @@ import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.SettingAttribute;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.utils.Misc;
 
@@ -30,6 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
 
@@ -42,7 +46,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
 
   @Override
-  public KubernetesConfig createCluster(String credentials, String zoneClusterName, Map<String, String> params) {
+  public KubernetesConfig createCluster(
+      SettingAttribute computeProviderSetting, String zoneClusterName, Map<String, String> params) {
+    String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
@@ -89,8 +95,16 @@ public class GkeClusterServiceImpl implements GkeClusterService {
         .build();
   }
 
+  private String validateAndGetCredentials(SettingAttribute computeProviderSetting) {
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
+      throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
+    }
+    return ((GcpConfig) computeProviderSetting.getValue()).getServiceAccountKeyFileContent();
+  }
+
   @Override
-  public boolean deleteCluster(String credentials, String zoneClusterName) {
+  public boolean deleteCluster(SettingAttribute computeProviderSetting, String zoneClusterName) {
+    String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
@@ -131,7 +145,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public KubernetesConfig getCluster(String credentials, String zoneClusterName) {
+  public KubernetesConfig getCluster(SettingAttribute computeProviderSetting, String zoneClusterName) {
+    String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
@@ -150,7 +165,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public List<String> listClusters(String credentials) {
+  public List<String> listClusters(SettingAttribute computeProviderSetting) {
+    String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
     try {
@@ -171,8 +187,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   }
 
   @Override
-  public boolean setNodePoolAutoscaling(
-      String credentials, String zoneClusterName, @Nullable String nodePoolId, boolean enabled, int min, int max) {
+  public boolean setNodePoolAutoscaling(SettingAttribute computeProviderSetting, String zoneClusterName,
+      @Nullable String nodePoolId, boolean enabled, int min, int max) {
+    String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);
@@ -209,7 +226,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
 
   @Override
   public NodePoolAutoscaling getNodePoolAutoscaling(
-      String credentials, String zoneClusterName, @Nullable String nodePoolId) {
+      SettingAttribute computeProviderSetting, String zoneClusterName, @Nullable String nodePoolId) {
+    String credentials = validateAndGetCredentials(computeProviderSetting);
     Container gkeContainerService = gcpHelperService.getGkeContainerService(credentials);
     String projectId = getProjectIdFromCredentials(credentials);
     String[] zoneCluster = zoneClusterName.split(ZONE_DELIMITER);

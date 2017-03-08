@@ -8,7 +8,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.SettingAttribute;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +23,7 @@ public class KubernetesHelperService {
   /**
    * Gets a Kubernetes client.
    */
-  public KubernetesClient getKubernetesClient(SettingAttribute settingAttribute) {
-    KubernetesConfig kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
+  public KubernetesClient getKubernetesClient(KubernetesConfig kubernetesConfig) {
     KubernetesClient clientCached = null;
     String masterUrl = kubernetesConfig.getMasterUrl();
     if (clientCacheMap.containsKey(masterUrl)) {

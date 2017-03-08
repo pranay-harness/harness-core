@@ -106,7 +106,7 @@ import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.FORK;
-import static software.wings.sm.StateType.KUBERNETES_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.values;
 
@@ -1060,7 +1060,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .withName("Deploy Containers")
                                    .addStep(aNode()
                                                 .withId(getUuid())
-                                                .withType(KUBERNETES_SERVICE_DEPLOY.name())
+                                                .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
                                                 .withName("Upgrade Containers")
                                                 .build())
                                    .build());

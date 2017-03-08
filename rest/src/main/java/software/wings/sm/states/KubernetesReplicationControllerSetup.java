@@ -5,21 +5,26 @@ import com.amazonaws.services.ecs.model.LogConfiguration;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
-import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -48,6 +53,8 @@ public class KubernetesReplicationControllerSetup extends State {
   private String loadBalancerSettingId;
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
+
+  @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
 
   @Inject @Transient private transient SettingsService settingsService;
 
@@ -84,67 +91,64 @@ public class KubernetesReplicationControllerSetup extends State {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
-    String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
+    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
 
     Service service = serviceResourceService.get(app.getAppId(), serviceId);
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
-    //    KubernetesContainerTask kubernetesContainerTask =
-    //        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(app.getAppId(),
-    //        serviceId, DeploymentType.ECS.name());
-    //
-    //    if (kubernetesContainerTask == null) {
-    //      kubernetesContainerTask = new KubernetesContainerTask();
-    //      EcsContainerTask.ContainerDefinition containerDefinition = new
-    //      KuberenetesContainerTask.ContainerDefinition(); containerDefinition.setMemory(256);
-    //      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    //    }
-    //
-    //    String containerName = imageName.replace('/', '_');
-    //    Integer containerPort = 8080; // TODO: don't hardcode read from config
-    //
-    //    List<ContainerDefinition> containerDefinitions =
-    //        kubernetesContainerTask.getContainerDefinitions().stream().map(containerDefinition ->
-    //        createContainerDefinition(imageName, containerName, containerDefinition))
-    //            .collect(Collectors.toList());
-    //
-    //    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = new
-    //    RegisterTaskDefinitionRequest().withContainerDefinitions(containerDefinitions)
-    //        .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
-    //
-    //    TaskDefinition taskDefinition = gkeClusterService.createTask(computeProviderSetting,
-    //    registerTaskDefinitionRequest);
-    //
-    //    /*
-    //
-    //    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
-    //
-    //    if (loadBalancerSetting == null ||
-    //    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) {
-    //      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
-    //    }
-    //    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
-    //*/
-    //    String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(),
-    //    taskDefinition.getRevision());
+    KubernetesContainerTask kubernetesContainerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
+
+    if (kubernetesContainerTask == null) {
+      kubernetesContainerTask = new KubernetesContainerTask();
+      KubernetesContainerTask.ContainerDefinition containerDefinition =
+          new KubernetesContainerTask.ContainerDefinition();
+      containerDefinition.setMemory(256);
+      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    }
+
+    String containerName = imageName.replace('/', '_');
+    Integer containerPort = 8080; // TODO: don't hardcode read from config
+
+    List<ContainerDefinition> containerDefinitions =
+        kubernetesContainerTask.getContainerDefinitions()
+            .stream()
+            .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
+            .collect(Collectors.toList());
+
+    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    //    kubernetesContainerService.createController(kubernetesConfig, containerDefinition);
+    /*
+
+    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
+
+    if (loadBalancerSetting == null ||
+    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
+    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    }
+    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
+*/
+    //    String replicationControllerName =
+    //    KubernetesConvention.getReplicationControllerName(taskDefinition.getFamily(), taskDefinition.getRevision());
     //
     //    String lastEcsServiceName = lastECSService(computeProviderSetting, clusterName,
     //    ECSConvention.getServiceNamePrefix(taskDefinition.getFamily()));
     //
     //    gkeClusterService.createService(computeProviderSetting, new
-    //    CreateServiceRequest().withServiceName(ecsServiceName).withCluster(clusterName).withDesiredCount(0)
+    //    CreateServiceRequest().withServiceName(replicationControllerName).withCluster(clusterName).withDesiredCount(0)
     //        .withDeploymentConfiguration(new
     //        DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
     //        .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
     //
     //
-    //    EcsServiceElement ecsServiceElement =
-    //        anEcsServiceElement().withUuid(serviceId).withName(ecsServiceName).withOldName(lastEcsServiceName).withClusterName(clusterName).build();
+    //    KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
+    //        aKubernetesReplicationControllerElement().withUuid(serviceId).withName(replicationControllerName).withOldName(lastEcsServiceName).withClusterName(clusterName).build();
     //    return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS)
-    //        .addContextElement(ecsServiceElement)
-    //        .addNotifyElement(ecsServiceElement)
+    //        .addContextElement(kubernetesReplicationControllerElement)
+    //        .addNotifyElement(kubernetesReplicationControllerElement)
     //        .withStateExecutionData(
-    //            anEcsServiceExecutionData().withEcsClusterName(clusterName).withEcsServiceName(ecsServiceName).withDockerImageName(imageName).build()).build();
+    //            aKubernetesReplicationControllerExecutionData().withClusterName(clusterName).withReplicationControllerName(replicationControllerName).withDockerImageName(imageName).build()).build();
     return null;
   }
 
@@ -157,7 +161,7 @@ public class KubernetesReplicationControllerSetup extends State {
    * @return the container definition
    */
   public ContainerDefinition createContainerDefinition(
-      String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
+      String imageName, String containerName, KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
 
     if (wingsContainerDefinition.getCpu() != null) {
@@ -185,7 +189,7 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     if (wingsContainerDefinition.getLogConfiguration() != null) {
-      EcsContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
+      KubernetesContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
       LogConfiguration logConfiguration = new LogConfiguration().withLogDriver(wingsLogConfiguration.getLogDriver());
       wingsLogConfiguration.getOptions().forEach(
           logOption -> logConfiguration.addOptionsEntry(logOption.getKey(), logOption.getValue()));

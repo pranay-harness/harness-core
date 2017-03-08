@@ -1,15 +1,5 @@
 package software.wings.service.impl;
 
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
-import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-
-import com.google.common.collect.Lists;
-
 import ch.qos.logback.classic.Level;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -36,6 +26,7 @@ import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.collect.Lists;
 import io.dropwizard.configuration.ConfigurationException;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.ConfigurationFactoryFactory;
@@ -60,13 +51,22 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.Misc;
 import software.wings.utils.YamlUtils;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+
+import static java.util.stream.Collectors.toList;
+import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
+import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -138,7 +138,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                                          .withInstance(instance)
                                          .build())
                               .collect(toList());
-    return PageResponse.Builder.aPageResponse().withResponse(awsHosts).build();
+    return aPageResponse().withResponse(awsHosts).build();
   }
 
   @Override
