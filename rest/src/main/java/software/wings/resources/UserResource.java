@@ -191,4 +191,11 @@ public class UserResource {
     userInvite.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.inviteUsers(userInvite));
   }
+
+  @DELETE
+  @Path("invites/{inviteId}")
+  public RestResponse<UserInvite> deleteInvite(
+      @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(userService.deleteInvite(accountId, inviteId));
+  }
 }

@@ -181,6 +181,8 @@ public class ConfigServiceImpl implements ConfigService {
     Map<String, Object> updateMap = new HashMap<>();
     String oldFileId = savedConfigFile.getFileUuid();
 
+    inputConfigFile.setEntityType(savedConfigFile.getEntityType());
+
     if (uploadedInputStream != null) {
       String fileId = fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
       EntityVersion entityVersion = entityVersionService.newEntityVersion(inputConfigFile.getAppId(), EntityType.CONFIG,
@@ -206,7 +208,10 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
     }
 
-    updateMap.put("configOverrideType", inputConfigFile.getConfigOverrideType());
+    if (inputConfigFile.getEntityType() != SERVICE) {
+      updateMap.put("configOverrideType", inputConfigFile.getConfigOverrideType());
+    }
+
     if (inputConfigFile.getConfigOverrideExpression() != null) {
       updateMap.put("configOverrideExpression", inputConfigFile.getConfigOverrideExpression());
     }

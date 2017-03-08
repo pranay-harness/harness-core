@@ -30,6 +30,7 @@ logging:
       port: 6514
       key: b623cc9c1ee668fffc89730c5adedc8f
       programName: manager-saas
+      maxMessageLength: 262144
 
 mongo:
   host: localhost

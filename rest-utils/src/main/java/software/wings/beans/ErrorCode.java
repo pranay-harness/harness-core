@@ -34,6 +34,11 @@ public enum ErrorCode {
   USER_ALREADY_REGISTERED("USER_ALREADY_REGISTERED", CONFLICT),
 
   /**
+   * User invitation does not exist error code.
+   */
+  USER_INVITATION_DOES_NOT_EXIST("USER_INVITATION_DOES_NOT_EXIST", UNAUTHORIZED, "User not invited to access account"),
+
+  /**
    * User does not exist error codes.
    */
   USER_DOES_NOT_EXIST("USER_DOES_NOT_EXIST", UNAUTHORIZED),
@@ -322,6 +327,11 @@ public enum ErrorCode {
     return status;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description != null ? description : CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, code);
   }

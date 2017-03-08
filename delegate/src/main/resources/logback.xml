@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <jmxConfigurator />
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>delegate.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -14,6 +13,7 @@
         </rollingPolicy>
 
         <withJansi>true</withJansi>
+
         <encoder>
             <pattern>%date{ISO8601} %boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
@@ -26,10 +26,30 @@
         </encoder>
     </appender>
 
+    <appender name="SYSLOG-TLS" class="software.wings.logging.Syslog4jAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%date{ISO8601} %boldGreen(${process_id}) %boldCyan(${version}) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
+        </layout>
+
+        <syslogConfig class="org.productivity.java.syslog4j.impl.net.tcp.ssl.SSLTCPNetSyslogConfig">
+            <!-- remote system to log to -->
+            <host>syslog-a.logdna.com</host>
+            <!-- remote port to log to -->
+            <port>6514</port>
+            <!-- max log message length in bytes -->
+            <maxMessageLength>128000</maxMessageLength>
+        </syslogConfig>
+
+        <programName>delegate</programName>
+        <key>b623cc9c1ee668fffc89730c5adedc8f</key>
+    </appender>
+
+
     <logger name="software.wings" level="INFO"/>
     <logger name="org.zeroturnaround" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="file"/>
+        <appender-ref ref="SYSLOG-TLS"/>
     </root>
 </configuration>

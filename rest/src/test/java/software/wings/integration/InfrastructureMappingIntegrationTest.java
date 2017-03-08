@@ -27,6 +27,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
@@ -67,7 +68,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
     String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
 
     settingsService.save(aSettingAttribute()
-                             .withIsPluginSetting(true)
+                             .withCategory(Category.CONNECTOR)
                              .withName("AppDynamics")
                              .withAccountId(accountId)
                              .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()

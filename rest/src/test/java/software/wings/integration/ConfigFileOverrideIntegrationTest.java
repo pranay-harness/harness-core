@@ -1,5 +1,16 @@
 package software.wings.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.ConfigFile.Builder.aConfigFile;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.integration.IntegrationTestUtil.randomInt;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -14,6 +25,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
@@ -26,7 +38,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 
-import javax.inject.Inject;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,17 +46,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Account.Builder.anAccount;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
-import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.integration.IntegrationTestUtil.randomInt;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 4/28/16.
@@ -134,7 +135,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     String accountId = wingsPersistence.save(anAccount().withCompanyName("Wings Software").build());
 
     settingsService.save(aSettingAttribute()
-                             .withIsPluginSetting(true)
+                             .withCategory(Category.CONNECTOR)
                              .withName("AppDynamics")
                              .withAccountId(accountId)
                              .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
