@@ -1,36 +1,5 @@
 package software.wings.resources;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
-import io.swagger.annotations.Api;
-import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.app.MainConfiguration;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.RestResponse;
-import software.wings.beans.SettingAttribute;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
-import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
-
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
@@ -42,6 +11,39 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+
+import com.google.inject.Inject;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.app.MainConfiguration;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -91,6 +93,7 @@ public class SettingResource {
       appId = GLOBAL_APP_ID;
     }
     variable.setAppId(appId);
+    variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
     return new RestResponse<>(attributeService.save(variable));
   }
 
@@ -121,8 +124,14 @@ public class SettingResource {
           fileName.contains("-") ? fileName.lastIndexOf("-")
                                  : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
     }
-    return new RestResponse<>(attributeService.save(
-        aSettingAttribute().withAccountId(accountId).withAppId(appId).withName(name).withValue(value).build()));
+    return new RestResponse<>(
+        attributeService.save(aSettingAttribute()
+                                  .withAccountId(accountId)
+                                  .withAppId(appId)
+                                  .withName(name)
+                                  .withValue(value)
+                                  .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
+                                  .build()));
   }
 
   /**
@@ -164,9 +173,9 @@ public class SettingResource {
   /**
    * Update.
    *
-   * @param appId    the app id
-   * @param attrId   the attr id
-   * @param variable the variable
+   * @param appId               the app id
+   * @param attrId              the attr id
+   * @param variable            the variable
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
    * @return the rest response
