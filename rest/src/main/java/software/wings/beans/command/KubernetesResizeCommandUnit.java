@@ -26,7 +26,7 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
   @Inject private transient DelegateLogService logService;
 
   public KubernetesResizeCommandUnit() {
-    super(CommandUnitType.RESIZE_KUBERNENTES);
+    super(CommandUnitType.RESIZE_KUBERNETES);
     setDeploymentType(DeploymentType.KUBERNETES.name());
   }
 

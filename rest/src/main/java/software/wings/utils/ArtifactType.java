@@ -18,6 +18,7 @@ import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED;
 import static software.wings.beans.command.CommandUnitType.RESIZE;
+import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 
@@ -369,9 +370,22 @@ public enum ArtifactType {
                                                      .withName("Resize ECS Service")
                                                      .withType(RESIZE.name())
                                                      .build())
-                                       // TODO(brett): Handle kubernetes
                                        .buildPipeline())
-                        .build());
+                        .build(),
+          aCommand()
+              .withCommandType(CommandType.RESIZE)
+              .withGraph(aGraph()
+                             .withGraphName("Resize Replication Controller")
+                             .addNodes(aNode()
+                                           .withOrigin(true)
+                                           .withX(50)
+                                           .withY(50)
+                                           .withId(UUIDGenerator.graphIdGenerator("node"))
+                                           .withName("Resize Kubernetes Replication Controller")
+                                           .withType(RESIZE_KUBERNETES.name())
+                                           .build())
+                             .buildPipeline())
+              .build());
     }
   },
   /**
