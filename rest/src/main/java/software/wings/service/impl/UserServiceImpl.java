@@ -129,7 +129,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
-      String loginUrl = buildAbsoluteUrl("/login");
+      String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
+          account.getCompanyName(), account.getCompanyName(), user.getEmail()));
 
       EmailData emailData = EmailData.Builder.anEmailData()
                                 .withTo(asList(user.getEmail()))
@@ -140,7 +141,7 @@ public class UserServiceImpl implements UserService {
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
-      logger.error("Verification email couldn't be sent " + e);
+      logger.error("Add account email couldn't be sent " + e);
     }
   }
 
@@ -251,18 +252,6 @@ public class UserServiceImpl implements UserService {
   }
 
   private UserInvite inviteUser(UserInvite userInvite) {
-    User user = wingsPersistence.createQuery(User.class)
-                    .field("email")
-                    .equal(userInvite.getEmail())
-                    .field("accounts")
-                    .equal(userInvite.getAccountId())
-                    .get();
-
-    if (user != null) {
-      userInvite.getRoles().forEach(role -> addRole(user.getUuid(), role.getUuid()));
-      userInvite.setCompleted(true);
-    }
-
     UserInvite existingInvite = wingsPersistence.createQuery(UserInvite.class)
                                     .field("email")
                                     .equal(userInvite.getEmail())
@@ -276,7 +265,62 @@ public class UserServiceImpl implements UserService {
       return wingsPersistence.get(UserInvite.class, existingInvite.getAppId(), existingInvite.getUuid());
     }
 
-    return wingsPersistence.saveAndGet(UserInvite.class, userInvite);
+    String inviteId = wingsPersistence.save(userInvite);
+    Account account = accountService.get(userInvite.getAccountId());
+
+    // process saved invite
+
+    User user = getUserByEmail(userInvite.getEmail());
+    if (user != null) {
+      boolean userAlreadyAddedToAccount =
+          user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(userInvite.getAccountId()));
+      if (userAlreadyAddedToAccount) {
+        userInvite.getRoles().forEach(role -> addRole(user.getUuid(), role.getUuid()));
+        userInvite.setCompleted(true);
+        sendAddedRoleEmail(user, account, userInvite.getRoles());
+      } else {
+        addAccountToExistingUser(user, account.getCompanyName());
+      }
+    } else {
+      sendNewInvitationMail(userInvite, account);
+    }
+    return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
+  }
+
+  private void sendNewInvitationMail(UserInvite userInvite, Account account) {
+    try {
+      String inviteUrl = buildAbsoluteUrl(String.format("/invite?company=%s&account=%s&email=%s",
+          account.getCompanyName(), account.getCompanyName(), userInvite.getEmail()));
+
+      EmailData emailData =
+          EmailData.Builder.anEmailData()
+              .withTo(asList(userInvite.getEmail()))
+              .withRetries(2)
+              .withTemplateName("invite")
+              .withTemplateModel(ImmutableMap.of("url", inviteUrl, "company", account.getCompanyName()))
+              .build();
+      emailNotificationService.send(emailData);
+    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+      logger.error("Invitation email couldn't be sent " + e);
+    }
+  }
+
+  private void sendAddedRoleEmail(User user, Account account, List<Role> roles) {
+    try {
+      String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
+          account.getCompanyName(), account.getCompanyName(), user.getEmail()));
+
+      EmailData emailData = EmailData.Builder.anEmailData()
+                                .withTo(asList(user.getEmail()))
+                                .withRetries(2)
+                                .withTemplateName("add_role")
+                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", loginUrl, "company",
+                                    account.getCompanyName(), "roles", roles))
+                                .build();
+      emailNotificationService.send(emailData);
+    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+      logger.error("Add account email couldn't be sent " + e);
+    }
   }
 
   @Override
