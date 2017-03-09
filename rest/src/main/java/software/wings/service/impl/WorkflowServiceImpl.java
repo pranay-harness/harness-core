@@ -95,9 +95,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.executable.ValidateOnExecution;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -110,6 +107,9 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * The Class WorkflowServiceImpl.
@@ -1045,14 +1045,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                   .withId(getUuid())
                                                   .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
                                                   .withName("Kubernetes Replication Controller Setup")
-                                                  .build())
-                                     .build());
-      workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE)
-                                     .withName("Setup Load Balancer Service")
-                                     .addStep(aNode()
-                                                  .withId(getUuid())
-                                                  .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
-                                                  .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());
     }

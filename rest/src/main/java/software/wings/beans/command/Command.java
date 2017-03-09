@@ -356,6 +356,7 @@ public class Command extends Base implements CommandUnit {
     private CommandExecutionStatus commandExecutionStatus;
     private boolean artifactNeeded;
     private CommandType commandType = CommandType.OTHER;
+    private String deploymentType;
 
     private Builder() {}
 
@@ -456,6 +457,11 @@ public class Command extends Base implements CommandUnit {
       return this;
     }
 
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -469,7 +475,8 @@ public class Command extends Base implements CommandUnit {
           .withName(name)
           .withExecutionResult(commandExecutionStatus)
           .withArtifactNeeded(artifactNeeded)
-          .withCommandType(commandType);
+          .withCommandType(commandType)
+          .withDeploymentType(deploymentType);
     }
 
     /**
@@ -486,6 +493,7 @@ public class Command extends Base implements CommandUnit {
       command.setCommandExecutionStatus(commandExecutionStatus);
       command.setArtifactNeeded(artifactNeeded);
       command.setCommandType(commandType);
+      command.setDeploymentType(deploymentType);
       return command;
     }
   }
