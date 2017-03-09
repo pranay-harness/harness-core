@@ -244,29 +244,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
-  public <T> boolean addToList(
-      Class<T> cls, String appId, String entityId, Query<T> query, String listFieldName, Object object) {
-    return primaryDatastore
-               .update(query.field(ID_KEY).equal(entityId).field("appId").equal(appId),
-                   createUpdateOperations(cls).add(listFieldName, object))
-               .getUpdatedCount()
-        > 0;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T> void deleteFromList(Class<T> cls, String appId, String entityId, String listFieldName, Object obj) {
-    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId).field("appId").equal(appId);
-    UpdateOperations<T> operation = primaryDatastore.createUpdateOperations(cls).removeAll(listFieldName, obj);
-    update(query, operation);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public <T extends Base> boolean delete(Class<T> cls, String uuid) {
     WriteResult result = primaryDatastore.delete(cls, uuid);
     return !(result == null || result.getN() == 0);
