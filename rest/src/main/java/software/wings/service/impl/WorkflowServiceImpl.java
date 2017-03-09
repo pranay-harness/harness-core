@@ -709,6 +709,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
     Validator.notNullCheck("InfraMapping", infrastructureMapping);
 
+    workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getDisplayName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
 
@@ -1138,6 +1139,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
             .withRollback(true)
             .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
             .withRollbackPhaseName(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
@@ -1161,6 +1163,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
             .withRollback(true)
             .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
             .withRollbackPhaseName(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
@@ -1184,6 +1187,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
             .withRollback(true)
             .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
             .withRollbackPhaseName(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
