@@ -26,7 +26,7 @@ import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.FORK;
-import static software.wings.sm.StateType.KUBERNETES_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.StateType.values;
 
@@ -951,12 +951,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
-    if (workflowPhase.getDeploymentType() == DeploymentType.ECS) {
-      requiredEntityTypes.add(EntityType.ARTIFACT);
+
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return requiredEntityTypes;
     }
 
-    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
+    if (workflowPhase.getDeploymentType() == DeploymentType.ECS
+        || workflowPhase.getDeploymentType() == DeploymentType.KUBERNETES) {
+      requiredEntityTypes.add(EntityType.ARTIFACT);
       return requiredEntityTypes;
     }
 
@@ -1042,16 +1044,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .withName("Setup Container")
                                      .addStep(aNode()
                                                   .withId(getUuid())
-                                                  .withType(StateType.KUBERNETES_SERVICE_SETUP.name())
+                                                  .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
                                                   .withName("Kubernetes Replication Controller Setup")
-                                                  .build())
-                                     .build());
-      workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE)
-                                     .withName("Setup Load Balancer Service")
-                                     .addStep(aNode()
-                                                  .withId(getUuid())
-                                                  .withType(StateType.KUBERNETES_SERVICE_SETUP.name())
-                                                  .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());
     }
@@ -1059,7 +1053,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .withName("Deploy Containers")
                                    .addStep(aNode()
                                                 .withId(getUuid())
-                                                .withType(KUBERNETES_SERVICE_DEPLOY.name())
+                                                .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
                                                 .withName("Upgrade Containers")
                                                 .build())
                                    .build());

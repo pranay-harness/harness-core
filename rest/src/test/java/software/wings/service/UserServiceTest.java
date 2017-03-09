@@ -14,6 +14,7 @@ import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -25,32 +26,33 @@ import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.name.Named;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
+import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -65,14 +67,7 @@ import javax.inject.Inject;
 public class UserServiceTest extends WingsBaseTest {
   private final User.Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
-  /**
-   * The Query.
-   */
-  @Mock Query<User> query;
-  /**
-   * The End.
-   */
-  @Mock FieldEnd end;
+
   /**
    * The Update operations.
    */
@@ -80,12 +75,17 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private EmailNotificationService<EmailData> emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private AccountService accountService;
   @Inject @InjectMocks private UserService userService;
-  @Inject @Named("primaryDatastore") private Datastore datastore;
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
-  @Captor private ArgumentCaptor<Query<EmailVerificationToken>> emailVerificationQueryArgumentCaptor;
+  @Mock Query<User> query;
+  @Mock FieldEnd end;
+  @Mock Query<EmailVerificationToken> verificationQuery;
+  @Mock FieldEnd verificationQueryEnd;
+  @Mock Query<UserInvite> userInviteQuery;
+  @Mock FieldEnd userInviteQueryEnd;
 
   /**
    * Sets mocks.
@@ -97,8 +97,14 @@ public class UserServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     when(updateOperations.add(any(), any())).thenReturn(updateOperations);
-    when(wingsPersistence.createQuery(EmailVerificationToken.class))
-        .thenReturn(datastore.createQuery(EmailVerificationToken.class));
+
+    when(wingsPersistence.createQuery(EmailVerificationToken.class)).thenReturn(verificationQuery);
+    when(verificationQuery.field(any())).thenReturn(verificationQueryEnd);
+    when(verificationQueryEnd.equal(any())).thenReturn(verificationQuery);
+
+    when(wingsPersistence.createQuery(UserInvite.class)).thenReturn(userInviteQuery);
+    when(userInviteQuery.field(any())).thenReturn(userInviteQueryEnd);
+    when(userInviteQueryEnd.equal(any())).thenReturn(userInviteQueryEnd);
   }
 
   /**
@@ -107,8 +113,7 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  @Ignore
-  public void shouldRegisterUser() throws Exception {
+  public void shouldRegisterNewUser() throws Exception {
     User savedUser = userBuilder.withUuid(USER_ID)
                          .withEmailVerified(false)
                          .withCompanyName(COMPANY_NAME)
@@ -118,6 +123,10 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
+    when(accountService.findOrCreate(COMPANY_NAME))
+        .thenReturn(Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
+        .thenReturn(PageResponse.Builder.aPageResponse().build());
 
     userService.register(userBuilder.build());
 
@@ -131,7 +140,7 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
-        .startsWith(PORTAL_URL + "/api/users/verify");
+        .startsWith(PORTAL_URL + "#/register/verify");
   }
 
   /**
@@ -206,15 +215,19 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldVerifyEmail() {
-    when(wingsPersistence.executeGetOneQuery(emailVerificationQueryArgumentCaptor.capture()))
+    when(verificationQuery.get())
         .thenReturn(EmailVerificationToken.Builder.anEmailVerificationToken()
                         .withUuid("TOKEN_ID")
                         .withUserId(USER_ID)
                         .withToken("TOKEN")
                         .build());
+
     userService.verifyEmail("TOKEN");
-    assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("appId")).isEqualTo(GLOBAL_APP_ID);
-    assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("token")).isEqualTo("TOKEN");
+
+    verify(verificationQuery).field("appId");
+    verify(verificationQueryEnd).equal(GLOBAL_APP_ID);
+    verify(verificationQuery).field("token");
+    verify(verificationQueryEnd).equal("TOKEN");
     verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("emailVerified", true));
     verify(wingsPersistence).delete(EmailVerificationToken.class, "TOKEN_ID");
   }

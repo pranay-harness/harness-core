@@ -1,10 +1,9 @@
 package software.wings.beans.command;
 
 import com.google.inject.Inject;
-
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 
 /**
@@ -12,6 +11,8 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
  */
 public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandUnit {
   @Inject @Transient protected transient AwsClusterService awsClusterService;
+
+  @Inject @Transient protected transient GkeClusterService gkeClusterService;
 
   @Inject @Transient protected transient KubernetesContainerService kubernetesContainerService;
 

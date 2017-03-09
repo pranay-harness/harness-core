@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateLogService;
@@ -25,7 +26,7 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
   @Inject private transient DelegateLogService logService;
 
   public KubernetesResizeCommandUnit() {
-    super(CommandUnitType.RESIZE_KUBERNENTES);
+    super(CommandUnitType.RESIZE_KUBERNETES);
     setDeploymentType(DeploymentType.KUBERNETES.name());
   }
 
@@ -43,7 +44,8 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      kubernetesContainerService.setControllerPodCount(cloudProviderSetting, serviceName, desiredCount);
+      KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
+      kubernetesContainerService.setControllerPodCount(kubernetesConfig, serviceName, desiredCount);
       context.setCommandExecutionData(aKubernetesResizeCommandUnitExecutionData().build());
       commandExecutionStatus = SUCCESS;
     } catch (Exception ex) {

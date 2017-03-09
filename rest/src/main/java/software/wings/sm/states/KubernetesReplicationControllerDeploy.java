@@ -6,19 +6,21 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
-import software.wings.api.KubernetesServiceElement;
+import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.ActivityService;
@@ -56,8 +58,8 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
  * Created by brett on 3/1/17
  * TODO(brett): Implement
  */
-public class KubernetesServiceDeploy extends State {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesServiceDeploy.class);
+public class KubernetesReplicationControllerDeploy extends State {
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -78,8 +80,10 @@ public class KubernetesServiceDeploy extends State {
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
-  public KubernetesServiceDeploy(String name) {
-    super(name, StateType.KUBERNETES_SERVICE_DEPLOY.name());
+  @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
+
+  public KubernetesReplicationControllerDeploy(String name) {
+    super(name, StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name());
   }
 
   @Override
@@ -97,17 +101,20 @@ public class KubernetesServiceDeploy extends State {
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), commandName).getCommand();
 
-    KubernetesServiceElement kubernetesServiceElement =
-        context.getContextElement(ContextElementType.KUBERNETES_SERVICE);
+    KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
+        context.getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER);
 
-    String kubernetesServiceName = kubernetesServiceElement.getName();
+    String replicationControllerName = kubernetesReplicationControllerElement.getName();
+    String clusterName = kubernetesReplicationControllerElement.getClusterName();
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     // TODO(brett): Implement
-    int desiredCount = 0;
+    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+    int desiredCount =
+        kubernetesContainerService.getControllerPodCount(kubernetesConfig, replicationControllerName) + instanceCount;
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -135,9 +142,9 @@ public class KubernetesServiceDeploy extends State {
     Activity activity = activityService.save(activityBuilder.build());
 
     CommandExecutionContext commandExecutionContext =
-        buildCommandExecutionContext(app, env.getUuid(), kubernetesServiceElement.getClusterName(),
-            kubernetesServiceName, desiredCount, activity.getUuid(), settingAttribute);
-    executionDataBuilder.withActivityId(activity.getUuid()).withNewContainerServiceName(kubernetesServiceName);
+        buildCommandExecutionContext(app, env.getUuid(), kubernetesReplicationControllerElement.getClusterName(),
+            replicationControllerName, desiredCount, activity.getUuid(), settingAttribute);
+    executionDataBuilder.withActivityId(activity.getUuid()).withNewContainerServiceName(replicationControllerName);
 
     delegateService.queueTask(aDelegateTask()
                                   .withAccountId(app.getAccountId())
@@ -156,14 +163,14 @@ public class KubernetesServiceDeploy extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    KubernetesServiceElement kubernetesServiceElement =
-        context.getContextElement(ContextElementType.KUBERNETES_SERVICE);
+    KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
+        context.getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
     commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
 
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
-      String ecsServiceName = kubernetesServiceElement.getOldName();
+      String ecsServiceName = kubernetesReplicationControllerElement.getOldName();
 
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       InfrastructureMapping infrastructureMapping =
@@ -194,8 +201,8 @@ public class KubernetesServiceDeploy extends State {
         desiredCount = 0;
       }
       CommandExecutionContext commandExecutionContext =
-          buildCommandExecutionContext(app, env.getUuid(), kubernetesServiceElement.getClusterName(), ecsServiceName,
-              desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
+          buildCommandExecutionContext(app, env.getUuid(), kubernetesReplicationControllerElement.getClusterName(),
+              ecsServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
 
       delegateService.queueTask(aDelegateTask()
                                     .withAccountId(app.getAccountId())

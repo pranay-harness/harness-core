@@ -64,5 +64,5 @@ public enum ContextElementType {
   /**
    * Kubernetes cluster context element type.
    */
-  KUBERNETES_SERVICE;
+  KUBERNETES_REPLICATION_CONTROLLER;
 }

@@ -85,7 +85,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * The Install.
    */
-  RESIZE_KUBERNENTES(KubernetesResizeCommandUnit.class, "Resize Kubernetes Controller", StencilCategory.CONTAINERS,
+  RESIZE_KUBERNETES(KubernetesResizeCommandUnit.class, "Resize Kubernetes Controller", StencilCategory.CONTAINERS,
       DEFAULT_DISPLAY_ORDER);
 
   private static final String stencilsPath = "/templates/commandstencils/";

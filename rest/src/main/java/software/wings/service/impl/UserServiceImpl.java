@@ -47,7 +47,6 @@ import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -86,18 +85,13 @@ public class UserServiceImpl implements UserService {
         : registerNewUser(user);
   }
 
-  private List<Role> getAllInvitedRoles(String email, String accountId) {
-    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class)
-                                .field("email")
-                                .equal(email)
-                                .field("accountId")
-                                .equal(accountId)
-                                .get();
-    List<Role> roles = new ArrayList<>();
-    if (userInvite != null) {
-      roles.addAll(userInvite.getRoles());
-    }
-    return roles;
+  private UserInvite getUserInvite(String email, String accountId) {
+    return wingsPersistence.createQuery(UserInvite.class)
+        .field("email")
+        .equal(email)
+        .field("accountId")
+        .equal(accountId)
+        .get();
   }
 
   private User addAccountToExistingUser(User existingUser, String companyName) {
@@ -108,8 +102,8 @@ public class UserServiceImpl implements UserService {
     }
 
     Account account = accountService.findOrCreate(companyName);
-    List<Role> invitedRoles = getAllInvitedRoles(existingUser.getEmail(), account.getUuid());
-    if (invitedRoles == null || invitedRoles.size() == 0) {
+    UserInvite userInvite = getUserInvite(existingUser.getEmail(), account.getUuid());
+    if (userInvite == null) {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
     }
 
@@ -120,11 +114,17 @@ public class UserServiceImpl implements UserService {
                                                         .equal(existingUser.getAppId()),
         wingsPersistence.createUpdateOperations(User.class)
             .addToSet("accounts", account)
-            .addToSet("roles", invitedRoles));
+            .addToSet("roles", userInvite.getRoles()));
     User user = get(existingUser.getUuid());
-    markInviteCompleted(existingUser.getEmail(), account.getUuid());
+    markInviteCompleted(userInvite);
     executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(user, account));
     return user;
+  }
+
+  private void markInviteCompleted(UserInvite userInvite) {
+    if (userInvite != null) {
+      wingsPersistence.updateField(UserInvite.class, userInvite.getUuid(), "completed", true);
+    }
   }
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
@@ -145,19 +145,13 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void markInviteCompleted(String email, String accountId) {
-    wingsPersistence.update(
-        wingsPersistence.createQuery(UserInvite.class).field("email").equal(email).field("accountId").equal(accountId),
-        wingsPersistence.createUpdateOperations(UserInvite.class).set("completed", true));
-  }
-
   private User registerNewUser(User user) {
     String companyName =
         isBlank(user.getCompanyName()) ? configuration.getPortal().getCompanyName() : user.getCompanyName();
     Account account = accountService.findOrCreate(companyName);
 
     user.getAccounts().add(account);
-
+    UserInvite userInvite = null;
     PageResponse<User> verifiedUsers = list(aPageRequest()
                                                 .addFilter("accounts", Operator.EQ, account.getUuid())
                                                 .addFilter("emailVerified", Operator.EQ, true)
@@ -165,18 +159,18 @@ public class UserServiceImpl implements UserService {
     if (verifiedUsers.getResponse().size() == 0) { // first User. Assign admin role
       user.addRole(roleService.getAdminRole());
     } else {
-      List<Role> invitedRoles = getAllInvitedRoles(user.getEmail(), account.getUuid());
-      if (invitedRoles == null || invitedRoles.size() == 0) {
+      userInvite = getUserInvite(user.getEmail(), account.getUuid());
+      if (userInvite == null) {
         throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
       }
-      user.setRoles(invitedRoles);
+      user.setRoles(userInvite.getRoles());
     }
 
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
-    markInviteCompleted(savedUser.getEmail(), account.getUuid());
+    markInviteCompleted(userInvite);
     executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
   }
@@ -218,12 +212,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public boolean verifyEmail(String emailToken) {
-    EmailVerificationToken verificationToken =
-        wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(EmailVerificationToken.class)
-                                                .field("appId")
-                                                .equal(Base.GLOBAL_APP_ID)
-                                                .field("token")
-                                                .equal(emailToken));
+    EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
+                                                   .field("appId")
+                                                   .equal(Base.GLOBAL_APP_ID)
+                                                   .field("token")
+                                                   .equal(emailToken)
+                                                   .get();
 
     if (verificationToken == null) {
       throw new WingsException(EMAIL_VERIFICATION_TOKEN_NOT_FOUND);
@@ -260,8 +254,14 @@ public class UserServiceImpl implements UserService {
                                     .get();
 
     if (existingInvite != null) {
-      wingsPersistence.addToList(UserInvite.class, existingInvite.getAppId(), existingInvite.getUuid(),
-          wingsPersistence.createQuery(UserInvite.class), "roles", userInvite.getRoles());
+      UpdateOperations<UserInvite> updateOp =
+          wingsPersistence.createUpdateOperations(UserInvite.class).addToSet("roles", userInvite.getRoles());
+      Query<UserInvite> updateQuery = wingsPersistence.createQuery(UserInvite.class)
+                                          .field(ID_KEY)
+                                          .equal(existingInvite.getUuid())
+                                          .field("appId")
+                                          .equal(userInvite.getAppId());
+      wingsPersistence.update(updateQuery, updateOp);
       return wingsPersistence.get(UserInvite.class, existingInvite.getAppId(), existingInvite.getUuid());
     }
 

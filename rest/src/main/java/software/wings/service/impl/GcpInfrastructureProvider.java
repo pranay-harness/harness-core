@@ -17,6 +17,7 @@ import javax.inject.Singleton;
 import java.util.List;
 
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 /**
  * Created by bzane on 2/27/17
@@ -36,7 +37,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
     // TODO(brett): Implement
-    return PageResponse.Builder.aPageResponse().withResponse(null).build();
+    return aPageResponse().withResponse(null).build();
   }
 
   @Override
@@ -82,7 +83,6 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
-    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
-    return gkeClusterService.listClusters(gcpConfig.getServiceAccountKeyFileContent());
+    return gkeClusterService.listClusters(computeProviderSetting);
   }
 }

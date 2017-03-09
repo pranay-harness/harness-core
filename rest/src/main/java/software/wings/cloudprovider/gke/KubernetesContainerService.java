@@ -1,8 +1,9 @@
 package software.wings.cloudprovider.gke;
 
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
-import software.wings.beans.SettingAttribute;
+import software.wings.beans.KubernetesConfig;
 
 import java.util.Map;
 
@@ -13,30 +14,40 @@ public interface KubernetesContainerService {
   /**
    * Creates a replication controller.
    */
-  ReplicationController createController(SettingAttribute settingAttribute, Map<String, String> params);
+  ReplicationController createController(KubernetesConfig kubernetesConfig, ReplicationController definition);
 
   /**
    * Deletes a replication controller.
    */
-  void deleteController(SettingAttribute settingAttribute, String name);
+  void deleteController(KubernetesConfig kubernetesConfig, String name);
+
+  /**
+   * Gets a replication controller.
+   */
+  ReplicationController getController(KubernetesConfig kubernetesConfig, String name);
+
+  /**
+   * List replication controllers.
+   */
+  ReplicationControllerList listControllers(KubernetesConfig kubernetesConfig);
 
   /**
    * Scales controller to specified number of nodes.
    */
-  void setControllerPodCount(SettingAttribute settingAttribute, String name, int number);
+  void setControllerPodCount(KubernetesConfig kubernetesConfig, String name, int number);
 
   /**
    * Gets the pod count of a replication controller.
    */
-  int getControllerPodCount(SettingAttribute settingAttribute, String name);
+  int getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
 
   /**
    * Creates a service.
    */
-  Service createService(SettingAttribute settingAttribute, Map<String, String> params);
+  Service createService(KubernetesConfig kubernetesConfig, Map<String, String> params);
 
   /**
    * Deletes a service.
    */
-  void deleteService(SettingAttribute settingAttribute, String name);
+  void deleteService(KubernetesConfig kubernetesConfig, String name);
 }

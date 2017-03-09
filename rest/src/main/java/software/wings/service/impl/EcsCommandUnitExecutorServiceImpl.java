@@ -23,7 +23,7 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
- * The Class SshCommandUnitExecutorServiceImpl.
+ * The Class EcsCommandUnitExecutorServiceImpl.
  */
 @ValidateOnExecution
 @Singleton

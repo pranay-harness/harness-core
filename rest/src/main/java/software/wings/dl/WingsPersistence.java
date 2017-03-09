@@ -187,33 +187,6 @@ public interface WingsPersistence {
   <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
 
   /**
-   * Adds the to list.
-   *
-   * @param <T>           the generic type
-   * @param cls           the cls
-   * @param appId         the app id
-   * @param entityId      the entity id
-   * @param query         the query
-   * @param listFieldName the list field name
-   * @param object        the object
-   * @return true, if successful
-   */
-  <T> boolean addToList(
-      Class<T> cls, String appId, String entityId, Query<T> query, String listFieldName, Object object);
-
-  /**
-   * Delete from list.
-   *
-   * @param <T>           the type parameter
-   * @param cls           the cls
-   * @param appId         the app id
-   * @param entityId      the entity id
-   * @param listFieldName the list field name
-   * @param object        the object
-   */
-  <T> void deleteFromList(Class<T> cls, String appId, String entityId, String listFieldName, Object object);
-
-  /**
    * Delete.
    *
    * @param <T>  the generic type
