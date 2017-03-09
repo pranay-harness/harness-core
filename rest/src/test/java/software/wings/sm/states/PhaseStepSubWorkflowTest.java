@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -22,6 +23,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
+import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepSubWorkflowExecutionData;
 import software.wings.api.ServiceElement;
@@ -303,6 +305,75 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Missing ECSServiceElement");
+    }
+  }
+
+  @Test
+  public void shouldHandleAsyncKubernetesSetup() {
+    when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
+        .thenReturn(elementExecutionSummaries);
+
+    String serviceId = getUuid();
+    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    PhaseElement phaseElement = aPhaseElement()
+                                    .withUuid(getUuid())
+                                    .withServiceElement(serviceElement)
+                                    .withDeploymentType(DeploymentType.KUBERNETES.name())
+                                    .build();
+
+    KubernetesReplicationControllerElement ecsServiceElement =
+        aKubernetesReplicationControllerElement().withUuid(serviceElement.getUuid()).build();
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .withStateName(STATE_NAME)
+                                                        .addContextElement(workflowStandardParams)
+                                                        .addContextElement(phaseElement)
+                                                        .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
+                                                        .build();
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
+    phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
+    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(ecsServiceElement).build());
+    Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
+
+    ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
+    assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
+    assertThat(response.getContextElements()).isNotNull().hasSize(1);
+    assertThat(response.getContextElements().get(0)).isNotNull().isEqualTo(ecsServiceElement);
+  }
+
+  @Test
+  public void shouldThrowInvalidKubernetesSetup() {
+    when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
+        .thenReturn(elementExecutionSummaries);
+
+    String serviceId = getUuid();
+    ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
+    PhaseElement phaseElement = aPhaseElement()
+                                    .withUuid(getUuid())
+                                    .withServiceElement(serviceElement)
+                                    .withDeploymentType(DeploymentType.KUBERNETES.name())
+                                    .build();
+
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .withStateName(STATE_NAME)
+                                                        .addContextElement(workflowStandardParams)
+                                                        .addContextElement(phaseElement)
+                                                        .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
+                                                        .build();
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
+    phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
+    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    try {
+      phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception.getParams()).hasSize(1);
+      assertThat(exception.getParams()).containsKey("message");
+      assertThat(exception.getParams().get("message"))
+          .asString()
+          .contains("Missing KubernetesReplicationControllerElement");
     }
   }
 }

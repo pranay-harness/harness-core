@@ -60,4 +60,55 @@ public class KubernetesReplicationControllerElement implements ContextElement {
   public void setClusterName(String clusterName) {
     this.clusterName = clusterName;
   }
+
+  public static final class KubernetesReplicationControllerElementBuilder {
+    private String uuid;
+    private String name;
+    private String oldName;
+    private String clusterName;
+
+    private KubernetesReplicationControllerElementBuilder() {}
+
+    public static KubernetesReplicationControllerElementBuilder aKubernetesReplicationControllerElement() {
+      return new KubernetesReplicationControllerElementBuilder();
+    }
+
+    public KubernetesReplicationControllerElementBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public KubernetesReplicationControllerElementBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public KubernetesReplicationControllerElementBuilder withOldName(String oldName) {
+      this.oldName = oldName;
+      return this;
+    }
+
+    public KubernetesReplicationControllerElementBuilder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
+      return this;
+    }
+
+    public KubernetesReplicationControllerElementBuilder but() {
+      return aKubernetesReplicationControllerElement()
+          .withUuid(uuid)
+          .withName(name)
+          .withOldName(oldName)
+          .withClusterName(clusterName);
+    }
+
+    public KubernetesReplicationControllerElement build() {
+      KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
+          new KubernetesReplicationControllerElement();
+      kubernetesReplicationControllerElement.setUuid(uuid);
+      kubernetesReplicationControllerElement.setName(name);
+      kubernetesReplicationControllerElement.setOldName(oldName);
+      kubernetesReplicationControllerElement.setClusterName(clusterName);
+      return kubernetesReplicationControllerElement;
+    }
+  }
 }

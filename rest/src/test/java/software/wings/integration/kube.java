@@ -18,6 +18,9 @@ package software.wings.integration;
 
 import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
@@ -105,18 +108,39 @@ public class kube {
 
     kubernetesService.cleanup(config);
 
-    kubernetesService.createController(config,
-        ImmutableMap.<String, String>builder()
-            .put("name", "backend-ctrl")
-            .put("appName", "testApp")
-            .put("containerName", "server")
-            .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-server")
-            .put("tier", "backend")
-            .put("cpu", "100m")
-            .put("memory", "100Mi")
-            .put("port", "8080")
-            .put("count", "2")
-            .build());
+    ReplicationController rc =
+        new ReplicationControllerBuilder()
+            .withApiVersion("v1")
+            .withNewMetadata()
+            .withName("backend-ctrl")
+            .addToLabels("app", "testApp")
+            .addToLabels("tier", "backend")
+            .endMetadata()
+            .withNewSpec()
+            .withReplicas(2)
+            .withNewTemplate()
+            .withNewMetadata()
+            .addToLabels("app", "testApp")
+            .addToLabels("tier", "backend")
+            .endMetadata()
+            .withNewSpec()
+            .addNewContainer()
+            .withName("server")
+            .withImage("gcr.io/gdg-apps-1090/graphviz-server")
+            .withArgs("8080")
+            .withNewResources()
+            .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
+            .endResources()
+            .addNewPort()
+            .withContainerPort(8080)
+            .endPort()
+            .endContainer()
+            .endSpec()
+            .endTemplate()
+            .endSpec()
+            .build();
+
+    kubernetesService.createController(config, rc);
 
     kubernetesService.createService(config,
         ImmutableMap.<String, String>builder()
@@ -127,18 +151,41 @@ public class kube {
             .put("targetPort", "8080")
             .build());
 
-    kubernetesService.createController(config,
-        ImmutableMap.<String, String>builder()
-            .put("name", "frontend-ctrl")
-            .put("appName", "testApp")
-            .put("containerName", "webapp")
-            .put("containerImage", "gcr.io/gdg-apps-1090/graphviz-webapp")
-            .put("tier", "frontend")
-            .put("cpu", "100m")
-            .put("memory", "100Mi")
-            .put("port", "8080")
-            .put("count", "2")
-            .build());
+    rc = new ReplicationControllerBuilder()
+             .withApiVersion("v1")
+             .withNewMetadata()
+             .withName("frontend-ctrl")
+             .addToLabels("app", "testApp")
+             .addToLabels("tier", "frontend")
+             .endMetadata()
+             .withNewSpec()
+             .withReplicas(2)
+             .withNewTemplate()
+             .withNewMetadata()
+             .addToLabels("app", "testApp")
+             .addToLabels("tier", "frontend")
+             .endMetadata()
+             .withNewSpec()
+             .addNewContainer()
+             .withName("webapp")
+             .withImage("gcr.io/gdg-apps-1090/graphviz-webapp")
+             .addNewEnv()
+             .withName("GET_HOSTS_FROM")
+             .withValue("dns")
+             .endEnv()
+             .withNewResources()
+             .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
+             .endResources()
+             .addNewPort()
+             .withContainerPort(8080)
+             .endPort()
+             .endContainer()
+             .endSpec()
+             .endTemplate()
+             .endSpec()
+             .build();
+
+    kubernetesService.createController(config, rc);
 
     kubernetesService.createService(config,
         ImmutableMap.<String, String>builder()

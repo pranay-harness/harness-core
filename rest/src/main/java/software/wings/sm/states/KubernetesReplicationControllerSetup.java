@@ -1,17 +1,22 @@
 package software.wings.sm.states;
 
-import com.amazonaws.services.ecs.model.ContainerDefinition;
-import com.amazonaws.services.ecs.model.LogConfiguration;
-import com.amazonaws.services.ecs.model.PortMapping;
-import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
+import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
@@ -34,14 +39,22 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
+import software.wings.utils.KubernetesConvention;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static software.wings.sm.StateType.KUBERNETES_SERVICE_SETUP;
+import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
+import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
 /**
  * Created by brett on 3/1/17
@@ -70,7 +83,7 @@ public class KubernetesReplicationControllerSetup extends State {
    * @param name the name
    */
   public KubernetesReplicationControllerSetup(String name) {
-    super(name, KUBERNETES_SERVICE_SETUP.name());
+    super(name, KUBERNETES_REPLICATION_CONTROLLER_SETUP.name());
   }
 
   @Override
@@ -87,7 +100,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
+    if (infrastructureMapping == null || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
@@ -109,47 +122,103 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     String containerName = imageName.replace('/', '_');
-    Integer containerPort = 8080; // TODO: don't hardcode read from config
 
-    List<ContainerDefinition> containerDefinitions =
+    Map<String, String> labels = new HashMap<>();
+    if (kubernetesContainerTask.getLabels() != null) {
+      kubernetesContainerTask.getLabels().forEach(label -> labels.put(label.getName(), label.getValue()));
+    }
+
+    List<Container> containerDefinitions =
         kubernetesContainerTask.getContainerDefinitions()
             .stream()
             .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
             .collect(Collectors.toList());
 
+    List<Volume> volumeList = new ArrayList<>();
+    kubernetesContainerTask.getContainerDefinitions().forEach(containerDefinition
+        -> volumeList.addAll(
+            containerDefinition.getStorageConfigurations()
+                .stream()
+                .map(storageConfiguration
+                    -> new VolumeBuilder()
+                           .withName(storageConfiguration.getHostSourcePath().replace('/', '_'))
+                           .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
+                           .build())
+                .collect(Collectors.toList())));
+
     KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
-    //    kubernetesContainerService.createController(kubernetesConfig, containerDefinition);
-    /*
 
-    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
+    String lastReplicationControllerName = lastReplicationController(kubernetesConfig,
+        KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), service.getName(), env.getName()));
 
-    if (loadBalancerSetting == null ||
-    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
-    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    String replicationControllerName =
+        KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(),
+            KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1);
+
+    kubernetesContainerService.createController(kubernetesConfig,
+        new ReplicationControllerBuilder()
+            .withApiVersion("v1")
+            .withNewMetadata()
+            .withName(replicationControllerName)
+            .addToLabels(labels)
+            .endMetadata()
+            .withNewSpec()
+            .withReplicas(0)
+            .withSelector(labels)
+            .withNewTemplate()
+            .withNewMetadata()
+            .addToLabels(labels)
+            .endMetadata()
+            .withNewSpec()
+            .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
+            .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
+            .endSpec()
+            .endTemplate()
+            .endSpec()
+            .build());
+
+    KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
+        aKubernetesReplicationControllerElement()
+            .withUuid(serviceId)
+            .withName(replicationControllerName)
+            .withOldName(lastReplicationControllerName)
+            .withClusterName(clusterName)
+            .build();
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .addContextElement(kubernetesReplicationControllerElement)
+        .addNotifyElement(kubernetesReplicationControllerElement)
+        .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
+                                    .withGkeClusterName(clusterName)
+                                    .withKubernetesReplicationControllerName(replicationControllerName)
+                                    .withDockerImageName(imageName)
+                                    .build())
+        .build();
+  }
+
+  private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
+    ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
+    if (replicationControllers == null) {
+      return null;
     }
-    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
-*/
-    //    String replicationControllerName =
-    //    KubernetesConvention.getReplicationControllerName(taskDefinition.getFamily(), taskDefinition.getRevision());
-    //
-    //    String lastEcsServiceName = lastECSService(computeProviderSetting, clusterName,
-    //    ECSConvention.getServiceNamePrefix(taskDefinition.getFamily()));
-    //
-    //    gkeClusterService.createService(computeProviderSetting, new
-    //    CreateServiceRequest().withServiceName(replicationControllerName).withCluster(clusterName).withDesiredCount(0)
-    //        .withDeploymentConfiguration(new
-    //        DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-    //        .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
-    //
-    //
-    //    KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
-    //        aKubernetesReplicationControllerElement().withUuid(serviceId).withName(replicationControllerName).withOldName(lastEcsServiceName).withClusterName(clusterName).build();
-    //    return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS)
-    //        .addContextElement(kubernetesReplicationControllerElement)
-    //        .addNotifyElement(kubernetesReplicationControllerElement)
-    //        .withStateExecutionData(
-    //            aKubernetesReplicationControllerExecutionData().withClusterName(clusterName).withReplicationControllerName(replicationControllerName).withDockerImageName(imageName).build()).build();
-    return null;
+    List<ReplicationController> replicationControllerList =
+        replicationControllers.getItems()
+            .stream()
+            .filter(controller
+                -> controller.getMetadata().getName().startsWith(controllerNamePrefix)
+                    && controller.getSpec().getReplicas() > 0)
+            .collect(Collectors.toList());
+
+    ReplicationController lastReplicationController = null;
+    for (ReplicationController controller : replicationControllerList) {
+      if (lastReplicationController == null
+          || controller.getMetadata().getCreationTimestamp().compareTo(
+                 lastReplicationController.getMetadata().getCreationTimestamp())
+              > 0) {
+        lastReplicationController = controller;
+      }
+    }
+    return lastReplicationController != null ? lastReplicationController.getMetadata().getName() : null;
   }
 
   /**
@@ -160,47 +229,59 @@ public class KubernetesReplicationControllerSetup extends State {
    * @param wingsContainerDefinition the wings container definition
    * @return the container definition
    */
-  public ContainerDefinition createContainerDefinition(
+  public Container createContainerDefinition(
       String imageName, String containerName, KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
-    ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
+    ContainerBuilder containerBuilder = new ContainerBuilder().withName(containerName).withImage(imageName);
 
+    Map<String, Quantity> limits = new HashMap<>();
     if (wingsContainerDefinition.getCpu() != null) {
-      containerDefinition.setCpu(wingsContainerDefinition.getCpu());
+      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu() + "m"));
     }
 
     if (wingsContainerDefinition.getMemory() != null) {
-      containerDefinition.setMemory(wingsContainerDefinition.getMemory());
+      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Mi"));
+    }
+
+    if (!limits.isEmpty()) {
+      containerBuilder.withNewResources().withLimits(limits).endResources();
     }
 
     if (wingsContainerDefinition.getPortMappings() != null) {
-      List<PortMapping> portMappings = wingsContainerDefinition.getPortMappings()
-                                           .stream()
-                                           .map(portMapping
-                                               -> new PortMapping()
-                                                      .withContainerPort(portMapping.getContainerPort())
-                                                      .withHostPort(portMapping.getHostPort())
-                                                      .withProtocol(TransportProtocol.Tcp))
-                                           .collect(Collectors.toList());
-      containerDefinition.setPortMappings(portMappings);
+      wingsContainerDefinition.getPortMappings().forEach(portMapping
+          -> containerBuilder.addNewPort()
+                 .withContainerPort(portMapping.getContainerPort())
+                 .withHostPort(portMapping.getHostPort())
+                 .withProtocol("TCP")
+                 .endPort());
     }
 
     if (wingsContainerDefinition.getCommands() != null) {
-      containerDefinition.setCommand(wingsContainerDefinition.getCommands());
+      containerBuilder.withCommand(wingsContainerDefinition.getCommands());
+    }
+
+    if (wingsContainerDefinition.getArguments() != null) {
+      containerBuilder.withArgs(wingsContainerDefinition.getArguments());
+    }
+
+    if (wingsContainerDefinition.getEnvironmentVariables() != null) {
+      wingsContainerDefinition.getEnvironmentVariables().forEach(
+          envVar -> containerBuilder.addNewEnv().withName(envVar.getName()).withValue(envVar.getValue()).endEnv());
     }
 
     if (wingsContainerDefinition.getLogConfiguration() != null) {
       KubernetesContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
-      LogConfiguration logConfiguration = new LogConfiguration().withLogDriver(wingsLogConfiguration.getLogDriver());
-      wingsLogConfiguration.getOptions().forEach(
-          logOption -> logConfiguration.addOptionsEntry(logOption.getKey(), logOption.getValue()));
-      containerDefinition.setLogConfiguration(logConfiguration);
+      // TODO:: Check about kubernetes logs.  See https://kubernetes.io/docs/concepts/clusters/logging/
     }
 
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
-      // TODO:: fill volume amd mount points here
+      wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
+          -> containerBuilder.addNewVolumeMount()
+                 .withName(storageConfiguration.getHostSourcePath().replace('/', '_'))
+                 .withMountPath(storageConfiguration.getContainerPath())
+                 .endVolumeMount());
     }
 
-    return containerDefinition;
+    return containerBuilder.build();
   }
 
   /**

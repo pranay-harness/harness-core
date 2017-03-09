@@ -99,6 +99,8 @@ public class DelegateModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.ECS.name())
         .to(EcsCommandUnitExecutorServiceImpl.class);
+    serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.KUBERNETES.name())
+        .to(EcsCommandUnitExecutorServiceImpl.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.SSH.name())
         .to(SshCommandUnitExecutorServiceImpl.class);
   }
