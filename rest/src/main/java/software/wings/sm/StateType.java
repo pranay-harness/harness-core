@@ -175,7 +175,7 @@ public enum StateType implements StateTypeDescriptor {
 
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SERVICE_SETUP(KubernetesReplicationControllerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
+  KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
 
   KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(
       KubernetesReplicationControllerDeploy.class, COMMANDS, ORCHESTRATION_STENCILS);

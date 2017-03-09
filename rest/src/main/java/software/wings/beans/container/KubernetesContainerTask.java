@@ -12,6 +12,7 @@ import java.util.List;
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesContainerTask extends ContainerTask {
+  @Attributes(title = "LABELS") List<Label> labels;
   private List<ContainerDefinition> containerDefinitions;
 
   public KubernetesContainerTask() {
@@ -26,6 +27,14 @@ public class KubernetesContainerTask extends ContainerTask {
     this.containerDefinitions = containerDefinitions;
   }
 
+  public List<Label> getLabels() {
+    return labels;
+  }
+
+  public void setLabels(List<Label> labels) {
+    this.labels = labels;
+  }
+
   @SchemaIgnore
   public String getServiceId() {
     return super.getServiceId();
@@ -34,10 +43,12 @@ public class KubernetesContainerTask extends ContainerTask {
   public static class ContainerDefinition {
     @SchemaIgnore private String name;
     @Attributes(title = "Commands") private List<String> commands;
+    @Attributes(title = "Arguments") private List<String> arguments;
     @Attributes(title = "CPU") private Integer cpu;
     @Attributes(title = "MEMORY") private Integer memory;
 
     @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
+    @Attributes(title = "ENVIRONMENT VARIABLES") List<EnvironmentVariable> environmentVariables;
     @Attributes(title = "LOG CONFIGURATION") @SchemaIgnore private LogConfiguration logConfiguration;
     @Attributes(title = "STORAGE/VOLUME") private List<StorageConfiguration> storageConfigurations;
 
@@ -56,6 +67,14 @@ public class KubernetesContainerTask extends ContainerTask {
 
     public void setCommands(List<String> commands) {
       this.commands = commands;
+    }
+
+    public List<String> getArguments() {
+      return arguments;
+    }
+
+    public void setArguments(List<String> arguments) {
+      this.arguments = arguments;
     }
 
     public LogConfiguration getLogConfiguration() {
@@ -96,6 +115,56 @@ public class KubernetesContainerTask extends ContainerTask {
 
     public void setPortMappings(List<PortMapping> portMappings) {
       this.portMappings = portMappings;
+    }
+
+    public List<EnvironmentVariable> getEnvironmentVariables() {
+      return environmentVariables;
+    }
+
+    public void setEnvironmentVariables(List<EnvironmentVariable> environmentVariables) {
+      this.environmentVariables = environmentVariables;
+    }
+  }
+
+  public static class EnvironmentVariable {
+    @Attributes(title = "Environment variable name") private String name;
+    @Attributes(title = "Environment variable value") private String value;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
+  }
+
+  public static class Label {
+    @Attributes(title = "Label name") private String name;
+    @Attributes(title = "Label value") private String value;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
     }
   }
 

@@ -1040,7 +1040,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .withName("Setup Container")
                                      .addStep(aNode()
                                                   .withId(getUuid())
-                                                  .withType(StateType.KUBERNETES_SERVICE_SETUP.name())
+                                                  .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
                                                   .withName("Kubernetes Replication Controller Setup")
                                                   .build())
                                      .build());
@@ -1048,7 +1048,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .withName("Setup Load Balancer Service")
                                      .addStep(aNode()
                                                   .withId(getUuid())
-                                                  .withType(StateType.KUBERNETES_SERVICE_SETUP.name())
+                                                  .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
                                                   .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());

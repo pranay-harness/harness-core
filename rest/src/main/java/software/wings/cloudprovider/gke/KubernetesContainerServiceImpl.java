@@ -1,17 +1,10 @@
 package software.wings.cloudprovider.gke;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.DoneableService;
-import io.fabric8.kubernetes.api.model.PodSpecFluent;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecFluent;
-import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ReplicationControllerFluent;
-import io.fabric8.kubernetes.api.model.ReplicationControllerSpecFluent;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceFluent;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -32,62 +25,32 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
   @Override
-  public ReplicationController createController(KubernetesConfig kubernetesConfig, Map<String, String> params) {
-    ResourceRequirements resourceRequirements = new ResourceRequirements();
-    resourceRequirements.setRequests(
-        ImmutableMap.of("cpu", new Quantity(params.get("cpu")), "memory", new Quantity(params.get("memory"))));
-
-    PodSpecFluent.ContainersNested<PodTemplateSpecFluent.SpecNested<ReplicationControllerSpecFluent.TemplateNested<
-        ReplicationControllerFluent.SpecNested<ReplicationControllerBuilder>>>> container =
-        new ReplicationControllerBuilder()
-            .withApiVersion("v1")
-            .withNewMetadata()
-            .withName(params.get("name"))
-            .addToLabels("app", params.get("appName"))
-            .addToLabels("tier", params.get("tier"))
-            .endMetadata()
-            .withNewSpec()
-            .withReplicas(Integer.valueOf(params.get("count")))
-            .withNewTemplate()
-            .withNewMetadata()
-            .addToLabels("app", params.get("appName"))
-            .addToLabels("tier", params.get("tier"))
-            .endMetadata()
-            .withNewSpec()
-            .addNewContainer()
-            .withName(params.get("containerName"))
-            .withImage(params.get("containerImage"))
-            .withResources(resourceRequirements);
-    if ("backend".equals(params.get("tier"))) {
-      container.withArgs(params.get("port"));
-    } else {
-      container.addNewEnv().withName("GET_HOSTS_FROM").withValue("dns").endEnv();
-    }
-    ReplicationController rc = container.addNewPort()
-                                   .withContainerPort(Integer.valueOf(params.get("port")))
-                                   .endPort()
-                                   .endContainer()
-                                   .endSpec()
-                                   .endTemplate()
-                                   .endSpec()
-                                   .build();
-
-    rc = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-             .replicationControllers()
-             .inNamespace("default")
-             .createOrReplace(rc);
-    logger.info("Created {} controller {} for {}", params.get("tier"), params.get("name"), params.get("appName"));
-    return rc;
+  public ReplicationController createController(KubernetesConfig kubernetesConfig, ReplicationController definition) {
+    logger.info("Creating controller {}", definition.getMetadata().getName());
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
+        .replicationControllers()
+        .createOrReplace(definition);
   }
 
   @Override
   public void deleteController(KubernetesConfig kubernetesConfig, String name) {
+    logger.info("Deleting controller {}", name);
     kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).delete();
-    logger.info("Deleted controller {}", name);
+  }
+
+  @Override
+  public ReplicationController getController(KubernetesConfig kubernetesConfig, String name) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get();
+  }
+
+  @Override
+  public ReplicationControllerList listControllers(KubernetesConfig kubernetesConfig) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().list();
   }
 
   @Override
   public Service createService(KubernetesConfig kubernetesConfig, Map<String, String> params) {
+    logger.info("Creating service {}", params.get("name"));
     ServiceFluent.SpecNested<DoneableService> spec = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                                          .services()
                                                          .createOrReplaceWithNew()
@@ -101,18 +64,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (params.containsKey("type")) {
       spec.withType(params.get("type"));
     }
-    Service service = spec.addNewPort()
-                          .withPort(Integer.valueOf(params.get("port")))
-                          .withNewTargetPort()
-                          .withIntVal(Integer.valueOf(params.get("targetPort")))
-                          .endTargetPort()
-                          .endPort()
-                          .addToSelector("app", params.get("appName"))
-                          .addToSelector("tier", params.get("tier"))
-                          .endSpec()
-                          .done();
-    logger.info("Created {} service {} for {}", params.get("tier"), params.get("name"), params.get("appName"));
-    return service;
+    return spec.addNewPort()
+        .withPort(Integer.valueOf(params.get("port")))
+        .withNewTargetPort()
+        .withIntVal(Integer.valueOf(params.get("targetPort")))
+        .endTargetPort()
+        .endPort()
+        .addToSelector("app", params.get("appName"))
+        .addToSelector("tier", params.get("tier"))
+        .endSpec()
+        .done();
   }
 
   @Override
@@ -132,11 +93,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public int getControllerPodCount(KubernetesConfig kubernetesConfig, String name) {
     return getController(kubernetesConfig, name).getSpec().getReplicas();
-  }
-
-  @Override
-  public ReplicationController getController(KubernetesConfig kubernetesConfig, String name) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get();
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, String rcName, String serviceName) {
