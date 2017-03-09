@@ -155,7 +155,7 @@ public class KubernetesReplicationControllerSetup extends State {
         KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(),
             KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1);
 
-    ReplicationController replicationControllerDefinition =
+    kubernetesContainerService.createController(kubernetesConfig,
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -175,17 +175,7 @@ public class KubernetesReplicationControllerSetup extends State {
             .endSpec()
             .endTemplate()
             .endSpec()
-            .build();
-
-    ReplicationController rc =
-        kubernetesContainerService.createController(kubernetesConfig, replicationControllerDefinition);
-
-    //    awsClusterService.createService(computeProviderSetting, new
-    //    CreateServiceRequest().withServiceName(replicationControllerName).withCluster(clusterName)
-    //        .withDesiredCount(0)
-    //        .withDeploymentConfiguration(new
-    //        DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-    //        .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
+            .build());
 
     KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
         aKubernetesReplicationControllerElement()
