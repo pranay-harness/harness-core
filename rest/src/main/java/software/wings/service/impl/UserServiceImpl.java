@@ -254,8 +254,14 @@ public class UserServiceImpl implements UserService {
                                     .get();
 
     if (existingInvite != null) {
-      wingsPersistence.addToList(UserInvite.class, existingInvite.getAppId(), existingInvite.getUuid(),
-          wingsPersistence.createQuery(UserInvite.class), "roles", userInvite.getRoles());
+      UpdateOperations<UserInvite> updateOp =
+          wingsPersistence.createUpdateOperations(UserInvite.class).addToSet("roles", userInvite.getRoles());
+      Query<UserInvite> updateQuery = wingsPersistence.createQuery(UserInvite.class)
+                                          .field(ID_KEY)
+                                          .equal(existingInvite.getUuid())
+                                          .field("appId")
+                                          .equal(userInvite.getAppId());
+      wingsPersistence.update(updateQuery, updateOp);
       return wingsPersistence.get(UserInvite.class, existingInvite.getAppId(), existingInvite.getUuid());
     }
 
