@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.common.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import java.util.Set;
 public class OrchestrationWorkflow extends Workflow {
   private WorkflowOrchestrationType workflowOrchestrationType;
 
-  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
+  private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
 
   private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -26,7 +27,7 @@ public class OrchestrationWorkflow extends Workflow {
 
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
-  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
+  private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
 
   private List<NotificationRule> notificationRules = new ArrayList<>();
 
@@ -180,9 +181,9 @@ public class OrchestrationWorkflow extends Workflow {
   public static final class OrchestrationWorkflowBuilder {
     private WorkflowOrchestrationType workflowOrchestrationType;
     private String name;
-    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT);
+    private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
     private List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT);
+    private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
     private List<NotificationRule> notificationRules = new ArrayList<>();
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private List<Variable> systemVariables = new ArrayList<>();

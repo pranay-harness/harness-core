@@ -95,8 +95,8 @@ public interface Constants {
   String WINGS_VARIABLE_PREFIX = "${";
   String WINGS_VARIABLE_SUFFIX = "}";
 
-  String PRE_DEPLOYMENT_STEPS = "Pre-deployment Steps";
-  String POST_DEPLOYMENT_STEPS = "Post-deployment Steps";
+  String PRE_DEPLOYMENT = "Pre-Deployment";
+  String POST_DEPLOYMENT = "Post-Deployment";
 
   String SUB_WORKFLOW_ID = "subWorkflowId";
   String SUB_WORKFLOW = "SUB_WORKFLOW";
