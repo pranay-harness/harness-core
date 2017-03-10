@@ -299,6 +299,7 @@ public class EcsServiceDeploy extends State {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
+    private String stateType;
     private boolean rollback;
     private String commandName;
     private int instanceCount;
@@ -326,6 +327,11 @@ public class EcsServiceDeploy extends State {
       return this;
     }
 
+    public EcsServiceDeployBuilder withStateType(String stateType) {
+      this.stateType = stateType;
+      return this;
+    }
+
     public EcsServiceDeployBuilder withRollback(boolean rollback) {
       this.rollback = rollback;
       return this;
@@ -345,6 +351,7 @@ public class EcsServiceDeploy extends State {
       EcsServiceDeploy ecsServiceDeploy = new EcsServiceDeploy(name);
       ecsServiceDeploy.setId(id);
       ecsServiceDeploy.setRequiredContextElementType(requiredContextElementType);
+      ecsServiceDeploy.setStateType(stateType);
       ecsServiceDeploy.setRollback(rollback);
       ecsServiceDeploy.setCommandName(commandName);
       ecsServiceDeploy.setInstanceCount(instanceCount);

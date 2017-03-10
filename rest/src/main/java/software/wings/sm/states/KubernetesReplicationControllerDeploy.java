@@ -1,7 +1,17 @@
 package software.wings.sm.states;
 
-import com.github.reinert.jjschema.Attributes;
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+
 import com.google.inject.Inject;
+
+import com.github.reinert.jjschema.Attributes;
+import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +22,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
@@ -19,10 +30,14 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandExecutionData;
+import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -44,19 +59,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
-
-import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 /**
  * Created by brett on 3/1/17
- * TODO(brett): Implement
  */
 public class KubernetesReplicationControllerDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
@@ -111,10 +116,17 @@ public class KubernetesReplicationControllerDeploy extends State {
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
-    // TODO(brett): Implement
     KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
-    int desiredCount =
-        kubernetesContainerService.getControllerPodCount(kubernetesConfig, replicationControllerName) + instanceCount;
+    ReplicationController replicationController =
+        kubernetesContainerService.getController(kubernetesConfig, replicationControllerName);
+
+    if (replicationController == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+          "Kubernetes replication controller setup not done, controllerName: " + replicationControllerName);
+    }
+
+    int desiredCount = replicationController.getSpec().getReplicas() + instanceCount;
+    logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
 
     executionDataBuilder.withServiceId(service.getUuid())
         .withServiceName(service.getName())
@@ -167,42 +179,49 @@ public class KubernetesReplicationControllerDeploy extends State {
         context.getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
-    commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
+    CommandExecutionResult commandExecutionResult = ((CommandExecutionResult) response.values().iterator().next());
+    if (commandExecutionResult == null || commandExecutionResult.getStatus() != CommandExecutionStatus.SUCCESS) {
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.FAILED);
+    }
 
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
-      String ecsServiceName = kubernetesReplicationControllerElement.getOldName();
-
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      InfrastructureMapping infrastructureMapping =
-          infrastructureMappingService.get(commandStateExecutionData.getAppId(), phaseElement.getInfraMappingId());
-      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-
-      // TODO(brett): Implement
-
-      commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
+      commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
+      String kubernetesReplicationControllerName = kubernetesReplicationControllerElement.getOldName();
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
+      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      KubernetesConfig kubernetesConfig =
+          gkeClusterService.getCluster(settingAttribute, kubernetesReplicationControllerElement.getClusterName());
+      ReplicationController replicationController =
+          kubernetesContainerService.getController(kubernetesConfig, kubernetesReplicationControllerName);
+      if (replicationController == null) {
+        logger.info("Old kubernetes replication controller {} does not exist.. nothing to do",
+            kubernetesReplicationControllerName);
+        return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
+      }
+
+      commandStateExecutionData.setOldContainerServiceName(kubernetesReplicationControllerName);
+
       Application app = workflowStandardParams.getApp();
       Environment env = workflowStandardParams.getEnv();
-
-      String serviceId = phaseElement.getServiceElement().getUuid();
 
       Command command = serviceResourceService
                             .getCommandByName(commandStateExecutionData.getAppId(),
                                 commandStateExecutionData.getServiceId(), env.getUuid(), commandName)
                             .getCommand();
 
-      // TODO(brett): Implement
-      int desiredCount = 0;
-
-      logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
+      int desiredCount = replicationController.getSpec().getReplicas() - instanceCount;
+      logger.info("Desired count for service {} is {}", kubernetesReplicationControllerName, desiredCount);
 
       if (desiredCount < 0) {
         desiredCount = 0;
       }
-      CommandExecutionContext commandExecutionContext =
-          buildCommandExecutionContext(app, env.getUuid(), kubernetesReplicationControllerElement.getClusterName(),
-              ecsServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
+      CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(),
+          kubernetesReplicationControllerElement.getClusterName(), kubernetesReplicationControllerName, desiredCount,
+          commandStateExecutionData.getActivityId(), settingAttribute);
 
       delegateService.queueTask(aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -226,19 +245,31 @@ public class KubernetesReplicationControllerDeploy extends State {
     }
   }
 
+  private ExecutionResponse buildEndStateExecution(
+      CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
+    activityService.updateStatus(
+        commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
+    return anExecutionResponse().withStateExecutionData(commandStateExecutionData).withExecutionStatus(status).build();
+  }
+
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(
       ExecutionContext context, Map<String, NotifyResponseData> response) {
-    // TODO: set actual containers
-
+    CommandExecutionData commandExecutionData =
+        ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    IntStream.range(0, instanceCount).parallel().forEach(value -> {
-      String uuid = UUIDGenerator.getUuid();
-      instanceStatusSummaries.add(
-          anInstanceStatusSummary()
-              .withStatus(ExecutionStatus.SUCCESS)
-              .withInstanceElement(anInstanceElement().withUuid(uuid).withDisplayName(uuid).build())
-              .build());
-    });
+
+    if (commandExecutionData instanceof ResizeCommandUnitExecutionData
+        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerIds() != null) {
+      ((ResizeCommandUnitExecutionData) commandExecutionData)
+          .getContainerIds()
+          .forEach(containerId
+              -> instanceStatusSummaries.add(
+                  anInstanceStatusSummary()
+                      .withStatus(ExecutionStatus.SUCCESS)
+                      .withInstanceElement(
+                          anInstanceElement().withUuid(containerId).withDisplayName(containerId).build())
+                      .build()));
+    }
     return instanceStatusSummaries;
   }
 
@@ -273,5 +304,146 @@ public class KubernetesReplicationControllerDeploy extends State {
 
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
+  }
+
+  public static final class KubernetesReplicationControllerDeployBuilder {
+    private static Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
+    private String id;
+    private String name;
+    private ContextElementType requiredContextElementType;
+    private String stateType;
+    private boolean rollback;
+    private String commandName;
+    private int instanceCount;
+    private transient SettingsService settingsService;
+    private transient DelegateService delegateService;
+    private transient ServiceResourceService serviceResourceService;
+    private transient ActivityService activityService;
+    private transient InfrastructureMappingService infrastructureMappingService;
+    private transient GkeClusterService gkeClusterService;
+    private transient KubernetesContainerService kubernetesContainerService;
+
+    private KubernetesReplicationControllerDeployBuilder() {}
+
+    public static KubernetesReplicationControllerDeployBuilder aKubernetesReplicationControllerDeploy() {
+      return new KubernetesReplicationControllerDeployBuilder();
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withRequiredContextElementType(
+        ContextElementType requiredContextElementType) {
+      this.requiredContextElementType = requiredContextElementType;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withStateType(String stateType) {
+      this.stateType = stateType;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withLogger(Logger logger) {
+      this.logger = logger;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withCommandName(String commandName) {
+      this.commandName = commandName;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withInstanceCount(int instanceCount) {
+      this.instanceCount = instanceCount;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withSettingsService(SettingsService settingsService) {
+      this.settingsService = settingsService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withDelegateService(DelegateService delegateService) {
+      this.delegateService = delegateService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withServiceResourceService(
+        ServiceResourceService serviceResourceService) {
+      this.serviceResourceService = serviceResourceService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withActivityService(ActivityService activityService) {
+      this.activityService = activityService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withInfrastructureMappingService(
+        InfrastructureMappingService infrastructureMappingService) {
+      this.infrastructureMappingService = infrastructureMappingService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withGkeClusterService(GkeClusterService gkeClusterService) {
+      this.gkeClusterService = gkeClusterService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder withKubernetesContainerService(
+        KubernetesContainerService kubernetesContainerService) {
+      this.kubernetesContainerService = kubernetesContainerService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerDeployBuilder but() {
+      return aKubernetesReplicationControllerDeploy()
+          .withId(id)
+          .withName(name)
+          .withRequiredContextElementType(requiredContextElementType)
+          .withStateType(stateType)
+          .withRollback(rollback)
+          .withLogger(logger)
+          .withCommandName(commandName)
+          .withInstanceCount(instanceCount)
+          .withSettingsService(settingsService)
+          .withDelegateService(delegateService)
+          .withServiceResourceService(serviceResourceService)
+          .withActivityService(activityService)
+          .withInfrastructureMappingService(infrastructureMappingService)
+          .withGkeClusterService(gkeClusterService)
+          .withKubernetesContainerService(kubernetesContainerService);
+    }
+
+    public KubernetesReplicationControllerDeploy build() {
+      KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
+          new KubernetesReplicationControllerDeploy(name);
+      kubernetesReplicationControllerDeploy.setId(id);
+      kubernetesReplicationControllerDeploy.setRequiredContextElementType(requiredContextElementType);
+      kubernetesReplicationControllerDeploy.setStateType(stateType);
+      kubernetesReplicationControllerDeploy.setRollback(rollback);
+      kubernetesReplicationControllerDeploy.setCommandName(commandName);
+      kubernetesReplicationControllerDeploy.setInstanceCount(instanceCount);
+      kubernetesReplicationControllerDeploy.infrastructureMappingService = this.infrastructureMappingService;
+      kubernetesReplicationControllerDeploy.gkeClusterService = this.gkeClusterService;
+      kubernetesReplicationControllerDeploy.activityService = this.activityService;
+      kubernetesReplicationControllerDeploy.kubernetesContainerService = this.kubernetesContainerService;
+      kubernetesReplicationControllerDeploy.settingsService = this.settingsService;
+      kubernetesReplicationControllerDeploy.delegateService = this.delegateService;
+      kubernetesReplicationControllerDeploy.serviceResourceService = this.serviceResourceService;
+      return kubernetesReplicationControllerDeploy;
+    }
   }
 }
