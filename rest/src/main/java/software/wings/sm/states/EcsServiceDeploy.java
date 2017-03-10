@@ -30,6 +30,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
@@ -171,6 +172,11 @@ public class EcsServiceDeploy extends State {
     EcsServiceElement ecsServiceElement = context.getContextElement(ContextElementType.ECS_SERVICE);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
+    CommandExecutionResult commandExecutionResult = ((CommandExecutionResult) response.values().iterator().next());
+    if (commandExecutionResult == null || commandExecutionResult.getStatus() != CommandExecutionStatus.SUCCESS) {
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.FAILED);
+    }
+
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
       String ecsServiceName = ecsServiceElement.getOldName();
@@ -186,12 +192,7 @@ public class EcsServiceDeploy extends State {
           services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
       if (!ecsService.isPresent()) {
         logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
-        activityService.updateStatus(commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(),
-            commandStateExecutionData.getStatus());
-        return anExecutionResponse()
-            .withStateExecutionData(commandStateExecutionData)
-            .withExecutionStatus(ExecutionStatus.SUCCESS)
-            .build();
+        return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
       }
 
       commandStateExecutionData.setOldContainerServiceName(ecsServiceName);
@@ -229,13 +230,15 @@ public class EcsServiceDeploy extends State {
           .build();
 
     } else {
-      activityService.updateStatus(commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(),
-          commandStateExecutionData.getStatus());
-      return anExecutionResponse()
-          .withStateExecutionData(commandStateExecutionData)
-          .withExecutionStatus(ExecutionStatus.SUCCESS)
-          .build();
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
+  }
+
+  private ExecutionResponse buildEndStateExecution(
+      CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
+    activityService.updateStatus(
+        commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
+    return anExecutionResponse().withStateExecutionData(commandStateExecutionData).withExecutionStatus(status).build();
   }
 
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(
