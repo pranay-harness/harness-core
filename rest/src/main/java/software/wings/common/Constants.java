@@ -97,11 +97,24 @@ public interface Constants {
 
   String PRE_DEPLOYMENT = "Pre-Deployment";
   String POST_DEPLOYMENT = "Post-Deployment";
+  String DISABLE_SERVICE = "Disable Service";
+  String ENABLE_SERVICE = "Enable Service";
+  String DEPLOY_SERVICE = "Deploy Service";
+  String STOP_SERVICE = "Stop Service";
+  String VERIFY_SERVICE = "Verify Service";
+
+  String DEPLOY_CONTAINERS = "Deploy Containers";
+  String SETUP_CONTAINER = "Setup Container";
+
+  String ECS_SERVICE_SETUP = "ECS Service Setup";
+  String ECS_SERVICE_DEPLOY = "Upgrade Containers";
 
   String SUB_WORKFLOW_ID = "subWorkflowId";
   String SUB_WORKFLOW = "SUB_WORKFLOW";
   String ROLLBACK_PREFIX = "Rollback ";
   String PHASE_NAME_PREFIX = "Phase ";
 
+  String WRAP_UP = "Wrap Up";
   String PROVISION_NODE_NAME = "Provision Nodes";
+  String DE_PROVISION_NODE = "De-Provision Nodes";
 }

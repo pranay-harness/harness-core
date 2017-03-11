@@ -50,7 +50,8 @@ public class GraphRenderer {
    */
   Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
       List<String> expandedGroupIds, Boolean expandLastOnly, boolean allExpanded) {
-    logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
+    logger.debug(
+        "generateSubworkflows request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
     Map<String, Node> nodeIdMap = new HashMap<>();
