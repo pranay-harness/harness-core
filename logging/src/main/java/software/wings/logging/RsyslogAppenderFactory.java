@@ -9,7 +9,6 @@ import io.dropwizard.logging.AbstractAppenderFactory;
 import io.dropwizard.logging.async.AsyncAppenderFactory;
 import io.dropwizard.logging.filter.LevelFilterFactory;
 import io.dropwizard.logging.layout.LayoutFactory;
-import org.productivity.java.syslog4j.impl.net.tcp.ssl.SSLTCPNetSyslogConfig;
 
 import javax.validation.constraints.NotNull;
 
@@ -153,19 +152,12 @@ public class RsyslogAppenderFactory<E extends DeferredProcessingAware> extends A
   @Override
   public Appender<E> build(LoggerContext context, String applicationName, LayoutFactory<E> layoutFactory,
       LevelFilterFactory<E> levelFilterFactory, AsyncAppenderFactory<E> asyncAppenderFactory) {
-    Syslog4jAppender appender = new Syslog4jAppender(programName, key);
+    CloudBeesSyslogAppender<E> appender = new CloudBeesSyslogAppender<E>(programName, key, host, port);
     appender.setName(name);
-
     appender.setContext(context);
     appender.setLayout(buildLayout(context, layoutFactory));
     appender.addFilter(levelFilterFactory.build(threshold));
     getFilterFactories().stream().forEach(f -> appender.addFilter(f.build()));
-
-    SSLTCPNetSyslogConfig config = new SSLTCPNetSyslogConfig(host, port);
-    config.setUseStructuredData(true);
-    config.setMaxMessageLength(maxMessageLength);
-
-    appender.setSyslogConfig(config);
 
     appender.start();
 

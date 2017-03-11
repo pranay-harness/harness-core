@@ -27,7 +27,7 @@ logging:
     - type: rsyslog-tcp-ssl
       threshold: TRACE
       host: syslog-a.logdna.com
-      port: 6514
+      port: 514
       key: b623cc9c1ee668fffc89730c5adedc8f
       programName: manager-saas
       maxMessageLength: 262144
