@@ -128,7 +128,6 @@ public class EcsServiceSetup extends State {
     TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
     /*
-
     SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
 
     if (loadBalancerSetting == null ||
@@ -136,7 +135,8 @@ public class EcsServiceSetup extends State {
     WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
     }
     ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
-*/
+    */
+
     String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
     String lastEcsServiceName = lastECSService(
@@ -285,6 +285,7 @@ public class EcsServiceSetup extends State {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
+    private String stateType;
     private boolean rollback;
     private String loadBalancerSettingId;
     private transient AwsClusterService awsClusterService;
@@ -308,6 +309,11 @@ public class EcsServiceSetup extends State {
 
     public EcsServiceSetupBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
       this.requiredContextElementType = requiredContextElementType;
+      return this;
+    }
+
+    public EcsServiceSetupBuilder withStateType(String stateType) {
+      this.stateType = stateType;
       return this;
     }
 
@@ -351,6 +357,7 @@ public class EcsServiceSetup extends State {
       EcsServiceSetup ecsServiceSetup = new EcsServiceSetup(name);
       ecsServiceSetup.setId(id);
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
+      ecsServiceSetup.setStateType(stateType);
       ecsServiceSetup.setRollback(rollback);
       ecsServiceSetup.setLoadBalancerSettingId(loadBalancerSettingId);
       ecsServiceSetup.settingsService = this.settingsService;

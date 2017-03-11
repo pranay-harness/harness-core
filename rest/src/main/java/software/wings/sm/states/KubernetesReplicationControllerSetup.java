@@ -1,8 +1,14 @@
 package software.wings.sm.states;
 
-import com.github.reinert.jjschema.Attributes;
+import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
+import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+
+import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
@@ -51,17 +57,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
-import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
-import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
-
 /**
  * Created by brett on 3/1/17
  * TODO(brett): Implement
  */
 public class KubernetesReplicationControllerSetup extends State {
-  @Attributes(title = "Tier")
+  @Attributes(title = "Load Balancer")
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerSettingId;
 
@@ -145,6 +146,17 @@ public class KubernetesReplicationControllerSetup extends State {
                            .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
                            .build())
                 .collect(Collectors.toList())));
+
+    /*
+    TODO:: Setup load balancer service
+    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
+
+    if (loadBalancerSetting == null ||
+    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
+    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
+    }
+    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
+    */
 
     KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
 
@@ -322,5 +334,124 @@ public class KubernetesReplicationControllerSetup extends State {
    */
   public void setLoadBalancerSettingId(String loadBalancerSettingId) {
     this.loadBalancerSettingId = loadBalancerSettingId;
+  }
+
+  public static final class KubernetesReplicationControllerSetupBuilder {
+    private String id;
+    private String name;
+    private ContextElementType requiredContextElementType;
+    private String stateType;
+    private boolean rollback;
+    private String loadBalancerSettingId;
+    private transient GkeClusterService gkeClusterService;
+    private transient KubernetesContainerService kubernetesContainerService;
+    private transient SettingsService settingsService;
+    private transient ServiceResourceService serviceResourceService;
+    private transient InfrastructureMappingService infrastructureMappingService;
+    private transient ArtifactStreamService artifactStreamService;
+
+    private KubernetesReplicationControllerSetupBuilder() {}
+
+    public static KubernetesReplicationControllerSetupBuilder aKubernetesReplicationControllerSetup() {
+      return new KubernetesReplicationControllerSetupBuilder();
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withRequiredContextElementType(
+        ContextElementType requiredContextElementType) {
+      this.requiredContextElementType = requiredContextElementType;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withStateType(String stateType) {
+      this.stateType = stateType;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withLoadBalancerSettingId(String loadBalancerSettingId) {
+      this.loadBalancerSettingId = loadBalancerSettingId;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withGkeClusterService(GkeClusterService gkeClusterService) {
+      this.gkeClusterService = gkeClusterService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withKubernetesContainerService(
+        KubernetesContainerService kubernetesContainerService) {
+      this.kubernetesContainerService = kubernetesContainerService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withSettingsService(SettingsService settingsService) {
+      this.settingsService = settingsService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withServiceResourceService(
+        ServiceResourceService serviceResourceService) {
+      this.serviceResourceService = serviceResourceService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withInfrastructureMappingService(
+        InfrastructureMappingService infrastructureMappingService) {
+      this.infrastructureMappingService = infrastructureMappingService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder withArtifactStreamService(
+        ArtifactStreamService artifactStreamService) {
+      this.artifactStreamService = artifactStreamService;
+      return this;
+    }
+
+    public KubernetesReplicationControllerSetupBuilder but() {
+      return aKubernetesReplicationControllerSetup()
+          .withId(id)
+          .withName(name)
+          .withRequiredContextElementType(requiredContextElementType)
+          .withStateType(stateType)
+          .withRollback(rollback)
+          .withLoadBalancerSettingId(loadBalancerSettingId)
+          .withGkeClusterService(gkeClusterService)
+          .withKubernetesContainerService(kubernetesContainerService)
+          .withSettingsService(settingsService)
+          .withServiceResourceService(serviceResourceService)
+          .withInfrastructureMappingService(infrastructureMappingService)
+          .withArtifactStreamService(artifactStreamService);
+    }
+
+    public KubernetesReplicationControllerSetup build() {
+      KubernetesReplicationControllerSetup kubernetesReplicationControllerSetup =
+          new KubernetesReplicationControllerSetup(name);
+      kubernetesReplicationControllerSetup.setId(id);
+      kubernetesReplicationControllerSetup.setRequiredContextElementType(requiredContextElementType);
+      kubernetesReplicationControllerSetup.setStateType(stateType);
+      kubernetesReplicationControllerSetup.setRollback(rollback);
+      kubernetesReplicationControllerSetup.setLoadBalancerSettingId(loadBalancerSettingId);
+      kubernetesReplicationControllerSetup.settingsService = this.settingsService;
+      kubernetesReplicationControllerSetup.serviceResourceService = this.serviceResourceService;
+      kubernetesReplicationControllerSetup.infrastructureMappingService = this.infrastructureMappingService;
+      kubernetesReplicationControllerSetup.gkeClusterService = this.gkeClusterService;
+      kubernetesReplicationControllerSetup.kubernetesContainerService = this.kubernetesContainerService;
+      kubernetesReplicationControllerSetup.artifactStreamService = this.artifactStreamService;
+      return kubernetesReplicationControllerSetup;
+    }
   }
 }
