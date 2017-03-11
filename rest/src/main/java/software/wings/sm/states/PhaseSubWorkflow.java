@@ -13,7 +13,9 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -23,6 +25,8 @@ import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
@@ -88,7 +92,19 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    return super.handleAsyncResponse(context, response);
+    ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
+    response.values().forEach(notifyResponseData -> {
+      if (notifyResponseData instanceof ElementNotifyResponseData) {
+        List<ContextElement> notifyElements = ((ElementNotifyResponseData) notifyResponseData).getContextElements();
+        if (notifyElements != null && !notifyElements.isEmpty()) {
+          if (executionResponse.getContextElements() == null) {
+            executionResponse.setContextElements(new ArrayList<>());
+          }
+          executionResponse.getContextElements().addAll(notifyElements);
+        }
+      }
+    });
+    return executionResponse;
   }
 
   public String getServiceId() {
