@@ -57,7 +57,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
     switch (phaseStepType) {
       case CONTAINER_DEPLOY: {
-        validateEcsServiceElement(contextIntf, phaseElement);
+        validateServiceElement(contextIntf, phaseElement);
         break;
       }
       case DEPLOY_SERVICE:
@@ -78,12 +78,25 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
-  private void validateEcsServiceElement(ExecutionContext context, PhaseElement phaseElement) {
-    List<ContextElement> elements = context.getContextElementList(ContextElementType.ECS_SERVICE);
-    if (elements == null || elements.isEmpty()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ECS Service Setup not done");
+  private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
+    List<ContextElement> ecsElements = context.getContextElementList(ContextElementType.ECS_SERVICE);
+    if (ecsElements != null && !ecsElements.isEmpty()) {
+      validateEcsServiceElement(ecsElements, phaseElement);
     }
 
+    List<ContextElement> kubernetesElements =
+        context.getContextElementList(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER);
+    if (kubernetesElements != null && !kubernetesElements.isEmpty()) {
+      validateKubernetesServiceElement(kubernetesElements, phaseElement);
+    }
+
+    if ((ecsElements == null || ecsElements.isEmpty())
+        && (kubernetesElements == null || kubernetesElements.isEmpty())) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Setup not done");
+    }
+  }
+
+  private void validateEcsServiceElement(List<ContextElement> elements, PhaseElement phaseElement) {
     Optional<ContextElement> ecsServiceElement =
         elements.parallelStream()
             .filter(contextElement
@@ -94,6 +107,21 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     if (!ecsServiceElement.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
           "ecsServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
+    }
+  }
+
+  private void validateKubernetesServiceElement(List<ContextElement> elements, PhaseElement phaseElement) {
+    Optional<ContextElement> kubernetesReplicationControllerElement =
+        elements.parallelStream()
+            .filter(contextElement
+                -> contextElement instanceof KubernetesReplicationControllerElement && contextElement.getUuid() != null
+                    && contextElement.getUuid().equals(phaseElement.getServiceElement().getUuid()))
+            .findFirst();
+
+    if (!kubernetesReplicationControllerElement.isPresent()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
+          "kubernetesReplicationControllerElement not present for the service "
+              + phaseElement.getServiceElement().getUuid());
     }
   }
 

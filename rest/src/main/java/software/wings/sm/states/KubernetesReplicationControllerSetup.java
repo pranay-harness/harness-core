@@ -124,11 +124,6 @@ public class KubernetesReplicationControllerSetup extends State {
 
     String containerName = Misc.normalizeExpression(imageName.toLowerCase().replace('_', '-'), "-");
 
-    Map<String, String> labels = new HashMap<>();
-    if (kubernetesContainerTask.getLabels() != null) {
-      kubernetesContainerTask.getLabels().forEach(label -> labels.put(label.getName(), label.getValue()));
-    }
-
     List<Container> containerDefinitions =
         kubernetesContainerTask.getContainerDefinitions()
             .stream()
@@ -143,7 +138,7 @@ public class KubernetesReplicationControllerSetup extends State {
                 .stream()
                 .map(storageConfiguration
                     -> new VolumeBuilder()
-                           .withName(storageConfiguration.getHostSourcePath().replace('/', '_'))
+                           .withName(storageConfiguration.getHostSourcePath().replace('/', '-'))
                            .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
                            .build())
                 .collect(Collectors.toList()));
@@ -166,9 +161,15 @@ public class KubernetesReplicationControllerSetup extends State {
     String lastReplicationControllerName = lastReplicationController(kubernetesConfig,
         KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), service.getName(), env.getName()));
 
+    int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
     String replicationControllerName =
-        KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(),
-            KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1);
+        KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(), revision);
+
+    Map<String, String> labels = new HashMap<>();
+    labels.put("revision", Integer.toString(revision));
+    if (kubernetesContainerTask.getLabels() != null) {
+      kubernetesContainerTask.getLabels().forEach(label -> labels.put(label.getName(), label.getValue()));
+    }
 
     kubernetesContainerService.createController(kubernetesConfig,
         new ReplicationControllerBuilder()
@@ -291,7 +292,7 @@ public class KubernetesReplicationControllerSetup extends State {
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
       wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
           -> containerBuilder.addNewVolumeMount()
-                 .withName(storageConfiguration.getHostSourcePath().replace('/', '_'))
+                 .withName(storageConfiguration.getHostSourcePath().replace('/', '-'))
                  .withMountPath(storageConfiguration.getContainerPath())
                  .endVolumeMount());
     }

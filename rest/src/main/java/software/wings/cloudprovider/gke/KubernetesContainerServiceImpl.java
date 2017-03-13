@@ -40,7 +40,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public ReplicationController getController(KubernetesConfig kubernetesConfig, String name) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get();
+    return name != null
+        ? kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get()
+        : null;
   }
 
   @Override

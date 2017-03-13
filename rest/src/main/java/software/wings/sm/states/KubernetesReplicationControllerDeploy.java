@@ -68,7 +68,7 @@ public class KubernetesReplicationControllerDeploy extends State {
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Resize Cluster")
+  @DefaultValue("Resize Replication Controller")
   private String commandName;
 
   @Attributes(title = "Number of instances") private int instanceCount;
