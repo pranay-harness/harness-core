@@ -24,5 +24,12 @@
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-logging</artifactId>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.cloudbees/syslog-java-client -->
+        <dependency>
+            <groupId>com.cloudbees</groupId>
+            <artifactId>syslog-java-client</artifactId>
+            <version>1.0.8</version>
+        </dependency>
+
     </dependencies>
 </project>

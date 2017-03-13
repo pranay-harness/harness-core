@@ -1,12 +1,27 @@
 package software.wings.service.impl;
 
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.GCP_KUBERNETES;
+import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
+
+import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +57,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
 
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.executable.ValidateOnExecution;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,19 +67,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-
-import static software.wings.api.DeploymentType.ECS;
-import static software.wings.api.DeploymentType.KUBERNETES;
-import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.GCP_KUBERNETES;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
-import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -575,7 +577,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
       List<Host> hosts =
           awsInfrastructureProvider.provisionHosts(computeProviderSetting, launcherConfigName, instanceCount);
-      updateHostsAndServiceInstances(infrastructureMapping, hosts, Arrays.asList());
+      updateHostsAndServiceInstances(infrastructureMapping, hosts, ImmutableList.of());
 
       return selectServiceInstancesByInfraMapping(appId, infrastructureMapping.getServiceTemplateId(),
           infrastructureMapping.getUuid(),
@@ -618,7 +620,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
       awsInfrastructureProvider.deProvisionHosts(
           appId, infrastructureMapping.getUuid(), computeProviderSetting, hostNames);
-      updateHostsAndServiceInstances(infrastructureMapping, Arrays.asList(), hostNames);
+      updateHostsAndServiceInstances(infrastructureMapping, ImmutableList.of(), hostNames);
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       // TODO(brett): Implement
     } else {

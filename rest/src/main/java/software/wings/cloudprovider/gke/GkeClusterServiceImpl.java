@@ -1,5 +1,10 @@
 package software.wings.cloudprovider.gke;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
+import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.services.container.Container;
@@ -12,9 +17,11 @@ import com.google.api.services.container.model.NodePool;
 import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import org.slf4j.Logger;
@@ -26,16 +33,11 @@ import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.utils.Misc;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
-import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+import javax.annotation.Nullable;
 
 /**
  * Created by bzane on 2/21/17
@@ -172,10 +174,11 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     try {
       ListClustersResponse response =
           gkeContainerService.projects().zones().clusters().list(projectId, ALL_ZONES).execute();
-      return response.getClusters()
-          .stream()
-          .map(cluster -> cluster.getZone() + ZONE_DELIMITER + cluster.getName())
-          .collect(Collectors.toList());
+      List<Cluster> clusters = response.getClusters();
+      return clusters != null ? clusters.stream()
+                                    .map(cluster -> cluster.getZone() + ZONE_DELIMITER + cluster.getName())
+                                    .collect(Collectors.toList())
+                              : ImmutableList.of();
     } catch (IOException e) {
       logger.error("Error listing clusters for project {}", projectId);
     }

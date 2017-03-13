@@ -102,7 +102,7 @@ public class KubernetesReplicationControllerDeploy extends State {
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
 
-    Service service = serviceResourceService.get(app.getAppId(), serviceId);
+    Service service = serviceResourceService.get(app.getUuid(), serviceId);
     Command command =
         serviceResourceService.getCommandByName(app.getUuid(), serviceId, env.getUuid(), commandName).getCommand();
 
@@ -209,8 +209,8 @@ public class KubernetesReplicationControllerDeploy extends State {
       Environment env = workflowStandardParams.getEnv();
 
       Command command = serviceResourceService
-                            .getCommandByName(commandStateExecutionData.getAppId(),
-                                commandStateExecutionData.getServiceId(), env.getUuid(), commandName)
+                            .getCommandByName(workflowStandardParams.getAppId(),
+                                phaseElement.getServiceElement().getUuid(), env.getUuid(), commandName)
                             .getCommand();
 
       int desiredCount = replicationController.getSpec().getReplicas() - instanceCount;
@@ -323,10 +323,12 @@ public class KubernetesReplicationControllerDeploy extends State {
     private transient GkeClusterService gkeClusterService;
     private transient KubernetesContainerService kubernetesContainerService;
 
-    private KubernetesReplicationControllerDeployBuilder() {}
+    private KubernetesReplicationControllerDeployBuilder(String name) {
+      this.name = name;
+    }
 
-    public static KubernetesReplicationControllerDeployBuilder aKubernetesReplicationControllerDeploy() {
-      return new KubernetesReplicationControllerDeployBuilder();
+    public static KubernetesReplicationControllerDeployBuilder aKubernetesReplicationControllerDeploy(String name) {
+      return new KubernetesReplicationControllerDeployBuilder(name);
     }
 
     public KubernetesReplicationControllerDeployBuilder withId(String id) {
@@ -409,9 +411,8 @@ public class KubernetesReplicationControllerDeploy extends State {
     }
 
     public KubernetesReplicationControllerDeployBuilder but() {
-      return aKubernetesReplicationControllerDeploy()
+      return aKubernetesReplicationControllerDeploy(name)
           .withId(id)
-          .withName(name)
           .withRequiredContextElementType(requiredContextElementType)
           .withStateType(stateType)
           .withRollback(rollback)

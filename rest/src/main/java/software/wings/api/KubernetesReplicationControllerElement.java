@@ -1,15 +1,14 @@
 package software.wings.api;
 
+import static software.wings.sm.ContextElementType.KUBERNETES_REPLICATION_CONTROLLER;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 
 import java.util.Map;
 
-import static software.wings.sm.ContextElementType.KUBERNETES_REPLICATION_CONTROLLER;
-
 /**
  * Created by brett on 3/1/17
- * TODO(brett): Implement
  */
 public class KubernetesReplicationControllerElement implements ContextElement {
   private String uuid;
