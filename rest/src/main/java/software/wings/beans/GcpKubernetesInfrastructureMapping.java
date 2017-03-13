@@ -6,7 +6,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 
 /**
  * Created by brett on 2/27/17
- * TODO(brett): Implement
  */
 @JsonTypeName("GCP_KUBERNETES")
 public class GcpKubernetesInfrastructureMapping extends InfrastructureMapping {

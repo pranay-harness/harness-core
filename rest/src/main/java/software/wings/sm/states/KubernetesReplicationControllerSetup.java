@@ -50,6 +50,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,7 +60,6 @@ import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/1/17
- * TODO(brett): Implement
  */
 public class KubernetesReplicationControllerSetup extends State {
   @Attributes(title = "Load Balancer")
@@ -107,7 +107,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
     String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
 
-    Service service = serviceResourceService.get(app.getAppId(), serviceId);
+    Service service = serviceResourceService.get(app.getUuid(), serviceId);
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
     KubernetesContainerTask kubernetesContainerTask =
@@ -122,7 +122,7 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
-    String containerName = imageName.replace('/', '_');
+    String containerName = Misc.normalizeExpression(imageName.toLowerCase().replace('_', '-'), "-");
 
     Map<String, String> labels = new HashMap<>();
     if (kubernetesContainerTask.getLabels() != null) {
@@ -136,8 +136,9 @@ public class KubernetesReplicationControllerSetup extends State {
             .collect(Collectors.toList());
 
     List<Volume> volumeList = new ArrayList<>();
-    kubernetesContainerTask.getContainerDefinitions().forEach(containerDefinition
-        -> volumeList.addAll(
+    kubernetesContainerTask.getContainerDefinitions().forEach(containerDefinition -> {
+      if (containerDefinition.getStorageConfigurations() != null) {
+        volumeList.addAll(
             containerDefinition.getStorageConfigurations()
                 .stream()
                 .map(storageConfiguration
@@ -145,7 +146,9 @@ public class KubernetesReplicationControllerSetup extends State {
                            .withName(storageConfiguration.getHostSourcePath().replace('/', '_'))
                            .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
                            .build())
-                .collect(Collectors.toList())));
+                .collect(Collectors.toList()));
+      }
+    });
 
     /*
     TODO:: Setup load balancer service
