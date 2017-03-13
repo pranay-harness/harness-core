@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Role.RoleType;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -66,7 +67,8 @@ public class User extends Base implements Principal {
 
   @JsonIgnore
   public boolean isAdmin() {
-    return roles != null && roles.stream().anyMatch(Role::isAdminRole);
+    return roles != null
+        && roles.stream().filter(role -> role.getRoleType() == RoleType.ACCOUNT_ADMIN).findFirst().isPresent();
   }
 
   @Override
