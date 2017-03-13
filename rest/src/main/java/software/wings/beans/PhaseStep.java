@@ -1,13 +1,24 @@
 package software.wings.beans;
 
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
+import static software.wings.sm.StateType.FORK;
+import static software.wings.sm.StateType.REPEAT;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
+import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.StateType;
+import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +55,6 @@ public class PhaseStep {
   }
 
   public String getName() {
-    if (name == null && phaseStepType != null) {
-      name = phaseStepType.name();
-    }
     return name;
   }
 
@@ -123,6 +131,75 @@ public class PhaseStep {
         .build();
   }
 
+  public Graph generateSubworkflow(DeploymentType deploymentType) {
+    Builder graphBuilder = aGraph().withGraphName(name);
+    if (steps == null || steps.isEmpty()) {
+      return graphBuilder.build();
+    }
+
+    Node originNode = null;
+    Node repeatNode = null;
+    if (deploymentType != null && deploymentType == DeploymentType.SSH
+        && (phaseStepType == DEPLOY_SERVICE || phaseStepType == DISABLE_SERVICE || phaseStepType == ENABLE_SERVICE
+               || phaseStepType == VERIFY_SERVICE)) {
+      // TODO - only meant for physical DC
+      // introduce repeat node
+
+      repeatNode = aNode()
+                       .withType(REPEAT.name())
+                       .withName("All Instances")
+                       .addProperty("executionStrategy", "PARALLEL")
+                       .addProperty("repeatElementExpression", "${instances}")
+                       .build();
+
+      graphBuilder.addNodes(repeatNode);
+    }
+
+    if (stepsInParallel) {
+      Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(name + "-FORK").build();
+      graphBuilder.addNodes(forkNode);
+      for (Node step : getSteps()) {
+        graphBuilder.addNodes(step);
+        graphBuilder.addLinks(aLink()
+                                  .withId(getUuid())
+                                  .withFrom(forkNode.getId())
+                                  .withTo(step.getId())
+                                  .withType(TransitionType.FORK.name())
+                                  .build());
+      }
+      if (originNode == null) {
+        originNode = forkNode;
+      }
+    } else {
+      String id1 = null;
+      String id2;
+      for (Node step : getSteps()) {
+        id2 = step.getId();
+        graphBuilder.addNodes(step);
+        if (id1 == null && originNode == null) {
+          originNode = step;
+        } else {
+          graphBuilder.addLinks(
+              aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+        }
+        id1 = id2;
+      }
+    }
+    if (repeatNode == null) {
+      originNode.setOrigin(true);
+    } else {
+      repeatNode.setOrigin(true);
+      graphBuilder.addLinks(aLink()
+                                .withId(getUuid())
+                                .withFrom(repeatNode.getId())
+                                .withTo(originNode.getId())
+                                .withType(TransitionType.REPEAT.name())
+                                .build());
+    }
+
+    return graphBuilder.build();
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -169,20 +246,16 @@ public class PhaseStep {
 
     private PhaseStepBuilder() {}
 
-    public static PhaseStepBuilder aPhaseStep(PhaseStepType phaseStepType) {
+    public static PhaseStepBuilder aPhaseStep(PhaseStepType phaseStepType, String name) {
       PhaseStepBuilder phaseStepBuilder = new PhaseStepBuilder();
       phaseStepBuilder.phaseStepType = phaseStepType;
+      phaseStepBuilder.name = name;
       phaseStepBuilder.uuid = UUIDGenerator.getUuid();
       return phaseStepBuilder;
     }
 
     public PhaseStepBuilder withUuid(String uuid) {
       this.uuid = uuid;
-      return this;
-    }
-
-    public PhaseStepBuilder withName(String name) {
-      this.name = name;
       return this;
     }
 

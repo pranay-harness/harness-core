@@ -131,6 +131,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       EcsServiceElement ecsServiceElement =
           (EcsServiceElement) notifiedElement(response, EcsServiceElement.class, "Missing ECSServiceElement");
       executionResponse.setContextElements(Lists.newArrayList(ecsServiceElement));
+      executionResponse.setNotifyElements(Lists.newArrayList(ecsServiceElement));
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       KubernetesReplicationControllerElement kubernetesReplicationControllerElement =

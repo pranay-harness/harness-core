@@ -1,7 +1,14 @@
 package software.wings.beans;
 
+import static java.util.stream.Collectors.toList;
+
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 
 import java.util.ArrayList;
@@ -15,6 +22,8 @@ import java.util.Set;
  */
 @Entity(value = "orchWorkflows", noClassnameStored = true)
 public class OrchestrationWorkflow extends Workflow {
+  private static final Logger logger = LoggerFactory.getLogger(OrchestrationWorkflow.class);
+
   private WorkflowOrchestrationType workflowOrchestrationType;
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
@@ -62,24 +71,11 @@ public class OrchestrationWorkflow extends Workflow {
   }
 
   public List<WorkflowPhase> getWorkflowPhases() {
-    List<WorkflowPhase> workflowPhases = new ArrayList<>();
-    for (String workflowPhaseId : workflowPhaseIds) {
-      workflowPhases.add(workflowPhaseIdMap.get(workflowPhaseId));
-    }
     return workflowPhases;
   }
 
   public void setWorkflowPhases(List<WorkflowPhase> workflowPhases) {
     this.workflowPhases = workflowPhases;
-    if (workflowPhases != null) {
-      workflowPhaseIds = new ArrayList<>();
-      workflowPhaseIdMap = new HashMap<>();
-
-      for (WorkflowPhase workflowPhase : workflowPhases) {
-        workflowPhaseIds.add(workflowPhase.getUuid());
-        workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
-      }
-    }
   }
 
   public PhaseStep getPostDeploymentSteps() {
@@ -176,6 +172,84 @@ public class OrchestrationWorkflow extends Workflow {
 
   public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {
     this.requiredEntityTypes = requiredEntityTypes;
+  }
+
+  /**
+   * Invoked before inserting document in mongo by morphia.
+   */
+  @PrePersist
+  public void onSave() {
+    super.onSave();
+
+    populatePhaseStepIds(preDeploymentSteps);
+    if (workflowPhases != null) {
+      workflowPhaseIds = new ArrayList<>();
+      workflowPhaseIdMap = new HashMap<>();
+
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        workflowPhaseIds.add(workflowPhase.getUuid());
+        workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
+        populatePhaseStepIds(workflowPhase);
+      }
+    }
+    populatePhaseStepIds(postDeploymentSteps);
+  }
+
+  /**
+   * Invoked after loading document from mongo by morphia.
+   */
+  @PostLoad
+  public void onLoad() {
+    populatePhaseSteps(preDeploymentSteps, getGraph());
+
+    workflowPhases = new ArrayList<>();
+    for (String workflowPhaseId : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
+      workflowPhases.add(workflowPhase);
+      workflowPhase.getPhaseSteps().forEach(phaseStep -> { populatePhaseSteps(phaseStep, getGraph()); });
+    }
+    if (rollbackWorkflowPhaseIdMap != null) {
+      rollbackWorkflowPhaseIdMap.values().forEach(workflowPhase -> {
+        workflowPhase.getPhaseSteps().forEach(phaseStep -> { populatePhaseSteps(phaseStep, getGraph()); });
+      });
+    }
+    populatePhaseSteps(postDeploymentSteps, getGraph());
+  }
+
+  public void populatePhaseStepIds(WorkflowPhase workflowPhase) {
+    if (workflowPhase.getPhaseSteps() == null || workflowPhase.getPhaseSteps().isEmpty()) {
+      return;
+    }
+    workflowPhase.getPhaseSteps().forEach(this ::populatePhaseStepIds);
+  }
+
+  public void populatePhaseStepIds(PhaseStep phaseStep) {
+    if (phaseStep.getSteps() == null) {
+      logger.error("Incorrect arguments to populate phaseStepIds: {}", phaseStep);
+      return;
+    }
+    phaseStep.setStepsIds(phaseStep.getSteps().stream().map(Node::getId).collect(toList()));
+  }
+
+  private void populatePhaseSteps(PhaseStep phaseStep, Graph graph) {
+    if (phaseStep == null || phaseStep.getUuid() == null || graph == null || graph.getSubworkflows() == null
+        || graph.getSubworkflows().get(phaseStep.getUuid()) == null) {
+      logger.error("Incorrect arguments to populate phaseStep: {}, graph: {}", phaseStep, graph);
+      return;
+    }
+    if (phaseStep.getStepsIds() == null || phaseStep.getStepsIds().isEmpty()) {
+      logger.info("Empty stepList for the phaseStep: {}", phaseStep);
+      return;
+    }
+
+    Graph subWorkflowGraph = graph.getSubworkflows().get(phaseStep.getUuid());
+    if (subWorkflowGraph == null) {
+      logger.info("No subworkflow found for the phaseStep: {}", phaseStep);
+      return;
+    }
+
+    Map<String, Node> nodesMap = subWorkflowGraph.getNodesMap();
+    phaseStep.setSteps(phaseStep.getStepsIds().stream().map(stepId -> nodesMap.get(stepId)).collect(toList()));
   }
 
   public static final class OrchestrationWorkflowBuilder {

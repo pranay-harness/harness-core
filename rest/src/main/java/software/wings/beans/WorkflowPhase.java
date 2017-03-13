@@ -1,12 +1,16 @@
 package software.wings.beans;
 
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 
 import software.wings.api.DeploymentType;
+import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.StateType;
+import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -142,6 +146,31 @@ public class WorkflowPhase {
     this.infraMappingId = infraMappingId;
   }
 
+  public Map<String, Graph> generateSubworkflows() {
+    Map<String, Graph> graphs = new HashMap<>();
+    Builder graphBuilder = aGraph().withGraphName(name);
+
+    String id1 = null;
+    String id2;
+    Node node;
+    for (PhaseStep phaseStep : phaseSteps) {
+      id2 = phaseStep.getUuid();
+      node = phaseStep.generatePhaseStepNode();
+      graphBuilder.addNodes(node);
+      if (id1 == null) {
+        node.setOrigin(true);
+      } else {
+        graphBuilder.addLinks(
+            aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+      }
+      id1 = id2;
+      Graph stepsGraph = phaseStep.generateSubworkflow(deploymentType);
+      graphs.put(phaseStep.getUuid(), stepsGraph);
+    }
+
+    graphs.put(uuid, graphBuilder.build());
+    return graphs;
+  }
   public static final class WorkflowPhaseBuilder {
     private String uuid = UUIDGenerator.getUuid();
     private String name;

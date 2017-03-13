@@ -13,6 +13,8 @@ import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNot
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
@@ -599,8 +601,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         anOrchestrationWorkflow()
             .withAppId(APP_ID)
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
-            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
     OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
@@ -656,7 +658,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdatePreDeployment() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
-    PhaseStep phaseStep = aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).withStepsInParallel(true).build();
     PhaseStep updated = workflowService.updatePreDeployment(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), phaseStep);
 
@@ -669,7 +671,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdatePostDeployment() {
     OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
 
-    PhaseStep phaseStep = aPhaseStep(PhaseStepType.POST_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep phaseStep = aPhaseStep(POST_DEPLOYMENT, Constants.PRE_DEPLOYMENT).withStepsInParallel(true).build();
     PhaseStep updated = workflowService.updatePostDeployment(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), phaseStep);
 
@@ -746,6 +748,55 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldDeleteWorkflowPhase() {
+    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(
+        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+
+    OrchestrationWorkflow orchestrationWorkflow2 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
+    assertThat(orchestrationWorkflow2).isNotNull();
+    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
+
+    WorkflowPhase phase1 = orchestrationWorkflow2.getWorkflowPhases().get(1);
+
+    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows()).isNotNull().containsKeys(phase1.getUuid());
+    phase1.getPhaseSteps().forEach(phaseStep -> {
+      assertThat(orchestrationWorkflow2.getGraph().getSubworkflows()).containsKeys(phaseStep.getUuid());
+    });
+
+    workflowService.deleteWorkflowPhase(APP_ID, orchestrationWorkflow2.getUuid(), phase1.getUuid());
+
+    OrchestrationWorkflow orchestrationWorkflow3 =
+        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow2.getUuid());
+
+    assertThat(orchestrationWorkflow3.getGraph().getNodes())
+        .isNotNull()
+        .extracting("name")
+        .isNotNull()
+        .doesNotContain(phase1.getName());
+    assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).isNotNull().doesNotContainKeys(phase1.getUuid());
+    phase1.getPhaseSteps().forEach(phaseStep -> {
+      assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).doesNotContainKeys(phaseStep.getUuid());
+    });
+  }
+
+  @Test
   public void shouldUpdateWorkflowPhaseRollback() {
     when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -805,11 +856,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
             .withPreDeploymentSteps(
-                aPhaseStep(PhaseStepType.PRE_DEPLOYMENT)
+                aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
                     .addStep(
                         aNode().withType("HTTP").withName("http").addProperty("URL", "http://www.google.com").build())
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
     OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
@@ -889,7 +940,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
     workflowPhase2.setName("phase2-changed");
-    workflowPhase2.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE).build());
 
     workflowService.updateWorkflowPhase(
         orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
@@ -969,14 +1019,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
         anOrchestrationWorkflow()
             .withAppId(APP_ID)
             .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT).build())
+            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
             .addWorkflowPhases(aWorkflowPhase()
                                    .withName("Phase1")
                                    .withInfraMappingId(INFRA_MAPPING_ID)
                                    .withServiceId(SERVICE_ID)
                                    .withDeploymentType(SSH)
                                    .build())
-            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT).build())
+            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
     OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
