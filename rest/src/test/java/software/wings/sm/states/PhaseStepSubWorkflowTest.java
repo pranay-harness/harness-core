@@ -111,7 +111,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("ECS Service Setup not done");
+      assertThat(exception.getParams().get("message")).asString().contains("Setup not done");
     }
   }
 
