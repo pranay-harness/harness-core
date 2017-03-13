@@ -8,10 +8,11 @@ import com.cloudbees.syslog.Facility;
 import com.cloudbees.syslog.MessageFormat;
 import com.cloudbees.syslog.Severity;
 import com.cloudbees.syslog.SyslogMessage;
-import com.cloudbees.syslog.sender.UdpSyslogMessageSender;
+import com.cloudbees.syslog.sender.TcpSyslogMessageSender;
 import org.productivity.java.syslog4j.SyslogIF;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 
@@ -19,7 +20,7 @@ import java.net.InetAddress;
  * Created by peeyushaggarwal on 3/7/17.
  */
 public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
-  private UdpSyslogMessageSender messageSender;
+  private TcpSyslogMessageSender messageSender;
   private Layout<E> layout;
   private String programName;
   private String key;
@@ -42,6 +43,11 @@ public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
           new SyslogMessage() {
             @Override
             public void toRfc5424SyslogMessage(Writer out) throws IOException {
+              StringWriter stringWriter = new StringWriter();
+              stringWriter.write("<key:" + key + "> ");
+              super.toRfc5424SyslogMessage(stringWriter);
+              out.write(Integer.toString(stringWriter.toString().length()));
+              out.write(' ');
               out.write("<key:" + key + "> ");
               super.toRfc5424SyslogMessage(out);
             }
@@ -63,14 +69,14 @@ public class CloudBeesSyslogAppender<E> extends AppenderBase<E> {
 
     synchronized (this) {
       if (messageSender == null) {
-        messageSender = new UdpSyslogMessageSender();
+        messageSender = new TcpSyslogMessageSender();
         messageSender.setDefaultAppName(programName);
         messageSender.setDefaultFacility(Facility.USER);
         messageSender.setDefaultSeverity(Severity.INFORMATIONAL);
         messageSender.setSyslogServerHostname(host);
         messageSender.setSyslogServerPort(port);
         messageSender.setMessageFormat(MessageFormat.RFC_5424); // optional, default is RFC 3164
-        // messageSender.setSsl(true);
+        messageSender.setSsl(true);
       }
     }
   }

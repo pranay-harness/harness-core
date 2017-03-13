@@ -34,7 +34,7 @@
         </layout>
 
         <host>syslog-a.logdna.com</host>
-        <port>514</port>
+        <port>6514</port>
         <programName>delegate</programName>
         <key>b623cc9c1ee668fffc89730c5adedc8f</key>
     </appender>
