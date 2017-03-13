@@ -785,6 +785,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     OrchestrationWorkflow orchestrationWorkflow3 =
         workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow2.getUuid());
 
+    assertThat(orchestrationWorkflow3.getGraph().getNodes())
+        .isNotNull()
+        .extracting("name")
+        .isNotNull()
+        .doesNotContain(phase1.getName());
     assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).isNotNull().doesNotContainKeys(phase1.getUuid());
     phase1.getPhaseSteps().forEach(phaseStep -> {
       assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).doesNotContainKeys(phaseStep.getUuid());

@@ -814,12 +814,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "orchestrationWorkflowId");
     }
 
-    List<String> phaseIds = orchestrationWorkflow.getWorkflowPhaseIds();
-    if (orchestrationWorkflow == null || phaseIds == null || !phaseIds.contains(phaseId)) {
+    if (orchestrationWorkflow.getWorkflowPhaseIds() == null
+        || !orchestrationWorkflow.getWorkflowPhaseIds().contains(phaseId)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "phaseId");
     }
 
+    List<String> phaseIds = orchestrationWorkflow.getWorkflowPhaseIds();
+    WorkflowPhase phase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+    WorkflowPhase rollbackPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
+
     phaseIds.remove(phaseId);
+
     Map<String, Graph> rollbackSubWorkflows =
         orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId).generateSubworkflows();
     Query<OrchestrationWorkflow> query = wingsPersistence.createQuery(OrchestrationWorkflow.class)
@@ -830,8 +835,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     UpdateOperations<OrchestrationWorkflow> updateOps =
         wingsPersistence.createUpdateOperations(OrchestrationWorkflow.class).set("workflowPhaseIds", phaseIds);
 
-    if (orchestrationWorkflow.getWorkflowPhaseIdMap() != null
-        && orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId) != null) {
+    if (phase != null) {
+      orchestrationWorkflow.getWorkflowPhases().remove(phase);
       updateOps.unset("workflowPhaseIdMap." + phaseId);
       updateOps.unset("graph.subworkflows." + phaseId);
       Map<String, Graph> subWorkflows =
@@ -839,15 +844,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       subWorkflows.keySet().forEach(key -> { updateOps.unset("graph.subworkflows." + key); });
     }
 
-    if (orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() != null
-        && orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId) != null) {
+    if (rollbackPhase != null) {
       updateOps.unset("rollbackWorkflowPhaseIdMap." + phaseId);
-      updateOps.unset(
-          "graph.subworkflows." + orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId).getUuid());
-      Map<String, Graph> subWorkflows =
-          orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId).generateSubworkflows();
+      updateOps.unset("graph.subworkflows." + rollbackPhase.getUuid());
+      Map<String, Graph> subWorkflows = rollbackPhase.generateSubworkflows();
       subWorkflows.keySet().forEach(key -> { updateOps.unset("graph.subworkflows." + key); });
     }
+
+    Graph graph = generateMainGraph(orchestrationWorkflow);
+    updateOps.set("graph.nodes", graph.getNodes()).set("graph.links", graph.getLinks());
 
     wingsPersistence.update(query, updateOps);
     updateStateMachine(appId, orchestrationWorkflowId);
