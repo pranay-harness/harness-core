@@ -5,6 +5,7 @@ import static software.wings.api.KubernetesReplicationControllerExecutionData.Ku
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -62,6 +63,9 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerSetup extends State {
+  private static final String VOLUME_PREFIX = "vol-";
+  private static final String VOLUME_SUFFIX = "-vol";
+
   @Attributes(title = "Load Balancer")
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerSettingId;
@@ -138,7 +142,7 @@ public class KubernetesReplicationControllerSetup extends State {
                 .stream()
                 .map(storageConfiguration
                     -> new VolumeBuilder()
-                           .withName(storageConfiguration.getHostSourcePath().replace('/', '-'))
+                           .withName(getVolumeName(storageConfiguration.getHostSourcePath()))
                            .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
                            .build())
                 .collect(Collectors.toList()));
@@ -165,11 +169,12 @@ public class KubernetesReplicationControllerSetup extends State {
     String replicationControllerName =
         KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(), revision);
 
-    Map<String, String> labels = new HashMap<>();
-    labels.put("revision", Integer.toString(revision));
-    if (kubernetesContainerTask.getLabels() != null) {
-      kubernetesContainerTask.getLabels().forEach(label -> labels.put(label.getName(), label.getValue()));
-    }
+    Map<String, String> labels = ImmutableMap.<String, String>builder()
+                                     .put("app", app.getName())
+                                     .put("service", service.getName())
+                                     .put("env", env.getName())
+                                     .put("revision", Integer.toString(revision))
+                                     .build();
 
     kubernetesContainerService.createController(kubernetesConfig,
         new ReplicationControllerBuilder()
@@ -210,6 +215,10 @@ public class KubernetesReplicationControllerSetup extends State {
                                     .withDockerImageName(imageName)
                                     .build())
         .build();
+  }
+
+  private String getVolumeName(String path) {
+    return VOLUME_PREFIX + path.replace('/', '-').toLowerCase() + VOLUME_SUFFIX;
   }
 
   private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
@@ -292,7 +301,7 @@ public class KubernetesReplicationControllerSetup extends State {
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
       wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
           -> containerBuilder.addNewVolumeMount()
-                 .withName(storageConfiguration.getHostSourcePath().replace('/', '-'))
+                 .withName(getVolumeName(storageConfiguration.getHostSourcePath()))
                  .withMountPath(storageConfiguration.getContainerPath())
                  .endVolumeMount());
     }
