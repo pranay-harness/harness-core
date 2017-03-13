@@ -26,6 +26,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
+import software.wings.beans.Role.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest.PageRequestType;
@@ -135,7 +136,7 @@ public class AuthServiceImpl implements AuthService {
 
   private boolean roleAuthorizedWithAccessType(
       Role role, PermissionAttribute permissionAttribute, String appId, String envId, PageRequestType requestType) {
-    if (role.isAdminRole()) {
+    if (role.getRoleType() == RoleType.ACCOUNT_ADMIN) {
       return true;
     }
     ResourceType reqResourceType = permissionAttribute.getResourceType();

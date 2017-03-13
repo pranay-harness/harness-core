@@ -20,7 +20,7 @@ public class Role extends Base {
   private String description;
   @NotEmpty private String accountId;
   @Embedded private List<Permission> permissions;
-  private boolean adminRole = false;
+  private RoleType roleType;
 
   /**
    * Gets name.
@@ -88,22 +88,12 @@ public class Role extends Base {
     permissions.add(permission);
   }
 
-  /**
-   * Is admin role boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isAdminRole() {
-    return adminRole;
+  public RoleType getRoleType() {
+    return roleType;
   }
 
-  /**
-   * Sets admin role.
-   *
-   * @param adminRole the admin role
-   */
-  public void setAdminRole(boolean adminRole) {
-    this.adminRole = adminRole;
+  public void setRoleType(RoleType roleType) {
+    this.roleType = roleType;
   }
 
   /**
@@ -126,7 +116,7 @@ public class Role extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, accountId, permissions, adminRole);
+    return 31 * super.hashCode() + Objects.hash(name, description, accountId, permissions, roleType);
   }
 
   @Override
@@ -143,7 +133,7 @@ public class Role extends Base {
     final Role other = (Role) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.accountId, other.accountId) && Objects.equals(this.permissions, other.permissions)
-        && Objects.equals(this.adminRole, other.adminRole);
+        && Objects.equals(this.roleType, other.roleType);
   }
 
   @Override
@@ -153,16 +143,18 @@ public class Role extends Base {
         .add("description", description)
         .add("accountId", accountId)
         .add("permissions", permissions)
-        .add("adminRole", adminRole)
+        .add("roleType", roleType)
         .toString();
   }
+
+  public enum RoleType { ACCOUNT_ADMIN, APPLICATION_ADMIN, PROD_SUPPORT, NON_PROD_SUPPORT }
 
   public static final class Builder {
     private String name;
     private String description;
     private String accountId;
     private List<Permission> permissions;
-    private boolean adminRole = false;
+    private RoleType roleType;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -196,8 +188,8 @@ public class Role extends Base {
       return this;
     }
 
-    public Builder withAdminRole(boolean adminRole) {
-      this.adminRole = adminRole;
+    public Builder withRoleType(RoleType roleType) {
+      this.roleType = roleType;
       return this;
     }
 
@@ -237,7 +229,7 @@ public class Role extends Base {
           .withDescription(description)
           .withAccountId(accountId)
           .withPermissions(permissions)
-          .withAdminRole(adminRole)
+          .withRoleType(roleType)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -252,7 +244,7 @@ public class Role extends Base {
       role.setDescription(description);
       role.setAccountId(accountId);
       role.setPermissions(permissions);
-      role.setAdminRole(adminRole);
+      role.setRoleType(roleType);
       role.setUuid(uuid);
       role.setAppId(appId);
       role.setCreatedBy(createdBy);

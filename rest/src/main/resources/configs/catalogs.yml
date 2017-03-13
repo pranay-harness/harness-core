@@ -135,3 +135,13 @@ ENVIRONMENT_TYPE:
       value: PROD
     - name: Non Production
       value: NON_PROD
+
+ROLE_TYPE:
+    - name: Account Administrator
+      value: ACCOUNT_ADMIN
+    - name: Application Administrator
+      value: APPLICATION_ADMIN
+    - name: Production Support
+      value: PROD_SUPPORT
+    - name: Non-production Support
+      value: NON_PROD_SUPPORT
