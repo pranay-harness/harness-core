@@ -199,7 +199,7 @@ public class KubernetesReplicationControllerSetup extends State {
             .withProtocol("TCP")
             .withPort(Integer.parseInt(port))
             .withNewTargetPort()
-            .withStrVal(targetPort)
+            .withIntVal(Integer.parseInt(targetPort))
             .endTargetPort()
             .endPort()
             .addToSelector(labels)
