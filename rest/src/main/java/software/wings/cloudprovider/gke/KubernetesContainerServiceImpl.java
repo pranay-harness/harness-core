@@ -2,19 +2,18 @@ package software.wings.cloudprovider.gke;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import io.fabric8.kubernetes.api.model.DoneableService;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceFluent;
+import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.KubernetesHelperService;
-
-import java.util.Map;
 
 /**
  * Created by brett on 2/9/17
@@ -33,12 +32,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void deleteController(KubernetesConfig kubernetesConfig, String name) {
-    logger.info("Deleting controller {}", name);
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).delete();
-  }
-
-  @Override
   public ReplicationController getController(KubernetesConfig kubernetesConfig, String name) {
     return name != null
         ? kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).get()
@@ -51,39 +44,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service createService(KubernetesConfig kubernetesConfig, Map<String, String> params) {
-    logger.info("Creating service {}", params.get("name"));
-    ServiceFluent.SpecNested<DoneableService> spec = kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-                                                         .services()
-                                                         .createOrReplaceWithNew()
-                                                         .withApiVersion("v1")
-                                                         .withNewMetadata()
-                                                         .withName(params.get("name"))
-                                                         .addToLabels("app", params.get("appName"))
-                                                         .addToLabels("tier", params.get("tier"))
-                                                         .endMetadata()
-                                                         .withNewSpec();
-    if (params.containsKey("type")) {
-      spec.withType(params.get("type"));
-    }
-    return spec.addNewPort()
-        .withPort(Integer.valueOf(params.get("port")))
-        .withNewTargetPort()
-        .withIntVal(Integer.valueOf(params.get("targetPort")))
-        .endTargetPort()
-        .endPort()
-        .addToSelector("app", params.get("appName"))
-        .addToSelector("tier", params.get("tier"))
-        .endSpec()
-        .done();
-  }
-
-  @Override
-  public void deleteService(KubernetesConfig kubernetesConfig, String name) {
-    ClientResource<Service, DoneableService> service =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name);
-    service.delete();
-    logger.info("Deleted service {}", name);
+  public void deleteController(KubernetesConfig kubernetesConfig, String name) {
+    logger.info("Deleting controller {}", name);
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).delete();
   }
 
   @Override
@@ -95,6 +58,31 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public int getControllerPodCount(KubernetesConfig kubernetesConfig, String name) {
     return getController(kubernetesConfig, name).getSpec().getReplicas();
+  }
+
+  @Override
+  public Service createService(KubernetesConfig kubernetesConfig, Service definition) {
+    logger.info("Creating service {}", definition.getMetadata().getName());
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().createOrReplace(definition);
+  }
+
+  @Override
+  public Service getService(KubernetesConfig kubernetesConfig, String name) {
+    return name != null ? kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name).get()
+                        : null;
+  }
+
+  @Override
+  public ServiceList listServices(KubernetesConfig kubernetesConfig) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().list();
+  }
+
+  @Override
+  public void deleteService(KubernetesConfig kubernetesConfig, String name) {
+    ClientResource<Service, DoneableService> service =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name);
+    service.delete();
+    logger.info("Deleted service {}", name);
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, String rcName, String serviceName) {

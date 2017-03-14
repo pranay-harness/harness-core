@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
  * Created by brett on 3/8/17
  */
 public class KubernetesConvention {
+  private static final String VOLUME_PREFIX = "vol-";
+  private static final String VOLUME_SUFFIX = "-vol";
   private static final String DELIMITER = ".";
   private static final String WILD_CHAR_REPLACEMENT = "-";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
@@ -31,6 +33,14 @@ public class KubernetesConvention {
       }
     }
     return -1;
+  }
+
+  public static String getServiceName(String replicationControllerName) {
+    return "service-" + replicationControllerName.replaceAll("\\.", "-");
+  }
+
+  public static String getVolumeName(String path) {
+    return VOLUME_PREFIX + path.replace('/', '-').toLowerCase() + VOLUME_SUFFIX;
   }
 
   private static String normalize(String expression) {

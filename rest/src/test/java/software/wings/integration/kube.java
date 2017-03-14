@@ -24,8 +24,8 @@ import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.common.collect.ImmutableMap;
 
 import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
@@ -110,7 +110,7 @@ public class kube {
 
     kubernetesService.cleanup(config);
 
-    ReplicationController rc =
+    kubernetesService.createController(config,
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -131,6 +131,7 @@ public class kube {
             .withImage("gcr.io/gdg-apps-1090/graphviz-server")
             .withArgs("8080")
             .withNewResources()
+            .withRequests(ImmutableMap.of("cpu", new Quantity("10m"), "memory", new Quantity(("10Mi"))))
             .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
             .endResources()
             .addNewPort()
@@ -140,63 +141,82 @@ public class kube {
             .endSpec()
             .endTemplate()
             .endSpec()
-            .build();
-
-    kubernetesService.createController(config, rc);
-
-    kubernetesService.createService(config,
-        ImmutableMap.<String, String>builder()
-            .put("name", "backend-service")
-            .put("appName", "testApp")
-            .put("tier", "backend")
-            .put("port", "80")
-            .put("targetPort", "8080")
             .build());
 
-    rc = new ReplicationControllerBuilder()
-             .withApiVersion("v1")
-             .withNewMetadata()
-             .withName("frontend-ctrl")
-             .addToLabels("app", "testApp")
-             .addToLabels("tier", "frontend")
-             .endMetadata()
-             .withNewSpec()
-             .withReplicas(2)
-             .withNewTemplate()
-             .withNewMetadata()
-             .addToLabels("app", "testApp")
-             .addToLabels("tier", "frontend")
-             .endMetadata()
-             .withNewSpec()
-             .addNewContainer()
-             .withName("webapp")
-             .withImage("gcr.io/gdg-apps-1090/graphviz-webapp")
-             .addNewEnv()
-             .withName("GET_HOSTS_FROM")
-             .withValue("dns")
-             .endEnv()
-             .withNewResources()
-             .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
-             .endResources()
-             .addNewPort()
-             .withContainerPort(8080)
-             .endPort()
-             .endContainer()
-             .endSpec()
-             .endTemplate()
-             .endSpec()
-             .build();
+    kubernetesService.createService(config,
+        new ServiceBuilder()
+            .withApiVersion("v1")
+            .withNewMetadata()
+            .withName("backend-service")
+            .addToLabels("app", "testApp")
+            .addToLabels("tier", "backend")
+            .endMetadata()
+            .withNewSpec()
+            .addNewPort()
+            .withPort(80)
+            .withNewTargetPort()
+            .withIntVal(8080)
+            .endTargetPort()
+            .endPort()
+            .addToSelector("app", "testApp")
+            .addToSelector("tier", "backend")
+            .endSpec()
+            .build());
 
-    kubernetesService.createController(config, rc);
+    kubernetesService.createController(config,
+        new ReplicationControllerBuilder()
+            .withApiVersion("v1")
+            .withNewMetadata()
+            .withName("frontend-ctrl")
+            .addToLabels("app", "testApp")
+            .addToLabels("tier", "frontend")
+            .endMetadata()
+            .withNewSpec()
+            .withReplicas(2)
+            .withNewTemplate()
+            .withNewMetadata()
+            .addToLabels("app", "testApp")
+            .addToLabels("tier", "frontend")
+            .endMetadata()
+            .withNewSpec()
+            .addNewContainer()
+            .withName("webapp")
+            .withImage("gcr.io/gdg-apps-1090/graphviz-webapp")
+            .addNewEnv()
+            .withName("GET_HOSTS_FROM")
+            .withValue("dns")
+            .endEnv()
+            .withNewResources()
+            .withLimits(ImmutableMap.of("cpu", new Quantity("100m"), "memory", new Quantity("100Mi")))
+            .endResources()
+            .addNewPort()
+            .withContainerPort(8080)
+            .endPort()
+            .endContainer()
+            .endSpec()
+            .endTemplate()
+            .endSpec()
+            .build());
 
     kubernetesService.createService(config,
-        ImmutableMap.<String, String>builder()
-            .put("name", "frontend-service")
-            .put("appName", "testApp")
-            .put("tier", "frontend")
-            .put("type", "LoadBalancer")
-            .put("port", "80")
-            .put("targetPort", "8080")
+        new ServiceBuilder()
+            .withApiVersion("v1")
+            .withNewMetadata()
+            .withName("frontend-service")
+            .addToLabels("app", "testApp")
+            .addToLabels("tier", "frontend")
+            .endMetadata()
+            .withNewSpec()
+            .addNewPort()
+            .withPort(80)
+            .withNewTargetPort()
+            .withIntVal(8080)
+            .endTargetPort()
+            .endPort()
+            .withType("LoadBalancer")
+            .addToSelector("app", "testApp")
+            .addToSelector("tier", "backend")
+            .endSpec()
             .build());
 
     kubernetesService.setControllerPodCount(config, "frontend-ctrl", 5);

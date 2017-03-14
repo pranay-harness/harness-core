@@ -17,6 +17,7 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.mongodb.morphia.annotations.Transient;
@@ -49,7 +50,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
@@ -63,12 +63,11 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerSetup extends State {
-  private static final String VOLUME_PREFIX = "vol-";
-  private static final String VOLUME_SUFFIX = "-vol";
-
-  @Attributes(title = "Load Balancer")
-  @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
-  private String loadBalancerSettingId;
+  @Attributes(
+      required = true, enums = {"ClusterIP", "NodePort", "LoadBalancer", "ExternalName"}, title = "Service Type")
+  private String serviceType;
+  @Attributes(required = true, title = "Port") private String port;
+  @Attributes(required = true, title = "Target Port") private String targetPort;
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
@@ -142,23 +141,12 @@ public class KubernetesReplicationControllerSetup extends State {
                 .stream()
                 .map(storageConfiguration
                     -> new VolumeBuilder()
-                           .withName(getVolumeName(storageConfiguration.getHostSourcePath()))
+                           .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
                            .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
                            .build())
                 .collect(Collectors.toList()));
       }
     });
-
-    /*
-    TODO:: Setup load balancer service
-    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
-
-    if (loadBalancerSetting == null ||
-    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
-    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
-    }
-    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
-    */
 
     KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
 
@@ -168,6 +156,7 @@ public class KubernetesReplicationControllerSetup extends State {
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
     String replicationControllerName =
         KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(), revision);
+    String serviceName = KubernetesConvention.getServiceName(replicationControllerName);
 
     Map<String, String> labels = ImmutableMap.<String, String>builder()
                                      .put("app", app.getName())
@@ -198,6 +187,26 @@ public class KubernetesReplicationControllerSetup extends State {
             .endSpec()
             .build());
 
+    kubernetesContainerService.createService(kubernetesConfig,
+        new ServiceBuilder()
+            .withApiVersion("v1")
+            .withNewMetadata()
+            .withName(serviceName)
+            .addToLabels(labels)
+            .endMetadata()
+            .withNewSpec()
+            .addNewPort()
+            .withProtocol("TCP")
+            .withPort(Integer.parseInt(port))
+            .withNewTargetPort()
+            .withStrVal(targetPort)
+            .endTargetPort()
+            .endPort()
+            .addToSelector(labels)
+            .withType(serviceType)
+            .endSpec()
+            .build());
+
     KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
         aKubernetesReplicationControllerElement()
             .withUuid(serviceId)
@@ -215,10 +224,6 @@ public class KubernetesReplicationControllerSetup extends State {
                                     .withDockerImageName(imageName)
                                     .build())
         .build();
-  }
-
-  private String getVolumeName(String path) {
-    return VOLUME_PREFIX + path.replace('/', '-').toLowerCase() + VOLUME_SUFFIX;
   }
 
   private String lastReplicationController(KubernetesConfig kubernetesConfig, String controllerNamePrefix) {
@@ -260,7 +265,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
     Map<String, Quantity> limits = new HashMap<>();
     if (wingsContainerDefinition.getCpu() != null) {
-      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu() + "m"));
+      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu().toString()));
     }
 
     if (wingsContainerDefinition.getMemory() != null) {
@@ -301,7 +306,7 @@ public class KubernetesReplicationControllerSetup extends State {
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
       wingsContainerDefinition.getStorageConfigurations().forEach(storageConfiguration
           -> containerBuilder.addNewVolumeMount()
-                 .withName(getVolumeName(storageConfiguration.getHostSourcePath()))
+                 .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
                  .withMountPath(storageConfiguration.getContainerPath())
                  .endVolumeMount());
     }
@@ -332,21 +337,33 @@ public class KubernetesReplicationControllerSetup extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   /**
-   * Gets load balancer setting id.
-   *
-   * @return the load balancer setting id
+   * Gets service type.
    */
-  public String getLoadBalancerSettingId() {
-    return loadBalancerSettingId;
+  public String getServiceType() {
+    return serviceType;
   }
 
   /**
-   * Sets load balancer setting id.
-   *
-   * @param loadBalancerSettingId the load balancer setting id
+   * Sets service type.
    */
-  public void setLoadBalancerSettingId(String loadBalancerSettingId) {
-    this.loadBalancerSettingId = loadBalancerSettingId;
+  public void setServiceType(String serviceType) {
+    this.serviceType = serviceType;
+  }
+
+  public String getPort() {
+    return port;
+  }
+
+  public void setPort(String port) {
+    this.port = port;
+  }
+
+  public String getTargetPort() {
+    return targetPort;
+  }
+
+  public void setTargetPort(String targetPort) {
+    this.targetPort = targetPort;
   }
 
   public static final class KubernetesReplicationControllerSetupBuilder {
@@ -355,7 +372,7 @@ public class KubernetesReplicationControllerSetup extends State {
     private ContextElementType requiredContextElementType;
     private String stateType;
     private boolean rollback;
-    private String loadBalancerSettingId;
+    private String serviceType;
     private transient GkeClusterService gkeClusterService;
     private transient KubernetesContainerService kubernetesContainerService;
     private transient SettingsService settingsService;
@@ -395,8 +412,8 @@ public class KubernetesReplicationControllerSetup extends State {
       return this;
     }
 
-    public KubernetesReplicationControllerSetupBuilder withLoadBalancerSettingId(String loadBalancerSettingId) {
-      this.loadBalancerSettingId = loadBalancerSettingId;
+    public KubernetesReplicationControllerSetupBuilder withServiceType(String serviceType) {
+      this.serviceType = serviceType;
       return this;
     }
 
@@ -441,7 +458,7 @@ public class KubernetesReplicationControllerSetup extends State {
           .withRequiredContextElementType(requiredContextElementType)
           .withStateType(stateType)
           .withRollback(rollback)
-          .withLoadBalancerSettingId(loadBalancerSettingId)
+          .withServiceType(serviceType)
           .withGkeClusterService(gkeClusterService)
           .withKubernetesContainerService(kubernetesContainerService)
           .withSettingsService(settingsService)
@@ -457,7 +474,7 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesReplicationControllerSetup.setRequiredContextElementType(requiredContextElementType);
       kubernetesReplicationControllerSetup.setStateType(stateType);
       kubernetesReplicationControllerSetup.setRollback(rollback);
-      kubernetesReplicationControllerSetup.setLoadBalancerSettingId(loadBalancerSettingId);
+      kubernetesReplicationControllerSetup.setServiceType(serviceType);
       kubernetesReplicationControllerSetup.settingsService = this.settingsService;
       kubernetesReplicationControllerSetup.serviceResourceService = this.serviceResourceService;
       kubernetesReplicationControllerSetup.infrastructureMappingService = this.infrastructureMappingService;
