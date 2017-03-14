@@ -2,6 +2,8 @@ package software.wings.cloudprovider.aws;
 
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 
+import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -19,14 +21,18 @@ import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.Cluster;
+import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.CreateClusterRequest;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
 import com.amazonaws.services.ecs.model.DeleteServiceResult;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
+import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
@@ -40,6 +46,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -49,9 +56,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,6 +77,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws InterruptedException the interrupted exception
+   */
+  public static void main(String... args) throws InterruptedException {
+    new EcsContainerServiceImpl().createCluster();
+  }
 
   /**
    * Create cluster.
@@ -922,6 +941,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonEC2Client amazonEC2Client =
+        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
@@ -935,11 +956,51 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     if (taskArns == null || taskArns.size() == 0) {
       return Arrays.asList();
     }
+
+    logger.info("Task arns = " + taskArns);
     List<Task> tasks =
         amazonECSClient.describeTasks(new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
             .getTasks();
     List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
-    return containerInstances;
+    logger.info("Container Instances = " + containerInstances);
+
+    List<ContainerInstance> containerInstanceList =
+        amazonECSClient
+            .describeContainerInstances(
+                new DescribeContainerInstancesRequest().withContainerInstances(containerInstances))
+            .getContainerInstances();
+    List<String> dockerContainerIds = Lists.newArrayList();
+    containerInstanceList.forEach(containerInstance -> {
+      String ipAddress =
+          amazonEC2Client
+              .describeInstances(new DescribeInstancesRequest().withInstanceIds(containerInstance.getEc2InstanceId()))
+              .getReservations()
+              .get(0)
+              .getInstances()
+              .get(0)
+              .getPrivateIpAddress();
+      TaskMetadata taskMetadata = null;
+      try {
+        logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
+        taskMetadata = Request.Get("http://" + ipAddress + ":51678/v1/tasks")
+                           .execute()
+                           .handleResponse(response
+                               -> JsonUtils.asObject(
+                                   CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
+                                   TaskMetadata.class));
+        logger.info("TaskMetadata = " + taskMetadata);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+      taskMetadata.getTasks()
+          .stream()
+          .filter(task -> taskArns.contains(task.getArn()))
+          .findFirst()
+          .ifPresent(task -> dockerContainerIds.add(task.getContainers().get(0).getDockerId()));
+    });
+    logger.info("Docker container ids = " + dockerContainerIds);
+    return dockerContainerIds;
   }
 
   @Override
@@ -987,15 +1048,5 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "connectorConfig is not of type AwsConfig");
     }
     return (AwsConfig) connectorConfig.getValue();
-  }
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   * @throws InterruptedException the interrupted exception
-   */
-  public static void main(String... args) throws InterruptedException {
-    new EcsContainerServiceImpl().createCluster();
   }
 }
