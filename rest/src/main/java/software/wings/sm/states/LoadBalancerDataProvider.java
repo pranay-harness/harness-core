@@ -26,7 +26,7 @@ public class LoadBalancerDataProvider implements DataProvider {
     List<SettingAttribute> settingAttributesByType =
         settingsService.getSettingAttributesByType(appId, SettingVariableTypes.ALB.name());
 
-    if (settingAttributesByType == null && settingAttributesByType.isEmpty()) {
+    if (settingAttributesByType == null || settingAttributesByType.isEmpty()) {
       return new HashMap<>();
     }
 

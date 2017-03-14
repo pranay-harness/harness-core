@@ -3,9 +3,8 @@ package software.wings.cloudprovider.gke;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceList;
 import software.wings.beans.KubernetesConfig;
-
-import java.util.Map;
 
 /**
  * Created by brett on 2/10/17.
@@ -17,19 +16,19 @@ public interface KubernetesContainerService {
   ReplicationController createController(KubernetesConfig kubernetesConfig, ReplicationController definition);
 
   /**
-   * Deletes a replication controller.
-   */
-  void deleteController(KubernetesConfig kubernetesConfig, String name);
-
-  /**
    * Gets a replication controller.
    */
   ReplicationController getController(KubernetesConfig kubernetesConfig, String name);
 
   /**
-   * List replication controllers.
+   * Lists replication controllers.
    */
   ReplicationControllerList listControllers(KubernetesConfig kubernetesConfig);
+
+  /**
+   * Deletes a replication controller.
+   */
+  void deleteController(KubernetesConfig kubernetesConfig, String name);
 
   /**
    * Scales controller to specified number of nodes.
@@ -44,7 +43,17 @@ public interface KubernetesContainerService {
   /**
    * Creates a service.
    */
-  Service createService(KubernetesConfig kubernetesConfig, Map<String, String> params);
+  Service createService(KubernetesConfig kubernetesConfig, Service definition);
+
+  /**
+   * Gets a service.
+   */
+  Service getService(KubernetesConfig kubernetesConfig, String name);
+
+  /**
+   * Lists services.
+   */
+  ServiceList listServices(KubernetesConfig kubernetesConfig);
 
   /**
    * Deletes a service.
