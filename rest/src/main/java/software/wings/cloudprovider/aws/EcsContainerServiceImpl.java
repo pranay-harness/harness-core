@@ -46,6 +46,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,16 +78,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
-  /**
-   * The entry point of application.
-   *
-   * @param args the input arguments
-   * @throws InterruptedException the interrupted exception
-   */
-  public static void main(String... args) throws InterruptedException {
-    new EcsContainerServiceImpl().createCluster();
-  }
 
   /**
    * Create cluster.
@@ -966,8 +957,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
     List<ContainerInstance> containerInstanceList =
         amazonECSClient
-            .describeContainerInstances(
-                new DescribeContainerInstancesRequest().withContainerInstances(containerInstances))
+            .describeContainerInstances(new DescribeContainerInstancesRequest()
+                                            .withCluster(clusterName)
+                                            .withContainerInstances(containerInstances))
             .getContainerInstances();
     List<String> dockerContainerIds = Lists.newArrayList();
     containerInstanceList.forEach(containerInstance -> {
@@ -997,7 +989,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           .stream()
           .filter(task -> taskArns.contains(task.getArn()))
           .findFirst()
-          .ifPresent(task -> dockerContainerIds.add(task.getContainers().get(0).getDockerId()));
+          .ifPresent(
+              task -> dockerContainerIds.add(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12)));
     });
     logger.info("Docker container ids = " + dockerContainerIds);
     return dockerContainerIds;
