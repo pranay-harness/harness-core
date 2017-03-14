@@ -9,7 +9,6 @@ import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCode.USER_ALREADY_REGISTERED;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -80,9 +79,8 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
 
-    return getUserByEmail(user.getEmail()) != null
-        ? addAccountToExistingUser(getUserByEmail(user.getEmail()), user.getCompanyName())
-        : registerNewUser(user);
+    User existingUser = getUserByEmail(user.getEmail());
+    return existingUser != null ? addAccountToExistingUser(existingUser, user) : registerNewUser(user);
   }
 
   private UserInvite getUserInvite(String email, String accountId) {
@@ -94,14 +92,8 @@ public class UserServiceImpl implements UserService {
         .get();
   }
 
-  private User addAccountToExistingUser(User existingUser, String companyName) {
-    if (isBlank(companyName)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Company Name Can't be empty");
-    } else if (existingUser.getAccounts().stream().anyMatch(account -> account.getCompanyName().equals(companyName))) {
-      throw new WingsException(USER_ALREADY_REGISTERED);
-    }
-
-    Account account = accountService.findOrCreate(companyName);
+  private User addAccountToExistingUser(User existingUser, User user) {
+    Account account = setupAccount(user);
     UserInvite userInvite = getUserInvite(existingUser.getEmail(), account.getUuid());
     if (userInvite == null) {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
@@ -115,10 +107,30 @@ public class UserServiceImpl implements UserService {
         wingsPersistence.createUpdateOperations(User.class)
             .addToSet("accounts", account)
             .addToSet("roles", userInvite.getRoles()));
-    User user = get(existingUser.getUuid());
     markInviteCompleted(userInvite);
-    executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(user, account));
+    executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(existingUser, account));
     return user;
+  }
+
+  private Account setupAccount(User user) {
+    if (isBlank(user.getCompanyName())) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Company Name Can't be empty");
+    }
+
+    if (isBlank(user.getAccountName())) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name Can't be empty");
+    }
+
+    if (accountService.exists(user.getAccountName())) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name should be unique");
+    }
+
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(user.getAccountName())
+                          .withCompanyName(user.getCompanyName())
+                          .build();
+
+    return accountService.save(account);
   }
 
   private void markInviteCompleted(UserInvite userInvite) {
@@ -146,9 +158,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private User registerNewUser(User user) {
-    String companyName =
-        isBlank(user.getCompanyName()) ? configuration.getPortal().getCompanyName() : user.getCompanyName();
-    Account account = accountService.findOrCreate(companyName);
+    Account account = setupAccount(user);
 
     user.getAccounts().add(account);
     UserInvite userInvite = null;
@@ -157,7 +167,7 @@ public class UserServiceImpl implements UserService {
                                                 .addFilter("emailVerified", Operator.EQ, true)
                                                 .build());
     if (verifiedUsers.getResponse().size() == 0) { // first User. Assign admin role
-      user.addRole(roleService.getAdminRole());
+      user.addRole(roleService.getAccountAdminRole(account.getUuid()));
     } else {
       userInvite = getUserInvite(user.getEmail(), account.getUuid());
       if (userInvite == null) {
@@ -279,7 +289,8 @@ public class UserServiceImpl implements UserService {
         userInvite.setCompleted(true);
         sendAddedRoleEmail(user, account, userInvite.getRoles());
       } else {
-        addAccountToExistingUser(user, account.getCompanyName());
+        // TODO
+        // addAccountToExistingUser(user, account.getCompanyName());
       }
     } else {
       sendNewInvitationMail(userInvite, account);

@@ -48,9 +48,16 @@ public interface RoleService {
   void delete(String roleId);
 
   /**
-   * Gets admin role.
+   * Gets account admin role.
    *
-   * @return the admin role
+   * @return the account admin role
    */
-  Role getAdminRole();
+  Role getAccountAdminRole(String accountId);
+
+  /**
+   * Gets app admin role.
+   *
+   * @return the app admin role
+   */
+  Role getAppAdminRole(String accountId, String appId);
 }

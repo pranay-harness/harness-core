@@ -7,6 +7,10 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.Role.Builder.aRole;
+import static software.wings.beans.RoleType.APPLICATION_ADMIN;
+import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
+import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
@@ -15,13 +19,16 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.Notification;
 import software.wings.beans.Orchestration;
+import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
@@ -38,6 +45,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
@@ -78,6 +86,7 @@ public class AppServiceImpl implements AppService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ArtifactService artifactService;
   @Inject private StatisticsService statisticsService;
+  @Inject private RoleService roleService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -86,6 +95,7 @@ public class AppServiceImpl implements AppService {
   @Metered
   public Application save(Application app) {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
+    createDefaultRoles(app);
     settingsService.createDefaultSettings(application.getUuid(), application.getAccountId());
     environmentService.createDefaultEnvironments(application.getUuid());
     notificationService.sendNotificationAsync(
@@ -97,6 +107,36 @@ public class AppServiceImpl implements AppService {
     workflowService.createWorkflow(Orchestration.class, getDefaultCanaryDeploymentObject(application.getUuid()));
 
     return get(application.getUuid(), INCOMPLETE, true, 0);
+  }
+
+  List<Role> createDefaultRoles(Application app) {
+    return Lists.newArrayList(roleService.save(aRole()
+                                                   .withAppId(Base.GLOBAL_APP_ID)
+                                                   .withAccountId(app.getAccountId())
+                                                   .withName(APPLICATION_ADMIN.getDisplayName())
+                                                   .withRoleType(APPLICATION_ADMIN)
+                                                   .withAllApps(false)
+                                                   .withAppId(app.getUuid())
+                                                   .withAppName(app.getName())
+                                                   .build()),
+        roleService.save(aRole()
+                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAccountId(app.getAccountId())
+                             .withName(PROD_SUPPORT.getDisplayName())
+                             .withRoleType(PROD_SUPPORT)
+                             .withAllApps(false)
+                             .withAppId(app.getUuid())
+                             .withAppName(app.getName())
+                             .build()),
+        roleService.save(aRole()
+                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAccountId(app.getAccountId())
+                             .withName(NON_PROD_SUPPORT.getDisplayName())
+                             .withRoleType(NON_PROD_SUPPORT)
+                             .withAllApps(false)
+                             .withAppId(app.getUuid())
+                             .withAppName(app.getName())
+                             .build()));
   }
 
   private Orchestration getDefaultCanaryDeploymentObject(String appId) {

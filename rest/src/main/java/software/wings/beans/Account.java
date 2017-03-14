@@ -1,12 +1,9 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.utils.validation.Create;
 
-import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -14,7 +11,9 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
-  @Indexed(unique = true) @NotNull private String companyName;
+  @Indexed @NotNull private String companyName;
+
+  @Indexed(unique = true) @NotNull private String accountName;
 
   @NotNull(groups = Create.class) private String accountKey;
 
@@ -54,33 +53,45 @@ public class Account extends Base {
     this.accountKey = accountKey;
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(companyName, accountKey);
+  public String getAccountName() {
+    return accountName;
+  }
+
+  public void setAccountName(String accountName) {
+    this.accountName = accountName;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!super.equals(obj)) {
+    if (!super.equals(o))
       return false;
-    }
-    final Account other = (Account) obj;
-    return Objects.equals(this.companyName, other.companyName) && Objects.equals(this.accountKey, other.accountKey);
+
+    Account account = (Account) o;
+
+    return accountName != null ? accountName.equals(account.accountName) : account.accountName == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
+    return result;
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("companyName", companyName).add("accountKey", accountKey).toString();
+    return "Account{"
+        + "companyName='" + companyName + '\'' + ", accountName='" + accountName + '\'' + ", accountKey='" + accountKey
+        + '\'' + '}';
   }
 
   public static final class Builder {
     private String companyName;
+    private String accountName;
     private String accountKey;
     private String uuid;
     private String appId = GLOBAL_APP_ID;
@@ -97,6 +108,11 @@ public class Account extends Base {
 
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
+      return this;
+    }
+
+    public Builder withAccountName(String accountName) {
+      this.accountName = accountName;
       return this;
     }
 
@@ -142,6 +158,7 @@ public class Account extends Base {
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
+          .withAccountName(accountName)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt);
@@ -150,6 +167,7 @@ public class Account extends Base {
     public Account build() {
       Account account = new Account();
       account.setCompanyName(companyName);
+      account.setAccountName(accountName);
       account.setAccountKey(accountKey);
       account.setUuid(uuid);
       account.setAppId(appId);

@@ -20,6 +20,7 @@ import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.ResourceTestRule;
 
@@ -35,13 +36,14 @@ public class UserResourceTest {
    * The constant ACTIVITY_SERVICE.
    */
   public static final UserService USER_SERVICE = mock(UserService.class);
+  public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
 
   /**
    * The constant RESOURCES.
    */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new UserResource(USER_SERVICE))
+                                                       .addResource(new UserResource(USER_SERVICE, ACCOUNT_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
 

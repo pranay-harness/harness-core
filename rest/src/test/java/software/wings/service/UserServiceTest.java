@@ -123,7 +123,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
-    when(accountService.findOrCreate(COMPANY_NAME))
+    when(accountService.save(any(Account.class)))
         .thenReturn(Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().build());

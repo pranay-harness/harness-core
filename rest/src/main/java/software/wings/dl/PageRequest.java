@@ -13,11 +13,9 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
-import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Permission;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
@@ -343,18 +341,16 @@ public class PageRequest<T> {
       if (user != null && user.getRoles() != null) {
         PageRequestType pageRequestType = (PageRequestType) requestContext.getProperty("pageRequestType");
         if (pageRequestType.equals(PageRequestType.LIST_WITHOUT_APP_ID)) { // add app filter based on user permissions
-          List<String> appIds = user.getRoles()
-                                    .stream()
-                                    .flatMap(role -> role.getPermissions().stream())
-                                    .filter(permission -> permission.getPermissionScope().equals(PermissionScope.APP))
-                                    .map(Permission::getAppId)
-                                    .collect(Collectors.toList());
-          if (!appIds.contains(Base.GLOBAL_APP_ID)) {
-            String fieldName = mappedClass.getClazz().equals(Application.class) ? "uuid" : "appId";
-            filters.add(SearchFilter.Builder.aSearchFilter()
-                            .withField(fieldName, Operator.IN, appIds.stream().toArray())
-                            .build());
-          }
+
+          // TODO: Should do better handling of permissions
+          //          List<String> appIds = user.getRoles().stream().flatMap(role -> role.getPermissions().stream())
+          //              .filter(permission ->
+          //              permission.getPermissionScope().equals(PermissionScope.APP)).map(Permission::getAppId).collect(Collectors.toList());
+          //          if (!appIds.contains(Base.GLOBAL_APP_ID)) {
+          //            String fieldName = mappedClass.getClazz().equals(Application.class) ? "uuid" : "appId";
+          //            filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.IN,
+          //            appIds.stream().toArray()).build());
+          //          }
         } else if (pageRequestType.equals(
                        PageRequestType.LIST_WITHOUT_ENV_ID)) { // add env filter based on user permissions
           List<Environment> appEnvironments = (List<Environment>) requestContext.getProperty("appEnvironments");
