@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
@@ -194,6 +195,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldGetDeploymentStatistics() {
     long endEpoch = LocalDate.now(ZoneId.systemDefault())
                         .minus(0, ChronoUnit.DAYS)

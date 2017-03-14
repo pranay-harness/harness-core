@@ -212,6 +212,11 @@ public class WingsTestConstants {
   public static final String COMPANY_NAME = "COMPANY_NAME";
 
   /**
+   * The constant ACCOUNT_NAME.
+   */
+  public static final String ACCOUNT_NAME = "ACCOUNT_NAME";
+
+  /**
    * The constant PASSWORD.
    */
   public static final String PASSWORD = "PASSWORD";
