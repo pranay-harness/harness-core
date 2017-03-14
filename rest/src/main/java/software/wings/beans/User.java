@@ -12,7 +12,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Role.RoleType;
 
 import java.security.Principal;
 import java.util.ArrayList;

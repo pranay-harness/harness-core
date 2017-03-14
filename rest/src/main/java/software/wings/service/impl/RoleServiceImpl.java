@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Role;
-import software.wings.beans.Role.RoleType;
+import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -100,6 +100,6 @@ public class RoleServiceImpl implements RoleService {
 
   @Override
   public Role getAdminRole() {
-    return wingsPersistence.createQuery(Role.class).field("adminRole").equal(true).get();
+    return wingsPersistence.createQuery(Role.class).field("roleType").equal(RoleType.ACCOUNT_ADMIN).get();
   }
 }

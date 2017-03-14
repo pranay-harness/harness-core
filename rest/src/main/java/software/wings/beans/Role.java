@@ -147,8 +147,6 @@ public class Role extends Base {
         .toString();
   }
 
-  public enum RoleType { ACCOUNT_ADMIN, APPLICATION_ADMIN, PROD_SUPPORT, NON_PROD_SUPPORT }
-
   public static final class Builder {
     private String name;
     private String description;

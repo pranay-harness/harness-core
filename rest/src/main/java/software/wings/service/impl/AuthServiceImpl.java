@@ -26,7 +26,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
-import software.wings.beans.Role.RoleType;
+import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest.PageRequestType;
