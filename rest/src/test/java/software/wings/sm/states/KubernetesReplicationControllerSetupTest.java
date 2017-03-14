@@ -133,6 +133,10 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
    */
   @Before
   public void setup() {
+    kubernetesReplicationControllerSetup.setServiceType("ClusterIP");
+    kubernetesReplicationControllerSetup.setPort("80");
+    kubernetesReplicationControllerSetup.setTargetPort("8080");
+
     when(appService.get(APP_ID)).thenReturn(app);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
@@ -222,6 +226,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
         .thenReturn(new ReplicationControllerListBuilder()
                         .withItems(Lists.newArrayList(kubernetesReplicationController))
                         .build());
+
     ExecutionResponse response = kubernetesReplicationControllerSetup.execute(context);
     assertThat(response).isNotNull();
     verify(gkeClusterService).getCluster(any(SettingAttribute.class), anyString());
