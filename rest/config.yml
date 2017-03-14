@@ -7,8 +7,10 @@ xxxxxxxx
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
       certAlias: selfsigned
       validateCerts: false
+      maxRequestHeaderSize: 100KiB
     - type: http
       port: 3457
+      maxRequestHeaderSize: 100KiB
   adminConnectors:
     - type: h2
       port: 9091
@@ -17,6 +19,11 @@ xxxxxxxx
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
       certAlias: selfsigned
       validateCerts: false
+  requestLog:
+      appenders:
+        - type: file
+          currentLogFilename: access.log
+          archivedLogFilenamePattern: access-%d.log.gz
 
 logging:
   level: INFO
