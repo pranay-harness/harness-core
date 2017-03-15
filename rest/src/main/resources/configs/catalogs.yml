@@ -145,3 +145,11 @@ ROLE_TYPE:
       value: PROD_SUPPORT
     - name: Non-production Support
       value: NON_PROD_SUPPORT
+
+OVERRIDE_TYPE:
+    - name: Entire Environment
+      value: ALL
+    - name: Override Specific Instances
+      value: INSTANCES
+    - name: Override Specific Zones/Tags etc.
+      value: CUSTOM
