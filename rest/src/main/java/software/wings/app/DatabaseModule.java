@@ -127,8 +127,21 @@ public class DatabaseModule extends AbstractModule {
                   .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
                       indexed.unique() || indexed.options().unique());
             } catch (MongoCommandException mex) {
-              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
-              throw mex;
+              if (mex.getErrorCode() == 85) { // When Index creation fails due to changed options drop it and recreate.
+                this.primaryDatastore.getCollection(mc.getClazz())
+                    .dropIndex(new BasicDBObject().append(mf.getNameToStore(), 1));
+                try {
+                  this.primaryDatastore.getCollection(mc.getClazz())
+                      .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null,
+                          indexed.unique() || indexed.options().unique());
+                } catch (MongoCommandException mex1) {
+                  logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+                  throw mex1;
+                }
+              } else {
+                logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+                throw mex;
+              }
             }
           }
         }
