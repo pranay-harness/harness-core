@@ -68,7 +68,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.ECSConvention;
+import software.wings.utils.EcsConvention;
 
 import java.util.Date;
 
@@ -173,7 +173,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     on(ecsServiceSetup).set("infrastructureMappingService", infrastructureMappingService);
 
     com.amazonaws.services.ecs.model.Service ecsService = new com.amazonaws.services.ecs.model.Service();
-    ecsService.setServiceName(ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()));
+    ecsService.setServiceName(EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()));
     ecsService.setCreatedAt(new Date());
 
     when(awsClusterService.getServices(computeProvider, CLUSTER_NAME)).thenReturn(Lists.newArrayList(ecsService));

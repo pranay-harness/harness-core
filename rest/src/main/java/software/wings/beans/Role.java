@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
@@ -9,18 +7,21 @@ import org.mongodb.morphia.annotations.Indexed;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by anubhaw on 3/16/16.
  */
 @Entity(value = "roles", noClassnameStored = true)
 public class Role extends Base {
-  @Indexed(unique = true) @NotEmpty private String name;
+  @Indexed @NotEmpty private String name;
   private String description;
   @NotEmpty private String accountId;
+
+  private String appName;
+
   @Embedded private List<Permission> permissions;
   private RoleType roleType;
+  private boolean allApps;
 
   /**
    * Gets name.
@@ -37,7 +38,15 @@ public class Role extends Base {
    * @param name the name
    */
   public void setName(String name) {
-    this.name = name.toUpperCase();
+    this.name = name;
+  }
+
+  public String getAppName() {
+    return appName;
+  }
+
+  public void setAppName(String appName) {
+    this.appName = appName;
   }
 
   /**
@@ -96,6 +105,14 @@ public class Role extends Base {
     this.roleType = roleType;
   }
 
+  public boolean isAllApps() {
+    return allApps;
+  }
+
+  public void setAllApps(boolean allApps) {
+    this.allApps = allApps;
+  }
+
   /**
    * Getter for property 'accountId'.
    *
@@ -115,36 +132,43 @@ public class Role extends Base {
   }
 
   @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, accountId, permissions, roleType);
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    if (!super.equals(o))
+      return false;
+
+    Role role = (Role) o;
+
+    if (allApps != role.allApps)
+      return false;
+    if (name != null ? !name.equals(role.name) : role.name != null)
+      return false;
+    if (description != null ? !description.equals(role.description) : role.description != null)
+      return false;
+    if (accountId != null ? !accountId.equals(role.accountId) : role.accountId != null)
+      return false;
+    return roleType == role.roleType;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Role other = (Role) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.accountId, other.accountId) && Objects.equals(this.permissions, other.permissions)
-        && Objects.equals(this.roleType, other.roleType);
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
+    result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
+    result = 31 * result + (roleType != null ? roleType.hashCode() : 0);
+    result = 31 * result + (allApps ? 1 : 0);
+    return result;
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("name", name)
-        .add("description", description)
-        .add("accountId", accountId)
-        .add("permissions", permissions)
-        .add("roleType", roleType)
-        .toString();
+    return "Role{"
+        + "name='" + name + '\'' + ", description='" + description + '\'' + ", accountId='" + accountId + '\''
+        + ", permissions=" + permissions + ", roleType=" + roleType + ", allApps=" + allApps + '}';
   }
 
   public static final class Builder {
@@ -153,8 +177,10 @@ public class Role extends Base {
     private String accountId;
     private List<Permission> permissions;
     private RoleType roleType;
+    private boolean allApps;
     private String uuid;
     private String appId;
+    private String appName;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -191,6 +217,11 @@ public class Role extends Base {
       return this;
     }
 
+    public Builder withAllApps(boolean allApps) {
+      this.allApps = allApps;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
@@ -198,6 +229,11 @@ public class Role extends Base {
 
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public Builder withAppName(String appName) {
+      this.appName = appName;
       return this;
     }
 
@@ -229,7 +265,9 @@ public class Role extends Base {
           .withPermissions(permissions)
           .withRoleType(roleType)
           .withUuid(uuid)
+          .withAllApps(allApps)
           .withAppId(appId)
+          .withAppName(appName)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -243,8 +281,10 @@ public class Role extends Base {
       role.setAccountId(accountId);
       role.setPermissions(permissions);
       role.setRoleType(roleType);
+      role.setAllApps(allApps);
       role.setUuid(uuid);
       role.setAppId(appId);
+      role.setAppName(appName);
       role.setCreatedBy(createdBy);
       role.setCreatedAt(createdAt);
       role.setLastUpdatedBy(lastUpdatedBy);

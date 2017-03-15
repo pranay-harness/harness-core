@@ -46,7 +46,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
-import software.wings.utils.ECSConvention;
+import software.wings.utils.EcsConvention;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -123,7 +123,7 @@ public class EcsServiceSetup extends State {
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest()
             .withContainerDefinitions(containerDefinitions)
-            .withFamily(ECSConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
+            .withFamily(EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
 
     TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
@@ -137,10 +137,10 @@ public class EcsServiceSetup extends State {
     ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
     */
 
-    String ecsServiceName = ECSConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
+    String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
     String lastEcsServiceName = lastECSService(
-        computeProviderSetting, clusterName, ECSConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+        computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
 
     awsClusterService.createService(computeProviderSetting,
         new CreateServiceRequest()

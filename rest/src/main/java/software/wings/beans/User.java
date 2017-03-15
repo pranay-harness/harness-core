@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.hibernate.validator.constraints.Email;
@@ -16,7 +14,6 @@ import org.mongodb.morphia.annotations.Transient;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import javax.security.auth.Subject;
 
 /**
@@ -34,6 +31,8 @@ public class User extends Base implements Principal {
   @JsonIgnore private String passwordHash;
 
   @Transient private String companyName;
+
+  @Transient private String accountName;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
 
@@ -284,47 +283,50 @@ public class User extends Base implements Principal {
     this.companyName = companyName;
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(
-              name, email, passwordHash, roles, accounts, lastLogin, password, token, emailVerified, statsFetchedOn);
+  public String getAccountName() {
+    return accountName;
+  }
+
+  public void setAccountName(String accountName) {
+    this.accountName = accountName;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!super.equals(obj)) {
+    if (!super.equals(o))
       return false;
-    }
-    final User other = (User) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.email, other.email)
-        && Objects.equals(this.passwordHash, other.passwordHash) && Objects.equals(this.roles, other.roles)
-        && Objects.equals(this.accounts, other.accounts) && Objects.equals(this.lastLogin, other.lastLogin)
-        && Objects.equals(this.password, other.password) && Objects.equals(this.token, other.token)
-        && Objects.equals(this.emailVerified, other.emailVerified)
-        && Objects.equals(this.statsFetchedOn, other.statsFetchedOn);
+
+    User user = (User) o;
+
+    if (name != null ? !name.equals(user.name) : user.name != null)
+      return false;
+    if (email != null ? !email.equals(user.email) : user.email != null)
+      return false;
+    if (companyName != null ? !companyName.equals(user.companyName) : user.companyName != null)
+      return false;
+    return accountName != null ? accountName.equals(user.accountName) : user.accountName == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (email != null ? email.hashCode() : 0);
+    result = 31 * result + (companyName != null ? companyName.hashCode() : 0);
+    result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
+    return result;
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("name", name)
-        .add("email", email)
-        .add("passwordHash", passwordHash)
-        .add("roles", roles)
-        .add("accounts", accounts)
-        .add("lastLogin", lastLogin)
-        .add("password", password)
-        .add("token", token)
-        .add("emailVerified", emailVerified)
-        .add("statsFetchedOn", statsFetchedOn)
-        .toString();
+    return "User{"
+        + "name='" + name + '\'' + ", email='" + email + '\'' + ", companyName='" + companyName + '\''
+        + ", accountName='" + accountName + '\'' + ", roles=" + roles + ", accounts=" + accounts
+        + ", lastLogin=" + lastLogin + ", emailVerified=" + emailVerified + ", statsFetchedOn=" + statsFetchedOn + '}';
   }
 
   public static final class Builder {
@@ -332,6 +334,7 @@ public class User extends Base implements Principal {
     private String email;
     private String passwordHash;
     private String companyName;
+    private String accountName;
     private List<Role> roles = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
     private long lastLogin;
@@ -369,6 +372,11 @@ public class User extends Base implements Principal {
 
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
+      return this;
+    }
+
+    public Builder withAccountName(String accountName) {
+      this.accountName = accountName;
       return this;
     }
 
@@ -451,6 +459,7 @@ public class User extends Base implements Principal {
           .withEmailVerified(emailVerified)
           .withStatsFetchedOn(statsFetchedOn)
           .withUuid(uuid)
+          .withAccountName(accountName)
           .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
@@ -464,6 +473,7 @@ public class User extends Base implements Principal {
       user.setEmail(email);
       user.setPasswordHash(passwordHash);
       user.setCompanyName(companyName);
+      user.setAccountName(accountName);
       user.setRoles(roles);
       user.setAccounts(accounts);
       user.setLastLogin(lastLogin);

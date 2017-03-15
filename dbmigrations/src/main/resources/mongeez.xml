@@ -13,4 +13,7 @@
     <file path="command-version-migration.js"/>
     <file path="command-target-to-all-env-migration.js"/>
     <file path="settings-category-migration.js"/>
+    <file path="service-variable-index-migration.js"/>
+    <file path="account-role.js"/>
+    <file path="config-files-index-migration.js"/>
 </changeFiles>

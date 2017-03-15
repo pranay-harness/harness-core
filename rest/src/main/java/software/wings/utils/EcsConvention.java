@@ -3,7 +3,7 @@ package software.wings.utils;
 /**
  * Created by rishi on 2/7/17.
  */
-public class ECSConvention {
+public class EcsConvention {
   private static final String DELIMITER = "__";
 
   public static String getTaskFamily(String appName, String serviceName, String envName) {

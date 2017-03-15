@@ -21,7 +21,8 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldSaveAccount() throws Exception {
-    Account account = accountService.save(anAccount().withCompanyName("Wings").withAccountKey("ACCOUNT_KEY").build());
+    Account account = accountService.save(
+        anAccount().withCompanyName("Wings").withAccountName("Wings").withAccountKey("ACCOUNT_KEY").build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
 
@@ -34,7 +35,8 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateCompanyName() throws Exception {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Wings").build());
+    Account account = wingsPersistence.saveAndGet(
+        Account.class, anAccount().withCompanyName("Wings").withAccountName("Wings").build());
     account.setCompanyName("Wings Software");
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);

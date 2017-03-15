@@ -6,6 +6,7 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 10/11/16.
@@ -21,5 +22,9 @@ public interface AccountService {
 
   void delete(String accountId);
 
-  Account findOrCreate(String companyName);
+  //  Account findOrCreate(String companyName);
+
+  String suggestAccountName(@NotNull String accountName);
+
+  boolean exists(String accountName);
 }

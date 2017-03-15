@@ -15,6 +15,7 @@ import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
@@ -117,13 +118,14 @@ public class UserServiceTest extends WingsBaseTest {
     User savedUser = userBuilder.withUuid(USER_ID)
                          .withEmailVerified(false)
                          .withCompanyName(COMPANY_NAME)
+                         .withAccountName(ACCOUNT_NAME)
                          .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
                          .build();
 
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
-    when(accountService.findOrCreate(COMPANY_NAME))
+    when(accountService.save(any(Account.class)))
         .thenReturn(Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().build());

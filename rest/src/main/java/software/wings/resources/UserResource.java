@@ -19,6 +19,7 @@ import software.wings.dl.PageResponse;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
@@ -50,10 +51,12 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
   private UserService userService;
+  private AccountService accountService;
 
   @Inject
-  public UserResource(UserService userService) {
+  public UserResource(UserService userService, AccountService accountService) {
     this.userService = userService;
+    this.accountService = accountService;
   }
 
   /**
@@ -110,6 +113,18 @@ public class UserResource {
   public RestResponse delete(@PathParam("userId") String userId) {
     userService.delete(userId);
     return new RestResponse();
+  }
+
+  /**
+   * Get rest response.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("account-name/{accountName}")
+  @PublicApi
+  public RestResponse<String> suggestAccountName(@PathParam("accountName") String accountName) {
+    return new RestResponse<>(accountService.suggestAccountName(accountName));
   }
 
   /**
