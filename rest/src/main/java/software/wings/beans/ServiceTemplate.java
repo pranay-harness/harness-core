@@ -27,8 +27,8 @@ public class ServiceTemplate extends Base {
   @NotEmpty private String serviceId;
 
   @Transient private Service service;
-  @Transient private List<ConfigFile> configFiles = new ArrayList<>();
-  @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
+  @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
+  @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
 
@@ -109,17 +109,17 @@ public class ServiceTemplate extends Base {
    *
    * @return the config files
    */
-  public List<ConfigFile> getConfigFiles() {
-    return configFiles;
+  public List<ConfigFile> getConfigFilesOverrides() {
+    return configFilesOverrides;
   }
 
   /**
    * Sets config files.
    *
-   * @param configFiles the config files
+   * @param configFilesOverrides the config files
    */
-  public void setConfigFiles(List<ConfigFile> configFiles) {
-    this.configFiles = configFiles;
+  public void setConfigFilesOverrides(List<ConfigFile> configFilesOverrides) {
+    this.configFilesOverrides = configFilesOverrides;
   }
 
   /**
@@ -163,24 +163,24 @@ public class ServiceTemplate extends Base {
    *
    * @return the service variables
    */
-  public List<ServiceVariable> getServiceVariables() {
-    return serviceVariables;
+  public List<ServiceVariable> getServiceVariablesOverrides() {
+    return serviceVariablesOverrides;
   }
 
   /**
    * Sets service variables.
    *
-   * @param serviceVariables the service variables
+   * @param serviceVariablesOverrides the service variables
    */
-  public void setServiceVariables(List<ServiceVariable> serviceVariables) {
-    this.serviceVariables = serviceVariables;
+  public void setServiceVariablesOverrides(List<ServiceVariable> serviceVariablesOverrides) {
+    this.serviceVariablesOverrides = serviceVariablesOverrides;
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              envId, name, description, serviceId, service, configFiles, serviceVariables, defaultServiceTemplate);
+        + Objects.hash(envId, name, description, serviceId, service, configFilesOverrides, serviceVariablesOverrides,
+              defaultServiceTemplate);
   }
 
   @Override
@@ -197,8 +197,9 @@ public class ServiceTemplate extends Base {
     final ServiceTemplate other = (ServiceTemplate) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
         && Objects.equals(this.description, other.description) && Objects.equals(this.serviceId, other.serviceId)
-        && Objects.equals(this.service, other.service) && Objects.equals(this.configFiles, other.configFiles)
-        && Objects.equals(this.serviceVariables, other.serviceVariables)
+        && Objects.equals(this.service, other.service)
+        && Objects.equals(this.configFilesOverrides, other.configFilesOverrides)
+        && Objects.equals(this.serviceVariablesOverrides, other.serviceVariablesOverrides)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
   }
 
@@ -210,8 +211,8 @@ public class ServiceTemplate extends Base {
         .add("description", description)
         .add("serviceId", serviceId)
         .add("service", service)
-        .add("configFiles", configFiles)
-        .add("serviceVariables", serviceVariables)
+        .add("configFilesOverrides", configFilesOverrides)
+        .add("serviceVariablesOverrides", serviceVariablesOverrides)
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .toString();
   }
@@ -233,8 +234,8 @@ public class ServiceTemplate extends Base {
     private String description;
     private String serviceId;
     private Service service;
-    private List<ConfigFile> configFiles = new ArrayList<>();
-    private List<ServiceVariable> serviceVariables = new ArrayList<>();
+    private List<ConfigFile> configFilesOverrides = new ArrayList<>();
+    private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
     private boolean defaultServiceTemplate = false;
     private String uuid;
     private String appId;
@@ -312,22 +313,22 @@ public class ServiceTemplate extends Base {
     /**
      * With config files builder.
      *
-     * @param configFiles the config files
+     * @param configFilesOverrides the config files
      * @return the builder
      */
-    public Builder withConfigFiles(List<ConfigFile> configFiles) {
-      this.configFiles = configFiles;
+    public Builder withConfigFilesOverrides(List<ConfigFile> configFilesOverrides) {
+      this.configFilesOverrides = configFilesOverrides;
       return this;
     }
 
     /**
      * With service variables builder.
      *
-     * @param serviceVariables the service variables
+     * @param serviceVariablesOverrides the service variables
      * @return the builder
      */
-    public Builder withServiceVariables(List<ServiceVariable> serviceVariables) {
-      this.serviceVariables = serviceVariables;
+    public Builder withServiceVariablesOverrides(List<ServiceVariable> serviceVariablesOverrides) {
+      this.serviceVariablesOverrides = serviceVariablesOverrides;
       return this;
     }
 
@@ -420,8 +421,8 @@ public class ServiceTemplate extends Base {
           .withDescription(description)
           .withServiceId(serviceId)
           .withService(service)
-          .withConfigFiles(configFiles)
-          .withServiceVariables(serviceVariables)
+          .withConfigFilesOverrides(configFilesOverrides)
+          .withServiceVariablesOverrides(serviceVariablesOverrides)
           .withDefaultServiceTemplate(defaultServiceTemplate)
           .withUuid(uuid)
           .withAppId(appId)
@@ -443,8 +444,8 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setDescription(description);
       serviceTemplate.setServiceId(serviceId);
       serviceTemplate.setService(service);
-      serviceTemplate.setConfigFiles(configFiles);
-      serviceTemplate.setServiceVariables(serviceVariables);
+      serviceTemplate.setConfigFilesOverrides(configFilesOverrides);
+      serviceTemplate.setServiceVariablesOverrides(serviceVariablesOverrides);
       serviceTemplate.setDefaultServiceTemplate(defaultServiceTemplate);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setAppId(appId);
