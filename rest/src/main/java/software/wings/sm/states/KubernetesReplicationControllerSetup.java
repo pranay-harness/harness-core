@@ -265,11 +265,11 @@ public class KubernetesReplicationControllerSetup extends State {
 
     Map<String, Quantity> limits = new HashMap<>();
     if (wingsContainerDefinition.getCpu() != null) {
-      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu().toString()));
+      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu() + "m"));
     }
 
     if (wingsContainerDefinition.getMemory() != null) {
-      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Gi"));
+      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Mi"));
     }
 
     if (!limits.isEmpty()) {
