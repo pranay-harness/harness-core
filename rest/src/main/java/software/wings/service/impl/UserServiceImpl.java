@@ -94,11 +94,6 @@ public class UserServiceImpl implements UserService {
 
   private User addAccountToExistingUser(User existingUser, User user) {
     Account account = setupAccount(user);
-    UserInvite userInvite = getUserInvite(existingUser.getEmail(), account.getUuid());
-    if (userInvite == null) {
-      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
-    }
-
     UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
                                                         .field("email")
                                                         .equal(existingUser.getEmail())
@@ -106,8 +101,7 @@ public class UserServiceImpl implements UserService {
                                                         .equal(existingUser.getAppId()),
         wingsPersistence.createUpdateOperations(User.class)
             .addToSet("accounts", account)
-            .addToSet("roles", userInvite.getRoles()));
-    markInviteCompleted(userInvite);
+            .addToSet("roles", roleService.getAccountAdminRole(account.getUuid())));
     executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(existingUser, account));
     return user;
   }
