@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.utils.validation.Create;
 
+import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -20,8 +21,12 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @Entity(value = "serviceVariables", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("entityId")
-                           , @Field("templateId"), @Field("type"), @Field("name") },
+@Indexes(@Index(fields =
+    {
+      @Field("entityId")
+      , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
+          @Field("name")
+    },
     options = @IndexOptions(unique = true)))
 public class ServiceVariable extends Base {
   /**
@@ -42,6 +47,9 @@ public class ServiceVariable extends Base {
   @Transient private ServiceVariable overriddenServiceVariable;
 
   private OverrideType overrideType;
+
+  private List<String> instances;
+  private String expression;
 
   private String name;
   private String value;
@@ -211,11 +219,47 @@ public class ServiceVariable extends Base {
     this.overrideType = overrideType;
   }
 
+  /**
+   * Getter for property 'instances'.
+   *
+   * @return Value for property 'instances'.
+   */
+  public List<String> getInstances() {
+    return instances;
+  }
+
+  /**
+   * Setter for property 'instances'.
+   *
+   * @param instances Value to set for property 'instances'.
+   */
+  public void setInstances(List<String> instances) {
+    this.instances = instances;
+  }
+
+  /**
+   * Getter for property 'expression'.
+   *
+   * @return Value for property 'expression'.
+   */
+  public String getExpression() {
+    return expression;
+  }
+
+  /**
+   * Setter for property 'expression'.
+   *
+   * @param expression Value to set for property 'expression'.
+   */
+  public void setExpression(String expression) {
+    this.expression = expression;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(templateId, envId, entityType, entityId, parentServiceVariableId, overriddenServiceVariable,
-              overrideType, name, value, type);
+              overrideType, instances, expression, name, value, type);
   }
 
   @Override
@@ -234,7 +278,8 @@ public class ServiceVariable extends Base {
         && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
         && Objects.equals(this.parentServiceVariableId, other.parentServiceVariableId)
         && Objects.equals(this.overriddenServiceVariable, other.overriddenServiceVariable)
-        && Objects.equals(this.overrideType, other.overrideType) && Objects.equals(this.name, other.name)
+        && Objects.equals(this.overrideType, other.overrideType) && Objects.equals(this.instances, other.instances)
+        && Objects.equals(this.expression, other.expression) && Objects.equals(this.name, other.name)
         && Objects.equals(this.value, other.value) && Objects.equals(this.type, other.type);
   }
 
@@ -248,6 +293,8 @@ public class ServiceVariable extends Base {
         .add("parentServiceVariableId", parentServiceVariableId)
         .add("overriddenServiceVariable", overriddenServiceVariable)
         .add("overrideType", overrideType)
+        .add("instances", instances)
+        .add("expression", expression)
         .add("name", name)
         .add("value", value)
         .add("type", type)
@@ -301,17 +348,19 @@ public class ServiceVariable extends Base {
     private String templateId = DEFAULT_TEMPLATE_ID;
     private String envId;
     private EntityType entityType;
-    private String entityId;
     private String uuid;
-    private String parentServiceVariableId;
     private String appId;
+    private String entityId;
     private EmbeddedUser createdBy;
-    private ServiceVariable overriddenServiceVariable;
+    private String parentServiceVariableId;
     private long createdAt;
-    private OverrideType overrideType;
     private EmbeddedUser lastUpdatedBy;
-    private String name;
+    private ServiceVariable overriddenServiceVariable;
     private long lastUpdatedAt;
+    private OverrideType overrideType;
+    private List<String> instances;
+    private String expression;
+    private String name;
     private String value;
     private Type type;
 
@@ -336,18 +385,8 @@ public class ServiceVariable extends Base {
       return this;
     }
 
-    public Builder withEntityId(String entityId) {
-      this.entityId = entityId;
-      return this;
-    }
-
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withParentServiceVariableId(String parentServiceVariableId) {
-      this.parentServiceVariableId = parentServiceVariableId;
       return this;
     }
 
@@ -356,13 +395,18 @@ public class ServiceVariable extends Base {
       return this;
     }
 
+    public Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withOverriddenServiceVariable(ServiceVariable overriddenServiceVariable) {
-      this.overriddenServiceVariable = overriddenServiceVariable;
+    public Builder withParentServiceVariableId(String parentServiceVariableId) {
+      this.parentServiceVariableId = parentServiceVariableId;
       return this;
     }
 
@@ -371,23 +415,38 @@ public class ServiceVariable extends Base {
       return this;
     }
 
-    public Builder withOverrideType(OverrideType overrideType) {
-      this.overrideType = overrideType;
-      return this;
-    }
-
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withName(String name) {
-      this.name = name;
+    public Builder withOverriddenServiceVariable(ServiceVariable overriddenServiceVariable) {
+      this.overriddenServiceVariable = overriddenServiceVariable;
       return this;
     }
 
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withOverrideType(OverrideType overrideType) {
+      this.overrideType = overrideType;
+      return this;
+    }
+
+    public Builder withInstances(List<String> instances) {
+      this.instances = instances;
+      return this;
+    }
+
+    public Builder withExpression(String expression) {
+      this.expression = expression;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -406,17 +465,19 @@ public class ServiceVariable extends Base {
           .withTemplateId(templateId)
           .withEnvId(envId)
           .withEntityType(entityType)
-          .withEntityId(entityId)
           .withUuid(uuid)
-          .withParentServiceVariableId(parentServiceVariableId)
           .withAppId(appId)
+          .withEntityId(entityId)
           .withCreatedBy(createdBy)
-          .withOverriddenServiceVariable(overriddenServiceVariable)
+          .withParentServiceVariableId(parentServiceVariableId)
           .withCreatedAt(createdAt)
-          .withOverrideType(overrideType)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withName(name)
+          .withOverriddenServiceVariable(overriddenServiceVariable)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withOverrideType(overrideType)
+          .withInstances(instances)
+          .withExpression(expression)
+          .withName(name)
           .withValue(value)
           .withType(type);
     }
@@ -426,17 +487,19 @@ public class ServiceVariable extends Base {
       serviceVariable.setTemplateId(templateId);
       serviceVariable.setEnvId(envId);
       serviceVariable.setEntityType(entityType);
-      serviceVariable.setEntityId(entityId);
       serviceVariable.setUuid(uuid);
-      serviceVariable.setParentServiceVariableId(parentServiceVariableId);
       serviceVariable.setAppId(appId);
+      serviceVariable.setEntityId(entityId);
       serviceVariable.setCreatedBy(createdBy);
-      serviceVariable.setOverriddenServiceVariable(overriddenServiceVariable);
+      serviceVariable.setParentServiceVariableId(parentServiceVariableId);
       serviceVariable.setCreatedAt(createdAt);
-      serviceVariable.setOverrideType(overrideType);
       serviceVariable.setLastUpdatedBy(lastUpdatedBy);
-      serviceVariable.setName(name);
+      serviceVariable.setOverriddenServiceVariable(overriddenServiceVariable);
       serviceVariable.setLastUpdatedAt(lastUpdatedAt);
+      serviceVariable.setOverrideType(overrideType);
+      serviceVariable.setInstances(instances);
+      serviceVariable.setExpression(expression);
+      serviceVariable.setName(name);
       serviceVariable.setValue(value);
       serviceVariable.setType(type);
       return serviceVariable;
