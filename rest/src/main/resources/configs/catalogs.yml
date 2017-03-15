@@ -153,3 +153,9 @@ OVERRIDE_TYPE:
       value: INSTANCES
     - name: Override Specific Zones/Tags etc.
       value: CUSTOM
+
+SERVICE_VARIABLE_TYPE:
+    - name: Text
+      value: TEXT
+    - name: Load Balancer
+      value: LB
