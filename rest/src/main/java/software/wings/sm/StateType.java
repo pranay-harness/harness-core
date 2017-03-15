@@ -1,9 +1,21 @@
 package software.wings.sm;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.JsonNode;
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.joor.Reflect.on;
+import static software.wings.sm.StateTypeScope.NONE;
+import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
+import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.stencils.StencilCategory.CLOUD;
+import static software.wings.stencils.StencilCategory.COMMANDS;
+import static software.wings.stencils.StencilCategory.VERIFICATIONS;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
@@ -20,7 +32,7 @@ import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
-import software.wings.sm.states.GkeAutoScaleProvisionState;
+import software.wings.sm.states.GcpAutoScaleProvisionState;
 import software.wings.sm.states.GcpNodeSelectState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
@@ -43,17 +55,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.joor.Reflect.on;
-import static software.wings.sm.StateTypeScope.NONE;
-import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
-import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
-import static software.wings.stencils.StencilCategory.CLOUD;
-import static software.wings.stencils.StencilCategory.COMMANDS;
-import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 /**
  * Represents type of state.
@@ -152,9 +153,15 @@ public enum StateType implements StateTypeDescriptor {
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
 
+  /**
+   * GCP Node Select state.
+   */
   GCP_NODE_SELECT(GcpNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
 
-  GKE_AUTOSCALE_PROVISION(GkeAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
+  /**
+   * GCP Node Provision state.
+   */
+  GCP_AUTOSCALE_PROVISION(GcpAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
 
   /**
    * Phase state type.

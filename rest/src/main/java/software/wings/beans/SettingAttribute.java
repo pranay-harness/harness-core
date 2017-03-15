@@ -11,7 +11,6 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.ELB;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SLACK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
@@ -190,7 +189,7 @@ public class SettingAttribute extends Base {
   }
 
   public enum Category {
-    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP, KUBERNETES)),
+    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, APP_DYNAMICS, ELB, ALB, SLACK, DOCKER)),
 
