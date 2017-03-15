@@ -159,9 +159,9 @@ public class KubernetesReplicationControllerSetup extends State {
     String serviceName = KubernetesConvention.getServiceName(replicationControllerName);
 
     Map<String, String> labels = ImmutableMap.<String, String>builder()
-                                     .put("app", app.getName())
-                                     .put("service", service.getName())
-                                     .put("env", env.getName())
+                                     .put("app", KubernetesConvention.getLabelValue(app.getName()))
+                                     .put("service", KubernetesConvention.getLabelValue(service.getName()))
+                                     .put("env", KubernetesConvention.getLabelValue(env.getName()))
                                      .put("revision", Integer.toString(revision))
                                      .build();
 
@@ -269,7 +269,7 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     if (wingsContainerDefinition.getMemory() != null) {
-      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Mi"));
+      limits.put("memory", new Quantity(wingsContainerDefinition.getMemory() + "Gi"));
     }
 
     if (!limits.isEmpty()) {

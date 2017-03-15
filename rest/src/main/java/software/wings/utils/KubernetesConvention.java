@@ -43,6 +43,10 @@ public class KubernetesConvention {
     return VOLUME_PREFIX + path.replace('/', '-').toLowerCase() + VOLUME_SUFFIX;
   }
 
+  public static String getLabelValue(String value) {
+    return normalize(value);
+  }
+
   private static String normalize(String expression) {
     Matcher matcher = wildCharPattern.matcher(expression);
     return matcher.replaceAll(WILD_CHAR_REPLACEMENT).toLowerCase();
