@@ -26,7 +26,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -72,8 +71,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     if (withDetails) {
       pageResponse.getResponse().forEach(template -> {
-        template.setConfigFiles(getOverrideFiles(template));
-        template.setServiceVariables(getOverrideServiceVariables(template));
+        template.setConfigFilesOverrides(getOverrideFiles(template));
+        template.setServiceVariablesOverrides(getOverrideServiceVariables(template));
         PageRequest<InfrastructureMapping> infraPageRequest = new PageRequest<>();
         List<SearchFilter> filters = pageRequest.getFilters();
         filters.add(aSearchFilter().withField("serviceTemplateId", Operator.EQ, template.getUuid()).build());
@@ -110,8 +109,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
 
     if (withDetails) {
-      serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
-      serviceTemplate.setServiceVariables(getOverrideServiceVariables(serviceTemplate));
+      serviceTemplate.setConfigFilesOverrides(getOverrideFiles(serviceTemplate));
+      serviceTemplate.setServiceVariablesOverrides(getOverrideServiceVariables(serviceTemplate));
     }
     return serviceTemplate;
   }
