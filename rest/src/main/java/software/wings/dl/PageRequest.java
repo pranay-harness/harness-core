@@ -21,7 +21,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
-import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.Misc;
 
@@ -29,8 +28,6 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
@@ -351,41 +348,40 @@ public class PageRequest<T> {
           //            filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.IN,
           //            appIds.stream().toArray()).build());
           //          }
-        } else if (pageRequestType.equals(
-                       PageRequestType.LIST_WITHOUT_ENV_ID)) { // add env filter based on user permissions
-          List<Environment> appEnvironments = (List<Environment>) requestContext.getProperty("appEnvironments");
-          Set<String> appEnvIds = appEnvironments.stream().map(Environment::getUuid).collect(Collectors.toSet());
-          Map<EnvironmentType, List<String>> appEnvIdsByType = appEnvironments.stream().collect(Collectors.groupingBy(
-              Environment::getEnvironmentType, Collectors.mapping(Environment::getUuid, Collectors.toList())));
-
-          List<String> envIds = new ArrayList<>();
-          user.getRoles()
-              .stream()
-              .flatMap(role -> role.getPermissions().stream())
-              .filter(permission
-                  -> permission.getPermissionScope().equals(PermissionScope.ENV)
-                      && (permission.getAppId().equals(map.getFirst("appId"))
-                             || permission.getAppId().equals(Base.GLOBAL_APP_ID)))
-              .forEach(permission -> {
-                if (Base.GLOBAL_ENV_ID.equals(permission.getEnvId())) {
-                  envIds.add(Base.GLOBAL_ENV_ID);
-                } else if (permission.getEnvId() != null && appEnvIds.contains(permission.getEnvId())) {
-                  envIds.add(permission.getEnvId());
-                } else if (permission.getEnvironmentType() != null) {
-                  envIds.addAll(getEnvIdsByType(appEnvironments, permission.getEnvironmentType()));
-                }
-              });
-
-          if (!envIds.contains(Base.GLOBAL_ENV_ID)) {
-            String fieldName = mappedClass.getClazz().equals(Environment.class) ? "uuid" : "envId";
-            if (envIds.size() == 0) {
-              filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.EQ, "").build());
-            } else {
-              filters.add(SearchFilter.Builder.aSearchFilter()
-                              .withField(fieldName, Operator.IN, envIds.stream().toArray())
-                              .build());
-            }
-          }
+          //        } else if (pageRequestType.equals(PageRequestType.LIST_WITHOUT_ENV_ID)) { // add env filter based on
+          //        user permissions
+          //          List<Environment> appEnvironments = (List<Environment>)
+          //          requestContext.getProperty("appEnvironments"); Set<String> appEnvIds =
+          //          appEnvironments.stream().map(Environment::getUuid).collect(Collectors.toSet());
+          //          Map<EnvironmentType, List<String>> appEnvIdsByType = appEnvironments.stream()
+          //              .collect(Collectors.groupingBy(Environment::getEnvironmentType,
+          //              Collectors.mapping(Environment::getUuid, Collectors.toList())));
+          //
+          //          //TODO :: Needs to fix the env access at upper layer
+          //          List<String> envIds = new ArrayList<>();
+          //          user.getRoles().stream().flatMap(role -> role.getPermissions().stream()).filter(
+          //              permission -> permission.getPermissionScope().equals(PermissionScope.ENV) &&
+          //              (permission.getAppId().equals(map.getFirst("appId")) || permission
+          //                  .getAppId().equals(Base.GLOBAL_APP_ID))).forEach(permission -> {
+          //            if (Base.GLOBAL_ENV_ID.equals(permission.getEnvId())) {
+          //              envIds.add(Base.GLOBAL_ENV_ID);
+          //            } else if (permission.getEnvId() != null && appEnvIds.contains(permission.getEnvId())) {
+          //              envIds.add(permission.getEnvId());
+          //            } else if (permission.getEnvironmentType() != null) {
+          //              envIds.addAll(getEnvIdsByType(appEnvironments, permission.getEnvironmentType()));
+          //            }
+          //          });
+          //
+          //          if (!envIds.contains(Base.GLOBAL_ENV_ID)) {
+          //            String fieldName = mappedClass.getClazz().equals(Environment.class) ? "uuid" : "envId";
+          //            if (envIds.size() == 0) {
+          //              filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.EQ,
+          //              "").build());
+          //            } else {
+          //              filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.IN,
+          //              envIds.stream().toArray()).build());
+          //            }
+          //          }
         }
       }
     }
