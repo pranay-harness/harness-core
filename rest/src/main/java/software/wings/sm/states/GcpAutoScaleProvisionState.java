@@ -8,9 +8,9 @@ import software.wings.sm.StateType;
 /**
  * Created by brett on 3/1/17
  */
-public class GkeAutoScaleProvisionState extends State {
-  public GkeAutoScaleProvisionState(String name) {
-    super(name, StateType.GKE_AUTOSCALE_PROVISION.name());
+public class GcpAutoScaleProvisionState extends State {
+  public GcpAutoScaleProvisionState(String name) {
+    super(name, StateType.GCP_AUTOSCALE_PROVISION.name());
   }
 
   private String gkeComputeProviderId;

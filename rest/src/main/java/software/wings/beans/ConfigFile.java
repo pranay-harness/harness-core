@@ -69,10 +69,10 @@ public class ConfigFile extends BaseFile {
 
   private String overridePath;
 
-  @NotNull(groups = {Create.class}) private ConfigOverrideType configOverrideType;
-  private String configOverrideExpression;
+  @NotNull(groups = {Create.class}) @FormDataParam("configOverrideType") private ConfigOverrideType configOverrideType;
+  @FormDataParam("configOverrideExpression") private String configOverrideExpression;
 
-  private List<String> instances;
+  @FormDataParam("instances") private List<String> instances;
 
   @Transient private ConfigFile overriddenConfigFile;
 
