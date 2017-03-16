@@ -1,5 +1,7 @@
 package software.wings.delegate.service;
 
+import static software.wings.managerclient.SafeHttpCall.execute;
+
 import software.wings.beans.Log;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.managerclient.ManagerClient;
@@ -18,7 +20,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   @Override
   public void save(String accountId, Log log) {
     try {
-      managerClient.saveLog(accountId, log).execute();
+      execute(managerClient.saveLog(accountId, log));
     } catch (IOException e) {
       e.printStackTrace();
     }

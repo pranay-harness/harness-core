@@ -1,5 +1,7 @@
 package software.wings.delegate.service;
 
+import static software.wings.managerclient.SafeHttpCall.execute;
+
 import com.google.inject.Singleton;
 
 import software.wings.beans.ConfigFile;
@@ -20,6 +22,6 @@ public class DelegateConfigServiceImpl implements DelegateConfigService {
   @Override
   public List<ConfigFile> getConfigFiles(String appId, String envId, String uuid, String hostId, String accountId)
       throws IOException {
-    return managerClient.getConfigFiles(uuid, accountId, appId, envId, hostId).execute().body().getResource();
+    return execute(managerClient.getConfigFiles(uuid, accountId, appId, envId, hostId)).getResource();
   }
 }
