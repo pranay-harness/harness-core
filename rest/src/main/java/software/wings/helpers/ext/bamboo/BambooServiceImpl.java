@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.Credentials;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -55,11 +56,15 @@ public class BambooServiceImpl implements BambooService {
     Call<JsonNode> request =
         getBambooClient(bambooConfig)
             .listPlanWithJobDetails(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()), planKey);
+    Response<JsonNode> response = null;
     try {
-      Response<JsonNode> response = request.execute();
+      response = request.execute();
       return extractJobKeyFromNestedProjectResponseJson(response);
     } catch (Exception ex) {
       logger.error("Job keys fetch failed with exception ", ex);
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
       return new ArrayList<>();
     }
   }
@@ -68,14 +73,18 @@ public class BambooServiceImpl implements BambooService {
   public BuildDetails getLastSuccessfulBuild(BambooConfig bambooConfig, String planKey) {
     Call<JsonNode> request =
         getBambooClient(bambooConfig).lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig), planKey);
+    Response<JsonNode> response = null;
     try {
-      Response<JsonNode> response = request.execute();
+      response = request.execute();
       JsonNode jsonNode = response.body();
       return aBuildDetails()
           .withNumber(jsonNode.get("buildNumber").asText())
           .withRevision(jsonNode.get("vcsRevisionKey").asText())
           .build();
     } catch (Exception ex) {
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
       logger.error("BambooService job keys fetch failed with exception " + ex.getStackTrace());
     }
     return null;
@@ -97,9 +106,10 @@ public class BambooServiceImpl implements BambooService {
         getBambooClient(bambooConfig)
             .listProjectPlans(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()));
     Map<String, String> planNameMap = new HashMap<>();
+    Response<JsonNode> response = null;
 
     try {
-      Response<JsonNode> response = request.execute();
+      response = request.execute();
       JsonNode planJsonNode = response.body().at("/plans/plan");
       planJsonNode.elements().forEachRemaining(jsonNode -> {
         String planKey = jsonNode.get("key").asText();
@@ -107,6 +117,9 @@ public class BambooServiceImpl implements BambooService {
         planNameMap.put(planKey, planName);
       });
     } catch (Exception ex) {
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
       logger.error("Job keys fetch failed with exception ", ex);
     }
     return planNameMap;
@@ -118,8 +131,9 @@ public class BambooServiceImpl implements BambooService {
 
     Call<JsonNode> request = getBambooClient(bambooConfig)
                                  .listBuildsForJob(getBasicAuthCredentials(bambooConfig), planKey, maxNumberOfBuilds);
+    Response<JsonNode> response = null;
     try {
-      Response<JsonNode> response = request.execute();
+      response = request.execute();
       JsonNode resultNode = response.body().at("/results/result");
       if (resultNode != null) {
         resultNode.elements().forEachRemaining(jsonNode -> {
@@ -130,6 +144,9 @@ public class BambooServiceImpl implements BambooService {
         });
       }
     } catch (Exception ex) {
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
       logger.error("BambooService job keys fetch failed with exception ", ex);
     }
     return buildDetailsList;
@@ -194,9 +211,10 @@ public class BambooServiceImpl implements BambooService {
     Call<JsonNode> request =
         getBambooClient(bambooConfig).getBuildArtifacts(getBasicAuthCredentials(bambooConfig), planKey, buildNumber);
     Map<String, String> artifactPathMap = new HashMap<>();
+    Response<JsonNode> response = null;
     try {
       // stages.stage.results.result.artifacts.artifact
-      Response<JsonNode> response = request.execute();
+      response = request.execute();
       JsonNode stageNodes = response.body().at("/stages/stage");
       if (stageNodes != null) {
         stageNodes.elements().forEachRemaining(stageNode -> {
@@ -219,6 +237,9 @@ public class BambooServiceImpl implements BambooService {
       }
     } catch (IOException ex) {
       logger.error("Download artifact failed with exception ", ex);
+      if (response != null && !response.isSuccessful()) {
+        IOUtils.closeQuietly(response.errorBody());
+      }
     }
     return artifactPathMap;
   }
