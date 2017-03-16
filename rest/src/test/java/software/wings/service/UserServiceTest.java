@@ -10,10 +10,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -25,8 +27,10 @@ import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
@@ -142,7 +146,45 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
-        .startsWith(PORTAL_URL + "#/register/verify");
+        .startsWith(PORTAL_URL + "#" + VERIFICATION_PATH);
+  }
+
+  /**
+   * Test register for existing user.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void shouldRegisterExistingUser() throws Exception {
+    User existingUser = userBuilder.withUuid(getUuid()).build();
+    User savedUser = userBuilder.withUuid(USER_ID)
+                         .withEmailVerified(false)
+                         .withCompanyName(COMPANY_NAME)
+                         .withAccountName(ACCOUNT_NAME)
+                         .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
+                         .build();
+
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
+    when(accountService.save(any(Account.class)))
+        .thenReturn(Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
+        .thenReturn(PageResponse.Builder.aPageResponse().withResponse(Lists.newArrayList(existingUser)).build());
+    when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
+        .thenReturn(anEmailVerificationToken().withToken("token123").build());
+
+    userService.register(userBuilder.build());
+
+    verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
+    assertThat(BCrypt.checkpw(PASSWORD, userArgumentCaptor.getValue().getPasswordHash())).isTrue();
+    assertThat(userArgumentCaptor.getValue().isEmailVerified()).isFalse();
+    assertThat(userArgumentCaptor.getValue().getCompanyName()).isEqualTo(COMPANY_NAME);
+
+    verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
+    assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
+    assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
+        .contains(VERIFICATION_PATH + "/token123");
   }
 
   /**
@@ -218,11 +260,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldVerifyEmail() {
     when(verificationQuery.get())
-        .thenReturn(EmailVerificationToken.Builder.anEmailVerificationToken()
-                        .withUuid("TOKEN_ID")
-                        .withUserId(USER_ID)
-                        .withToken("TOKEN")
-                        .build());
+        .thenReturn(anEmailVerificationToken().withUuid("TOKEN_ID").withUserId(USER_ID).withToken("TOKEN").build());
 
     userService.verifyEmail("TOKEN");
 
