@@ -1,11 +1,11 @@
 package software.wings.sm.states;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -213,18 +213,18 @@ public class KubernetesReplicationControllerSetup extends State {
       }
       spec.withPorts(ImmutableList.of(servicePort.build())); // TODO:: Allow more than one port
 
-      if (serviceType == ServiceType.LoadBalancer && !Strings.isNullOrEmpty(loadBalancerIP)) {
+      if (serviceType == ServiceType.LoadBalancer && !isNullOrEmpty(loadBalancerIP)) {
         spec.withLoadBalancerIP(loadBalancerIP);
       }
 
-      if (serviceType == ServiceType.ClusterIP && !Strings.isNullOrEmpty(clusterIP)) {
+      if (serviceType == ServiceType.ClusterIP && !isNullOrEmpty(clusterIP)) {
         spec.withClusterIP(clusterIP);
       }
     } else {
       // TODO:: fabric8 doesn't seem to support external name yet. Add here when it does.
     }
 
-    if (!Strings.isNullOrEmpty(externalIPs)) {
+    if (!isNullOrEmpty(externalIPs)) {
       spec.withExternalIPs(Arrays.stream(externalIPs.split(",")).map(String::trim).collect(Collectors.toList()));
     }
 
@@ -317,11 +317,11 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     if (wingsContainerDefinition.getCommands() != null) {
-      containerBuilder.withCommand(wingsContainerDefinition.getCommands());
-    }
-
-    if (wingsContainerDefinition.getArguments() != null) {
-      containerBuilder.withArgs(wingsContainerDefinition.getArguments());
+      wingsContainerDefinition.getCommands().forEach(command -> {
+        if (!command.trim().isEmpty()) {
+          containerBuilder.withCommand(command.trim());
+        }
+      });
     }
 
     if (wingsContainerDefinition.getEnvironmentVariables() != null) {
