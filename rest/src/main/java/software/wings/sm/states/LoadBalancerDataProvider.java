@@ -35,7 +35,7 @@ public class LoadBalancerDataProvider implements DataProvider {
     return amazonElasticLoadBalancingClient.describeLoadBalancers(new DescribeLoadBalancersRequest().withPageSize(400))
         .getLoadBalancers()
         .stream()
-        .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "classic"))
+        .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
         .map(LoadBalancer::getLoadBalancerName)
         .collect(Collectors.toMap(Function.identity(), Function.identity()));
   }

@@ -32,6 +32,6 @@ public class AWSRolesDataProvider implements DataProvider {
     return amazonIdentityManagementClient.listRoles(new ListRolesRequest().withMaxItems(400))
         .getRoles()
         .stream()
-        .collect(Collectors.toMap(Role::getRoleId, Role::getRoleName));
+        .collect(Collectors.toMap(Role::getArn, Role::getRoleName));
   }
 }
