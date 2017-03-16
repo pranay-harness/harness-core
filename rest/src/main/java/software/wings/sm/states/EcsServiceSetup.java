@@ -17,6 +17,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
@@ -142,6 +143,15 @@ public class EcsServiceSetup extends State {
     String lastEcsServiceName = lastECSService(
         computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
 
+    List<com.amazonaws.services.ecs.model.Service> services =
+        awsClusterService.getServices(computeProviderSetting, clusterName);
+    List<com.amazonaws.services.ecs.model.LoadBalancer> loadBalancers =
+        services.stream()
+            .filter(service1 -> StringUtils.equals(service1.getServiceName(), lastEcsServiceName))
+            .findFirst()
+            .orElse(new com.amazonaws.services.ecs.model.Service())
+            .getLoadBalancers();
+
     awsClusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
@@ -149,7 +159,8 @@ public class EcsServiceSetup extends State {
             .withDesiredCount(0)
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision()));
+            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision())
+            .withLoadBalancers(loadBalancers));
 
     EcsServiceElement ecsServiceElement = anEcsServiceElement()
                                               .withUuid(serviceId)
