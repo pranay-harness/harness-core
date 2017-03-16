@@ -43,7 +43,6 @@ public class KubernetesContainerTask extends ContainerTask {
   public static class ContainerDefinition {
     @SchemaIgnore private String name;
     @Attributes(title = "Commands") private List<String> commands;
-    @Attributes(title = "Arguments") private List<String> arguments;
     @Attributes(title = "CPU") private Integer cpu;
     @Attributes(title = "MEMORY") private Integer memory;
 
@@ -67,14 +66,6 @@ public class KubernetesContainerTask extends ContainerTask {
 
     public void setCommands(List<String> commands) {
       this.commands = commands;
-    }
-
-    public List<String> getArguments() {
-      return arguments;
-    }
-
-    public void setArguments(List<String> arguments) {
-      this.arguments = arguments;
     }
 
     public LogConfiguration getLogConfiguration() {

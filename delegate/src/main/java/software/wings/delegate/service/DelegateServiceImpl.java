@@ -3,6 +3,7 @@ package software.wings.delegate.service;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
+import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -221,12 +222,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
     logger.info("Registering delegate....");
-    RestResponse<Delegate> delegateResponse =
-        managerClient
-            .registerDelegate(accountId,
-                builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build())
-            .execute()
-            .body();
+    RestResponse<Delegate> delegateResponse = execute(managerClient.registerDelegate(
+        accountId, builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
 
     builder.withUuid(delegateResponse.getResource().getUuid()).withStatus(delegateResponse.getResource().getStatus());
     logger.info("Delegate registered with id " + delegateResponse.getResource().getUuid());
@@ -239,8 +236,7 @@ public class DelegateServiceImpl implements DelegateService {
     upgradeExecutor.scheduleWithFixedDelay(() -> {
       logger.info("checking for upgrade");
       try {
-        RestResponse<Delegate> restResponse =
-            managerClient.checkForUpgrade(version, delegateId, accountId).execute().body();
+        RestResponse<Delegate> restResponse = execute(managerClient.checkForUpgrade(version, delegateId, accountId));
         if (restResponse.getResource().isDoUpgrade()) {
           logger.info("Upgrading delegate...");
           upgradeService.doUpgrade(restResponse.getResource(), getVersion());
@@ -274,10 +270,8 @@ public class DelegateServiceImpl implements DelegateService {
     Response<DelegateTask> acquireResponse = null;
 
     try {
-      DelegateTask delegateTask = null;
-      acquireResponse =
-          managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId).execute();
-      delegateTask = acquireResponse.body();
+      DelegateTask delegateTask =
+          execute(managerClient.acquireTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
       if (delegateTask != null) {
         logger.info("DelegateTask acquired - uuid: {}, accountId: {}, taskType: {}", delegateTask.getUuid(),
             delegateTask.getAccountId(), delegateTask.getTaskType());
@@ -300,6 +294,9 @@ public class DelegateServiceImpl implements DelegateService {
                 if (response != null && !response.isSuccessful()) {
                   response.errorBody().close();
                 }
+                if (response != null && response.isSuccessful()) {
+                  response.body().close();
+                }
               }
             });
         injector.injectMembers(delegateRunnableTask);
@@ -310,10 +307,6 @@ public class DelegateServiceImpl implements DelegateService {
       }
     } catch (IOException e) {
       logger.error("Unable to acquire task ", e);
-    } finally {
-      if (acquireResponse != null && !acquireResponse.isSuccessful()) {
-        acquireResponse.errorBody().close();
-      }
     }
   }
 

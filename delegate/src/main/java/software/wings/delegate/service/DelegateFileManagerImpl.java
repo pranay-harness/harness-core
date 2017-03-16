@@ -2,12 +2,14 @@ package software.wings.delegate.service;
 
 import static java.lang.System.currentTimeMillis;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.inject.Singleton;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import org.apache.commons.io.IOUtils;
 import retrofit2.Response;
 import software.wings.beans.RestResponse;
@@ -63,16 +65,24 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   @Override
   public String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId)
       throws IOException {
-    return managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId).execute().body().getResource();
+    return execute(managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId)).getResource();
   }
 
   @Override
   public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId) throws IOException {
-    return managerClient.downloadFile(fileId, bucket, accountId).execute().body().byteStream();
+    Response<ResponseBody> response = null;
+    try {
+      response = managerClient.downloadFile(fileId, bucket, accountId).execute();
+      return response.body().byteStream();
+    } finally {
+      if (response != null && !response.isSuccessful()) {
+        response.errorBody().close();
+      }
+    }
   }
 
   @Override
   public DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException {
-    return managerClient.getMetaInfo(fileId, fileBucket, accountId).execute().body().getResource();
+    return execute(managerClient.getMetaInfo(fileId, fileBucket, accountId)).getResource();
   }
 }
