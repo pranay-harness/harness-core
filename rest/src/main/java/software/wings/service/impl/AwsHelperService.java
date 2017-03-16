@@ -15,6 +15,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.AmazonECSClient;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -90,6 +91,9 @@ public class AwsHelperService {
     return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, secretKey));
   }
 
+  public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, String secretKey) {
+    return new AmazonElasticLoadBalancingClient(new BasicAWSCredentials(accessKey, secretKey));
+  }
   public String getHostnameFromDnsName(String dnsName) {
     return (!isNullOrEmpty(dnsName) && dnsName.endsWith(".ec2.internal"))
         ? dnsName.substring(0, dnsName.length() - ".ec2.internal".length())

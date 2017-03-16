@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
@@ -18,7 +19,6 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
@@ -62,6 +62,12 @@ public class EcsServiceSetup extends State {
   @Attributes(title = "Load Balancer")
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerSettingId;
+
+  @Attributes(title = "Target Group")
+  @EnumData(enumDataProvider = LoadBalancerTargetGroupDataProvider.class)
+  private String targetGroupArn;
+
+  @Attributes(title = "Role") @EnumData(enumDataProvider = AWSRolesDataProvider.class) private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
 
@@ -116,7 +122,6 @@ public class EcsServiceSetup extends State {
     }
 
     String containerName = imageName.replace('/', '_');
-    Integer containerPort = 8080; // TODO: don't hardcode read from config
 
     List<ContainerDefinition> containerDefinitions =
         ecsContainerTask.getContainerDefinitions()
@@ -146,31 +151,30 @@ public class EcsServiceSetup extends State {
     String lastEcsServiceName = lastECSService(
         computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
 
-    List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(computeProviderSetting, clusterName);
-    List<com.amazonaws.services.ecs.model.LoadBalancer> loadBalancers =
-        services.stream()
-            .filter(service1 -> StringUtils.equals(service1.getServiceName(), lastEcsServiceName))
-            .findFirst()
-            .orElse(new com.amazonaws.services.ecs.model.Service())
-            .getLoadBalancers();
-
-    String role = services.stream()
-                      .filter(service1 -> StringUtils.equals(service1.getServiceName(), lastEcsServiceName))
-                      .findFirst()
-                      .orElse(new com.amazonaws.services.ecs.model.Service())
-                      .getRoleArn();
-
-    awsClusterService.createService(computeProviderSetting,
+    CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
             .withCluster(clusterName)
             .withDesiredCount(0)
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision())
-            .withLoadBalancers(loadBalancers)
-            .withRole(role));
+            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
+    List<com.amazonaws.services.ecs.model.Service> services =
+        awsClusterService.getServices(computeProviderSetting, clusterName);
+
+    if (!isEmpty(containerDefinitions.get(0).getPortMappings())) {
+      int containerPort = ecsContainerTask.getContainerDefinitions().get(0).getPortMappings().get(0).getContainerPort();
+
+      createServiceRequest
+          .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
+                                 .withContainerName(containerName)
+                                 .withContainerPort(containerPort)
+                                 .withLoadBalancerName(loadBalancerSettingId)
+                                 .withTargetGroupArn(targetGroupArn))
+          .withRole(roleArn);
+    }
+
+    awsClusterService.createService(computeProviderSetting, createServiceRequest);
 
     EcsServiceElement ecsServiceElement = anEcsServiceElement()
                                               .withUuid(serviceId)
@@ -303,6 +307,42 @@ public class EcsServiceSetup extends State {
    */
   public void setLoadBalancerSettingId(String loadBalancerSettingId) {
     this.loadBalancerSettingId = loadBalancerSettingId;
+  }
+
+  /**
+   * Getter for property 'targetGroupArn'.
+   *
+   * @return Value for property 'targetGroupArn'.
+   */
+  public String getTargetGroupArn() {
+    return targetGroupArn;
+  }
+
+  /**
+   * Setter for property 'targetGroupArn'.
+   *
+   * @param targetGroupArn Value to set for property 'targetGroupArn'.
+   */
+  public void setTargetGroupArn(String targetGroupArn) {
+    this.targetGroupArn = targetGroupArn;
+  }
+
+  /**
+   * Getter for property 'roleArn'.
+   *
+   * @return Value for property 'roleArn'.
+   */
+  public String getRoleArn() {
+    return roleArn;
+  }
+
+  /**
+   * Setter for property 'roleArn'.
+   *
+   * @param roleArn Value to set for property 'roleArn'.
+   */
+  public void setRoleArn(String roleArn) {
+    this.roleArn = roleArn;
   }
 
   public static final class EcsServiceSetupBuilder {
