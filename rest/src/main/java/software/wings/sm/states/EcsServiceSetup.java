@@ -155,6 +155,12 @@ public class EcsServiceSetup extends State {
             .orElse(new com.amazonaws.services.ecs.model.Service())
             .getLoadBalancers();
 
+    String role = services.stream()
+                      .filter(service1 -> StringUtils.equals(service1.getServiceName(), lastEcsServiceName))
+                      .findFirst()
+                      .orElse(new com.amazonaws.services.ecs.model.Service())
+                      .getRoleArn();
+
     awsClusterService.createService(computeProviderSetting,
         new CreateServiceRequest()
             .withServiceName(ecsServiceName)
@@ -163,7 +169,8 @@ public class EcsServiceSetup extends State {
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision())
-            .withLoadBalancers(loadBalancers));
+            .withLoadBalancers(loadBalancers)
+            .withRole(role));
 
     EcsServiceElement ecsServiceElement = anEcsServiceElement()
                                               .withUuid(serviceId)
