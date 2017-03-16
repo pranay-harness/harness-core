@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -49,7 +50,9 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -213,11 +216,11 @@ public class EcsServiceSetup extends State {
       String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
 
-    if (wingsContainerDefinition.getCpu() != null) {
+    if (wingsContainerDefinition.getCpu() != null && wingsContainerDefinition.getMemory().intValue() > 0) {
       containerDefinition.setCpu(wingsContainerDefinition.getCpu());
     }
 
-    if (wingsContainerDefinition.getMemory() != null) {
+    if (wingsContainerDefinition.getMemory() != null && wingsContainerDefinition.getMemory().intValue() > 0) {
       containerDefinition.setMemory(wingsContainerDefinition.getMemory());
     }
 
@@ -233,9 +236,12 @@ public class EcsServiceSetup extends State {
       containerDefinition.setPortMappings(portMappings);
     }
 
-    if (wingsContainerDefinition.getCommands() != null) {
-      containerDefinition.setCommand(wingsContainerDefinition.getCommands());
-    }
+    List<String> commands = Optional.ofNullable(wingsContainerDefinition.getCommands())
+                                .orElse(Collections.emptyList())
+                                .stream()
+                                .filter(s -> isNotBlank(s))
+                                .collect(Collectors.toList());
+    containerDefinition.setCommand(commands);
 
     if (wingsContainerDefinition.getLogConfiguration() != null) {
       EcsContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
