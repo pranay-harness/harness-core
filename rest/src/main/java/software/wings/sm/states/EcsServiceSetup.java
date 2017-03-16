@@ -169,7 +169,6 @@ public class EcsServiceSetup extends State {
           .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
                                  .withContainerName(containerName)
                                  .withContainerPort(containerPort)
-                                 .withLoadBalancerName(loadBalancerSettingId)
                                  .withTargetGroupArn(targetGroupArn))
           .withRole(roleArn);
     }
