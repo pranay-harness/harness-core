@@ -3,6 +3,7 @@ package software.wings.rules;
 import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
@@ -169,6 +170,7 @@ public class WingsRule implements MethodRule {
     configuration.getPortal().setCompanyName("COMPANY_NAME");
     configuration.getPortal().setAllowedDomains("wings.software");
     configuration.getPortal().setUrl(PORTAL_URL);
+    configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.getMongoConnectionFactory().setHost(mongoClient.getAddress().getHost());
     configuration.getMongoConnectionFactory().setPort(mongoClient.getAddress().getPort());
     configuration.getMongoConnectionFactory().setDb(datastore.getDB().getName());

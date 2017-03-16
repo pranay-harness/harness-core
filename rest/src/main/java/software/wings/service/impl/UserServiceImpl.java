@@ -10,11 +10,10 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.Lists;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
@@ -30,7 +29,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
@@ -43,6 +41,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.KryoUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -78,58 +77,16 @@ public class UserServiceImpl implements UserService {
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
-
+    Account account = setupAccount(user.getAccountName(), user.getCompanyName());
     User existingUser = getUserByEmail(user.getEmail());
-    return existingUser != null ? addAccountToExistingUser(existingUser, user) : registerNewUser(user);
-  }
-
-  private UserInvite getUserInvite(String email, String accountId) {
-    return wingsPersistence.createQuery(UserInvite.class)
-        .field("email")
-        .equal(email)
-        .field("accountId")
-        .equal(accountId)
-        .get();
-  }
-
-  private User addAccountToExistingUser(User existingUser, User user) {
-    Account account = setupAccount(user);
-    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                                        .field("email")
-                                                        .equal(existingUser.getEmail())
-                                                        .field("appId")
-                                                        .equal(existingUser.getAppId()),
-        wingsPersistence.createUpdateOperations(User.class)
-            .addToSet("accounts", account)
-            .addToSet("roles", roleService.getAccountAdminRole(account.getUuid())));
-    executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(existingUser, account));
-    return user;
-  }
-
-  private Account setupAccount(User user) {
-    if (isBlank(user.getCompanyName())) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Company Name Can't be empty");
-    }
-
-    if (isBlank(user.getAccountName())) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name Can't be empty");
-    }
-
-    if (accountService.exists(user.getAccountName())) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name should be unique");
-    }
-
-    Account account = Account.Builder.anAccount()
-                          .withAccountName(user.getAccountName())
-                          .withCompanyName(user.getCompanyName())
-                          .build();
-
-    return accountService.save(account);
-  }
-
-  private void markInviteCompleted(UserInvite userInvite) {
-    if (userInvite != null) {
-      wingsPersistence.updateField(UserInvite.class, userInvite.getUuid(), "completed", true);
+    if (existingUser != null) {
+      addAccountAdminRole(existingUser, account);
+      executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(existingUser, account));
+      return existingUser;
+    } else {
+      User savedUser = registerNewUser(user, account);
+      executorService.execute(() -> sendVerificationEmail(savedUser));
+      return savedUser;
     }
   }
 
@@ -151,31 +108,13 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private User registerNewUser(User user) {
-    Account account = setupAccount(user);
-
+  private User registerNewUser(User user, Account account) {
     user.getAccounts().add(account);
-    UserInvite userInvite = null;
-    PageResponse<User> verifiedUsers = list(aPageRequest()
-                                                .addFilter("accounts", Operator.EQ, account.getUuid())
-                                                .addFilter("emailVerified", Operator.EQ, true)
-                                                .build());
-    if (verifiedUsers.getResponse().size() == 0) { // first User. Assign admin role
-      user.addRole(roleService.getAccountAdminRole(account.getUuid()));
-    } else {
-      userInvite = getUserInvite(user.getEmail(), account.getUuid());
-      if (userInvite == null) {
-        throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
-      }
-      user.setRoles(userInvite.getRoles());
-    }
-
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
+    user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
-    markInviteCompleted(userInvite);
-    executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
   }
 
@@ -243,49 +182,27 @@ public class UserServiceImpl implements UserService {
     return userInvite.getEmails()
         .stream()
         .map(email -> {
-          userInvite.setEmail(email);
-          return inviteUser(userInvite);
+          UserInvite userInviteClone = KryoUtils.clone(userInvite);
+          userInviteClone.setEmail(email);
+          return inviteUser(userInviteClone);
         })
         .collect(Collectors.toList());
   }
 
   private UserInvite inviteUser(UserInvite userInvite) {
-    UserInvite existingInvite = wingsPersistence.createQuery(UserInvite.class)
-                                    .field("email")
-                                    .equal(userInvite.getEmail())
-                                    .field("accountId")
-                                    .equal(userInvite.getAccountId())
-                                    .get();
-
-    if (existingInvite != null) {
-      UpdateOperations<UserInvite> updateOp =
-          wingsPersistence.createUpdateOperations(UserInvite.class).addToSet("roles", userInvite.getRoles());
-      Query<UserInvite> updateQuery = wingsPersistence.createQuery(UserInvite.class)
-                                          .field(ID_KEY)
-                                          .equal(existingInvite.getUuid())
-                                          .field("appId")
-                                          .equal(userInvite.getAppId());
-      wingsPersistence.update(updateQuery, updateOp);
-      return wingsPersistence.get(UserInvite.class, existingInvite.getAppId(), existingInvite.getUuid());
-    }
-
-    String inviteId = wingsPersistence.save(userInvite);
     Account account = accountService.get(userInvite.getAccountId());
-
-    // process saved invite
+    String inviteId = wingsPersistence.save(userInvite);
 
     User user = getUserByEmail(userInvite.getEmail());
     if (user != null) {
       boolean userAlreadyAddedToAccount =
           user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(userInvite.getAccountId()));
-      if (userAlreadyAddedToAccount) {
-        userInvite.getRoles().forEach(role -> addRole(user.getUuid(), role.getUuid()));
-        userInvite.setCompleted(true);
-        sendAddedRoleEmail(user, account, userInvite.getRoles());
+      if (!userAlreadyAddedToAccount) {
+        addRoles(user, userInvite.getRoles());
       } else {
-        // TODO
-        // addAccountToExistingUser(user, account.getCompanyName());
+        addAccountRoles(user, account, userInvite.getRoles());
       }
+      sendAddedRoleEmail(user, account, userInvite.getRoles());
     } else {
       sendNewInvitationMail(userInvite, account);
     }
@@ -441,5 +358,48 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
+  }
+
+  private User addAccountAdminRole(User existingUser, Account account) {
+    return addAccountRoles(
+        existingUser, account, Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
+  }
+
+  private User addAccountRoles(User existingUser, Account account, List<Role> roles) {
+    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
+                                                        .field("email")
+                                                        .equal(existingUser.getEmail())
+                                                        .field("appId")
+                                                        .equal(existingUser.getAppId()),
+        wingsPersistence.createUpdateOperations(User.class).addToSet("accounts", account).addToSet("roles", roles));
+    return existingUser;
+  }
+
+  private User addRoles(User user, List<Role> roles) {
+    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
+                                                        .field("email")
+                                                        .equal(user.getEmail())
+                                                        .field("appId")
+                                                        .equal(user.getAppId()),
+        wingsPersistence.createUpdateOperations(User.class).addToSet("roles", roles));
+    return user;
+  }
+
+  private Account setupAccount(String accountName, String companyName) {
+    if (isBlank(companyName)) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Company Name Can't be empty");
+    }
+
+    if (isBlank(accountName)) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name Can't be empty");
+    }
+
+    if (accountService.exists(accountName)) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Account Name should be unique");
+    }
+
+    Account account = Account.Builder.anAccount().withAccountName(accountName).withCompanyName(companyName).build();
+
+    return accountService.save(account);
   }
 }

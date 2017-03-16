@@ -263,6 +263,8 @@ public class WingsTestConstants {
    */
   public static final String PORTAL_URL = "PORTAL_URL";
 
+  public static final String VERIFICATION_PATH = "VERIFICATION_PATH";
+
   /**
    * The constant NOTIFICATION_ID.
    */
