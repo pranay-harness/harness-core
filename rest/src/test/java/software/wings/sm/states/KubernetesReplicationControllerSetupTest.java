@@ -136,6 +136,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     kubernetesReplicationControllerSetup.setServiceType("ClusterIP");
     kubernetesReplicationControllerSetup.setPort("80");
     kubernetesReplicationControllerSetup.setTargetPort("8080");
+    kubernetesReplicationControllerSetup.setProtocol("TCP");
 
     when(appService.get(APP_ID)).thenReturn(app);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(env);

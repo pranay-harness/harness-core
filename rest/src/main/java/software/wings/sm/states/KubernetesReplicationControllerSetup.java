@@ -5,11 +5,12 @@ import static software.wings.api.KubernetesReplicationControllerExecutionData.Ku
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
@@ -18,6 +19,8 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.mongodb.morphia.annotations.Transient;
@@ -54,6 +57,7 @@ import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,11 +67,19 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerSetup extends State {
-  @Attributes(
-      required = true, enums = {"ClusterIP", "NodePort", "LoadBalancer", "ExternalName"}, title = "Service Type")
-  private String serviceType;
-  @Attributes(required = true, title = "Port") private String port;
-  @Attributes(required = true, title = "Target Port") private String targetPort;
+  private enum ServiceType { ClusterIP, LoadBalancer, NodePort, ExternalName }
+
+  private enum PortProtocol { TCP, UDP }
+
+  private ServiceType serviceType;
+  private Integer port;
+  private Integer targetPort;
+  private PortProtocol protocol;
+  private String clusterIP;
+  private String externalIPs;
+  private String loadBalancerIP;
+  private Integer nodePort;
+  private String externalName;
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
@@ -187,6 +199,35 @@ public class KubernetesReplicationControllerSetup extends State {
             .endSpec()
             .build());
 
+    ServiceSpecBuilder spec = new ServiceSpecBuilder().addToSelector(labels).withType(serviceType.name());
+
+    if (serviceType != ServiceType.ExternalName) {
+      ServicePortBuilder servicePort = new ServicePortBuilder()
+                                           .withProtocol(protocol.name())
+                                           .withPort(port)
+                                           .withNewTargetPort()
+                                           .withIntVal(targetPort)
+                                           .endTargetPort();
+      if (serviceType == ServiceType.NodePort && nodePort != null) {
+        servicePort.withNodePort(nodePort);
+      }
+      spec.withPorts(ImmutableList.of(servicePort.build())); // TODO:: Allow more than one port
+
+      if (serviceType == ServiceType.LoadBalancer && !Strings.isNullOrEmpty(loadBalancerIP)) {
+        spec.withLoadBalancerIP(loadBalancerIP);
+      }
+
+      if (serviceType == ServiceType.ClusterIP && !Strings.isNullOrEmpty(clusterIP)) {
+        spec.withClusterIP(clusterIP);
+      }
+    } else {
+      // TODO:: fabric8 doesn't seem to support external name yet. Add here when it does.
+    }
+
+    if (!Strings.isNullOrEmpty(externalIPs)) {
+      spec.withExternalIPs(Arrays.stream(externalIPs.split(",")).map(String::trim).collect(Collectors.toList()));
+    }
+
     kubernetesContainerService.createService(kubernetesConfig,
         new ServiceBuilder()
             .withApiVersion("v1")
@@ -194,17 +235,7 @@ public class KubernetesReplicationControllerSetup extends State {
             .withName(serviceName)
             .addToLabels(labels)
             .endMetadata()
-            .withNewSpec()
-            .addNewPort()
-            .withProtocol("TCP")
-            .withPort(Integer.parseInt(port))
-            .withNewTargetPort()
-            .withIntVal(Integer.parseInt(targetPort))
-            .endTargetPort()
-            .endPort()
-            .addToSelector(labels)
-            .withType(serviceType)
-            .endSpec()
+            .withSpec(spec.build())
             .build());
 
     KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
@@ -340,30 +371,86 @@ public class KubernetesReplicationControllerSetup extends State {
    * Gets service type.
    */
   public String getServiceType() {
-    return serviceType;
+    return serviceType.name();
   }
 
   /**
    * Sets service type.
    */
   public void setServiceType(String serviceType) {
-    this.serviceType = serviceType;
+    try {
+      this.serviceType = ServiceType.valueOf(serviceType);
+    } catch (IllegalArgumentException e) {
+      this.serviceType = ServiceType.ClusterIP;
+    }
   }
 
   public String getPort() {
-    return port;
+    return port.toString();
   }
 
   public void setPort(String port) {
-    this.port = port;
+    this.port = Integer.parseInt(port);
   }
 
   public String getTargetPort() {
-    return targetPort;
+    return targetPort.toString();
   }
 
   public void setTargetPort(String targetPort) {
-    this.targetPort = targetPort;
+    this.targetPort = Integer.parseInt(targetPort);
+  }
+
+  public String getProtocol() {
+    return protocol.name();
+  }
+
+  public void setProtocol(String protocol) {
+    try {
+      this.protocol = PortProtocol.valueOf(protocol);
+    } catch (IllegalArgumentException e) {
+      this.protocol = PortProtocol.TCP;
+    }
+  }
+
+  public String getClusterIP() {
+    return clusterIP;
+  }
+
+  public void setClusterIP(String clusterIP) {
+    this.clusterIP = clusterIP;
+  }
+
+  public String getExternalIPs() {
+    return externalIPs;
+  }
+
+  public void setExternalIPs(String externalIPs) {
+    this.externalIPs = externalIPs;
+  }
+
+  public String getLoadBalancerIP() {
+    return loadBalancerIP;
+  }
+
+  public void setLoadBalancerIP(String loadBalancerIP) {
+    this.loadBalancerIP = loadBalancerIP;
+  }
+
+  public String getNodePort() {
+    return nodePort.toString();
+  }
+
+  public void setNodePort(String nodePort) {
+    this.nodePort = Integer.parseInt(nodePort);
+  }
+
+  public String getExternalName() {
+    return externalName;
+  }
+
+  public void setExternalName(String externalName) {
+    this.externalName = externalName;
   }
 
   public static final class KubernetesReplicationControllerSetupBuilder {
