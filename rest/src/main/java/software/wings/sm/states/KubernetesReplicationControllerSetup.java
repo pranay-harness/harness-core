@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
@@ -132,7 +133,6 @@ public class KubernetesReplicationControllerSetup extends State {
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
     String replicationControllerName =
         KubernetesConvention.getReplicationControllerName(app.getName(), serviceName, env, revision);
-    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
 
     Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
                                             .put("app", KubernetesConvention.getLabelValue(app.getName()))
@@ -148,11 +148,20 @@ public class KubernetesReplicationControllerSetup extends State {
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageName, app));
 
-    if (serviceType != null && serviceType != ServiceType.None
-        && kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName) == null) {
-      logger.info("Kubernetes service {} does not exist. Creating.", kubernetesServiceName);
-      kubernetesContainerService.createService(
-          kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
+    String kubernetesServiceName = null;
+    String serviceClusterIP = null;
+    String serviceLoadBalancerIP = null;
+
+    if (serviceType != null && serviceType != ServiceType.None) {
+      kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+      Service service = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName);
+      if (service == null) {
+        logger.info("Kubernetes service {} does not exist. Creating.", kubernetesServiceName);
+        service = kubernetesContainerService.createService(
+            kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
+      }
+      serviceClusterIP = service.getSpec().getClusterIP();
+      serviceLoadBalancerIP = service.getSpec().getLoadBalancerIP();
     }
 
     KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
@@ -169,6 +178,9 @@ public class KubernetesReplicationControllerSetup extends State {
         .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
                                     .withGkeClusterName(clusterName)
                                     .withKubernetesReplicationControllerName(replicationControllerName)
+                                    .withKubernetesServiceName(kubernetesServiceName)
+                                    .withKubernetesServiceClusterIP(serviceClusterIP)
+                                    .withKubernetesServiceLoadBalancerIP(serviceLoadBalancerIP)
                                     .withDockerImageName(imageName)
                                     .build())
         .build();

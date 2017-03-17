@@ -42,6 +42,7 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -126,7 +127,8 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
   private Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private SettingAttribute computeProvider = aSettingAttribute().build();
-  private ReplicationController replicationControllerSpec;
+  private ReplicationController replicationController;
+  private io.fabric8.kubernetes.api.model.Service kubernetesService;
 
   /**
    * Set up.
@@ -156,7 +158,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
 
     when(settingsService.get(APP_ID, COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
 
-    replicationControllerSpec =
+    replicationController =
         new ReplicationControllerBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -188,10 +190,34 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
             .endSpec()
             .build();
 
+    kubernetesService = new ServiceBuilder()
+                            .withApiVersion("v1")
+                            .withNewMetadata()
+                            .withName("backend-service")
+                            .addToLabels("app", "testApp")
+                            .addToLabels("tier", "backend")
+                            .endMetadata()
+                            .withNewSpec()
+                            .addNewPort()
+                            .withPort(80)
+                            .withNewTargetPort()
+                            .withIntVal(8080)
+                            .endTargetPort()
+                            .endPort()
+                            .addToSelector("app", "testApp")
+                            .addToSelector("tier", "backend")
+                            .withClusterIP("1.2.3.4")
+                            .withLoadBalancerIP("5.6.7.8")
+                            .endSpec()
+                            .build();
+
     when(gkeClusterService.getCluster(any(SettingAttribute.class), anyString())).thenReturn(kubernetesConfig);
-    when(kubernetesContainerService.createController(kubernetesConfig, replicationControllerSpec))
-        .thenReturn(replicationControllerSpec);
+    when(kubernetesContainerService.createController(eq(kubernetesConfig), any(ReplicationController.class)))
+        .thenReturn(replicationController);
     when(kubernetesContainerService.listControllers(kubernetesConfig)).thenReturn(null);
+    when(kubernetesContainerService.createService(
+             eq(kubernetesConfig), any(io.fabric8.kubernetes.api.model.Service.class)))
+        .thenReturn(kubernetesService);
   }
 
   @Test
