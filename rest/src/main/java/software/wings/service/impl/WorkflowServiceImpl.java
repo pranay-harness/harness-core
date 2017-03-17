@@ -1027,7 +1027,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .addStep(aNode()
                                                   .withId(getUuid())
                                                   .withType(StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
-                                                  .withName("Kubernetes Replication Controller Setup")
+                                                  .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());
     }

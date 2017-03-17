@@ -68,7 +68,7 @@ import java.util.stream.Collectors;
 public class KubernetesReplicationControllerSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
 
-  private enum ServiceType { ClusterIP, LoadBalancer, NodePort, ExternalName }
+  private enum ServiceType { None, ClusterIP, LoadBalancer, NodePort, ExternalName }
 
   private enum PortProtocol { TCP, UDP }
 
@@ -148,7 +148,8 @@ public class KubernetesReplicationControllerSetup extends State {
     kubernetesContainerService.createController(kubernetesConfig,
         createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageName, app));
 
-    if (kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName) == null) {
+    if (serviceType != null && serviceType != ServiceType.None
+        && kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName) == null) {
       logger.info("Kubernetes service {} does not exist. Creating.", kubernetesServiceName);
       kubernetesContainerService.createService(
           kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
