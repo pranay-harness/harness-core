@@ -22,6 +22,7 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
+import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -60,6 +61,8 @@ import java.util.stream.Collectors;
  */
 @Attributes(description = "Settings for AWS load balancer and roles for working with ECS Service.")
 public class EcsServiceSetup extends State {
+  @Attributes(title = "Use LoadBalancer?") private boolean useLoadBalancer;
+
   @Attributes(title = "Elastic Load Balancer")
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
   private String loadBalancerName;
@@ -165,7 +168,12 @@ public class EcsServiceSetup extends State {
     List<com.amazonaws.services.ecs.model.Service> services =
         awsClusterService.getServices(computeProviderSetting, clusterName);
 
-    if (!isEmpty(containerDefinitions.get(0).getPortMappings())) {
+    EcsServiceExecutionData.Builder ecsServiceExecutionDataBuilder = anEcsServiceExecutionData()
+                                                                         .withEcsClusterName(clusterName)
+                                                                         .withEcsServiceName(ecsServiceName)
+                                                                         .withDockerImageName(imageName);
+
+    if (useLoadBalancer && !isEmpty(containerDefinitions.get(0).getPortMappings())) {
       int containerPort = ecsContainerTask.getContainerDefinitions().get(0).getPortMappings().get(0).getContainerPort();
 
       createServiceRequest
@@ -174,6 +182,9 @@ public class EcsServiceSetup extends State {
                                  .withContainerPort(containerPort)
                                  .withTargetGroupArn(targetGroupArn))
           .withRole(roleArn);
+      ecsServiceExecutionDataBuilder.withLoadBalancerName(loadBalancerName)
+          .withRoleArn(roleArn)
+          .withTargetGroupArn(targetGroupArn);
     }
 
     awsClusterService.createService(computeProviderSetting, createServiceRequest);
@@ -184,18 +195,12 @@ public class EcsServiceSetup extends State {
                                               .withOldName(lastEcsServiceName)
                                               .withClusterName(clusterName)
                                               .build();
+
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .addContextElement(ecsServiceElement)
         .addNotifyElement(ecsServiceElement)
-        .withStateExecutionData(anEcsServiceExecutionData()
-                                    .withEcsClusterName(clusterName)
-                                    .withEcsServiceName(ecsServiceName)
-                                    .withDockerImageName(imageName)
-                                    .withLoadBalancerName(loadBalancerName)
-                                    .withTargetGroupArn(targetGroupArn)
-                                    .withRoleArn(roleArn)
-                                    .build())
+        .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
         .build();
   }
 
@@ -350,12 +355,31 @@ public class EcsServiceSetup extends State {
     this.roleArn = roleArn;
   }
 
+  /**
+   * Getter for property 'useLoadBalancer'.
+   *
+   * @return Value for property 'useLoadBalancer'.
+   */
+  public boolean isUseLoadBalancer() {
+    return useLoadBalancer;
+  }
+
+  /**
+   * Setter for property 'useLoadBalancer'.
+   *
+   * @param useLoadBalancer Value to set for property 'useLoadBalancer'.
+   */
+  public void setUseLoadBalancer(boolean useLoadBalancer) {
+    this.useLoadBalancer = useLoadBalancer;
+  }
+
   public static final class Builder {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
     private String stateType;
     private boolean rollback;
+    private boolean useLoadBalancer;
     private String loadBalancerName;
     private String targetGroupArn;
     private String roleArn;
@@ -391,6 +415,11 @@ public class EcsServiceSetup extends State {
       return this;
     }
 
+    public Builder withUseLoadBalancer(boolean useLoadBalancer) {
+      this.useLoadBalancer = useLoadBalancer;
+      return this;
+    }
+
     public Builder withLoadBalancerName(String loadBalancerName) {
       this.loadBalancerName = loadBalancerName;
       return this;
@@ -413,6 +442,7 @@ public class EcsServiceSetup extends State {
           .withRequiredContextElementType(requiredContextElementType)
           .withStateType(stateType)
           .withRollback(rollback)
+          .withUseLoadBalancer(useLoadBalancer)
           .withLoadBalancerName(loadBalancerName)
           .withTargetGroupArn(targetGroupArn)
           .withRoleArn(roleArn);
@@ -424,6 +454,7 @@ public class EcsServiceSetup extends State {
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);
       ecsServiceSetup.setRollback(rollback);
+      ecsServiceSetup.setUseLoadBalancer(useLoadBalancer);
       ecsServiceSetup.setLoadBalancerName(loadBalancerName);
       ecsServiceSetup.setTargetGroupArn(targetGroupArn);
       ecsServiceSetup.setRoleArn(roleArn);

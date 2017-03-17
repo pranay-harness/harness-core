@@ -1,3 +1,3 @@
 {
-  "ui:order": ["loadBalancerName", "targetGroupArn", "roleArn"]
+  "ui:order": ["useLoadBalancer","loadBalancerName", "targetGroupArn", "roleArn"]
 }
