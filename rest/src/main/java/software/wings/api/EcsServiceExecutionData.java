@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import static com.google.common.base.Strings.emptyToNull;
+import static org.apache.commons.lang.ArrayUtils.getLength;
 import static org.apache.commons.lang3.StringUtils.split;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
@@ -170,7 +171,7 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
   private String getTargetGroupName() {
     String targetGroupName = null;
     String[] targetGroupArnParts = split(targetGroupArn, "/");
-    if (targetGroupArnParts.length >= 2) {
+    if (getLength(targetGroupArnParts) >= 2) {
       targetGroupName = targetGroupArnParts[1];
     }
     return targetGroupName;
