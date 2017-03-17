@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
-import static software.wings.api.EcsServiceExecutionData.EcsServiceExecutionDataBuilder.anEcsServiceExecutionData;
+import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -192,6 +192,9 @@ public class EcsServiceSetup extends State {
                                     .withEcsClusterName(clusterName)
                                     .withEcsServiceName(ecsServiceName)
                                     .withDockerImageName(imageName)
+                                    .withLoadBalancerName(loadBalancerName)
+                                    .withTargetGroupArn(targetGroupArn)
+                                    .withRoleArn(roleArn)
                                     .build())
         .build();
   }
