@@ -22,6 +22,7 @@ import static software.wings.beans.stats.NotificationCount.Builder.aNotification
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -120,7 +121,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                                    new StatusCount(ExecutionStatus.FAILED, 5)))
                                .build())
                         .iterator());
-    TopConsumersStatistics topConsumers = (TopConsumersStatistics) statisticsService.getTopConsumers();
+    TopConsumersStatistics topConsumers = (TopConsumersStatistics) statisticsService.getTopConsumers(ACCOUNT_ID);
     assertThat(topConsumers.getTopConsumers())
         .hasSize(1)
         .containsExactly(aTopConsumer()
@@ -184,7 +185,10 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false)))
         .thenReturn(aPageResponse().withResponse(executions).build());
 
-    UserStatistics userStats = statisticsService.getUserStats();
+    when(appService.list(any(PageRequest.class), eq(false), eq(0), eq(0)))
+        .thenReturn(aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).build())).build());
+
+    UserStatistics userStats = statisticsService.getUserStats(ACCOUNT_ID);
     assertThat(userStats.getDeploymentCount()).isEqualTo(2);
     assertThat(userStats.getLastFetchedOn()).isEqualTo(statusFetchedOn);
     assertThat(userStats.getAppDeployments())
@@ -242,7 +246,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
     when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false)))
         .thenReturn(aPageResponse().withResponse(executions).build());
-    DeploymentStatistics deploymentStatistics = statisticsService.getDeploymentStatistics(APP_ID, 30);
+    DeploymentStatistics deploymentStatistics = statisticsService.getDeploymentStatistics(ACCOUNT_ID, APP_ID, 30);
 
     assertThat(deploymentStatistics.getStatsMap()).hasSize(3).containsOnlyKeys(EnvironmentType.values());
 
@@ -272,7 +276,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
     when(activityService.list(any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().withResponse(asList(anActivity().build())).build());
 
-    NotificationCount notificationCount = statisticsService.getNotificationCount(APP_ID, 30);
+    NotificationCount notificationCount = statisticsService.getNotificationCount(ACCOUNT_ID, APP_ID, 30);
     assertThat(notificationCount)
         .isEqualTo(aNotificationCount()
                        .withCompletedNotificationsCount(2)

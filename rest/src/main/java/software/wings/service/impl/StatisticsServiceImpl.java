@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.collect.Iterables.isEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -90,8 +91,10 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private ActivityService activityService;
 
   @Override
-  public WingsStatistics getTopConsumers() {
-    List<Application> applications = appService.list(new PageRequest<>(), false, 0, 0).getResponse();
+  public WingsStatistics getTopConsumers(String accountId) {
+    List<Application> applications =
+        appService.list(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build(), false, 0, 0)
+            .getResponse();
     ImmutableMap<String, Application> appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
     List<TopConsumer> topConsumers =
         getTopConsumerForPastXDays(30).stream().filter(tc -> appIdMap.containsKey(tc.getAppId())).collect(toList());
@@ -160,12 +163,19 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
-  public UserStatistics getUserStats() {
+  public UserStatistics getUserStats(String accountId) {
+    // TODO: Needs to see what's purpose for this.
     User user = UserThreadLocal.get();
     if (user == null) {
       return new UserStatistics();
     }
     long statsFetchedOn = user.getStatsFetchedOn();
+    UserStatistics userStatistics = anUserStatistics().withLastFetchedOn(statsFetchedOn).build();
+
+    List<String> appIds = getAppIdsForAccount(accountId);
+    if (isEmpty(appIds)) {
+      return userStatistics;
+    }
 
     PageRequest pageRequest =
         aPageRequest()
@@ -173,6 +183,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, statsFetchedOn).build())
             .addFilter(
                 aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter("appId", Operator.IN, appIds.toArray())
             .build();
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
@@ -195,15 +206,22 @@ public class StatisticsServiceImpl implements StatisticsService {
         (int) appDeployments.stream().mapToInt(appDeployment -> appDeployment.getDeployments().size()).sum();
 
     executorService.submit(() -> userService.updateStatsFetchedOnForUser(user));
-    return anUserStatistics()
-        .withAppDeployments(appDeployments)
-        .withDeploymentCount(deploymentCount)
-        .withLastFetchedOn(statsFetchedOn)
-        .build();
+    userStatistics.setAppDeployments(appDeployments);
+    userStatistics.setDeploymentCount(deploymentCount);
+    return userStatistics;
   }
 
+  private List<String> getAppIdsForAccount(String accountId) {
+    List<Application> applications = appService.list(
+        PageRequest.Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).build(), false, 0, 0);
+    if (applications == null) {
+      return new ArrayList<>();
+    } else {
+      return applications.stream().map(Application::getUuid).collect(toList());
+    }
+  }
   @Override
-  public DeploymentStatistics getDeploymentStatistics(String appId, int numOfDays) {
+  public DeploymentStatistics getDeploymentStatistics(String accountId, String appId, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
     PageRequest pageRequest =
@@ -215,7 +233,14 @@ public class StatisticsServiceImpl implements StatisticsService {
                            .build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
-    if (!isNullOrEmpty(appId)) {
+    if (isNullOrEmpty(appId)) {
+      List<String> appIds = getAppIdsForAccount(accountId);
+      if (isEmpty(appIds)) {
+        return null;
+      }
+      pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
+
+    } else {
       pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build());
     }
 
@@ -236,13 +261,17 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   @Override
-  public NotificationCount getNotificationCount(String appId, int minutesFromNow) {
+  public NotificationCount getNotificationCount(String accountId, String appId, int minutesFromNow) {
     long queryStartEpoch = System.currentTimeMillis() - (minutesFromNow * 60 * 1000);
 
-    PageRequest actionableNotificationRequest =
-        aPageRequest().addFilter("actionable", Operator.EQ, true).addFilter("complete", Operator.EQ, false).build();
+    PageRequest actionableNotificationRequest = aPageRequest()
+                                                    .addFilter("accountId", Operator.EQ, accountId)
+                                                    .addFilter("actionable", Operator.EQ, true)
+                                                    .addFilter("complete", Operator.EQ, false)
+                                                    .build();
 
     PageRequest nonActionableNotificationRequest = aPageRequest()
+                                                       .addFilter("accountId", Operator.EQ, accountId)
                                                        .addFilter("createdAt", Operator.GT, queryStartEpoch)
                                                        .addFilter("actionable", Operator.EQ, false)
                                                        .build();
@@ -252,6 +281,10 @@ public class StatisticsServiceImpl implements StatisticsService {
                                      .addFilter("status", Operator.EQ, FAILED)
                                      .addFieldsIncluded("appId")
                                      .build();
+    List<String> appIds = getAppIdsForAccount(accountId);
+    if (!isEmpty(appIds)) {
+      failureRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, appIds.toArray()).build());
+    }
 
     if (appId != null) {
       actionableNotificationRequest.addFilter("appId", appId, Operator.EQ);

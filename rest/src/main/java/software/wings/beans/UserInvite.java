@@ -104,4 +104,95 @@ public class UserInvite extends Base {
   public void setEmails(List<String> emails) {
     this.emails = emails;
   }
+
+  public static final class UserInviteBuilder {
+    private String accountId;
+    private String email;
+    private List<Role> roles = new ArrayList<>();
+    private boolean completed = false;
+    private List<String> emails = new ArrayList<>();
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
+
+    private UserInviteBuilder() {}
+
+    public static UserInviteBuilder anUserInvite() {
+      return new UserInviteBuilder();
+    }
+
+    public UserInviteBuilder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    public UserInviteBuilder withEmail(String email) {
+      this.email = email;
+      return this;
+    }
+
+    public UserInviteBuilder withRoles(List<Role> roles) {
+      this.roles = roles;
+      return this;
+    }
+
+    public UserInviteBuilder withCompleted(boolean completed) {
+      this.completed = completed;
+      return this;
+    }
+
+    public UserInviteBuilder withEmails(List<String> emails) {
+      this.emails = emails;
+      return this;
+    }
+
+    public UserInviteBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public UserInviteBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public UserInviteBuilder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public UserInviteBuilder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public UserInviteBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public UserInviteBuilder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public UserInvite build() {
+      UserInvite userInvite = new UserInvite();
+      userInvite.setAccountId(accountId);
+      userInvite.setEmail(email);
+      userInvite.setRoles(roles);
+      userInvite.setCompleted(completed);
+      userInvite.setEmails(emails);
+      userInvite.setUuid(uuid);
+      userInvite.setAppId(appId);
+      userInvite.setCreatedBy(createdBy);
+      userInvite.setCreatedAt(createdAt);
+      userInvite.setLastUpdatedBy(lastUpdatedBy);
+      userInvite.setLastUpdatedAt(lastUpdatedAt);
+      return userInvite;
+    }
+  }
 }

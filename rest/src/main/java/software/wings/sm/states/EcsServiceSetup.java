@@ -58,16 +58,19 @@ import java.util.stream.Collectors;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
+@Attributes(description = "Settings for AWS load balancer and roles for working with ECS Service.")
 public class EcsServiceSetup extends State {
-  @Attributes(title = "Load Balancer")
+  @Attributes(title = "Elastic Load Balancer")
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
-  private String loadBalancerSettingId;
+  private String loadBalancerName;
 
   @Attributes(title = "Target Group")
   @EnumData(enumDataProvider = LoadBalancerTargetGroupDataProvider.class)
   private String targetGroupArn;
 
-  @Attributes(title = "Role") @EnumData(enumDataProvider = AWSRolesDataProvider.class) private String roleArn;
+  @Attributes(title = "Role", description = "Arn for the role required by ECS for registering targets on ELB.")
+  @EnumData(enumDataProvider = AWSRolesDataProvider.class)
+  private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
 
@@ -137,7 +140,7 @@ public class EcsServiceSetup extends State {
     TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
     /*
-    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerSettingId);
+    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerName);
 
     if (loadBalancerSetting == null ||
     !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
@@ -295,17 +298,17 @@ public class EcsServiceSetup extends State {
    *
    * @return the load balancer setting id
    */
-  public String getLoadBalancerSettingId() {
-    return loadBalancerSettingId;
+  public String getLoadBalancerName() {
+    return loadBalancerName;
   }
 
   /**
    * Sets load balancer setting id.
    *
-   * @param loadBalancerSettingId the load balancer setting id
+   * @param loadBalancerName the load balancer setting id
    */
-  public void setLoadBalancerSettingId(String loadBalancerSettingId) {
-    this.loadBalancerSettingId = loadBalancerSettingId;
+  public void setLoadBalancerName(String loadBalancerName) {
+    this.loadBalancerName = loadBalancerName;
   }
 
   /**
@@ -344,76 +347,72 @@ public class EcsServiceSetup extends State {
     this.roleArn = roleArn;
   }
 
-  public static final class EcsServiceSetupBuilder {
+  public static final class Builder {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
     private String stateType;
     private boolean rollback;
-    private String loadBalancerSettingId;
-    private transient AwsClusterService awsClusterService;
-    private transient SettingsService settingsService;
-    private transient ServiceResourceService serviceResourceService;
-    private transient InfrastructureMappingService infrastructureMappingService;
-    private transient ArtifactStreamService artifactStreamService;
+    private String loadBalancerName;
+    private String targetGroupArn;
+    private String roleArn;
 
-    private EcsServiceSetupBuilder(String name) {
-      this.name = name;
+    private Builder() {}
+
+    public static Builder anEcsServiceSetup() {
+      return new Builder();
     }
 
-    public static EcsServiceSetupBuilder anEcsServiceSetup(String name) {
-      return new EcsServiceSetupBuilder(name);
-    }
-
-    public EcsServiceSetupBuilder withId(String id) {
+    public Builder withId(String id) {
       this.id = id;
       return this;
     }
 
-    public EcsServiceSetupBuilder withRequiredContextElementType(ContextElementType requiredContextElementType) {
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withRequiredContextElementType(ContextElementType requiredContextElementType) {
       this.requiredContextElementType = requiredContextElementType;
       return this;
     }
 
-    public EcsServiceSetupBuilder withStateType(String stateType) {
+    public Builder withStateType(String stateType) {
       this.stateType = stateType;
       return this;
     }
 
-    public EcsServiceSetupBuilder withRollback(boolean rollback) {
+    public Builder withRollback(boolean rollback) {
       this.rollback = rollback;
       return this;
     }
 
-    public EcsServiceSetupBuilder withLoadBalancerSettingId(String loadBalancerSettingId) {
-      this.loadBalancerSettingId = loadBalancerSettingId;
+    public Builder withLoadBalancerName(String loadBalancerName) {
+      this.loadBalancerName = loadBalancerName;
       return this;
     }
 
-    public EcsServiceSetupBuilder withAwsClusterService(AwsClusterService awsClusterService) {
-      this.awsClusterService = awsClusterService;
+    public Builder withTargetGroupArn(String targetGroupArn) {
+      this.targetGroupArn = targetGroupArn;
       return this;
     }
 
-    public EcsServiceSetupBuilder withSettingsService(SettingsService settingsService) {
-      this.settingsService = settingsService;
+    public Builder withRoleArn(String roleArn) {
+      this.roleArn = roleArn;
       return this;
     }
 
-    public EcsServiceSetupBuilder withServiceResourceService(ServiceResourceService serviceResourceService) {
-      this.serviceResourceService = serviceResourceService;
-      return this;
-    }
-
-    public EcsServiceSetupBuilder withInfrastructureMappingService(
-        InfrastructureMappingService infrastructureMappingService) {
-      this.infrastructureMappingService = infrastructureMappingService;
-      return this;
-    }
-
-    public EcsServiceSetupBuilder withArtifactStreamService(ArtifactStreamService artifactStreamService) {
-      this.artifactStreamService = artifactStreamService;
-      return this;
+    public Builder but() {
+      return anEcsServiceSetup()
+          .withId(id)
+          .withName(name)
+          .withRequiredContextElementType(requiredContextElementType)
+          .withStateType(stateType)
+          .withRollback(rollback)
+          .withLoadBalancerName(loadBalancerName)
+          .withTargetGroupArn(targetGroupArn)
+          .withRoleArn(roleArn);
     }
 
     public EcsServiceSetup build() {
@@ -422,12 +421,9 @@ public class EcsServiceSetup extends State {
       ecsServiceSetup.setRequiredContextElementType(requiredContextElementType);
       ecsServiceSetup.setStateType(stateType);
       ecsServiceSetup.setRollback(rollback);
-      ecsServiceSetup.setLoadBalancerSettingId(loadBalancerSettingId);
-      ecsServiceSetup.settingsService = this.settingsService;
-      ecsServiceSetup.artifactStreamService = this.artifactStreamService;
-      ecsServiceSetup.serviceResourceService = this.serviceResourceService;
-      ecsServiceSetup.awsClusterService = this.awsClusterService;
-      ecsServiceSetup.infrastructureMappingService = this.infrastructureMappingService;
+      ecsServiceSetup.setLoadBalancerName(loadBalancerName);
+      ecsServiceSetup.setTargetGroupArn(targetGroupArn);
+      ecsServiceSetup.setRoleArn(roleArn);
       return ecsServiceSetup;
     }
   }

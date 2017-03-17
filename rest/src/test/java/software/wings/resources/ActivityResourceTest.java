@@ -38,6 +38,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
 import software.wings.utils.ResourceTestRule;
 
@@ -50,6 +51,8 @@ import javax.ws.rs.core.Response;
  * Created by peeyushaggarwal on 4/1/16.
  */
 public class ActivityResourceTest {
+  public static final AppService APP_SERVICE = mock(AppService.class);
+
   /**
    * The constant ACTIVITY_SERVICE.
    */
@@ -63,10 +66,11 @@ public class ActivityResourceTest {
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .addResource(new ActivityResource(APP_SERVICE, ACTIVITY_SERVICE, LOG_SERVICE))
+          .addProvider(WingsExceptionMapper.class)
+          .build();
 
   /**
    * The constant ACTUAL_ACTIVITY.

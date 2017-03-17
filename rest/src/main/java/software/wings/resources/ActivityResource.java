@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -10,13 +11,16 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
+import software.wings.beans.Application;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;
@@ -39,17 +43,20 @@ import javax.ws.rs.core.Response;
 @Timed
 @ExceptionMetered
 public class ActivityResource {
+  private AppService appService;
   private ActivityService activityService;
   private LogService logService;
 
   /**
    * Instantiates a new activity resource.
    *
+   * @param appService the activity service
    * @param activityService the activity service
    * @param logService      the log service
    */
   @Inject
-  public ActivityResource(ActivityService activityService, LogService logService) {
+  public ActivityResource(AppService appService, ActivityService activityService, LogService logService) {
+    this.appService = appService;
     this.activityService = activityService;
     this.logService = logService;
   }
@@ -62,10 +69,17 @@ public class ActivityResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Activity>> list(
+  public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     if (!Strings.isNullOrEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
+    } else {
+      PageRequest<Application> applicationPageRequest =
+          aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
+      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
+      if (res == null || res.isEmpty()) {
+        return new RestResponse<PageResponse<Activity>>(new PageResponse<Activity>());
+      }
     }
     return new RestResponse<>(activityService.list(request));
   }

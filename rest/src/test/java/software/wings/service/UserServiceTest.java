@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
@@ -48,6 +49,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.Role;
+import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -56,13 +59,13 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
@@ -130,7 +133,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
     when(accountService.save(any(Account.class)))
-        .thenReturn(Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().build());
 
@@ -166,7 +169,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(accountService.save(any(Account.class)))
-        .thenReturn(Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
         .thenReturn(PageResponse.Builder.aPageResponse().withResponse(Lists.newArrayList(existingUser)).build());
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
@@ -201,11 +204,13 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateUser() {
-    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).build();
-    UserThreadLocal.set(user);
+    List<Role> roles = Lists.newArrayList(
+        aRole().withUuid(getUuid()).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(getUuid()).build());
+    User user =
+        anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).withRoles(roles).build();
 
     userService.update(user);
-    verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME));
+    verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME, "roles", roles));
     verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
   }
 

@@ -15,6 +15,7 @@ import software.wings.service.intfc.StatisticsService;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -36,8 +37,8 @@ public class StatisticsResource {
    */
   @GET
   @Path("top-consumers")
-  public RestResponse<WingsStatistics> topConsumers() {
-    return new RestResponse<>(statisticsService.getTopConsumers());
+  public RestResponse<WingsStatistics> topConsumers(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(statisticsService.getTopConsumers(accountId));
   }
 
   /**
@@ -46,22 +47,22 @@ public class StatisticsResource {
    * @return the rest response
    */
   @GET
-  @Path("user-stats")
-  public RestResponse<UserStatistics> userStatistics() {
-    return new RestResponse<>(statisticsService.getUserStats());
+  @Path("user-stats/{accountId}")
+  public RestResponse<UserStatistics> userStatistics(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(statisticsService.getUserStats(accountId));
   }
 
   @GET
   @Path("deployment-stats")
-  public RestResponse<DeploymentStatistics> deploymentStats(
+  public RestResponse<DeploymentStatistics> deploymentStats(@QueryParam("accountId") String accountId,
       @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
-    return new RestResponse<>(statisticsService.getDeploymentStatistics(appId, numOfDays));
+    return new RestResponse<>(statisticsService.getDeploymentStatistics(accountId, appId, numOfDays));
   }
 
   @GET
   @Path("notification-count")
-  public RestResponse<NotificationCount> notificationCount(
+  public RestResponse<NotificationCount> notificationCount(@QueryParam("accountId") String accountId,
       @DefaultValue("60") @QueryParam("minutesFromNow") Integer minutesFromNow, @QueryParam("appId") String appId) {
-    return new RestResponse<>(statisticsService.getNotificationCount(appId, minutesFromNow));
+    return new RestResponse<>(statisticsService.getNotificationCount(accountId, appId, minutesFromNow));
   }
 }
