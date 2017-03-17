@@ -9,8 +9,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
@@ -76,22 +74,6 @@ private OkHttpClient getUnsafeOkHttpClient() {
             .retryOnConnectionFailure(true)
             .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
             .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
-            .addInterceptor(chain -> {
-              Request request = chain.request();
-
-              long t1 = System.nanoTime();
-              logger.debug(
-                  String.format("Sending request %s on %s%n%s", request.url(), chain.connection(), request.headers()));
-
-              Response response = chain.proceed(request);
-
-              long t2 = System.nanoTime();
-              logger.debug(String.format("Received response for %s in %.1fms%n%s\n", response.request().url(),
-                  (t2 - t1) / 1e6d, response.headers()));
-
-              return response;
-
-            })
             .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> chain.proceed(chain.request())))
             .hostnameVerifier((hostname, session) -> true)
             .build();
