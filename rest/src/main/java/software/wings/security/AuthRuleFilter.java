@@ -124,9 +124,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
 
-    return resourceMethod.getAnnotation(AuthRule.class) == null && resourceClass.getAnnotation(AuthRule.class) == null
-        && (resourceMethod.getAnnotation(PublicApi.class) != null
-               || resourceClass.getAnnotation(PublicApi.class) != null);
+    return resourceMethod.getAnnotation(PublicApi.class) != null
+        || resourceClass.getAnnotation(PublicApi.class) != null;
   }
 
   private boolean delegateAPI() {

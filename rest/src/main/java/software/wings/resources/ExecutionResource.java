@@ -1,11 +1,11 @@
 package software.wings.resources;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
@@ -16,7 +16,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
@@ -67,17 +66,18 @@ public class ExecutionResource {
    */
   @GET
   @Produces("application/json")
-  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
-      @BeanParam PageRequest<WorkflowExecution> pageRequest,
+  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
       @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    if (StringUtils.isBlank(appId)) {
-      PageRequest<Application> applicationPageRequest = aPageRequest().addFieldsIncluded("uuid").build();
+    if (isBlank(appId)) {
+      PageRequest<Application> applicationPageRequest =
+          aPageRequest().addFieldsIncluded("uuid").addFilter("accountId", Operator.EQ, accountId).build();
       PageResponse<Application> res = appService.list(applicationPageRequest, false, 0, 0);
       if (res == null || res.isEmpty()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "No applications");
+        return new RestResponse<PageResponse<WorkflowExecution>>(new PageResponse<WorkflowExecution>());
       }
       List<String> appIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
       filter.setFieldValues(appIds.toArray());
