@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import static com.google.common.base.Strings.emptyToNull;
+import static org.apache.commons.lang3.StringUtils.split;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
@@ -132,10 +133,7 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
     putNotNull(executionDetails, "loadBalancerName",
         anExecutionDataValue().withValue(loadBalancerName).withDisplayName("Load Balancer").build());
     putNotNull(executionDetails, "targetGroupArn",
-        anExecutionDataValue()
-            .withValue(emptyToNull(strip(substringAfterLast(targetGroupArn, "/"))))
-            .withDisplayName("Target Group")
-            .build());
+        anExecutionDataValue().withValue(emptyToNull(getTargetGroupName())).withDisplayName("Target Group").build());
     putNotNull(executionDetails, "roleArn",
         anExecutionDataValue()
             .withValue(emptyToNull(strip(substringAfterLast(roleArn, "/"))))
@@ -159,10 +157,7 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
     putNotNull(executionDetails, "loadBalancerName",
         anExecutionDataValue().withValue(loadBalancerName).withDisplayName("Load Balancer").build());
     putNotNull(executionDetails, "targetGroupArn",
-        anExecutionDataValue()
-            .withValue(emptyToNull(strip(substringAfterLast(targetGroupArn, "/"))))
-            .withDisplayName("Target Group")
-            .build());
+        anExecutionDataValue().withValue(emptyToNull(getTargetGroupName())).withDisplayName("Target Group").build());
     putNotNull(executionDetails, "roleArn",
         anExecutionDataValue()
             .withValue(emptyToNull(strip(substringAfterLast(roleArn, "/"))))
@@ -170,6 +165,15 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
             .build());
 
     return executionDetails;
+  }
+
+  private String getTargetGroupName() {
+    String targetGroupName = null;
+    String[] targetGroupArnParts = split(targetGroupArn, "/");
+    if (targetGroupArnParts.length >= 2) {
+      targetGroupName = targetGroupArnParts[1];
+    }
+    return targetGroupName;
   }
 
   public static final class Builder {
