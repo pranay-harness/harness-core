@@ -24,16 +24,16 @@ import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -54,7 +54,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +66,8 @@ import java.util.stream.Collectors;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerSetup extends State {
+  private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
+
   private enum ServiceType { ClusterIP, LoadBalancer, NodePort, ExternalName }
 
   private enum PortProtocol { TCP, UDP }
@@ -95,8 +96,6 @@ public class KubernetesReplicationControllerSetup extends State {
 
   /**
    * Instantiates a new state.
-   *
-   * @param name the name
    */
   public KubernetesReplicationControllerSetup(String name) {
     super(name, KUBERNETES_REPLICATION_CONTROLLER_SETUP.name());
@@ -112,7 +111,7 @@ public class KubernetesReplicationControllerSetup extends State {
     String imageName = fetchArtifactImageName(artifact);
 
     Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
+    String env = workflowStandardParams.getEnv().getName();
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
@@ -122,121 +121,38 @@ public class KubernetesReplicationControllerSetup extends State {
 
     String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
 
-    Service service = serviceResourceService.get(app.getUuid(), serviceId);
+    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-
-    KubernetesContainerTask kubernetesContainerTask =
-        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-            app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
-
-    if (kubernetesContainerTask == null) {
-      kubernetesContainerTask = new KubernetesContainerTask();
-      KubernetesContainerTask.ContainerDefinition containerDefinition =
-          new KubernetesContainerTask.ContainerDefinition();
-      containerDefinition.setMemory(256);
-      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    }
-
-    String containerName = Misc.normalizeExpression(imageName.toLowerCase().replace('_', '-'), "-");
-
-    List<Container> containerDefinitions =
-        kubernetesContainerTask.getContainerDefinitions()
-            .stream()
-            .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
-            .collect(Collectors.toList());
-
-    List<Volume> volumeList = new ArrayList<>();
-    kubernetesContainerTask.getContainerDefinitions().forEach(containerDefinition -> {
-      if (containerDefinition.getStorageConfigurations() != null) {
-        volumeList.addAll(
-            containerDefinition.getStorageConfigurations()
-                .stream()
-                .map(storageConfiguration
-                    -> new VolumeBuilder()
-                           .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
-                           .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
-                           .build())
-                .collect(Collectors.toList()));
-      }
-    });
 
     KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
 
-    String lastReplicationControllerName = lastReplicationController(kubernetesConfig,
-        KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), service.getName(), env.getName()));
+    String lastReplicationControllerName = lastReplicationController(
+        kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
 
     int revision = KubernetesConvention.getRevisionFromControllerName(lastReplicationControllerName) + 1;
     String replicationControllerName =
-        KubernetesConvention.getReplicationControllerName(app.getName(), service.getName(), env.getName(), revision);
-    String serviceName = KubernetesConvention.getServiceName(replicationControllerName);
+        KubernetesConvention.getReplicationControllerName(app.getName(), serviceName, env, revision);
+    String kubernetesServiceName = KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
 
-    Map<String, String> labels = ImmutableMap.<String, String>builder()
-                                     .put("app", KubernetesConvention.getLabelValue(app.getName()))
-                                     .put("service", KubernetesConvention.getLabelValue(service.getName()))
-                                     .put("env", KubernetesConvention.getLabelValue(env.getName()))
-                                     .put("revision", Integer.toString(revision))
-                                     .build();
+    Map<String, String> serviceLabels = ImmutableMap.<String, String>builder()
+                                            .put("app", KubernetesConvention.getLabelValue(app.getName()))
+                                            .put("service", KubernetesConvention.getLabelValue(serviceName))
+                                            .put("env", KubernetesConvention.getLabelValue(env))
+                                            .build();
+
+    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
+                                               .putAll(serviceLabels)
+                                               .put("revision", Integer.toString(revision))
+                                               .build();
 
     kubernetesContainerService.createController(kubernetesConfig,
-        new ReplicationControllerBuilder()
-            .withApiVersion("v1")
-            .withNewMetadata()
-            .withName(replicationControllerName)
-            .addToLabels(labels)
-            .endMetadata()
-            .withNewSpec()
-            .withReplicas(0)
-            .withSelector(labels)
-            .withNewTemplate()
-            .withNewMetadata()
-            .addToLabels(labels)
-            .endMetadata()
-            .withNewSpec()
-            .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
-            .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
-            .endSpec()
-            .endTemplate()
-            .endSpec()
-            .build());
+        createReplicationControllerDefinition(replicationControllerName, controllerLabels, serviceId, imageName, app));
 
-    ServiceSpecBuilder spec = new ServiceSpecBuilder().addToSelector(labels).withType(serviceType.name());
-
-    if (serviceType != ServiceType.ExternalName) {
-      ServicePortBuilder servicePort = new ServicePortBuilder()
-                                           .withProtocol(protocol.name())
-                                           .withPort(port)
-                                           .withNewTargetPort()
-                                           .withIntVal(targetPort)
-                                           .endTargetPort();
-      if (serviceType == ServiceType.NodePort && nodePort != null) {
-        servicePort.withNodePort(nodePort);
-      }
-      spec.withPorts(ImmutableList.of(servicePort.build())); // TODO:: Allow more than one port
-
-      if (serviceType == ServiceType.LoadBalancer && !isNullOrEmpty(loadBalancerIP)) {
-        spec.withLoadBalancerIP(loadBalancerIP);
-      }
-
-      if (serviceType == ServiceType.ClusterIP && !isNullOrEmpty(clusterIP)) {
-        spec.withClusterIP(clusterIP);
-      }
-    } else {
-      // TODO:: fabric8 doesn't seem to support external name yet. Add here when it does.
+    if (kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName) == null) {
+      logger.info("Kubernetes service {} does not exist. Creating.", kubernetesServiceName);
+      kubernetesContainerService.createService(
+          kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
     }
-
-    if (!isNullOrEmpty(externalIPs)) {
-      spec.withExternalIPs(Arrays.stream(externalIPs.split(",")).map(String::trim).collect(Collectors.toList()));
-    }
-
-    kubernetesContainerService.createService(kubernetesConfig,
-        new ServiceBuilder()
-            .withApiVersion("v1")
-            .withNewMetadata()
-            .withName(serviceName)
-            .addToLabels(labels)
-            .endMetadata()
-            .withSpec(spec.build())
-            .build());
 
     KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
         aKubernetesReplicationControllerElement()
@@ -283,14 +199,115 @@ public class KubernetesReplicationControllerSetup extends State {
   }
 
   /**
-   * Create container definition container definition.
-   *
-   * @param imageName                the image name
-   * @param containerName            the container name
-   * @param wingsContainerDefinition the wings container definition
-   * @return the container definition
+   * Creates replication controller definition
    */
-  public Container createContainerDefinition(
+  private ReplicationController createReplicationControllerDefinition(String replicationControllerName,
+      Map<String, String> controllerLabels, String serviceId, String imageName, Application app) {
+    KubernetesContainerTask kubernetesContainerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            app.getAppId(), serviceId, DeploymentType.KUBERNETES.name());
+
+    if (kubernetesContainerTask == null) {
+      kubernetesContainerTask = new KubernetesContainerTask();
+      KubernetesContainerTask.ContainerDefinition containerDefinition =
+          new KubernetesContainerTask.ContainerDefinition();
+      containerDefinition.setMemory(256);
+      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    }
+
+    String containerName = KubernetesConvention.getContainerName(imageName);
+
+    List<Container> containerDefinitions =
+        kubernetesContainerTask.getContainerDefinitions()
+            .stream()
+            .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
+            .collect(Collectors.toList());
+
+    List<Volume> volumeList = new ArrayList<>();
+    kubernetesContainerTask.getContainerDefinitions().forEach(containerDefinition -> {
+      if (containerDefinition.getStorageConfigurations() != null) {
+        volumeList.addAll(
+            containerDefinition.getStorageConfigurations()
+                .stream()
+                .map(storageConfiguration
+                    -> new VolumeBuilder()
+                           .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
+                           .withHostPath(new HostPathVolumeSource(storageConfiguration.getHostSourcePath()))
+                           .build())
+                .collect(Collectors.toList()));
+      }
+    });
+
+    return new ReplicationControllerBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata()
+        .withName(replicationControllerName)
+        .addToLabels(controllerLabels)
+        .endMetadata()
+        .withNewSpec()
+        .withReplicas(0)
+        .withSelector(controllerLabels)
+        .withNewTemplate()
+        .withNewMetadata()
+        .addToLabels(controllerLabels)
+        .endMetadata()
+        .withNewSpec()
+        .addToContainers(containerDefinitions.toArray(new Container[containerDefinitions.size()]))
+        .addToVolumes(volumeList.toArray(new Volume[volumeList.size()]))
+        .endSpec()
+        .endTemplate()
+        .endSpec()
+        .build();
+  }
+
+  /**
+   * Creates service definition
+   */
+  private io.fabric8.kubernetes.api.model.Service createServiceDefinition(
+      String serviceName, Map<String, String> serviceLabels) {
+    ServiceSpecBuilder spec = new ServiceSpecBuilder().addToSelector(serviceLabels).withType(serviceType.name());
+
+    if (serviceType != ServiceType.ExternalName) {
+      ServicePortBuilder servicePort = new ServicePortBuilder()
+                                           .withProtocol(protocol.name())
+                                           .withPort(port)
+                                           .withNewTargetPort()
+                                           .withIntVal(targetPort)
+                                           .endTargetPort();
+      if (serviceType == ServiceType.NodePort && nodePort != null) {
+        servicePort.withNodePort(nodePort);
+      }
+      spec.withPorts(ImmutableList.of(servicePort.build())); // TODO:: Allow more than one port
+
+      if (serviceType == ServiceType.LoadBalancer && !isNullOrEmpty(loadBalancerIP)) {
+        spec.withLoadBalancerIP(loadBalancerIP);
+      }
+
+      if (serviceType == ServiceType.ClusterIP && !isNullOrEmpty(clusterIP)) {
+        spec.withClusterIP(clusterIP);
+      }
+    } else {
+      // TODO:: fabric8 doesn't seem to support external name yet. Add here when it does.
+    }
+
+    if (!isNullOrEmpty(externalIPs)) {
+      spec.withExternalIPs(Arrays.stream(externalIPs.split(",")).map(String::trim).collect(Collectors.toList()));
+    }
+
+    return new ServiceBuilder()
+        .withApiVersion("v1")
+        .withNewMetadata()
+        .withName(serviceName)
+        .addToLabels(serviceLabels)
+        .endMetadata()
+        .withSpec(spec.build())
+        .build();
+  }
+
+  /**
+   * Creates container definition
+   */
+  private Container createContainerDefinition(
       String imageName, String containerName, KubernetesContainerTask.ContainerDefinition wingsContainerDefinition) {
     ContainerBuilder containerBuilder = new ContainerBuilder().withName(containerName).withImage(imageName);
 
@@ -346,12 +363,9 @@ public class KubernetesReplicationControllerSetup extends State {
   }
 
   /**
-   * Fetch artifact image name string.
-   *
-   * @param artifact the artifact
-   * @return the string
+   * Fetches artifact image name string
    */
-  public String fetchArtifactImageName(Artifact artifact) {
+  private String fetchArtifactImageName(Artifact artifact) {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
     if (!(artifactStream instanceof DockerArtifactStream)) {

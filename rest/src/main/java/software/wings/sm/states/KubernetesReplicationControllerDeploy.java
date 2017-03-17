@@ -175,7 +175,7 @@ public class KubernetesReplicationControllerDeploy extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
+    KubernetesReplicationControllerElement replicationControllerElement =
         context.getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER);
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
 
@@ -186,7 +186,7 @@ public class KubernetesReplicationControllerDeploy extends State {
 
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
-      String kubernetesReplicationControllerName = kubernetesReplicationControllerElement.getOldName();
+      String replicationControllerName = replicationControllerElement.getOldName();
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -194,16 +194,16 @@ public class KubernetesReplicationControllerDeploy extends State {
           infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
       SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       KubernetesConfig kubernetesConfig =
-          gkeClusterService.getCluster(settingAttribute, kubernetesReplicationControllerElement.getClusterName());
+          gkeClusterService.getCluster(settingAttribute, replicationControllerElement.getClusterName());
       ReplicationController replicationController =
-          kubernetesContainerService.getController(kubernetesConfig, kubernetesReplicationControllerName);
+          kubernetesContainerService.getController(kubernetesConfig, replicationControllerName);
       if (replicationController == null) {
-        logger.info("Old kubernetes replication controller {} does not exist.. nothing to do",
-            kubernetesReplicationControllerName);
+        logger.info(
+            "Old kubernetes replication controller {} does not exist.. nothing to do", replicationControllerName);
         return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
       }
 
-      commandStateExecutionData.setOldContainerServiceName(kubernetesReplicationControllerName);
+      commandStateExecutionData.setOldContainerServiceName(replicationControllerName);
 
       Application app = workflowStandardParams.getApp();
       Environment env = workflowStandardParams.getEnv();
@@ -214,14 +214,14 @@ public class KubernetesReplicationControllerDeploy extends State {
                             .getCommand();
 
       int desiredCount = replicationController.getSpec().getReplicas() - instanceCount;
-      logger.info("Desired count for service {} is {}", kubernetesReplicationControllerName, desiredCount);
+      logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
 
       if (desiredCount < 0) {
         desiredCount = 0;
       }
-      CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(),
-          kubernetesReplicationControllerElement.getClusterName(), kubernetesReplicationControllerName, desiredCount,
-          commandStateExecutionData.getActivityId(), settingAttribute);
+      CommandExecutionContext commandExecutionContext =
+          buildCommandExecutionContext(app, env.getUuid(), replicationControllerElement.getClusterName(),
+              replicationControllerName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
 
       delegateService.queueTask(aDelegateTask()
                                     .withAccountId(app.getAccountId())

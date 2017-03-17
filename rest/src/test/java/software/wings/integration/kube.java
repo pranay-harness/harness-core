@@ -108,7 +108,7 @@ public class kube {
         gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null);
     logger.info("Autoscale setting: {}", autoscaling);
 
-    kubernetesService.cleanup(config);
+    //    kubernetesService.cleanup(config);
 
     kubernetesService.createController(config,
         new ReplicationControllerBuilder()

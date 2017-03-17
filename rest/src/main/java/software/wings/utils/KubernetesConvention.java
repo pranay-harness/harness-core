@@ -1,6 +1,5 @@
 package software.wings.utils;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -9,8 +8,8 @@ import java.util.regex.Pattern;
 public class KubernetesConvention {
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
-  private static final String DELIMITER = ".";
-  private static final String WILD_CHAR_REPLACEMENT = "-";
+  private static final String DOT = ".";
+  private static final String DASH = "-";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"']");
 
   public static String getReplicationControllerName(String appName, String serviceName, String envName, int revision) {
@@ -18,15 +17,19 @@ public class KubernetesConvention {
   }
 
   public static String getReplicationControllerNamePrefix(String appName, String serviceName, String envName) {
-    return normalize(appName + DELIMITER + serviceName + DELIMITER + envName + DELIMITER);
+    return normalize(appName + DOT + serviceName + DOT + envName + DOT);
+  }
+
+  public static String getKubernetesServiceName(String appName, String serviceName, String envName) {
+    return normalize(appName + DASH + serviceName + DASH + envName);
   }
 
   public static int getRevisionFromControllerName(String name) {
     if (name != null) {
-      int index = name.lastIndexOf(DELIMITER);
+      int index = name.lastIndexOf(DOT);
       if (index >= 0) {
         try {
-          return Integer.parseInt(name.substring(index + DELIMITER.length()));
+          return Integer.parseInt(name.substring(index + DOT.length()));
         } catch (NumberFormatException e) {
           // Ignore
         }
@@ -35,12 +38,12 @@ public class KubernetesConvention {
     return -1;
   }
 
-  public static String getServiceName(String replicationControllerName) {
-    return "service-" + replicationControllerName.replaceAll("\\.", "-");
+  public static String getContainerName(String imageName) {
+    return normalize(imageName);
   }
 
   public static String getVolumeName(String path) {
-    return VOLUME_PREFIX + path.replace('/', '-').toLowerCase() + VOLUME_SUFFIX;
+    return VOLUME_PREFIX + normalize(path) + VOLUME_SUFFIX;
   }
 
   public static String getLabelValue(String value) {
@@ -48,7 +51,6 @@ public class KubernetesConvention {
   }
 
   private static String normalize(String expression) {
-    Matcher matcher = wildCharPattern.matcher(expression);
-    return matcher.replaceAll(WILD_CHAR_REPLACEMENT).toLowerCase();
+    return wildCharPattern.matcher(expression).replaceAll(DASH).toLowerCase();
   }
 }
