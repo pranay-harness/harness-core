@@ -207,8 +207,14 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
                             .addToSelector("app", "testApp")
                             .addToSelector("tier", "backend")
                             .withClusterIP("1.2.3.4")
-                            .withLoadBalancerIP("5.6.7.8")
                             .endSpec()
+                            .withNewStatus()
+                            .withNewLoadBalancer()
+                            .addNewIngress()
+                            .withIp("5.6.7.8")
+                            .endIngress()
+                            .endLoadBalancer()
+                            .endStatus()
                             .build();
 
     when(gkeClusterService.getCluster(any(SettingAttribute.class), anyString())).thenReturn(kubernetesConfig);
