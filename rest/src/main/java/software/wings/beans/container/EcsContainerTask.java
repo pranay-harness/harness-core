@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
+import software.wings.stencils.DefaultValue;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class EcsContainerTask extends ContainerTask {
     @SchemaIgnore private String name;
     @Attributes(title = "Commands") private List<String> commands;
     @Attributes(title = "CPU") private Integer cpu;
-    @Attributes(title = "MEMORY") private Integer memory;
+    @DefaultValue("256") @Attributes(title = "MEMORY") private Integer memory;
 
     @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
     @Attributes(title = "LOG CONFIGURATION") @SchemaIgnore private LogConfiguration logConfiguration;
@@ -102,6 +103,7 @@ public class EcsContainerTask extends ContainerTask {
   public static class PortMapping {
     @Attributes(title = "Container port") private Integer containerPort;
     @Attributes(title = "Host port") private Integer hostPort;
+    @Attributes(title = "Expose on Load Balancer") private boolean loadBalancerPort;
 
     public Integer getContainerPort() {
       return containerPort;
@@ -117,6 +119,24 @@ public class EcsContainerTask extends ContainerTask {
 
     public void setHostPort(Integer hostPort) {
       this.hostPort = hostPort;
+    }
+
+    /**
+     * Getter for property 'loadBalancerPort'.
+     *
+     * @return Value for property 'loadBalancerPort'.
+     */
+    public boolean isLoadBalancerPort() {
+      return loadBalancerPort;
+    }
+
+    /**
+     * Setter for property 'loadBalancerPort'.
+     *
+     * @param loadBalancerPort Value to set for property 'loadBalancerPort'.
+     */
+    public void setLoadBalancerPort(boolean loadBalancerPort) {
+      this.loadBalancerPort = loadBalancerPort;
     }
   }
 

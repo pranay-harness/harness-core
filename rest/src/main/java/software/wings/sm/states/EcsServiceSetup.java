@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static com.google.common.collect.Iterables.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
@@ -124,6 +123,7 @@ public class EcsServiceSetup extends State {
       ecsContainerTask = new EcsContainerTask();
       EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
       containerDefinition.setMemory(256);
+      containerDefinition.setPortMappings(Collections.emptyList());
       ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
@@ -173,13 +173,18 @@ public class EcsServiceSetup extends State {
                                                                          .withEcsServiceName(ecsServiceName)
                                                                          .withDockerImageName(imageName);
 
-    if (useLoadBalancer && !isEmpty(containerDefinitions.get(0).getPortMappings())) {
-      int containerPort = ecsContainerTask.getContainerDefinitions().get(0).getPortMappings().get(0).getContainerPort();
-
+    int portToExpose = ecsContainerTask.getContainerDefinitions()
+                           .stream()
+                           .flatMap(containerDefinition -> containerDefinition.getPortMappings().stream())
+                           .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
+                           .findFirst()
+                           .map(EcsContainerTask.PortMapping::getContainerPort)
+                           .orElse(0);
+    if (useLoadBalancer && portToExpose != 0) {
       createServiceRequest
           .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
                                  .withContainerName(containerName)
-                                 .withContainerPort(containerPort)
+                                 .withContainerPort(portToExpose)
                                  .withTargetGroupArn(targetGroupArn))
           .withRole(roleArn);
       ecsServiceExecutionDataBuilder.withLoadBalancerName(loadBalancerName)
