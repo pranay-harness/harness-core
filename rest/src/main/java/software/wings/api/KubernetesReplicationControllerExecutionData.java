@@ -92,19 +92,16 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
         anExecutionDataValue()
             .withValue(kubernetesReplicationControllerName)
-            .withDisplayName("Kubernetes Replication Controller Name")
+            .withDisplayName("Replication Controller Name")
             .build());
     putNotNull(executionDetails, "kubernetesServiceName",
-        anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Kubernetes Service Name").build());
+        anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Service Name").build());
     putNotNull(executionDetails, "kubernetesServiceClusterIP",
-        anExecutionDataValue()
-            .withValue(kubernetesServiceClusterIP)
-            .withDisplayName("Kubernetes Service Cluster IP")
-            .build());
+        anExecutionDataValue().withValue(kubernetesServiceClusterIP).withDisplayName("Service Cluster IP").build());
     putNotNull(executionDetails, "kubernetesServiceLoadBalancerIP",
         anExecutionDataValue()
             .withValue(kubernetesServiceLoadBalancerIP)
-            .withDisplayName("Kubernetes Service Load Balancer IP")
+            .withDisplayName("Service Load Balancer IP")
             .build());
     putNotNull(executionDetails, "dockerImageName",
         anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
@@ -123,19 +120,16 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
         anExecutionDataValue()
             .withValue(kubernetesReplicationControllerName)
-            .withDisplayName("Kubernetes Replication Controller Name")
+            .withDisplayName("Replication Controller Name")
             .build());
     putNotNull(executionDetails, "kubernetesServiceName",
-        anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Kubernetes Service Name").build());
+        anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Service Name").build());
     putNotNull(executionDetails, "kubernetesServiceClusterIP",
-        anExecutionDataValue()
-            .withValue(kubernetesServiceClusterIP)
-            .withDisplayName("Kubernetes Service Cluster IP")
-            .build());
+        anExecutionDataValue().withValue(kubernetesServiceClusterIP).withDisplayName("Service Cluster IP").build());
     putNotNull(executionDetails, "kubernetesServiceLoadBalancerIP",
         anExecutionDataValue()
             .withValue(kubernetesServiceLoadBalancerIP)
-            .withDisplayName("Kubernetes Service Load Balancer IP")
+            .withDisplayName("Service Load Balancer IP")
             .build());
     putNotNull(executionDetails, "dockerImageName",
         anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());

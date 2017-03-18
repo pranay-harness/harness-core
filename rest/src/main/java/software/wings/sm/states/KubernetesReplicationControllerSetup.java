@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
@@ -161,7 +162,10 @@ public class KubernetesReplicationControllerSetup extends State {
             kubernetesConfig, createServiceDefinition(kubernetesServiceName, serviceLabels));
       }
       serviceClusterIP = service.getSpec().getClusterIP();
-      serviceLoadBalancerIP = service.getSpec().getLoadBalancerIP();
+      LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+      if (loadBalancer != null && !loadBalancer.getIngress().isEmpty()) {
+        serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
+      }
     }
 
     KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
