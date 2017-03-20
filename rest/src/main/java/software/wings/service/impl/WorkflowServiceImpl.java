@@ -705,8 +705,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     boolean serviceRepeat = false;
     if (orchestrationWorkflow.getWorkflowPhaseIds() != null) {
       for (String phaseId : orchestrationWorkflow.getWorkflowPhaseIds()) {
-        if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId).getServiceId().equals(
-                workflowPhase.getServiceId())) {
+        WorkflowPhase existingPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+        if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+            && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()) {
           serviceRepeat = true;
           break;
         }
