@@ -58,9 +58,8 @@ import java.util.stream.Collectors;
 /**
  * Created by peeyushaggarwal on 2/3/17.
  */
-@Attributes(description = "Settings for AWS load balancer and roles for working with ECS Service.")
 public class EcsServiceSetup extends State {
-  @Attributes(title = "Use LoadBalancer?") private boolean useLoadBalancer;
+  @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
 
   @Attributes(title = "Elastic Load Balancer")
   @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
@@ -70,7 +69,7 @@ public class EcsServiceSetup extends State {
   @EnumData(enumDataProvider = LoadBalancerTargetGroupDataProvider.class)
   private String targetGroupArn;
 
-  @Attributes(title = "Role", description = "Arn for the role required by ECS for registering targets on ELB.")
+  @Attributes(title = "IAM Role", description = "Role with AmazonEC2ContainerServiceRole policy attached.")
   @EnumData(enumDataProvider = AWSRolesDataProvider.class)
   private String roleArn;
 
