@@ -9,6 +9,9 @@ import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -27,7 +30,9 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Role;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
@@ -192,7 +197,9 @@ public class UserServiceImpl implements UserService {
     String inviteId = wingsPersistence.save(userInvite);
 
     User user = getUserByEmail(userInvite.getEmail());
-    if (user != null) {
+    if (user == null) {
+      sendNewInvitationMail(userInvite, account);
+    } else {
       boolean userAlreadyAddedToAccount =
           user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(userInvite.getAccountId()));
       if (!userAlreadyAddedToAccount) {
@@ -201,8 +208,6 @@ public class UserServiceImpl implements UserService {
         addAccountRoles(user, account, userInvite.getRoles());
       }
       sendAddedRoleEmail(user, account, userInvite.getRoles());
-    } else {
-      sendNewInvitationMail(userInvite, account);
     }
     return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
   }
@@ -246,6 +251,45 @@ public class UserServiceImpl implements UserService {
   @Override
   public PageResponse<UserInvite> listInvites(PageRequest<UserInvite> pageRequest) {
     return wingsPersistence.query(UserInvite.class, pageRequest);
+  }
+
+  @Override
+  public UserInvite getInvite(String accountId, String inviteId) {
+    return wingsPersistence.get(UserInvite.class,
+        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("uuid", Operator.EQ, inviteId).build());
+  }
+
+  @Override
+  public UserInvite completeInvite(UserInvite userInvite) {
+    UserInvite existingInvite = getInvite(userInvite.getAccountId(), userInvite.getUuid());
+    if (existingInvite == null) {
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
+    }
+    if (existingInvite.isCompleted()) {
+      return existingInvite;
+    }
+    if (userInvite.getUser() == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "User Details");
+    }
+
+    Account account = accountService.get(existingInvite.getAccountId());
+    User existingUser = getUserByEmail(existingInvite.getEmail());
+    if (existingUser == null) {
+      User user = anUser()
+                      .withAccounts(Lists.newArrayList(account))
+                      .withEmail(existingInvite.getEmail())
+                      .withEmailVerified(true)
+                      .withName(userInvite.getUser().getName())
+                      .withPasswordHash(hashpw(userInvite.getUser().getPassword(), BCrypt.gensalt()))
+                      .withRoles(existingInvite.getRoles())
+                      .build();
+      wingsPersistence.save(user);
+    } else {
+      addAccountRoles(existingUser, account, userInvite.getRoles());
+    }
+    wingsPersistence.updateField(UserInvite.class, existingInvite.getUuid(), "completed", true);
+    existingInvite.setCompleted(true);
+    return existingInvite;
   }
 
   @Override

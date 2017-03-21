@@ -259,6 +259,11 @@ public class WingsTestConstants {
   public static final String USER_ID = "USER_ID";
 
   /**
+   * The constant USER_INVITE_ID.
+   */
+  public static final String USER_INVITE_ID = "USER_INVITE_ID";
+
+  /**
    * The constant PORTAL_URL.
    */
   public static final String PORTAL_URL = "PORTAL_URL";

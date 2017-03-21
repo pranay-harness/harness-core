@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -24,6 +25,8 @@ public class UserInvite extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   private boolean completed = false;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
+
+  @Transient @JsonIgnore private User user;
 
   /**
    * Gets account id.
@@ -103,6 +106,14 @@ public class UserInvite extends Base {
 
   public void setEmails(List<String> emails) {
     this.emails = emails;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
   }
 
   public static final class UserInviteBuilder {

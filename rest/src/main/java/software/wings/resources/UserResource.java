@@ -200,11 +200,27 @@ public class UserResource {
     return new RestResponse<>(userService.listInvites(pageRequest));
   }
 
+  @GET
+  @Path("invites/{inviteId}")
+  public RestResponse<UserInvite> getInvite(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("inviteId") @NotEmpty String inviteId) {
+    return new RestResponse<>(userService.getInvite(accountId, inviteId));
+  }
+
   @POST
   @Path("invites")
   public RestResponse<List<UserInvite>> inviteUsers(@NotNull UserInvite userInvite) {
     userInvite.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.inviteUsers(userInvite));
+  }
+
+  @PUT
+  @Path("invites/{inviteId}")
+  public RestResponse<UserInvite> getInvite(@QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
+    userInvite.setAccountId(accountId);
+    userInvite.setUuid(inviteId);
+    return new RestResponse<>(userService.completeInvite(userInvite));
   }
 
   @DELETE

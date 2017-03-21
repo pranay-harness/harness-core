@@ -16,6 +16,7 @@ import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -27,7 +28,9 @@ import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_INVITE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.USER_PASSWORD;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
 import com.google.common.collect.ImmutableMap;
@@ -94,6 +97,8 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock FieldEnd verificationQueryEnd;
   @Mock Query<UserInvite> userInviteQuery;
   @Mock FieldEnd userInviteQueryEnd;
+
+  @Captor private ArgumentCaptor<UserInvite> userInviteCaptor;
 
   /**
    * Sets mocks.
@@ -319,5 +324,24 @@ public class UserServiceTest extends WingsBaseTest {
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(USER_ID);
     verify(updateOperations).removeAll("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
+  }
+
+  @Test
+  public void shouldCompleteInvite() {
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(accountService.get(ACCOUNT_ID)).thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
+    when(wingsPersistence.get(eq(UserInvite.class), any(PageRequest.class)))
+        .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
+
+    UserInvite userInvite =
+        anUserInvite().withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).withUuid(USER_INVITE_ID).build();
+    userInvite.setUser(anUser().withName(USER_NAME).withPassword(USER_PASSWORD).build());
+    userService.completeInvite(userInvite);
+
+    verify(wingsPersistence).save(userArgumentCaptor.capture());
+    User savedUser = userArgumentCaptor.getValue();
+    assertThat(BCrypt.checkpw(USER_PASSWORD, savedUser.getPasswordHash())).isTrue();
+    assertThat(savedUser.isEmailVerified()).isTrue();
+    assertThat(savedUser).hasFieldOrPropertyWithValue("email", USER_EMAIL);
   }
 }

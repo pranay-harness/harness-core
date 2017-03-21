@@ -113,6 +113,10 @@ public interface UserService {
    */
   PageResponse<UserInvite> listInvites(PageRequest<UserInvite> pageRequest);
 
+  UserInvite getInvite(String accountId, String inviteId);
+
+  UserInvite completeInvite(UserInvite userInvite);
+
   /**
    * Delete invite user invite.
    *
