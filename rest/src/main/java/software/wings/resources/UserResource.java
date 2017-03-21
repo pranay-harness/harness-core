@@ -216,7 +216,7 @@ public class UserResource {
 
   @PUT
   @Path("invites/{inviteId}")
-  public RestResponse<UserInvite> getInvite(@QueryParam("accountId") @NotEmpty String accountId,
+  public RestResponse<UserInvite> completeInvite(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);

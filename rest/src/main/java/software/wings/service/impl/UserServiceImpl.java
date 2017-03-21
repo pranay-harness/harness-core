@@ -214,8 +214,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendNewInvitationMail(UserInvite userInvite, Account account) {
     try {
-      String inviteUrl = buildAbsoluteUrl(String.format("/invite?company=%s&account=%s&email=%s",
-          account.getCompanyName(), account.getCompanyName(), userInvite.getEmail()));
+      String inviteUrl = buildAbsoluteUrl(String.format("/invite?company=%s&account=%s&email=%s&inviteId=%s",
+          account.getCompanyName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
 
       EmailData emailData =
           EmailData.Builder.anEmailData()
