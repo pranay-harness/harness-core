@@ -25,9 +25,9 @@ public class UserInvite extends Base {
   private boolean completed = false;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
 
-  @Transient @JsonProperty(access = WRITE_ONLY) private String name;
+  @Transient private String name;
 
-  @Transient @JsonProperty(access = WRITE_ONLY) private String password;
+  @Transient private String password;
 
   /**
    * Gets account id.
