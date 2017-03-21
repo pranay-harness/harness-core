@@ -214,6 +214,7 @@ public class UserResource {
     return new RestResponse<>(userService.inviteUsers(userInvite));
   }
 
+  @PublicApi
   @PUT
   @Path("invites/{inviteId}")
   public RestResponse<UserInvite> completeInvite(@QueryParam("accountId") @NotEmpty String accountId,
