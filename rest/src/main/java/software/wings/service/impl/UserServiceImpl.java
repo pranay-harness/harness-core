@@ -268,8 +268,8 @@ public class UserServiceImpl implements UserService {
     if (existingInvite.isCompleted()) {
       return existingInvite;
     }
-    if (userInvite.getUser() == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "User Details");
+    if (userInvite.getName() == null || userInvite.getPassword() == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "User name/password");
     }
 
     Account account = accountService.get(existingInvite.getAccountId());
@@ -279,8 +279,8 @@ public class UserServiceImpl implements UserService {
                       .withAccounts(Lists.newArrayList(account))
                       .withEmail(existingInvite.getEmail())
                       .withEmailVerified(true)
-                      .withName(userInvite.getUser().getName())
-                      .withPasswordHash(hashpw(userInvite.getUser().getPassword(), BCrypt.gensalt()))
+                      .withName(userInvite.getName())
+                      .withPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()))
                       .withRoles(existingInvite.getRoles())
                       .build();
       wingsPersistence.save(user);

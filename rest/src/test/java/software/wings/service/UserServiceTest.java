@@ -335,7 +335,8 @@ public class UserServiceTest extends WingsBaseTest {
 
     UserInvite userInvite =
         anUserInvite().withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).withUuid(USER_INVITE_ID).build();
-    userInvite.setUser(anUser().withName(USER_NAME).withPassword(USER_PASSWORD).build());
+    userInvite.setName(USER_NAME);
+    userInvite.setPassword(USER_PASSWORD);
     userService.completeInvite(userInvite);
 
     verify(wingsPersistence).save(userArgumentCaptor.capture());

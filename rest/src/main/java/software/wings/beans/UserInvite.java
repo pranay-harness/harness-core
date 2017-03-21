@@ -25,7 +25,9 @@ public class UserInvite extends Base {
   private boolean completed = false;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
 
-  @Transient private User user;
+  @Transient @JsonProperty(access = WRITE_ONLY) private String name;
+
+  @Transient @JsonProperty(access = WRITE_ONLY) private String password;
 
   /**
    * Gets account id.
@@ -107,12 +109,20 @@ public class UserInvite extends Base {
     this.emails = emails;
   }
 
-  public User getUser() {
-    return user;
+  public String getName() {
+    return name;
   }
 
-  public void setUser(User user) {
-    this.user = user;
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public static final class UserInviteBuilder {
