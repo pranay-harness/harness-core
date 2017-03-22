@@ -112,6 +112,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private User registerNewUser(User user, Account account) {
+    user.setAppId(Base.GLOBAL_APP_ID);
     user.getAccounts().add(account);
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
@@ -283,6 +284,7 @@ public class UserServiceImpl implements UserService {
                       .withName(userInvite.getName())
                       .withPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()))
                       .withRoles(existingInvite.getRoles())
+                      .withAppId(Base.GLOBAL_APP_ID)
                       .build();
       wingsPersistence.save(user);
     } else {

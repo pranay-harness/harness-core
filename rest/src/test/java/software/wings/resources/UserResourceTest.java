@@ -30,9 +30,6 @@ import javax.ws.rs.core.GenericType;
  * Created by peeyushaggarwal on 4/1/16.
  */
 public class UserResourceTest {
-  /**
-   * The constant ACTIVITY_SERVICE.
-   */
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
 
