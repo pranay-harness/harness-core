@@ -46,12 +46,14 @@ import software.wings.CurrentThreadExecutor;
 import software.wings.app.CacheModule;
 import software.wings.app.DatabaseModule;
 import software.wings.app.ExecutorModule;
+import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
 import software.wings.app.WingsModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
+import software.wings.licensing.LicenseManager;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
@@ -187,12 +189,19 @@ public class WingsRule implements MethodRule {
         new AbstractModule() {
           @Override
           protected void configure() {
+            bind(LicenseManager.class).toInstance(mock(LicenseManager.class));
+          }
+        },
+        new AbstractModule() {
+          @Override
+          protected void configure() {
             bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
             bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
           }
         },
-        new ValidationModule(validatorFactory), new DatabaseModule(datastore, datastore, distributedLockSvc),
-        new WingsModule(configuration), new ExecutorModule(executorService), new QueueModule(datastore));
+        new LicenseModule(), new ValidationModule(validatorFactory),
+        new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
+        new ExecutorModule(executorService), new QueueModule(datastore));
 
     if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
       System.setProperty("hazelcast.jcache.provider.type", "server");
