@@ -159,6 +159,9 @@ public class MongoHelper {
       case STARTS_WITH:
         return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 
+      case HAS:
+        return fieldEnd.hasAnyOf(Arrays.asList(filter.getFieldValues()));
+
       case IN:
         return fieldEnd.hasAnyOf(Arrays.asList(filter.getFieldValues()));
 

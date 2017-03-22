@@ -140,8 +140,11 @@ public class SearchFilter {
                * Starts with operator.
                */
     STARTS_WITH, /**
-                  * In operator.
+                  * Has element operator.
                   */
+    HAS, /**
+          * In operator.
+          */
     IN, /**
          * Not in operator.
          */

@@ -21,6 +21,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.common.UUIDGenerator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -114,6 +115,41 @@ public class WingsPersistenceTest extends WingsBaseTest {
     filter.setOp(Operator.IN);
     req.addFilter(filter);
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(2);
+  }
+
+  /**
+   * Should query by in operator.
+   */
+  @Test
+  public void shouldQueryListObjectByINOperator() {
+    TestEntityB b11 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b11"));
+    TestEntityB b12 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b12"));
+    TestEntityB b21 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b21"));
+    TestEntityB b22 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b22"));
+    TestEntityB b31 = wingsPersistence.saveAndGet(TestEntityB.class, new TestEntityB("b31"));
+    TestEntity entity = new TestEntity();
+    entity.setTestEntityBList(Lists.newArrayList(b11, b12));
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setTestEntityBList(Lists.newArrayList(b21, b22));
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setTestEntityBList(Lists.newArrayList(b31));
+    wingsPersistence.save(entity);
+
+    TestEntityB b111 = new TestEntityB();
+    b111.setUuid(b11.getUuid());
+
+    TestEntityB b311 = new TestEntityB();
+    b311.setUuid(b31.getUuid());
+
+    PageResponse<TestEntity> res = wingsPersistence.query(
+        TestEntity.class, aPageRequest().addFilter("testEntityBList", Operator.HAS, b111, b311).build());
+
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
   }
@@ -466,7 +502,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     private String fieldA;
     private List<String> fieldList;
     private Map<String, String> mapField;
-
+    @Reference List<TestEntityB> testEntityBList;
     /**
      * Gets field a.
      *
@@ -529,9 +565,19 @@ public class WingsPersistenceTest extends WingsBaseTest {
       this.testEntityB = testEntityB;
     }
 
+    public List<TestEntityB> getTestEntityBList() {
+      return testEntityBList;
+    }
+
+    public void setTestEntityBList(List<TestEntityB> testEntityBList) {
+      this.testEntityBList = testEntityBList;
+    }
+
     @Override
     public String toString() {
-      return "TestEntity [fieldA=" + fieldA + ", mapField=" + mapField + ", testEntityB=" + testEntityB + "]";
+      return "TestEntity{"
+          + "testEntityB=" + testEntityB + ", fieldA='" + fieldA + '\'' + ", fieldList=" + fieldList
+          + ", mapField=" + mapField + ", testEntityBList=" + testEntityBList + '}';
     }
   }
 
@@ -540,6 +586,13 @@ public class WingsPersistenceTest extends WingsBaseTest {
    */
   public static class TestEntityB extends Base {
     private String fieldB;
+
+    public TestEntityB() {}
+
+    public TestEntityB(String fieldB) {
+      this.fieldB = fieldB;
+      setUuid(UUIDGenerator.getUuid());
+    }
 
     /**
      * Gets field b.
