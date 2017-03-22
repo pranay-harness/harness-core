@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
@@ -15,7 +14,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -68,7 +66,6 @@ public class UserResourceTest {
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
     PageRequest<User> expectedPageRequest = new PageRequest<>();
-    expectedPageRequest.addFilter("appId", GLOBAL_APP_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
 
