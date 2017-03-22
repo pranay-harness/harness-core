@@ -16,4 +16,5 @@
     <file path="service-variable-index-migration.js"/>
     <file path="account-role.js"/>
     <file path="config-files-index-migration.js"/>
+    <file path="standard-role-permissions.js" />
 </changeFiles>

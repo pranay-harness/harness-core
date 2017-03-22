@@ -12,7 +12,6 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
 
 import javax.inject.Inject;
@@ -37,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Timed
 @ExceptionMetered
+@AuthRule(APPLICATION)
 public class AppResource {
   private AppService appService;
 
@@ -59,8 +59,6 @@ public class AppResource {
    * @return the rest response
    */
   @GET
-  @AuthRule("APPLICATION:READ")
-  @ListAPI(APPLICATION)
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays,
@@ -75,7 +73,6 @@ public class AppResource {
    * @return the rest response
    */
   @POST
-  @AuthRule("APPLICATION:WRITE")
   public RestResponse<Application> save(Application app) {
     return new RestResponse<>(appService.save(app));
   }
@@ -89,7 +86,6 @@ public class AppResource {
    */
   @PUT
   @Path("{appId}")
-  @AuthRule("APPLICATION:WRITE")
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
@@ -104,7 +100,6 @@ public class AppResource {
    */
   @GET
   @Path("{appId}")
-  @AuthRule("APPLICATION:WRITE")
   public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
@@ -121,7 +116,6 @@ public class AppResource {
    * @return the rest response
    */
   @DELETE
-  @AuthRule("APPLICATION:WRITE")
   @Path("{appId}")
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);

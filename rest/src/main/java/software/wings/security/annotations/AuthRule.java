@@ -2,6 +2,7 @@ package software.wings.security.annotations;
 
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.ResourceType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,7 +22,7 @@ public @interface AuthRule {
    *
    * @return the string
    */
-  String[] value() default {}; /* Resource:Action */
+  ResourceType[] value() default {}; /* Resource */
 
   /**
    * Scope permission scope.

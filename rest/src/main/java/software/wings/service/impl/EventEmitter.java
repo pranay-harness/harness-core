@@ -8,6 +8,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
 import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AppService;
 
 import javax.inject.Inject;
@@ -53,25 +54,25 @@ public class EventEmitter {
     /**
      * Artifacts channel.
      */
-    ARTIFACTS("artifacts", "ui", "ARTIFACT:ALL"), /**
-                                                   * Activities channel.
-                                                   */
-    ACTIVITIES("activities", "ui", "ENVIRONMENT:ALL"),
+    ARTIFACTS("artifacts", "ui", ResourceType.ARTIFACT), /**
+                                                          * Activities channel.
+                                                          */
+    ACTIVITIES("activities", "ui", ResourceType.ENVIRONMENT),
 
-    DELEGATES("delegates", "ui", "");
+    DELEGATES("delegates", "ui", null);
 
     private String channelName;
-    private String permission;
+    private ResourceType permission;
     private String target;
     private PermissionScope scope = PermissionScope.APP;
 
-    Channel(String channelName, String target, String permission) {
+    Channel(String channelName, String target, ResourceType permission) {
       this.channelName = channelName;
       this.permission = permission;
       this.target = target;
     }
 
-    Channel(String channelName, String target, String permission, PermissionScope scope) {
+    Channel(String channelName, String target, ResourceType permission, PermissionScope scope) {
       this.channelName = channelName;
       this.permission = permission;
       this.scope = scope;
@@ -107,7 +108,7 @@ public class EventEmitter {
      *
      * @return the permission
      */
-    public String getPermission() {
+    public ResourceType getPermission() {
       return permission;
     }
 
@@ -116,7 +117,7 @@ public class EventEmitter {
      *
      * @param permission the permission
      */
-    public void setPermission(String permission) {
+    public void setPermission(ResourceType permission) {
       this.permission = permission;
     }
 

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -37,6 +38,7 @@ import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.EnvironmentService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -52,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
 
   private AccountService accountService;
+  private EnvironmentService environmentService;
 
   /**
    * Instantiates a new Auth service.
@@ -59,9 +62,10 @@ public class AuthServiceImpl implements AuthService {
    * @param dbCache the db cache
    */
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService) {
+  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, EnvironmentService environmentService) {
     this.dbCache = dbCache;
     this.accountService = accountService;
+    this.environmentService = environmentService;
   }
 
   @Override
@@ -76,13 +80,18 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes,
-      PageRequestType requestType) {
-    if (user.isAdmin()) {
+  public void authorize(String accountId, String appId, String envId, User user,
+      List<PermissionAttribute> permissionAttributes, PageRequestType requestType) {
+    if (user.isAccountAdmin(accountId)) {
       return;
     }
+    EnvironmentType envType = null;
+    if (envId != null) {
+      Environment env = dbCache.get(Environment.class, envId);
+      envType = env.getEnvironmentType();
+    }
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
-      if (!authorizeAccessType(appId, envId, permissionAttribute, user.getRoles(), requestType)) {
+      if (!authorizeAccessType(accountId, appId, envId, envType, permissionAttribute, user.getRoles(), requestType)) {
         throw new WingsException(ACCESS_DENIED);
       }
     }
@@ -126,30 +135,49 @@ public class AuthServiceImpl implements AuthService {
     }
   }
 
-  private boolean authorizeAccessType(String appId, String envId, PermissionAttribute permissionAttribute,
-      List<Role> roles, PageRequestType requestType) {
+  private boolean authorizeAccessType(String accountId, String appId, String envId, EnvironmentType envType,
+      PermissionAttribute permissionAttribute, List<Role> roles, PageRequestType requestType) {
     return roles.stream()
-        .filter(role -> roleAuthorizedWithAccessType(role, permissionAttribute, appId, envId, requestType))
+        .filter(role
+            -> roleAuthorizedWithAccessType(role, permissionAttribute, accountId, appId, envId, envType, requestType))
         .findFirst()
         .isPresent();
   }
 
-  private boolean roleAuthorizedWithAccessType(
-      Role role, PermissionAttribute permissionAttribute, String appId, String envId, PageRequestType requestType) {
-    if (role.getRoleType() == RoleType.ACCOUNT_ADMIN) {
+  private boolean roleAuthorizedWithAccessType(Role role, PermissionAttribute permissionAttribute, String accountId,
+      String appId, String envId, EnvironmentType envType, PageRequestType requestType) {
+    if (role.getAccountId() != null && role.getAccountId().equals(accountId)
+        && role.getRoleType() == RoleType.ACCOUNT_ADMIN) {
       return true;
     }
     ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
-    boolean requiresEnvironmentPermission = permissionAttribute.getScope().equals(PermissionScope.ENV);
+    PermissionScope permissionScope = permissionAttribute.getScope();
+
+    if (role.getPermissions() == null) {
+      return false;
+    }
+
     for (Permission permission : role.getPermissions()) {
-      if (hasMatchingPermissionType(requiresEnvironmentPermission, permission.getPermissionScope())
-          && hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
-          && allowedInEnv(envId, requiresEnvironmentPermission, permission, requestType)
-          && forApplication(appId, permission, requestType)) {
-        return true;
+      if (permission.getPermissionScope() != permissionScope
+          || (permission.getAction() != Action.ALL && reqAction != permission.getAction())) {
+        continue;
+      }
+      if (permissionScope == PermissionScope.APP) {
+        if (appId.equals(permission.getAppId())) {
+          return true;
+        }
+      } else if (permissionScope == PermissionScope.ENV) {
+        if (permission.getEnvironmentType() != null && permission.getEnvironmentType().equals(envType)) {
+          return true;
+        }
+
+        if (permission.getEnvId() != null && permission.getEnvId().equals(envId)) {
+          return true;
+        }
       }
     }
+
     return false;
   }
 
@@ -189,10 +217,10 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private boolean canPerformAction(Action reqAction, Permission permission) {
-    return Action.ALL.equals(permission.getAction()) || (reqAction.equals(permission.getAction()));
+    return reqAction.equals(permission.getAction());
   }
 
   private boolean hasResourceAccess(ResourceType reqResource, Permission permission) {
-    return ResourceType.ANY.equals(permission.getResourceType()) || (reqResource.equals(permission.getResourceType()));
+    return reqResource.equals(permission.getResourceType());
   }
 }

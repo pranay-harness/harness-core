@@ -16,6 +16,8 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
@@ -49,6 +51,7 @@ import javax.ws.rs.core.MediaType;
 @ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@AuthRule(ResourceType.USER)
 public class UserResource {
   private UserService userService;
   private AccountService accountService;
@@ -66,7 +69,6 @@ public class UserResource {
    * @return the rest response
    */
   @GET
-  @AuthRule("USER:READ")
   public RestResponse<PageResponse<User>> list(
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     pageRequest.addFilter("appId", GLOBAL_APP_ID, EQ);
@@ -94,7 +96,6 @@ public class UserResource {
    * @return the rest response
    */
   @PUT
-  @AuthRule("USER:WRITE")
   @Path("{userId}")
   public RestResponse<User> update(@PathParam("userId") String userId, User user) {
     user.setUuid(userId);
@@ -109,7 +110,6 @@ public class UserResource {
    */
   @DELETE
   @Path("{userId}")
-  @AuthRule("USER:WRITE")
   public RestResponse delete(@PathParam("userId") String userId) {
     userService.delete(userId);
     return new RestResponse();
@@ -133,8 +133,8 @@ public class UserResource {
    * @return the rest response
    */
   @GET
-  @AuthRule("USER:READ")
   @Path("user")
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
   public RestResponse<User> get() {
     return new RestResponse<>(UserThreadLocal.get().getPublicUser());
   }
@@ -174,7 +174,6 @@ public class UserResource {
    * @return the rest response
    */
   @PUT
-  @AuthRule("USER:WRITE")
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.addRole(userId, roleId));
@@ -188,7 +187,6 @@ public class UserResource {
    * @return the rest response
    */
   @DELETE
-  @AuthRule("USER:WRITE")
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.revokeRole(userId, roleId));

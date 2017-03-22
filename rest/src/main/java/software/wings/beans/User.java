@@ -64,9 +64,14 @@ public class User extends Base implements Principal {
   }
 
   @JsonIgnore
-  public boolean isAdmin() {
+  public boolean isAccountAdmin(String accountId) {
     return roles != null
-        && roles.stream().filter(role -> role.getRoleType() == RoleType.ACCOUNT_ADMIN).findFirst().isPresent();
+        && roles.stream()
+               .filter(role
+                   -> role.getRoleType() == RoleType.ACCOUNT_ADMIN && role.getAccountId() != null
+                       && role.getAccountId().equals(accountId))
+               .findFirst()
+               .isPresent();
   }
 
   @Override

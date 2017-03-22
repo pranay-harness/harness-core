@@ -22,14 +22,15 @@ public interface AuthService {
   /**
    * Authorize.
    *
+   * @param accountId
    * @param appId                the app id
    * @param envId                the env id
    * @param user                 the user
    * @param permissionAttributes the permission attributes
    * @param requestType          the request type
    */
-  void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes,
-      PageRequestType requestType);
+  void authorize(String accountId, String appId, String envId, User user,
+      List<PermissionAttribute> permissionAttributes, PageRequestType requestType);
 
   void validateDelegateToken(String accountId, String tokenString);
 }

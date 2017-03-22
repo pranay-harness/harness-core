@@ -4,8 +4,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.PostLoad;
+import software.wings.beans.Environment.EnvironmentType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -169,6 +172,38 @@ public class Role extends Base {
     return "Role{"
         + "name='" + name + '\'' + ", description='" + description + '\'' + ", accountId='" + accountId + '\''
         + ", permissions=" + permissions + ", roleType=" + roleType + ", allApps=" + allApps + '}';
+  }
+
+  @Override
+  public void onSave() {
+    super.onSave();
+
+    // No need to save permissions with standard roles
+    if (roleType == RoleType.ACCOUNT_ADMIN || roleType == RoleType.APPLICATION_ADMIN
+        || roleType == RoleType.PROD_SUPPORT || roleType == RoleType.NON_PROD_SUPPORT) {
+      permissions = null;
+    }
+  }
+
+  @PostLoad
+  public void onLoad() {
+    // Standard roles
+    if (roleType == RoleType.ACCOUNT_ADMIN || roleType == RoleType.APPLICATION_ADMIN
+        || roleType == RoleType.PROD_SUPPORT || roleType == RoleType.NON_PROD_SUPPORT) {
+      if (roleType.getPermissions() != null) {
+        permissions = Arrays.asList(roleType.getPermissions());
+
+        permissions.forEach(permission -> {
+          permission.setAccountId(getAccountId());
+          permission.setAppId(getAppId());
+          if (roleType == RoleType.PROD_SUPPORT) {
+            permission.setEnvironmentType(EnvironmentType.PROD);
+          } else if (roleType == RoleType.NON_PROD_SUPPORT) {
+            permission.setEnvironmentType(EnvironmentType.NON_PROD);
+          }
+        });
+      }
+    }
   }
 
   public static final class Builder {

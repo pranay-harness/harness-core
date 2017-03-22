@@ -14,6 +14,7 @@ import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
+import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -93,15 +94,27 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
     }
+    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
+    if (requiredPermissionAttributes == null || allLoggedInScope(requiredPermissionAttributes)) {
+      return;
+    }
+
+    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     String appId = getRequestParamFromContext("appId", pathParameters, queryParameters);
     String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
     setRequestAndResourceType(requestContext, appId);
 
-    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
-    authService.authorize(appId, envId, user, requiredPermissionAttributes,
+    authService.authorize(accountId, appId, envId, user, requiredPermissionAttributes,
         (PageRequestType) requestContext.getProperty("pageRequestType"));
+  }
+
+  private boolean allLoggedInScope(List<PermissionAttribute> requiredPermissionAttributes) {
+    return !requiredPermissionAttributes.parallelStream()
+                .filter(permissionAttribute -> permissionAttribute.getScope() != PermissionScope.LOGGED_IN)
+                .findFirst()
+                .isPresent();
   }
 
   private boolean isDelegateRequest(ContainerRequestContext requestContext) {
@@ -153,8 +166,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
   }
 
-  private List<PermissionAttribute> getAllRequiredPermissionAttributes() {
-    List<PermissionAttribute> permissionAttributes = new ArrayList<>();
+  private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {
     List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
     List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
 
@@ -162,20 +174,25 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
     if (null != methodAnnotations) {
       Stream.of(methodAnnotations.value())
-          .forEach(s -> methodPermissionAttributes.add(new PermissionAttribute(s, methodAnnotations.scope())));
+          .forEach(s
+              -> methodPermissionAttributes.add(
+                  new PermissionAttribute(s, methodAnnotations.scope(), requestContext.getMethod())));
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
     if (null != classAnnotations) {
       Stream.of(classAnnotations.value())
-          .forEach(s -> classPermissionAttributes.add(new PermissionAttribute(s, methodAnnotations.scope())));
+          .forEach(s
+              -> classPermissionAttributes.add(
+                  new PermissionAttribute(s, classAnnotations.scope(), requestContext.getMethod())));
     }
 
-    permissionAttributes.addAll(classPermissionAttributes);
-    permissionAttributes.removeAll(methodPermissionAttributes);
-    permissionAttributes.addAll(methodPermissionAttributes);
-    return permissionAttributes;
+    if (methodPermissionAttributes.isEmpty()) {
+      return classPermissionAttributes;
+    } else {
+      return methodPermissionAttributes;
+    }
   }
 
   private void updateUserInAuditRecord(User user) {

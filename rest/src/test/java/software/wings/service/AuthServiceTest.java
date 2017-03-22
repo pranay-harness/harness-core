@@ -1,27 +1,16 @@
 package software.wings.service;
-
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.security.PermissionAttribute.Action.ALL;
-import static software.wings.security.PermissionAttribute.Action.READ;
-import static software.wings.security.PermissionAttribute.Action.WRITE;
-import static software.wings.security.PermissionAttribute.PermissionScope.APP;
-import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
-import static software.wings.security.PermissionAttribute.ResourceType.ANY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
-import static software.wings.utils.WingsTestConstants.ROLE_ID;
-import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
@@ -47,11 +36,14 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Role;
+import software.wings.beans.RoleType;
+import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.dl.GenericDbCache;
-import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 
@@ -63,7 +55,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
-
 /**
  * Created by anubhaw on 8/31/16.
  */
@@ -71,78 +62,7 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
-  private final Role appAllResourceReadActionRole = aRole()
-                                                        .withAppId(GLOBAL_APP_ID)
-                                                        .withName(ROLE_NAME)
-                                                        .withUuid(ROLE_ID)
-                                                        .withPermissions(asList(aPermission()
-                                                                                    .withAppId(APP_ID)
-                                                                                    .withEnvId(ENV_ID)
-                                                                                    .withPermissionScope(APP)
-                                                                                    .withResourceType(ANY)
-                                                                                    .withAction(READ)
-                                                                                    .build()))
-                                                        .build();
-  private final Role appAllResourceWriteActionRole = aRole()
-                                                         .withAppId(GLOBAL_APP_ID)
-                                                         .withName(ROLE_NAME)
-                                                         .withUuid(ROLE_ID)
-                                                         .withPermissions(asList(aPermission()
-                                                                                     .withAppId(APP_ID)
-                                                                                     .withEnvId(ENV_ID)
-                                                                                     .withPermissionScope(APP)
-                                                                                     .withResourceType(ANY)
-                                                                                     .withAction(WRITE)
-                                                                                     .build()))
-                                                         .build();
-  private final Role appAllResourceAllActionRole = aRole()
-                                                       .withAppId(GLOBAL_APP_ID)
-                                                       .withName(ROLE_NAME)
-                                                       .withUuid(ROLE_ID)
-                                                       .withPermissions(asList(aPermission()
-                                                                                   .withAppId(APP_ID)
-                                                                                   .withEnvId(ENV_ID)
-                                                                                   .withPermissionScope(APP)
-                                                                                   .withResourceType(ANY)
-                                                                                   .withAction(ALL)
-                                                                                   .build()))
-                                                       .build();
-  private final Role envAllResourceReadActionRole = aRole()
-                                                        .withAppId(GLOBAL_APP_ID)
-                                                        .withName(ROLE_NAME)
-                                                        .withUuid(ROLE_ID)
-                                                        .withPermissions(asList(aPermission()
-                                                                                    .withAppId(GLOBAL_APP_ID)
-                                                                                    .withEnvId(ENV_ID)
-                                                                                    .withPermissionScope(ENV)
-                                                                                    .withResourceType(ANY)
-                                                                                    .withAction(READ)
-                                                                                    .build()))
-                                                        .build();
-  private final Role envAllResourceWriteActionRole = aRole()
-                                                         .withAppId(GLOBAL_APP_ID)
-                                                         .withName(ROLE_NAME)
-                                                         .withUuid(ROLE_ID)
-                                                         .withPermissions(asList(aPermission()
-                                                                                     .withAppId(GLOBAL_APP_ID)
-                                                                                     .withEnvId(ENV_ID)
-                                                                                     .withPermissionScope(ENV)
-                                                                                     .withResourceType(ANY)
-                                                                                     .withAction(WRITE)
-                                                                                     .build()))
-                                                         .build();
-  private final Role envAllResourceAllActionRole = aRole()
-                                                       .withAppId(GLOBAL_APP_ID)
-                                                       .withName(ROLE_NAME)
-                                                       .withUuid(ROLE_ID)
-                                                       .withPermissions(asList(aPermission()
-                                                                                   .withAppId(GLOBAL_APP_ID)
-                                                                                   .withEnvId(ENV_ID)
-                                                                                   .withPermissionScope(ENV)
-                                                                                   .withResourceType(ANY)
-                                                                                   .withAction(ALL)
-                                                                                   .build()))
-                                                       .build();
+
   @Mock private GenericDbCache cache;
   @Mock private AccountService accountService;
 
@@ -196,100 +116,69 @@ public class AuthServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCode.EXPIRED_TOKEN.name());
   }
 
-  /**
-   * Should authorize app scope resource read request for user with required permission.
-   */
   @Test
-  public void shouldAuthorizeAppScopeResourceReadRequestForUserWithRequiredPermission() {
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(appAllResourceReadActionRole)).build(),
-        asList(new PermissionAttribute("APPLICATION:READ", APP)), PageRequestType.OTHER);
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(appAllResourceAllActionRole)).build(),
-        asList(new PermissionAttribute("APPLICATION:READ", APP)), PageRequestType.OTHER);
+  public void shouldAuthorizeWithAccountAdminAccess() {
+    Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build();
+    User user = userBuilder.but().withRoles(asList(role)).build();
+    authService.authorize(
+        ACCOUNT_ID, null, null, user, asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null);
   }
 
-  /**
-   * Should deny app scope resource read request for user without required permission.
-   */
   @Test
-  public void shouldDenyAppScopeResourceReadRequestForUserWithoutRequiredPermission() {
+  public void shouldDenyWithoutAccountAdminAccess() {
+    Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).build();
+    role.onLoad();
+    User user = userBuilder.but().withRoles(asList(role)).build();
     assertThatThrownBy(()
-                           -> authService.authorize(APP_ID, ENV_ID,
-                               userBuilder.but().withRoles(asList(envAllResourceAllActionRole)).build(),
-                               asList(new PermissionAttribute("APPLICATION:READ", APP)), PageRequestType.OTHER))
+                           -> authService.authorize(ACCOUNT_ID, null, null, user,
+                               asList(new PermissionAttribute(ResourceType.USER, Action.READ)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
+    ;
   }
 
-  /**
-   * Should authorize app scope resource write request for user with required permission.
-   */
   @Test
-  public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(appAllResourceWriteActionRole)).build(),
-        asList(new PermissionAttribute("APPLICATION:WRITE", APP)), PageRequestType.OTHER);
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(appAllResourceAllActionRole)).build(),
-        asList(new PermissionAttribute("APPLICATION:WRITE", APP)), PageRequestType.OTHER);
+  public void shouldAuthorizeWithAppAdminAccess() {
+    Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(APP_ID).build();
+    role.onLoad();
+    User user = userBuilder.but().withRoles(asList(role)).build();
+    authService.authorize(
+        ACCOUNT_ID, APP_ID, null, user, asList(new PermissionAttribute(ResourceType.ARTIFACT, Action.UPDATE)), null);
   }
 
-  /**
-   * Should deny app scope resource write request for user without required permission.
-   */
   @Test
-  public void shouldDenyAppScopeResourceWriteRequestForUserWithoutRequiredPermission() {
+  public void shouldAuthorizeReadWithEnvAccess() {
+    Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
+    role.onLoad();
+    User user = userBuilder.but().withRoles(asList(role)).build();
+    authService.authorize(
+        ACCOUNT_ID, APP_ID, ENV_ID, user, asList(new PermissionAttribute(ResourceType.APPLICATION, Action.READ)), null);
+  }
+
+  @Test
+  public void shouldDenyWithDiffAppAdminAccess() {
+    Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.APPLICATION_ADMIN).withAppId("APP_ID2").build();
+    role.onLoad();
+    User user = userBuilder.but().withRoles(asList(role)).build();
     assertThatThrownBy(()
-                           -> authService.authorize(APP_ID, ENV_ID,
-                               userBuilder.but().withRoles(asList(envAllResourceAllActionRole)).build(),
-                               asList(new PermissionAttribute("APPLICATION:WRITE", APP)), PageRequestType.OTHER))
+                           -> authService.authorize(ACCOUNT_ID, APP_ID, null, user,
+                               asList(new PermissionAttribute(ResourceType.APPLICATION, Action.READ)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
+    ;
   }
 
-  /**
-   * Should authorize env scope resource read request for user with required permission.
-   */
   @Test
-  public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(envAllResourceReadActionRole)).build(),
-        asList(new PermissionAttribute("ENVIRONMENT:READ", ENV)), PageRequestType.OTHER);
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(envAllResourceAllActionRole)).build(),
-        asList(new PermissionAttribute("ENVIRONMENT:READ", ENV)), PageRequestType.OTHER);
-  }
-
-  /**
-   * Should deny env scope resource read request for user without required permission.
-   */
-  @Test
-  public void shouldDenyEnvScopeResourceReadRequestForUserWithoutRequiredPermission() {
+  public void shouldDenyWriteWithEnvAccess() {
+    Role role = aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.NON_PROD_SUPPORT).withAppId(APP_ID).build();
+    role.onLoad();
+    User user = userBuilder.but().withRoles(asList(role)).build();
     assertThatThrownBy(()
-                           -> authService.authorize(APP_ID, ENV_ID,
-                               userBuilder.but().withRoles(asList(appAllResourceAllActionRole)).build(),
-                               asList(new PermissionAttribute("ENVIRONMENT:READ", ENV)), PageRequestType.OTHER))
+                           -> authService.authorize(ACCOUNT_ID, APP_ID, ENV_ID, user,
+                               asList(new PermissionAttribute(ResourceType.APPLICATION, Action.UPDATE)), null))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.ACCESS_DENIED.name());
-  }
-
-  /**
-   * Should authorize env scope resource write request for user with required permission.
-   */
-  @Test
-  public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(envAllResourceWriteActionRole)).build(),
-        asList(new PermissionAttribute("ENVIRONMENT:WRITE", ENV)), PageRequestType.OTHER);
-    authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(envAllResourceWriteActionRole)).build(),
-        asList(new PermissionAttribute("ENVIRONMENT:WRITE", ENV)), PageRequestType.OTHER);
-  }
-
-  /**
-   * Should deny env scope resource write request for user without required permission.
-   */
-  @Test
-  public void shouldDenyEnvScopeResourceWriteRequestForUserWithoutRequiredPermission() {
-    assertThatThrownBy(()
-                           -> authService.authorize(APP_ID, ENV_ID,
-                               userBuilder.but().withRoles(asList(appAllResourceAllActionRole)).build(),
-                               asList(new PermissionAttribute("ENVIRONMENT:WRITE", ENV)), PageRequestType.OTHER))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.ACCESS_DENIED.name());
+    ;
   }
 
   @Test

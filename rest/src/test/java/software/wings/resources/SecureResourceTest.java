@@ -13,13 +13,11 @@ import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.PermissionAttribute.Action.ALL;
+import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.READ;
-import static software.wings.security.PermissionAttribute.Action.WRITE;
+import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
-import static software.wings.security.PermissionAttribute.ResourceType.ANY;
-import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
-import static software.wings.security.PermissionAttribute.ResourceType.RELEASE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -58,6 +56,7 @@ import software.wings.common.AuditHelper;
 import software.wings.dl.GenericDbCache;
 import software.wings.exception.WingsException;
 import software.wings.security.AuthRuleFilter;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -96,10 +95,9 @@ public class SecureResourceTest {
   private static AuditHelper auditHelper = mock(AuditHelper.class);
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
-
-  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService);
-
   private static EnvironmentService environmentService = mock(EnvironmentService.class);
+
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService, environmentService);
 
   private static AuthRuleFilter authRuleFilter =
       new AuthRuleFilter(auditService, auditHelper, authService, environmentService);
@@ -113,55 +111,72 @@ public class SecureResourceTest {
 
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 
-  private final Role appAllResourceReadActionRole = aRole()
-                                                        .withAppId(GLOBAL_APP_ID)
-                                                        .withName(ROLE_NAME)
-                                                        .withUuid(ROLE_ID)
-                                                        .withPermissions(asList(aPermission()
-                                                                                    .withAppId(APP_ID)
-                                                                                    .withEnvId(ENV_ID)
-                                                                                    .withPermissionScope(APP)
-                                                                                    .withResourceType(ANY)
-                                                                                    .withAction(READ)
-                                                                                    .build()))
-                                                        .build();
-  private final Role appAllResourceWriteActionRole = aRole()
-                                                         .withAppId(GLOBAL_APP_ID)
-                                                         .withName(ROLE_NAME)
-                                                         .withUuid(ROLE_ID)
-                                                         .withPermissions(asList(aPermission()
-                                                                                     .withAppId(APP_ID)
-                                                                                     .withEnvId(ENV_ID)
-                                                                                     .withPermissionScope(APP)
-                                                                                     .withResourceType(ANY)
-                                                                                     .withAction(WRITE)
-                                                                                     .build()))
-                                                         .build();
+  private final Role appAllResourceReadActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(APP)
+                                      .withResourceType(ResourceType.APPLICATION)
+                                      .withAction(READ)
+                                      .build()))
+          .build();
+  private final Role appAllResourceCreateActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(APP)
+                                      .withResourceType(ResourceType.APPLICATION)
+                                      .withAction(CREATE)
+                                      .build()))
+          .build();
+  private final Role appAllResourceWriteActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(APP)
+                                      .withResourceType(ResourceType.APPLICATION)
+                                      .withAction(UPDATE)
+                                      .build()))
+          .build();
 
-  private final Role envAllResourceReadActionRole = aRole()
-                                                        .withAppId(GLOBAL_APP_ID)
-                                                        .withName(ROLE_NAME)
-                                                        .withUuid(ROLE_ID)
-                                                        .withPermissions(asList(aPermission()
-                                                                                    .withAppId(APP_ID)
-                                                                                    .withEnvId(ENV_ID)
-                                                                                    .withPermissionScope(ENV)
-                                                                                    .withResourceType(ANY)
-                                                                                    .withAction(READ)
-                                                                                    .build()))
-                                                        .build();
-  private final Role envAllResourceWriteActionRole = aRole()
-                                                         .withAppId(GLOBAL_APP_ID)
-                                                         .withName(ROLE_NAME)
-                                                         .withUuid(ROLE_ID)
-                                                         .withPermissions(asList(aPermission()
-                                                                                     .withAppId(APP_ID)
-                                                                                     .withEnvId(ENV_ID)
-                                                                                     .withPermissionScope(ENV)
-                                                                                     .withResourceType(ANY)
-                                                                                     .withAction(WRITE)
-                                                                                     .build()))
-                                                         .build();
+  private final Role envAllResourceReadActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(ENV)
+                                      .withResourceType(ResourceType.ENVIRONMENT)
+                                      .withAction(READ)
+                                      .build()))
+          .build();
+  private final Role envAllResourceWriteActionRole =
+      aRole()
+          .withAppId(GLOBAL_APP_ID)
+          .withName(ROLE_NAME)
+          .withUuid(ROLE_ID)
+          .withPermissions(asList(aPermission()
+                                      .withAppId(APP_ID)
+                                      .withEnvId(ENV_ID)
+                                      .withPermissionScope(ENV)
+                                      .withResourceType(ResourceType.ENVIRONMENT)
+                                      .withAction(UPDATE)
+                                      .build()))
+          .build();
 
   private User user =
       anUser().withAppId(GLOBAL_APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD).build();
@@ -245,7 +260,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
-    user.setRoles(asList(appAllResourceWriteActionRole));
+    user.setRoles(asList(appAllResourceCreateActionRole));
 
     RestResponse<User> response = resources.client()
                                       .target("/secure-resources/appResourceWriteActionOnAppScope?appId=APP_ID")
@@ -296,7 +311,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
-    user.setRoles(asList(envAllResourceReadActionRole));
+    user.setRoles(asList(appAllResourceReadActionRole));
 
     RestResponse<User> response =
         resources.client()
@@ -312,7 +327,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
-    user.setRoles(asList(envAllResourceWriteActionRole));
+    user.setRoles(asList(appAllResourceCreateActionRole));
 
     RestResponse<User> response =
         resources.client()
@@ -362,62 +377,6 @@ public class SecureResourceTest {
   }
 
   /**
-   * Should authorize env scope release resource read request for user with required permission.
-   */
-  @Test
-  public void shouldAuthorizeEnvScopeReleaseResourceReadRequestForUserWithRequiredPermission() {
-    Role envReleaseResourceReadActionRole = aRole()
-                                                .withAppId(GLOBAL_APP_ID)
-                                                .withName(ROLE_NAME)
-                                                .withUuid(ROLE_ID)
-                                                .withPermissions(asList(aPermission()
-                                                                            .withAppId(APP_ID)
-                                                                            .withEnvId(ENV_ID)
-                                                                            .withPermissionScope(ENV)
-                                                                            .withResourceType(RELEASE)
-                                                                            .withAction(READ)
-                                                                            .build()))
-                                                .build();
-    user.setRoles(asList(envReleaseResourceReadActionRole));
-
-    RestResponse<User> response =
-        resources.client()
-            .target("/secure-resources/releaseResourceReadActionOnEnvScope?appId=APP_ID&envId=ENV_ID")
-            .request()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-            .get(new GenericType<RestResponse<User>>() {});
-    assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
-  }
-
-  /**
-   * Should authorize env scope release resource write request for user with required permission.
-   */
-  @Test
-  public void shouldAuthorizeEnvScopeReleaseResourceWriteRequestForUserWithRequiredPermission() {
-    Role envReleaseResourceWriteActionRole = aRole()
-                                                 .withAppId(GLOBAL_APP_ID)
-                                                 .withName(ROLE_NAME)
-                                                 .withUuid(ROLE_ID)
-                                                 .withPermissions(asList(aPermission()
-                                                                             .withAppId(APP_ID)
-                                                                             .withEnvId(ENV_ID)
-                                                                             .withPermissionScope(ENV)
-                                                                             .withResourceType(RELEASE)
-                                                                             .withAction(WRITE)
-                                                                             .build()))
-                                                 .build();
-    user.setRoles(asList(envReleaseResourceWriteActionRole));
-
-    RestResponse<User> response =
-        resources.client()
-            .target("/secure-resources/releaseResourceWriteActionOnEnvScope?appId=APP_ID&envId=ENV_ID")
-            .request()
-            .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
-            .post(ENTITY, new GenericType<RestResponse<User>>() {});
-    assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
-  }
-
-  /**
    * Should deny env scope release resource read request for user without required permission.
    */
   @Test
@@ -430,7 +389,7 @@ public class SecureResourceTest {
                                                                               .withAppId(APP_ID)
                                                                               .withEnvId(ENV_ID)
                                                                               .withPermissionScope(ENV)
-                                                                              .withResourceType(DEPLOYMENT)
+                                                                              .withResourceType(ResourceType.DEPLOYMENT)
                                                                               .withAction(ALL)
                                                                               .build()))
                                                   .build();

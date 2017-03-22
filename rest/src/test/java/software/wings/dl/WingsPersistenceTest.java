@@ -90,6 +90,35 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   /**
+   * Should query by in operator.
+   */
+  @Test
+  public void shouldQueryListByINOperator() {
+    TestEntity entity = new TestEntity();
+    entity.setFieldList(Lists.newArrayList("fieldList11", "fieldList12", "fieldList13"));
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setFieldList(Lists.newArrayList("fieldList21"));
+    wingsPersistence.save(entity);
+
+    entity = new TestEntity();
+    entity.setFieldList(Lists.newArrayList("fieldList31", "fieldList32"));
+    wingsPersistence.save(entity);
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+
+    filter.setFieldValues("fieldList11", "fieldList13", "fieldList21");
+    filter.setFieldName("fieldList");
+    filter.setOp(Operator.IN);
+    req.addFilter(filter);
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(2);
+  }
+
+  /**
    * Should paginate filter sort.
    */
   @Test
@@ -435,6 +464,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
      */
     @Reference TestEntityB testEntityB;
     private String fieldA;
+    private List<String> fieldList;
     private Map<String, String> mapField;
 
     /**
@@ -453,6 +483,14 @@ public class WingsPersistenceTest extends WingsBaseTest {
      */
     public void setFieldA(String fieldA) {
       this.fieldA = fieldA;
+    }
+
+    public List<String> getFieldList() {
+      return fieldList;
+    }
+
+    public void setFieldList(List<String> fieldList) {
+      this.fieldList = fieldList;
     }
 
     /**

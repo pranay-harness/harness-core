@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -50,7 +50,7 @@ public class SecureResource {
    */
   @GET
   @Path("appResourceReadActionOnAppScope")
-  @AuthRule("APPLICATION:READ")
+  @AuthRule(ResourceType.APPLICATION)
   public RestResponse<User> appResourceReadActionOnAppScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -62,7 +62,7 @@ public class SecureResource {
    */
   @POST
   @Path("appResourceWriteActionOnAppScope")
-  @AuthRule("APPLICATION:WRITE")
+  @AuthRule(ResourceType.APPLICATION)
   public RestResponse<User> appResourceWriteActionOnAppScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -74,7 +74,7 @@ public class SecureResource {
    */
   @GET
   @Path("envResourceReadActionOnEnvScope")
-  @AuthRule(value = "ENVIRONMENT:READ", scope = PermissionScope.ENV)
+  @AuthRule(ResourceType.ENVIRONMENT)
   public RestResponse<User> envResourceReadActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -86,32 +86,8 @@ public class SecureResource {
    */
   @POST
   @Path("envResourceWriteActionOnEnvScope")
-  @AuthRule(value = "ENVIRONMENT:WRITE", scope = PermissionScope.ENV)
+  @AuthRule(value = ResourceType.ENVIRONMENT)
   public RestResponse<User> envResourceWriteActionOnEnvScope() {
-    return new RestResponse<>(UserThreadLocal.get());
-  }
-
-  /**
-   * Release resource read action on env scope rest response.
-   *
-   * @return the rest response
-   */
-  @GET
-  @Path("releaseResourceReadActionOnEnvScope")
-  @AuthRule(value = "RELEASE:READ", scope = PermissionScope.ENV)
-  public RestResponse<User> releaseResourceReadActionOnEnvScope() {
-    return new RestResponse<>(UserThreadLocal.get());
-  }
-
-  /**
-   * Release resource write action on env scope rest response.
-   *
-   * @return the rest response
-   */
-  @POST
-  @Path("releaseResourceWriteActionOnEnvScope")
-  @AuthRule(value = "RELEASE:WRITE", scope = PermissionScope.ENV)
-  public RestResponse<User> releaseResourceWriteActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
 

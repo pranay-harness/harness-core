@@ -62,6 +62,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
           sendError(resource, INVALID_REQUEST);
         }
 
+        String accountId = pathSegments.get(1);
         String appId = pathSegments.get(2).replace("all", Base.GLOBAL_APP_ID);
         String envId = pathSegments.get(3).replace("all", Base.GLOBAL_ENV_ID);
         Channel channel = Channel.getChannelByChannelName(pathSegments.get(5));
@@ -69,9 +70,11 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         if (channel == null) {
           sendError(resource, INVALID_REQUEST);
         }
-        PermissionAttribute permissionAttribute = new PermissionAttribute(channel.getPermission(), channel.getScope());
+        PermissionAttribute permissionAttribute =
+            new PermissionAttribute(channel.getPermission(), channel.getScope(), "GET");
 
-        authService.authorize(appId, envId, authToken.getUser(), asList(permissionAttribute), PageRequestType.OTHER);
+        authService.authorize(
+            accountId, appId, envId, authToken.getUser(), asList(permissionAttribute), PageRequestType.OTHER);
 
       } catch (WingsException e) {
         sendError(resource, e.getResponseMessageList().get(0).getCode());

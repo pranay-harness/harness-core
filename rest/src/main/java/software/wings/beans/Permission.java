@@ -15,6 +15,7 @@ public class Permission {
   private Action action;
   private String envId;
   private String appId;
+  private String accountId;
   private EnvironmentType environmentType;
   private PermissionScope permissionScope;
 
@@ -88,6 +89,14 @@ public class Permission {
    */
   public void setAppId(String appId) {
     this.appId = appId;
+  }
+
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**

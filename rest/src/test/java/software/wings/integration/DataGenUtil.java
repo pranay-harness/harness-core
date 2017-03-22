@@ -2,11 +2,9 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -14,13 +12,10 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
-import static software.wings.beans.Permission.Builder.aPermission;
-import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -33,11 +28,6 @@ import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.randomSeedString;
 import static software.wings.integration.SeedData.seedNames;
-import static software.wings.security.PermissionAttribute.Action.ALL;
-import static software.wings.security.PermissionAttribute.Action.READ;
-import static software.wings.security.PermissionAttribute.PermissionScope.APP;
-import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
-import static software.wings.security.PermissionAttribute.ResourceType.ANY;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.collect.ImmutableMap;
@@ -75,7 +65,6 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -273,91 +262,35 @@ public void populateData() throws IOException {
 
 private void addDefaultRoleAndUsers() {
   // TODO: Not needed
-  accountId = wingsPersistence.save(anAccount()
-                                        .withUuid("kmpySmUISimoRrJL6NL73w")
-                                        .withAccountKey("2f6b0988b6fb3370073c3d0505baee59")
-                                        .withCompanyName("Wings Software")
-                                        .build());
-  Role administrator = aRole()
-                           .withAppId(Base.GLOBAL_APP_ID)
-                           .withAccountId(accountId)
-                           .withName("Administrator")
-                           .withPermissions(asList(aPermission()
-                                                       .withPermissionScope(APP)
-                                                       .withAppId(GLOBAL_APP_ID)
-                                                       .withResourceType(ANY)
-                                                       .withAction(ALL)
-                                                       .build(),
-                               aPermission()
-                                   .withPermissionScope(ENV)
-                                   .withAppId(GLOBAL_APP_ID)
-                                   .withEnvironmentType(EnvironmentType.ALL)
-                                   .withResourceType(ANY)
-                                   .withAction(ALL)
-                                   .build()))
-                           .withRoleType(RoleType.ACCOUNT_ADMIN)
-                           .build();
-
-  Role engineers = aRole()
-                       .withAppId(Base.GLOBAL_APP_ID)
-                       .withAccountId(accountId)
-                       .withName("Software Engineering")
-                       .withPermissions(asList(aPermission()
-                                                   .withPermissionScope(APP)
-                                                   .withAppId(GLOBAL_APP_ID)
-                                                   .withResourceType(ANY)
-                                                   .withAction(ALL)
-                                                   .build(),
-                           aPermission()
-                               .withPermissionScope(ENV)
-                               .withAppId(GLOBAL_APP_ID)
-                               .withEnvironmentType(NON_PROD)
-                               .withResourceType(ANY)
-                               .withAction(ALL)
-                               .build()))
-                       .build();
-
-  Role operation = aRole()
-                       .withAppId(Base.GLOBAL_APP_ID)
-                       .withAccountId(accountId)
-                       .withName("Operation Engineering")
-                       .withPermissions(asList(aPermission()
-                                                   .withPermissionScope(APP)
-                                                   .withAppId(GLOBAL_APP_ID)
-                                                   .withResourceType(ANY)
-                                                   .withAction(READ)
-                                                   .build(),
-                           aPermission()
-                               .withPermissionScope(ENV)
-                               .withAppId(GLOBAL_APP_ID)
-                               .withEnvironmentType(EnvironmentType.ALL)
-                               .withResourceType(ANY)
-                               .withAction(ALL)
-                               .build()))
-                       .build();
-
-  Role quality = aRole()
-                     .withAppId(Base.GLOBAL_APP_ID)
-                     .withAccountId(accountId)
-                     .withName("Quality Engineering")
-                     .withPermissions(asList(aPermission()
-                                                 .withPermissionScope(APP)
-                                                 .withAppId(GLOBAL_APP_ID)
-                                                 .withResourceType(ANY)
-                                                 .withAction(READ)
-                                                 .build(),
-                         aPermission()
-                             .withPermissionScope(ENV)
-                             .withAppId(GLOBAL_APP_ID)
-                             .withEnvironmentType(EnvironmentType.NON_PROD)
-                             .withResourceType(ANY)
-                             .withAction(ALL)
-                             .build()))
-                     .build();
-
-  wingsPersistence.save(asList(administrator, engineers, operation, quality));
-
-  addAdminUser();
+  //    accountId = wingsPersistence
+  //        .save(anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("2f6b0988b6fb3370073c3d0505baee59").withCompanyName("Wings
+  //        Software").build());
+  //    Role administrator =
+  //    aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Administrator").withPermissions(
+  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(ALL).build(),
+  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(EnvironmentType.ALL).withResourceType(ANY).withAction(ALL)
+  //                .build())).withRoleType(RoleType.ACCOUNT_ADMIN) .build();
+  //
+  //    Role engineers = aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Software
+  //    Engineering").withPermissions(
+  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(ALL).build(),
+  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(NON_PROD).withResourceType(ANY).withAction(ALL).build())).build();
+  //
+  //    Role operation = aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Operation
+  //    Engineering").withPermissions(
+  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(READ).build(),
+  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(EnvironmentType.ALL).withResourceType(ANY).withAction(ALL)
+  //                .build())).build();
+  //
+  //    Role quality = aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Quality
+  //    Engineering").withPermissions(
+  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(READ).build(),
+  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(EnvironmentType.NON_PROD).withResourceType(ANY).withAction(ALL)
+  //                .build())).build();
+  //
+  //    wingsPersistence.save(asList(administrator, engineers, operation, quality));
+  //
+  //    addAdminUser();
 }
 
 private void addAdminUser() {
