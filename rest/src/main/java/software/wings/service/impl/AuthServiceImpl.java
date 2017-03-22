@@ -22,6 +22,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -82,6 +83,23 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void authorize(String accountId, String appId, String envId, User user,
       List<PermissionAttribute> permissionAttributes, PageRequestType requestType) {
+    Application application = null;
+    if (appId != null) {
+      application = dbCache.get(Application.class, appId);
+      if (application == null) {
+        logger.error("Auth Failure: non-existing appId: {}", appId);
+        throw new WingsException(ACCESS_DENIED);
+      }
+    }
+    if (accountId == null) {
+      if (application != null) {
+        accountId = application.getAccountId();
+      }
+    } else if (dbCache.get(Account.class, accountId) == null) {
+      logger.error("Auth Failure: non-existing accountId: {}", accountId);
+      throw new WingsException(ACCESS_DENIED);
+    }
+
     if (user.isAccountAdmin(accountId)) {
       return;
     }
