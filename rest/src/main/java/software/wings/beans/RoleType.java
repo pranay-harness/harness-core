@@ -10,11 +10,13 @@ import software.wings.security.PermissionAttribute.PermissionScope;
  * Created by rishi on 3/13/17.
  */
 public enum RoleType {
-  ACCOUNT_ADMIN("Account Administrator"),
+  ACCOUNT_ADMIN("Account Administrator", "Account Adminitrator members have all the access within account"),
   APPLICATION_ADMIN("Application Administrator",
+      "Application Administrator members have access to setup application(service, environment/infrastructure, workflows) and do deployments within application",
       aPermission().withAction(Action.ALL).withPermissionScope(PermissionScope.APP).build(),
       aPermission().withAction(Action.ALL).withPermissionScope(PermissionScope.ENV).build()),
   PROD_SUPPORT("Production Support",
+      "Production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within PROD environments",
       aPermission()
           .withAction(Action.ALL)
           .withPermissionScope(PermissionScope.ENV)
@@ -22,23 +24,22 @@ public enum RoleType {
           .build(),
       aPermission().withAction(Action.READ).withPermissionScope(PermissionScope.APP).build()),
   NON_PROD_SUPPORT("Non-production Support",
+      "Non-production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within NON_PROD environments",
       aPermission()
           .withAction(Action.ALL)
           .withPermissionScope(PermissionScope.ENV)
           .withEnvironmentType(EnvironmentType.NON_PROD)
           .build(),
       aPermission().withAction(Action.READ).withPermissionScope(PermissionScope.APP).build()),
-  CUSTOM("Custom");
+  CUSTOM("Custom", "Custom Role");
 
   private final String displayName;
+  private final String description;
   private Permission[] permissions;
 
-  RoleType(String displayName) {
-    this(displayName, null);
-  }
-
-  RoleType(String displayName, Permission... permissions) {
+  RoleType(String displayName, String description, Permission... permissions) {
     this.displayName = displayName;
+    this.description = description;
     this.permissions = permissions;
   }
 
@@ -52,6 +53,10 @@ public enum RoleType {
 
   public void setPermissions(Permission[] permissions) {
     this.permissions = permissions;
+  }
+
+  public String getDescription() {
+    return description;
   }
 
   public String getRoleName(String appName) {

@@ -6,6 +6,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.security.PermissionAttribute.PermissionScope;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -190,15 +191,16 @@ public class Role extends Base {
     // Standard roles
     if (roleType == RoleType.ACCOUNT_ADMIN || roleType == RoleType.APPLICATION_ADMIN
         || roleType == RoleType.PROD_SUPPORT || roleType == RoleType.NON_PROD_SUPPORT) {
+      setDescription(roleType.getDescription());
       if (roleType.getPermissions() != null) {
         permissions = Arrays.asList(roleType.getPermissions());
 
         permissions.forEach(permission -> {
           permission.setAccountId(getAccountId());
           permission.setAppId(getAppId());
-          if (roleType == RoleType.PROD_SUPPORT) {
+          if (permission.getPermissionScope() == PermissionScope.ENV && roleType == RoleType.PROD_SUPPORT) {
             permission.setEnvironmentType(EnvironmentType.PROD);
-          } else if (roleType == RoleType.NON_PROD_SUPPORT) {
+          } else if (permission.getPermissionScope() == PermissionScope.ENV && roleType == RoleType.NON_PROD_SUPPORT) {
             permission.setEnvironmentType(EnvironmentType.NON_PROD);
           }
         });
