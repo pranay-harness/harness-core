@@ -71,7 +71,6 @@ public class UserResource {
   @GET
   public RestResponse<PageResponse<User>> list(
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
-    pageRequest.addFilter("appId", GLOBAL_APP_ID, EQ);
     return new RestResponse<>(userService.list(pageRequest));
   }
 
@@ -211,6 +210,7 @@ public class UserResource {
   @Path("invites")
   public RestResponse<List<UserInvite>> inviteUsers(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
+    userInvite.setAccountId(accountId);
     userInvite.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.inviteUsers(userInvite));
   }
