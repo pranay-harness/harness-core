@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
@@ -11,7 +10,9 @@ import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.auth.Auth;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.Account;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
@@ -71,6 +72,8 @@ public class UserResource {
   @GET
   public RestResponse<PageResponse<User>> list(
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+    Account account = accountService.get(accountId);
+    pageRequest.addFilter("accounts", account, Operator.HAS);
     return new RestResponse<>(userService.list(pageRequest));
   }
 
