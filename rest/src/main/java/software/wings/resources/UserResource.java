@@ -97,6 +97,7 @@ public class UserResource {
    */
   @PUT
   @Path("{userId}")
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
   public RestResponse<User> update(@PathParam("userId") String userId, User user) {
     user.setUuid(userId);
     return new RestResponse<>(userService.update(user));
@@ -110,7 +111,7 @@ public class UserResource {
    */
   @DELETE
   @Path("{userId}")
-  public RestResponse delete(@PathParam("userId") String userId) {
+  public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
     userService.delete(userId);
     return new RestResponse();
   }
@@ -194,7 +195,8 @@ public class UserResource {
 
   @GET
   @Path("invites")
-  public RestResponse<PageResponse<UserInvite>> listInvites(@BeanParam PageRequest<UserInvite> pageRequest) {
+  public RestResponse<PageResponse<UserInvite>> listInvites(
+      @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<UserInvite> pageRequest) {
     return new RestResponse<>(userService.listInvites(pageRequest));
   }
 
@@ -207,7 +209,8 @@ public class UserResource {
 
   @POST
   @Path("invites")
-  public RestResponse<List<UserInvite>> inviteUsers(@NotNull UserInvite userInvite) {
+  public RestResponse<List<UserInvite>> inviteUsers(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
     userInvite.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.inviteUsers(userInvite));
   }
