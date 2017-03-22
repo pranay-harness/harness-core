@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
@@ -84,6 +85,8 @@ public class AuthServiceTest extends WingsBaseTest {
         .thenReturn(
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.NON_PROD).build());
     when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
+    when(cache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
   }
 
