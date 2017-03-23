@@ -33,6 +33,10 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.licensing.DatabaseLicenseProviderImpl;
+import software.wings.licensing.LicenseManager;
+import software.wings.licensing.LicenseManagerImpl;
+import software.wings.licensing.LicenseProvider;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
@@ -207,6 +211,8 @@ public class WingsModule extends AbstractModule {
     bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
+    bind(LicenseManager.class).to(LicenseManagerImpl.class);
+    bind(LicenseProvider.class).to(DatabaseLicenseProviderImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

@@ -1,21 +1,22 @@
 package software.wings.licensing;
 
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 
 /**
  * Created by peeyushaggarwal on 3/22/17.
  */
 public class LicenseInterceptorTest extends WingsBaseTest {
-  @Inject private LicenseManager licenseManager;
+  @Mock private LicenseManager licenseManager;
+
+  @InjectMocks @Inject private LicenseInterceptor licenseInterceptor;
 
   @Licensed
   public static class ClassLicensedObject {
@@ -40,9 +41,8 @@ public class LicenseInterceptorTest extends WingsBaseTest {
 
   @Test
   public void shouldInterceptMethodCallExtendedWithLicensing() throws Exception {
-    when(licenseManager.isAllowed(eq("ACCOUNT_ID"), eq("licensedMethod"))).thenReturn(true);
     methodLicensedObject.licensedMethod("ACCOUNT_ID");
-    verify(licenseManager).isAllowed("ACCOUNT_ID", "licensedMethod");
+    verify(licenseManager).validateLicense("ACCOUNT_ID", "licensedMethod");
   }
 
   @Test
@@ -59,12 +59,10 @@ public class LicenseInterceptorTest extends WingsBaseTest {
 
   @Test
   public void shouldInterceptAllCallsFromClassAnnotatedWithLicenseAnnotation() throws Exception {
-    when(licenseManager.isAllowed(eq("ACCOUNT_ID"), anyString())).thenReturn(true);
-
     classLicensedObject.method("ACCOUNT_ID");
-    verify(licenseManager).isAllowed("ACCOUNT_ID", "method");
+    verify(licenseManager).validateLicense("ACCOUNT_ID", "method");
 
     classLicensedObject.anotherMethod("ACCOUNT_ID");
-    verify(licenseManager).isAllowed("ACCOUNT_ID", "anotherMethod");
+    verify(licenseManager).validateLicense("ACCOUNT_ID", "anotherMethod");
   }
 }

@@ -14,6 +14,7 @@ public class LicenseModule extends AbstractModule {
   protected void configure() {
     LicenseInterceptor interceptor = new LicenseInterceptor();
     requestInjection(interceptor);
+    bind(LicenseInterceptor.class).toInstance(interceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Licensed.class), interceptor);
     bindInterceptor(Matchers.annotatedWith(Licensed.class), Matchers.any(), interceptor);
   }

@@ -279,7 +279,11 @@ public enum ErrorCode {
   UNKNOWN_ARTIFACT_TYPE("UNKNOWN_ARTIFACT_TYPE"), /**
                                                    * Timeout error codes.
                                                    */
-  INIT_TIMEOUT("INIT_TIMEOUT");
+  INIT_TIMEOUT("INIT_TIMEOUT"),
+
+  LICENSE_EXPIRED("LICENSE_EXPIRED"),
+
+  NOT_LICENSED("NOT_LICENSED");
 
   /**
    * The constant ARGS_NAME.

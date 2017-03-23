@@ -17,6 +17,10 @@ public class Account extends Base {
 
   @NotNull(groups = Create.class) private String accountKey;
 
+  private String licenseId;
+
+  private long licenseExpiryTime;
+
   /**
    * Getter for property 'companyName'.
    *
@@ -59,6 +63,42 @@ public class Account extends Base {
 
   public void setAccountName(String accountName) {
     this.accountName = accountName;
+  }
+
+  /**
+   * Getter for property 'licenseId'.
+   *
+   * @return Value for property 'licenseId'.
+   */
+  public String getLicenseId() {
+    return licenseId;
+  }
+
+  /**
+   * Setter for property 'licenseId'.
+   *
+   * @param licenseId Value to set for property 'licenseId'.
+   */
+  public void setLicenseId(String licenseId) {
+    this.licenseId = licenseId;
+  }
+
+  /**
+   * Getter for property 'licenseExpiryTime'.
+   *
+   * @return Value for property 'licenseExpiryTime'.
+   */
+  public long getLicenseExpiryTime() {
+    return licenseExpiryTime;
+  }
+
+  /**
+   * Setter for property 'licenseExpiryTime'.
+   *
+   * @param licenseExpiryTime Value to set for property 'licenseExpiryTime'.
+   */
+  public void setLicenseExpiryTime(long licenseExpiryTime) {
+    this.licenseExpiryTime = licenseExpiryTime;
   }
 
   @Override

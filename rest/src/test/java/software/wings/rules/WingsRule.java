@@ -53,7 +53,6 @@ import software.wings.app.WingsModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
-import software.wings.licensing.LicenseManager;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
@@ -186,12 +185,6 @@ public class WingsRule implements MethodRule {
     HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
     List<AbstractModule> modules = Lists.newArrayList(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(LicenseManager.class).toInstance(mock(LicenseManager.class));
-          }
-        },
         new AbstractModule() {
           @Override
           protected void configure() {
