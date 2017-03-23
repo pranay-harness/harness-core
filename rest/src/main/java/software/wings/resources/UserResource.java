@@ -57,6 +57,12 @@ public class UserResource {
   private UserService userService;
   private AccountService accountService;
 
+  /**
+   * Instantiates a new User resource.
+   *
+   * @param userService    the user service
+   * @param accountService the account service
+   */
   @Inject
   public UserResource(UserService userService, AccountService accountService) {
     this.userService = userService;
@@ -67,6 +73,7 @@ public class UserResource {
    * List.
    *
    * @param pageRequest the page request
+   * @param accountId   the account id
    * @return the rest response
    */
   @GET
@@ -108,7 +115,8 @@ public class UserResource {
   /**
    * Delete.
    *
-   * @param userId the user id
+   * @param accountId the account id
+   * @param userId    the user id
    * @return the rest response
    */
   @DELETE
@@ -119,8 +127,36 @@ public class UserResource {
   }
 
   /**
+   * Reset password rest response.
+   *
+   * @param passwordRequest the password request
+   * @return the rest response
+   */
+  @PublicApi
+  @POST
+  @Path("reset-password")
+  public RestResponse resetPassword(@NotNull ResetPasswordRequest passwordRequest) {
+    return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
+  }
+
+  /**
+   * Update password rest response.
+   *
+   * @param resetPasswordToken the reset password token
+   * @return the rest response
+   */
+  @PublicApi
+  @POST
+  @Path("reset-password/{token}")
+  public RestResponse updatePassword(
+      @NotEmpty @PathParam("token") String resetPasswordToken, UpdatePasswordRequest updatePasswordRequest) {
+    return new RestResponse(userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword()));
+  }
+
+  /**
    * Get rest response.
    *
+   * @param accountName the account name
    * @return the rest response
    */
   @GET
@@ -195,6 +231,13 @@ public class UserResource {
     return new RestResponse<>(userService.revokeRole(userId, roleId));
   }
 
+  /**
+   * List invites rest response.
+   *
+   * @param accountId   the account id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Path("invites")
   public RestResponse<PageResponse<UserInvite>> listInvites(
@@ -202,6 +245,13 @@ public class UserResource {
     return new RestResponse<>(userService.listInvites(pageRequest));
   }
 
+  /**
+   * Gets invite.
+   *
+   * @param accountId the account id
+   * @param inviteId  the invite id
+   * @return the invite
+   */
   @GET
   @Path("invites/{inviteId}")
   public RestResponse<UserInvite> getInvite(
@@ -209,6 +259,13 @@ public class UserResource {
     return new RestResponse<>(userService.getInvite(accountId, inviteId));
   }
 
+  /**
+   * Invite users rest response.
+   *
+   * @param accountId  the account id
+   * @param userInvite the user invite
+   * @return the rest response
+   */
   @POST
   @Path("invites")
   public RestResponse<List<UserInvite>> inviteUsers(
@@ -218,6 +275,14 @@ public class UserResource {
     return new RestResponse<>(userService.inviteUsers(userInvite));
   }
 
+  /**
+   * Complete invite rest response.
+   *
+   * @param accountId  the account id
+   * @param inviteId   the invite id
+   * @param userInvite the user invite
+   * @return the rest response
+   */
   @PublicApi
   @PUT
   @Path("invites/{inviteId}")
@@ -228,10 +293,67 @@ public class UserResource {
     return new RestResponse<>(userService.completeInvite(userInvite));
   }
 
+  /**
+   * Delete invite rest response.
+   *
+   * @param inviteId  the invite id
+   * @param accountId the account id
+   * @return the rest response
+   */
   @DELETE
   @Path("invites/{inviteId}")
   public RestResponse<UserInvite> deleteInvite(
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(userService.deleteInvite(accountId, inviteId));
+  }
+
+  /**
+   * The type Reset password request.
+   */
+  public static class ResetPasswordRequest {
+    private String email;
+
+    /**
+     * Gets email.
+     *
+     * @return the email
+     */
+    public String getEmail() {
+      return email;
+    }
+
+    /**
+     * Sets email.
+     *
+     * @param email the email
+     */
+    public void setEmail(String email) {
+      this.email = email;
+    }
+  }
+
+  /**
+   * The type Update password request.
+   */
+  public static class UpdatePasswordRequest {
+    private String password;
+
+    /**
+     * Gets password.
+     *
+     * @return the password
+     */
+    public String getPassword() {
+      return password;
+    }
+
+    /**
+     * Sets password.
+     *
+     * @param password the password
+     */
+    public void setPassword(String password) {
+      this.password = password;
+    }
   }
 }

@@ -58,6 +58,7 @@ portal:
   allowedDomains: wings.software
   companyName: Wings Software
   authTokenExpiryInMillis: 86400000
+  jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
 
 awsEcsAMIByRegion:
   us-east-1: ami-b2df2ca4

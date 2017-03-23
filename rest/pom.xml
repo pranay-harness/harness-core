@@ -389,6 +389,11 @@
             <artifactId>subzero-core</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>

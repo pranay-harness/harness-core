@@ -47,6 +47,8 @@ public class User extends Base implements Principal {
 
   private long statsFetchedOn;
 
+  @JsonIgnore private long passwordChangedAt;
+
   /**
    * Return partial user object without sensitive information.
    *
@@ -332,6 +334,14 @@ public class User extends Base implements Principal {
         + "name='" + name + '\'' + ", email='" + email + '\'' + ", companyName='" + companyName + '\''
         + ", accountName='" + accountName + '\'' + ", roles=" + roles + ", accounts=" + accounts
         + ", lastLogin=" + lastLogin + ", emailVerified=" + emailVerified + ", statsFetchedOn=" + statsFetchedOn + '}';
+  }
+
+  public long getPasswordChangedAt() {
+    return passwordChangedAt;
+  }
+
+  public void setPasswordChangedAt(long passwordChangedAt) {
+    this.passwordChangedAt = passwordChangedAt;
   }
 
   public static final class Builder {

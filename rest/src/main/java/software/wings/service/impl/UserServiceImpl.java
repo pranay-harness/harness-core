@@ -6,8 +6,11 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
+import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static software.wings.beans.User.Builder.anUser;
@@ -17,6 +20,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
 import org.apache.http.client.utils.URIBuilder;
@@ -47,7 +56,9 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.KryoUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -117,6 +128,7 @@ public class UserServiceImpl implements UserService {
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
+    user.setPasswordChangedAt(System.currentTimeMillis());
     user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
     return savedUser;
@@ -307,6 +319,87 @@ public class UserServiceImpl implements UserService {
       wingsPersistence.delete(userInvite);
     }
     return userInvite;
+  }
+
+  @Override
+  public boolean resetPassword(String email) {
+    User user = getUserByEmail(email);
+
+    if (user == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "Email doesn't exist");
+    }
+
+    String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
+    if (jwtPasswordSecret == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
+    }
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      String token = JWT.create()
+                         .withIssuer("Wings Software")
+                         .withIssuedAt(new Date())
+                         .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
+                         .withClaim("email", email)
+                         .sign(algorithm);
+      sendResetPasswordEmail(user, token);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(UNKNOWN_ERROR, "message", "reset password link could not be generated");
+    }
+    return true;
+  }
+
+  @Override
+  public boolean updatePassword(String resetPasswordToken, String password) {
+    String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
+    if (jwtPasswordSecret == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
+    }
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Wings Software").build();
+      DecodedJWT jwt = verifier.verify(resetPasswordToken);
+      JWT decode = JWT.decode(resetPasswordToken);
+      String email = decode.getClaim("email").asString();
+      resetUserPassword(email, password, decode.getIssuedAt().getTime());
+    } catch (UnsupportedEncodingException exception) {
+      throw new WingsException(UNKNOWN_ERROR, "message", "Invalid reset password link");
+    } catch (JWTVerificationException exception) {
+      throw new WingsException(EXPIRED_TOKEN);
+    }
+    return true;
+  }
+
+  private void resetUserPassword(String email, String password, long tokenIssuedAt) {
+    User user = getUserByEmail(email);
+    if (user == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "Email doesn't exist");
+    } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
+      throw new WingsException(EXPIRED_TOKEN);
+    }
+
+    String hashed = hashpw(password, BCrypt.gensalt());
+    wingsPersistence.update(user,
+        wingsPersistence.createUpdateOperations(User.class)
+            .set("passwordHash", hashed)
+            .set("passwordChangedAt", System.currentTimeMillis()));
+  }
+
+  private void sendResetPasswordEmail(User user, String token) {
+    try {
+      String resetPasswordUrl = buildAbsoluteUrl("/reset-password/" + token);
+
+      EmailData emailData = EmailData.Builder.anEmailData()
+                                .withTo(asList(user.getEmail()))
+                                .withRetries(2)
+                                .withTemplateName("reset_password")
+                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", resetPasswordUrl))
+                                .build();
+      emailNotificationService.send(emailData);
+    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+      logger.error("Reset password email couldn't be sent " + e);
+    }
   }
 
   /* (non-Javadoc)
