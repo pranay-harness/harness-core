@@ -165,4 +165,102 @@ public class License extends Base {
   public void setExpiryDuration(long expiryDuration) {
     this.expiryDuration = expiryDuration;
   }
+
+  public static final class Builder {
+    private String name;
+    private List<Entitlement> entitlements;
+    private boolean isActive;
+    private long expiryDuration;
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
+
+    private Builder() {}
+
+    public static Builder aLicense() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withEntitlements(List<Entitlement> entitlements) {
+      this.entitlements = entitlements;
+      return this;
+    }
+
+    public Builder withIsActive(boolean isActive) {
+      this.isActive = isActive;
+      return this;
+    }
+
+    public Builder withExpiryDuration(long expiryDuration) {
+      this.expiryDuration = expiryDuration;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder but() {
+      return aLicense()
+          .withName(name)
+          .withEntitlements(entitlements)
+          .withIsActive(isActive)
+          .withExpiryDuration(expiryDuration)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt);
+    }
+
+    public License build() {
+      License license = new License();
+      license.setName(name);
+      license.setEntitlements(entitlements);
+      license.setExpiryDuration(expiryDuration);
+      license.setUuid(uuid);
+      license.setAppId(appId);
+      license.setCreatedBy(createdBy);
+      license.setCreatedAt(createdAt);
+      license.setLastUpdatedBy(lastUpdatedBy);
+      license.setLastUpdatedAt(lastUpdatedAt);
+      license.isActive = this.isActive;
+      return license;
+    }
+  }
 }
