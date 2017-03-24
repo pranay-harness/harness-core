@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Permission.Builder.aPermission;
@@ -25,7 +27,10 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
+import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+
+import com.google.common.collect.ImmutableList;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
@@ -43,6 +48,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
@@ -60,9 +66,10 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.UserService;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Date;
@@ -95,12 +102,13 @@ public class SecureResourceTest {
   private static AuditHelper auditHelper = mock(AuditHelper.class);
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
-  private static EnvironmentService environmentService = mock(EnvironmentService.class);
+  private static AppService appService = mock(AppService.class);
+  private static UserService userService = mock(UserService.class);
 
-  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService, environmentService);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService);
 
   private static AuthRuleFilter authRuleFilter =
-      new AuthRuleFilter(auditService, auditHelper, authService, environmentService);
+      new AuthRuleFilter(auditService, auditHelper, authService, appService, userService);
 
   /**
    * The constant resources.
@@ -116,6 +124,7 @@ public class SecureResourceTest {
           .withAppId(GLOBAL_APP_ID)
           .withName(ROLE_NAME)
           .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
           .withPermissions(asList(aPermission()
                                       .withAppId(APP_ID)
                                       .withEnvId(ENV_ID)
@@ -129,6 +138,7 @@ public class SecureResourceTest {
           .withAppId(GLOBAL_APP_ID)
           .withName(ROLE_NAME)
           .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
           .withPermissions(asList(aPermission()
                                       .withAppId(APP_ID)
                                       .withEnvId(ENV_ID)
@@ -142,6 +152,7 @@ public class SecureResourceTest {
           .withAppId(GLOBAL_APP_ID)
           .withName(ROLE_NAME)
           .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
           .withPermissions(asList(aPermission()
                                       .withAppId(APP_ID)
                                       .withEnvId(ENV_ID)
@@ -156,6 +167,7 @@ public class SecureResourceTest {
           .withAppId(GLOBAL_APP_ID)
           .withName(ROLE_NAME)
           .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
           .withPermissions(asList(aPermission()
                                       .withAppId(APP_ID)
                                       .withEnvId(ENV_ID)
@@ -169,6 +181,7 @@ public class SecureResourceTest {
           .withAppId(GLOBAL_APP_ID)
           .withName(ROLE_NAME)
           .withUuid(ROLE_ID)
+          .withAccountId(ACCOUNT_ID)
           .withPermissions(asList(aPermission()
                                       .withAppId(APP_ID)
                                       .withEnvId(ENV_ID)
@@ -178,8 +191,13 @@ public class SecureResourceTest {
                                       .build()))
           .build();
 
-  private User user =
-      anUser().withAppId(GLOBAL_APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD).build();
+  private User user = anUser()
+                          .withUuid(USER_ID)
+                          .withAppId(GLOBAL_APP_ID)
+                          .withEmail(USER_EMAIL)
+                          .withName(USER_NAME)
+                          .withPassword(PASSWORD)
+                          .build();
 
   /**
    * Sets up.
@@ -189,13 +207,22 @@ public class SecureResourceTest {
   @Before
   public void setUp() throws Exception {
     when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(user, TOKEN_EXPIRY_IN_MILLIS));
+    when(genericDbCache.get(Account.class, ACCOUNT_ID))
+        .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(genericDbCache.get(Application.class, APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).build());
+        .thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build());
     when(genericDbCache.get(Environment.class, ENV_ID))
         .thenReturn(
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.NON_PROD).build());
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
+    when(appService.get(APP_ID))
+        .thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build());
+    when(userService.getUserAccountRole(USER_ID, ACCOUNT_ID))
+        .thenReturn(anAccountRole()
+                        .withAccountId(ACCOUNT_ID)
+                        .withApplicationRoles(ImmutableList.of(anApplicationRole().withAppId(APP_ID).build()))
+                        .build());
   }
 
   /**

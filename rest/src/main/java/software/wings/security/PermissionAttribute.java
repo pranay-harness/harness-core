@@ -124,7 +124,13 @@ public class PermissionAttribute {
     ARTIFACT(APP), /**
                     * User resource.
                     */
-    USER(ACCOUNT);
+    CLOUD(ACCOUNT), /**
+                     * User resource.
+                     */
+    USER(ACCOUNT), /**
+                    * User resource.
+                    */
+    SETTING(ACCOUNT);
 
     private ImmutableMap<Action, PermissionScope> actionPermissionScopeMap;
 

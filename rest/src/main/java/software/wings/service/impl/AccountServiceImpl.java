@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
+import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 
@@ -55,6 +56,13 @@ public class AccountServiceImpl implements AccountService {
                                                    .withName(ACCOUNT_ADMIN.getDisplayName())
                                                    .withRoleType(ACCOUNT_ADMIN)
                                                    .build()),
+        roleService.save(aRole()
+                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAccountId(account.getUuid())
+                             .withName(APPLICATION_ADMIN.getDisplayName())
+                             .withRoleType(APPLICATION_ADMIN)
+                             .withAllApps(true)
+                             .build()),
         roleService.save(aRole()
                              .withAppId(Base.GLOBAL_APP_ID)
                              .withAccountId(account.getUuid())

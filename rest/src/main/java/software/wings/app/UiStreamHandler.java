@@ -23,7 +23,6 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.common.cache.ResponseCodeCache;
-import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.EventEmitter.Channel;
@@ -73,8 +72,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         PermissionAttribute permissionAttribute =
             new PermissionAttribute(channel.getPermission(), channel.getScope(), "GET");
 
-        authService.authorize(
-            accountId, appId, envId, authToken.getUser(), asList(permissionAttribute), PageRequestType.OTHER);
+        authService.authorize(accountId, appId, envId, authToken.getUser(), asList(permissionAttribute), null);
 
       } catch (WingsException e) {
         sendError(resource, e.getResponseMessageList().get(0).getCode());

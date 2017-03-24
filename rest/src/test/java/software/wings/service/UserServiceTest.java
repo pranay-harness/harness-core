@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
@@ -18,9 +19,16 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
+import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
+import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -37,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import freemarker.template.TemplateException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +60,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AccountRole;
+import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -62,12 +73,16 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -87,6 +102,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AccountService accountService;
+  @Mock private AppService appService;
   @Inject @InjectMocks private UserService userService;
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
@@ -344,5 +360,47 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(BCrypt.checkpw(USER_PASSWORD, savedUser.getPasswordHash())).isTrue();
     assertThat(savedUser.isEmailVerified()).isTrue();
     assertThat(savedUser).hasFieldOrPropertyWithValue("email", USER_EMAIL);
+  }
+
+  @Test
+  public void shouldGetAccountRole() {
+    List<Role> roles =
+        asList(aRole().withUuid(getUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build());
+
+    AccountRole userAccountRole = userService.getUserAccountRole(USER_ID, ACCOUNT_ID);
+    assertThat(userAccountRole)
+        .isNotNull()
+        .extracting("accountId", "accountName", "allApps")
+        .containsExactly(ACCOUNT_ID, ACCOUNT_NAME, true);
+    assertThat(userAccountRole.getResourceAccess()).isNotNull();
+    for (ResourceType resourceType : ResourceType.values()) {
+      for (Action action : Action.values()) {
+        assertThat(userAccountRole.getResourceAccess()).contains(ImmutablePair.of(resourceType, action));
+      }
+    }
+  }
+
+  @Test
+  public void shouldGetApplicationRole() {
+    List<Role> roles =
+        asList(aRole().withUuid(getUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
+    when(appService.get(APP_ID))
+        .thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build());
+
+    ApplicationRole applicationRole = userService.getUserApplicationRole(USER_ID, APP_ID);
+    assertThat(applicationRole)
+        .isNotNull()
+        .extracting("appId", "appName", "allEnvironments")
+        .containsExactly(APP_ID, APP_NAME, true);
+    assertThat(applicationRole.getResourceAccess()).isNotNull();
+    for (ResourceType resourceType : Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+      for (Action action : Action.values()) {
+        assertThat(applicationRole.getResourceAccess()).contains(ImmutablePair.of(resourceType, action));
+      }
+    }
   }
 }

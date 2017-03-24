@@ -2,8 +2,8 @@ package software.wings.service.intfc;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.security.PermissionAttribute;
+import software.wings.security.UserRequestInfo;
 
 import java.util.List;
 
@@ -21,16 +21,15 @@ public interface AuthService {
 
   /**
    * Authorize.
-   *
    * @param accountId
    * @param appId                the app id
    * @param envId                the env id
    * @param user                 the user
    * @param permissionAttributes the permission attributes
-   * @param requestType          the request type
+   * @param userRequestInfo
    */
   void authorize(String accountId, String appId, String envId, User user,
-      List<PermissionAttribute> permissionAttributes, PageRequestType requestType);
+      List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo);
 
   void validateDelegateToken(String accountId, String tokenString);
 }

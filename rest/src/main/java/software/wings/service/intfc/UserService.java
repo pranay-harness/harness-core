@@ -2,6 +2,8 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.AccountRole;
+import software.wings.beans.ApplicationRole;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
@@ -125,4 +127,8 @@ public interface UserService {
    * @return the user invite
    */
   UserInvite deleteInvite(String accountId, String inviteId);
+
+  AccountRole getUserAccountRole(String userId, String accountId);
+
+  ApplicationRole getUserApplicationRole(String userId, String appId);
 }

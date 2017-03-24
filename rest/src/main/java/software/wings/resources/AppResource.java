@@ -12,8 +12,10 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -59,10 +61,12 @@ public class AppResource {
    * @return the rest response
    */
   @GET
+  @ListAPI(APPLICATION)
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays,
-      @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions) {
+      @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions,
+      @QueryParam("appIds") List<String> appIds) {
     return new RestResponse<>(appService.list(pageRequest, overview, numberOfExecutions, overviewDays));
   }
 
