@@ -4,9 +4,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
+import software.wings.licensing.LicenseManager;
 import software.wings.service.intfc.AccountService;
 
 import javax.inject.Inject;
@@ -15,7 +18,9 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 10/11/16.
  */
 public class AccountServiceTest extends WingsBaseTest {
-  @Inject private AccountService accountService;
+  @Mock private LicenseManager licenseManager;
+
+  @InjectMocks @Inject private AccountService accountService;
 
   @Inject private WingsPersistence wingsPersistence;
 

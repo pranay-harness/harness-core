@@ -115,8 +115,21 @@ public interface UserService {
    */
   PageResponse<UserInvite> listInvites(PageRequest<UserInvite> pageRequest);
 
+  /**
+   * Gets invite.
+   *
+   * @param accountId the account id
+   * @param inviteId  the invite id
+   * @return the invite
+   */
   UserInvite getInvite(String accountId, String inviteId);
 
+  /**
+   * Complete invite user invite.
+   *
+   * @param userInvite the user invite
+   * @return the user invite
+   */
   UserInvite completeInvite(UserInvite userInvite);
 
   /**
@@ -131,4 +144,21 @@ public interface UserService {
   AccountRole getUserAccountRole(String userId, String accountId);
 
   ApplicationRole getUserApplicationRole(String userId, String appId);
+
+  /**
+   * Reset password boolean.
+   *
+   * @param emailId the email id
+   * @return the boolean
+   */
+  boolean resetPassword(String emailId);
+
+  /**
+   * Update password boolean.
+   *
+   * @param resetPasswordToken the reset password token
+   * @param password           the password
+   * @return the boolean
+   */
+  boolean updatePassword(String resetPasswordToken, String password);
 }

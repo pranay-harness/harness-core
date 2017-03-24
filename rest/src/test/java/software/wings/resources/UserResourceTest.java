@@ -62,11 +62,7 @@ public class UserResourceTest {
                                                         .get(new GenericType<RestResponse<PageResponse<User>>>() {});
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
-    PageRequest<User> expectedPageRequest = new PageRequest<>();
-    expectedPageRequest.setOffset("0");
-    expectedPageRequest.setLimit("50");
-
-    verify(USER_SERVICE).list(expectedPageRequest);
+    verify(USER_SERVICE).list(any(PageRequest.class));
   }
 
   @Test(expected = BadRequestException.class)

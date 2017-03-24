@@ -17,4 +17,5 @@
     <file path="account-role.js"/>
     <file path="config-files-index-migration.js"/>
     <file path="standard-role-permissions.js" />
+    <file path="license-migration.js" />
 </changeFiles>

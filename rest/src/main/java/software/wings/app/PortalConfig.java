@@ -22,7 +22,7 @@ public class PortalConfig {
   @JsonProperty(defaultValue = "/app/%s/overview") private String applicationOverviewUrlPattern = "/app/%s/overview";
   @JsonProperty(defaultValue = "/app/%s/env/%s/execution/%s/detail")
   private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
-
+  private String jwtPasswordSecret;
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**
@@ -141,6 +141,14 @@ public class PortalConfig {
    */
   public void setApplicationOverviewUrlPattern(String applicationOverviewUrlPattern) {
     this.applicationOverviewUrlPattern = applicationOverviewUrlPattern;
+  }
+
+  public String getJwtPasswordSecret() {
+    return jwtPasswordSecret;
+  }
+
+  public void setJwtPasswordSecret(String jwtPasswordSecret) {
+    this.jwtPasswordSecret = jwtPasswordSecret;
   }
 
   /**

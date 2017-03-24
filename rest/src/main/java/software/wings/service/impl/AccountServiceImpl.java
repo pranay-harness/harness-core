@@ -19,6 +19,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.licensing.LicenseManager;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.RoleService;
 
@@ -41,9 +42,12 @@ public class AccountServiceImpl implements AccountService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
+  @Inject private LicenseManager licenseManager;
 
   @Override
   public Account save(@Valid Account account) {
+    account.setAccountKey(generateAccountKey());
+    licenseManager.setLicense(account);
     wingsPersistence.save(account);
     createDefaultRoles(account);
     return account;

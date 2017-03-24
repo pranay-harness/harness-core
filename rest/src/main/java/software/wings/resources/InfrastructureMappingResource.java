@@ -6,8 +6,8 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.HostValidationResponse;
 import software.wings.beans.HostValidationRequest;
+import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -150,10 +150,10 @@ public class InfrastructureMappingResource {
   }
 
   @GET
-  @Path("compute-providers/{computeProviderId}/roles")
-  public RestResponse<List<String>> getRoles(@QueryParam("appId") String appId,
+  @Path("compute-providers/{computeProviderId}/instance-roles")
+  public RestResponse<List<String>> getInstanceRoles(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listRoles(appId, deploymentType, computeProviderId));
+    return new RestResponse<>(infrastructureMappingService.listInstanceRoles(appId, deploymentType, computeProviderId));
   }
 
   @GET
@@ -161,5 +161,28 @@ public class InfrastructureMappingResource {
   public RestResponse<List<String>> getNetworks(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listNetworks(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/roles")
+  public RestResponse<Map<String, String>> getRoles(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listAllRoles(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/load-balancers")
+  public RestResponse<List<String>> getLoadBalancers(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listLoadBalancers(appId, deploymentType, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/load-balancer/{loadbalancerName}/target-groups")
+  public RestResponse<Map<String, String>> getTargetGroups(@QueryParam("appId") String appId,
+      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId,
+      @PathParam("loadbalancerName") String loadbalancerName) {
+    return new RestResponse<>(
+        infrastructureMappingService.listTargetGroups(appId, deploymentType, computeProviderId, loadbalancerName));
   }
 }

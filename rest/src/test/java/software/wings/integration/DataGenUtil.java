@@ -16,6 +16,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -40,6 +41,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
+import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -55,9 +57,11 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -65,6 +69,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.License;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -94,6 +99,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -242,7 +248,7 @@ private void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
  */
 @Test
 public void populateData() throws IOException {
-  addDefaultRoleAndUsers();
+  createLicenseAndDefaultUser();
   createGlobalSettings();
 
   List<Application> apps = createApplications();
@@ -260,37 +266,27 @@ public void populateData() throws IOException {
   }
 }
 
-private void addDefaultRoleAndUsers() {
-  // TODO: Not needed
-  //    accountId = wingsPersistence
-  //        .save(anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("2f6b0988b6fb3370073c3d0505baee59").withCompanyName("Wings
-  //        Software").build());
-  //    Role administrator =
-  //    aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Administrator").withPermissions(
-  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(ALL).build(),
-  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(EnvironmentType.ALL).withResourceType(ANY).withAction(ALL)
-  //                .build())).withRoleType(RoleType.ACCOUNT_ADMIN) .build();
-  //
-  //    Role engineers = aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Software
-  //    Engineering").withPermissions(
-  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(ALL).build(),
-  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(NON_PROD).withResourceType(ANY).withAction(ALL).build())).build();
-  //
-  //    Role operation = aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Operation
-  //    Engineering").withPermissions(
-  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(READ).build(),
-  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(EnvironmentType.ALL).withResourceType(ANY).withAction(ALL)
-  //                .build())).build();
-  //
-  //    Role quality = aRole().withAppId(Base.GLOBAL_APP_ID).withAccountId(accountId).withName("Quality
-  //    Engineering").withPermissions(
-  //        asList(aPermission().withPermissionScope(APP).withAppId(GLOBAL_APP_ID).withResourceType(ANY).withAction(READ).build(),
-  //            aPermission().withPermissionScope(ENV).withAppId(GLOBAL_APP_ID).withEnvironmentType(EnvironmentType.NON_PROD).withResourceType(ANY).withAction(ALL)
-  //                .build())).build();
-  //
-  //    wingsPersistence.save(asList(administrator, engineers, operation, quality));
-  //
-  //    addAdminUser();
+private void createLicenseAndDefaultUser() {
+  License license =
+      aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
+  wingsPersistence.save(license);
+  addAdminUser();
+  Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
+  String oldAccountId = account.getUuid();
+  account.setAccountKey("2f6b0988b6fb3370073c3d0505baee59");
+  account.setUuid("kmpySmUISimoRrJL6NL73w");
+  accountId = "kmpySmUISimoRrJL6NL73w";
+  wingsPersistence.delete(Account.class, oldAccountId);
+  wingsPersistence.save(account);
+
+  UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
+  userUpdateOperations.set("accounts", Lists.newArrayList("kmpySmUISimoRrJL6NL73w"));
+  wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
+
+  UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
+  roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
+  wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
+  loginAdminUser();
 }
 
 private void addAdminUser() {
@@ -309,12 +305,13 @@ private void addAdminUser() {
                                   aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
                               .build())
                       .getResponse())
+              .withAccountName("Wings Software")
+              .withCompanyName("Wings Software")
               .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
-  loginAdminUser();
 }
 
 private void loginAdminUser() {
@@ -513,7 +510,7 @@ private String createLoadBalancerConfig(String appId, String envId, String lbNam
 private List<Application> createApplications() {
   List<Application> apps = new ArrayList<>();
 
-  WebTarget target = client.target(API_BASE + "/apps/");
+  WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
 
   for (int i = 0; i < NUM_APPS; i++) {
     String name = getName(appNames);
