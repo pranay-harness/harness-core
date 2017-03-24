@@ -77,4 +77,6 @@ public interface Stencil<T> {
    * @return the state
    */
   @JsonIgnore T newInstance(String id);
+
+  boolean matches(Object context);
 }

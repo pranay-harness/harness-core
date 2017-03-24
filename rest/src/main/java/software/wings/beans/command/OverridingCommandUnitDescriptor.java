@@ -90,4 +90,9 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
   public Integer getDisplayOrder() {
     return commandUnitDescriptor == null ? DEFAULT_DISPLAY_ORDER : commandUnitDescriptor.getDisplayOrder();
   }
+
+  @Override
+  public boolean matches(Object context) {
+    return commandUnitDescriptor.matches(context);
+  }
 }

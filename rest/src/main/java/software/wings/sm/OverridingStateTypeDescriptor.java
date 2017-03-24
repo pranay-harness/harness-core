@@ -133,4 +133,9 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
   public Integer getDisplayOrder() {
     return stateTypeDescriptor == null ? DEFAULT_DISPLAY_ORDER : stateTypeDescriptor.getDisplayOrder();
   }
+
+  @Override
+  public boolean matches(Object context) {
+    return stateTypeDescriptor.matches(context);
+  }
 }

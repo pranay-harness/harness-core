@@ -1,9 +1,12 @@
 package software.wings.beans.container;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
+import static org.joor.Reflect.on;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.api.DeploymentType;
 import software.wings.beans.OverridingContainerTaskTypeDescriptor;
 import software.wings.exception.WingsException;
@@ -13,8 +16,6 @@ import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;
-
-import static org.joor.Reflect.on;
 
 /**
  * Created by anubhaw on 2/6/17.
@@ -96,5 +97,10 @@ public enum ContainerTaskType implements ContainerTaskTypeDescriptor {
   @Override
   public ContainerTask newInstance(String id) {
     return on(containerTaskClass).create().get();
+  }
+
+  @Override
+  public boolean matches(Object context) {
+    return true;
   }
 }
