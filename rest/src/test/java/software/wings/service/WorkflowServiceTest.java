@@ -529,6 +529,20 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void stencilsForWorkflow()
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    OrchestrationWorkflow orchestrationWorkflow = createOrchestrationWorkflow();
+    Map<StateTypeScope, List<Stencil>> stencils =
+        workflowService.stencils(APP_ID, orchestrationWorkflow.getUuid(), null);
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils).isNotNull().hasSize(3).containsKeys(
+        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(Stencil::getType)
+        .contains("REPEAT", "FORK");
+  }
+
+  @Test
   public void shouldCreateWorkflowFailure() {
     WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(appId);
   }
