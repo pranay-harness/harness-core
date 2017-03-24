@@ -60,6 +60,7 @@ import software.wings.utils.Validator;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -292,7 +293,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting);
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @Override
@@ -305,7 +306,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listAMIs(computeProviderSetting, region);
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @Override
@@ -318,7 +319,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listRegions(computeProviderSetting);
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @Override
@@ -331,11 +332,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listInstanceTypes(computeProviderSetting);
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @Override
-  public List<String> listRoles(String appId, String deploymentType, String computeProviderId) {
+  public List<String> listInstanceRoles(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listIAMInstanceRoles(computeProviderSetting);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("ComputeProvider", computeProviderSetting);
 
@@ -344,7 +358,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listIAMRoles(computeProviderSetting);
     }
-    return new ArrayList<>();
+    return Collections.emptyMap();
   }
 
   @Override
@@ -357,7 +371,34 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listVPCs(computeProviderSetting);
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> listLoadBalancers(String appId, String deploymentType, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listLoadBalancers(computeProviderSetting);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public Map<String, String> listTargetGroups(
+      String appId, String deploymentType, String computeProviderId, String loadBalancerName) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listTargetGroups(computeProviderSetting, loadBalancerName);
+    }
+    return Collections.emptyMap();
   }
 
   @Override
@@ -507,7 +548,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .map(Host::getHostName)
           .collect(Collectors.toList());
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   @Override
@@ -534,7 +575,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       Validator.notNullCheck("ComputeProvider", computeProviderSetting);
       return infrastructureProvider.listLaunchConfigurations(computeProviderSetting);
     }
-    return new ArrayList<>();
+    return Collections.emptyList();
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
