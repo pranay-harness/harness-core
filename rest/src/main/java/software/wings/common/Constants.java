@@ -117,6 +117,4 @@ public interface Constants {
   String WRAP_UP = "Wrap Up";
   String PROVISION_NODE_NAME = "Provision Nodes";
   String DE_PROVISION_NODE = "De-Provision Nodes";
-
-  String USER_REQUEST_INFO = "USER_REQUEST_INFO";
 }

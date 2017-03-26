@@ -11,6 +11,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.EnvironmentRole.EnvironmentRoleBuilder.anEnvironmentRole;
 import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
@@ -23,6 +24,7 @@ import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_NAME;
@@ -222,6 +224,15 @@ public class SecureResourceTest {
         .thenReturn(anAccountRole()
                         .withAccountId(ACCOUNT_ID)
                         .withApplicationRoles(ImmutableList.of(anApplicationRole().withAppId(APP_ID).build()))
+                        .build());
+    when(userService.getUserApplicationRole(USER_ID, APP_ID))
+        .thenReturn(anApplicationRole()
+                        .withAppId(APP_ID)
+                        .withEnvironmentRoles(ImmutableList.of(anEnvironmentRole()
+                                                                   .withEnvId(ENV_ID)
+                                                                   .withEnvName(ENV_NAME)
+                                                                   .withEnvironmentType(EnvironmentType.PROD)
+                                                                   .build()))
                         .build());
   }
 

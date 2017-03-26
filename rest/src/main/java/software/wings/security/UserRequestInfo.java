@@ -16,6 +16,8 @@ public class UserRequestInfo {
   private ImmutableList<String> allowedAppIds;
   private ImmutableList<String> allowedEnvIds;
 
+  private ImmutableList<PermissionAttribute> permissionAttributes;
+
   public String getAccountId() {
     return accountId;
   }
@@ -72,6 +74,14 @@ public class UserRequestInfo {
     this.allowedEnvIds = allowedEnvIds;
   }
 
+  public ImmutableList<PermissionAttribute> getPermissionAttributes() {
+    return permissionAttributes;
+  }
+
+  void setPermissionAttributes(ImmutableList<PermissionAttribute> permissionAttributes) {
+    this.permissionAttributes = permissionAttributes;
+  }
+
   public static final class UserRequestInfoBuilder {
     private String accountId;
     private String appId;
@@ -80,6 +90,7 @@ public class UserRequestInfo {
     private boolean allEnvironmentsAllowed;
     private ImmutableList<String> allowedAppIds;
     private ImmutableList<String> allowedEnvIds;
+    private ImmutableList<PermissionAttribute> permissionAttributes;
 
     private UserRequestInfoBuilder() {}
 
@@ -122,6 +133,11 @@ public class UserRequestInfo {
       return this;
     }
 
+    public UserRequestInfoBuilder withPermissionAttributes(ImmutableList<PermissionAttribute> permissionAttributes) {
+      this.permissionAttributes = permissionAttributes;
+      return this;
+    }
+
     public UserRequestInfo build() {
       UserRequestInfo userRequestInfo = new UserRequestInfo();
       userRequestInfo.setAccountId(accountId);
@@ -131,6 +147,7 @@ public class UserRequestInfo {
       userRequestInfo.setAllEnvironmentsAllowed(allEnvironmentsAllowed);
       userRequestInfo.setAllowedAppIds(allowedAppIds);
       userRequestInfo.setAllowedEnvIds(allowedEnvIds);
+      userRequestInfo.setPermissionAttributes(permissionAttributes);
       return userRequestInfo;
     }
   }

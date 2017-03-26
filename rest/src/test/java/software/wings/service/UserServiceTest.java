@@ -384,6 +384,31 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldGetAccountForAllApsAdminRole() {
+    List<Role> roles = asList(aRole()
+                                  .withUuid(getUuid())
+                                  .withRoleType(RoleType.APPLICATION_ADMIN)
+                                  .withAccountId(ACCOUNT_ID)
+                                  .withAllApps(true)
+                                  .build());
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build());
+
+    AccountRole userAccountRole = userService.getUserAccountRole(USER_ID, ACCOUNT_ID);
+    assertThat(userAccountRole)
+        .isNotNull()
+        .extracting("accountId", "accountName", "allApps")
+        .containsExactly(ACCOUNT_ID, ACCOUNT_NAME, true);
+    assertThat(userAccountRole.getResourceAccess()).isNotNull();
+    for (ResourceType resourceType : Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+      for (Action action : Action.values()) {
+        assertThat(userAccountRole.getResourceAccess()).contains(ImmutablePair.of(resourceType, action));
+      }
+    }
+  }
+
+  @Test
   public void shouldGetApplicationRole() {
     List<Role> roles =
         asList(aRole().withUuid(getUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());

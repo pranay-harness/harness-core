@@ -158,7 +158,7 @@ public class AuthServiceImpl implements AuthService {
 
   private boolean roleAuthorizedWithAccessType(Role role, PermissionAttribute permissionAttribute, String accountId,
       String appId, String envId, EnvironmentType envType, UserRequestInfo userRequestInfo) {
-    if (appId == null || role.getPermissions() == null) {
+    if (role.getPermissions() == null) {
       return false;
     }
 

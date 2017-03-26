@@ -14,11 +14,11 @@ import com.google.common.collect.ImmutableList;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
+import software.wings.beans.EnvironmentRole;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionScope;
@@ -120,9 +120,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     UserRequestInfoBuilder userRequestInfoBuilder =
-        anUserRequestInfo().withAccountId(accountId).withAppId(appId).withEnvId(envId);
+        anUserRequestInfo().withAccountId(accountId).withAppId(appId).withEnvId(envId).withPermissionAttributes(
+            ImmutableList.copyOf(requiredPermissionAttributes));
+
     if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
-      userRequestInfoBuilder.withAllAppsAllowed(true);
+      userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
     } else {
       AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
       ImmutableList<String> appIds = copyOf(userAccountRole.getApplicationRoles()
@@ -130,11 +132,26 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                                                 .map(ApplicationRole::getAppId)
                                                 .distinct()
                                                 .collect(Collectors.toList()));
+
+      if (appId != null) {
+        if (user.isAppAdmin(accountId, appId)) {
+          userRequestInfoBuilder.withAllEnvironmentsAllowed(true);
+        } else {
+          ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
+          ImmutableList<String> envIds = copyOf(applicationRole.getEnvironmentRoles()
+                                                    .stream()
+                                                    .map(EnvironmentRole::getEnvId)
+                                                    .distinct()
+                                                    .collect(Collectors.toList()));
+          userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+        }
+      }
+
       userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(appIds);
     }
 
     UserRequestInfo userRequestInfo = userRequestInfoBuilder.build();
-    requestContext.setProperty(Constants.USER_REQUEST_INFO, userRequestInfo);
+    user.setUserRequestInfo(userRequestInfo);
 
     authService.authorize(accountId, appId, envId, user, requiredPermissionAttributes, userRequestInfo);
   }

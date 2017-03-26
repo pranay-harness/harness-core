@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.UserRequestInfo;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -51,7 +52,10 @@ public class User extends Base implements Principal {
   private String lastAccountId;
 
   private String lastAppId;
+
   @JsonIgnore private long passwordChangedAt;
+
+  @JsonIgnore @Transient private UserRequestInfo userRequestInfo;
 
   /**
    * Return partial user object without sensitive information.
@@ -84,7 +88,7 @@ public class User extends Base implements Principal {
         && roles.stream()
                .filter(role
                    -> role.getRoleType() == RoleType.APPLICATION_ADMIN && role.getAccountId() != null
-                       && role.getAccountId().equals(accountId) && role.isAllApps() && role.getPermissions() == null)
+                       && role.getAccountId().equals(accountId) && role.isAllApps())
                .findFirst()
                .isPresent();
   }
@@ -345,6 +349,14 @@ public class User extends Base implements Principal {
 
   public void setLastAppId(String lastAppId) {
     this.lastAppId = lastAppId;
+  }
+
+  public UserRequestInfo getUserRequestInfo() {
+    return userRequestInfo;
+  }
+
+  public void setUserRequestInfo(UserRequestInfo userRequestInfo) {
+    this.userRequestInfo = userRequestInfo;
   }
 
   @Override

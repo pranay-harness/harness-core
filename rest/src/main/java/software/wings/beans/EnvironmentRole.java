@@ -46,4 +46,46 @@ public class EnvironmentRole {
   public void setResourceAccess(Map<ResourceType, Action> resourceAccess) {
     this.resourceAccess = resourceAccess;
   }
+
+  public static final class EnvironmentRoleBuilder {
+    private String envId;
+    private String envName;
+    private EnvironmentType environmentType;
+    private Map<ResourceType, Action> resourceAccess;
+
+    private EnvironmentRoleBuilder() {}
+
+    public static EnvironmentRoleBuilder anEnvironmentRole() {
+      return new EnvironmentRoleBuilder();
+    }
+
+    public EnvironmentRoleBuilder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public EnvironmentRoleBuilder withEnvName(String envName) {
+      this.envName = envName;
+      return this;
+    }
+
+    public EnvironmentRoleBuilder withEnvironmentType(EnvironmentType environmentType) {
+      this.environmentType = environmentType;
+      return this;
+    }
+
+    public EnvironmentRoleBuilder withResourceAccess(Map<ResourceType, Action> resourceAccess) {
+      this.resourceAccess = resourceAccess;
+      return this;
+    }
+
+    public EnvironmentRole build() {
+      EnvironmentRole environmentRole = new EnvironmentRole();
+      environmentRole.setEnvId(envId);
+      environmentRole.setEnvName(envName);
+      environmentRole.setEnvironmentType(environmentType);
+      environmentRole.setResourceAccess(resourceAccess);
+      return environmentRole;
+    }
+  }
 }
