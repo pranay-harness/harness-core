@@ -1,11 +1,24 @@
 [![Build Status](http://wingsbuild:0db28aa0f4fc0685df9a216fc7af0ca96254b7c2@ec2-54-174-51-35.compute-1.amazonaws.com/job/portal/buildStatus/icon)](http://wingsbuild:0db28aa0f4fc0685df9a216fc7af0ca96254b7c2@ec2-54-174-51-35.compute-1.amazonaws.com/job/portal/)
 
-Wings Project Setup instructions :
-1) Maven download : https://maven.apache.org/download.cgi 
+Wings Project Dev environment setup instructions :
 
-2) Project Checkout from repository:  https://github.com/wings-software/wings
+On MacOS
 
-3) Set up Project:
+Prerequisities
+
+1) Install Homebrew : /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" 
+2) Install Java download : brew cask install java
+3) Install maven : brew install maven 
+4) Install mongo : brew install mongo
+5) Install npm : brew install npm
+
+Build 
+
+1) Clone form git repository:  https://github.com/wings-software/wings
+2) Install IntelliJ community edition 
+Ide Setup
+
+2) Install IntelliJ community edition 
     Intellij Setup:
     a. Import portal in intellij as maven project. 
     b. Import codeStyle/intellij-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
