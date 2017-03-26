@@ -58,6 +58,11 @@ public class OverridingArtifactStreamDescriptor
   }
 
   @Override
+  public boolean matches(Object context) {
+    return artifactStreamTypeDescriptor.matches(context);
+  }
+
+  @Override
   public JsonNode getOverridingJsonSchema() {
     return overridingJsonSchema.orElse(null);
   }

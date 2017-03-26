@@ -5,6 +5,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -89,6 +90,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.TransitionType;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
@@ -103,6 +105,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -166,7 +169,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
-  public Map<StateTypeScope, List<Stencil>> stencils(String appId, StateTypeScope... stateTypeScopes) {
+  public Map<StateTypeScope, List<Stencil>> stencils(
+      String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
     Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
 
     Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
@@ -180,8 +184,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         maps.put(scope, mapByScope.get(scope));
       }
     }
-
     maps.values().forEach(list -> { Collections.sort(list, stencilDefaultSorter); });
+
+    boolean filterForWorkflow = isNotBlank(workflowId);
+    boolean filterForPhase = filterForWorkflow && isNotBlank(phaseId);
+
+    Predicate<Stencil> predicate = stencil -> true;
+    if (filterForWorkflow) {
+      OrchestrationWorkflow orchestrationWorkflow = readOrchestrationWorkflow(appId, workflowId);
+      if (filterForPhase) {
+        WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+        predicate =
+            stencil -> stencil.matches(infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId()));
+      } else {
+        predicate = stencil
+            -> stencil.getStencilCategory() != StencilCategory.COMMANDS
+            && stencil.getStencilCategory() != StencilCategory.CLOUD;
+      }
+    }
+
+    Predicate<Stencil> finalPredicate = predicate;
+    maps = maps.entrySet().stream().collect(toMap(Entry::getKey,
+        stateTypeScopeListEntry
+        -> stateTypeScopeListEntry.getValue().stream().filter(finalPredicate).collect(toList())));
 
     return maps;
   }
@@ -227,7 +252,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<String, StateTypeDescriptor> stencilMap() {
     if (cachedStencilMap == null) {
-      stencils(null);
+      stencils(null, null, null);
     }
     return cachedStencilMap;
   }

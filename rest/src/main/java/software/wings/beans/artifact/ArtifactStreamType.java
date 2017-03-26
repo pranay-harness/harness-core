@@ -109,4 +109,9 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
       throw new WingsException("Error in initializing CommandUnitType-" + file, exception);
     }
   }
+
+  @Override
+  public boolean matches(Object context) {
+    return true;
+  }
 }

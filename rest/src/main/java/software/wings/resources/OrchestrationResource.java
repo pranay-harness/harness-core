@@ -132,8 +132,10 @@ public class OrchestrationResource {
    */
   @GET
   @Path("stencils")
-  public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
-    return new RestResponse<>(workflowService.stencils(appId, StateTypeScope.ORCHESTRATION_STENCILS)
-                                  .get(StateTypeScope.ORCHESTRATION_STENCILS));
+  public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @QueryParam("workflowId") String workflowId, @QueryParam("phaseId") String phaseId) {
+    return new RestResponse<>(
+        workflowService.stencils(appId, workflowId, phaseId, StateTypeScope.ORCHESTRATION_STENCILS)
+            .get(StateTypeScope.ORCHESTRATION_STENCILS));
   }
 }

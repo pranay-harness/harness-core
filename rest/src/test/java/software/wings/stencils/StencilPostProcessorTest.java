@@ -296,6 +296,11 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     }
 
     @Override
+    public boolean matches(Object context) {
+      return true;
+    }
+
+    @Override
     public StencilCategory getStencilCategory() {
       return StencilCategory.OTHERS;
     }
@@ -356,6 +361,11 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     @Override
     public ExpandStencilObject newInstance(String id) {
       return stencilType.newInstance(id);
+    }
+
+    @Override
+    public boolean matches(Object context) {
+      return stencilType.matches(context);
     }
 
     @Override

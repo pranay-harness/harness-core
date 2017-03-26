@@ -282,7 +282,7 @@ public class PipelineServiceImpl implements PipelineService {
   public Pipeline createPipeline(Pipeline pipeline) {
     validatePipeline(pipeline);
     pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null);
+    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null, null, null);
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
     return pipeline;
   }

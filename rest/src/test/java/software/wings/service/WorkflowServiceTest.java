@@ -477,7 +477,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void stencils()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID);
+    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, null, null);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(3).containsKeys(
         StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE);
@@ -497,7 +497,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void stencilsForPipeline()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, StateTypeScope.PIPELINE_STENCILS);
+    Map<StateTypeScope, List<Stencil>> stencils =
+        workflowService.stencils(APP_ID, null, null, StateTypeScope.PIPELINE_STENCILS);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.PIPELINE_STENCILS);
     assertThat(stencils.get(StateTypeScope.PIPELINE_STENCILS))
@@ -518,12 +519,26 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void stencilsForOrchestration()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
     Map<StateTypeScope, List<Stencil>> stencils =
-        workflowService.stencils(APP_ID, StateTypeScope.ORCHESTRATION_STENCILS);
+        workflowService.stencils(APP_ID, null, null, StateTypeScope.ORCHESTRATION_STENCILS);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
+        .contains("REPEAT", "FORK");
+  }
+
+  @Test
+  public void stencilsForWorkflow()
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    OrchestrationWorkflow orchestrationWorkflow = createOrchestrationWorkflow();
+    Map<StateTypeScope, List<Stencil>> stencils =
+        workflowService.stencils(APP_ID, orchestrationWorkflow.getUuid(), null);
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils).isNotNull().hasSize(3).containsKeys(
+        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(Stencil::getType)
         .contains("REPEAT", "FORK");
   }
 

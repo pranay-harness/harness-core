@@ -60,6 +60,11 @@ public class OverridingContainerTaskTypeDescriptor
   }
 
   @Override
+  public boolean matches(Object context) {
+    return containerTaskTypeDescriptor.matches(context);
+  }
+
+  @Override
   public JsonNode getOverridingJsonSchema() {
     return overridingJsonSchema.orElse(null);
   }
