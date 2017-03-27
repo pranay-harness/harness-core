@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 
 import com.google.inject.Inject;
 
@@ -12,7 +13,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.EnvironmentService;
 
@@ -47,7 +47,7 @@ public class EnvironmentResource {
    * @return the rest response
    */
   @GET
-  @ListAPI(ResourceType.ENVIRONMENT)
+  @ListAPI(ENVIRONMENT)
   public RestResponse<PageResponse<Environment>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);

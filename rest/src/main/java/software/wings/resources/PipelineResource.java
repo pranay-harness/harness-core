@@ -163,7 +163,7 @@ public class PipelineResource {
   @GET
   @Path("stencils")
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
-    return new RestResponse<>(
-        workflowService.stencils(appId, StateTypeScope.PIPELINE_STENCILS).get(StateTypeScope.PIPELINE_STENCILS));
+    return new RestResponse<>(workflowService.stencils(appId, null, null, StateTypeScope.PIPELINE_STENCILS)
+                                  .get(StateTypeScope.PIPELINE_STENCILS));
   }
 }

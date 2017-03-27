@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
+import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
 import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
@@ -15,7 +17,14 @@ import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
+import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
+import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
@@ -27,6 +36,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import freemarker.template.TemplateException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
@@ -37,6 +47,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountRole;
+import software.wings.beans.Application;
+import software.wings.beans.ApplicationRole;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.ErrorCode;
@@ -49,8 +62,11 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -59,6 +75,7 @@ import software.wings.utils.KryoUtils;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -84,6 +101,7 @@ public class UserServiceImpl implements UserService {
   @Inject private RoleService roleService;
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
+  @Inject private AppService appService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -489,6 +507,68 @@ public class UserServiceImpl implements UserService {
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
     return wingsPersistence.get(User.class, userId);
+  }
+
+  @Override
+  public AccountRole getUserAccountRole(String userId, String accountId) {
+    Account account = accountService.get(accountId);
+    User user = get(userId);
+
+    if (user.isAccountAdmin(accountId)) {
+      ImmutableList.Builder<ImmutablePair<ResourceType, Action>> builder = ImmutableList.builder();
+      for (ResourceType resourceType : ResourceType.values()) {
+        for (Action action : Action.values()) {
+          builder.add(ImmutablePair.of(resourceType, action));
+        }
+      }
+      return anAccountRole()
+          .withAccountId(accountId)
+          .withAccountName(account.getAccountName())
+          .withAllApps(true)
+          .withResourceAccess(builder.build())
+          .build();
+
+    } else if (user.isAllAppAdmin(accountId)) {
+      ImmutableList.Builder<ImmutablePair<ResourceType, Action>> builder = ImmutableList.builder();
+      for (ResourceType resourceType :
+          Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+        for (Action action : Action.values()) {
+          builder.add(ImmutablePair.of(resourceType, action));
+        }
+      }
+      return anAccountRole()
+          .withAccountId(accountId)
+          .withAccountName(account.getAccountName())
+          .withAllApps(true)
+          .withResourceAccess(builder.build())
+          .build();
+    }
+    return null;
+  }
+
+  @Override
+  public ApplicationRole getUserApplicationRole(String userId, String appId) {
+    Application application = appService.get(appId);
+    User user = get(userId);
+    if (user.isAccountAdmin(application.getAccountId()) || user.isAppAdmin(application.getAccountId(), appId)) {
+      ImmutableList.Builder<ImmutablePair<ResourceType, Action>> builder = ImmutableList.builder();
+      for (ResourceType resourceType :
+          Arrays.asList(APPLICATION, SERVICE, ARTIFACT, DEPLOYMENT, WORKFLOW, ENVIRONMENT)) {
+        for (Action action : Action.values()) {
+          builder.add(ImmutablePair.of(resourceType, action));
+        }
+      }
+      return anApplicationRole()
+          .withAppId(appId)
+          .withAppName(application.getName())
+          .withAllEnvironments(true)
+          .withResourceAccess(builder.build())
+          .build();
+    } else {
+      // TODO - for Prod support and non prod support
+    }
+
+    return null;
   }
 
   private Role ensureRolePresent(String roleId) {

@@ -92,7 +92,8 @@ public interface WorkflowService {
    * @param stateTypeScopes the state type scopes
    * @return the map
    */
-  Map<StateTypeScope, List<Stencil>> stencils(String appId, StateTypeScope... stateTypeScopes);
+  Map<StateTypeScope, List<Stencil>> stencils(
+      String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes);
 
   /**
    * List orchestration.

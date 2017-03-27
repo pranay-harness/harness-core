@@ -178,9 +178,16 @@ public interface InfrastructureMappingService {
 
   List<String> listInstanceTypes(String appId, String deploymentType, String computeProviderId);
 
-  List<String> listRoles(String appId, String deploymentType, String computeProviderId);
+  List<String> listInstanceRoles(String appId, String deploymentType, String computeProviderId);
+
+  Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId);
 
   List<String> listNetworks(String appId, String deploymentType, String computeProviderId);
+
+  List<String> listLoadBalancers(String appId, String deploymentType, String computeProviderId);
+
+  Map<String, String> listTargetGroups(
+      String appId, String deploymentType, String computeProviderId, String loadBalancerName);
 
   /**
    * Validate host host name validation response.

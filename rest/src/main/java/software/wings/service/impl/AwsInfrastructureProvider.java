@@ -1,5 +1,16 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
+import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
+import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+
+import com.google.common.collect.Lists;
+
 import ch.qos.logback.classic.Level;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -21,18 +32,25 @@ import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
+import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
+import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
+import com.amazonaws.services.identitymanagement.model.ListRolesRequest;
+import com.amazonaws.services.identitymanagement.model.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.collect.Lists;
 import io.dropwizard.configuration.ConfigurationException;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.ConfigurationFactoryFactory;
 import io.dropwizard.configuration.DefaultConfigurationFactoryFactory;
 import io.dropwizard.jackson.DiscoverableSubtypeResolver;
 import io.dropwizard.jersey.validation.Validators;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -51,22 +69,14 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.utils.Misc;
 import software.wings.utils.YamlUtils;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
-import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.infrastructure.AwsHost.Builder.anAwsHost;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 10/4/16.
@@ -111,12 +121,14 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                                                            .withSecretKey("Yef4E+CZTR2wRQc3IVfDS4Ls22BAeab9JVlZx2nu")
                                                            .build())
                                             .build();
-    System.out.println(awsInfrastructureProvider.listAMIs(settingAttribute, "us-east-1"));
+    // System.out.println(awsInfrastructureProvider.listAMIs(settingAttribute, "us-east-1"));
 
-    System.out.println(awsInfrastructureProvider.listRegions(settingAttribute));
-    System.out.println(awsInfrastructureProvider.listIAMRoles(settingAttribute));
-    System.out.println(awsInfrastructureProvider.listVPCs(settingAttribute));
-    System.out.println(awsInfrastructureProvider.listInstanceTypes(settingAttribute));
+    // System.out.println(awsInfrastructureProvider.listRegions(settingAttribute));
+    System.out.println(awsInfrastructureProvider.listLoadBalancers(settingAttribute));
+    System.out.println(awsInfrastructureProvider.listTargetGroups(settingAttribute, "testecs"));
+
+    // System.out.println(awsInfrastructureProvider.listVPCs(settingAttribute));
+    // System.out.println(awsInfrastructureProvider.listInstanceTypes(settingAttribute));
   }
 
   @Override
@@ -331,7 +343,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return mainConfiguration.getAwsInstanceTypes();
   }
 
-  public List<String> listIAMRoles(SettingAttribute computeProviderSetting) {
+  public List<String> listIAMInstanceRoles(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     AmazonIdentityManagementClient amazonIdentityManagementClient =
         awsHelperService.getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
@@ -340,6 +352,17 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .stream()
         .map(InstanceProfile::getInstanceProfileName)
         .collect(toList());
+  }
+
+  public Map<String, String> listIAMRoles(SettingAttribute computeProviderSetting) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    AmazonIdentityManagementClient amazonIdentityManagementClient =
+        awsHelperService.getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+    return amazonIdentityManagementClient.listRoles(new ListRolesRequest().withMaxItems(400))
+        .getRoles()
+        .stream()
+        .collect(Collectors.toMap(Role::getArn, Role::getRoleName));
   }
 
   public List<String> listVPCs(SettingAttribute computeProviderSetting) {
@@ -364,5 +387,38 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
             .map(Vpc::getVpcId)
             .collect(toList()));
     return results;
+  }
+
+  public List<String> listLoadBalancers(SettingAttribute computeProviderSetting) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+
+    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+        awsHelperService.getAmazonElasticLoadBalancingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+    return amazonElasticLoadBalancingClient.describeLoadBalancers(new DescribeLoadBalancersRequest().withPageSize(400))
+        .getLoadBalancers()
+        .stream()
+        .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
+        .map(LoadBalancer::getLoadBalancerName)
+        .collect(Collectors.toList());
+  }
+
+  public Map<String, String> listTargetGroups(SettingAttribute computeProviderSetting, String loadBalancerName) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+
+    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+        awsHelperService.getAmazonElasticLoadBalancingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+    String loadBalancerArn = amazonElasticLoadBalancingClient
+                                 .describeLoadBalancers(new DescribeLoadBalancersRequest().withNames(loadBalancerName))
+                                 .getLoadBalancers()
+                                 .get(0)
+                                 .getLoadBalancerArn();
+
+    return amazonElasticLoadBalancingClient
+        .describeTargetGroups(new DescribeTargetGroupsRequest().withPageSize(400).withLoadBalancerArn(loadBalancerArn))
+        .getTargetGroups()
+        .stream()
+        .collect(Collectors.toMap(TargetGroup::getTargetGroupArn, TargetGroup::getTargetGroupName));
   }
 }

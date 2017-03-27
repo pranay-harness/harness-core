@@ -4,6 +4,8 @@ import static java.lang.System.currentTimeMillis;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
+import static software.wings.security.PermissionAttribute.PermissionScope.APP;
+import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 
 import com.google.inject.Singleton;
 
@@ -19,9 +21,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.User;
 import software.wings.common.UUIDGenerator;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 
 import java.util.ArrayList;
@@ -295,7 +301,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       sortOrder.setOrderType(OrderType.DESC);
       req.addOrder(sortOrder);
     }
-
+    includeAuthFilters(req);
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
   }
 
@@ -370,5 +376,34 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public void stop() throws Exception {
     close();
+  }
+
+  private void includeAuthFilters(PageRequest pageRequest) {
+    User user = UserThreadLocal.get();
+    if (user == null || user.getUserRequestInfo() == null || user.getUserRequestInfo().isAllAppsAllowed()) {
+      return;
+    }
+
+    UserRequestInfo userRequestInfo = user.getUserRequestInfo();
+
+    if (!userRequestInfo.isAllAppsAllowed()
+        && userRequestInfo.getPermissionAttributes()
+               .stream()
+               .map(PermissionAttribute::getScope)
+               .anyMatch(scope -> scope == APP)) {
+      // make sure APP_ID is one of the filter parameter
+      pageRequest.addFilter("appId", userRequestInfo.getAllowedAppIds().toArray(), Operator.EQ);
+      return;
+    }
+
+    if (!userRequestInfo.isAllEnvironmentsAllowed()
+        && userRequestInfo.getPermissionAttributes()
+               .stream()
+               .map(PermissionAttribute::getScope)
+               .anyMatch(scope -> scope == ENV)) {
+      // make sure envId is one of the filter parameter
+      pageRequest.addFilter("envId", userRequestInfo.getAllowedEnvIds().toArray(), Operator.EQ);
+      return;
+    }
   }
 }

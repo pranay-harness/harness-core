@@ -1,32 +1,40 @@
 package software.wings.security;
 
+import static com.google.common.collect.ImmutableList.copyOf;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
-import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
-import static software.wings.dl.PageRequest.PageRequestType.OTHER;
+import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
+import com.google.common.collect.ImmutableList;
+
+import software.wings.beans.AccountRole;
+import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
+import software.wings.beans.EnvironmentRole;
+import software.wings.beans.Permission;
+import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionScope;
-import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.UserService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -49,7 +57,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuditService auditService;
   private AuditHelper auditHelper;
   private AuthService authService;
-  private EnvironmentService environmentService;
+  private UserService userService;
+  private AppService appService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -57,15 +66,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    * @param auditService       the audit service
    * @param auditHelper        the audit helper
    * @param authService        the auth service
-   * @param environmentService the environment service
+   * @param appService the appService
+   * @param userService the userService
    */
   @Inject
   public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
-      EnvironmentService environmentService) {
+      AppService appService, UserService userService) {
     this.auditService = auditService;
     this.auditHelper = auditHelper;
     this.authService = authService;
-    this.environmentService = environmentService;
+    this.appService = appService;
+    this.userService = userService;
   }
 
   /* (non-Javadoc)
@@ -104,10 +115,45 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     String appId = getRequestParamFromContext("appId", pathParameters, queryParameters);
     String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
-    setRequestAndResourceType(requestContext, appId);
+    if (appId != null && accountId == null) {
+      accountId = appService.get(appId).getAccountId();
+    }
 
-    authService.authorize(accountId, appId, envId, user, requiredPermissionAttributes,
-        (PageRequestType) requestContext.getProperty("pageRequestType"));
+    UserRequestInfoBuilder userRequestInfoBuilder =
+        anUserRequestInfo().withAccountId(accountId).withAppId(appId).withEnvId(envId).withPermissionAttributes(
+            ImmutableList.copyOf(requiredPermissionAttributes));
+
+    if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
+      userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
+    } else {
+      AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
+      ImmutableList<String> appIds = copyOf(userAccountRole.getApplicationRoles()
+                                                .stream()
+                                                .map(ApplicationRole::getAppId)
+                                                .distinct()
+                                                .collect(Collectors.toList()));
+
+      if (appId != null) {
+        if (user.isAppAdmin(accountId, appId)) {
+          userRequestInfoBuilder.withAllEnvironmentsAllowed(true);
+        } else {
+          ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
+          ImmutableList<String> envIds = copyOf(applicationRole.getEnvironmentRoles()
+                                                    .stream()
+                                                    .map(EnvironmentRole::getEnvId)
+                                                    .distinct()
+                                                    .collect(Collectors.toList()));
+          userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+        }
+      }
+
+      userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(appIds);
+    }
+
+    UserRequestInfo userRequestInfo = userRequestInfoBuilder.build();
+    user.setUserRequestInfo(userRequestInfo);
+
+    authService.authorize(accountId, appId, envId, user, requiredPermissionAttributes, userRequestInfo);
   }
 
   private boolean allLoggedInScope(List<PermissionAttribute> requiredPermissionAttributes) {
@@ -150,20 +196,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                || resourceClass.getAnnotation(DelegateAuth.class) != null);
   }
 
-  private void setRequestAndResourceType(ContainerRequestContext requestContext, String appId) {
-    ListAPI listAPI = resourceInfo.getResourceMethod().getAnnotation(ListAPI.class);
-    if (listAPI != null) {
-      requestContext.setProperty("resourceType", listAPI.value());
-      // TODO:: Improve this logic
-      if (listAPI.value() == ResourceType.APPLICATION) {
-        requestContext.setProperty("pageRequestType", LIST_WITHOUT_APP_ID);
-      } else if (listAPI.value() == ResourceType.ENVIRONMENT) {
-        requestContext.setProperty("pageRequestType", LIST_WITHOUT_ENV_ID);
-        requestContext.setProperty("appEnvironments", environmentService.getEnvByApp(appId));
-      }
-    } else {
-      requestContext.setProperty("pageRequestType", OTHER);
-    }
+  private List<String> getAppIds(List<Role> roles) {
+    return roles.stream()
+        .flatMap(role -> role.getPermissions().stream())
+        .filter(permission
+            -> permission.getPermissionScope() == PermissionScope.APP && permission.getAction() == Action.READ
+                && permission.getAppId() != null && !permission.getAppId().equals(GLOBAL_APP_ID))
+        .map(Permission::getAppId)
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {

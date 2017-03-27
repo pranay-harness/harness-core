@@ -1,9 +1,12 @@
 package software.wings.beans.command;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
+import static org.joor.Reflect.on;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.exception.WingsException;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -11,8 +14,6 @@ import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;
-
-import static org.joor.Reflect.on;
 
 /**
  * Created by peeyushaggarwal on 6/2/16.
@@ -188,5 +189,10 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   @Override
   public Integer getDisplayOrder() {
     return displayOrder;
+  }
+
+  @Override
+  public boolean matches(Object context) {
+    return true;
   }
 }

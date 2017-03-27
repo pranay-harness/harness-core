@@ -11,6 +11,8 @@ import io.dropwizard.auth.Auth;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
+import software.wings.beans.AccountRole;
+import software.wings.beans.ApplicationRole;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -176,6 +178,32 @@ public class UserResource {
   @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
   public RestResponse<User> get() {
     return new RestResponse<>(UserThreadLocal.get().getPublicUser());
+  }
+
+  /**
+   * Get rest response.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("account-roles/{accountId}")
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  public RestResponse<AccountRole> getAccountRole(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(
+        userService.getUserAccountRole(UserThreadLocal.get().getPublicUser().getUuid(), accountId));
+  }
+
+  /**
+   * Get rest response.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("application-roles/{appId}")
+  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  public RestResponse<ApplicationRole> getApplicationRole(@PathParam("appId") String appId) {
+    return new RestResponse<>(
+        userService.getUserApplicationRole(UserThreadLocal.get().getPublicUser().getUuid(), appId));
   }
 
   /**

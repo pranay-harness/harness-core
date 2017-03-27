@@ -12,12 +12,15 @@ import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMapping.InfrastructureMappingType;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -53,6 +56,7 @@ import software.wings.utils.JsonUtils;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -126,7 +130,9 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Command state type.
    */
-  COMMAND(CommandState.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS),
+  COMMAND(CommandState.class, StencilCategory.COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Approval state type.
@@ -136,7 +142,8 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * The Load balancer.
    */
-  LOAD_BALANCER(LoadBalancerState.class, StencilCategory.COMMANDS, "Load Balancer", ORCHESTRATION_STENCILS),
+  LOAD_BALANCER(LoadBalancerState.class, StencilCategory.COMMANDS, "Load Balancer",
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
 
   /**
    * Jenkins state type.
@@ -146,27 +153,32 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * AWS Node Select state.
    */
-  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+  AWS_NODE_SELECT(
+      AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Provision state.
    */
-  AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
+  AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
 
   /**
    * GCP Node Select state.
    */
-  GCP_NODE_SELECT(GcpNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+  GCP_NODE_SELECT(GcpNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
+      ORCHESTRATION_STENCILS),
 
   /**
    * GCP Node Provision state.
    */
-  GCP_AUTOSCALE_PROVISION(GcpAutoScaleProvisionState.class, CLOUD, ORCHESTRATION_STENCILS),
+  GCP_AUTOSCALE_PROVISION(GcpAutoScaleProvisionState.class, CLOUD,
+      Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES), ORCHESTRATION_STENCILS),
 
   /**
    * Phase state type.
    */
-  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, ORCHESTRATION_STENCILS),
+  DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Phase state type.
@@ -178,14 +190,19 @@ public enum StateType implements StateTypeDescriptor {
    */
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
 
-  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, ORCHESTRATION_STENCILS),
+  ECS_SERVICE_SETUP(
+      EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS),
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD, ORCHESTRATION_STENCILS),
+  KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
+      Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      ORCHESTRATION_STENCILS),
 
-  KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(
-      KubernetesReplicationControllerDeploy.class, COMMANDS, ORCHESTRATION_STENCILS);
+  KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
@@ -197,6 +214,7 @@ public enum StateType implements StateTypeDescriptor {
   private StencilCategory stencilCategory;
   private Integer displayOrder = DEFAULT_DISPLAY_ORDER;
   private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
+  private List<InfrastructureMappingType> supportedInfrastructureMappingTypes = Collections.emptyList();
 
   /**
    * Instantiates a new state type.
@@ -208,6 +226,11 @@ public enum StateType implements StateTypeDescriptor {
     this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, scopes);
   }
 
+  <E> StateType(Class<? extends State> stateClass, StencilCategory stencilCategory,
+      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, supportedInfrastructureMappingTypes, scopes);
+  }
+
   /**
    * Instantiates a new state type.
    *
@@ -217,16 +240,27 @@ public enum StateType implements StateTypeDescriptor {
    */
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, displayOrder, null, scopes);
+    this(stateClass, stencilCategory, displayOrder, Collections.emptyList(), scopes);
+  }
+
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
+      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, displayOrder, null, supportedInfrastructureMappingTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, String displayName,
-      StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, displayName, scopes);
+      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, displayName, supportedInfrastructureMappingTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       String displayName, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, displayOrder, displayName, Collections.emptyList(), scopes);
+  }
+
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
+      String displayName, List<InfrastructureMappingType> supportedInfrastructureMappingTypes,
+      StateTypeScope... scopes) {
     this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);
     this.jsonSchema = loadJsonSchema();
@@ -240,6 +274,7 @@ public enum StateType implements StateTypeDescriptor {
     } catch (Exception e) {
       this.uiSchema = new HashMap<String, Object>();
     }
+    this.supportedInfrastructureMappingTypes = supportedInfrastructureMappingTypes;
   }
 
   private Object readResource(String file) {
@@ -309,5 +344,14 @@ public enum StateType implements StateTypeDescriptor {
   @Override
   public Integer getDisplayOrder() {
     return displayOrder;
+  }
+
+  @Override
+  public boolean matches(Object context) {
+    InfrastructureMapping infrastructureMapping = (InfrastructureMapping) context;
+    InfrastructureMappingType infrastructureMappingType =
+        InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
+    return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
+        || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
   }
 }

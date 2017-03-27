@@ -10,10 +10,12 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.UserRequestInfo;
 
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.security.auth.Subject;
 
 /**
@@ -47,7 +49,13 @@ public class User extends Base implements Principal {
 
   private long statsFetchedOn;
 
+  private String lastAccountId;
+
+  private String lastAppId;
+
   @JsonIgnore private long passwordChangedAt;
+
+  @JsonIgnore @Transient private UserRequestInfo userRequestInfo;
 
   /**
    * Return partial user object without sensitive information.
@@ -65,7 +73,6 @@ public class User extends Base implements Principal {
     return publicUser;
   }
 
-  @JsonIgnore
   public boolean isAccountAdmin(String accountId) {
     return roles != null
         && roles.stream()
@@ -74,6 +81,36 @@ public class User extends Base implements Principal {
                        && role.getAccountId().equals(accountId))
                .findFirst()
                .isPresent();
+  }
+
+  public boolean isAllAppAdmin(String accountId) {
+    return roles != null
+        && roles.stream()
+               .filter(role
+                   -> role.getRoleType() == RoleType.APPLICATION_ADMIN && role.getAccountId() != null
+                       && role.getAccountId().equals(accountId) && role.isAllApps())
+               .findFirst()
+               .isPresent();
+  }
+
+  public boolean isAppAdmin(String accountId, String appId) {
+    return roles != null
+        && roles.stream()
+               .filter(role
+                   -> role.getRoleType() == RoleType.APPLICATION_ADMIN && role.getAccountId() != null
+                       && role.getAccountId().equals(accountId) && (role.isAllApps() || appId.equals(role.getAppId())))
+               .findFirst()
+               .isPresent();
+  }
+
+  @JsonIgnore
+  public List<Role> getRolesByAccountId(String accountId) {
+    if (roles == null) {
+      return null;
+    }
+    return roles.stream()
+        .filter(role -> role.getAccountId() != null && role.getAccountId().equals(accountId))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -296,6 +333,30 @@ public class User extends Base implements Principal {
 
   public void setAccountName(String accountName) {
     this.accountName = accountName;
+  }
+
+  public String getLastAccountId() {
+    return lastAccountId;
+  }
+
+  public void setLastAccountId(String lastAccountId) {
+    this.lastAccountId = lastAccountId;
+  }
+
+  public String getLastAppId() {
+    return lastAppId;
+  }
+
+  public void setLastAppId(String lastAppId) {
+    this.lastAppId = lastAppId;
+  }
+
+  public UserRequestInfo getUserRequestInfo() {
+    return userRequestInfo;
+  }
+
+  public void setUserRequestInfo(UserRequestInfo userRequestInfo) {
+    this.userRequestInfo = userRequestInfo;
   }
 
   @Override
