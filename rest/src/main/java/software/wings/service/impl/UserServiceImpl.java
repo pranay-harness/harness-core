@@ -50,6 +50,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -82,6 +83,7 @@ public class UserServiceImpl implements UserService {
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
   @Inject private AccountService accountService;
+  @Inject private AuthService authService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -384,6 +386,7 @@ public class UserServiceImpl implements UserService {
         wingsPersistence.createUpdateOperations(User.class)
             .set("passwordHash", hashed)
             .set("passwordChangedAt", System.currentTimeMillis()));
+    executorService.submit(() -> authService.invalidateAllTokensForUser(user.getUuid()));
   }
 
   private void sendResetPasswordEmail(User user, String token) {
@@ -423,6 +426,7 @@ public class UserServiceImpl implements UserService {
     Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("name", user.getName());
     if (user.getPassword() != null && user.getPassword().length() > 0) {
       builder.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
+      builder.put("passwordChangedAt", System.currentTimeMillis());
     }
     if (user.getRoles() != null && !user.getRoles().isEmpty()) {
       builder.put("roles", user.getRoles());

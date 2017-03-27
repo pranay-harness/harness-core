@@ -54,6 +54,7 @@ import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.GenericDbCache;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -96,8 +97,9 @@ public class SecureResourceTest {
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
   private static EnvironmentService environmentService = mock(EnvironmentService.class);
+  private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
 
-  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService, environmentService);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService, wingsPersistence);
 
   private static AuthRuleFilter authRuleFilter =
       new AuthRuleFilter(auditService, auditHelper, authService, environmentService);

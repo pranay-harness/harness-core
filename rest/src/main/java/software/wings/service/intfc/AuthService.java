@@ -33,4 +33,6 @@ public interface AuthService {
       List<PermissionAttribute> permissionAttributes, PageRequestType requestType);
 
   void validateDelegateToken(String accountId, String tokenString);
+
+  void invalidateAllTokensForUser(String userId);
 }

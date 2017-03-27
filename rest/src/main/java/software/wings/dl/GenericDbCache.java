@@ -63,4 +63,14 @@ public class GenericDbCache {
     }
     return null;
   }
+
+  /**
+   * Invalidate.
+   *
+   * @param cls    the cls
+   * @param objKey the obj key
+   */
+  public void invalidate(Class cls, String objKey) {
+    cache.invalidate(makeCacheKey(cls, objKey));
+  }
 }

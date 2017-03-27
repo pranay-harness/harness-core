@@ -19,6 +19,7 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -32,6 +33,7 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest.PageRequestType;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -39,7 +41,6 @@ import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -55,18 +56,19 @@ public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
 
   private AccountService accountService;
-  private EnvironmentService environmentService;
+  private WingsPersistence wingsPersistence;
 
   /**
    * Instantiates a new Auth service.
    *
    * @param dbCache the db cache
+   * @param wingsPersistence
    */
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, EnvironmentService environmentService) {
+  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, WingsPersistence wingsPersistence) {
     this.dbCache = dbCache;
     this.accountService = accountService;
-    this.environmentService = environmentService;
+    this.wingsPersistence = wingsPersistence;
   }
 
   @Override
@@ -151,6 +153,16 @@ public class AuthServiceImpl implements AuthService {
     } catch (JOSEException e) {
       throw new WingsException(INVALID_TOKEN);
     }
+  }
+
+  @Override
+  public void invalidateAllTokensForUser(String userId) {
+    List<Key<AuthToken>> keyList =
+        wingsPersistence.createQuery(AuthToken.class).field("user").equal(userId).asKeyList();
+    keyList.forEach(authTokenKey -> {
+      wingsPersistence.delete(AuthToken.class, authTokenKey.getId().toString());
+      dbCache.invalidate(AuthToken.class, authTokenKey.getId().toString());
+    });
   }
 
   private boolean authorizeAccessType(String accountId, String appId, String envId, EnvironmentType envType,
