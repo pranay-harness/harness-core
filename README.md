@@ -15,29 +15,34 @@ Prerequisities
 Build 
 
 1) Clone form git repository:  https://github.com/wings-software/wings
-2) Install IntelliJ community edition 
-Ide Setup
+2) Starte mongo db 
+3) Go to wings directory and run mvn clean install 
 
-2) Install IntelliJ community edition 
+Note : On MacOS sierra ,If many test cases fail then follow the instructuions in this post. (https://thoeni.io/post/macos-sierra-java/) 
+
+Ide Setup 
+
+1) Install IntelliJ community edition 
+2) Import wings portal as maven project
+3) Import Code Style codeStyle/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
     Intellij Setup:
     a. Import portal in intellij as maven project. 
     b. Import codeStyle/intellij-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
 
-    To build project along with ui:
-    a. Install npm: https://github.com/nodesource/distributions.
-    b. cd to wings directory and checkout UI project from repository: https://github.com/wings-software/wingsui
-    c. Run "mvn package -DbuildUI=true"
-
-
-    To run api server run class WingsApplication with following arguments.
-       VM Args: -Xbootclasspath/p:<Your home directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.8.v20160420/alpn-boot-8.1.8.v20160420.jar  
-       Program Args: server config.yml
+Run from IntelliJ 
+1) Run  API Server : 
+     Run 'WingsApplication' class  with following configurations.
+       VM Args: -Xbootclasspath/p:<Your home directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.8.v<YYYYMMDD>/alpn-boot-8.1.8.v<YYYYMMDD>.jar  
+       Program Args: server config.yml
        Working Directory: $MODULE_DIR$
-
-    To delegate, run class DelegateApplication with following arguments.
-       VM Args: -Xbootclasspath/p:<Your home directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.8.v20160420/alpn-boot-8.1.8.v20160420.jar -Dversion=999.0.0
+2) Run/Debug API Server :
+     Run 'DelegateApplication' classp  with following configurations.
+       VM Args: -Xbootclasspath/p:<Your home directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.8.v<YYYYMMDD>/alpn-boot-8.1.8.v<YYYYMMDD>.jar -Dversion=999.0.0
        Program Args: config-delegate.yml
        Working Directory: $MODULE_DIR$
 
-7) to apply database migrations run following command in dbmigrations folder:
+Note: 
+1 ) To build UI Go to wings-ui and follow READ me instructions.
+
+2) To apply database migrations run following command in dbmigrations folder:
    "mvn clean compile exec:java"
