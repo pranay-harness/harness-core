@@ -7,13 +7,14 @@ package software.wings.resources;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
-import software.wings.beans.ExecutionScope;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
@@ -79,6 +80,8 @@ public class CatalogResource {
    * @throws IOException exception.
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<Map<String, Object>> list(
       @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) throws IOException {
     Map<String, Object> catalogs = getCatalogs(catalogTypes, uriInfo);

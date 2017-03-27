@@ -36,8 +36,6 @@ import javax.ws.rs.QueryParam;
 @Api("/notifications")
 @Path("/notifications")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 public class NotificationResource {
   @Inject private NotificationService notificationService;
 
@@ -49,6 +47,8 @@ public class NotificationResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Notification>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Notification> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     if (!Strings.isNullOrEmpty(appId)) {
@@ -68,6 +68,8 @@ public class NotificationResource {
    */
   @GET
   @Path("{notificationId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Notification> get(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("notificationId") String notificationId) {
     return new RestResponse<>(notificationService.get(appId, notificationId));
@@ -83,6 +85,8 @@ public class NotificationResource {
    */
   @POST
   @Path("{notificationId}/action/{type}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Notification> act(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("notificationId") String notificationId, @PathParam("type") NotificationActionType actionType) {
     return new RestResponse<>(notificationService.act(appId, notificationId, actionType));

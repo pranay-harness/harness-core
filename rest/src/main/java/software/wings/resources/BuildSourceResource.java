@@ -23,8 +23,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("build-sources")
 @Path("/build-sources")
-@Timed
-@ExceptionMetered
 @Produces("application/json")
 public class BuildSourceResource {
   @Inject private BuildSourceService buildSourceService;
@@ -37,6 +35,8 @@ public class BuildSourceResource {
    */
   @GET
   @Path("jobs")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Set<String>> getJobs(
       @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getJobs(appId, settingId));
@@ -50,6 +50,8 @@ public class BuildSourceResource {
    */
   @GET
   @Path("plans")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildPlans(
       @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getPlans(appId, settingId));
@@ -64,6 +66,8 @@ public class BuildSourceResource {
    */
   @GET
   @Path("jobs/{jobName}/paths")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Set<String>> getArtifactPaths(@QueryParam("appId") String appId,
       @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId));
@@ -79,6 +83,8 @@ public class BuildSourceResource {
    */
   @GET
   @Path("builds")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<BuildDetails>> getBuilds(@QueryParam("appId") String appId,
       @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getBuilds(appId, artifactStreamId, settingId));

@@ -43,8 +43,6 @@ import javax.ws.rs.core.Response;
 @Api("app-containers")
 @Path("/app-containers")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
   @Inject private MainConfiguration configuration;
@@ -58,6 +56,8 @@ public class AppContainerResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<AppContainer>> list(@QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<AppContainer> request) {
     return new RestResponse<>(appContainerService.list(request));
@@ -72,6 +72,8 @@ public class AppContainerResource {
    */
   @GET
   @Path("{appContainerId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<AppContainer> get(@QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
       @PathParam("appContainerId") String appContainerId) {
     return new RestResponse<>(appContainerService.get(appId, appContainerId));
@@ -90,6 +92,8 @@ public class AppContainerResource {
    */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -118,6 +122,8 @@ public class AppContainerResource {
   @PUT
   @Path("{appContainerId}")
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse<AppContainer> updatePlatform(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
@@ -141,6 +147,8 @@ public class AppContainerResource {
    */
   @DELETE
   @Path("{appContainerId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse deletePlatform(
       @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
     appContainerService.delete(appId, appContainerId);
@@ -157,6 +165,8 @@ public class AppContainerResource {
   @GET
   @Path("{appContainerId}/download")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response download(
       @QueryParam("accountId") String accountId, @PathParam("appContainerId") String appContainerId) {
     File appContainerFile = appContainerService.download(accountId, appContainerId);

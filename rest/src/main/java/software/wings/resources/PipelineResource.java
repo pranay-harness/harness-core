@@ -4,6 +4,8 @@
 
 package software.wings.resources;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
@@ -61,6 +63,8 @@ public class PipelineResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
     return new RestResponse<>(pipelineService.listPipelines(pageRequest));
@@ -75,6 +79,8 @@ public class PipelineResource {
    */
   @GET
   @Path("{pipelineId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
     return new RestResponse<>(pipelineService.readPipeline(appId, pipelineId));
   }
@@ -87,6 +93,8 @@ public class PipelineResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     return new RestResponse<>(pipelineService.createPipeline(pipeline));
@@ -102,6 +110,8 @@ public class PipelineResource {
    */
   @PUT
   @Path("{pipelineId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
@@ -119,6 +129,8 @@ public class PipelineResource {
    */
   @DELETE
   @Path("{pipelineId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipelineService.deletePipeline(appId, pipelineId);
@@ -133,6 +145,8 @@ public class PipelineResource {
    */
   @GET
   @Path("executions")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<PipelineExecution>> listExecutions(
       @BeanParam PageRequest<PipelineExecution> pageRequest) {
     return new RestResponse<>(pipelineService.listPipelineExecutions(pageRequest));
@@ -148,6 +162,8 @@ public class PipelineResource {
    */
   @POST
   @Path("executions")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     return new RestResponse<>(pipelineService.execute(appId, pipelineId, executionArgs));
@@ -162,6 +178,8 @@ public class PipelineResource {
    */
   @GET
   @Path("stencils")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
     return new RestResponse<>(workflowService.stencils(appId, null, null, StateTypeScope.PIPELINE_STENCILS)
                                   .get(StateTypeScope.PIPELINE_STENCILS));

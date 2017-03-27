@@ -40,8 +40,6 @@ import javax.ws.rs.core.Response;
 @Api("activities")
 @Path("/activities")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 public class ActivityResource {
   private AppService appService;
   private ActivityService activityService;
@@ -69,6 +67,8 @@ public class ActivityResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     if (!Strings.isNullOrEmpty(envId)) {
@@ -91,8 +91,11 @@ public class ActivityResource {
    * @param activityId the activity id
    * @return the rest response
    */
+
   @GET
   @Path("{activityId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Activity> get(@QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.get(activityId, appId));
   }
@@ -108,6 +111,8 @@ public class ActivityResource {
    */
   @GET
   @Path("{activityId}/logs")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Log>> listLogs(@QueryParam("appId") String appId,
       @PathParam("activityId") String activityId, @QueryParam("unitName") String unitName,
       @BeanParam PageRequest<Log> request) {
@@ -127,6 +132,7 @@ public class ActivityResource {
    */
   @GET
   @Path("{activityId}/units")
+  @Timed
   public RestResponse<List<CommandUnit>> getActivityCommandUnits(
       @QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
@@ -142,6 +148,8 @@ public class ActivityResource {
   @GET
   @Path("{activityId}/all-logs")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response exportLogs(@QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     File logFile = logService.exportLogs(appId, activityId);
     Response.ResponseBuilder response = Response.ok(logFile, "application/x-unknown");

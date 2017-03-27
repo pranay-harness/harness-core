@@ -29,8 +29,6 @@ import javax.ws.rs.core.MediaType;
  */
 @Api("roles")
 @Path("/roles")
-@Timed
-@ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class RoleResource {
@@ -43,6 +41,8 @@ public class RoleResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Role>> list(
       @BeanParam PageRequest<Role> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(roleService.list(pageRequest));
@@ -55,6 +55,8 @@ public class RoleResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<Role> save(Role role) {
     return new RestResponse<>(roleService.save(role));
   }
@@ -68,6 +70,8 @@ public class RoleResource {
    */
   @PUT
   @Path("{roleId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Role> update(@PathParam("roleId") String roleId, Role role) {
     role.setUuid(roleId);
     return new RestResponse<>(roleService.update(role));
@@ -81,6 +85,8 @@ public class RoleResource {
    */
   @DELETE
   @Path("{roleId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@PathParam("{roleId}") String roleId) {
     roleService.delete(roleId);
     return new RestResponse();
@@ -94,6 +100,8 @@ public class RoleResource {
    */
   @GET
   @Path("{roleId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Role> get(@PathParam("roleId") String roleId) {
     return new RestResponse<>(roleService.get(roleId));
   }

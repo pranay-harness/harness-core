@@ -50,8 +50,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("settings")
 @Path("/settings")
-@Timed
-@ExceptionMetered
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 public class SettingResource {
@@ -67,6 +65,8 @@ public class SettingResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<SettingAttribute>> list(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
@@ -88,6 +88,8 @@ public class SettingResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable) {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
@@ -107,6 +109,8 @@ public class SettingResource {
   @POST
   @Path("upload")
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse<SettingAttribute> saveUpload(@FormDataParam("appId") String appId,
       @FormDataParam("accountId") String accountId, @FormDataParam("type") String type,
       @FormDataParam("name") String name, @FormDataParam("file") InputStream uploadedInputStream,
@@ -143,6 +147,8 @@ public class SettingResource {
    */
   @GET
   @Path("{attrId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<SettingAttribute> get(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
@@ -160,6 +166,8 @@ public class SettingResource {
    */
   @PUT
   @Path("{attrId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<SettingAttribute> update(
       @QueryParam("appId") String appId, @PathParam("attrId") String attrId, SettingAttribute variable) {
     if (isNullOrEmpty(appId)) {
@@ -183,6 +191,8 @@ public class SettingResource {
   @PUT
   @Path("{attrId}/upload")
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse<SettingAttribute> update(@QueryParam("appId") String appId, @PathParam("attrId") String attrId,
       SettingAttribute variable, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
@@ -206,6 +216,8 @@ public class SettingResource {
    */
   @DELETE
   @Path("{attrId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;

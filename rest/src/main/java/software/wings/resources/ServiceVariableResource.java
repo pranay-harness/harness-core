@@ -4,6 +4,8 @@ import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceVariable;
@@ -48,6 +50,8 @@ public class ServiceVariableResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<ServiceVariable>> list(@BeanParam PageRequest<ServiceVariable> pageRequest) {
     return new RestResponse<>(serviceVariablesService.list(pageRequest));
   }
@@ -60,6 +64,8 @@ public class ServiceVariableResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServiceVariable> save(@QueryParam("appId") String appId, ServiceVariable serviceVariable) {
     serviceVariable.setAppId(appId);
     return new RestResponse<>(serviceVariablesService.save(serviceVariable));
@@ -74,6 +80,8 @@ public class ServiceVariableResource {
    */
   @GET
   @Path("{serviceVariableId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServiceVariable> get(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
     return new RestResponse<>(serviceVariablesService.get(appId, serviceVariableId));
@@ -89,6 +97,8 @@ public class ServiceVariableResource {
    */
   @PUT
   @Path("{serviceVariableId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse update(@QueryParam("appId") String appId,
       @PathParam("serviceVariableId") String serviceVariableId, ServiceVariable serviceVariable) {
     serviceVariable.setUuid(serviceVariableId);
@@ -104,6 +114,8 @@ public class ServiceVariableResource {
    */
   @DELETE
   @Path("{serviceVariableId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
     serviceVariablesService.delete(appId, serviceVariableId);
@@ -120,6 +132,8 @@ public class ServiceVariableResource {
    */
   @DELETE
   @Path("/entity/{entityId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @PathParam("entityId") String entityId) {

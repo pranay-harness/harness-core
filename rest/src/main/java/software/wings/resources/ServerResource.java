@@ -18,10 +18,10 @@ import javax.ws.rs.Produces;
 @Api("/server")
 @Path("/server")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 public class ServerResource {
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServerInfo> getServerInfo() {
     ServerInfo serverInfo = new ServerInfo();
     serverInfo.setZoneId(ZoneId.systemDefault());

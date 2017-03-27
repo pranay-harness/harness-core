@@ -24,8 +24,6 @@ import javax.ws.rs.Produces;
  */
 @Api("/service-instances")
 @Path("service-instances")
-@Timed
-@ExceptionMetered
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 public class ServiceInstanceResource {
@@ -41,6 +39,8 @@ public class ServiceInstanceResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<ServiceInstance>> list(@BeanParam PageRequest<ServiceInstance> pageRequest) {
     return new RestResponse<>(instanceService.list(pageRequest));
   }

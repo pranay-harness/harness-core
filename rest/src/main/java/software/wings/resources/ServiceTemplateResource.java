@@ -33,8 +33,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("service-templates")
 @Path("/service-templates")
-@Timed
-@ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
 public class ServiceTemplateResource {
@@ -52,6 +50,8 @@ public class ServiceTemplateResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
@@ -68,6 +68,8 @@ public class ServiceTemplateResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServiceTemplate> create(
       @QueryParam("envId") String envId, @QueryParam("appId") String appId, ServiceTemplate serviceTemplate) {
     serviceTemplate.setAppId(appId);
@@ -85,6 +87,8 @@ public class ServiceTemplateResource {
    */
   @GET
   @Path("{templateId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServiceTemplate> get(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId) {
     return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId, true));
@@ -101,6 +105,8 @@ public class ServiceTemplateResource {
    */
   @PUT
   @Path("{templateId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServiceTemplate> update(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, ServiceTemplate serviceTemplate) {
     serviceTemplate.setAppId(appId);
@@ -119,6 +125,8 @@ public class ServiceTemplateResource {
    */
   @DELETE
   @Path("{templateId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId) {
     serviceTemplateService.delete(appId, envId, serviceTemplateId);
@@ -128,6 +136,8 @@ public class ServiceTemplateResource {
   @DelegateAuth
   @GET
   @Path("{templateId}/compute-files")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<ConfigFile>> computeFiles(@PathParam("templateId") String templateId,
       @QueryParam("envId") @NotEmpty String envId, @QueryParam("appId") @NotEmpty String appId,
       @QueryParam("hostId") @NotEmpty String hostId, @QueryParam("accountId") @NotEmpty String accountId) {

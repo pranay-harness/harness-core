@@ -4,6 +4,8 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -54,6 +56,8 @@ public class DelegateFileResource {
   @POST
   @Path("{delegateId}/tasks/{taskId}")
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse<String> saveArtifact(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -75,6 +79,8 @@ public class DelegateFileResource {
   @DelegateAuth
   @GET
   @Path("fileId")
+  @Timed
+  @ExceptionMetered
   public RestResponse<String> getFileId(@QueryParam("entityId") @NotEmpty String entityId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("version") int version,
       @QueryParam("accountId") @NotEmpty String accountId) {
@@ -86,6 +92,8 @@ public class DelegateFileResource {
   @DelegateAuth
   @GET
   @Path("download")
+  @Timed
+  @ExceptionMetered
   public StreamingOutput downloadFile(@QueryParam("fileId") @NotEmpty String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
     logger.debug("fileId: {}, fileBucket: {}", fileId, fileBucket);
@@ -98,6 +106,8 @@ public class DelegateFileResource {
   @DelegateAuth
   @GET
   @Path("metainfo")
+  @Timed
+  @ExceptionMetered
   public RestResponse<DelegateFile> getFileInfo(@QueryParam("fileId") String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
     logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);

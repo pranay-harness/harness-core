@@ -3,6 +3,8 @@ package software.wings.resources;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
@@ -66,6 +68,8 @@ public class ExecutionResource {
    */
   @GET
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
@@ -115,6 +119,8 @@ public class ExecutionResource {
   @GET
   @Path("{workflowExecutionId}")
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("expandedGroupId") List<String> expandedGroupIds) {
@@ -132,6 +138,8 @@ public class ExecutionResource {
    */
   @POST
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs));
@@ -148,6 +156,8 @@ public class ExecutionResource {
   @POST
   @Path("orchestrated")
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowExecution> triggerOrchestratedExecution(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
@@ -165,6 +175,8 @@ public class ExecutionResource {
   @POST
   @Path("simple")
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowExecution> triggerSimpleExecution(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
@@ -183,6 +195,8 @@ public class ExecutionResource {
   @PUT
   @Path("{workflowExecutionId}")
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       ExecutionInterrupt executionInterrupt) {
@@ -204,6 +218,8 @@ public class ExecutionResource {
   @POST
   @Path("required-args")
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<RequiredExecutionArgs> requiredArgs(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
@@ -221,6 +237,8 @@ public class ExecutionResource {
   @GET
   @Path("{workflowExecutionId}/node/{stateExecutionInstanceId}")
   @Produces("application/json")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Node> getExecutionNodeDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {

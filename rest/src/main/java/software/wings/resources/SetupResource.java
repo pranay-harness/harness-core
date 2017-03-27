@@ -24,8 +24,6 @@ import javax.ws.rs.QueryParam;
  * Created by anubhaw on 6/29/16.
  */
 @Api("setup")
-@Timed
-@ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
 @Path("setup")
@@ -43,6 +41,8 @@ public class SetupResource {
    */
   @GET
   @Path("/applications/{appId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Setup> verifyApplication(@PathParam("appId") String appId) {
     return new RestResponse<>(
         setupService.getApplicationSetupStatus(appService.get(appId, SetupStatus.INCOMPLETE, false, 0)));
@@ -57,6 +57,8 @@ public class SetupResource {
    */
   @GET
   @Path("/services/{serviceId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Setup> verifyService(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(setupService.getServiceSetupStatus(serviceResourceService.get(appId, serviceId)));
@@ -71,6 +73,8 @@ public class SetupResource {
    */
   @GET
   @Path("/environments/{envId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Setup> verifyEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return new RestResponse<>(setupService.getEnvironmentSetupStatus(environmentService.get(appId, envId, false)));
   }

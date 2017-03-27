@@ -36,8 +36,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("services")
 @Path("services")
-@Timed
-@ExceptionMetered
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @PublicApi
@@ -62,6 +60,8 @@ public class ServiceResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Service>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
@@ -78,6 +78,8 @@ public class ServiceResource {
    */
   @GET
   @Path("{serviceId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Service> get(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
       @QueryParam("status") SetupStatus status) {
     if (status == null) {
@@ -94,6 +96,8 @@ public class ServiceResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<Service> save(@QueryParam("appId") String appId, Service service) {
     service.setAppId(appId);
     return new RestResponse<>(serviceResourceService.save(service));
@@ -109,6 +113,8 @@ public class ServiceResource {
    */
   @PUT
   @Path("{serviceId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Service> update(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
     service.setUuid(serviceId);
@@ -125,6 +131,8 @@ public class ServiceResource {
    */
   @DELETE
   @Path("{serviceId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     serviceResourceService.delete(appId, serviceId);
     return new RestResponse();
@@ -140,6 +148,8 @@ public class ServiceResource {
    */
   @POST
   @Path("{serviceId}/commands")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Service> saveCommand(@ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
       @ApiParam(name = "command", required = true) ServiceCommand command) {
@@ -148,6 +158,8 @@ public class ServiceResource {
 
   @GET
   @Path("{serviceId}/commands/{commandName}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ServiceCommand> getCommand(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName,
       @QueryParam("version") int version) {
@@ -165,6 +177,8 @@ public class ServiceResource {
    */
   @PUT
   @Path("{serviceId}/commands/{commandName}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Service> updateCommand(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ServiceCommand command) {
     return new RestResponse<>(serviceResourceService.updateCommand(appId, serviceId, command));
@@ -180,6 +194,8 @@ public class ServiceResource {
    */
   @DELETE
   @Path("{serviceId}/commands/{commandName}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Service> deleteCommand(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName) {
     return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, commandName));
@@ -195,6 +211,8 @@ public class ServiceResource {
    */
   @GET
   @Path("{serviceId}/commands/stencils")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
     return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName));
@@ -202,6 +220,8 @@ public class ServiceResource {
 
   @POST
   @Path("{serviceId}/containers/tasks")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ContainerTask> createContainerTask(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
@@ -211,6 +231,8 @@ public class ServiceResource {
 
   @GET
   @Path("{serviceId}/containers/tasks")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<ContainerTask>> listContainerTask(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @BeanParam PageRequest<ContainerTask> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
@@ -220,6 +242,8 @@ public class ServiceResource {
 
   @PUT
   @Path("{serviceId}/containers/tasks/{taskId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
@@ -230,6 +254,8 @@ public class ServiceResource {
 
   @GET
   @Path("{serviceId}/containers/tasks/stencils")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<Stencil>> listTaskStencils(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.getContainerTaskStencils(appId, serviceId));

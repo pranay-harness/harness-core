@@ -25,8 +25,6 @@ import javax.ws.rs.core.MediaType;
  */
 @Api("plugins")
 @Path("/plugins")
-@Timed
-@ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PluginResource {
@@ -39,12 +37,16 @@ public class PluginResource {
 
   @GET
   @Path("{accountId}/installed")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<AccountPlugin>> installedPlugins(@PathParam("accountId") String accountId) {
     return aRestResponse().withResource(pluginService.getInstalledPlugins(accountId)).build();
   }
 
   @GET
   @Path("{accountId}/installed/settingschema")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Map<String, Map<String, Object>>> installedPluginSettingSchema(
       @PathParam("accountId") String accountId) {
     return aRestResponse().withResource(pluginService.getPluginSettingSchema(accountId)).build();

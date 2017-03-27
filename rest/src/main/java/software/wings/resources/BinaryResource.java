@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 
 import java.io.File;
@@ -30,6 +32,8 @@ public class BinaryResource {
   @GET
   @Path("framework")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response framework() throws IOException, GeneralSecurityException {
     return downloadFileFromResource("wings_main.pl");
   }
@@ -55,6 +59,8 @@ public class BinaryResource {
   @GET
   @Path("sample")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response sample() throws IOException, GeneralSecurityException {
     return downloadFileFromResource("sample.tar.gz");
   }

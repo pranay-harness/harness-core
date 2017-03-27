@@ -23,8 +23,6 @@ import javax.ws.rs.core.MediaType;
  */
 @Api("versions")
 @Path("/versions")
-@Timed
-@ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class VersionResource {
@@ -36,6 +34,8 @@ public class VersionResource {
   }
 
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<EntityVersionCollection>> list(
       @BeanParam PageRequest<EntityVersionCollection> pageRequest) {
     return new RestResponse<>(entityVersionService.listEntityVersions(pageRequest));

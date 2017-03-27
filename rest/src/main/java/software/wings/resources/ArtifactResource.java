@@ -3,9 +3,9 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
@@ -35,8 +35,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  */
 @Api("artifacts")
 @Path("/artifacts")
-@Timed
-@ExceptionMetered
 @Produces("application/json")
 public class ArtifactResource {
   private ArtifactService artifactService;
@@ -59,6 +57,8 @@ public class ArtifactResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
@@ -74,6 +74,8 @@ public class ArtifactResource {
    */
   @GET
   @Path("{artifactId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     return new RestResponse<>(artifactService.get(appId, artifactId, true));
   }
@@ -86,6 +88,8 @@ public class ArtifactResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
     return new RestResponse<>(artifactService.create(artifact));
@@ -101,6 +105,8 @@ public class ArtifactResource {
    */
   @PUT
   @Path("{artifactId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Artifact> update(
       @QueryParam("appId") String appId, @PathParam("artifactId") String artifactId, Artifact artifact) {
     artifact.setUuid(artifactId);
@@ -117,6 +123,8 @@ public class ArtifactResource {
    */
   @DELETE
   @Path("{artifactId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     artifactService.delete(appId, artifactId);
     return new RestResponse();
@@ -134,6 +142,8 @@ public class ArtifactResource {
   @GET
   @Path("{artifactId}/artifactFile")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId)
       throws IOException, GeneralSecurityException {
     File artifactFile = artifactService.download(appId, artifactId);

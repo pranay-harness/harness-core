@@ -70,8 +70,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     ((DefaultServerFactory) getServerFactory())
         .setApplicationConnectors(defaultServerFactory.getApplicationConnectors());
     ((DefaultServerFactory) getServerFactory()).setAdminConnectors(defaultServerFactory.getAdminConnectors());
-    // System.out.println("here");
-    // super.setServerFactory(factory);
+    ((DefaultServerFactory) getServerFactory()).setRequestLogFactory(defaultServerFactory.getRequestLogFactory());
   }
 
   /**

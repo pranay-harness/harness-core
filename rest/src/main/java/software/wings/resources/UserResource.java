@@ -50,8 +50,6 @@ import javax.ws.rs.core.MediaType;
  */
 @Api("users")
 @Path("/users")
-@Timed
-@ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @AuthRule(ResourceType.USER)
@@ -79,6 +77,8 @@ public class UserResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<User>> list(
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     Account account = accountService.get(accountId);
@@ -94,6 +94,8 @@ public class UserResource {
    */
   @POST
   @PublicApi
+  @Timed
+  @ExceptionMetered
   public RestResponse<User> register(User user) {
     user.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.register(user));
@@ -109,6 +111,8 @@ public class UserResource {
   @PUT
   @Path("{userId}")
   @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
   public RestResponse<User> update(@PathParam("userId") String userId, User user) {
     user.setUuid(userId);
     return new RestResponse<>(userService.update(user));
@@ -123,6 +127,8 @@ public class UserResource {
    */
   @DELETE
   @Path("{userId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
     userService.delete(userId);
     return new RestResponse();
@@ -137,6 +143,8 @@ public class UserResource {
   @PublicApi
   @POST
   @Path("reset-password")
+  @Timed
+  @ExceptionMetered
   public RestResponse resetPassword(@NotNull ResetPasswordRequest passwordRequest) {
     return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
   }
@@ -150,6 +158,8 @@ public class UserResource {
   @PublicApi
   @POST
   @Path("reset-password/{token}")
+  @Timed
+  @ExceptionMetered
   public RestResponse updatePassword(
       @NotEmpty @PathParam("token") String resetPasswordToken, UpdatePasswordRequest updatePasswordRequest) {
     return new RestResponse(userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword()));
@@ -164,6 +174,8 @@ public class UserResource {
   @GET
   @Path("account-name/{accountName}")
   @PublicApi
+  @Timed
+  @ExceptionMetered
   public RestResponse<String> suggestAccountName(@PathParam("accountName") String accountName) {
     return new RestResponse<>(accountService.suggestAccountName(accountName));
   }
@@ -176,6 +188,8 @@ public class UserResource {
   @GET
   @Path("user")
   @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
   public RestResponse<User> get() {
     return new RestResponse<>(UserThreadLocal.get().getPublicUser());
   }
@@ -188,6 +202,8 @@ public class UserResource {
   @GET
   @Path("account-roles/{accountId}")
   @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
   public RestResponse<AccountRole> getAccountRole(@PathParam("accountId") String accountId) {
     return new RestResponse<>(
         userService.getUserAccountRole(UserThreadLocal.get().getPublicUser().getUuid(), accountId));
@@ -201,6 +217,8 @@ public class UserResource {
   @GET
   @Path("application-roles/{appId}")
   @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
   public RestResponse<ApplicationRole> getApplicationRole(@PathParam("appId") String appId) {
     return new RestResponse<>(
         userService.getUserApplicationRole(UserThreadLocal.get().getPublicUser().getUuid(), appId));
@@ -215,6 +233,8 @@ public class UserResource {
   @GET
   @Path("login")
   @PublicApi
+  @Timed
+  @ExceptionMetered
   public RestResponse<User> login(@Auth User user) {
     return new RestResponse<>(user);
   }
@@ -229,6 +249,8 @@ public class UserResource {
   @GET
   @Path("verify/{token}")
   @PublicApi
+  @Timed
+  @ExceptionMetered
   public RestResponse<Map<String, Object>> verifyEmail(@PathParam("token") String token) throws URISyntaxException {
     return new RestResponse<>(of("success", userService.verifyEmail(token)));
   }
@@ -242,6 +264,8 @@ public class UserResource {
    */
   @PUT
   @Path("{userId}/role/{roleId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.addRole(userId, roleId));
   }
@@ -255,6 +279,8 @@ public class UserResource {
    */
   @DELETE
   @Path("{userId}/role/{roleId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.revokeRole(userId, roleId));
   }
@@ -268,6 +294,8 @@ public class UserResource {
    */
   @GET
   @Path("invites")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<UserInvite>> listInvites(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<UserInvite> pageRequest) {
     return new RestResponse<>(userService.listInvites(pageRequest));
@@ -282,6 +310,8 @@ public class UserResource {
    */
   @GET
   @Path("invites/{inviteId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<UserInvite> getInvite(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("inviteId") @NotEmpty String inviteId) {
     return new RestResponse<>(userService.getInvite(accountId, inviteId));
@@ -296,6 +326,8 @@ public class UserResource {
    */
   @POST
   @Path("invites")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<UserInvite>> inviteUsers(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
@@ -314,6 +346,8 @@ public class UserResource {
   @PublicApi
   @PUT
   @Path("invites/{inviteId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<UserInvite> completeInvite(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
@@ -330,6 +364,8 @@ public class UserResource {
    */
   @DELETE
   @Path("invites/{inviteId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<UserInvite> deleteInvite(
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(userService.deleteInvite(accountId, inviteId));

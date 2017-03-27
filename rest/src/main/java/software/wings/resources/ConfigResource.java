@@ -6,6 +6,8 @@ import static software.wings.beans.EntityType.SERVICE;
 
 import com.google.inject.Inject;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -57,6 +59,8 @@ public class ConfigResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<ConfigFile>> list(@BeanParam PageRequest<ConfigFile> pageRequest) {
     return new RestResponse<>(configService.list(pageRequest));
   }
@@ -74,6 +78,8 @@ public class ConfigResource {
    */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
       @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
@@ -102,6 +108,8 @@ public class ConfigResource {
    */
   @GET
   @Path("{configId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ConfigFile> get(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     return new RestResponse<>(configService.get(appId, configId));
   }
@@ -119,6 +127,8 @@ public class ConfigResource {
   @PUT
   @Path("{configId}")
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
@@ -150,6 +160,8 @@ public class ConfigResource {
    */
   @DELETE
   @Path("{configId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     configService.delete(appId, configId);
     return new RestResponse();
@@ -165,6 +177,8 @@ public class ConfigResource {
   @GET
   @Path("{configId}/download")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response downloadConfig(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @QueryParam("version") Integer version) {
     File configFile = configService.download(appId, configId, version);
@@ -183,6 +197,8 @@ public class ConfigResource {
    */
   @DELETE
   @Path("/entity/{entityId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @PathParam("entityId") String entityId) {

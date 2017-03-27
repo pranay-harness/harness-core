@@ -25,8 +25,6 @@ import javax.ws.rs.QueryParam;
 @Api("/statistics")
 @Path("/statistics")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 public class StatisticsResource {
   @Inject private StatisticsService statisticsService;
 
@@ -37,6 +35,8 @@ public class StatisticsResource {
    */
   @GET
   @Path("top-consumers")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WingsStatistics> topConsumers(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(statisticsService.getTopConsumers(accountId));
   }
@@ -48,12 +48,16 @@ public class StatisticsResource {
    */
   @GET
   @Path("user-stats/{accountId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<UserStatistics> userStatistics(@PathParam("accountId") String accountId) {
     return new RestResponse<>(statisticsService.getUserStats(accountId));
   }
 
   @GET
   @Path("deployment-stats")
+  @Timed
+  @ExceptionMetered
   public RestResponse<DeploymentStatistics> deploymentStats(@QueryParam("accountId") String accountId,
       @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays, @QueryParam("appId") String appId) {
     return new RestResponse<>(statisticsService.getDeploymentStatistics(accountId, appId, numOfDays));
@@ -61,6 +65,8 @@ public class StatisticsResource {
 
   @GET
   @Path("notification-count")
+  @Timed
+  @ExceptionMetered
   public RestResponse<NotificationCount> notificationCount(@QueryParam("accountId") String accountId,
       @DefaultValue("60") @QueryParam("minutesFromNow") Integer minutesFromNow, @QueryParam("appId") String appId) {
     return new RestResponse<>(statisticsService.getNotificationCount(accountId, appId, minutesFromNow));

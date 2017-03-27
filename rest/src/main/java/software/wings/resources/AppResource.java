@@ -36,8 +36,6 @@ import javax.ws.rs.QueryParam;
 @Api("/apps")
 @Path("/apps")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 @AuthRule(APPLICATION)
 public class AppResource {
   private AppService appService;
@@ -62,6 +60,8 @@ public class AppResource {
    */
   @GET
   @ListAPI(APPLICATION)
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays,
@@ -77,6 +77,8 @@ public class AppResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<Application> save(Application app) {
     return new RestResponse<>(appService.save(app));
   }
@@ -90,6 +92,8 @@ public class AppResource {
    */
   @PUT
   @Path("{appId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
@@ -104,6 +108,8 @@ public class AppResource {
    */
   @GET
   @Path("{appId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("overviewDays") @DefaultValue("30") int overviewDays) {
@@ -121,6 +127,8 @@ public class AppResource {
    */
   @DELETE
   @Path("{appId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);
     return new RestResponse();

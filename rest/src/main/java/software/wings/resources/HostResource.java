@@ -35,8 +35,6 @@ import javax.ws.rs.core.Response;
  */
 @Api("hosts")
 @Path("/hosts")
-@Timed
-@ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
 public class HostResource {
@@ -62,6 +60,8 @@ public class HostResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Host>> list(@BeanParam PageRequest<Host> pageRequest) {
     return new RestResponse<>(hostService.list(pageRequest));
   }
@@ -76,6 +76,8 @@ public class HostResource {
    */
   @GET
   @Path("{hostId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Host> get(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     return new RestResponse<>(hostService.get(appId, envId, hostId));
@@ -92,6 +94,8 @@ public class HostResource {
    */
   @PUT
   @Path("{hostId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("hostId") String hostId, Host host) {
     host.setUuid(hostId);
@@ -109,6 +113,8 @@ public class HostResource {
    */
   @DELETE
   @Path("{hostId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     hostService.delete(appId, envId, hostId);
@@ -128,6 +134,8 @@ public class HostResource {
   @POST
   @Path("import")
   @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
   public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
@@ -147,6 +155,8 @@ public class HostResource {
   @GET
   @Path("export")
   @Encoded
+  @Timed
+  @ExceptionMetered
   public Response exportHosts(
       @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @QueryParam("envId") String envId) {
     //    File hostsFile = hostService.exportHosts(appId);

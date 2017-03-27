@@ -47,8 +47,6 @@ import javax.ws.rs.QueryParam;
 @Path("/artifactstreams")
 @Produces("application/json")
 @Consumes("application/json")
-@Timed
-@ExceptionMetered
 @PublicApi
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
@@ -93,6 +91,8 @@ public class ArtifactStreamResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<ArtifactStream>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
@@ -108,6 +108,8 @@ public class ArtifactStreamResource {
    */
   @GET
   @Path("{streamId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ArtifactStream> get(@QueryParam("appId") String appId, @PathParam("streamId") String streamId) {
     return new RestResponse<>(artifactStreamService.get(appId, streamId));
   }
@@ -120,6 +122,8 @@ public class ArtifactStreamResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<ArtifactStream> save(@QueryParam("appId") String appId, ArtifactStream artifactStream) {
     try {
       if (!appService.exist(appId)) {
@@ -143,6 +147,8 @@ public class ArtifactStreamResource {
    */
   @PUT
   @Path("{streamId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ArtifactStream> update(
       @QueryParam("appId") String appId, @PathParam("streamId") String streamId, ArtifactStream artifactStream) {
     artifactStream.setUuid(streamId);
@@ -159,6 +165,8 @@ public class ArtifactStreamResource {
    */
   @DELETE
   @Path("{id}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
     artifactStreamService.delete(appId, id);
     return new RestResponse<>();
@@ -174,6 +182,8 @@ public class ArtifactStreamResource {
    */
   @POST
   @Path("{streamId}/actions")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ArtifactStream> addAction(@QueryParam("appId") String appId,
       @PathParam("streamId") String streamId, ArtifactStreamAction artifactStreamAction) {
     return new RestResponse<>(artifactStreamService.addStreamAction(appId, streamId, artifactStreamAction));
@@ -190,6 +200,8 @@ public class ArtifactStreamResource {
    */
   @PUT
   @Path("{streamId}/actions/{workflowId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ArtifactStream> updateAction(@QueryParam("appId") String appId,
       @PathParam("streamId") String streamId, @PathParam("workflowId") String workflowId,
       ArtifactStreamAction artifactStreamAction) {
@@ -207,6 +219,8 @@ public class ArtifactStreamResource {
    */
   @DELETE
   @Path("{streamId}/actions/{workflowId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<ArtifactStream> deleteAction(@QueryParam("appId") String appId,
       @PathParam("streamId") String streamId, @PathParam("workflowId") String workflowId) {
     return new RestResponse<>(artifactStreamService.deleteStreamAction(appId, streamId, workflowId));
@@ -220,6 +234,8 @@ public class ArtifactStreamResource {
    */
   @POST
   @Path("cron/translate")
+  @Timed
+  @ExceptionMetered
   public RestResponse<String> translateCron(Map<String, String> inputMap) {
     try {
       return new RestResponse<>(CronExpressionDescriptor.getDescription(
@@ -231,6 +247,8 @@ public class ArtifactStreamResource {
 
   @GET
   @Path("stencils")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<Stencil>> installedPluginSettingSchema(
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId, serviceId)).build();
@@ -238,6 +256,8 @@ public class ArtifactStreamResource {
 
   @GET
   @Path("buildsource-types")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Map<String, String>> getBuildSourceTypes(
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(artifactStreamService.getSupportedBuildSourceTypes(appId, serviceId));

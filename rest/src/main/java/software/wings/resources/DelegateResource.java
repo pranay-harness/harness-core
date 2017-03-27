@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import freemarker.template.TemplateException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -56,6 +58,8 @@ public class DelegateResource {
   @GET
   @ApiImplicitParams(
       { @ApiImplicitParam(name = "accountId", required = true, dataType = "string", paramType = "query") })
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Delegate>>
   list(@BeanParam PageRequest<Delegate> pageRequest) {
     return new RestResponse<>(delegateService.list(pageRequest));
@@ -63,6 +67,8 @@ public class DelegateResource {
 
   @GET
   @Path("{deletgateId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Delegate> get(
       @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateService.get(accountId, delegateId));
@@ -70,6 +76,8 @@ public class DelegateResource {
 
   @DELETE
   @Path("{deletgateId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Void> delete(
       @PathParam("deletgateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     delegateService.delete(accountId, delegateId);
@@ -79,6 +87,8 @@ public class DelegateResource {
   @DelegateAuth
   @PUT
   @Path("{deletgateId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Delegate> update(@PathParam("deletgateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
@@ -89,6 +99,8 @@ public class DelegateResource {
   @DelegateAuth
   @POST
   @Path("register")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
     return new RestResponse<>(delegateService.register(delegate));
@@ -111,6 +123,8 @@ public class DelegateResource {
 
   @GET
   @Path("downloadUrl")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Map<String, String>> downloadUrl(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
     return new RestResponse<>(ImmutableMap.of("downloadUrl",
@@ -122,6 +136,8 @@ public class DelegateResource {
   @PublicApi
   @GET
   @Path("download")
+  @Timed
+  @ExceptionMetered
   public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
@@ -137,6 +153,8 @@ public class DelegateResource {
   @POST
   @Path("{delegateId}/tasks/{taskId}")
   @Consumes("application/x-kryo")
+  @Timed
+  @ExceptionMetered
   public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
     delegateService.processDelegateResponse(delegateTaskResponse);
@@ -146,6 +164,8 @@ public class DelegateResource {
   @PUT
   @Produces("application/x-kryo")
   @Path("{delegateId}/tasks/{taskId}/acquire")
+  @Timed
+  @ExceptionMetered
   public DelegateTask acquireDelegateTask(@PathParam("delegateId") String delegateId,
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId) {
     return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
@@ -154,6 +174,8 @@ public class DelegateResource {
   @DelegateAuth
   @GET
   @Path("{deletgateId}/upgrade")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Delegate> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("deletgateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {

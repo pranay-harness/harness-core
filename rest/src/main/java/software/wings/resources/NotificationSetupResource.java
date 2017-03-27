@@ -25,8 +25,6 @@ import javax.ws.rs.QueryParam;
 @Api("/notification-setup")
 @Path("/notification-setup")
 @Produces("application/json")
-@Timed
-@ExceptionMetered
 public class NotificationSetupResource {
   private NotificationSetupService notificationSetupService;
 
@@ -44,6 +42,8 @@ public class NotificationSetupResource {
    */
   @GET
   @Path("notification-groups")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<NotificationGroup>> listNotificationGroups(
       @QueryParam("appId") String appId, @BeanParam PageRequest<NotificationGroup> pageRequest) {
     return new RestResponse<>(notificationSetupService.listNotificationGroups(pageRequest));
@@ -58,6 +58,8 @@ public class NotificationSetupResource {
    */
   @GET
   @Path("notification-groups/{notificationGroupId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<NotificationGroup> readNotificationGroup(
       @QueryParam("appId") String appId, @PathParam("notificationGroupId") String notificationGroupId) {
     return new RestResponse<>(notificationSetupService.readNotificationGroup(appId, notificationGroupId));
@@ -72,6 +74,8 @@ public class NotificationSetupResource {
    */
   @POST
   @Path("notification-groups")
+  @Timed
+  @ExceptionMetered
   public RestResponse<NotificationGroup> createNotificationGroups(
       @QueryParam("appId") String appId, NotificationGroup notificationGroup) {
     notificationGroup.setAppId(appId);
@@ -87,6 +91,8 @@ public class NotificationSetupResource {
    */
   @GET
   @Path("notification-rules")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<NotificationRule>> listNotificationRules(
       @QueryParam("appId") String appId, @BeanParam PageRequest<NotificationRule> pageRequest) {
     return new RestResponse<>(notificationSetupService.listNotificationRules(pageRequest));
@@ -101,6 +107,8 @@ public class NotificationSetupResource {
    */
   @GET
   @Path("notification-rules/{notificationGroupId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<NotificationRule> readNotificationRule(
       @QueryParam("appId") String appId, @PathParam("notificationGroupId") String notificationRuleId) {
     return new RestResponse<>(notificationSetupService.readNotificationRule(appId, notificationRuleId));
@@ -115,6 +123,8 @@ public class NotificationSetupResource {
    */
   @POST
   @Path("notification-rules")
+  @Timed
+  @ExceptionMetered
   public RestResponse<NotificationRule> createNotificationRule(
       @QueryParam("appId") String appId, NotificationRule notificationRule) {
     notificationRule.setAppId(appId);

@@ -20,10 +20,14 @@ xxxxxxxx
       certAlias: selfsigned
       validateCerts: false
   requestLog:
-      appenders:
-        - type: file
-          currentLogFilename: access.log
-          archivedLogFilenamePattern: access-%d.log.gz
+    appenders:
+      - type: rsyslog-tcp-ssl
+        name: syslog-accesslogs-appender
+        threshold: TRACE
+        host: syslog-a.logdna.com
+        port: 6514
+        key: b623cc9c1ee668fffc89730c5adedc8f
+        programName: manager-saas-accesslogs
 
 logging:
   level: INFO
@@ -37,7 +41,6 @@ logging:
       port: 6514
       key: b623cc9c1ee668fffc89730c5adedc8f
       programName: manager-saas
-      maxMessageLength: 262144
 
 mongo:
   host: localhost
@@ -49,7 +52,7 @@ metrics:
   - type: graphite
     host: carbon.hostedgraphite.com
     port: 2003
-    prefix: b7eb9d0f-415f-4691-aff3-8228b31277b1
+    prefix: server
 
 delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
 

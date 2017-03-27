@@ -4,6 +4,8 @@
 
 package software.wings.resources;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Orchestration;
 import software.wings.beans.RestResponse;
@@ -56,6 +58,8 @@ public class OrchestrationResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
@@ -71,6 +75,8 @@ public class OrchestrationResource {
    */
   @GET
   @Path("{orchestrationId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Orchestration> read(@QueryParam("appId") String appId,
       @PathParam("orchestrationId") String orchestrationId, @QueryParam("version") Integer version) {
     return new RestResponse<>(workflowService.readOrchestration(appId, orchestrationId, version));
@@ -85,6 +91,8 @@ public class OrchestrationResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<Orchestration> create(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, Orchestration orchestration) {
     orchestration.setAppId(appId);
@@ -102,6 +110,8 @@ public class OrchestrationResource {
    */
   @PUT
   @Path("{orchestrationId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Orchestration> update(@QueryParam("appId") String appId,
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
@@ -118,6 +128,8 @@ public class OrchestrationResource {
    */
   @DELETE
   @Path("{orchestrationId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("orchestrationId") String orchestrationId) {
     workflowService.deleteWorkflow(Orchestration.class, appId, orchestrationId);
     return new RestResponse();
@@ -132,6 +144,8 @@ public class OrchestrationResource {
    */
   @GET
   @Path("stencils")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @QueryParam("workflowId") String workflowId, @QueryParam("phaseId") String phaseId) {
     return new RestResponse<>(

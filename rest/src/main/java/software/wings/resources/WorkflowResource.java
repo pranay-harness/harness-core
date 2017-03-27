@@ -4,14 +4,16 @@
 
 package software.wings.resources;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Variable;
-import software.wings.beans.PhaseStep;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -58,6 +60,8 @@ public class WorkflowResource {
    * @return the rest response
    */
   @GET
+  @Timed
+  @ExceptionMetered
   public RestResponse<PageResponse<OrchestrationWorkflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<OrchestrationWorkflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
@@ -75,6 +79,8 @@ public class WorkflowResource {
    */
   @GET
   @Path("{orchestrationWorkflowId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<OrchestrationWorkflow> read(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @QueryParam("version") Integer version) {
     return new RestResponse<>(workflowService.readOrchestrationWorkflow(appId, orchestrationWorkflowId));
@@ -88,6 +94,8 @@ public class WorkflowResource {
    * @return the rest response
    */
   @POST
+  @Timed
+  @ExceptionMetered
   public RestResponse<OrchestrationWorkflow> create(
       @QueryParam("appId") String appId, OrchestrationWorkflow orchestrationWorkflow) {
     orchestrationWorkflow.setAppId(appId);
@@ -103,6 +111,8 @@ public class WorkflowResource {
    */
   @DELETE
   @Path("{orchestrationWorkflowId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId) {
     workflowService.deleteOrchestrationWorkflow(appId, orchestrationWorkflowId);
@@ -119,6 +129,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/basic")
+  @Timed
+  @ExceptionMetered
   public RestResponse<OrchestrationWorkflow> updatePreDeployment(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId,
       OrchestrationWorkflow orchestrationWorkflow) {
@@ -136,6 +148,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/pre-deploy")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PhaseStep> updatePreDeployment(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, PhaseStep phaseStep) {
     return new RestResponse<>(workflowService.updatePreDeployment(appId, orchestrationWorkflowId, phaseStep));
@@ -151,6 +165,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/post-deploy")
+  @Timed
+  @ExceptionMetered
   public RestResponse<PhaseStep> updatePostDeployment(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, PhaseStep phaseStep) {
     return new RestResponse<>(workflowService.updatePostDeployment(appId, orchestrationWorkflowId, phaseStep));
@@ -166,6 +182,8 @@ public class WorkflowResource {
    */
   @POST
   @Path("{orchestrationWorkflowId}/phases")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowPhase> create(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, WorkflowPhase workflowPhase) {
     return new RestResponse<>(workflowService.createWorkflowPhase(appId, orchestrationWorkflowId, workflowPhase));
@@ -182,6 +200,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/phases/{phaseId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowPhase> update(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId,
       WorkflowPhase workflowPhase) {
@@ -199,6 +219,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/phases/{phaseId}/rollback")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowPhase> updateRollback(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId,
       WorkflowPhase rollbackWorkflowPhase) {
@@ -216,6 +238,8 @@ public class WorkflowResource {
    */
   @DELETE
   @Path("{orchestrationWorkflowId}/phases/{phaseId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<WorkflowPhase> deletePhase(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, @PathParam("phaseId") String phaseId) {
     workflowService.deleteWorkflowPhase(appId, orchestrationWorkflowId, phaseId);
@@ -233,6 +257,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/nodes/{nodeId}")
+  @Timed
+  @ExceptionMetered
   public RestResponse<Node> updateGraphNode(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId,
       @QueryParam("subworkflowId") String subworkflowId, @PathParam("nodeId") String nodeId, Node node) {
@@ -250,6 +276,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/notification-rules")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<NotificationRule>> updateNotificationRules(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, List<NotificationRule> notificationRules) {
     return new RestResponse<>(
@@ -266,6 +294,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/failure-strategies")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<FailureStrategy>> updateFailureStrategies(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, List<FailureStrategy> failureStrategies) {
     return new RestResponse<>(
@@ -282,6 +312,8 @@ public class WorkflowResource {
    */
   @PUT
   @Path("{orchestrationWorkflowId}/user-variables")
+  @Timed
+  @ExceptionMetered
   public RestResponse<List<Variable>> updateUserVariables(@QueryParam("appId") String appId,
       @PathParam("orchestrationWorkflowId") String orchestrationWorkflowId, List<Variable> userVariables) {
     return new RestResponse<>(workflowService.updateUserVariables(appId, orchestrationWorkflowId, userVariables));
