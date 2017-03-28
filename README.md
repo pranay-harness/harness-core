@@ -11,16 +11,18 @@ Prerequisities
 3) Install maven : brew install maven 
 4) Install mongo : brew install mongo
 5) Install npm : brew install npm
+6) Set up JAVA_HOME: create ~/.bash_profile file and add following line:
+    export JAVA_HOME=$(/usr/libexec/java_home)
 
 Build 
 
 1) Clone form git repository:  https://github.com/wings-software/wings
-2) Starte mongo db 
+2) Start mongo db (mongod)
 3) Go to wings directory and run mvn clean install 
 
-Note : On MacOS sierra ,If many test cases fail then follow the instructuions in this post. (https://thoeni.io/post/macos-sierra-java/) 
+Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLocalHost() response problem as documented in this blog post (https://thoeni.io/post/macos-sierra-java/).
 
-Ide Setup 
+IDE Setup
 
 1) Install IntelliJ community edition 
 2) Import wings portal as maven project
