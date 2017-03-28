@@ -1,12 +1,15 @@
 package software.wings.app;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.google.inject.matcher.Matchers.not;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -136,8 +139,16 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule();
     StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
-    Injector injector = Guice.createInjector(
-        MetricsInstrumentationModule.builder().withMetricRegistry(metricRegistry).build(), cacheModule, streamModule,
+    Injector injector = Guice.createInjector(MetricsInstrumentationModule.builder()
+                                                 .withMetricRegistry(metricRegistry)
+                                                 .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {
+                                                   @Override
+                                                   public boolean matches(TypeLiteral<?> typeLiteral) {
+                                                     return typeLiteral.getRawType().isAnnotationPresent(Path.class);
+                                                   }
+                                                 }))
+                                                 .build(),
+        cacheModule, streamModule,
         new AbstractModule() {
           @Override
           protected void configure() {
