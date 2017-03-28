@@ -15,6 +15,7 @@ import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
@@ -117,6 +118,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (appId != null && accountId == null) {
       accountId = appService.get(appId).getAccountId();
+    }
+
+    if (accountId == null) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "accountId not specified");
     }
 
     UserRequestInfoBuilder userRequestInfoBuilder =

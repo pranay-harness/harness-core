@@ -79,7 +79,8 @@ public class AppResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<Application> save(Application app) {
+  public RestResponse<Application> save(@QueryParam("accountId") String accountId, Application app) {
+    app.setAccountId(accountId);
     return new RestResponse<>(appService.save(app));
   }
 
