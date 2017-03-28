@@ -74,6 +74,11 @@ private OkHttpClient getUnsafeOkHttpClient() {
             .retryOnConnectionFailure(true)
             .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
             .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0])
+            .addInterceptor(chain
+                -> chain.proceed(chain.request()
+                                     .newBuilder()
+                                     .addHeader("User-Agent", "delegate/" + System.getProperty("version"))
+                                     .build()))
             .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> chain.proceed(chain.request())))
             .hostnameVerifier((hostname, session) -> true)
             .build();
