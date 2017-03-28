@@ -495,7 +495,7 @@
             <dependency>
                 <groupId>com.squareup.retrofit2</groupId>
                 <artifactId>retrofit</artifactId>
-                <version>2.1.0</version>
+                <version>2.2.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.google.android</groupId>
@@ -506,7 +506,7 @@
             <dependency>
                 <groupId>com.squareup.retrofit2</groupId>
                 <artifactId>converter-jackson</artifactId>
-                <version>2.1.0</version>
+                <version>2.2.0</version>
             </dependency>
 
             <dependency>
