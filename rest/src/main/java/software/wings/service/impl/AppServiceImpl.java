@@ -21,7 +21,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
@@ -92,7 +91,6 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
    */
   @Override
-  @Metered
   public Application save(Application app) {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
     createDefaultRoles(app);
