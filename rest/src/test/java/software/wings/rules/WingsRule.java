@@ -12,11 +12,11 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.internal.metrics.MetricsRegistry;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -191,7 +191,7 @@ public class WingsRule implements MethodRule {
           protected void configure() {
             bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
             bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
-            bind(MetricsRegistry.class);
+            bind(MetricRegistry.class);
           }
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
