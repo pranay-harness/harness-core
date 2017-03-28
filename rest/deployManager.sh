@@ -15,6 +15,7 @@ sed -i 's/certAlias: selfsigned/certAlias: java/' config.yml
 sed -i "s/url: https:\/\/localhost:8000/url: https:\/\/${1}/" config.yml
 sed -i "s/delegateMetadataUrl: http:\/\/wingsdelegates.s3-website-us-east-1.amazonaws.com\/delegateci.txt/delegateMetadataUrl: http:\/\/wingsdelegates.s3-website-us-east-1.amazonaws.com\/delegate${3}.txt/" config.yml
 sed -i 's/b623cc9c1ee668fffc89730c5adedc8f/4ac03b05674fc5c488e3b9b235078d5d/' config.yml
+sed -i 's/carbon.hostedgraphite.com/ec2-34-205-52-18.compute-1.amazonaws.com/' config.yml
 
 export HOSTNAME
 NEW_RELIC_APP_NAME="${2}" nohup java -Dfile.encoding=UTF-8 -jar $HOME/rest-0.0.1-SNAPSHOT-capsule.jar config.yml > portal.log 2>&1 &
