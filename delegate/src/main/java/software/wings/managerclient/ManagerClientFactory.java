@@ -9,6 +9,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
+import okhttp3.Response;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
@@ -79,7 +81,17 @@ private OkHttpClient getUnsafeOkHttpClient() {
                                      .newBuilder()
                                      .addHeader("User-Agent", "delegate/" + System.getProperty("version"))
                                      .build()))
-            .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> chain.proceed(chain.request())))
+            .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> {
+              Response response = null;
+              try {
+                response = chain.proceed(chain.request());
+                return response;
+              } finally {
+                if (response != null && !response.isSuccessful()) {
+                  IOUtils.closeQuietly(response.body());
+                }
+              }
+            }))
             .hostnameVerifier((hostname, session) -> true)
             .build();
 
