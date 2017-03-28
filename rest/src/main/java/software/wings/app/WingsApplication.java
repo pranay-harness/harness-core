@@ -9,10 +9,12 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.hazelcast.core.HazelcastInstance;
 import com.palantir.versioninfo.VersionInfoBundle;
+import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
@@ -79,6 +81,7 @@ import javax.ws.rs.Path;
  */
 public class WingsApplication extends Application<MainConfiguration> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final MetricRegistry metricRegistry = new MetricRegistry();
 
   /**
    * The entry point of application.
@@ -116,6 +119,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         new JsonSubtypeResolver(bootstrap.getObjectMapper().getSubtypeResolver()));
     bootstrap.getObjectMapper().setConfig(
         bootstrap.getObjectMapper().getSerializationConfig().withView(JsonViews.Public.class));
+    bootstrap.setMetricRegistry(metricRegistry);
 
     logger.info("bootstrapping done.");
   }
@@ -132,11 +136,13 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule();
     StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
-    Injector injector = Guice.createInjector(cacheModule, streamModule,
+    Injector injector = Guice.createInjector(
+        MetricsInstrumentationModule.builder().withMetricRegistry(metricRegistry).build(), cacheModule, streamModule,
         new AbstractModule() {
           @Override
           protected void configure() {
             bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
+            bind(MetricRegistry.class).toInstance(metricRegistry);
           }
         },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
