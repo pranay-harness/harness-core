@@ -633,7 +633,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     Validator.notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()));
 
-    orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
+    boolean found = false;
+    for (int i = 0; i < orchestrationWorkflow.getWorkflowPhases().size(); i++) {
+      if (orchestrationWorkflow.getWorkflowPhases().get(i).getUuid().equals(workflowPhase.getUuid())) {
+        orchestrationWorkflow.getWorkflowPhases().remove(i);
+        orchestrationWorkflow.getWorkflowPhases().add(i, workflowPhase);
+        orchestrationWorkflow.getWorkflowPhaseIdMap().put(workflowPhase.getUuid(), workflowPhase);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "no matching workflowPhase");
+    }
+
     updateWorkflow(workflow, orchestrationWorkflow);
     return workflowPhase;
   }
