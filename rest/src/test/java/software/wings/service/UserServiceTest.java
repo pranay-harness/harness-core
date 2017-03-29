@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,12 +46,15 @@ import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -59,15 +64,18 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
+import software.wings.beans.Role.Builder;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -77,12 +85,15 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -103,6 +114,9 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AccountService accountService;
   @Mock private AppService appService;
+  @Mock private AuthService authService;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
+
   @Inject @InjectMocks private UserService userService;
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
@@ -126,6 +140,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     when(updateOperations.add(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
 
     when(wingsPersistence.createQuery(EmailVerificationToken.class)).thenReturn(verificationQuery);
     when(verificationQuery.field(any())).thenReturn(verificationQueryEnd);
@@ -150,6 +165,8 @@ public class UserServiceTest extends WingsBaseTest {
                          .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
                          .build();
 
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
@@ -188,6 +205,8 @@ public class UserServiceTest extends WingsBaseTest {
                          .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
                          .build();
 
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.getPortal().getVerificationUrl()).thenReturn(VERIFICATION_PATH);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(accountService.save(any(Account.class)))
         .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
@@ -343,6 +362,51 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldInviteNewUser() {
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmails(asList(USER_EMAIL))
+                                .withRoles(asList(Builder.aRole().withUuid(ROLE_ID).build()))
+                                .build();
+
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+
+    userService.inviteUsers(userInvite);
+
+    verify(accountService).get(ACCOUNT_ID);
+    verify(wingsPersistence).save(userInvite);
+    verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
+  }
+
+  @Test
+  public void shouldInviteExistingUser() {
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmails(asList(USER_EMAIL))
+                                .withRoles(asList(Builder.aRole().withUuid(ROLE_ID).build()))
+                                .build();
+
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+
+    userService.inviteUsers(userInvite);
+
+    verify(query, times(2)).field("email");
+    verify(end, times(2)).equal(USER_EMAIL);
+    verify(accountService).get(ACCOUNT_ID);
+    verify(wingsPersistence).save(userInvite);
+    verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
+  }
+
+  @Test
   public void shouldCompleteInvite() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
@@ -427,5 +491,44 @@ public class UserServiceTest extends WingsBaseTest {
         assertThat(applicationRole.getResourceAccess()).contains(ImmutablePair.of(resourceType, action));
       }
     }
+  }
+
+  @Test
+  public void shouldSendResetPasswordEmail() throws EmailException, TemplateException, IOException {
+    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    userService.resetPassword(USER_EMAIL);
+
+    verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("reset_password");
+    assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
+    assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
+        .startsWith(PORTAL_URL + "#/reset-password/");
+    assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url").length())
+        .isGreaterThan((PORTAL_URL + "#/reset-password/").length());
+  }
+
+  @Test
+  public void shouldUpdatePassword() throws UnsupportedEncodingException {
+    when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
+    Algorithm algorithm = Algorithm.HMAC256("SECRET");
+    String token = JWT.create()
+                       .withIssuer("Wings Software")
+                       .withIssuedAt(new Date())
+                       .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
+                       .withClaim("email", USER_EMAIL)
+                       .sign(algorithm);
+
+    userService.updatePassword(token, USER_PASSWORD);
+
+    verify(query).field("email");
+    verify(end).equal(USER_EMAIL);
+    verify(authService).invalidateAllTokensForUser(USER_ID);
+    verify(wingsPersistence).update(eq(userBuilder.withUuid(USER_ID).build()), any(UpdateOperations.class));
+    verify(updateOperations).set(eq("passwordHash"), anyString());
+    verify(updateOperations).set(eq("passwordChangedAt"), anyLong());
   }
 }
