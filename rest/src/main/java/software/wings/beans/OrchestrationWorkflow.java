@@ -18,11 +18,11 @@ import java.util.Set;
 public abstract class OrchestrationWorkflow {
   private OrchestrationWorkflowType orchestrationWorkflowType;
 
-  public OrchestrationWorkflowType getWorkflowOrchestrationType() {
+  public OrchestrationWorkflowType getOrchestrationWorkflowType() {
     return orchestrationWorkflowType;
   }
 
-  public void setWorkflowOrchestrationType(OrchestrationWorkflowType orchestrationWorkflowType) {
+  public void setOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
     this.orchestrationWorkflowType = orchestrationWorkflowType;
   }
 

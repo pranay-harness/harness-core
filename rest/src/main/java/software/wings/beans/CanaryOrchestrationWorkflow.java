@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @JsonTypeName("CANARY")
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
-    setWorkflowOrchestrationType(OrchestrationWorkflowType.CANARY);
+    setOrchestrationWorkflowType(OrchestrationWorkflowType.CANARY);
   }
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
