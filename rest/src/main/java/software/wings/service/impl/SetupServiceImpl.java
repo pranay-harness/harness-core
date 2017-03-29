@@ -125,7 +125,7 @@ public class SetupServiceImpl implements SetupService {
       if (hosts != null && !hosts.isEmpty()) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
-            .withDisplayText("Setup complete: you can createStateMachine a deployment.")
+            .withDisplayText("Setup complete: you can create a deployment.")
             .withUrl(String.format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
             .build();
       }

@@ -10,18 +10,18 @@ public class SpawningExecutionResponse extends ExecutionResponse {
   private List<StateExecutionInstance> stateExecutionInstanceList = new ArrayList<>();
 
   /**
-   * Gets state execution instance listStateMachines.
+   * Gets state execution instance list.
    *
-   * @return the state execution instance listStateMachines
+   * @return the state execution instance list
    */
   public List<StateExecutionInstance> getStateExecutionInstanceList() {
     return stateExecutionInstanceList;
   }
 
   /**
-   * Sets state execution instance listStateMachines.
+   * Sets state execution instance list.
    *
-   * @param stateExecutionInstanceList the state execution instance listStateMachines
+   * @param stateExecutionInstanceList the state execution instance list
    */
   public void setStateExecutionInstanceList(List<StateExecutionInstance> stateExecutionInstanceList) {
     this.stateExecutionInstanceList = stateExecutionInstanceList;

@@ -101,7 +101,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines pipeline executions.
+   * Should list pipeline executions.
    */
   @Test
   public void shouldListPipelineExecutions() {

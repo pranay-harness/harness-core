@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * Created by rishi on 3/28/17.
  */
-@JsonTypeName("CANARY")
+@JsonTypeName("CUSTOM")
 public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public CustomOrchestrationWorkflow() {
     setWorkflowOrchestrationType(OrchestrationWorkflowType.CUSTOM);

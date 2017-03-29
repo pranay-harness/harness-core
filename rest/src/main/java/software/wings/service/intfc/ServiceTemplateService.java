@@ -61,7 +61,7 @@ public interface ServiceTemplateService {
    *
    * @param existingFiles the existing files
    * @param newFiles      the new files
-   * @return the listStateMachines
+   * @return the list
    */
   List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles);
 

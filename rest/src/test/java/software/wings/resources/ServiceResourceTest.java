@@ -56,7 +56,7 @@ public class ServiceResourceTest {
                                               .build();
 
   /**
-   * Should listStateMachines services.
+   * Should list services.
    */
   @Test
   public void shouldListServices() {

@@ -21,7 +21,7 @@ public interface WingsPersistence {
    *
    * @param <T> the generic type
    * @param cls the cls
-   * @return the listStateMachines
+   * @return the list
    */
   <T extends Base> List<T> list(Class<T> cls);
 
@@ -31,7 +31,7 @@ public interface WingsPersistence {
    * @param <T>      the generic type
    * @param cls      the cls
    * @param readPref the read pref
-   * @return the listStateMachines
+   * @return the list
    */
   <T extends Base> List<T> list(Class<T> cls, ReadPref readPref);
 
@@ -110,8 +110,8 @@ public interface WingsPersistence {
    * Save.
    *
    * @param <T>   the generic type
-   * @param tList the t listStateMachines
-   * @return the listStateMachines
+   * @param tList the t list
+   * @return the list
    */
   <T extends Base> List<String> save(List<T> tList);
 
@@ -257,10 +257,10 @@ public interface WingsPersistence {
   <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
 
   /**
-   * Gets the or createStateMachine grid fs bucket.
+   * Gets the or create grid fs bucket.
    *
    * @param bucketName the bucket name
-   * @return the or createStateMachine grid fs bucket
+   * @return the or create grid fs bucket
    */
   GridFSBucket getOrCreateGridFSBucket(String bucketName);
 

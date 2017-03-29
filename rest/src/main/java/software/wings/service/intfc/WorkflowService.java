@@ -148,10 +148,10 @@ public interface WorkflowService {
   void deleteStateMachinesByApplication(String appId);
 
   /**
-   * List workflow failure strategies listStateMachines.
+   * List workflow failure strategies list.
    *
    * @param appId the app id
-   * @return the listStateMachines
+   * @return the list
    */
   List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId);
 
@@ -169,7 +169,7 @@ public interface WorkflowService {
    * @param workflowFailureStrategy the workflow failure strategy
    * @return the workflow failure strategy
    */
-  WorkflowFailureStrategy createStateMachine(@Valid WorkflowFailureStrategy workflowFailureStrategy);
+  WorkflowFailureStrategy createWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
   /**
    * Update workflow failure strategy.
@@ -177,7 +177,7 @@ public interface WorkflowService {
    * @param workflowFailureStrategy the workflow failure strategy
    * @return the workflow failure strategy
    */
-  WorkflowFailureStrategy update(@Valid WorkflowFailureStrategy workflowFailureStrategy);
+  WorkflowFailureStrategy updateWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
   /**
    * Delete workflow failure strategy boolean.

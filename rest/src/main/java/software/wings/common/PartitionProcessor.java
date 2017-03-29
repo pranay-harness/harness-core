@@ -70,10 +70,10 @@ public interface PartitionProcessor {
     }
 
   /**
-   * Partitions listStateMachines.
+   * Partitions list.
    *
    * @param breakdownsParams the breakdowns params
-   * @return the listStateMachines
+   * @return the list
    */
   default List
     <PartitionElement> partitions(String... breakdownsParams) {
@@ -128,10 +128,10 @@ public interface PartitionProcessor {
     }
 
   /**
-   * Compute counts listStateMachines.
+   * Compute counts list.
    *
    * @param total the total
-   * @return the listStateMachines
+   * @return the list
    */
   default List
     <Integer> computeCounts(int total) {
@@ -231,9 +231,9 @@ public interface PartitionProcessor {
     }
 
     /**
-     * Elements listStateMachines.
+     * Elements list.
      *
-     * @return the listStateMachines
+     * @return the list
      */
     List<ContextElement> elements();
 

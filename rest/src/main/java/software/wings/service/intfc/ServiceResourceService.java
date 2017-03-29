@@ -163,10 +163,10 @@ public interface ServiceResourceService {
   void deleteByApp(String appId);
 
   /**
-   * Find services by app listStateMachines.
+   * Find services by app list.
    *
    * @param appId the app id
-   * @return the listStateMachines
+   * @return the list
    */
   List<Service> findServicesByApp(String appId);
 

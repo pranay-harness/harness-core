@@ -106,7 +106,7 @@ public class ArtifactResourceTest {
   }
 
   /**
-   * Should createStateMachine new artifact.
+   * Should create new artifact.
    */
   @Test
   public void shouldCreateNewArtifact() {
@@ -171,7 +171,7 @@ public class ArtifactResourceTest {
   }
 
   /**
-   * Should listStateMachines artifact.
+   * Should list artifact.
    *
    * @throws IOException Signals that an I/O exception has occurred.
    */

@@ -25,7 +25,7 @@ public class StateTypeTest {
   }
 
   /**
-   * Should createStateMachine new instance for.
+   * Should create new instance for.
    *
    * @param stateTypeName the state type name
    * @throws Exception the exception

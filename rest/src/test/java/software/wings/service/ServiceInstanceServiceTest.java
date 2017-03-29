@@ -99,7 +99,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines service instances.
+   * Should list service instances.
    */
   @Test
   public void shouldListServiceInstances() {

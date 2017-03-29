@@ -49,7 +49,7 @@ public class HostResourceTest extends WingsBaseTest {
   private static final Host host = Builder.aHost().withAppId(APP_ID).withEnvId(ENV_ID).withHostName(HOST_NAME).build();
 
   /**
-   * Should listStateMachines hosts.
+   * Should list hosts.
    */
   @Test
   @Ignore

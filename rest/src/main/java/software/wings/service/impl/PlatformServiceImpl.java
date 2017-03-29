@@ -20,7 +20,7 @@ public class PlatformServiceImpl implements PlatformService {
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.PlatformService#listStateMachines(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.PlatformService#list(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<AppContainer> list(PageRequest<AppContainer> req) {
@@ -28,7 +28,7 @@ public class PlatformServiceImpl implements PlatformService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.PlatformService#createStateMachine(software.wings.beans.AppContainer)
+   * @see software.wings.service.intfc.PlatformService#create(software.wings.beans.AppContainer)
    */
   @Override
   public AppContainer create(AppContainer platform) {

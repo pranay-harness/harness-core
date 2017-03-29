@@ -97,7 +97,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines saved service templates.
+   * Should list saved service templates.
    */
   @Test
   public void shouldListSavedServiceTemplates() {
@@ -133,7 +133,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should createStateMachine default service template by env.
+   * Should create default service template by env.
    */
   @Test
   public void shouldCreateDefaultServiceTemplateByEnv() {
@@ -152,7 +152,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should createStateMachine default service template by service.
+   * Should create default service template by service.
    */
   @Test
   public void shouldCreateDefaultServiceTemplateByService() {

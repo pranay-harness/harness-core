@@ -94,7 +94,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private ActivityService activityService;
 
   /**
-   * Should listStateMachines activities.
+   * Should list activities.
    */
   @Test
   public void shouldListActivities() {

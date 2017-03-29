@@ -26,7 +26,7 @@ public class CommandUnitTypeTest {
   }
 
   /**
-   * Should createStateMachine new instance for.
+   * Should create new instance for.
    *
    * @param commandUnitTypeName the command unit type name
    * @throws Exception the exception

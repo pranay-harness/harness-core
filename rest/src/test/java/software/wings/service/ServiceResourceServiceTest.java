@@ -143,7 +143,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines services.
+   * Should list services.
    */
   @Test
   public void shouldListServices() {

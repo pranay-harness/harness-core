@@ -1,6 +1,8 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 
 import java.util.List;
 import java.util.Set;
@@ -8,7 +10,11 @@ import java.util.Set;
 /**
  * Created by rishi on 3/28/17.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "orchestrationWorkflowType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "orchestrationWorkflowType", include = As.PROPERTY)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = CanaryOrchestrationWorkflow.class, name = "CANARY")
+  , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM")
+})
 public abstract class OrchestrationWorkflow {
   private OrchestrationWorkflowType orchestrationWorkflowType;
 

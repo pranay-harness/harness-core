@@ -12,10 +12,10 @@ public final class FileBucketHelper {
   @Inject private WingsPersistence wingsPersistence;
 
   /**
-   * Gets the or createStateMachine file bucket.
+   * Gets the or create file bucket.
    *
    * @param fileBucket the file bucket
-   * @return the or createStateMachine file bucket
+   * @return the or create file bucket
    */
   public GridFSBucket getOrCreateFileBucket(FileBucket fileBucket) {
     return wingsPersistence.getOrCreateGridFSBucket(fileBucket.getName());

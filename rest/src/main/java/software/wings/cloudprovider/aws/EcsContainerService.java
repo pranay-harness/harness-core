@@ -58,7 +58,7 @@ public interface EcsContainerService {
    * @param serviceName          the service name
    * @param desiredCount         the desired count
    * @param executionLogCallback the execution log callback
-   * @return the listStateMachines
+   * @return the list
    */
   List<String> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
       Integer desiredCount, ExecutionLogCallback executionLogCallback);

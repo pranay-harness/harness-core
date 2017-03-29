@@ -25,7 +25,7 @@ public class NotifyEvent extends Queuable {
   /**
    * Copy constructor.
    *
-   * @param other NotifyEvent to createStateMachine copy for.
+   * @param other NotifyEvent to create copy for.
    */
   public NotifyEvent(NotifyEvent other) {
     super(other);

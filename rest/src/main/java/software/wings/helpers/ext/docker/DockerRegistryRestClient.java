@@ -19,7 +19,7 @@ public interface DockerRegistryRestClient {
   Call<DockerRegistryToken> getToken(@Header("Authorization") String basicAuthHeader, @Url String url,
       @Query("service") String service, @Query("scope") String scope);
 
-  @GET("/v2/{imageName}/tags/listStateMachines")
+  @GET("/v2/{imageName}/tags/list")
   Call<DockerImageTagResponse> listImageTags(
       @Header("Authorization") String bearerAuthHeader, @Path(value = "imageName", encoded = true) String imageName);
 }

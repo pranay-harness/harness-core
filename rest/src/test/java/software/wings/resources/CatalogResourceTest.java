@@ -86,7 +86,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines catalogs.
+   * Should list catalogs.
    */
   @Test
   public void shouldListCatalogs() {
@@ -110,7 +110,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines catalogs for.
+   * Should list catalogs for.
    *
    * @param catalogNameForDisplay the catalog name for display
    * @param settingAttribute      the setting attribute

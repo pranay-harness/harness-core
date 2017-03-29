@@ -49,7 +49,7 @@ public class LogServiceTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
   /**
-   * Should listStateMachines logs.
+   * Should list logs.
    */
   @Test
   public void shouldListLogs() {

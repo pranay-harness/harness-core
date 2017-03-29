@@ -59,7 +59,7 @@ public class ServiceVariableResourceTest {
                                                               .build();
 
   /**
-   * Should listStateMachines variables.
+   * Should list variables.
    *
    * @throws Exception the exception
    */

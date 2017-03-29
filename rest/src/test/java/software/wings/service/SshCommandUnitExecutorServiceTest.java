@@ -151,7 +151,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should createStateMachine password based ssh config.
+   * Should create password based ssh config.
    */
   @Test
   public void shouldCreatePasswordBasedSshConfig() {
@@ -174,7 +174,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should createStateMachine key based ssh config.
+   * Should create key based ssh config.
    */
   @Test
   public void shouldCreateKeyBasedSshConfig() {
@@ -198,7 +198,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should createStateMachine bastion host based ssh config.
+   * Should create bastion host based ssh config.
    */
   @Test
   public void shouldCreateBastionHostBasedSshConfig() {

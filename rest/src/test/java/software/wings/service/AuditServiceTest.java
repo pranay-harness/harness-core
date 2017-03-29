@@ -31,7 +31,7 @@ public class AuditServiceTest extends WingsBaseTest {
   private String appId = UUIDGenerator.getUuid();
 
   /**
-   * Should createStateMachine.
+   * Should create.
    *
    * @throws Exception the exception
    */
@@ -81,7 +81,7 @@ public class AuditServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines.
+   * Should list.
    *
    * @throws Exception the exception
    */

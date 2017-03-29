@@ -129,7 +129,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   /**
    * List.
    *
-   * @return the listStateMachines
+   * @return the list
    */
   public List<ServiceElement> list() {
     if (ArrayUtils.isEmpty(serviceNames)) {
@@ -149,7 +149,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    *
    * @param services the services
    * @param names    the names
-   * @return the listStateMachines
+   * @return the list
    */
   List<ServiceElement> matchingServices(List<ServiceElement> services, String... names) {
     if (services == null) {

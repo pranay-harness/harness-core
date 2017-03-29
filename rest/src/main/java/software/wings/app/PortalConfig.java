@@ -63,9 +63,9 @@ public class PortalConfig {
   }
 
   /**
-   * Gets allowed domains listStateMachines.
+   * Gets allowed domains list.
    *
-   * @return the allowed domains listStateMachines
+   * @return the allowed domains list
    */
   public List<String> getAllowedDomainsList() {
     return isEmpty(allowedDomains) ? Lists.newArrayList() : allowedDomains;

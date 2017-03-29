@@ -130,7 +130,7 @@ public class AppServiceImpl implements AppService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppService#listStateMachines(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<Application> list(

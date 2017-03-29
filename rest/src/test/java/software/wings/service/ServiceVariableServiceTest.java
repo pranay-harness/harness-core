@@ -83,7 +83,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should listStateMachines.
+   * Should list.
    */
   @Test
   public void shouldList() {

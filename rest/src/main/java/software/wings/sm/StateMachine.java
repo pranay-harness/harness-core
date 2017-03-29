@@ -435,11 +435,11 @@ public class StateMachine extends Base {
   }
 
   /**
-   * Returns listStateMachines of next states given start state and transition type.
+   * Returns list of next states given start state and transition type.
    *
    * @param fromStateName  start state.
    * @param transitionType transition type to look state from.
-   * @return listStateMachines of next states or null.
+   * @return list of next states or null.
    */
   public List<State> getNextStates(String fromStateName, TransitionType transitionType) {
     Map<String, Map<TransitionType, List<State>>> transitionFlowMap = getTransitionFlowMap();
@@ -470,7 +470,7 @@ public class StateMachine extends Base {
   /**
    * Gets transition flow map.
    *
-   * @return a transition flow map describing transition types to listStateMachines of states.
+   * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
     if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() > 0) {

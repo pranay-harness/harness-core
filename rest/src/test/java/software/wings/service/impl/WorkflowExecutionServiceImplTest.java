@@ -534,7 +534,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //    filter.setFieldValues(pipeline.getUuid());
   //    filter.setOp(Operator.EQ);
   //    req.addFilter(filter);
-  //    PageResponse<StateMachine> res = workflowService.listStateMachines(req);
+  //    PageResponse<StateMachine> res = workflowService.list(req);
   //
   //    assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
   //    assertThat(res.get(0).getTransitions()).hasSize(1);
@@ -696,7 +696,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //  }
   //
   //  /**
-  //   * Should listStateMachines orchestration.
+  //   * Should list orchestration.
   //   *
   //   * @throws InterruptedException the interrupted exception
   //   */

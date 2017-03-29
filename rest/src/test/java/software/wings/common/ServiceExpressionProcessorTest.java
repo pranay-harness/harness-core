@@ -81,7 +81,7 @@ public class ServiceExpressionProcessorTest {
   }
 
   /**
-   * Should return listStateMachines all.
+   * Should return list all.
    */
   @Test
   public void shouldReturnListAll() {
@@ -112,7 +112,7 @@ public class ServiceExpressionProcessorTest {
   }
 
   /**
-   * Should return listStateMachines all from context.
+   * Should return list all from context.
    */
   @Test
   public void shouldReturnListAllFromContext() {
@@ -135,7 +135,7 @@ public class ServiceExpressionProcessorTest {
   }
 
   /**
-   * Should return listStateMachines some by name.
+   * Should return list some by name.
    */
   @Test
   public void shouldReturnListSomeByName() {
@@ -163,7 +163,7 @@ public class ServiceExpressionProcessorTest {
   }
 
   /**
-   * Should return listStateMachines some by name.
+   * Should return list some by name.
    */
   @Test
   public void shouldReturnSelectedListSomeByName() {

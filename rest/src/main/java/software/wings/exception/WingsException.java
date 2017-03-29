@@ -17,7 +17,7 @@ public class WingsException extends WingsApiException {
   private static final long serialVersionUID = -3266129015976960503L;
 
   /**
-   * The Response message listStateMachines.
+   * The Response message list.
    */
   List<ResponseMessage> responseMessageList = new ArrayList<ResponseMessage>();
   private Map<String, Object> params = new HashMap<String, Object>();
@@ -129,7 +129,7 @@ public class WingsException extends WingsApiException {
   /**
    * Instantiates a new wings exception.
    *
-   * @param messageList the message listStateMachines
+   * @param messageList the message list
    * @param message     the message
    * @param cause       the cause
    */
@@ -167,18 +167,18 @@ public class WingsException extends WingsApiException {
   }
 
   /**
-   * Gets response message listStateMachines.
+   * Gets response message list.
    *
-   * @return the response message listStateMachines
+   * @return the response message list
    */
   public List<ResponseMessage> getResponseMessageList() {
     return responseMessageList;
   }
 
   /**
-   * Sets response message listStateMachines.
+   * Sets response message list.
    *
-   * @param messageList the message listStateMachines
+   * @param messageList the message list
    */
   public void setResponseMessageList(List<ResponseMessage> messageList) {
     this.responseMessageList = messageList;

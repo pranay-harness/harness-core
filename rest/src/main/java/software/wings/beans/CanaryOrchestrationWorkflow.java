@@ -1,13 +1,18 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
+import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -178,10 +183,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     populatePhaseStepIds(postDeploymentSteps);
-    populateGraph();
+    setGraph(generateGraph());
   }
-
-  private void populateGraph() {}
 
   /**
    * Invoked after loading document from mongo by morphia.
@@ -238,6 +241,36 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
     Map<String, Node> nodesMap = subWorkflowGraph.getNodesMap();
     phaseStep.setSteps(phaseStep.getStepsIds().stream().map(stepId -> nodesMap.get(stepId)).collect(toList()));
+  }
+
+  private Graph generateGraph() {
+    String id1 = preDeploymentSteps.getUuid();
+    String id2;
+    Node preDeploymentNode = preDeploymentSteps.generatePhaseStepNode();
+    preDeploymentNode.setOrigin(true);
+    Builder graphBuilder =
+        aGraph().addNodes(preDeploymentNode).addSubworkflow(id1, preDeploymentSteps.generateSubworkflow(null));
+
+    if (workflowPhases != null) {
+      for (WorkflowPhase workflowPhase : workflowPhases) {
+        id2 = workflowPhase.getUuid();
+        graphBuilder.addNodes(workflowPhase.generatePhaseNode())
+            .addLinks(
+                aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+
+        if (rollbackWorkflowPhaseIdMap != null && rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid()) != null) {
+          Node rollbackNode = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid()).generatePhaseNode();
+          graphBuilder.addNodes(rollbackNode);
+        }
+        id1 = id2;
+      }
+    }
+    id2 = postDeploymentSteps.getUuid();
+    graphBuilder.addNodes(postDeploymentSteps.generatePhaseStepNode())
+        .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
+        .addSubworkflow(id2, postDeploymentSteps.generateSubworkflow(null));
+
+    return graphBuilder.build();
   }
 
   public static final class CanaryOrchestrationWorkflowBuilder {

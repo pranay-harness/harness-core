@@ -348,8 +348,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
       throw new WingsException("Orchestration Workflow has already been triggered");
     }
-    // TODO - validate listStateMachines of artifact Ids if it's matching for all the services involved in this
-    // orchestration
+    // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
     StateMachine stateMachine = workflowService.readLatestStateMachine(appId, workflowId);
     if (stateMachine == null) {
@@ -686,7 +685,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
       if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "OrchestrationWorkflow machine not found");
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "OrchestrationWorkflow not found");
       }
 
       StateMachine stateMachine = workflowService.readLatestStateMachine(appId, executionArgs.getOrchestrationId());
