@@ -28,7 +28,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.Lists;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -45,6 +44,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -1734,7 +1734,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   public void shouldTriggerCanaryWorkflow() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env = wingsPersistence.saveAndGet(
@@ -1756,17 +1755,18 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
 
-    infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(env.getUuid())
-                                          .withHostNames(Lists.newArrayList("host1"))
-                                          .withServiceTemplateId(serviceTemplate.getUuid())
-                                          .withComputeProviderSettingId(computeProvider.getUuid())
-                                          .withComputeProviderType(computeProvider.getValue().getType())
-                                          .withDeploymentType(SSH.name())
-                                          .build());
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                              .withAppId(app.getUuid())
+                                              .withEnvId(env.getUuid())
+                                              .withHostNames(Lists.newArrayList("host1"))
+                                              .withServiceTemplateId(serviceTemplate.getUuid())
+                                              .withComputeProviderSettingId(computeProvider.getUuid())
+                                              .withComputeProviderType(computeProvider.getValue().getType())
+                                              .withDeploymentType(SSH.name())
+                                              .build());
 
-    triggerWorkflow(app.getAppId(), env, service, computeProvider);
+    triggerWorkflow(app.getAppId(), env, service, computeProvider, infrastructureMapping);
   }
 
   /**
@@ -1776,12 +1776,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @param env             the env
    * @param service
    * @param computeProvider
+   * @param infrastructureMapping
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerWorkflow(String appId, Environment env, Service service, SettingAttribute computeProvider)
-      throws InterruptedException {
-    Workflow workflow = createWorkflow(appId, env, service, computeProvider);
+  public String triggerWorkflow(String appId, Environment env, Service service, SettingAttribute computeProvider,
+      InfrastructureMapping infrastructureMapping) throws InterruptedException {
+    Workflow workflow = createWorkflow(appId, env, service, computeProvider, infrastructureMapping);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
@@ -1802,7 +1803,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return executionId;
   }
 
-  private Workflow createWorkflow(String appId, Environment env, Service service, SettingAttribute computeProvider) {
+  private Workflow createWorkflow(String appId, Environment env, Service service, SettingAttribute computeProvider,
+      InfrastructureMapping infrastructureMapping) {
     Workflow orchestrationWorkflow =
         aWorkflow()
             .withName(WORKFLOW_NAME)
@@ -1815,6 +1817,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                           .withName("Phase1")
                                           .withServiceId(service.getUuid())
                                           .withDeploymentType(SSH)
+                                          .withInfraMappingId(infrastructureMapping.getUuid())
                                           .build())
                     .withPostDeploymentSteps(
                         aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
