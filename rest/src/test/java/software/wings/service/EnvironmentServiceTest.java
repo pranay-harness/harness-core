@@ -86,7 +86,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list environments.
+   * Should listStateMachines environments.
    */
   @Test
   public void shouldListEnvironments() {
@@ -199,7 +199,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should create default environments.
+   * Should createStateMachine default environments.
    */
   @Test
   public void shouldCreateDefaultEnvironments() {

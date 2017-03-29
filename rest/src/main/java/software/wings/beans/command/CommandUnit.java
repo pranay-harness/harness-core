@@ -18,13 +18,13 @@ import java.util.List;
 @JsonTypeInfo(use = Id.NAME, property = "commandUnitType", include = As.EXISTING_PROPERTY)
 public interface CommandUnit {
   /**
-   * Prepare list.
+   * Prepare listStateMachines.
    *
    * @param activityId             the activity id
    * @param executionStagingDir    the execution staging dir
    * @param launcherScriptFileName the launcher script file name
    * @param prefix                 the prefix
-   * @return the list
+   * @return the listStateMachines
    * @throws IOException       the io exception
    * @throws TemplateException the template exception
    */

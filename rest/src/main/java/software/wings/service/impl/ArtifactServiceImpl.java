@@ -67,7 +67,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.ArtifactService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices) {
@@ -83,7 +83,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.artifact.Artifact)
+   * @see software.wings.service.intfc.ArtifactService#createStateMachine(software.wings.beans.artifact.Artifact)
    */
   @Override
   @ValidationGroups(Create.class)

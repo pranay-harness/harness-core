@@ -7,7 +7,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
@@ -18,8 +18,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import software.wings.WingsBaseTest;
-import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Workflow;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -38,7 +39,7 @@ import javax.ws.rs.core.MediaType;
 public class WorkflowResourceTest extends WingsBaseTest {
   private static final WorkflowService WORKFLOW_SERVICE = mock(WorkflowService.class);
 
-  @Captor private ArgumentCaptor<PageRequest<OrchestrationWorkflow>> pageRequestArgumentCaptor;
+  @Captor private ArgumentCaptor<PageRequest<Workflow>> pageRequestArgumentCaptor;
 
   /**
    * The constant RESOURCES.
@@ -51,48 +52,44 @@ public class WorkflowResourceTest extends WingsBaseTest {
 
   private static String APP_ID = "APP_ID";
   private static String WORKFLOW_ID = "WORKFLOW_ID";
-  private static final OrchestrationWorkflow ORCHESTRATION_WORKFLOW =
-      anOrchestrationWorkflow().withAppId(APP_ID).withUuid(WORKFLOW_ID).build();
+  private static final Workflow WORKFLOW = aWorkflow().withAppId(APP_ID).withUuid(WORKFLOW_ID).build();
 
   /**
-   * Should create workflow.
+   * Should createStateMachine workflow.
    */
   @Test
   public void shouldCreateWorkflow() {
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        anOrchestrationWorkflow().withAppId(APP_ID).withUuid(UUIDGenerator.getUuid()).build();
-    when(WORKFLOW_SERVICE.createOrchestrationWorkflow(ORCHESTRATION_WORKFLOW)).thenReturn(orchestrationWorkflow2);
+    Workflow workflow2 = aWorkflow().withAppId(APP_ID).withUuid(UUIDGenerator.getUuid()).build();
+    when(WORKFLOW_SERVICE.createWorkflow(WORKFLOW)).thenReturn(workflow2);
 
-    RestResponse<OrchestrationWorkflow> restResponse =
+    RestResponse<CanaryOrchestrationWorkflow> restResponse =
         RESOURCES.client()
             .target(format("/workflows?appId=%s", APP_ID))
             .request()
-            .post(Entity.entity(ORCHESTRATION_WORKFLOW, MediaType.APPLICATION_JSON),
-                new GenericType<RestResponse<OrchestrationWorkflow>>() {});
+            .post(Entity.entity(WORKFLOW, MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<CanaryOrchestrationWorkflow>>() {});
 
-    assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", orchestrationWorkflow2);
-    verify(WORKFLOW_SERVICE).createOrchestrationWorkflow(ORCHESTRATION_WORKFLOW);
+    assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", workflow2);
+    verify(WORKFLOW_SERVICE).createWorkflow(WORKFLOW);
   }
 
   /**
-   * Should list workflows.
+   * Should listStateMachines workflows.
    */
   @Test
   public void shouldListWorkflow() {
-    PageRequest<OrchestrationWorkflow> pageRequest = aPageRequest().build();
-    PageResponse<OrchestrationWorkflow> pageResponse =
-        aPageResponse().withResponse(Lists.newArrayList(ORCHESTRATION_WORKFLOW)).build();
-    when(WORKFLOW_SERVICE.listOrchestrationWorkflows(any(PageRequest.class), any(Integer.class)))
-        .thenReturn(pageResponse);
+    PageRequest<Workflow> pageRequest = aPageRequest().build();
+    PageResponse<Workflow> pageResponse = aPageResponse().withResponse(Lists.newArrayList(WORKFLOW)).build();
+    when(WORKFLOW_SERVICE.listWorkflows(any(PageRequest.class), any(Integer.class))).thenReturn(pageResponse);
 
-    RestResponse<PageResponse<OrchestrationWorkflow>> restResponse =
+    RestResponse<PageResponse<Workflow>> restResponse =
         RESOURCES.client()
             .target(format("/workflows?appId=%s&previousExecutionsCount=2", APP_ID))
             .request()
-            .get(new GenericType<RestResponse<PageResponse<OrchestrationWorkflow>>>() {});
+            .get(new GenericType<RestResponse<PageResponse<Workflow>>>() {});
 
     log().info(JsonUtils.asJson(restResponse));
-    verify(WORKFLOW_SERVICE).listOrchestrationWorkflows(pageRequestArgumentCaptor.capture(), eq(2));
+    verify(WORKFLOW_SERVICE).listWorkflows(pageRequestArgumentCaptor.capture(), eq(2));
     assertThat(pageRequestArgumentCaptor.getValue()).isNotNull();
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", pageResponse);
   }
@@ -102,15 +99,15 @@ public class WorkflowResourceTest extends WingsBaseTest {
    */
   @Test
   public void shouldReadWorkflow() {
-    when(WORKFLOW_SERVICE.readOrchestrationWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(ORCHESTRATION_WORKFLOW);
+    when(WORKFLOW_SERVICE.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(WORKFLOW);
 
-    RestResponse<OrchestrationWorkflow> restResponse =
+    RestResponse<CanaryOrchestrationWorkflow> restResponse =
         RESOURCES.client()
             .target(format("/workflows/%s?appId=%s", WORKFLOW_ID, APP_ID))
             .request()
-            .get(new GenericType<RestResponse<OrchestrationWorkflow>>() {});
+            .get(new GenericType<RestResponse<CanaryOrchestrationWorkflow>>() {});
 
-    assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", ORCHESTRATION_WORKFLOW);
-    verify(WORKFLOW_SERVICE).readOrchestrationWorkflow(APP_ID, WORKFLOW_ID);
+    assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", WORKFLOW);
+    verify(WORKFLOW_SERVICE).readWorkflow(APP_ID, WORKFLOW_ID);
   }
 }

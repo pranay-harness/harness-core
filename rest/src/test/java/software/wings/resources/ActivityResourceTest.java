@@ -117,7 +117,7 @@ public class ActivityResourceTest {
   }
 
   /**
-   * Should list activities.
+   * Should listStateMachines activities.
    */
   @Test
   public void shouldListActivities() {
@@ -152,7 +152,7 @@ public class ActivityResourceTest {
   }
 
   /**
-   * Should list logs.
+   * Should listStateMachines logs.
    */
   @Test
   public void shouldListLogs() {
@@ -174,7 +174,7 @@ public class ActivityResourceTest {
   }
 
   /**
-   * Should list command units.
+   * Should listStateMachines command units.
    */
   @Test
   public void shouldListCommandUnits() {

@@ -672,7 +672,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId) {
-    // TODO:: use serviceId and envId to narrow down list ??
+    // TODO:: use serviceId and envId to narrow down listStateMachines ??
 
     Service service = serviceResourceService.get(appId, serviceId);
     ArtifactType artifactType = service.getArtifactType();

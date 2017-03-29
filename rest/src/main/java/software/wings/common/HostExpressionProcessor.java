@@ -113,7 +113,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   /**
    * List.
    *
-   * @return the list
+   * @return the listStateMachines
    */
   public List<HostElement> list() {
     List<Host> hosts = null;

@@ -64,7 +64,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private EntityVersionService entityVersionService;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.ConfigService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<ConfigFile> list(PageRequest<ConfigFile> request) {

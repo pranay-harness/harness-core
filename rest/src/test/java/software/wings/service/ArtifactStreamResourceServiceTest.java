@@ -52,7 +52,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should create artifact stream.
+   * Should createStateMachine artifact stream.
    */
   @Test
   public void shouldCreateArtifactStream() {
@@ -60,7 +60,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list all artifact streams.
+   * Should listStateMachines all artifact streams.
    */
   @Test
   public void shouldListAllArtifactStreams() {

@@ -100,7 +100,7 @@ public class HostServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list hosts.
+   * Should listStateMachines hosts.
    */
   @Test
   public void shouldListHosts() {
@@ -240,7 +240,7 @@ public class HostServiceTest extends WingsBaseTest {
             asList(anApplication().withUuid("ID1").withName("NAME1").build(),
        anApplication().withUuid("ID2").withName("NAME2").build()); PageResponse pageResponse = new PageResponse();
         pageResponse.setResponse(applications);
-        when(appService.list(any(), eq(false), eq(0), eq(0))).thenReturn(pageResponse);
+        when(appService.listStateMachines(any(), eq(false), eq(0), eq(0))).thenReturn(pageResponse);
         when(wingsPersistence.getDatastore().createAggregation(Host.class)).thenReturn(aggregationPipeline);
         when(aggregationPipeline.match(hostQuery)).thenReturn(aggregationPipeline);
         when(aggregationPipeline.group(anyString(), any())).thenReturn(aggregationPipeline);

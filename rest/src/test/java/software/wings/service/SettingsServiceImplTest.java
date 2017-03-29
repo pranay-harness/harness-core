@@ -57,7 +57,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should list settings.
+   * Should listStateMachines settings.
    */
   @Test
   public void shouldListSettings() {
@@ -136,7 +136,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should list connection attributes.
+   * Should listStateMachines connection attributes.
    */
   @Test
   public void shouldListConnectionAttributes() {
@@ -157,7 +157,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should list bastion host connection attributes.
+   * Should listStateMachines bastion host connection attributes.
    */
   @Test
   public void shouldListBastionHostConnectionAttributes() {

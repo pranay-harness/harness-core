@@ -22,7 +22,7 @@ public interface Constants {
   /**
    * The constant EXPRESSION_LIST_SUFFIX.
    */
-  String EXPRESSION_LIST_SUFFIX = ".list()";
+  String EXPRESSION_LIST_SUFFIX = ".listStateMachines()";
 
   /**
    * The constant EXPRESSION_PARTITIONS_SUFFIX.

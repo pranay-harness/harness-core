@@ -101,7 +101,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list pipeline executions.
+   * Should listStateMachines pipeline executions.
    */
   @Test
   public void shouldListPipelineExecutions() {
@@ -164,7 +164,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldRefreshPipelineExecutionForAllQueuedStates() {
     StateMachine stateMachine = createPipelineStateMachine();
-    when(workflowService.readLatest(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
+    when(workflowService.readLatestStateMachine(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
     PageResponse pageResponse = PageResponse.Builder.aPageResponse().withResponse(asList()).build();
     when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class))).thenReturn(pageResponse);
     PipelineExecution pipelineExecution = aPipelineExecution()
@@ -191,7 +191,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldRefreshPipelineExecutionForRunningState() {
     StateMachine stateMachine = createPipelineStateMachine();
-    when(workflowService.readLatest(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
+    when(workflowService.readLatestStateMachine(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
 
     StateExecutionInstance seiEnvDev =
         aStateExecutionInstance()
@@ -245,7 +245,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldRefreshPipelineExecutionForCompletedExecution() {
     StateMachine stateMachine = createPipelineStateMachine();
-    when(workflowService.readLatest(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
+    when(workflowService.readLatestStateMachine(APP_ID, PIPELINE_ID)).thenReturn(stateMachine);
 
     StateExecutionInstance seiEnvDev =
         aStateExecutionInstance()

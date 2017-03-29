@@ -70,37 +70,37 @@ public interface InfrastructureMappingService {
   Map<String, Map<String, Object>> getInfraMappingStencils(String appId);
 
   /**
-   * List service instances list.
+   * List service instances listStateMachines.
    *
    * @param appId             the app id
    * @param serviceId         the service id
    * @param envId             the env id
    * @param computeProviderId the compute provider id
-   * @param selectionParams   the selection params   @return the list
-   * @return the list
+   * @param selectionParams   the selection params   @return the listStateMachines
+   * @return the listStateMachines
    */
   List<ServiceInstance> selectServiceInstances(
       String appId, String serviceId, String envId, String computeProviderId, Map<String, Object> selectionParams);
 
   /**
-   * List compute provider hosts list.
+   * List compute provider hosts listStateMachines.
    *
    * @param appId             the app id
    * @param envId             the env id
    * @param serviceId         the service id
    * @param computeProviderId the compute provider id
-   * @return the list
+   * @return the listStateMachines
    */
   List<String> listComputeProviderHosts(String appId, String envId, String serviceId, String computeProviderId);
 
   /**
-   * List launch configs list.
+   * List launch configs listStateMachines.
    *
    * @param appId             the app id
    * @param envId             the env id
    * @param serviceId         the service id
    * @param computeProviderId the compute provider id
-   * @return the list
+   * @return the listStateMachines
    */
   List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String serviceId, String computeProviderId);
 
@@ -117,14 +117,14 @@ public interface InfrastructureMappingService {
       String appId, String envId, String serviceId, String computeProviderId);
 
   /**
-   * Provision nodes list.
+   * Provision nodes listStateMachines.
    *
    * @param appId              the app id
    * @param envId              the env id
    * @param infraMappingId     the infra mapping id
    * @param launcherConfigName the launcher config name
    * @param instanceCount      the instance count
-   * @return the list
+   * @return the listStateMachines
    */
   List<ServiceInstance> provisionNodes(
       String appId, String envId, String infraMappingId, String launcherConfigName, int instanceCount);
@@ -151,24 +151,24 @@ public interface InfrastructureMappingService {
   Map<String, Map<String, String>> listInfraTypes(String appId, String envId, String serviceId);
 
   /**
-   * Select service instances list.
+   * Select service instances listStateMachines.
    *
    * @param appId           the app id
    * @param envId           the env id
    * @param infraMappingId  the infra mapping id
    * @param selectionParams the selection params
-   * @return the list
+   * @return the listStateMachines
    */
   List<ServiceInstance> selectServiceInstances(
       String appId, String envId, String infraMappingId, Map<String, Object> selectionParams);
 
   /**
-   * List clusters list.
+   * List clusters listStateMachines.
    *
    * @param appId             the app id
    * @param deploymentType    the deployment type
    * @param computeProviderId the compute provider id
-   * @return the list
+   * @return the listStateMachines
    */
   List<String> listClusters(String appId, String deploymentType, String computeProviderId);
 

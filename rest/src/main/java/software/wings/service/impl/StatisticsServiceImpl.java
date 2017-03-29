@@ -12,7 +12,7 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
-import static software.wings.beans.WorkflowType.ORCHESTRATION_WORKFLOW;
+import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.SIMPLE;
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
@@ -111,7 +111,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .field("appId")
             .in(appIds)
             .field("workflowType")
-            .in(asList(ORCHESTRATION_WORKFLOW, SIMPLE))
+            .in(asList(ORCHESTRATION, SIMPLE))
             .retrievedFields(true, "appId", "environmentType", "serviceInstanceId", "artifactId", "workflowExecutionId")
             .asList();
 
@@ -228,9 +228,8 @@ public class StatisticsServiceImpl implements StatisticsService {
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter()
-                           .withField("workflowType", Operator.IN, ORCHESTRATION_WORKFLOW, WorkflowType.SIMPLE)
-                           .build())
+            .addFilter(
+                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
     if (isNullOrEmpty(appId)) {

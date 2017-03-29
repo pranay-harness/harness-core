@@ -196,7 +196,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   /**
    * Lists.
    *
-   * @return the list
+   * @return the listStateMachines
    */
   public List<InstanceElement> list() {
     PartitionElement instancePartition = getInstancesPartition();
@@ -327,7 +327,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    *
    * @param serviceTemplates the serviceTemplates
    * @param names            the names
-   * @return the list
+   * @return the listStateMachines
    */
   List<ServiceTemplate> matchingServiceTemplates(List<ServiceTemplate> serviceTemplates, String... names) {
     if (serviceTemplates == null) {

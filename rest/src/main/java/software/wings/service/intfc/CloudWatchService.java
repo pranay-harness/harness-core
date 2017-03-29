@@ -7,29 +7,29 @@ import java.util.List;
  */
 public interface CloudWatchService {
   /**
-   * List namespaces list.
+   * List namespaces listStateMachines.
    *
    * @param settingId the setting id
-   * @return the list
+   * @return the listStateMachines
    */
   List<String> listNamespaces(String settingId);
 
   /**
-   * List metrics list.
+   * List metrics listStateMachines.
    *
    * @param settingId the setting id
    * @param namespace the namespace
-   * @return the list
+   * @return the listStateMachines
    */
   List<String> listMetrics(String settingId, String namespace);
 
   /**
-   * List dimensions list.
+   * List dimensions listStateMachines.
    *
    * @param settingId  the setting id
    * @param namespace  the namespace
    * @param metricName the metric name
-   * @return the list
+   * @return the listStateMachines
    */
   List<String> listDimensions(String settingId, String namespace, String metricName);
 }

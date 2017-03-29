@@ -38,7 +38,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   public DelegateFile upload(DelegateFile delegateFile, File content) throws IOException {
     RequestBody filename = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), "file");
 
-    // create RequestBody instance from file
+    // createStateMachine RequestBody instance from file
     RequestBody requestFile = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), content);
 
     // MultipartBody.Part is used to send also the actual file name

@@ -32,7 +32,7 @@ public class RoleServiceImpl implements RoleService {
   @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.RoleService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.RoleService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<Role> list(PageRequest<Role> pageRequest) {

@@ -21,7 +21,7 @@ public class ManagedDistributedLockSvc implements DistributedLockSvc, Managed {
   }
 
   /* (non-Javadoc)
-   * @see com.deftlabs.lock.mongo.DistributedLockSvc#create(java.lang.String)
+   * @see com.deftlabs.lock.mongo.DistributedLockSvc#createStateMachine(java.lang.String)
    */
   @Override
   public DistributedLock create(String s) {
@@ -29,7 +29,7 @@ public class ManagedDistributedLockSvc implements DistributedLockSvc, Managed {
   }
 
   /* (non-Javadoc)
-   * @see com.deftlabs.lock.mongo.DistributedLockSvc#create(java.lang.String,
+   * @see com.deftlabs.lock.mongo.DistributedLockSvc#createStateMachine(java.lang.String,
    * com.deftlabs.lock.mongo.DistributedLockOptions)
    */
   @Override

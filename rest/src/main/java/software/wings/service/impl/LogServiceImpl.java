@@ -37,7 +37,7 @@ public class LogServiceImpl implements LogService {
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.LogService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<Log> list(PageRequest<Log> pageRequest) {

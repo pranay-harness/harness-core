@@ -106,7 +106,7 @@ public interface WorkflowExecutionService {
    */
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
-  WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
+  WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate);
 
   /**

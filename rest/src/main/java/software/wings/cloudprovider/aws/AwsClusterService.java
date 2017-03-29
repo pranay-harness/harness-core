@@ -30,7 +30,7 @@ public interface AwsClusterService {
    * @param serviceName          the service name
    * @param desiredSize          the desired size
    * @param executionLogCallback the execution log callback
-   * @return the list
+   * @return the listStateMachines
    */
   List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback);

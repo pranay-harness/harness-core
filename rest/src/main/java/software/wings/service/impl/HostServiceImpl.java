@@ -48,7 +48,7 @@ public class HostServiceImpl implements HostService {
   @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.HostService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<Host> list(PageRequest<Host> req) {

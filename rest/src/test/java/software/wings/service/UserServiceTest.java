@@ -236,7 +236,7 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list users.
+   * Should listStateMachines users.
    */
   @Test
   public void shouldListUsers() {

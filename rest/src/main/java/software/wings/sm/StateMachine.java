@@ -57,7 +57,9 @@ public class StateMachine extends Base {
 
   @Indexed private String name;
 
-  private Graph graph;
+  private OrchestrationWorkflow orchestrationWorkflow;
+
+  private boolean valid;
 
   private List<State> states = Lists.newArrayList();
 
@@ -79,41 +81,12 @@ public class StateMachine extends Base {
   /**
    * Instantiates a new state machine.
    *
-   * @param orchestrationWorkflow   the workflow
+   * @param workflow   the workflow
+   * @param graph   the graph
    * @param stencilMap the stencil map
    */
-  public StateMachine(OrchestrationWorkflow orchestrationWorkflow, Map<String, StateTypeDescriptor> stencilMap) {
-    this(orchestrationWorkflow, stencilMap, orchestrationWorkflow.getGraph());
-
-    Map<String, Graph> subworkflows = orchestrationWorkflow.getGraph().getSubworkflows();
-    if (subworkflows != null) {
-      for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
-        Graph childGraph = entry.getValue();
-        if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
-          continue;
-        }
-        childStateMachines.put(entry.getKey(), new StateMachine(orchestrationWorkflow, stencilMap, childGraph));
-      }
-    }
-    setAppId(orchestrationWorkflow.getAppId());
-    this.originId = orchestrationWorkflow.getUuid();
-  }
-
-  private StateMachine(
-      OrchestrationWorkflow orchestrationWorkflow, Map<String, StateTypeDescriptor> stencilMap, Graph graph) {
-    logger.info("graph received for transform: {}", orchestrationWorkflow.getGraph());
-    this.graph = graph;
-    this.name = graph.getGraphName();
-
-    try {
-      transform(stencilMap);
-    } catch (WingsException e) {
-      logger.error(e.getLocalizedMessage(), e);
-      throw e;
-    } catch (Exception e) {
-      logger.error(e.getLocalizedMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "StateMachine transformation error");
-    }
+  public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
+    this(workflow, workflow.getDefaultVersion(), graph, stencilMap);
   }
 
   /**
@@ -125,20 +98,28 @@ public class StateMachine extends Base {
    */
   public StateMachine(
       Workflow workflow, Integer originVersion, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    logger.info("graph received for transform: {}", graph);
-    setAppId(workflow.getAppId());
-    this.originId = workflow.getUuid();
+    if (workflow != null) {
+      orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+      setAppId(workflow.getAppId());
+      this.originId = workflow.getUuid();
+    }
     this.originVersion = originVersion;
-    this.graph = graph;
-    this.name = graph.getGraphName();
+
     try {
-      transform(stencilMap);
-    } catch (WingsException e) {
-      logger.error(e.getLocalizedMessage(), e);
-      throw e;
-    } catch (Exception e) {
-      logger.error(e.getLocalizedMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "StateMachine transformation error");
+      transform(graph, stencilMap);
+      Map<String, Graph> subworkflows = graph.getSubworkflows();
+      if (subworkflows != null) {
+        for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
+          Graph childGraph = entry.getValue();
+          if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
+            continue;
+          }
+          childStateMachines.put(entry.getKey(), new StateMachine(null, originVersion, childGraph, stencilMap));
+        }
+      }
+      valid = true;
+    } catch (WingsException wingsException) {
+      logger.error("Error in Statemachine transform", wingsException);
     }
   }
 
@@ -205,7 +186,7 @@ public class StateMachine extends Base {
     clearCache();
   }
 
-  private void transform(Map<String, StateTypeDescriptor> stencilMap) {
+  private void transform(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
     String originStateName = null;
     for (Node node : graph.getNodes()) {
       logger.info("node : {}", node);
@@ -454,11 +435,11 @@ public class StateMachine extends Base {
   }
 
   /**
-   * Returns list of next states given start state and transition type.
+   * Returns listStateMachines of next states given start state and transition type.
    *
    * @param fromStateName  start state.
    * @param transitionType transition type to look state from.
-   * @return list of next states or null.
+   * @return listStateMachines of next states or null.
    */
   public List<State> getNextStates(String fromStateName, TransitionType transitionType) {
     Map<String, Map<TransitionType, List<State>>> transitionFlowMap = getTransitionFlowMap();
@@ -489,7 +470,7 @@ public class StateMachine extends Base {
   /**
    * Gets transition flow map.
    *
-   * @return a transition flow map describing transition types to list of states.
+   * @return a transition flow map describing transition types to listStateMachines of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
     if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() > 0) {
@@ -794,24 +775,6 @@ public class StateMachine extends Base {
     this.name = name;
   }
 
-  /**
-   * Gets graph.
-   *
-   * @return the graph
-   */
-  public Graph getGraph() {
-    return graph;
-  }
-
-  /**
-   * Sets graph.
-   *
-   * @param graph the graph
-   */
-  public void setGraph(Graph graph) {
-    this.graph = graph;
-  }
-
   public Integer getOriginVersion() {
     return originVersion;
   }
@@ -826,6 +789,22 @@ public class StateMachine extends Base {
 
   public void setChildStateMachines(Map<String, StateMachine> childStateMachines) {
     this.childStateMachines = childStateMachines;
+  }
+
+  public OrchestrationWorkflow getOrchestrationWorkflow() {
+    return orchestrationWorkflow;
+  }
+
+  public void setOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow) {
+    this.orchestrationWorkflow = orchestrationWorkflow;
+  }
+
+  public boolean isValid() {
+    return valid;
+  }
+
+  public void setValid(boolean valid) {
+    this.valid = valid;
   }
 
   /**
@@ -843,7 +822,6 @@ public class StateMachine extends Base {
     private String originId;
     private Integer originVersion;
     private String name;
-    private Graph graph;
     private List<State> states = Lists.newArrayList();
     private List<Transition> transitions = Lists.newArrayList();
     private String initialStateName;
@@ -872,11 +850,6 @@ public class StateMachine extends Base {
 
     public StateMachineBuilder withName(String name) {
       this.name = name;
-      return this;
-    }
-
-    public StateMachineBuilder withGraph(Graph graph) {
-      this.graph = graph;
       return this;
     }
 
@@ -930,7 +903,6 @@ public class StateMachine extends Base {
       stateMachine.setOriginId(originId);
       stateMachine.setOriginVersion(originVersion);
       stateMachine.setName(name);
-      stateMachine.setGraph(graph);
       stateMachine.setStates(states);
       stateMachine.setTransitions(transitions);
       stateMachine.setInitialStateName(initialStateName);

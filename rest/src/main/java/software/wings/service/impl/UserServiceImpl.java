@@ -454,7 +454,7 @@ public class UserServiceImpl implements UserService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.UserService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.UserService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<User> list(PageRequest<User> pageRequest) {

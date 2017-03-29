@@ -49,7 +49,7 @@ public class WaitNotifyEngine {
    *
    * @param timeoutMsec    timeout for wait in milliseconds.
    * @param callback       function to be executed when all correlationIds are completed.
-   * @param correlationIds list of ids to wait for.
+   * @param correlationIds listStateMachines of ids to wait for.
    * @return id of WaitInstance.
    */
   public String waitForAll(long timeoutMsec, NotifyCallback callback, String... correlationIds) {
@@ -59,7 +59,7 @@ public class WaitNotifyEngine {
 
     String waitInstanceId = wingsPersistence.save(new WaitInstance(callback, correlationIds));
 
-    // create queue
+    // createStateMachine queue
     Arrays.stream(correlationIds)
         .forEach(correlationId -> wingsPersistence.save(new WaitQueue(waitInstanceId, correlationId)));
 

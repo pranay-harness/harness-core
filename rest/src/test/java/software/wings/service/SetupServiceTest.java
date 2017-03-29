@@ -74,7 +74,7 @@ public class SetupServiceTest extends WingsBaseTest {
   //    Release rel = Release.Builder.aRelease().build();
   //    PageResponse<Release> res = new PageResponse();
   //    res.setResponse(asList(rel));
-  //    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(res);
+  //    when(artifactStreamService.listStateMachines(any(PageRequest.class))).thenReturn(res);
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
   //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
@@ -88,7 +88,7 @@ public class SetupServiceTest extends WingsBaseTest {
   //
   //    PageResponse<Artifact> artRes = new PageResponse<>();
   //    artRes.setResponse(asList(new Artifact()));
-  //    when(artifactService.list(any(PageRequest.class))).thenReturn(artRes);
+  //    when(artifactService.listStateMachines(any(PageRequest.class))).thenReturn(artRes);
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
   //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();

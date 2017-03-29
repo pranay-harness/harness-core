@@ -126,7 +126,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list.
+   * Should listStateMachines.
    */
   @Test
   public void shouldListApplicationWithSummary() {
@@ -148,7 +148,7 @@ public class AppServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list.
+   * Should listStateMachines.
    */
   @Test
   public void shouldListApplication() {

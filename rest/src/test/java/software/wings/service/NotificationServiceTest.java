@@ -70,7 +70,7 @@ public class NotificationServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list.
+   * Should listStateMachines.
    */
   @Test
   public void shouldList() {

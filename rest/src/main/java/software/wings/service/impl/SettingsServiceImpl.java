@@ -37,7 +37,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.SettingsService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req) {

@@ -137,12 +137,12 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   /**
-   * Gets flatten command unit list.
+   * Gets flatten command unit listStateMachines.
    *
    * @param appId     the app id
    * @param serviceId the service id
    * @param command   the command
-   * @return the flatten command unit list
+   * @return the flatten command unit listStateMachines
    */
   private List<CommandUnit> getFlattenCommandUnitList(
       String appId, String serviceId, Map<String, Integer> commandNameVersionMap, Command command) {

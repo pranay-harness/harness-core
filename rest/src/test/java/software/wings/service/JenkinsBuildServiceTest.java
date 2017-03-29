@@ -93,7 +93,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should return list of builds.
+   * Should return listStateMachines of builds.
    *
    * @throws IOException Signals that an I/O exception has occurred.
    */

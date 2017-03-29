@@ -77,7 +77,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should create artifact when valid.
+   * Should createStateMachine artifact when valid.
    */
   @Test
   public void shouldCreateArtifactWhenValid() {
@@ -174,7 +174,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list artifact.
+   * Should listStateMachines artifact.
    */
   @Test
   public void shouldListArtifact() {

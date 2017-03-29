@@ -88,7 +88,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should list.
+   * Should listStateMachines.
    */
   @Test
   public void shouldList() {

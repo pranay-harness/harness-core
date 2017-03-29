@@ -57,13 +57,13 @@ public class StencilPostProcessor {
   }
 
   /**
-   * Post process list.
+   * Post process listStateMachines.
    *
    * @param <T>      the type parameter
    * @param stencils the stencils
    * @param appId    the app id
    * @param args     the args
-   * @return the list
+   * @return the listStateMachines
    */
   public <T extends Stencil> List<Stencil> postProcess(List<T> stencils, String appId, String... args) {
     return stencils.stream().flatMap(t -> processStencil(t, appId, args)).collect(toList());

@@ -37,11 +37,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.Orchestration;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -80,6 +77,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.MapperUtils;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -304,7 +302,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
 
-    StateMachine stateMachine = workflowService.readLatest(appId, pipelineId);
+    StateMachine stateMachine = workflowService.readLatestStateMachine(appId, pipelineId);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
@@ -329,8 +327,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
-      String appId, String envId, String orchestrationId, ExecutionArgs executionArgs) {
-    return triggerOrchestrationWorkflowExecution(appId, envId, orchestrationId, executionArgs, null);
+      String appId, String envId, String workflowId, ExecutionArgs executionArgs) {
+    return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, executionArgs, null);
   }
 
   /**
@@ -338,81 +336,34 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    *
    * @param appId                   the app id
    * @param envId                   the env id
-   * @param orchestrationId         the orchestration id
+   * @param workflowId         the orchestration id
    * @param executionArgs           the execution args
    * @param workflowExecutionUpdate the workflow execution update
    * @return the workflow execution
    */
-  @Override
-  public WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
+  public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =
-        getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, orchestrationId);
-    if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
-      throw new WingsException("Orchestration has already been triggered");
-    }
-    // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
-
-    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
-    if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + orchestrationId);
-    }
-
-    Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
-
-    WorkflowExecution workflowExecution = new WorkflowExecution();
-    workflowExecution.setAppId(appId);
-    workflowExecution.setEnvId(envId);
-    workflowExecution.setWorkflowId(orchestrationId);
-    workflowExecution.setName(WORKFLOW_NAME_PREF + orchestration.getName());
-    workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
-    workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setExecutionArgs(executionArgs);
-
-    WorkflowStandardParams stdParams = new WorkflowStandardParams();
-    stdParams.setAppId(appId);
-    stdParams.setEnvId(envId);
-    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
-      stdParams.setArtifactIds(
-          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
-    }
-    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
-
-    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
-  }
-
-  /**
-   * Trigger orchestration execution workflow execution.
-   *
-   * @param appId                   the app id
-   * @param envId                   the env id
-   * @param orchestrationId         the orchestration id
-   * @param executionArgs           the execution args
-   * @param workflowExecutionUpdate the workflow execution update
-   * @return the workflow execution
-   */
-  public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
-      ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    List<WorkflowExecution> runningWorkflowExecutions =
-        getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION_WORKFLOW, appId, orchestrationId);
+        getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, workflowId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
       throw new WingsException("Orchestration Workflow has already been triggered");
     }
-    // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
+    // TODO - validate listStateMachines of artifact Ids if it's matching for all the services involved in this
+    // orchestration
 
-    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
+    StateMachine stateMachine = workflowService.readLatestStateMachine(appId, workflowId);
     if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + orchestrationId);
+      throw new WingsException("No stateMachine associated with " + workflowId);
     }
 
-    OrchestrationWorkflow orchestration = wingsPersistence.get(OrchestrationWorkflow.class, appId, orchestrationId);
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setEnvId(envId);
-    workflowExecution.setWorkflowId(orchestrationId);
-    workflowExecution.setName(WORKFLOW_NAME_PREF + orchestration.getName());
-    workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION_WORKFLOW);
+    workflowExecution.setWorkflowId(workflowId);
+    workflowExecution.setName(WORKFLOW_NAME_PREF + workflow.getName());
+    workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
 
@@ -620,9 +571,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       logger.debug("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
-        logger.error("orchestrationId is null for an orchestrated execution");
+        logger.error("workflowId is null for an orchestrated execution");
         throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
+            ErrorCode.INVALID_REQUEST, "message", "workflowId is null for an orchestrated execution");
       }
       return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs);
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
@@ -654,12 +605,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId);
-    String orchestrationId = workflow.getUuid();
+    Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
+    String workflowId = workflow.getUuid();
 
-    StateMachine stateMachine = workflowService.readLatest(appId, orchestrationId);
+    StateMachine stateMachine = workflowService.readLatestStateMachine(appId, workflowId);
     if (stateMachine == null) {
-      throw new WingsException("No stateMachine associated with " + orchestrationId);
+      throw new WingsException("No stateMachine associated with " + workflowId);
     }
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
@@ -696,34 +647,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private List<WorkflowExecution> getRunningWorkflowExecutions(
       WorkflowType workflowType, String appId, String workflowId) {
-    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
-
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("appId");
-    filter.setFieldValues(appId);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
-
-    filter = new SearchFilter();
-    filter.setFieldName("workflowId");
-    filter.setFieldValues(workflowId);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
-
-    filter = new SearchFilter();
-    filter.setFieldName("workflowType");
-    filter.setFieldValues(workflowType);
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
-
-    filter = new SearchFilter();
-    filter.setFieldName("status");
-    List<Object> statuses = new ArrayList<>();
-    statuses.add(ExecutionStatus.NEW);
-    statuses.add(ExecutionStatus.RUNNING);
-    filter.setFieldValues(statuses);
-    filter.setOp(Operator.IN);
-    pageRequest.addFilter(filter);
+    PageRequest<WorkflowExecution> pageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, appId)
+            .addFilter("workflowId", Operator.EQ, workflowId)
+            .addFilter("workflowType", Operator.EQ, workflowType)
+            .addFilter("status", Operator.IN, ExecutionStatus.NEW, ExecutionStatus.RUNNING)
+            .build();
 
     PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (pageResponse == null) {
@@ -747,37 +677,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
-    if (executionArgs.getWorkflowType() == null) {
-      logger.error("workflowType is null");
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "workflowType is null");
-    }
+    Validator.notNullCheck("workflowType", executionArgs.getWorkflowType());
 
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION
-        || executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
+        || executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       logger.debug("Received an orchestrated execution request");
-      if (executionArgs.getOrchestrationId() == null) {
-        logger.error("orchestrationId is null for an orchestrated execution");
-        throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
+      Validator.notNullCheck("orchestrationId", executionArgs.getOrchestrationId());
+
+      Workflow workflow = workflowService.readWorkflow(appId, executionArgs.getOrchestrationId());
+      if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "OrchestrationWorkflow machine not found");
       }
 
-      OrchestrationWorkflow orchestration =
-          wingsPersistence.get(OrchestrationWorkflow.class, appId, executionArgs.getOrchestrationId());
-      if (orchestration == null) {
-        logger.error("Invalid orchestrationId");
-        throw new WingsException(
-            ErrorCode.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
-      }
-
-      StateMachine stateMachine = workflowService.readLatest(appId, executionArgs.getOrchestrationId());
+      StateMachine stateMachine = workflowService.readLatestStateMachine(appId, executionArgs.getOrchestrationId());
       if (stateMachine == null) {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Associated state machine not found");
       }
 
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-      requiredExecutionArgs.setEntityTypes(orchestration.getRequiredEntityTypes());
+      requiredExecutionArgs.setEntityTypes(workflow.getOrchestrationWorkflow().getRequiredEntityTypes());
       return requiredExecutionArgs;
-      // return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
 
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.debug("Received an simple execution request");
@@ -871,24 +790,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<ElementExecutionSummary> serviceExecutionSummaries = new ArrayList<>();
-    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
-      OrchestrationWorkflow orchestrationWorkflow =
-          workflowService.readOrchestrationWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
-      if (orchestrationWorkflow != null) {
-        List<Service> services = orchestrationWorkflow.getServices();
-        if (services != null) {
-          services.forEach(service -> {
-            ServiceElement serviceElement = ServiceElement.Builder.aServiceElement()
-                                                .withUuid(service.getUuid())
-                                                .withName(service.getName())
-                                                .build();
-            ElementExecutionSummary elementSummary = anElementExecutionSummary()
-                                                         .withContextElement(serviceElement)
-                                                         .withStatus(ExecutionStatus.QUEUED)
-                                                         .build();
-            serviceExecutionSummaries.add(elementSummary);
-          });
-        }
+    // TODO : version should also be captured as part of the WorkflowExecution
+    Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+    if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
+      List<Service> services = workflow.getServices();
+      if (services != null) {
+        services.forEach(service -> {
+          ServiceElement serviceElement =
+              ServiceElement.Builder.aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build();
+          ElementExecutionSummary elementSummary =
+              anElementExecutionSummary().withContextElement(serviceElement).withStatus(ExecutionStatus.QUEUED).build();
+          serviceExecutionSummaries.add(elementSummary);
+        });
       }
     }
     Map<String, ElementExecutionSummary> serviceExecutionSummaryMap = serviceExecutionSummaries.stream().collect(

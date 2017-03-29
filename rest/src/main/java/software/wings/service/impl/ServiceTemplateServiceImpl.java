@@ -62,7 +62,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.ServiceTemplateService#listStateMachines(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
@@ -347,11 +347,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   /**
-   * Override service settings list.
+   * Override service settings listStateMachines.
    *
    * @param existingFiles the existing files
    * @param newFiles      the new files
-   * @return the list
+   * @return the listStateMachines
    */
   public List<ServiceVariable> overrideServiceSettings(
       List<ServiceVariable> existingFiles, List<ServiceVariable> newFiles) {
