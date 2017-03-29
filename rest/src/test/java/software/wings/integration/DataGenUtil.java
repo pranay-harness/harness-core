@@ -338,7 +338,7 @@ private void createGlobalSettings() {
                         .withCategory(Category.CONNECTOR)
                         .withAccountId(accountId)
                         .withValue(aJenkinsConfig()
-                                       .withJenkinsUrl("http://ec2-54-174-51-35.compute-1.amazonaws.com/")
+                                       .withJenkinsUrl("https://jenkins.wings.software")
                                        .withUsername("wingsbuild")
                                        .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
                                        .build())
