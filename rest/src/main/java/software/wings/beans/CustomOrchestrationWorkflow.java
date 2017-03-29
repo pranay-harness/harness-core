@@ -11,7 +11,7 @@ import java.util.Set;
 @JsonTypeName("CUSTOM")
 public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public CustomOrchestrationWorkflow() {
-    setWorkflowOrchestrationType(OrchestrationWorkflowType.CUSTOM);
+    setOrchestrationWorkflowType(OrchestrationWorkflowType.CUSTOM);
   }
 
   private Graph graph;
