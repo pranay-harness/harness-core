@@ -331,7 +331,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Workflow createWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
-    workflow = wingsPersistence.saveAndGet(Workflow.class, workflow);
+    String key = wingsPersistence.save(workflow);
     if (orchestrationWorkflow != null) {
       orchestrationWorkflow.onSave();
       orchestrationWorkflow.setRequiredEntityTypes(getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
@@ -340,10 +340,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
     }
     // create initial version
-    entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid(),
-        workflow.getName(), ChangeType.CREATED, workflow.getNotes());
+    entityVersionService.newEntityVersion(
+        workflow.getAppId(), EntityType.WORKFLOW, key, workflow.getName(), ChangeType.CREATED, workflow.getNotes());
 
-    return workflow;
+    return readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
   }
 
   /**

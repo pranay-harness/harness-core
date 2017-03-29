@@ -320,8 +320,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       return this;
     }
 
-    public CanaryOrchestrationWorkflowBuilder withWorkflowPhases(List<WorkflowPhase> workflowPhases) {
-      this.workflowPhases = workflowPhases;
+    public CanaryOrchestrationWorkflowBuilder addWorkflowPhase(WorkflowPhase workflowPhase) {
+      this.workflowPhases.add(workflowPhase);
       return this;
     }
 

@@ -52,7 +52,11 @@ public class WorkflowResourceTest extends WingsBaseTest {
 
   private static String APP_ID = "APP_ID";
   private static String WORKFLOW_ID = "WORKFLOW_ID";
-  private static final Workflow WORKFLOW = aWorkflow().withAppId(APP_ID).withUuid(WORKFLOW_ID).build();
+  private static final Workflow WORKFLOW = aWorkflow()
+                                               .withAppId(APP_ID)
+                                               .withUuid(WORKFLOW_ID)
+                                               .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                                               .build();
 
   /**
    * Should create workflow.
