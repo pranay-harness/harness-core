@@ -280,7 +280,7 @@ private void createLicenseAndDefaultUser() {
   wingsPersistence.save(account);
 
   UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
-  userUpdateOperations.set("accounts", Lists.newArrayList("kmpySmUISimoRrJL6NL73w"));
+  userUpdateOperations.set("accounts", Lists.newArrayList(account));
   wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
 
   UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
