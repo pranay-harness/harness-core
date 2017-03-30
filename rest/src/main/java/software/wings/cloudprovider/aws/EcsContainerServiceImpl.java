@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
@@ -46,6 +47,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.newrelic.agent.deps.org.apache.http.conn.HttpHostConnectException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
@@ -981,8 +983,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                    CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
                                    TaskMetadata.class));
         logger.info("TaskMetadata = " + taskMetadata);
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (IOException ex) {
+        if (ex instanceof HttpHostConnectException) {
+          executionLogCallback.saveExecutionLog(
+              "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
+        }
+        logger.error(ex.getMessage());
+        throw new WingsException(
+            UNKNOWN_ERROR, "message", "Container meta data fetch failed on EC2 host: " + ipAddress);
       }
 
       taskMetadata.getTasks()
