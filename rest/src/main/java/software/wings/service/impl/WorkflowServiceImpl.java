@@ -382,8 +382,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
       }
 
-      EntityVersion entityVersion =
-          entityVersionService.lastEntityVersion(workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid());
+      EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW,
+          workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
       workflow.setDefaultVersion(entityVersion.getVersion());
 
       if (orchestrationWorkflow != null) {

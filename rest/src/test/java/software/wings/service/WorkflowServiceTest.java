@@ -4,15 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
-import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -48,8 +45,6 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
-import software.wings.beans.EntityType;
-import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -128,7 +123,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<Workflow> updateOperations;
   @Mock Query<Workflow> query;
 
-  @Mock private EntityVersionService entityVersionService;
+  @Inject private EntityVersionService entityVersionService;
 
   @InjectMocks @Inject private WorkflowService workflowService;
   @Mock private FieldEnd fieldEnd;
@@ -138,8 +133,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
-    when(entityVersionService.lastEntityVersion(anyString(), eq(EntityType.WORKFLOW), anyString()))
-        .thenReturn(anEntityVersion().withVersion(2).build());
     when(pluginManager.getExtensions(StateTypeDescriptor.class)).thenReturn(newArrayList());
 
     when(query.field(anyString())).thenReturn(fieldEnd);
@@ -506,10 +499,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
         .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
             orchestrationWorkflow.getPostDeploymentSteps().getUuid());
-
-    verify(entityVersionService)
-        .newEntityVersion(eq(workflow2.getAppId()), eq(EntityType.WORKFLOW), eq(workflow2.getUuid()),
-            eq(workflow2.getName()), eq(ChangeType.CREATED), eq(workflow2.getNotes()));
 
     PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
         aPageRequest()
@@ -881,7 +870,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
 
     workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
-    workflowPhase2.setName("phase2-changed");
 
     workflowService.updateWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
@@ -891,7 +879,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
 
     assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
-    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
 
     Graph graph = orchestrationWorkflow3.getGraph();
     assertThat(graph).isNotNull();
