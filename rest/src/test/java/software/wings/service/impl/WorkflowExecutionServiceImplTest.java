@@ -10,11 +10,11 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Orchestration.Builder.anOrchestration;
-import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
@@ -22,16 +22,17 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorCode;
@@ -47,8 +49,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.Orchestration;
-import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -61,8 +62,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowOrchestrationType;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
@@ -106,27 +107,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
 
-  @Mock @Inject private StaticConfiguration staticConfiguration;
+  @Mock private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
-
-  /**
-   * Should read simple workflow.
-   */
-  @Test
-  public void shouldReadSimpleWorkflow() {
-    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
-    Orchestration workflow = workflowService.readLatestSimpleWorkflow(app.getUuid());
-    assertThat(workflow).isNotNull();
-    assertThat(workflow.getWorkflowType()).isEqualTo(WorkflowType.SIMPLE);
-    assertThat(workflow.getGraph()).isNotNull();
-    assertThat(workflow.getGraph().getNodes()).isNotNull();
-    assertThat(workflow.getGraph().getNodes().size()).isEqualTo(2);
-    assertThat(workflow.getGraph().getLinks()).isNotNull();
-    assertThat(workflow.getGraph().getLinks().size()).isEqualTo(1);
-  }
 
   /**
    * Should trigger simple workflow.
@@ -503,28 +485,27 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .build())
             .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
     callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -581,7 +562,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Ignore
   public void triggerPipeline() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
@@ -656,20 +636,19 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .build())
             .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
 
-    PipelineStage stag1 = new PipelineStage(asList(new PipelineStageElement("DEV", StateType.ENV_STATE.name(),
-        ImmutableMap.of("envId", env.getUuid(), "workflowId", orchestration.getUuid()))));
+    PipelineStage stag1 = new PipelineStage(asList(new PipelineStageElement(
+        "DEV", StateType.ENV_STATE.name(), ImmutableMap.of("envId", env.getUuid(), "workflowId", workflow.getUuid()))));
     PipelineStage stag2 = new PipelineStage(asList(
         new PipelineStageElement("APPROVAL", StateType.APPROVAL.name(), ImmutableMap.of("envId", env.getUuid()))));
     List<PipelineStage> pipelineStages = asList(stag1, stag2);
@@ -691,7 +670,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     filter.setFieldValues(pipeline.getUuid());
     filter.setOp(Operator.EQ);
     req.addFilter(filter);
-    PageResponse<StateMachine> res = workflowService.list(req);
+    PageResponse<StateMachine> res = workflowService.listStateMachines(req);
 
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
     assertThat(res.get(0).getTransitions()).hasSize(1);
@@ -729,16 +708,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should trigger orchestration.
+   * Should trigger workflow.
    *
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldTriggerOrchestration() throws InterruptedException {
+  public void shouldTriggerWorkflow() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
-    triggerOrchestration(appId, env);
+    triggerWorkflow(appId, env);
   }
 
   /**
@@ -752,7 +731,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
-    WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerOrchestration(appId, env));
+    WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerWorkflow(appId, env));
     Node node0 = execution.getExecutionNode();
     assertThat(workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId()))
         .isEqualToIgnoringGivenFields(node0, "x", "y", "width", "height", "next", "expanded");
@@ -766,8 +745,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //  @Test
   //  public void shouldUpdateInProgressCount() throws InterruptedException {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
-  //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
-  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    Builder.anEnvironment().withAppId(appId).build()); triggerWorkflow(env); WorkflowExecution workflowExecution =
+  //    wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    workflowExecutionService.incrementInProgressCount(workflowExecution.getAccountId(), workflowExecution.getUuid(),
   //    1); workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
@@ -781,8 +760,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //  @Test
   //  public void shouldUpdateSuccessCount() throws InterruptedException {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
-  //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
-  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    Builder.anEnvironment().withAppId(appId).build()); triggerWorkflow(env); WorkflowExecution workflowExecution =
+  //    wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    workflowExecutionService.incrementSuccess(workflowExecution.getAccountId(), workflowExecution.getUuid(), 1);
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);
@@ -798,7 +777,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
-    triggerOrchestration(appId, env);
+    triggerWorkflow(appId, env);
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
@@ -806,26 +785,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Trigger orchestration.
+   * Trigger workflow.
    *
    * @param appId the app id
    * @param env   the env
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerOrchestration(String appId, Environment env) throws InterruptedException {
-    Orchestration orchestration = createExecutableOrchestration(appId, env);
+  public String triggerWorkflow(String appId, Environment env) throws InterruptedException {
+    Workflow workflow = createExecutableWorkflow(appId, env);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution =
         ((WorkflowExecutionServiceImpl) workflowExecutionService)
-            .triggerOrchestrationExecution(appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
+            .triggerOrchestrationWorkflowExecution(appId, env.getUuid(), workflow.getUuid(), executionArgs, callback);
     callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(appId, executionId);
     assertThat(execution)
@@ -835,7 +814,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return executionId;
   }
 
-  private Orchestration createExecutableOrchestration(String appId, Environment env) {
+  private Workflow createExecutableWorkflow(String appId, Environment env) {
     Graph graph = aGraph()
                       .addNodes(aNode()
                                     .withId("n1")
@@ -858,37 +837,36 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
                       .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(appId)
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
-    return orchestration;
+    Workflow workflow = aWorkflow()
+                            .withAppId(appId)
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
+    return workflow;
   }
 
   /**
-   * Should list orchestration.
+   * Should list workflow.
    *
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldListOrchestration() throws InterruptedException {
+  public void shouldListWorkflow() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
-    triggerOrchestration(appId, env);
+    triggerWorkflow(appId, env);
 
-    // 2nd orchestration
-    Orchestration orchestration = createExecutableOrchestration(appId, env);
-    PageRequest<Orchestration> pageRequest = new PageRequest<>();
-    PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest, null);
+    // 2nd workflow
+    Workflow workflow = createExecutableWorkflow(appId, env);
+    PageRequest<Workflow> pageRequest = new PageRequest<>();
+    PageResponse<Workflow> res = workflowService.listWorkflows(pageRequest, null);
 
     assertThat(res).isNotNull().hasSize(2);
   }
@@ -928,27 +906,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
                       .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     int i = 0;
@@ -1040,26 +1017,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
             .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     Thread.sleep(1000);
@@ -1143,10 +1119,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should throw invalid argument for invalid orchestration id.
+   * Should throw invalid argument for invalid workflow id.
    */
   @Test
-  public void shouldThrowInvalidArgumentForInvalidOrchestrationId() {
+  public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
@@ -1204,27 +1180,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
                       .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     int i = 0;
@@ -1313,26 +1288,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
             .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     Thread.sleep(1000);
@@ -1445,27 +1419,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
             .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     int i = 0;
@@ -1662,27 +1635,26 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
             .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                      .withTargetToAllEnv(true)
-                                      .build();
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
-                                          orchestration.getUuid(), executionArgs, callback);
+                                      .triggerOrchestrationWorkflowExecution(
+                                          app.getUuid(), env.getUuid(), workflow.getUuid(), executionArgs, callback);
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
     int i = 0;
@@ -1815,8 +1787,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
-  public void shouldTriggerOrchestrationWorkflow() throws InterruptedException {
+  public void shouldTriggerCanaryWorkflow() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Builder.anEnvironment().withName(ENV_NAME).withAppId(app.getUuid()).build());
@@ -1837,41 +1808,45 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());
 
-    infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
-                                          .withAppId(app.getUuid())
-                                          .withEnvId(env.getUuid())
-                                          .withHostNames(Lists.newArrayList("host1"))
-                                          .withServiceTemplateId(serviceTemplate.getUuid())
-                                          .withComputeProviderSettingId(computeProvider.getUuid())
-                                          .build());
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.save(PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+                                              .withAppId(app.getUuid())
+                                              .withEnvId(env.getUuid())
+                                              .withHostNames(Lists.newArrayList("host1"))
+                                              .withServiceTemplateId(serviceTemplate.getUuid())
+                                              .withComputeProviderSettingId(computeProvider.getUuid())
+                                              .withComputeProviderType(computeProvider.getValue().getType())
+                                              .withDeploymentType(SSH.name())
+                                              .build());
 
-    triggerOrchestrationWorkflow(app.getAppId(), env, service, computeProvider);
+    triggerWorkflow(app.getAppId(), env, service, computeProvider, infrastructureMapping);
   }
 
   /**
-   * Trigger orchestration.
+   * Trigger workflow.
    *
    * @param appId           the app id
    * @param env             the env
    * @param service
    * @param computeProvider
+   * @param infrastructureMapping
    * @return the string
    * @throws InterruptedException the interrupted exception
    */
-  public String triggerOrchestrationWorkflow(
-      String appId, Environment env, Service service, SettingAttribute computeProvider) throws InterruptedException {
-    OrchestrationWorkflow orchestration = createOrchestrationWorkflow(appId, env, service, computeProvider);
+  public String triggerWorkflow(String appId, Environment env, Service service, SettingAttribute computeProvider,
+      InfrastructureMapping infrastructureMapping) throws InterruptedException {
+    Workflow workflow = createWorkflow(appId, env, service, computeProvider, infrastructureMapping);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
-    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
-                                      .triggerOrchestrationWorkflowExecution(
-                                          appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
+    WorkflowExecution execution =
+        ((WorkflowExecutionServiceImpl) workflowExecutionService)
+            .triggerOrchestrationWorkflowExecution(appId, env.getUuid(), workflow.getUuid(), executionArgs, callback);
     callback.await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
-    logger.debug("Orchestration executionId: {}", executionId);
+    logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
     execution = workflowExecutionService.getExecutionDetails(appId, executionId);
     assertThat(execution)
@@ -1881,33 +1856,47 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     return executionId;
   }
 
-  private OrchestrationWorkflow createOrchestrationWorkflow(
-      String appId, Environment env, Service service, SettingAttribute computeProvider) {
-    OrchestrationWorkflow orchestrationWorkflow =
-        anOrchestrationWorkflow()
+  private Workflow createWorkflow(String appId, Environment env, Service service, SettingAttribute computeProvider,
+      InfrastructureMapping infrastructureMapping) {
+    Workflow orchestrationWorkflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
             .withAppId(appId)
             .withEnvId(env.getUuid())
-            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-            .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhases(
-                aWorkflowPhase().withName("Phase1").withServiceId(service.getUuid()).withDeploymentType(SSH).build())
-            .withPostDeploymentSteps(aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withServiceId(service.getUuid())
+                                          .withDeploymentType(SSH)
+                                          .withInfraMappingId(infrastructureMapping.getUuid())
+                                          .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
             .build();
 
-    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
-    assertThat(orchestrationWorkflow2)
+    Workflow orchestrationWorkflow2 = workflowService.createWorkflow(orchestrationWorkflow);
+    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrProperty("uuid");
+    assertThat(orchestrationWorkflow2.getOrchestrationWorkflow())
         .isNotNull()
-        .hasFieldOrProperty("uuid")
         .hasFieldOrProperty("preDeploymentSteps")
         .hasFieldOrProperty("postDeploymentSteps")
         .hasFieldOrProperty("graph");
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    Workflow orchestrationWorkflow3 =
+        workflowService.readWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
     assertThat(orchestrationWorkflow3).isNotNull();
-    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+    assertThat(orchestrationWorkflow3.getOrchestrationWorkflow())
+        .isNotNull()
+        .isInstanceOf(CanaryOrchestrationWorkflow.class);
+    assertThat(((CanaryOrchestrationWorkflow) orchestrationWorkflow3.getOrchestrationWorkflow()).getWorkflowPhases())
+        .isNotNull()
+        .hasSize(1);
 
-    WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
+    WorkflowPhase workflowPhase =
+        ((CanaryOrchestrationWorkflow) orchestrationWorkflow3.getOrchestrationWorkflow()).getWorkflowPhases().get(0);
     PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
                                     .stream()
                                     .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
@@ -1915,15 +1904,21 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
-        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+        aNode().withType("EMAIL").withName("email").addProperty("toAddress", "a@b.com").build());
 
     workflowService.updateWorkflowPhase(
         orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
 
-    OrchestrationWorkflow orchestrationWorkflow4 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
+    Workflow orchestrationWorkflow4 =
+        workflowService.readWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
 
-    logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
+    assertThat(orchestrationWorkflow4).isNotNull();
+    assertThat(orchestrationWorkflow4.getOrchestrationWorkflow())
+        .isNotNull()
+        .isInstanceOf(CanaryOrchestrationWorkflow.class);
+
+    logger.info("Graph Json : \n {}",
+        JsonUtils.asJson(((CanaryOrchestrationWorkflow) orchestrationWorkflow4.getOrchestrationWorkflow()).getGraph()));
 
     return orchestrationWorkflow4;
   }

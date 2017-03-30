@@ -151,8 +151,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
           workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).containsEntry("message", "workflowType is null");
+      assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
+      assertThat(exception.getParams()).containsEntry("args", "workflowType");
     }
   }
 
@@ -173,9 +173,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
           workflowExecutionService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams())
-          .containsEntry("message", "orchestrationId is null for an orchestrated execution");
+      assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
+      assertThat(exception.getParams()).containsEntry("args", "orchestrationId");
     }
   }
 
@@ -197,7 +196,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).containsEntry("message", "Invalid orchestrationId: " + orchestrationId);
+      assertThat(exception.getParams()).containsEntry("message", "OrchestrationWorkflow not found");
     }
   }
 

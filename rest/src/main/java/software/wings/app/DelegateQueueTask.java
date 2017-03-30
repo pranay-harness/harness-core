@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static java.util.Spliterators.spliteratorUnknownSize;
+import static java.util.stream.StreamSupport.stream;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -14,6 +16,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
 
+import java.util.Spliterator;
 import javax.inject.Inject;
 
 /**
@@ -41,9 +44,12 @@ public class DelegateQueueTask implements Runnable {
         return;
       }
 
-      CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class)
-          .iterator()
-          .forEachRemaining(stringDelegateTaskEntry
+      stream(
+          spliteratorUnknownSize(CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).iterator(),
+              Spliterator.NONNULL),
+          false)
+          .filter(stringDelegateTaskEntry -> stringDelegateTaskEntry.getValue().getStatus().equals(Status.QUEUED))
+          .forEach(stringDelegateTaskEntry
               -> broadcasterFactory
                      .lookup("/stream/delegate/" + stringDelegateTaskEntry.getValue().getAccountId(), true)
                      .broadcast(stringDelegateTaskEntry.getValue()));

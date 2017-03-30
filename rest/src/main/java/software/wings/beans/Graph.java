@@ -224,36 +224,26 @@ public class Graph {
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj)
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    if (obj == null)
+    if (o == null || getClass() != o.getClass())
       return false;
-    if (getClass() != obj.getClass())
+
+    Graph graph = (Graph) o;
+
+    if (version != graph.version)
       return false;
-    Graph other = (Graph) obj;
-    if (graphName == null) {
-      if (other.graphName != null)
-        return false;
-    } else if (!graphName.equals(other.graphName))
+    if (graphName != null ? !graphName.equals(graph.graphName) : graph.graphName != null)
       return false;
-    if (links == null) {
-      if (other.links != null)
-        return false;
-    } else if (!links.equals(other.links))
+    if (nodes != null ? !nodes.equals(graph.nodes) : graph.nodes != null)
       return false;
-    if (nodes == null) {
-      if (other.nodes != null)
-        return false;
-    } else if (!nodes.equals(other.nodes))
+    if (links != null ? !links.equals(graph.links) : graph.links != null)
       return false;
-    return true;
+    if (subworkflows != null ? !subworkflows.equals(graph.subworkflows) : graph.subworkflows != null)
+      return false;
+    return originState != null ? originState.equals(graph.originState) : graph.originState == null;
   }
 
   private Optional<Node> getOriginNode() {
@@ -265,8 +255,9 @@ public class Graph {
 
   @Override
   public String toString() {
-    return "Graph [graphName=" + graphName + ", nodes=" + nodes + ", links=" + links + ", originState=" + originState
-        + "]";
+    return "Graph{"
+        + "graphName='" + graphName + '\'' + ", nodes=" + nodes + ", links=" + links + ", subworkflows=" + subworkflows
+        + ", originState=" + originState + ", version=" + version + '}';
   }
 
   /**

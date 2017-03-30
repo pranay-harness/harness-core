@@ -45,9 +45,15 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
-    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION_WORKFLOW) {
-      OrchestrationWorkflow orchestrationWorkflow =
-          workflowService.readOrchestrationWorkflow(context.getAppId(), workflowExecution.getWorkflowId());
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      Workflow workflow = workflowService.readWorkflow(context.getAppId(), workflowExecution.getWorkflowId());
+      if (workflow == null || workflow.getOrchestrationWorkflow() == null
+          || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
+        return null;
+      }
+
+      CanaryOrchestrationWorkflow orchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow == null || orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() == null
           || orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()) == null) {
         return null;
@@ -70,7 +76,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     return null;
   }
 
-  private RepairActionCode rollbackStrategy(OrchestrationWorkflow orchestrationWorkflow) {
+  private RepairActionCode rollbackStrategy(CanaryOrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow.getFailureStrategies() == null) {
       return null;
     }

@@ -188,7 +188,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     if (artifactStreamAction.getWorkflowType().equals(ORCHESTRATION)) {
-      Workflow workflow = workflowService.readOrchestration(appId, artifactStreamAction.getWorkflowId(), null);
+      Workflow workflow = workflowService.readWorkflow(appId, artifactStreamAction.getWorkflowId(), null);
       artifactStreamAction.setWorkflowName(workflow.getName());
       Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
       artifactStreamAction.setEnvName(environment.getName());

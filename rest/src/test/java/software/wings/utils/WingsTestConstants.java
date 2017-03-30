@@ -162,6 +162,11 @@ public class WingsTestConstants {
   public static final String WORKFLOW_ID = "WORKFLOW_ID";
 
   /**
+   * The constant WORKFLOW_NAME.
+   */
+  public static final String WORKFLOW_NAME = "WORKFLOW_NAME";
+
+  /**
    * The constant PIPELINE_ID.
    */
   public static final String PIPELINE_ID = "PIPELINE_ID";

@@ -211,16 +211,23 @@ public class PhaseStep {
 
     if (stepsInParallel != phaseStep.stepsInParallel)
       return false;
+    if (rollback != phaseStep.rollback)
+      return false;
     if (uuid != null ? !uuid.equals(phaseStep.uuid) : phaseStep.uuid != null)
       return false;
     if (name != null ? !name.equals(phaseStep.name) : phaseStep.name != null)
       return false;
     if (phaseStepType != phaseStep.phaseStepType)
       return false;
+    if (stepsIds != null ? !stepsIds.equals(phaseStep.stepsIds) : phaseStep.stepsIds != null)
+      return false;
     if (steps != null ? !steps.equals(phaseStep.steps) : phaseStep.steps != null)
       return false;
-    return failureStrategies != null ? failureStrategies.equals(phaseStep.failureStrategies)
-                                     : phaseStep.failureStrategies == null;
+    if (failureStrategies != null ? !failureStrategies.equals(phaseStep.failureStrategies)
+                                  : phaseStep.failureStrategies != null)
+      return false;
+    return rollbackPhaseStepName != null ? rollbackPhaseStepName.equals(phaseStep.rollbackPhaseStepName)
+                                         : phaseStep.rollbackPhaseStepName == null;
   }
 
   @Override
@@ -228,9 +235,12 @@ public class PhaseStep {
     int result = uuid != null ? uuid.hashCode() : 0;
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (phaseStepType != null ? phaseStepType.hashCode() : 0);
+    result = 31 * result + (stepsIds != null ? stepsIds.hashCode() : 0);
     result = 31 * result + (steps != null ? steps.hashCode() : 0);
     result = 31 * result + (stepsInParallel ? 1 : 0);
     result = 31 * result + (failureStrategies != null ? failureStrategies.hashCode() : 0);
+    result = 31 * result + (rollback ? 1 : 0);
+    result = 31 * result + (rollbackPhaseStepName != null ? rollbackPhaseStepName.hashCode() : 0);
     return result;
   }
 
