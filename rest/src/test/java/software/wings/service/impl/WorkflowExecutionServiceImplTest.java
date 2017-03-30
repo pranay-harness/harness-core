@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
@@ -16,16 +17,20 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
+import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import org.junit.Test;
@@ -48,6 +53,10 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -57,6 +66,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -65,7 +75,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -75,6 +84,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
@@ -545,115 +555,157 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .contains("instRepeatWait", "instRepeatWait", "instRepeatWait", "instRepeatWait");
     assertThat(instRepeatWait).extracting("type").contains("WAIT", "WAIT", "WAIT", "WAIT");
   }
-  //
-  //  /**
-  //   * Trigger pipeline.
-  //   *
-  //   * @throws InterruptedException the interrupted exception
-  //   */
-  //  @Test
-  //  @Ignore
-  //  public void triggerPipeline() throws InterruptedException {
-  //    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
-  //    Environment env = wingsPersistence.saveAndGet(Environment.class,
-  //    Builder.anEnvironment().withAppId(app.getUuid()).build());
-  //
-  //    Host host = wingsPersistence.saveAndGet(Host.class,
-  //    aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
-  //
-  //    Service service =
-  //        wingsPersistence.saveAndGet(Service.class,
-  //        aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
-  //    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-  //        aServiceTemplate().withAppId(app.getUuid()).withEnvId(env.getUuid()).withServiceId(service.getUuid()).withName("TEMPLATE_NAME")
-  //            .withDescription("TEMPLATE_DESCRIPTION").build());
-  //    serviceTemplate.setService(service);
-  //
-  //    software.wings.beans.ServiceInstance.Builder builder =
-  //        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
-  //
-  //    ServiceInstance inst = serviceInstanceService.save(builder.withHost(host).build());
-  //
-  //
-  //    Graph graph = aGraph().addNodes(aNode().withId("Repeat By Services").withOrigin(true).withName("Repeat By
-  //    Services").withType(StateType.REPEAT.name())
-  //        .addProperty("repeatElementExpression", "${services()}").addProperty("executionStrategy",
-  //        ExecutionStrategy.SERIAL).build()).addNodes(
-  //        aNode().withId("RepeatByInstances").withName("RepeatByInstances").withType(StateType.REPEAT.name())
-  //            .addProperty("repeatElementExpression", "${instances}").addProperty("executionStrategy",
-  //            ExecutionStrategy.PARALLEL).build())
-  //        .addNodes(aNode().withId("svcRepeatWait").withName("svcRepeatWait").withType(StateType.WAIT.name()).addProperty("duration",
-  //        1).build())
-  //        .addNodes(aNode().withId("instRepeatWait").withName("instRepeatWait").withType(StateType.WAIT.name()).addProperty("duration",
-  //        1).build())
-  //        .addNodes(aNode().withId("instSuccessWait").withName("instSuccessWait").withType(StateType.WAIT.name()).addProperty("duration",
-  //        1).build()) .addLinks(aLink().withId("l1").withFrom("Repeat By
-  //        Services").withTo("svcRepeatWait").withType("repeat").build())
-  //        .addLinks(aLink().withId("l2").withFrom("svcRepeatWait").withTo("RepeatByInstances").withType("success").build())
-  //        .addLinks(aLink().withId("l3").withFrom("RepeatByInstances").withTo("instRepeatWait").withType("repeat").build())
-  //        .addLinks(aLink().withId("l4").withFrom("RepeatByInstances").withTo("instSuccessWait").withType("success").build()).build();
-  //
-  //    Workflow workflow = aWorkflow().withAppId(app.getUuid()).withName("workflow1").withDescription("Sample
-  //    Workflow").withGraph(graph)
-  //        .withWorkflowType(WorkflowType.ORCHESTRATION).withTargetToAllEnv(true).build();
-  //    workflow = workflowService.createWorkflow(workflow);
-  //    assertThat(workflow).isNotNull();
-  //    assertThat(workflow.getUuid()).isNotNull();
-  //
-  //
-  //    PipelineStage stag1 = new PipelineStage(
-  //        asList(new PipelineStageElement("DEV", StateType.ENV_STATE.name(), ImmutableMap.of("envId", env.getUuid(),
-  //        "workflowId", workflow.getUuid()))));
-  //    PipelineStage stag2 = new PipelineStage(asList(new PipelineStageElement("APPROVAL", StateType.APPROVAL.name(),
-  //    ImmutableMap.of("envId", env.getUuid())))); List<PipelineStage> pipelineStages = asList(stag1, stag2);
-  //
-  //    Pipeline pipeline =
-  //        aPipeline().withAppId(app.getUuid()).withName("pipeline1").withDescription("Sample
-  //        Pipeline").withPipelineStages(pipelineStages).build();
-  //
-  //    pipeline = pipelineService.createPipeline(pipeline);
-  //    assertThat(pipeline).isNotNull();
-  //    assertThat(pipeline.getUuid()).isNotNull();
-  //
-  //    PageRequest<StateMachine> req = new PageRequest<>();
-  //    SearchFilter filter = new SearchFilter();
-  //    filter.setFieldName("originId");
-  //    filter.setFieldValues(pipeline.getUuid());
-  //    filter.setOp(Operator.EQ);
-  //    req.addFilter(filter);
-  //    PageResponse<StateMachine> res = workflowService.list(req);
-  //
-  //    assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
-  //    assertThat(res.get(0).getTransitions()).hasSize(1);
-  //
-  //    Artifact artifact = wingsPersistence
-  //        .saveAndGet(Artifact.class,
-  //        anArtifact().withAppId(app.getUuid()).withDisplayName(ARTIFACT_NAME).withServiceIds(asList(service.getUuid())).build());
-  //    ExecutionArgs executionArgs = new ExecutionArgs();
-  //    executionArgs.setArtifacts(asList(artifact));
-  //
-  //    triggerPipeline(app.getUuid(), pipeline, executionArgs);
-  //  }
-  //
-  //  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, ExecutionArgs executionArgs) throws
-  //  InterruptedException {
-  //
-  //    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
-  //    WorkflowExecution execution =
-  //        ((WorkflowExecutionServiceImpl) workflowExecutionService).triggerPipelineExecution(appId,
-  //        pipeline.getUuid(), executionArgs, callback);
-  //    callback.await();
-  //
-  //    assertThat(execution).isNotNull();
-  //    String executionId = execution.getUuid();
-  //    logger.debug("Pipeline executionId: {}", executionId);
-  //    assertThat(executionId).isNotNull();
-  //    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
-  //    assertThat(execution).isNotNull().extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
-  //        .containsExactly(executionId, ExecutionStatus.SUCCESS);
-  //
-  //    return execution;
-  //  }
+
+  /**
+   * Trigger pipeline.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void triggerPipeline() throws InterruptedException {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+
+    Host host = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
+
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withServiceId(service.getUuid())
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+    serviceTemplate.setService(service);
+
+    software.wings.beans.ServiceInstance.Builder builder =
+        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
+
+    ServiceInstance inst = serviceInstanceService.save(builder.withHost(host).build());
+
+    Graph graph =
+        aGraph()
+            .addNodes(aNode()
+                          .withId("Repeat By Services")
+                          .withOrigin(true)
+                          .withName("Repeat By Services")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${services()}")
+                          .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("RepeatByInstances")
+                          .withName("RepeatByInstances")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${instances}")
+                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("svcRepeatWait")
+                          .withName("svcRepeatWait")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 1)
+                          .build())
+            .addNodes(aNode()
+                          .withId("instRepeatWait")
+                          .withName("instRepeatWait")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 1)
+                          .build())
+            .addNodes(aNode()
+                          .withId("instSuccessWait")
+                          .withName("instSuccessWait")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 1)
+                          .build())
+            .addLinks(
+                aLink().withId("l1").withFrom("Repeat By Services").withTo("svcRepeatWait").withType("repeat").build())
+            .addLinks(
+                aLink().withId("l2").withFrom("svcRepeatWait").withTo("RepeatByInstances").withType("success").build())
+            .addLinks(
+                aLink().withId("l3").withFrom("RepeatByInstances").withTo("instRepeatWait").withType("repeat").build())
+            .addLinks(aLink()
+                          .withId("l4")
+                          .withFrom("RepeatByInstances")
+                          .withTo("instSuccessWait")
+                          .withType("success")
+                          .build())
+            .build();
+
+    Workflow workflow = aWorkflow()
+                            .withAppId(app.getUuid())
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withWorkflowType(WorkflowType.ORCHESTRATION)
+                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
+                            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull();
+    assertThat(workflow.getUuid()).isNotNull();
+
+    PipelineStage stag1 = new PipelineStage(asList(new PipelineStageElement(
+        "DEV", StateType.ENV_STATE.name(), ImmutableMap.of("envId", env.getUuid(), "workflowId", workflow.getUuid()))));
+    PipelineStage stag2 = new PipelineStage(asList(
+        new PipelineStageElement("APPROVAL", StateType.APPROVAL.name(), ImmutableMap.of("envId", env.getUuid()))));
+    List<PipelineStage> pipelineStages = asList(stag1, stag2);
+
+    Pipeline pipeline = aPipeline()
+                            .withAppId(app.getUuid())
+                            .withName("pipeline1")
+                            .withDescription("Sample Pipeline")
+                            .withPipelineStages(pipelineStages)
+                            .build();
+
+    pipeline = pipelineService.createPipeline(pipeline);
+    assertThat(pipeline).isNotNull();
+    assertThat(pipeline.getUuid()).isNotNull();
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValues(pipeline.getUuid());
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+    PageResponse<StateMachine> res = workflowService.listStateMachines(req);
+
+    assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
+    assertThat(res.get(0).getTransitions()).hasSize(1);
+
+    Artifact artifact = wingsPersistence.saveAndGet(Artifact.class,
+        anArtifact()
+            .withAppId(app.getUuid())
+            .withDisplayName(ARTIFACT_NAME)
+            .withServiceIds(asList(service.getUuid()))
+            .build());
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(artifact));
+
+    triggerPipeline(app.getUuid(), pipeline, executionArgs);
+  }
+
+  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, ExecutionArgs executionArgs)
+      throws InterruptedException {
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                      .triggerPipelineExecution(appId, pipeline.getUuid(), executionArgs, callback);
+    callback.await();
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Pipeline executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    return execution;
+  }
 
   /**
    * Should trigger workflow.

@@ -17,10 +17,12 @@ import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailu
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
 import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
@@ -49,11 +51,16 @@ import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ExecutionScope;
+import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Node;
+import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
@@ -89,6 +96,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -711,235 +719,271 @@ public class WorkflowServiceTest extends WingsBaseTest {
     });
   }
 
-  //
-  //  @Test
-  //  public void shouldUpdateWorkflowPhaseRollback() {
-  //    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
-  //    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(
-  //        anAwsInfrastructureMapping().withUuid(INFRA_MAPPING_ID).withDeploymentType(SSH.name()).withComputeProviderType(SettingVariableTypes.AWS.name())
-  //            .build());
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow1 = createWorkflowWorkflow();
-  //    WorkflowPhase workflowPhase =
-  //    aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-  //    workflowService.createWorkflowPhase(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid(), workflowPhase);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow2).isNotNull();
-  //    assertThat(workflowWorkflow2.getWorkflowPhases()).isNotNull().hasSize(1);
-  //
-  //    WorkflowPhase workflowPhase2 = workflowWorkflow2.getWorkflowPhases().get(0);
-  //    assertThat(workflowPhase2).isNotNull();
-  //
-  //    assertThat(workflowWorkflow2.getRollbackWorkflowPhaseIdMap()).isNotNull().containsKeys(workflowPhase2.getUuid());
-  //
-  //    WorkflowPhase rollbackPhase = workflowWorkflow2.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
-  //    assertThat(rollbackPhase).isNotNull();
-  //
-  //    int size = rollbackPhase.getPhaseSteps().size();
-  //    rollbackPhase.getPhaseSteps().remove(0);
-  //
-  //    workflowService.updateWorkflowPhaseRollback(APP_ID, workflowWorkflow2.getUuid(), workflowPhase2.getUuid(),
-  //    rollbackPhase);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow3 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow3).isNotNull();
-  //    assertThat(workflowWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
-  //    assertThat(workflowWorkflow3.getWorkflowPhases().get(0)).isNotNull().hasFieldOrPropertyWithValue("uuid",
-  //    workflowPhase2.getUuid());
-  //
-  //    assertThat(workflowWorkflow3.getRollbackWorkflowPhaseIdMap()).isNotNull().containsKeys(workflowWorkflow3.getWorkflowPhases().get(0).getUuid());
-  //    WorkflowPhase rollbackPhase2 = workflowWorkflow3.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
-  //    assertThat(rollbackPhase2).isNotNull().hasFieldOrPropertyWithValue("uuid", rollbackPhase.getUuid());
-  //    assertThat(rollbackPhase2.getPhaseSteps()).hasSize(size - 1);
-  //
-  //  }
-  //
-  //  @Test
-  //  public void shouldUpdateNode() {
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow =
-  //    aWorkflow().withAppId(APP_ID).withWorkflowWorkflowType(WorkflowWorkflowType.CANARY)
-  //        .withPreDeploymentSteps(
-  //            aPhaseStep(PRE_DEPLOYMENT,
-  //            Constants.PRE_DEPLOYMENT).addStep(aNode().withType("HTTP").withName("http").addProperty("URL",
-  //            "http://www.google.com").build())
-  //                .build()).withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT,
-  //                Constants.POST_DEPLOYMENT).build()).build();
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 = workflowService.createWorkflowWorkflow(workflowWorkflow);
-  //    assertThat(workflowWorkflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrProperty("graph").hasFieldOrProperty("preDeploymentSteps")
-  //        .hasFieldOrProperty("postDeploymentSteps");
-  //
-  //    assertThat(workflowWorkflow2.getGraph().getSubworkflows()).isNotNull().containsKeys(workflowWorkflow2.getPreDeploymentSteps().getUuid())
-  //        .containsKeys(workflowWorkflow2.getPostDeploymentSteps().getUuid());
-  //
-  //    Graph graph =
-  //    workflowWorkflow2.getGraph().getSubworkflows().get(workflowWorkflow2.getPreDeploymentSteps().getUuid());
-  //    assertThat(graph).isNotNull();
-  //    assertThat(graph.getNodes()).isNotNull().hasSize(1);
-  //    Node node = graph.getNodes().get(0);
-  //    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
-  //    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.google.com");
-  //    node.getProperties().put("URL", "http://www.yahoo.com");
-  //
-  //    workflowService
-  //        .updateGraphNode(workflowWorkflow2.getAppId(), workflowWorkflow2.getUuid(),
-  //        workflowWorkflow2.getPreDeploymentSteps().getUuid(), node);
-  //
-  //    workflowWorkflow2 = workflowService.readWorkflow(workflowWorkflow2.getAppId(), workflowWorkflow2.getUuid());
-  //    assertThat(workflowWorkflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrProperty("graph").hasFieldOrProperty("preDeploymentSteps")
-  //        .hasFieldOrProperty("postDeploymentSteps");
-  //
-  //    assertThat(workflowWorkflow2.getGraph().getSubworkflows()).isNotNull().containsKeys(workflowWorkflow2.getPreDeploymentSteps().getUuid())
-  //        .containsKeys(workflowWorkflow2.getPostDeploymentSteps().getUuid());
-  //
-  //    graph = workflowWorkflow2.getGraph().getSubworkflows().get(workflowWorkflow2.getPreDeploymentSteps().getUuid());
-  //    assertThat(graph).isNotNull();
-  //    assertThat(graph.getNodes()).isNotNull().hasSize(1);
-  //    node = graph.getNodes().get(0);
-  //    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
-  //    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.yahoo.com");
-  //
-  //  }
-  //
-  //  @Test
-  //  public void shouldHaveGraph() {
-  //    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
-  //    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(
-  //        anAwsInfrastructureMapping().withUuid(INFRA_MAPPING_ID).withDeploymentType(SSH.name()).withComputeProviderType(SettingVariableTypes.AWS.name())
-  //            .build());
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow1 = createWorkflowWorkflow();
-  //
-  //    WorkflowPhase workflowPhase =
-  //    aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-  //    workflowService.createWorkflowPhase(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid(), workflowPhase);
-  //
-  //    WorkflowPhase workflowPhase2 =
-  //    aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-  //    workflowService.createWorkflowPhase(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid(), workflowPhase2);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow2).isNotNull();
-  //    assertThat(workflowWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
-  //
-  //    workflowPhase2 = workflowWorkflow2.getWorkflowPhases().get(1);
-  //    workflowPhase2.setName("phase2-changed");
-  //
-  //    workflowService.updateWorkflowPhase(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid(), workflowPhase2);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow3 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow3).isNotNull();
-  //    assertThat(workflowWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
-  //    assertThat(workflowWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
-  //
-  //    Graph graph = workflowWorkflow3.getGraph();
-  //    assertThat(graph).isNotNull();
-  //    assertThat(graph.getNodes()).isNotNull().hasSize(6).doesNotContainNull();
-  //    assertThat(graph.getLinks()).isNotNull().hasSize(3).doesNotContainNull();
-  //    assertThat(graph.getNodes().get(0).getId()).isEqualTo(workflowWorkflow3.getPreDeploymentSteps().getUuid());
-  //    assertThat(graph.getNodes().get(1).getId()).isEqualTo(workflowWorkflow3.getWorkflowPhaseIds().get(0));
-  //    assertThat(graph.getNodes().get(3).getId()).isEqualTo(workflowWorkflow3.getWorkflowPhaseIds().get(1));
-  //    assertThat(graph.getNodes().get(5).getId()).isEqualTo(workflowWorkflow3.getPostDeploymentSteps().getUuid());
-  //    logger.info("Graph Nodes: {}", graph.getNodes());
-  //    assertThat(graph.getSubworkflows()).isNotNull()
-  //        .containsKeys(workflowWorkflow3.getPreDeploymentSteps().getUuid(),
-  //        workflowWorkflow3.getWorkflowPhaseIds().get(0),
-  //            workflowWorkflow3.getWorkflowPhaseIds().get(1), workflowWorkflow3.getPostDeploymentSteps().getUuid());
-  //  }
-  //
-  //  @Test
-  //  public void shouldUpdateNotificationRules() {
-  //    CanaryWorkflowWorkflow workflowWorkflow1 = createWorkflowWorkflow();
-  //
-  //    List<NotificationRule> notificationRules = newArrayList(aNotificationRule().build());
-  //    List<NotificationRule> updated =
-  //        workflowService.updateNotificationRules(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid(),
-  //        notificationRules);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow2).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
-  //  }
-  //
-  //
-  //  @Test
-  //  public void shouldUpdateFailureStrategies() {
-  //    CanaryWorkflowWorkflow workflowWorkflow1 = createWorkflowWorkflow();
-  //
-  //    List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
-  //    List<FailureStrategy> updated =
-  //        workflowService.updateFailureStrategies(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid(),
-  //        failureStrategies);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow2).isNotNull().hasFieldOrPropertyWithValue("failureStrategies", failureStrategies);
-  //  }
-  //
-  //
-  //  @Test
-  //  public void shouldUpdateUserVariables() {
-  //    CanaryWorkflowWorkflow workflowWorkflow1 = createWorkflowWorkflow();
-  //
-  //    List<Variable> userVariables = newArrayList(aVariable().build());
-  //    List<Variable> updated = workflowService.updateUserVariables(workflowWorkflow1.getAppId(),
-  //    workflowWorkflow1.getUuid(), userVariables);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 =
-  //        workflowService.readWorkflow(workflowWorkflow1.getAppId(), workflowWorkflow1.getUuid());
-  //    assertThat(workflowWorkflow2).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
-  //  }
-  //
-  //
-  //  @Test
-  //  public void shouldCreateComplexWorkflow() {
-  //    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
-  //    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(
-  //        anAwsInfrastructureMapping().withUuid(INFRA_MAPPING_ID).withDeploymentType(SSH.name()).withComputeProviderType(SettingVariableTypes.AWS.name())
-  //            .build());
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow =
-  //    aWorkflow().withAppId(APP_ID).withWorkflowWorkflowType(WorkflowWorkflowType.CANARY)
-  //        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build()).addWorkflowPhases(
-  //            aWorkflowPhase().withName("Phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).withDeploymentType(SSH).build())
-  //        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build()).build();
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow2 = workflowService.createWorkflowWorkflow(workflowWorkflow);
-  //    assertThat(workflowWorkflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrProperty("preDeploymentSteps").hasFieldOrProperty("postDeploymentSteps")
-  //        .hasFieldOrProperty("graph");
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow3 =
-  //        workflowService.readWorkflow(workflowWorkflow2.getAppId(), workflowWorkflow2.getUuid());
-  //    assertThat(workflowWorkflow3).isNotNull();
-  //    assertThat(workflowWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
-  //
-  //    WorkflowPhase workflowPhase = workflowWorkflow3.getWorkflowPhases().get(0);
-  //    PhaseStep deployPhaseStep =
-  //        workflowPhase.getPhaseSteps().stream().filter(ps -> ps.getPhaseStepType() ==
-  //        PhaseStepType.DEPLOY_SERVICE).collect(Collectors.toList()).get(0);
-  //
-  //    deployPhaseStep.getSteps().add(aNode().withType("HTTP").withName("http").addProperty("url",
-  //    "www.google.com").build());
-  //
-  //    workflowService.updateWorkflowPhase(workflowWorkflow2.getAppId(), workflowWorkflow2.getUuid(), workflowPhase);
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow4 =
-  //        workflowService.readWorkflow(workflowWorkflow2.getAppId(), workflowWorkflow2.getUuid());
-  //    workflowService
-  //        .deleteWorkflowPhase(workflowWorkflow4.getAppId(), workflowWorkflow4.getUuid(),
-  //        workflowWorkflow4.getWorkflowPhaseIds().get(0));
-  //
-  //    CanaryWorkflowWorkflow workflowWorkflow5 =
-  //        workflowService.readWorkflow(workflowWorkflow2.getAppId(), workflowWorkflow2.getUuid());
-  //    assertThat(workflowWorkflow5).isNotNull();
-  //
-  //    logger.info("Graph Json : \n {}", JsonUtils.asJson(workflowWorkflow4.getGraph()));
-  //
-  //  }
+  @Test
+  public void shouldUpdateWorkflowPhaseRollback() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow1 = createCanaryWorkflow();
+
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+
+    assertThat(orchestrationWorkflow.getRollbackWorkflowPhaseIdMap())
+        .isNotNull()
+        .containsKeys(workflowPhase2.getUuid());
+
+    WorkflowPhase rollbackPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
+    assertThat(rollbackPhase).isNotNull();
+
+    int size = rollbackPhase.getPhaseSteps().size();
+    rollbackPhase.getPhaseSteps().remove(0);
+
+    workflowService.updateWorkflowPhaseRollback(APP_ID, workflow2.getUuid(), workflowPhase2.getUuid(), rollbackPhase);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+
+    assertThat(orchestrationWorkflow3.getRollbackWorkflowPhaseIdMap())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow3.getWorkflowPhases().get(0).getUuid());
+    WorkflowPhase rollbackPhase2 = orchestrationWorkflow3.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
+    assertThat(rollbackPhase2).isNotNull().hasFieldOrPropertyWithValue("uuid", rollbackPhase.getUuid());
+    assertThat(rollbackPhase2.getPhaseSteps()).hasSize(size - 1);
+  }
+
+  @Test
+  public void shouldUpdateNode() {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                                                .addStep(aNode()
+                                                             .withType("HTTP")
+                                                             .withName("http")
+                                                             .addProperty("url", "http://www.google.com")
+                                                             .build())
+                                                .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
+
+    Graph graph =
+        orchestrationWorkflow.getGraph().getSubworkflows().get(orchestrationWorkflow.getPreDeploymentSteps().getUuid());
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(1);
+    Node node = graph.getNodes().get(0);
+    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
+    assertThat(node.getProperties()).isNotNull().containsKey("url").containsValue("http://www.google.com");
+    node.getProperties().put("url", "http://www.yahoo.com");
+
+    workflowService.updateGraphNode(
+        workflow2.getAppId(), workflow2.getUuid(), orchestrationWorkflow.getPreDeploymentSteps().getUuid(), node);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("uuid", workflow2.getUuid());
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow3)
+        .hasFieldOrProperty("graph")
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps");
+
+    assertThat(orchestrationWorkflow3.getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow.getPreDeploymentSteps().getUuid())
+        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+
+    graph = orchestrationWorkflow3.getGraph().getSubworkflows().get(
+        orchestrationWorkflow.getPreDeploymentSteps().getUuid());
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(1);
+    node = graph.getNodes().get(0);
+    assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
+    assertThat(node.getProperties()).isNotNull().containsKey("url").containsValue("http://www.yahoo.com");
+  }
+
+  @Test
+  public void shouldHaveGraph() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    Workflow workflow1 = createCanaryWorkflow();
+
+    WorkflowPhase workflowPhase =
+        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow2 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+
+    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
+
+    workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
+    workflowPhase2.setName("phase2-changed");
+
+    workflowService.updateWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow3).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
+    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
+
+    Graph graph = orchestrationWorkflow3.getGraph();
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).isNotNull().hasSize(6).doesNotContainNull();
+    assertThat(graph.getLinks()).isNotNull().hasSize(3).doesNotContainNull();
+    assertThat(graph.getNodes().get(0).getId()).isEqualTo(orchestrationWorkflow3.getPreDeploymentSteps().getUuid());
+    assertThat(graph.getNodes().get(1).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(0));
+    assertThat(graph.getNodes().get(3).getId()).isEqualTo(orchestrationWorkflow3.getWorkflowPhaseIds().get(1));
+    assertThat(graph.getNodes().get(5).getId()).isEqualTo(orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+    logger.info("Graph Nodes: {}", graph.getNodes());
+    assertThat(graph.getSubworkflows())
+        .isNotNull()
+        .containsKeys(orchestrationWorkflow3.getPreDeploymentSteps().getUuid(),
+            orchestrationWorkflow3.getWorkflowPhaseIds().get(0), orchestrationWorkflow3.getWorkflowPhaseIds().get(1),
+            orchestrationWorkflow3.getPostDeploymentSteps().getUuid());
+  }
+
+  @Test
+  public void shouldUpdateNotificationRules() {
+    Workflow workflow1 = createCanaryWorkflow();
+
+    List<NotificationRule> notificationRules = newArrayList(aNotificationRule().build());
+    List<NotificationRule> updated =
+        workflowService.updateNotificationRules(workflow1.getAppId(), workflow1.getUuid(), notificationRules);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
+  }
+
+  @Test
+  public void shouldUpdateFailureStrategies() {
+    Workflow workflow1 = createCanaryWorkflow();
+
+    List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
+    List<FailureStrategy> updated =
+        workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("failureStrategies", failureStrategies);
+  }
+
+  @Test
+  public void shouldUpdateUserVariables() {
+    Workflow workflow1 = createCanaryWorkflow();
+
+    List<Variable> userVariables = newArrayList(aVariable().build());
+    List<Variable> updated =
+        workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
+
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
+  }
+
+  @Test
+  public void shouldCreateComplexWorkflow() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow3).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
+    PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
+                                    .stream()
+                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
+                                    .collect(Collectors.toList())
+                                    .get(0);
+
+    deployPhaseStep.getSteps().add(
+        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
+
+    Workflow workflow4 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    workflowService.deleteWorkflowPhase(workflow4.getAppId(), workflow4.getUuid(), workflowPhase.getUuid());
+
+    Workflow workflow5 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow5).isNotNull();
+  }
 }
