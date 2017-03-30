@@ -256,11 +256,13 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         id2 = workflowPhase.getUuid();
         graphBuilder.addNodes(workflowPhase.generatePhaseNode())
             .addLinks(
-                aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build());
+                aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
+            .addSubworkflows(workflowPhase.generateSubworkflows());
 
         if (rollbackWorkflowPhaseIdMap != null && rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid()) != null) {
           Node rollbackNode = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid()).generatePhaseNode();
-          graphBuilder.addNodes(rollbackNode);
+          graphBuilder.addNodes(rollbackNode)
+              .addSubworkflows(rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid()).generateSubworkflows());
         }
         id1 = id2;
       }
