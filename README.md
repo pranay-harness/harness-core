@@ -72,4 +72,5 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 1) To build UI Go to wings-ui and follow READ me instructions.
 
 2) To apply database migrations run following command in dbmigrations folder:
-    "mvn clean compile exec:java"
+
+    ```mvn clean compile exec:java```
