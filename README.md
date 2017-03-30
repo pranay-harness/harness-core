@@ -42,7 +42,7 @@ Run from IntelliJ
     * Working Directory: $MODULE_DIR$
 
 Note:
-1 ) To build UI Go to wings-ui and follow READ me instructions.
+1) To build UI Go to wings-ui and follow READ me instructions.
 
 2) To apply database migrations run following command in dbmigrations folder:
     "mvn clean compile exec:java"
