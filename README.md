@@ -33,11 +33,13 @@ IDE Setup
 
 Run from IntelliJ
 1) Run  API Server : Run 'WingsApplication' class  with following configurations.
-    * VM Args: -Xbootclasspath/p:<Your home directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.8.v<YYYYMMDD>/alpn-boot-8.1.8.v<YYYYMMDD>.jar  
+    * Environment Variable: JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
+    * VM Args: -Xbootclasspath/p:&lt;Your Home Directory&gt;/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar
     * Program Args: server config.yml
     * Working Directory: $MODULE_DIR$
 2) Run/Debug API Server : Run 'DelegateApplication' classp  with following configurations.
-    * VM Args: -Xbootclasspath/p:<Your home directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.8.v<YYYYMMDD>/alpn-boot-8.1.8.v<YYYYMMDD>.jar -Dversion=999.0.0
+    * Environment Variable: JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home
+    * VM Args: -Xbootclasspath/p:&lt;Your Home Directory&gt;/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0
     * Program Args: config-delegate.yml
     * Working Directory: $MODULE_DIR$
 
