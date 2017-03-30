@@ -18,4 +18,5 @@
     <file path="config-files-index-migration.js"/>
     <file path="standard-role-permissions.js" />
     <file path="license-migration.js" />
+    <file path="workflow-version-refactor.js" />
 </changeFiles>
