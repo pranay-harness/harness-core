@@ -23,6 +23,7 @@ import software.wings.utils.Misc;
 
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 
 /**
@@ -34,8 +35,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
   @Inject private ExpressionEvaluator evaluator;
   @Inject private JenkinsFactory jenkinsFactory;
 
-  public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<JenkinsExecutionResponse> consumer) {
-    super(delegateId, delegateTask, consumer);
+  public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<JenkinsExecutionResponse> postExecute,
+      Supplier<Boolean> preExecute) {
+    super(delegateId, delegateTask, postExecute, preExecute);
   }
 
   @Override

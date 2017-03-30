@@ -17,6 +17,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 
 /**
@@ -27,8 +28,9 @@ public class CommandTask extends AbstractDelegateRunnableTask<CommandExecutionRe
 
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
 
-  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<CommandExecutionResult> consumer) {
-    super(delegateId, delegateTask, consumer);
+  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<CommandExecutionResult> postExecute,
+      Supplier<Boolean> preExecute) {
+    super(delegateId, delegateTask, postExecute, preExecute);
   }
 
   @Override

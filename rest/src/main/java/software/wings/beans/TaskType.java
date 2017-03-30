@@ -12,6 +12,7 @@ import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Created by peeyushaggarwal on 12/8/16.
@@ -42,8 +43,8 @@ public enum TaskType {
     this.delegateRunnableTaskClass = delegateRunnableTaskClass;
   }
 
-  public DelegateRunnableTask getDelegateRunnableTask(
-      String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-    return on(delegateRunnableTaskClass).create(delegateId, delegateTask, consumer).get();
+  public DelegateRunnableTask getDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
+      Consumer<? extends NotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+    return on(delegateRunnableTaskClass).create(delegateId, delegateTask, postExecute, preExecute).get();
   }
 }

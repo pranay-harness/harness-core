@@ -38,6 +38,8 @@ public interface DelegateService {
 
   DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId);
 
+  DelegateTask startDelegateTask(String accountId, String delegateId, String taskId);
+
   void processDelegateResponse(DelegateTaskResponse response);
 
   File download(String managerHost, String accountId) throws IOException, TemplateException;

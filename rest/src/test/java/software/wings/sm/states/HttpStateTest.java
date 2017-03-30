@@ -401,7 +401,8 @@ public class HttpStateTest extends WingsBaseTest {
       task.getTaskType()
           .getDelegateRunnableTask(DELEGATE_ID, task,
               o
-              -> asyncExecutionResponse = httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o)))
+              -> asyncExecutionResponse = httpState.handleAsyncResponse(context, ImmutableMap.of(task.getWaitId(), o)),
+              () -> true)
           .run();
       return null;
     })

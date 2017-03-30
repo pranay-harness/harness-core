@@ -216,12 +216,31 @@ public class DelegateServiceImpl implements DelegateService {
                                       .doesNotExist()
                                       .field(ID_KEY)
                                       .equal(taskId);
-      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                            .set("status", DelegateTask.Status.STARTED)
-                                                            .set("delegateId", delegateId);
+      UpdateOperations<DelegateTask> updateOperations =
+          wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
+    }
+    return delegateTask;
+  }
+
+  @Override
+  public DelegateTask startDelegateTask(String accountId, String delegateId, String taskId) {
+    DelegateTask delegateTask = CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    if (delegateTask == null) {
+      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                      .field("accountId")
+                                      .equal(accountId)
+                                      .field("status")
+                                      .equal(DelegateTask.Status.QUEUED)
+                                      .field("delegateId")
+                                      .equal(delegateId)
+                                      .field(ID_KEY)
+                                      .equal(taskId);
+      UpdateOperations<DelegateTask> updateOperations =
+          wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.STARTED);
+      delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     }
     return delegateTask;
   }

@@ -35,6 +35,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Created by peeyushaggarwal on 12/7/16.
@@ -46,8 +47,9 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<HttpStateExecutionData> consumer) {
-    super(delegateId, delegateTask, consumer);
+  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<HttpStateExecutionData> postExecute,
+      Supplier<Boolean> preExecute) {
+    super(delegateId, delegateTask, postExecute, preExecute);
   }
 
   @Override
@@ -147,7 +149,8 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
   public static final class Builder {
     private String delegateId;
     private DelegateTask delegateTask;
-    private Consumer<HttpStateExecutionData> consumer;
+    private Consumer<HttpStateExecutionData> postExecute;
+    private Supplier<Boolean> preExecute;
 
     private Builder() {}
 
@@ -165,13 +168,18 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
       return this;
     }
 
-    public Builder withConsumer(Consumer<HttpStateExecutionData> consumer) {
-      this.consumer = consumer;
+    public Builder withPostExecute(Consumer<HttpStateExecutionData> postExecute) {
+      this.postExecute = postExecute;
+      return this;
+    }
+
+    public Builder withPreExecute(Supplier<Boolean> preExecute) {
+      this.preExecute = preExecute;
       return this;
     }
 
     public HttpTask build() {
-      HttpTask httpTask = new HttpTask(delegateId, delegateTask, consumer);
+      HttpTask httpTask = new HttpTask(delegateId, delegateTask, postExecute, preExecute);
       return httpTask;
     }
   }

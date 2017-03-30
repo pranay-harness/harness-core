@@ -80,4 +80,9 @@ public interface ManagerClient {
   @PUT("delegates/{delegateId}/tasks/{taskId}/acquire")
   Call<DelegateTask> acquireTask(
       @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+
+  @KryoResponse
+  @PUT("delegates/{delegateId}/tasks/{taskId}/start")
+  Call<DelegateTask> startTask(
+      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
 }

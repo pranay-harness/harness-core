@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 
 /**
@@ -30,8 +31,9 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
   @Inject private BambooService bambooService;
   @Inject private DelegateFileManager delegateFileManager;
 
-  public BambooCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<ListNotifyResponseData> consumer) {
-    super(delegateId, delegateTask, consumer);
+  public BambooCollectionTask(String delegateId, DelegateTask delegateTask,
+      Consumer<ListNotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+    super(delegateId, delegateTask, postExecute, preExecute);
   }
 
   @Override

@@ -277,28 +277,40 @@ public class DelegateServiceImpl implements DelegateService {
             delegateTask.getAccountId(), delegateTask.getTaskType());
         DelegateTask finalDelegateTask = delegateTask;
         DelegateRunnableTask delegateRunnableTask =
-            delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask, notifyResponseData -> {
-              Response<ResponseBody> response = null;
-              try {
-                response = managerClient
-                               .sendTaskStatus(delegateId, finalDelegateTask.getUuid(), accountId,
-                                   aDelegateTaskResponse()
-                                       .withTask(finalDelegateTask)
-                                       .withAccountId(accountId)
-                                       .withResponse(notifyResponseData)
-                                       .build())
-                               .execute();
-              } catch (IOException e) {
-                logger.error("Unable to send response to manager ", e);
-              } finally {
-                if (response != null && !response.isSuccessful()) {
-                  response.errorBody().close();
-                }
-                if (response != null && response.isSuccessful()) {
-                  response.body().close();
-                }
-              }
-            });
+            delegateTask.getTaskType().getDelegateRunnableTask(delegateId, delegateTask,
+                notifyResponseData
+                -> {
+                  Response<ResponseBody> response = null;
+                  try {
+                    response = managerClient
+                                   .sendTaskStatus(delegateId, finalDelegateTask.getUuid(), accountId,
+                                       aDelegateTaskResponse()
+                                           .withTask(finalDelegateTask)
+                                           .withAccountId(accountId)
+                                           .withResponse(notifyResponseData)
+                                           .build())
+                                   .execute();
+                  } catch (IOException e) {
+                    logger.error("Unable to send response to manager ", e);
+                  } finally {
+                    if (response != null && !response.isSuccessful()) {
+                      response.errorBody().close();
+                    }
+                    if (response != null && response.isSuccessful()) {
+                      response.body().close();
+                    }
+                  }
+                },
+                () -> {
+                  try {
+                    DelegateTask delegateTask1 =
+                        execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+                    return delegateTask1 != null;
+                  } catch (IOException e) {
+                    logger.error("Unable to update task status on manager.", e);
+                    return false;
+                  }
+                });
         injector.injectMembers(delegateRunnableTask);
         executorService.submit(delegateRunnableTask);
       } else {

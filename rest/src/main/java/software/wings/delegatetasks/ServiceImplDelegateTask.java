@@ -11,6 +11,7 @@ import org.joor.ReflectException;
 import software.wings.beans.DelegateTask;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Created by peeyushaggarwal on 1/12/17.
@@ -18,9 +19,9 @@ import java.util.function.Consumer;
 public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask<RemoteMethodReturnValueData> {
   @Inject private Injector injector;
 
-  public ServiceImplDelegateTask(
-      String delegateId, DelegateTask delegateTask, Consumer<RemoteMethodReturnValueData> consumer) {
-    super(delegateId, delegateTask, consumer);
+  public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask,
+      Consumer<RemoteMethodReturnValueData> postExecute, Supplier<Boolean> preExecute) {
+    super(delegateId, delegateTask, postExecute, preExecute);
   }
 
   @Override

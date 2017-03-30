@@ -44,7 +44,7 @@ public class JenkinsTaskTest {
 
   @InjectMocks
   private JenkinsTask jenkinsTask = (JenkinsTask) TaskType.JENKINS.getDelegateRunnableTask(
-      "delid1", aDelegateTask().build(), notifyResponseData -> {});
+      "delid1", aDelegateTask().build(), notifyResponseData -> {}, () -> true);
 
   @Before
   public void setUp() throws Exception {
