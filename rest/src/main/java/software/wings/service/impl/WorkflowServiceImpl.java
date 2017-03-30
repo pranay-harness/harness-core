@@ -382,13 +382,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       EntityVersion entityVersion =
           entityVersionService.lastEntityVersion(workflow.getAppId(), EntityType.WORKFLOW, workflow.getUuid());
+      workflow.setDefaultVersion(entityVersion.getVersion());
+
       if (orchestrationWorkflow != null) {
         StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
             ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
         stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       }
 
-      workflow.setDefaultVersion(entityVersion.getVersion());
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
     }
 
@@ -399,6 +400,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .equal(workflow.getUuid()),
         ops);
 
+    workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
     return workflow;
   }
 
@@ -553,8 +555,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     orchestrationWorkflow.setPreDeploymentSteps(phaseStep);
 
-    updateWorkflow(workflow, orchestrationWorkflow);
-    return phaseStep;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getPreDeploymentSteps();
   }
 
   @Override
@@ -566,8 +569,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     orchestrationWorkflow.setPostDeploymentSteps(phaseStep);
 
-    updateWorkflow(workflow, orchestrationWorkflow);
-    return phaseStep;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getPostDeploymentSteps();
   }
 
   @Override
@@ -579,9 +583,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     attachWorkflowPhase(workflow, workflowPhase);
-    updateWorkflow(workflow, orchestrationWorkflow);
 
-    return workflowPhase;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
@@ -648,8 +653,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "no matching workflowPhase");
     }
 
-    updateWorkflow(workflow, orchestrationWorkflow);
-    return workflowPhase;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
 
   @Override
@@ -663,8 +669,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
 
     orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(phaseId, rollbackWorkflowPhase);
-    updateWorkflow(workflow, orchestrationWorkflow);
-    return rollbackWorkflowPhase;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
   }
 
   @Override
@@ -677,6 +684,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
 
     orchestrationWorkflow.getWorkflowPhases().remove(orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId));
+    orchestrationWorkflow.getWorkflowPhaseIdMap().remove(phaseId);
+    orchestrationWorkflow.getWorkflowPhaseIds().remove(phaseId);
+    orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().remove(phaseId);
     updateWorkflow(workflow, orchestrationWorkflow);
   }
 
@@ -705,8 +715,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "args", "node");
     }
 
-    updateWorkflow(workflow, orchestrationWorkflow, false);
-    return node;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getGraph()
+        .getSubworkflows()
+        .get(subworkflowId)
+        .getNodes()
+        .stream()
+        .filter(n -> node.getId().equals(n.getId()))
+        .findFirst()
+        .get();
   }
 
   @Override
@@ -719,9 +737,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     orchestrationWorkflow.setNotificationRules(notificationRules);
-    updateWorkflow(workflow, orchestrationWorkflow);
-
-    return notificationRules;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getNotificationRules();
   }
 
   @Override
@@ -734,9 +752,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     orchestrationWorkflow.setFailureStrategies(failureStrategies);
-    updateWorkflow(workflow, orchestrationWorkflow);
-
-    return failureStrategies;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getFailureStrategies();
   }
 
   @Override
@@ -748,9 +766,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     orchestrationWorkflow.setUserVariables(userVariables);
-    updateWorkflow(workflow, orchestrationWorkflow);
-
-    return userVariables;
+    orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
+    return orchestrationWorkflow.getUserVariables();
   }
 
   private Set<EntityType> getRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {

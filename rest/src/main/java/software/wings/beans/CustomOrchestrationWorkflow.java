@@ -53,6 +53,23 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   @Override
   public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {}
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    CustomOrchestrationWorkflow that = (CustomOrchestrationWorkflow) o;
+
+    return graph != null ? graph.equals(that.graph) : that.graph == null;
+  }
+
+  @Override
+  public int hashCode() {
+    return graph != null ? graph.hashCode() : 0;
+  }
+
   public static final class CustomOrchestrationWorkflowBuilder {
     private Graph graph;
 

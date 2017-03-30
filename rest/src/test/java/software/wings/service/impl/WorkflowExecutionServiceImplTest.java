@@ -65,6 +65,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -1851,7 +1852,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
-        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+        aNode().withType("EMAIL").withName("email").addProperty("toAddress", "a@b.com").build());
 
     workflowService.updateWorkflowPhase(
         orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
