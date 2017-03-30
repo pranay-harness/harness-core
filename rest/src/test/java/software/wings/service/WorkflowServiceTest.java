@@ -252,7 +252,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflow.setName("workflow2");
     workflow.setDescription(null);
 
-    Graph graph2 = ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph();
+    Graph graph2 =
+        JsonUtils.clone(((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), Graph.class);
     graph2.getNodes().add(aNode().withId("n5").withName("http").withX(350).withType(StateType.HTTP.name()).build());
     graph2.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
@@ -261,6 +262,24 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .isEqualToComparingOnlyGivenFields(workflow, "uuid", "name", "description", "orchestrationWorkflow")
         .hasFieldOrPropertyWithValue("defaultVersion", 2);
+
+    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
+
+    assertThat(res).isNotNull().hasSize(2);
+    assertThat(res.get(0))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", updatedWorkflow.getOrchestrationWorkflow())
+        .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
+        .hasFieldOrPropertyWithValue("originVersion", 2);
+    assertThat(res.get(1))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", workflow.getOrchestrationWorkflow())
+        .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
+        .hasFieldOrPropertyWithValue("originVersion", 1);
   }
 
   /**
@@ -322,7 +341,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .build());
 
     assertThat(res).isNotNull().hasSize(1);
-    assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
+    assertThat(res.get(0))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow)
+        .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
+        .hasFieldOrPropertyWithValue("originVersion", 1);
     return workflow;
   }
 

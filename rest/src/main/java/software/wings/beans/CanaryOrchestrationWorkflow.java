@@ -176,10 +176,16 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       workflowPhaseIds = new ArrayList<>();
       workflowPhaseIdMap = new HashMap<>();
 
+      int i = 0;
       for (WorkflowPhase workflowPhase : workflowPhases) {
+        workflowPhase.setName(Constants.PHASE_NAME_PREFIX + ++i);
         workflowPhaseIds.add(workflowPhase.getUuid());
         workflowPhaseIdMap.put(workflowPhase.getUuid(), workflowPhase);
         populatePhaseStepIds(workflowPhase);
+
+        WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
+        rollbackPhase.setName(Constants.ROLLBACK_PREFIX + workflowPhase.getName());
+        populatePhaseStepIds(rollbackPhase);
       }
     }
     populatePhaseStepIds(postDeploymentSteps);

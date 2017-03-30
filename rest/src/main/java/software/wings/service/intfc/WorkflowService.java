@@ -124,6 +124,8 @@ public interface WorkflowService {
   Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes);
 
+  StateMachine readStateMachine(String appId, String originId, Integer version);
+
   /**
    * Read latest simple workflow .
    *

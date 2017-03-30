@@ -688,7 +688,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "OrchestrationWorkflow not found");
       }
 
-      StateMachine stateMachine = workflowService.readLatestStateMachine(appId, executionArgs.getOrchestrationId());
+      StateMachine stateMachine =
+          workflowService.readStateMachine(appId, executionArgs.getOrchestrationId(), workflow.getDefaultVersion());
       if (stateMachine == null) {
         throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Associated state machine not found");
       }

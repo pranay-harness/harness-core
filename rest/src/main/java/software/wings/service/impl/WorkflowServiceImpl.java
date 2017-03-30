@@ -378,6 +378,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
+        orchestrationWorkflow.setRequiredEntityTypes(
+            getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
       }
 
       EntityVersion entityVersion =
@@ -430,7 +432,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return wingsPersistence.get(StateMachine.class, req);
   }
 
-  private StateMachine readStateMachine(String appId, String originId, Integer version) {
+  @Override
+  public StateMachine readStateMachine(String appId, String originId, Integer version) {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -600,12 +603,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-
-    if (orchestrationWorkflow.getWorkflowPhases() == null) {
-      workflowPhase.setName(Constants.PHASE_NAME_PREFIX + 1);
-    } else {
-      workflowPhase.setName(Constants.PHASE_NAME_PREFIX + (orchestrationWorkflow.getWorkflowPhases().size() + 1));
-    }
 
     boolean serviceRepeat = false;
     if (orchestrationWorkflow.getWorkflowPhaseIds() != null) {
