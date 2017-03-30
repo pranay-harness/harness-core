@@ -28,7 +28,6 @@ public class Environment extends Base {
   @NotNull private EnvironmentType environmentType = NON_PROD;
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
-  @Transient private List<Orchestration> orchestrations;
   @Transient private Setup setup;
 
   /**
@@ -119,24 +118,6 @@ public class Environment extends Base {
    */
   public void setServiceTemplates(List<ServiceTemplate> serviceTemplates) {
     this.serviceTemplates = serviceTemplates;
-  }
-
-  /**
-   * Gets orchestrations.
-   *
-   * @return the orchestrations
-   */
-  public List<Orchestration> getOrchestrations() {
-    return orchestrations;
-  }
-
-  /**
-   * Sets orchestrations.
-   *
-   * @param orchestrations the orchestrations
-   */
-  public void setOrchestrations(List<Orchestration> orchestrations) {
-    this.orchestrations = orchestrations;
   }
 
   /**

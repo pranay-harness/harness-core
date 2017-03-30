@@ -2,21 +2,25 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
-import static software.wings.beans.Orchestration.Builder.anOrchestration;
-import static software.wings.beans.OrchestrationWorkflow.OrchestrationWorkflowBuilder.anOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
 import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -24,40 +28,45 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ro.fortsoft.pf4j.PluginManager;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Environment;
-import software.wings.beans.Environment.Builder;
+import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.Orchestration;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.RepairActionCode;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Service;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
-import software.wings.beans.WorkflowOrchestrationType;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
+import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -68,10 +77,12 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
+import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
@@ -90,45 +101,42 @@ import javax.inject.Inject;
  */
 @Listeners(NotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
-  private static String appId = UUIDGenerator.getUuid();
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-  @InjectMocks @Inject private WorkflowService workflowService;
-  @Inject private WingsPersistence wingsPersistence;
+  private static String envId = UUIDGenerator.getUuid();
+  private static String workflowId = UUIDGenerator.getUuid();
 
-  @Mock private ServiceResourceService serviceResourceServiceMock;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ServiceInstanceService serviceInstanceService;
-  @Mock private ServiceInstanceService serviceInstanceServiceMock;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Inject private WingsPersistence wingsPersistence;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
+    @Override
+    public List<Stencil> answer(InvocationOnMock invocationOnMock) throws Throwable {
+      logger.info("invocationOnMock.getArguments()[0] " + invocationOnMock.getArguments()[0]);
+      return (List<Stencil>) invocationOnMock.getArguments()[0];
+    }
+  });
 
-  private Environment env;
-  private List<Service> services;
+  @Mock private PluginManager pluginManager;
+  @Mock private UpdateOperations<Workflow> updateOperations;
+  @Mock Query<Workflow> query;
+
+  @Inject private EntityVersionService entityVersionService;
+
+  @InjectMocks @Inject private WorkflowService workflowService;
+  @Mock private FieldEnd fieldEnd;
 
   /**
-   * Gets environment.
-   *
-   * @return the environment
+   * Sets mocks.
    */
-  public Environment getEnvironment() {
-    if (env == null) {
-      env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
-    }
-    return env;
-  }
+  @Before
+  public void setupMocks() {
+    when(pluginManager.getExtensions(StateTypeDescriptor.class)).thenReturn(newArrayList());
 
-  /**
-   * Gets services.
-   *
-   * @return the services
-   */
-  public List<Service> getServices() {
-    if (services == null) {
-      services = newArrayList(
-          wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("catalog").build()),
-          wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("content").build()));
-    }
-    return services;
+    when(query.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(query);
   }
 
   /**
@@ -139,7 +147,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId(appId);
+    sm.setAppId(APP_ID);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
@@ -159,132 +167,29 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .withToState(stateC)
                          .build());
 
-    sm = workflowService.create(sm);
+    sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-
     String smId = sm.getUuid();
     sm = wingsPersistence.get(StateMachine.class, smId);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
-    System.out.println("All Done!");
   }
 
-  //  /**
-  //   * Should create pipeline with graph.
-  //   */
-  //  @Test
-  //  public void shouldCreatePipelineWithGraph() {
-  //    createPipeline();
-  //  }
-
-  //  /**
-  //   * Should list pipeline
-  //   */
-  //  @Test
-  //  public void shouldListPipeline() {
-  //    createPipelineNoGraph();
-  //    createPipeline();
-  //    createPipelineNoGraph();
-  //    createPipeline();
-  //    PageRequest<Pipeline> req = new PageRequest<>();
-  //    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
-  //    PageResponse<Pipeline> res = workflowService.listPipelines(req);
-  //    assertThat(res).isNotNull();
-  //    assertThat(res.getResponse()).isNotNull();
-  //    assertThat(res.size()).isEqualTo(4);
-  //  }
-
-  //  /**
-  //   * Should read pipeline
-  //   */
-  //  @Test
-  //  public void shouldReadPipeline() {
-  //    Pipeline pipeline = createPipelineNoGraph();
-  //    Pipeline pipeline2 = workflowService.readPipeline(appId, pipeline.getUuid());
-  //    assertThat(pipeline2).isNotNull();
-  //    assertThat(pipeline2).isEqualToComparingFieldByField(pipeline);
-  //  }
-
-  //  /**
-  //   * Should update pipeline with no graph.
-  //   */
-  //  @Test
-  //  public void shouldUpdatePipelineWithNoGraph() {
-  //    Pipeline pipeline = createPipelineNoGraph();
-  //    Graph graph = createInitialGraph();
-  //    pipeline.setGraph(graph);
-  //
-  //    updatePipeline(pipeline, 1);
-  //  }
-
-  //  /**
-  //   * Should update pipeline with graph.
-  //   */
-  //  @Test
-  //  public void shouldUpdatePipelineWithGraph() {
-  //    Pipeline pipeline = createPipeline();
-  //    updatePipeline(pipeline, 2);
-  //  }
-
-  //  /**
-  //   * Update pipeline.
-  //   *
-  //   * @param pipeline   the pipeline
-  //   * @param graphCount the graph count
-  //   */
-  //  public void updatePipeline(Pipeline pipeline, int graphCount) {
-  //    pipeline.setDescription("newDescription");
-  //    pipeline.setName("pipeline2");
-  //
-  //    List<Service> newServices = Lists.newArrayList(wingsPersistence.saveAndGet(Service.class,
-  //    aService().withAppId(appId).withName("ui").build()),
-  //        wingsPersistence.saveAndGet(Service.class, aService().withAppId(appId).withName("server").build()));
-  //    pipeline.setServices(newServices);
-  //
-  //    Graph graph = pipeline.getGraph();
-  //    graph.getNodes().add(aNode().withId("n4").withName("PROD").withX(350).withY(50).addProperty("envId",
-  //    "34567").withType(StateType.ENV_STATE.name()).build());
-  //    graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build());
-  //
-  //    Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
-  //    assertThat(updatedPipeline).isNotNull().extracting(Pipeline::getUuid, Pipeline::getName,
-  //    Pipeline::getDescription, Pipeline::getServices, Pipeline::getDefaultVersion)
-  //        .containsExactly(pipeline.getUuid(), "pipeline2", "newDescription", newServices, 2);
-  //
-  //    PageRequest<StateMachine> req = new PageRequest<>();
-  //    SearchFilter filter = new SearchFilter();
-  //    filter.setFieldName("originId");
-  //    filter.setFieldValues(pipeline.getUuid());
-  //    filter.setOp(Operator.EQ);
-  //    req.addFilter(filter);
-  //    PageResponse<StateMachine> res = workflowService.list(req);
-  //
-  //    assertThat(res).isNotNull().hasSize(graphCount);
-  //
-  //    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid());
-  //    assertThat(sm.getGraph()).isEqualTo(graph);
-  //
-  //  }
-  //
-  //  private Pipeline createPipeline() {
-  //    Graph graph = createInitialGraph();
-  //    Pipeline pipeline =
-  //        aPipeline().withAppId(appId).withName("pipeline1").withDescription("Sample
-  //        Pipeline").addServices("service1", "service2").withGraph(graph).build();
-  //
-  //    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
-  //    assertThat(pipeline).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
-  //
-  //    PageRequest<StateMachine> req = new PageRequest<>();
-  //    SearchFilter filter = new SearchFilter();
-  //    filter.setFieldName("originId");
-  //    filter.setFieldValues(pipeline.getUuid());
-  //    filter.setOp(Operator.EQ);
-  //    req.addFilter(filter);
-  //    PageResponse<StateMachine> res = workflowService.list(req);
-  //
-  //    assertThat(res).isNotNull().hasSize(1).doesNotContainNull().extracting(StateMachine::getGraph).doesNotContainNull().containsExactly(graph);
-  //    return pipeline;
-  //  }
+  /**
+   * Should read simple workflow.
+   */
+  @Test
+  public void shouldReadSimpleWorkflowFromFile() {
+    Workflow workflow = workflowService.readLatestSimpleWorkflow(APP_ID, envId);
+    assertThat(workflow)
+        .isNotNull()
+        .extracting("appId", "envId", "workflowType")
+        .containsExactly(APP_ID, envId, WorkflowType.SIMPLE);
+    CustomOrchestrationWorkflow orchestrationWorkflow =
+        (CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
+    assertThat(orchestrationWorkflow.getGraph().getNodes()).isNotNull().hasSize(2);
+    assertThat(orchestrationWorkflow.getGraph().getLinks()).isNotNull().hasSize(1);
+  }
 
   /**
    * @return
@@ -321,93 +226,68 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .build();
   }
 
-  //  private Pipeline createPipelineNoGraph() {
-  //    Pipeline pipeline = new Pipeline();
-  //    pipeline.setAccountId(appId);
-  //    pipeline.setName("pipeline1");
-  //    pipeline.setDescription("Sample Pipeline");
-  //
-  //    pipeline.setServices(getServices());
-  //
-  //    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
-  //    assertThat(pipeline).isNotNull();
-  //    assertThat(pipeline.getUuid()).isNotNull();
-  //
-  //    PageRequest<StateMachine> req = new PageRequest<>();
-  //    SearchFilter filter = new SearchFilter();
-  //    filter.setFieldName("originId");
-  //    filter.setFieldValues(pipeline.getUuid());
-  //    filter.setOp(Operator.EQ);
-  //    req.addFilter(filter);
-  //    PageResponse<StateMachine> res = workflowService.list(req);
-  //
-  //    assertThat(res).isNotNull().hasSize(0);
-  //
-  //    return pipeline;
-  //  }
-
   /**
-   * Should create orchestration.
+   * Should create workflow.
    */
   @Test
-  public void shouldCreateOrchestration() {
-    createOrchestration();
+  public void shouldCreateWorkflow() {
+    createWorkflow();
   }
 
   /**
-   * Should update orchestration.
+   * Should update workflow.
    */
   @Test
-  public void shouldUpdateOrchestration() {
-    Orchestration orchestration = createOrchestration();
-    String uuid = orchestration.getUuid();
-    orchestration = workflowService.readOrchestration(appId, uuid, null);
+  public void shouldUpdateWorkflow() {
+    Workflow workflow = createWorkflow();
+    Graph graph1 = ((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph();
 
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
-    assertThat(orchestration.getUuid()).isEqualTo(uuid);
+    workflow.setName("workflow2");
+    workflow.setDescription(null);
 
-    orchestration.setName("orchestration2");
-    orchestration.setDescription(null);
-    orchestration.setSetAsDefault(true);
-    Graph graph = orchestration.getGraph();
+    Graph graph2 =
+        JsonUtils.clone(((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), Graph.class);
+    graph2.getNodes().add(aNode().withId("n5").withName("http").withX(350).withType(StateType.HTTP.name()).build());
+    graph2.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
-    graph.getNodes().add(aNode().withId("n5").withName("http").withX(350).withType(StateType.HTTP.name()).build());
-    graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
+    Workflow updatedWorkflow = workflowService.updateWorkflow(workflow);
+    assertThat(updatedWorkflow)
+        .isNotNull()
+        .isEqualToComparingOnlyGivenFields(workflow, "uuid", "name", "description", "orchestrationWorkflow")
+        .hasFieldOrPropertyWithValue("defaultVersion", 2);
 
-    Orchestration updatedOrchestration = workflowService.updateOrchestration(orchestration);
-    assertThat(updatedOrchestration).isNotNull().hasFieldOrPropertyWithValue("defaultVersion", 2);
-    assertThat(updatedOrchestration.getUuid()).isNotNull();
-    assertThat(updatedOrchestration.getUuid()).isEqualTo(orchestration.getUuid());
-    assertThat(updatedOrchestration.getName()).isEqualTo("orchestration2");
-    assertThat(updatedOrchestration.getDescription()).isNull();
-    PageRequest<StateMachine> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("originId");
-    filter.setFieldValues(orchestration.getUuid());
-    filter.setOp(Operator.EQ);
-    req.addFilter(filter);
-    PageResponse<StateMachine> res = workflowService.list(req);
+    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
 
     assertThat(res).isNotNull().hasSize(2);
-
-    StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid());
-    assertThat(sm.getGraph()).isNotNull().isEqualTo(graph);
+    assertThat(res.get(0))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", updatedWorkflow.getOrchestrationWorkflow())
+        .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
+        .hasFieldOrPropertyWithValue("originVersion", 2);
+    assertThat(res.get(1))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", workflow.getOrchestrationWorkflow())
+        .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
+        .hasFieldOrPropertyWithValue("originVersion", 1);
   }
 
   /**
-   * Should delete orchestration.
+   * Should delete workflow.
    */
   @Test
-  public void shouldDeleteOrchestration() {
-    Orchestration orchestration = createOrchestration();
-    String uuid = orchestration.getUuid();
-    workflowService.deleteWorkflow(Orchestration.class, appId, uuid);
-    orchestration = workflowService.readOrchestration(appId, uuid, null);
-    assertThat(orchestration).isNull();
+  public void shouldDeleteWorkflow() {
+    Workflow workflow = createWorkflow();
+    String uuid = workflow.getUuid();
+    workflowService.deleteWorkflow(APP_ID, uuid);
+    workflow = workflowService.readWorkflow(APP_ID, uuid, null);
+    assertThat(workflow).isNull();
   }
 
-  private Orchestration createOrchestration() {
+  private Workflow createWorkflow() {
     Graph graph = aGraph()
                       .addNodes(aNode()
                                     .withId("n1")
@@ -436,34 +316,30 @@ public class WorkflowServiceTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
                       .build();
 
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(appId)
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withGraph(graph)
-                                      .withServices(getServices())
-                                      .build();
+    CustomOrchestrationWorkflow orchestrationWorkflow = aCustomOrchestrationWorkflow().withGraph(graph).build();
+    Workflow workflow = aWorkflow()
+                            .withAppId(APP_ID)
+                            .withName("workflow1")
+                            .withDescription("Sample Workflow")
+                            .withOrchestrationWorkflow(orchestrationWorkflow)
+                            .build();
 
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
+    workflow = workflowService.createWorkflow(workflow);
+    assertThat(workflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("defaultVersion", 1);
 
-    PageRequest<StateMachine> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("originId");
-    filter.setFieldValues(orchestration.getUuid());
-    filter.setOp(Operator.EQ);
-    req.addFilter(filter);
-    PageResponse<StateMachine> res = workflowService.list(req);
+    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
 
-    assertThat(res)
+    assertThat(res).isNotNull().hasSize(1);
+    assertThat(res.get(0))
         .isNotNull()
-        .hasSize(1)
-        .doesNotContainNull()
-        .extracting(StateMachine::getGraph)
-        .doesNotContainNull()
-        .containsExactly(graph);
-
-    return orchestration;
+        .hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow)
+        .hasFieldOrPropertyWithValue("originId", workflow.getUuid())
+        .hasFieldOrPropertyWithValue("originVersion", 1);
+    return workflow;
   }
 
   /**
@@ -529,67 +405,53 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void stencilsForWorkflow()
-      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    OrchestrationWorkflow orchestrationWorkflow = createOrchestrationWorkflow();
-    Map<StateTypeScope, List<Stencil>> stencils =
-        workflowService.stencils(APP_ID, orchestrationWorkflow.getUuid(), null);
-    logger.debug(JsonUtils.asJson(stencils));
-    assertThat(stencils).isNotNull().hasSize(3).containsKeys(
-        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE);
-    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
-        .extracting(Stencil::getType)
-        .contains("REPEAT", "FORK");
-  }
-
-  @Test
   public void shouldCreateWorkflowFailure() {
-    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(appId);
+    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(APP_ID);
   }
 
   @Test
   public void shouldListWorkflowFailureStrategies() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertWorkflowFailureStrategy(appId);
-    createAndAssertWorkflowFailureStrategy(appId);
-    createAndAssertWorkflowFailureStrategy(appId);
+    String APP_ID = UUIDGenerator.getUuid();
+    createAndAssertWorkflowFailureStrategy(APP_ID);
+    createAndAssertWorkflowFailureStrategy(APP_ID);
+    createAndAssertWorkflowFailureStrategy(APP_ID);
     createAndAssertWorkflowFailureStrategy(UUIDGenerator.getUuid());
 
-    PageRequest<WorkflowFailureStrategy> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
+    PageRequest<WorkflowFailureStrategy> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, APP_ID).build();
     PageResponse<WorkflowFailureStrategy> pageResponse = workflowService.listWorkflowFailureStrategies(pageRequest);
     assertThat(pageResponse)
         .isNotNull()
         .hasSize(3)
         .doesNotContainNull()
         .extracting("appId")
-        .containsExactly(appId, appId, appId);
+        .containsExactly(APP_ID, APP_ID, APP_ID);
   }
 
   @Test
   public void shouldListWorkflowFailureStrategiesByAppId() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertWorkflowFailureStrategy(appId);
-    createAndAssertWorkflowFailureStrategy(appId);
-    createAndAssertWorkflowFailureStrategy(appId);
+    String APP_ID = UUIDGenerator.getUuid();
+    createAndAssertWorkflowFailureStrategy(APP_ID);
+    createAndAssertWorkflowFailureStrategy(APP_ID);
+    createAndAssertWorkflowFailureStrategy(APP_ID);
     createAndAssertWorkflowFailureStrategy(UUIDGenerator.getUuid());
 
-    List<WorkflowFailureStrategy> res = workflowService.listWorkflowFailureStrategies(appId);
+    List<WorkflowFailureStrategy> res = workflowService.listWorkflowFailureStrategies(APP_ID);
     assertThat(res).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(
-        appId, appId, appId);
+        APP_ID, APP_ID, APP_ID);
   }
 
   @Test
   public void shouldDeleteWorkflowFailureStrategy() {
-    String appId = UUIDGenerator.getUuid();
-    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(appId);
-    boolean deleted = workflowService.deleteWorkflowFailureStrategy(appId, workflowFailureStrategy.getUuid());
+    String APP_ID = UUIDGenerator.getUuid();
+    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(APP_ID);
+    boolean deleted = workflowService.deleteWorkflowFailureStrategy(APP_ID, workflowFailureStrategy.getUuid());
     assertThat(deleted).isTrue();
   }
 
-  private WorkflowFailureStrategy createAndAssertWorkflowFailureStrategy(String appId) {
+  private WorkflowFailureStrategy createAndAssertWorkflowFailureStrategy(String APP_ID) {
     WorkflowFailureStrategy workflowFailureStrategy =
         aWorkflowFailureStrategy()
-            .withAppId(appId)
+            .withAppId(APP_ID)
             .withName("Non-Prod Failure Strategy")
             .addFailureStrategy(aFailureStrategy()
                                     .addFailureTypes(FailureType.CONNECTIVITY)
@@ -600,171 +462,215 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withWorkflowExecutionFilter(aWorkflowExecutionFilter().addWorkflowId("workflow1").addEnvId("env1").build())
             .build();
 
-    WorkflowFailureStrategy created = workflowService.create(workflowFailureStrategy);
+    WorkflowFailureStrategy created = workflowService.createWorkflowFailureStrategy(workflowFailureStrategy);
     assertThat(created).isNotNull().hasFieldOrProperty("uuid").isEqualToComparingFieldByField(workflowFailureStrategy);
     return created;
   }
 
   @Test
-  public void shouldCreateOrchestrationWorkflow() {
-    OrchestrationWorkflow workflow = createOrchestrationWorkflow();
-    logger.info(JsonUtils.asJson(workflow));
-  }
-
-  public OrchestrationWorkflow createOrchestrationWorkflow() {
-    OrchestrationWorkflow orchestrationWorkflow =
-        anOrchestrationWorkflow()
+  public void shouldCreateCanaryWorkflow() {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
             .withAppId(APP_ID)
-            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
             .build();
 
-    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
-    assertThat(orchestrationWorkflow2)
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow)
         .isNotNull()
-        .hasFieldOrProperty("uuid")
         .hasFieldOrProperty("preDeploymentSteps")
         .hasFieldOrProperty("postDeploymentSteps")
         .hasFieldOrProperty("graph");
-    return orchestrationWorkflow2;
-  }
+    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
+    assertThat(orchestrationWorkflow.getGraph().getNodes())
+        .extracting("id")
+        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
+            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
 
-  @Test
-  public void shouldDeleteOrchestrationWorkflow() {
-    OrchestrationWorkflow orchestrationWorkflow = createOrchestrationWorkflow();
-    workflowService.deleteOrchestrationWorkflow(orchestrationWorkflow.getAppId(), orchestrationWorkflow.getUuid());
+    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
+        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
+            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
 
-    orchestrationWorkflow = workflowService.readOrchestrationWorkflow(appId, orchestrationWorkflow.getUuid());
-    assertThat(orchestrationWorkflow).isNull();
-  }
+    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
 
-  @Test
-  public void shouldListOrchestrationWorkflow() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    OrchestrationWorkflow orchestrationWorkflow2 = createOrchestrationWorkflow();
-    OrchestrationWorkflow orchestrationWorkflow3 = createOrchestrationWorkflow();
+    assertThat(res).isNotNull().hasSize(1);
+    assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
-    PageResponse<OrchestrationWorkflow> response = workflowService.listOrchestrationWorkflows(
-        aPageRequest().withLimit("2").addOrder("createdAt", OrderType.ASC).build());
-
-    assertThat(response).isNotNull().hasSize(2).extracting("uuid").containsExactly(
-        orchestrationWorkflow1.getUuid(), orchestrationWorkflow2.getUuid());
-    assertThat(response.getTotal()).isEqualTo(3);
+    logger.info(JsonUtils.asJson(workflow2));
   }
 
   @Test
   public void shouldUpdateBasic() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
     String name2 = "Name2";
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        anOrchestrationWorkflow().withAppId(APP_ID).withUuid(orchestrationWorkflow1.getUuid()).withName(name2).build();
+    Workflow workflow2 = aWorkflow().withAppId(APP_ID).withUuid(workflow1.getUuid()).withName(name2).build();
 
-    workflowService.updateOrchestrationWorkflowBasic(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), orchestrationWorkflow2);
+    workflowService.updateWorkflow(workflow2, null);
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("name", name2);
+    Workflow orchestrationWorkflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull().hasFieldOrPropertyWithValue("name", name2);
   }
 
   @Test
   public void shouldUpdatePreDeployment() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
 
     PhaseStep phaseStep = aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).withStepsInParallel(true).build();
-    PhaseStep updated = workflowService.updatePreDeployment(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), phaseStep);
+    PhaseStep updated = workflowService.updatePreDeployment(workflow1.getAppId(), workflow1.getUuid(), phaseStep);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("preDeploymentSteps", phaseStep);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull().hasFieldOrPropertyWithValue("uuid", workflow1.getUuid());
+    assertThat(workflow2.getOrchestrationWorkflow()).isNotNull().isInstanceOf(CanaryOrchestrationWorkflow.class);
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getPreDeploymentSteps())
+        .isNotNull()
+        .isEqualTo(phaseStep);
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph()).isNotNull();
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph().getNodes())
+        .isNotNull()
+        .extracting("id")
+        .contains(phaseStep.getUuid());
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(phaseStep.getUuid());
+  }
+
+  public Workflow createCanaryWorkflow() {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+    assertThat(workflow2.getOrchestrationWorkflow())
+        .isNotNull()
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph");
+    return workflow2;
   }
 
   @Test
   public void shouldUpdatePostDeployment() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
 
-    PhaseStep phaseStep = aPhaseStep(POST_DEPLOYMENT, Constants.PRE_DEPLOYMENT).withStepsInParallel(true).build();
-    PhaseStep updated = workflowService.updatePostDeployment(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), phaseStep);
+    PhaseStep phaseStep = aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).withStepsInParallel(true).build();
+    PhaseStep updated = workflowService.updatePostDeployment(workflow1.getAppId(), workflow1.getUuid(), phaseStep);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("postDeploymentSteps", phaseStep);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull().hasFieldOrPropertyWithValue("uuid", workflow1.getUuid());
+    assertThat(workflow2.getOrchestrationWorkflow()).isNotNull().isInstanceOf(CanaryOrchestrationWorkflow.class);
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getPostDeploymentSteps())
+        .isNotNull()
+        .isEqualTo(phaseStep);
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph()).isNotNull();
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph().getNodes())
+        .isNotNull()
+        .extracting("id")
+        .contains(phaseStep.getUuid());
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(phaseStep.getUuid());
   }
-
   @Test
   public void shouldCreateWorkflowPhase() {
-    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().withServiceId(SERVICE_ID).withInfraMappingId(INFRA_MAPPING_ID).build();
 
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull();
-    assertThat(orchestrationWorkflow2.getWorkflowPhases())
-        .isNotNull()
-        .hasSize(orchestrationWorkflow1.getWorkflowPhases().size() + 1);
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
 
-    WorkflowPhase workflowPhase2 =
-        orchestrationWorkflow2.getWorkflowPhases().get(orchestrationWorkflow2.getWorkflowPhases().size() - 1);
+    assertThat(workflow2).isNotNull().hasFieldOrPropertyWithValue("uuid", workflow1.getUuid());
+    assertThat(workflow2.getOrchestrationWorkflow()).isNotNull().isInstanceOf(CanaryOrchestrationWorkflow.class);
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph()).isNotNull();
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph().getNodes())
+        .isNotNull()
+        .extracting("id")
+        .contains(workflowPhase.getUuid());
+    assertThat(((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getGraph().getSubworkflows())
+        .isNotNull()
+        .containsKeys(workflowPhase.getUuid());
+
+    List<WorkflowPhase> workflowPhases =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    assertThat(workflowPhases)
+        .isNotNull()
+        .hasSize(((CanaryOrchestrationWorkflow) workflow1.getOrchestrationWorkflow()).getWorkflowPhases().size() + 1);
+
+    WorkflowPhase workflowPhase2 = workflowPhases.get(workflowPhases.size() - 1);
     assertThat(workflowPhase2).isNotNull().hasFieldOrPropertyWithValue("name", Constants.PHASE_NAME_PREFIX + 1);
     assertThat(workflowPhase2.getPhaseSteps()).isNotNull().hasSize(6);
   }
 
   @Test
   public void shouldUpdateWorkflowPhase() {
-    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
+    Workflow workflow1 = createCanaryWorkflow();
 
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
         aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull();
-    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
 
-    workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
+    List<WorkflowPhase> workflowPhases2 =
+        ((CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow()).getWorkflowPhases();
+    workflowPhase2 = workflowPhases2.get(workflowPhases2.size() - 1);
     workflowPhase2.setName("phase2-changed");
 
-    workflowService.updateWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase2);
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow3).isNotNull();
-    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
-    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    List<WorkflowPhase> workflowPhases3 =
+        ((CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow()).getWorkflowPhases();
+    WorkflowPhase workflowPhase3 = workflowPhases3.get(workflowPhases3.size() - 1);
+    assertThat(workflowPhase3).isEqualToComparingOnlyGivenFields(workflowPhase2, "uuid", "name");
   }
 
   @Test
   public void shouldDeleteWorkflowPhase() {
-    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
@@ -772,89 +678,100 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
 
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
-    WorkflowPhase workflowPhase =
-        aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("phase2")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .build())
+                    .build())
+            .build();
 
-    WorkflowPhase workflowPhase2 =
-        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+    Workflow workflow1 = workflowService.createWorkflow(workflow);
+    assertThat(workflow1).isNotNull().hasFieldOrProperty("uuid");
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull();
-    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
 
-    WorkflowPhase phase1 = orchestrationWorkflow2.getWorkflowPhases().get(1);
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    List<WorkflowPhase> workflowPhases2 = orchestrationWorkflow.getWorkflowPhases();
+    WorkflowPhase workflowPhase = workflowPhases2.get(workflowPhases2.size() - 2);
 
-    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows()).isNotNull().containsKeys(phase1.getUuid());
-    phase1.getPhaseSteps().forEach(phaseStep -> {
-      assertThat(orchestrationWorkflow2.getGraph().getSubworkflows()).containsKeys(phaseStep.getUuid());
+    assertThat(orchestrationWorkflow.getGraph().getSubworkflows()).isNotNull().containsKeys(workflowPhase.getUuid());
+    workflowPhase.getPhaseSteps().forEach(phaseStep -> {
+      assertThat(orchestrationWorkflow.getGraph().getSubworkflows()).containsKeys(phaseStep.getUuid());
     });
 
-    workflowService.deleteWorkflowPhase(APP_ID, orchestrationWorkflow2.getUuid(), phase1.getUuid());
+    workflowService.deleteWorkflowPhase(APP_ID, workflow1.getUuid(), workflowPhase.getUuid());
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow2.getUuid());
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow3).isNotNull();
 
-    assertThat(orchestrationWorkflow3.getGraph().getNodes())
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow3.getGraph().getSubworkflows())
         .isNotNull()
-        .extracting("name")
-        .isNotNull()
-        .doesNotContain(phase1.getName());
-    assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).isNotNull().doesNotContainKeys(phase1.getUuid());
-    phase1.getPhaseSteps().forEach(phaseStep -> {
+        .doesNotContainKeys(workflowPhase.getUuid());
+    workflowPhase.getPhaseSteps().forEach(phaseStep -> {
       assertThat(orchestrationWorkflow3.getGraph().getSubworkflows()).doesNotContainKeys(phaseStep.getUuid());
     });
   }
 
   @Test
   public void shouldUpdateWorkflowPhaseRollback() {
-    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
+    Workflow workflow1 = createCanaryWorkflow();
 
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
     WorkflowPhase workflowPhase =
         aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull();
-    assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(1);
+    WorkflowPhase workflowPhase2 =
+        aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
-    WorkflowPhase workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(0);
-    assertThat(workflowPhase2).isNotNull();
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
 
-    assertThat(orchestrationWorkflow2.getRollbackWorkflowPhaseIdMap())
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+
+    assertThat(orchestrationWorkflow.getRollbackWorkflowPhaseIdMap())
         .isNotNull()
         .containsKeys(workflowPhase2.getUuid());
 
-    WorkflowPhase rollbackPhase = orchestrationWorkflow2.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
+    WorkflowPhase rollbackPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase2.getUuid());
     assertThat(rollbackPhase).isNotNull();
 
     int size = rollbackPhase.getPhaseSteps().size();
     rollbackPhase.getPhaseSteps().remove(0);
 
-    workflowService.updateWorkflowPhaseRollback(
-        APP_ID, orchestrationWorkflow2.getUuid(), workflowPhase2.getUuid(), rollbackPhase);
+    workflowService.updateWorkflowPhaseRollback(APP_ID, workflow2.getUuid(), workflowPhase2.getUuid(), rollbackPhase);
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow3).isNotNull();
-    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
-    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(0))
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("uuid", workflowPhase2.getUuid());
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
 
     assertThat(orchestrationWorkflow3.getRollbackWorkflowPhaseIdMap())
         .isNotNull()
@@ -866,104 +783,102 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateNode() {
-    OrchestrationWorkflow orchestrationWorkflow =
-        anOrchestrationWorkflow()
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
             .withAppId(APP_ID)
-            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-            .withPreDeploymentSteps(
-                aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                    .addStep(
-                        aNode().withType("HTTP").withName("http").addProperty("URL", "http://www.google.com").build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                                                .addStep(aNode()
+                                                             .withType("HTTP")
+                                                             .withName("http")
+                                                             .addProperty("url", "http://www.google.com")
+                                                             .build())
+                                                .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
             .build();
 
-    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
-    assertThat(orchestrationWorkflow2)
-        .isNotNull()
-        .hasFieldOrProperty("uuid")
-        .hasFieldOrProperty("graph")
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps");
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull();
+    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
 
-    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows())
-        .isNotNull()
-        .containsKeys(orchestrationWorkflow2.getPreDeploymentSteps().getUuid())
-        .containsKeys(orchestrationWorkflow2.getPostDeploymentSteps().getUuid());
-
-    Graph graph = orchestrationWorkflow2.getGraph().getSubworkflows().get(
-        orchestrationWorkflow2.getPreDeploymentSteps().getUuid());
+    Graph graph =
+        orchestrationWorkflow.getGraph().getSubworkflows().get(orchestrationWorkflow.getPreDeploymentSteps().getUuid());
     assertThat(graph).isNotNull();
     assertThat(graph.getNodes()).isNotNull().hasSize(1);
     Node node = graph.getNodes().get(0);
     assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
-    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.google.com");
-    node.getProperties().put("URL", "http://www.yahoo.com");
+    assertThat(node.getProperties()).isNotNull().containsKey("url").containsValue("http://www.google.com");
+    node.getProperties().put("url", "http://www.yahoo.com");
 
-    workflowService.updateGraphNode(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(),
-        orchestrationWorkflow2.getPreDeploymentSteps().getUuid(), node);
+    workflowService.updateGraphNode(
+        workflow2.getAppId(), workflow2.getUuid(), orchestrationWorkflow.getPreDeploymentSteps().getUuid(), node);
 
-    orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
-    assertThat(orchestrationWorkflow2)
-        .isNotNull()
-        .hasFieldOrProperty("uuid")
+    Workflow workflow3 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow3).isNotNull().hasFieldOrPropertyWithValue("uuid", workflow2.getUuid());
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow3)
         .hasFieldOrProperty("graph")
         .hasFieldOrProperty("preDeploymentSteps")
         .hasFieldOrProperty("postDeploymentSteps");
 
-    assertThat(orchestrationWorkflow2.getGraph().getSubworkflows())
+    assertThat(orchestrationWorkflow3.getGraph().getSubworkflows())
         .isNotNull()
-        .containsKeys(orchestrationWorkflow2.getPreDeploymentSteps().getUuid())
-        .containsKeys(orchestrationWorkflow2.getPostDeploymentSteps().getUuid());
+        .containsKeys(orchestrationWorkflow.getPreDeploymentSteps().getUuid())
+        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid());
 
-    graph = orchestrationWorkflow2.getGraph().getSubworkflows().get(
-        orchestrationWorkflow2.getPreDeploymentSteps().getUuid());
+    graph = orchestrationWorkflow3.getGraph().getSubworkflows().get(
+        orchestrationWorkflow.getPreDeploymentSteps().getUuid());
     assertThat(graph).isNotNull();
     assertThat(graph.getNodes()).isNotNull().hasSize(1);
     node = graph.getNodes().get(0);
     assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
-    assertThat(node.getProperties()).isNotNull().containsKey("URL").containsValue("http://www.yahoo.com");
+    assertThat(node.getProperties()).isNotNull().containsKey("url").containsValue("http://www.yahoo.com");
   }
 
   @Test
   public void shouldHaveGraph() {
-    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
                         .withDeploymentType(SSH.name())
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
-
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
 
     WorkflowPhase workflowPhase =
         aWorkflowPhase().withName("phase1").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase);
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
 
     WorkflowPhase workflowPhase2 =
         aWorkflowPhase().withName("phase2").withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
-    workflowService.createWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+    workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull();
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow2 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+
     assertThat(orchestrationWorkflow2.getWorkflowPhases()).isNotNull().hasSize(2);
 
     workflowPhase2 = orchestrationWorkflow2.getWorkflowPhases().get(1);
-    workflowPhase2.setName("phase2-changed");
 
-    workflowService.updateWorkflowPhase(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), workflowPhase2);
+    workflowService.updateWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase2);
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow3).isNotNull();
+    Workflow workflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow3).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+
     assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(2);
-    assertThat(orchestrationWorkflow3.getWorkflowPhases().get(1)).hasFieldOrPropertyWithValue("name", "phase2-changed");
 
     Graph graph = orchestrationWorkflow3.getGraph();
     assertThat(graph).isNotNull();
@@ -983,46 +898,52 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateNotificationRules() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
 
     List<NotificationRule> notificationRules = newArrayList(aNotificationRule().build());
-    List<NotificationRule> updated = workflowService.updateNotificationRules(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), notificationRules);
+    List<NotificationRule> updated =
+        workflowService.updateNotificationRules(workflow1.getAppId(), workflow1.getUuid(), notificationRules);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("notificationRules", notificationRules);
   }
 
   @Test
   public void shouldUpdateFailureStrategies() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
 
     List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
-    List<FailureStrategy> updated = workflowService.updateFailureStrategies(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), failureStrategies);
+    List<FailureStrategy> updated =
+        workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("failureStrategies", failureStrategies);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("failureStrategies", failureStrategies);
   }
 
   @Test
   public void shouldUpdateUserVariables() {
-    OrchestrationWorkflow orchestrationWorkflow1 = createOrchestrationWorkflow();
+    Workflow workflow1 = createCanaryWorkflow();
 
     List<Variable> userVariables = newArrayList(aVariable().build());
-    List<Variable> updated = workflowService.updateUserVariables(
-        orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid(), userVariables);
+    List<Variable> updated =
+        workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
 
-    OrchestrationWorkflow orchestrationWorkflow2 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow1.getAppId(), orchestrationWorkflow1.getUuid());
-    assertThat(orchestrationWorkflow2).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
+    Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
+    assertThat(workflow2).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
   }
 
   @Test
   public void shouldCreateComplexWorkflow() {
-    when(serviceResourceServiceMock.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
@@ -1030,31 +951,31 @@ public class WorkflowServiceTest extends WingsBaseTest {
                         .withComputeProviderType(SettingVariableTypes.AWS.name())
                         .build());
 
-    OrchestrationWorkflow orchestrationWorkflow =
-        anOrchestrationWorkflow()
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
             .withAppId(APP_ID)
-            .withWorkflowOrchestrationType(WorkflowOrchestrationType.CANARY)
-            .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
-            .addWorkflowPhases(aWorkflowPhase()
-                                   .withName("Phase1")
-                                   .withInfraMappingId(INFRA_MAPPING_ID)
-                                   .withServiceId(SERVICE_ID)
-                                   .withDeploymentType(SSH)
-                                   .build())
-            .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withName("Phase1")
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
             .build();
 
-    OrchestrationWorkflow orchestrationWorkflow2 = workflowService.createOrchestrationWorkflow(orchestrationWorkflow);
-    assertThat(orchestrationWorkflow2)
-        .isNotNull()
-        .hasFieldOrProperty("uuid")
-        .hasFieldOrProperty("preDeploymentSteps")
-        .hasFieldOrProperty("postDeploymentSteps")
-        .hasFieldOrProperty("graph");
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
 
-    OrchestrationWorkflow orchestrationWorkflow3 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
-    assertThat(orchestrationWorkflow3).isNotNull();
+    Workflow workflow3 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow3).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
 
     WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
@@ -1067,18 +988,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     deployPhaseStep.getSteps().add(
         aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
 
-    workflowService.updateWorkflowPhase(
-        orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid(), workflowPhase);
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
 
-    OrchestrationWorkflow orchestrationWorkflow4 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
-    workflowService.deleteWorkflowPhase(orchestrationWorkflow4.getAppId(), orchestrationWorkflow4.getUuid(),
-        orchestrationWorkflow4.getWorkflowPhaseIds().get(0));
+    Workflow workflow4 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    workflowService.deleteWorkflowPhase(workflow4.getAppId(), workflow4.getUuid(), workflowPhase.getUuid());
 
-    OrchestrationWorkflow orchestrationWorkflow5 =
-        workflowService.readOrchestrationWorkflow(orchestrationWorkflow2.getAppId(), orchestrationWorkflow2.getUuid());
-    assertThat(orchestrationWorkflow5).isNotNull();
-
-    logger.info("Graph Json : \n {}", JsonUtils.asJson(orchestrationWorkflow4.getGraph()));
+    Workflow workflow5 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow5).isNotNull();
   }
 }

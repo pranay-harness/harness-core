@@ -1,15 +1,13 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.Base;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.Orchestration;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowFailureStrategy;
-import software.wings.beans.PhaseStep;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -30,35 +28,66 @@ import javax.validation.constraints.NotNull;
  */
 public interface WorkflowService {
   /**
+   * List Workflow.
+   *
+   * @param pageRequest the page request
+   * @return the page response
+   */
+  PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
+
+  PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount);
+
+  /**
+   * Read Workflow.
+   *
+   * @param appId           the app id
+   * @param workflowId the workflow id
+   * @param version         the version
+   * @return the workflow
+   */
+  Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId, Integer version);
+
+  /**
+   * Read Workflow.
+   *
+   * @param appId           the app id
+   * @param workflowId the workflow id
+   * @return the workflow
+   */
+  Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId);
+
+  /**
    * Creates the workflow.
    *
-   * @param <T>      the generic type
-   * @param cls      the cls
    * @param workflow the workflow
-   * @return the t
+   * @return the workflow
    */
-  <T extends Workflow> T createWorkflow(Class<T> cls, @Valid T workflow);
+  Workflow createWorkflow(@Valid Workflow workflow);
 
   /**
    * Update workflow.
    *
-   * @param <T>      the generic type
    * @param workflow the workflow
-   * @param version  the version
-   * @return the t
+   * @return the workflow
    */
-  <T extends Workflow> T updateWorkflow(@Valid T workflow, Integer version);
+  Workflow updateWorkflow(@Valid Workflow workflow);
+
+  /**
+   * Update workflow.
+   *
+   * @param workflow the workflow
+   * @return the workflow
+   */
+  Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow);
 
   /**
    * Delete workflow.
    *
-   * @param <T>        the generic type
-   * @param cls        the cls
    * @param appId      the app id
    * @param workflowId the workflow id
    * @return the boolean
    */
-  <T extends Base> boolean deleteWorkflow(Class<T> cls, String appId, String workflowId);
+  boolean deleteWorkflow(String appId, String workflowId);
 
   /**
    * Creates the.
@@ -66,7 +95,7 @@ public interface WorkflowService {
    * @param stateMachine the state machine
    * @return the state machine
    */
-  StateMachine create(@Valid StateMachine stateMachine);
+  StateMachine createStateMachine(@Valid StateMachine stateMachine);
 
   /**
    * Read latest.
@@ -75,7 +104,7 @@ public interface WorkflowService {
    * @param originId the origin id
    * @return the state machine
    */
-  StateMachine readLatest(String appId, String originId);
+  StateMachine readLatestStateMachine(String appId, String originId);
 
   /**
    * List.
@@ -83,7 +112,7 @@ public interface WorkflowService {
    * @param req the req
    * @return the page response
    */
-  PageResponse<StateMachine> list(PageRequest<StateMachine> req);
+  PageResponse<StateMachine> listStateMachines(PageRequest<StateMachine> req);
 
   /**
    * Stencils.
@@ -95,40 +124,16 @@ public interface WorkflowService {
   Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes);
 
-  /**
-   * List orchestration.
-   *
-   * @param pageRequest the page request
-   * @param envId       the env id
-   * @return the page response
-   */
-  PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest, String envId);
+  StateMachine readStateMachine(String appId, String originId, Integer version);
 
   /**
-   * Read orchestration.
-   *
-   * @param appId           the app id
-   * @param orchestrationId the orchestration id
-   * @param version         the version
-   * @return the orchestration
-   */
-  Orchestration readOrchestration(@NotNull String appId, @NotNull String orchestrationId, Integer version);
-
-  /**
-   * Update orchestration.
-   *
-   * @param orchestration the orchestration
-   * @return the orchestration
-   */
-  Orchestration updateOrchestration(Orchestration orchestration);
-
-  /**
-   * Read latest simple workflow orchestration.
+   * Read latest simple workflow .
    *
    * @param appId the app id
-   * @return the orchestration
+   * @param envId the environment id
+   * @return the workflow
    */
-  Orchestration readLatestSimpleWorkflow(String appId);
+  Workflow readLatestSimpleWorkflow(String appId, String envId);
 
   /**
    * Delete workflow by environment.
@@ -166,7 +171,7 @@ public interface WorkflowService {
    * @param workflowFailureStrategy the workflow failure strategy
    * @return the workflow failure strategy
    */
-  WorkflowFailureStrategy create(@Valid WorkflowFailureStrategy workflowFailureStrategy);
+  WorkflowFailureStrategy createWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
   /**
    * Update workflow failure strategy.
@@ -174,7 +179,7 @@ public interface WorkflowService {
    * @param workflowFailureStrategy the workflow failure strategy
    * @return the workflow failure strategy
    */
-  WorkflowFailureStrategy update(@Valid WorkflowFailureStrategy workflowFailureStrategy);
+  WorkflowFailureStrategy updateWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy);
 
   /**
    * Delete workflow failure strategy boolean.
@@ -186,57 +191,32 @@ public interface WorkflowService {
   boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId);
 
   /**
-   * Read for env state machine.
-   *
-   * @param appId           the app id
-   * @param envId           the env id
-   * @param orchestrationId the orchestration id
-   * @return the state machine
-   */
-  StateMachine readForEnv(String appId, String envId, String orchestrationId);
-
-  /**
    * Stencil map map.
    *
    * @return the map
    */
   public Map<String, StateTypeDescriptor> stencilMap();
 
-  PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(PageRequest<OrchestrationWorkflow> pageRequest);
+  PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep);
 
-  PageResponse<OrchestrationWorkflow> listOrchestrationWorkflows(
-      PageRequest<OrchestrationWorkflow> pageRequest, Integer previousExecutionsCount);
+  PhaseStep updatePostDeployment(String appId, String workflowId, PhaseStep phaseStep);
 
-  OrchestrationWorkflow readOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
+  WorkflowPhase createWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
 
-  OrchestrationWorkflow createOrchestrationWorkflow(OrchestrationWorkflow orchestrationWorkflow);
-
-  boolean deleteOrchestrationWorkflow(String appId, String orchestrationWorkflowId);
-
-  OrchestrationWorkflow updateOrchestrationWorkflowBasic(
-      String appId, String orchestrationWorkflowId, OrchestrationWorkflow orchestrationWorkflow);
-
-  PhaseStep updatePreDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep);
-
-  PhaseStep updatePostDeployment(String appId, String orchestrationWorkflowId, PhaseStep phaseStep);
-
-  WorkflowPhase createWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
-
-  WorkflowPhase updateWorkflowPhase(String appId, String orchestrationWorkflowId, WorkflowPhase workflowPhase);
+  WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
 
   WorkflowPhase updateWorkflowPhaseRollback(
-      String appId, String orchestrationWorkflowId, String phaseId, WorkflowPhase workflowPhase);
+      String appId, String workflowId, String phaseId, WorkflowPhase workflowPhase);
 
-  void deleteWorkflowPhase(String appId, String orchestrationWorkflowId, String phaseId);
+  void deleteWorkflowPhase(String appId, String workflowId, String phaseId);
 
   List<NotificationRule> updateNotificationRules(
-      String appId, String orchestrationWorkflowId, List<NotificationRule> notificationRules);
+      String appId, String workflowId, List<NotificationRule> notificationRules);
 
   List<FailureStrategy> updateFailureStrategies(
-      String appId, String orchestrationWorkflowId, List<FailureStrategy> failureStrategies);
+      String appId, String workflowId, List<FailureStrategy> failureStrategies);
 
-  List<Variable> updateUserVariables(String appId, String orchestrationWorkflowId, List<Variable> userVariables);
+  List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables);
 
-  Node updateGraphNode(
-      @NotNull String appId, @NotNull String orchestrationWorkflowId, @NotNull String subworkflowId, Node node);
+  Node updateGraphNode(@NotNull String appId, @NotNull String workflowId, @NotNull String subworkflowId, Node node);
 }

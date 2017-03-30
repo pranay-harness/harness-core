@@ -19,10 +19,7 @@ public class Validator {
    */
   public static void notNullCheck(String name, Object value) {
     if (value == null) {
-      Map<String, Object> map = new HashMap<>();
-      map.put("name", name);
-      map.put("value", value);
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", name);
     }
   }
 

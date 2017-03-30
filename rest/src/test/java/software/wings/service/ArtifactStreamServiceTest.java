@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
@@ -32,7 +33,6 @@ import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
-import software.wings.beans.Orchestration;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
@@ -158,8 +158,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                     .withWorkflowId(WORKFLOW_ID)
                                                     .withEnvId(ENV_ID)
                                                     .build();
-    when(workflowService.readOrchestration(APP_ID, WORKFLOW_ID, null))
-        .thenReturn(Orchestration.Builder.anOrchestration().withName("NAME").build());
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID, null)).thenReturn(aWorkflow().withName("NAME").build());
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(Environment.Builder.anEnvironment().withName(ENV_NAME).build());
     artifactStreamService.addStreamAction(APP_ID, ARTIFACT_STREAM_ID, artifactStreamAction);
