@@ -47,7 +47,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
     * VM Args: 
     
-        `-Xbootclasspath/p:&lt;Your Home Directory&gt;/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
+        `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
     * Program Args: 
     
         `server config.yml`
@@ -60,7 +60,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
     * VM Args: 
     
-        `-Xbootclasspath/p:&lt;Your Home Directory&gt;/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0`
+        `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0`
     * Program Args: 
     
         `config-delegate.yml`
