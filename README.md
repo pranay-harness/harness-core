@@ -28,6 +28,7 @@
 1) Clone form git repository: https://github.com/wings-software/wings
 2) Start mongo db (mongod)
 3) Go to wings directory and run 
+
     `mvn clean install`
 
 Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLocalHost() response problem as documented in this blog post (https://thoeni.io/post/macos-sierra-java/).
