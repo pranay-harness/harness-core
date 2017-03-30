@@ -58,7 +58,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), 50);
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from jenkins server");
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from jenkins server", ex);
     }
   }
 
@@ -69,7 +69,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       return Lists.newArrayList(jenkins.getJobs().keySet());
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching jobs from jenkins server");
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching jobs from jenkins server", e);
     }
   }
 
@@ -103,7 +103,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       return jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName());
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching build from jenkins server");
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching build from jenkins server", ex);
     }
   }
 

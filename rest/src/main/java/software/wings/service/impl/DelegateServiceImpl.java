@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -220,7 +221,12 @@ public class DelegateServiceImpl implements DelegateService {
           wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
-      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
+      if (isBlank(delegateTask.getDelegateId())) {
+        delegateTask.setDelegateId(delegateId);
+        Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
+      } else {
+        delegateTask = null;
+      }
     }
     return delegateTask;
   }
@@ -241,6 +247,8 @@ public class DelegateServiceImpl implements DelegateService {
       UpdateOperations<DelegateTask> updateOperations =
           wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.STARTED);
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+    } else {
+      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId, delegateTask);
     }
     return delegateTask;
   }

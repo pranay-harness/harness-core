@@ -34,7 +34,7 @@ public class StaticConfiguration {
     try {
       json = Resources.toString(url, Charsets.UTF_8);
     } catch (IOException e) {
-      throw new WingsException("Error in loading simple workflow default graph");
+      throw new WingsException("Error in loading simple workflow default graph", e);
     }
     return JsonUtils.asObject(json, Graph.class);
   }
