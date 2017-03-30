@@ -5,6 +5,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -46,6 +47,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -71,6 +73,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
+  @Inject private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks;
+
   private Socket socket;
   private RequestBuilder request;
 
@@ -257,7 +261,11 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
           socket.fire(JsonUtils.asJson(
-              builder.but().withLastHeartBeat(System.currentTimeMillis()).withConnected(true).build()));
+              builder.but()
+                  .withLastHeartBeat(System.currentTimeMillis())
+                  .withConnected(true)
+                  .withCurrentlyExecutingDelegateTasks(Lists.newArrayList(currentlyExecutingTasks.values()))
+                  .build()));
         }
       } catch (IOException e) {
         logger.error("Exception while sending heartbeat ", e);
@@ -293,6 +301,7 @@ public class DelegateServiceImpl implements DelegateService {
                   } catch (IOException e) {
                     logger.error("Unable to send response to manager ", e);
                   } finally {
+                    currentlyExecutingTasks.remove(finalDelegateTask.getUuid());
                     if (response != null && !response.isSuccessful()) {
                       response.errorBody().close();
                     }
@@ -305,7 +314,11 @@ public class DelegateServiceImpl implements DelegateService {
                   try {
                     DelegateTask delegateTask1 =
                         execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
-                    return delegateTask1 != null;
+                    boolean taskAcquired = delegateTask1 != null;
+                    if (taskAcquired) {
+                      currentlyExecutingTasks.putIfAbsent(delegateTask.getUuid(), delegateTask1);
+                    }
+                    return taskAcquired;
                   } catch (IOException e) {
                     logger.error("Unable to update task status on manager.", e);
                     return false;

@@ -22,6 +22,8 @@ public class Delegate extends Base {
   @Transient private boolean doUpgrade;
   @Transient private String upgradeScript;
 
+  @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
+
   /**
    * Getter for property 'accountId'.
    *
@@ -184,6 +186,24 @@ public class Delegate extends Base {
   }
 
   /**
+   * Getter for property 'currentlyExecutingDelegateTasks'.
+   *
+   * @return Value for property 'currentlyExecutingDelegateTasks'.
+   */
+  public List<DelegateTask> getCurrentlyExecutingDelegateTasks() {
+    return currentlyExecutingDelegateTasks;
+  }
+
+  /**
+   * Setter for property 'currentlyExecutingDelegateTasks'.
+   *
+   * @param currentlyExecutingDelegateTasks Value to set for property 'currentlyExecutingDelegateTasks'.
+   */
+  public void setCurrentlyExecutingDelegateTasks(List<DelegateTask> currentlyExecutingDelegateTasks) {
+    this.currentlyExecutingDelegateTasks = currentlyExecutingDelegateTasks;
+  }
+
+  /**
    * Setter for property 'supportedTaskTypes'.
    *
    * @param supportedTaskTypes Value to set for property 'supportedTaskTypes'.
@@ -205,6 +225,7 @@ public class Delegate extends Base {
     private List<TaskType> supportedTaskTypes;
     private boolean doUpgrade;
     private String upgradeScript;
+    private List<DelegateTask> currentlyExecutingDelegateTasks;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -268,6 +289,11 @@ public class Delegate extends Base {
       return this;
     }
 
+    public Builder withCurrentlyExecutingDelegateTasks(List<DelegateTask> currentlyExecutingDelegateTasks) {
+      this.currentlyExecutingDelegateTasks = currentlyExecutingDelegateTasks;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
@@ -310,6 +336,7 @@ public class Delegate extends Base {
           .withSupportedTaskTypes(supportedTaskTypes)
           .withDoUpgrade(doUpgrade)
           .withUpgradeScript(upgradeScript)
+          .withCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -330,6 +357,7 @@ public class Delegate extends Base {
       delegate.setSupportedTaskTypes(supportedTaskTypes);
       delegate.setDoUpgrade(doUpgrade);
       delegate.setUpgradeScript(upgradeScript);
+      delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);
       delegate.setUuid(uuid);
       delegate.setAppId(appId);
       delegate.setCreatedBy(createdBy);
