@@ -5,6 +5,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.common.UUIDGenerator.getUuid;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -34,9 +35,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
 
-  private List<String> workflowPhaseIds = new ArrayList<>();
+  @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
-  private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
+  @JsonIgnore private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
 
   private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
 
@@ -279,6 +280,22 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .addSubworkflow(id2, postDeploymentSteps.generateSubworkflow(null));
 
     return graphBuilder.build();
+  }
+
+  public boolean validate() {
+    setValid(true);
+    setValidationMessage(null);
+    if (workflowPhases != null) {
+      List<String> invalidChildren = workflowPhases.stream()
+                                         .filter(workflowPhase -> !workflowPhase.validate())
+                                         .map(WorkflowPhase::getName)
+                                         .collect(Collectors.toList());
+      if (invalidChildren != null && !invalidChildren.isEmpty()) {
+        setValid(false);
+        setValidationMessage(String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalidChildren.toString()));
+      }
+    }
+    return isValid();
   }
 
   public static final class CanaryOrchestrationWorkflowBuilder {

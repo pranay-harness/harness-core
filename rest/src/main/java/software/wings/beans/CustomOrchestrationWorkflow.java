@@ -54,6 +54,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {}
 
   @Override
+  public boolean validate() {
+    return true;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;

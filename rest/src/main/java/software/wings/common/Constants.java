@@ -117,4 +117,8 @@ public interface Constants {
   String WRAP_UP = "Wrap Up";
   String PROVISION_NODE_NAME = "Provision Nodes";
   String DE_PROVISION_NODE = "De-Provision Nodes";
+  String STEP_VALIDATION_MESSAGE = "Some fields %s are found to be invalid/incomplete.";
+  String PHASE_STEP_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
+  String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
+  String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
 }

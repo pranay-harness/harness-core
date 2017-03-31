@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.anyObject;
@@ -24,7 +25,9 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
 import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -88,6 +91,7 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -510,6 +514,87 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
     logger.info(JsonUtils.asJson(workflow2));
+  }
+
+  @Test
+  public void shouldValidateWorkflow() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(
+                        aWorkflowPhase()
+                            .withServiceId(SERVICE_ID)
+                            .withInfraMappingId(INFRA_MAPPING_ID)
+                            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                              .addStep(aNode()
+                                                           .withId(getUuid())
+                                                           .withType(ECS_SERVICE_DEPLOY.name())
+                                                           .withName(Constants.ECS_SERVICE_DEPLOY)
+                                                           .build())
+                                              .build())
+                            .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow)
+        .isNotNull()
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph")
+        .hasFieldOrPropertyWithValue("valid", false)
+        .hasFieldOrPropertyWithValue(
+            "validationMessage", String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, "[Phase 1]"));
+    assertThat(orchestrationWorkflow.getWorkflowPhases().get(0))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("valid", false)
+        .hasFieldOrPropertyWithValue("validationMessage",
+            String.format(Constants.PHASE_VALIDATION_MESSAGE, asList(Constants.DEPLOY_CONTAINERS)));
+    assertThat(orchestrationWorkflow.getWorkflowPhases().get(0).getPhaseSteps().get(0))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("valid", false)
+        .hasFieldOrPropertyWithValue("validationMessage",
+            String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, asList(Constants.ECS_SERVICE_DEPLOY)));
+    assertThat(orchestrationWorkflow.getWorkflowPhases()
+                   .get(0)
+                   .getPhaseSteps()
+                   .get(0)
+                   .getSteps()
+                   .stream()
+                   .filter(n -> n.getName().equals(Constants.ECS_SERVICE_DEPLOY))
+                   .findFirst()
+                   .get())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("valid", false)
+        .hasFieldOrPropertyWithValue(
+            "validationMessage", String.format(Constants.STEP_VALIDATION_MESSAGE, asList("instanceCount")));
+    assertThat(orchestrationWorkflow.getWorkflowPhases()
+                   .get(0)
+                   .getPhaseSteps()
+                   .get(0)
+                   .getSteps()
+                   .get(0)
+                   .getInValidFieldMessages())
+        .isNotNull()
+        .hasSize(1)
+        .contains(new AbstractMap.SimpleEntry("instanceCount", "instanceCount needs to be greater than 0"));
   }
 
   @Test

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -34,6 +35,9 @@ public class WorkflowPhase {
 
   private boolean rollback;
   private String rollbackPhaseName;
+
+  private boolean valid;
+  private String validationMessage;
 
   private List<PhaseStep> phaseSteps = new ArrayList<>();
 
@@ -113,6 +117,22 @@ public class WorkflowPhase {
     this.rollbackPhaseName = rollbackPhaseName;
   }
 
+  public boolean isValid() {
+    return valid;
+  }
+
+  public void setValid(boolean valid) {
+    this.valid = valid;
+  }
+
+  public String getValidationMessage() {
+    return validationMessage;
+  }
+
+  public void setValidationMessage(String validationMessage) {
+    this.validationMessage = validationMessage;
+  }
+
   public Node generatePhaseNode() {
     return aNode()
         .withId(uuid)
@@ -171,6 +191,23 @@ public class WorkflowPhase {
     graphs.put(uuid, graphBuilder.build());
     return graphs;
   }
+
+  public boolean validate() {
+    valid = true;
+    validationMessage = null;
+    if (phaseSteps != null) {
+      List<String> invalidChildren = phaseSteps.stream()
+                                         .filter(phaseStep -> !phaseStep.validate())
+                                         .map(PhaseStep::getName)
+                                         .collect(Collectors.toList());
+      if (invalidChildren != null && !invalidChildren.isEmpty()) {
+        valid = false;
+        validationMessage = String.format(Constants.PHASE_VALIDATION_MESSAGE, invalidChildren.toString());
+      }
+    }
+    return valid;
+  }
+
   public static final class WorkflowPhaseBuilder {
     private String uuid = UUIDGenerator.getUuid();
     private String name;

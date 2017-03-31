@@ -346,6 +346,10 @@ public class Graph {
     private boolean expanded;
     private boolean origin;
 
+    private boolean valid;
+    private String validationMessage;
+    private Map<String, String> inValidFieldMessages;
+
     private List<ElementExecutionSummary> elementStatusSummary;
     private List<InstanceStatusSummary> instanceStatusSummary;
 
@@ -692,6 +696,41 @@ public class Graph {
      */
     public void setInstanceStatusSummary(List<InstanceStatusSummary> instanceStatusSummary) {
       this.instanceStatusSummary = instanceStatusSummary;
+    }
+
+    public boolean isValid() {
+      return valid;
+    }
+
+    public void setValid(boolean valid) {
+      this.valid = valid;
+    }
+
+    public String getValidationMessage() {
+      return validationMessage;
+    }
+
+    public void setValidationMessage(String validationMessage) {
+      this.validationMessage = validationMessage;
+    }
+
+    public Map<String, String> getInValidFieldMessages() {
+      return inValidFieldMessages;
+    }
+
+    public void setInValidFieldMessages(Map<String, String> inValidFieldMessages) {
+      this.inValidFieldMessages = inValidFieldMessages;
+    }
+
+    public boolean validate() {
+      if (inValidFieldMessages == null || inValidFieldMessages.isEmpty()) {
+        valid = true;
+        validationMessage = null;
+      } else {
+        valid = false;
+        validationMessage = String.format(Constants.STEP_VALIDATION_MESSAGE, inValidFieldMessages.keySet());
+      }
+      return valid;
     }
 
     /*
