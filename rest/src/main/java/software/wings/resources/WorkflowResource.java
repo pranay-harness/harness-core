@@ -12,6 +12,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
@@ -67,7 +68,14 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Workflow> pageRequest,
-      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
+      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
+      @QueryParam("workflowType") List<String> workflowTypes) {
+    if ((workflowTypes == null || workflowTypes.isEmpty())
+        && (pageRequest.getFilters() == null
+               || pageRequest.getFilters().stream().noneMatch(
+                      searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
+      pageRequest.addFilter("workflowType", WorkflowType.ORCHESTRATION, Operator.EQ);
+    }
     PageResponse<Workflow> workflows = workflowService.listWorkflows(pageRequest, previousExecutionsCount);
     return new RestResponse<>(workflows);
   }
