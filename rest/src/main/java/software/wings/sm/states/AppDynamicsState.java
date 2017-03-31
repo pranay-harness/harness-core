@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.codec.binary.Base64;
@@ -22,6 +24,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -102,6 +105,11 @@ public class AppDynamicsState extends HttpState {
     } catch (UnsupportedEncodingException ex) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
     }
+  }
+
+  @Override
+  public List<String> getPatternsForRequiredContextElementType() {
+    return asList(metricPath, getAssertion());
   }
 
   /**

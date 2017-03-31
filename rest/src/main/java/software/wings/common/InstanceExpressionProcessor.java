@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PartitionElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
@@ -208,6 +209,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
           .collect(toList());
     }
 
+    InstanceElementListParam instanceListParam = getInstanceListParam();
+    if (instanceListParam != null) {
+      return instanceListParam.getInstanceElements();
+    }
+
     PageRequest<ServiceInstance> pageRequest = buildPageRequest();
     PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
     return convertToInstanceElements(instances.getResponse());
@@ -367,6 +373,19 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       pageRequestBuilder.addFilter(aSearchFilter().withField("name", Operator.IN, serviceTemplateNames).build());
     }
     return serviceTemplateService.list(pageRequestBuilder.build(), false).getResponse();
+  }
+
+  private InstanceElementListParam getInstanceListParam() {
+    List<ContextElement> params = context.getContextElementList(ContextElementType.PARAM);
+    if (params == null) {
+      return null;
+    }
+    for (ContextElement param : params) {
+      if (Constants.INSTANCE_LIST_PARAMS.equals(param.getName())) {
+        return (InstanceElementListParam) param;
+      }
+    }
+    return null;
   }
 
   private ServiceInstanceIdsParam getServiceInstanceIdsParam() {
