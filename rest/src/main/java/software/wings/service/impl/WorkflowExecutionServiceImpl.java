@@ -4,6 +4,8 @@
 
 package software.wings.service.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -11,8 +13,6 @@ import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflo
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
-
-import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -466,7 +466,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
     if (workflowExecutionAdvisor != null) {
-      stateExecutionInstance.setExecutionEventAdvisors(Lists.newArrayList(workflowExecutionAdvisor));
+      stateExecutionInstance.setExecutionEventAdvisors(newArrayList(workflowExecutionAdvisor));
     }
 
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
@@ -794,6 +794,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
       List<Service> services = workflow.getServices();
+      if (workflow.getWorkflowType() == WorkflowType.SIMPLE) {
+        services = asList(serviceResourceService.get(
+            workflow.getAppId(), workflowExecution.getExecutionArgs().getServiceId(), false));
+      }
+
       if (services != null) {
         services.forEach(service -> {
           ServiceElement serviceElement =

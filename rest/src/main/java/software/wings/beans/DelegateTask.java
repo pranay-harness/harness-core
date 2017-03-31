@@ -298,7 +298,7 @@ public class DelegateTask extends Base {
     }
   }
 
-  public enum Status { QUEUED, STARTED, FINISHED }
+  public enum Status { QUEUED, STARTED, FINISHED, ERROR }
 
   public static final class Builder {
     private TaskType taskType;
