@@ -35,4 +35,6 @@ public abstract class OrchestrationWorkflow {
   public abstract Set<EntityType> getRequiredEntityTypes();
 
   public abstract void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes);
+
+  public abstract boolean validate();
 }

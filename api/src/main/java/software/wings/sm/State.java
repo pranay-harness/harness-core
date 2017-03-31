@@ -173,4 +173,8 @@ public abstract class State {
    * Resolve properties.
    */
   public void resolveProperties() {}
+
+  public Map<String, String> validateFields() {
+    return null;
+  }
 }

@@ -22,6 +22,7 @@ import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 12/21/16.
@@ -37,6 +38,9 @@ public class PhaseStep {
 
   private boolean rollback;
   private String rollbackPhaseStepName;
+
+  private boolean valid = true;
+  private String validationMessage;
 
   public PhaseStep() {}
 
@@ -116,6 +120,22 @@ public class PhaseStep {
 
   public void setRollbackPhaseStepName(String rollbackPhaseStepName) {
     this.rollbackPhaseStepName = rollbackPhaseStepName;
+  }
+
+  public boolean isValid() {
+    return valid;
+  }
+
+  public void setValid(boolean valid) {
+    this.valid = valid;
+  }
+
+  public String getValidationMessage() {
+    return validationMessage;
+  }
+
+  public void setValidationMessage(String validationMessage) {
+    this.validationMessage = validationMessage;
   }
 
   public Node generatePhaseStepNode() {
@@ -198,6 +218,23 @@ public class PhaseStep {
     }
 
     return graphBuilder.build();
+  }
+
+  public boolean validate() {
+    valid = true;
+    validationMessage = null;
+    if (steps != null) {
+      List<String> invalidChildren =
+          steps.stream()
+              .filter(steps -> steps.getInValidFieldMessages() != null && !steps.getInValidFieldMessages().isEmpty())
+              .flatMap(node -> node.getInValidFieldMessages().keySet().stream())
+              .collect(Collectors.toList());
+      if (invalidChildren != null && !invalidChildren.isEmpty()) {
+        valid = false;
+        validationMessage = String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
+      }
+    }
+    return valid;
   }
 
   @Override

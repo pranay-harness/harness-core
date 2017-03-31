@@ -54,6 +54,7 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -278,6 +279,15 @@ public class EcsServiceDeploy extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (instanceCount == 0) {
+      invalidFields.put("instanceCount", "instanceCount needs to be greater than 0");
+    }
+    return invalidFields;
+  }
 
   public String getCommandName() {
     return commandName;

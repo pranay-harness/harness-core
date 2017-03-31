@@ -98,29 +98,21 @@ public class StateMachine extends Base {
    */
   public StateMachine(
       Workflow workflow, Integer originVersion, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    if (workflow != null) {
-      orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-      setAppId(workflow.getAppId());
-      this.originId = workflow.getUuid();
-    }
+    orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    setAppId(workflow.getAppId());
+    this.originId = workflow.getUuid();
     this.originVersion = originVersion;
-
     try {
-      transform(graph, stencilMap);
-      Map<String, Graph> subworkflows = graph.getSubworkflows();
-      if (subworkflows != null) {
-        for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
-          Graph childGraph = entry.getValue();
-          if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
-            continue;
-          }
-          childStateMachines.put(entry.getKey(), new StateMachine(null, originVersion, childGraph, stencilMap));
-        }
-      }
+      deepTransform(graph, stencilMap);
       valid = true;
     } catch (WingsException wingsException) {
       logger.error("Error in Statemachine transform", wingsException);
     }
+    orchestrationWorkflow.validate();
+  }
+
+  public StateMachine(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
+    deepTransform(graph, stencilMap);
   }
 
   public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
@@ -186,6 +178,20 @@ public class StateMachine extends Base {
     clearCache();
   }
 
+  public void deepTransform(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
+    transform(graph, stencilMap);
+    Map<String, Graph> subworkflows = graph.getSubworkflows();
+    if (subworkflows != null) {
+      for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
+        Graph childGraph = entry.getValue();
+        if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
+          continue;
+        }
+        childStateMachines.put(entry.getKey(), new StateMachine(childGraph, stencilMap));
+      }
+    }
+  }
+
   private void transform(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
     String originStateName = null;
     for (Node node : graph.getNodes()) {
@@ -223,6 +229,8 @@ public class StateMachine extends Base {
       MapperUtils.mapObject(properties, state);
 
       state.resolveProperties();
+
+      node.setInValidFieldMessages(state.validateFields());
 
       addState(state);
     }
