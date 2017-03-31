@@ -100,6 +100,8 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
     setUnset(updateOperations, "connected", delegate.isConnected());
 
+    logger.info("Currently executing delegate tasks = " + delegate.getCurrentlyExecutingDelegateTasks());
+
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(delegate.getAccountId())
