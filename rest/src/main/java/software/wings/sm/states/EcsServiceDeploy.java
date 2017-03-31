@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EcsServiceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -239,7 +241,13 @@ public class EcsServiceDeploy extends State {
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-    return anExecutionResponse().withStateExecutionData(commandStateExecutionData).withExecutionStatus(status).build();
+    InstanceElementListParam instanceElementListParam =
+        anInstanceElementListParam().withInstanceElements(new ArrayList<>()).build();
+    return anExecutionResponse()
+        .withStateExecutionData(commandStateExecutionData)
+        .withExecutionStatus(status)
+        .addNotifyElement(instanceElementListParam)
+        .build();
   }
 
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(

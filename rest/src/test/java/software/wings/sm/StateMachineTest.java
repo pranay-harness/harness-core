@@ -345,7 +345,7 @@ public class StateMachineTest extends WingsBaseTest {
                          .build());
     sm.validate();
 
-    sm.addRepeatersBasedOnStateRequiredContextElement();
+    sm.addRepeatersBasedOnRequiredContextElement();
 
     sm.clearCache();
 
@@ -425,7 +425,7 @@ public class StateMachineTest extends WingsBaseTest {
                          .build());
     sm.validate();
 
-    sm.addRepeatersBasedOnStateRequiredContextElement();
+    sm.addRepeatersBasedOnRequiredContextElement();
 
     sm.clearCache();
 
@@ -503,7 +503,7 @@ public class StateMachineTest extends WingsBaseTest {
                          .build());
     sm.validate();
 
-    sm.addRepeatersBasedOnStateRequiredContextElement();
+    sm.addRepeatersBasedOnRequiredContextElement();
 
     sm.clearCache();
 

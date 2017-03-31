@@ -84,6 +84,11 @@ public abstract class State {
     return requiredContextElementType;
   }
 
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    return null;
+  }
+
   /**
    * Sets required context element type.
    *
