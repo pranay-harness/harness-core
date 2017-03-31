@@ -73,7 +73,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
-  @Inject private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks;
+  @Inject private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
 
   private Socket socket;
   private RequestBuilder request;

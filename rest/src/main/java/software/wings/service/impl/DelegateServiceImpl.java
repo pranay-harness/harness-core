@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static com.google.common.collect.Iterables.isEmpty;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.lang.StringUtils.substringBefore;
@@ -100,14 +102,31 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
     setUnset(updateOperations, "connected", delegate.isConnected());
 
-    logger.info("Currently executing delegate tasks = " + delegate.getCurrentlyExecutingDelegateTasks());
-
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(delegate.getAccountId())
                                 .field(ID_KEY)
                                 .equal(delegate.getUuid()),
         updateOperations);
+
+    // Touch currently executing tasks.
+    if (delegate.getCurrentlyExecutingDelegateTasks() != null
+        && !isEmpty(delegate.getCurrentlyExecutingDelegateTasks())) {
+      Query<DelegateTask> delegateTaskQuery =
+          wingsPersistence.createQuery(DelegateTask.class)
+              .field("accountId")
+              .equal(delegate.getAccountId())
+              .field("delegateId")
+              .equal(delegate.getUuid())
+              .field("status")
+              .equal(DelegateTask.Status.STARTED)
+              .field("lastUpdatedAt")
+              .lessThan(System.currentTimeMillis())
+              .field(ID_KEY)
+              .in(delegate.getCurrentlyExecutingDelegateTasks().stream().map(DelegateTask::getUuid).collect(toList()));
+      wingsPersistence.update(delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class));
+    }
+
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
     Delegate updatedDelegate = get(delegate.getAccountId(), delegate.getUuid());
