@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepSubWorkflowExecutionData;
@@ -160,6 +161,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           (EcsServiceElement) notifiedElement(response, EcsServiceElement.class, "Missing ECSServiceElement");
       executionResponse.setContextElements(Lists.newArrayList(ecsServiceElement));
       executionResponse.setNotifyElements(Lists.newArrayList(ecsServiceElement));
+    } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
+        && phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+          response, InstanceElementListParam.class, "Missing InstanceListParam Element");
+      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      executionResponse.setNotifyElements(Lists.newArrayList(instanceElementListParam));
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       KubernetesReplicationControllerElement kubernetesReplicationControllerElement =

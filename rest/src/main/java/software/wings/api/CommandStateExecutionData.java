@@ -13,6 +13,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private String newContainerServiceName;
   private String oldContainerServiceName;
-  private List<InstanceStatusSummary> instanceStatusSummaries;
+  private List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -352,7 +353,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String artifactName;
     private String newContainerServiceName;
     private String oldContainerServiceName;
-    private List<InstanceStatusSummary> instanceStatusSummaries;
+    private List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
     private Builder() {}
 

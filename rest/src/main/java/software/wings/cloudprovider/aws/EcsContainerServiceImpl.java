@@ -47,7 +47,6 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.newrelic.agent.deps.org.apache.http.conn.HttpHostConnectException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
@@ -973,32 +972,31 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               .getInstances()
               .get(0)
               .getPrivateIpAddress();
-      TaskMetadata taskMetadata = null;
+
       try {
         logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
-        taskMetadata = Request.Get("http://" + ipAddress + ":51678/v1/tasks")
-                           .execute()
-                           .handleResponse(response
-                               -> JsonUtils.asObject(
-                                   CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
-                                   TaskMetadata.class));
+        TaskMetadata taskMetadata =
+            Request.Get("http://" + ipAddress + ":51678/v1/tasks")
+                .execute()
+                .handleResponse(response
+                    -> JsonUtils.asObject(
+                        CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
+                        TaskMetadata.class));
+
+        taskMetadata.getTasks()
+            .stream()
+            .filter(task -> taskArns.contains(task.getArn()))
+            .findFirst()
+            .ifPresent(task
+                -> dockerContainerIds.add(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12)));
         logger.info("TaskMetadata = " + taskMetadata);
       } catch (IOException ex) {
-        if (ex instanceof HttpHostConnectException) {
-          executionLogCallback.saveExecutionLog(
-              "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
-        }
+        executionLogCallback.saveExecutionLog(
+            "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
         logger.error(ex.getMessage());
         throw new WingsException(
             UNKNOWN_ERROR, "message", "Container meta data fetch failed on EC2 host: " + ipAddress);
       }
-
-      taskMetadata.getTasks()
-          .stream()
-          .filter(task -> taskArns.contains(task.getArn()))
-          .findFirst()
-          .ifPresent(
-              task -> dockerContainerIds.add(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12)));
     });
     logger.info("Docker container ids = " + dockerContainerIds);
     return dockerContainerIds;

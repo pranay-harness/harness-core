@@ -107,6 +107,7 @@ public class AppDynamicsState extends HttpState {
     }
   }
 
+  @SchemaIgnore
   @Override
   public List<String> getPatternsForRequiredContextElementType() {
     return asList(metricPath, getAssertion());
