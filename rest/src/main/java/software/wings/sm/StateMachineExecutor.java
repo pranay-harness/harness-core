@@ -3,6 +3,7 @@ package software.wings.sm;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -24,6 +25,7 @@ import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -480,7 +482,7 @@ public class StateMachineExecutor {
   /**
    * @param stateExecutionInstance
    * @param childStateMachineId
-   *@param nextState  @return
+   * @param nextState              @return
    */
   private StateExecutionInstance clone(
       StateExecutionInstance stateExecutionInstance, String childStateMachineId, State nextState) {
@@ -491,7 +493,7 @@ public class StateMachineExecutor {
 
   /**
    * @param stateExecutionInstance
-   *@param nextState  @return
+   * @param nextState              @return
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
@@ -648,7 +650,8 @@ public class StateMachineExecutor {
    * @param stateExecutionInstanceId stateMachineInstance to resume.
    * @param response                 map of responses from state machine instances this state was waiting on.
    */
-  public void resume(String appId, String stateExecutionInstanceId, Map<String, NotifyResponseData> response) {
+  public void resume(
+      String appId, String stateExecutionInstanceId, Map<String, NotifyResponseData> response, boolean asyncError) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
@@ -671,7 +674,7 @@ public class StateMachineExecutor {
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
-    executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this));
+    executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this, asyncError));
   }
 
   /**
@@ -882,6 +885,7 @@ public class StateMachineExecutor {
     private StateMachineExecutor stateMachineExecutor;
     private State state;
     private Map<String, NotifyResponseData> response;
+    private boolean asyncError = false;
 
     /**
      * Instantiates a new Sm execution dispatcher.
@@ -892,11 +896,12 @@ public class StateMachineExecutor {
      * @param stateMachineExecutor the state machine executor
      */
     public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
-        StateMachineExecutor stateMachineExecutor) {
+        StateMachineExecutor stateMachineExecutor, boolean asyncError) {
       this.context = context;
       this.state = state;
       this.response = response;
       this.stateMachineExecutor = stateMachineExecutor;
+      this.asyncError = asyncError;
     }
 
     /* (non-Javadoc)
@@ -905,8 +910,22 @@ public class StateMachineExecutor {
     @Override
     public void run() {
       try {
-        ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
-        stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+        if (!asyncError) {
+          ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
+          stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+        } else {
+          StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
+          ErrorNotifyResponseData errorNotifyResponseData =
+              (ErrorNotifyResponseData) response.values().iterator().next();
+          stateExecutionData.setErrorMsg(errorNotifyResponseData.getErrorMessage());
+          stateExecutionData.setStatus(ExecutionStatus.ERROR);
+          stateMachineExecutor.handleExecuteResponse(context,
+              anExecutionResponse()
+                  .withExecutionStatus(ExecutionStatus.ERROR)
+                  .withStateExecutionData(stateExecutionData)
+                  .withErrorMessage(errorNotifyResponseData.getErrorMessage())
+                  .build());
+        }
       } catch (Exception ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       }

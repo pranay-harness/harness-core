@@ -19,6 +19,8 @@ import java.util.Objects;
 public class NotifyResponse<T extends NotifyResponseData> extends Base {
   @Embedded private T response;
 
+  private boolean error;
+
   @Indexed private Date expiryTs;
 
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
@@ -35,8 +37,13 @@ public class NotifyResponse<T extends NotifyResponseData> extends Base {
    * @param response      the response
    */
   public NotifyResponse(String correlationId, T response) {
+    this(correlationId, response, false);
+  }
+
+  public NotifyResponse(String correlationId, T response, boolean error) {
     setUuid(correlationId);
     setResponse(response);
+    setError(error);
   }
 
   /**
@@ -93,9 +100,29 @@ public class NotifyResponse<T extends NotifyResponseData> extends Base {
     this.status = status;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
+  /**
+   * Getter for property 'error'.
+   *
+   * @return Value for property 'error'.
    */
+  public boolean isError() {
+    return error;
+  }
+
+  /**
+   * Setter for property 'error'.
+   *
+   * @param error Value to set for property 'error'.
+   */
+  public void setError(boolean error) {
+    this.error = error;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(response, error, expiryTs, status);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -107,15 +134,8 @@ public class NotifyResponse<T extends NotifyResponseData> extends Base {
     if (!super.equals(obj)) {
       return false;
     }
-    NotifyResponse<?> that = (NotifyResponse<?>) obj;
-    return Objects.equals(response, that.response) && Objects.equals(expiryTs, that.expiryTs) && status == that.status;
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), response, expiryTs, status);
+    final NotifyResponse other = (NotifyResponse) obj;
+    return Objects.equals(this.response, other.response) && Objects.equals(this.error, other.error)
+        && Objects.equals(this.expiryTs, other.expiryTs) && Objects.equals(this.status, other.status);
   }
 }

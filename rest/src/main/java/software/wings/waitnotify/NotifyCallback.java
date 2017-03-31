@@ -14,4 +14,6 @@ public interface NotifyCallback {
    * @param response the response
    */
   void notify(Map<String, NotifyResponseData> response);
+
+  void notifyError(Map<String, NotifyResponseData> response);
 }
