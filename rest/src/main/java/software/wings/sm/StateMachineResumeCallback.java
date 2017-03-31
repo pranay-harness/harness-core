@@ -75,6 +75,11 @@ public class StateMachineResumeCallback implements NotifyCallback {
    */
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.resume(appId, stateExecutionInstanceId, response);
+    stateMachineExecutor.resume(appId, stateExecutionInstanceId, response, false);
+  }
+
+  @Override
+  public void notifyError(Map<String, NotifyResponseData> response) {
+    stateMachineExecutor.resume(appId, stateExecutionInstanceId, response, true);
   }
 }

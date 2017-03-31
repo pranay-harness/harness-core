@@ -79,17 +79,25 @@ public class WaitNotifyEngine {
    * @return id of notification response object.
    */
   public <T extends NotifyResponseData> String notify(String correlationId, T response) {
+    return notify(correlationId, response, false);
+  }
+
+  public String notify(String correlationId, ErrorNotifyResponseData response) {
+    return notify(correlationId, response, true);
+  }
+
+  private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
     Preconditions.checkArgument(StringUtils.isNotEmpty(correlationId), "correlationId is null or empty");
 
     log().debug("notify request received for the correlationId : {}", correlationId);
 
-    String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
+    String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));
 
     PageRequest<WaitQueue> req = new PageRequest<>();
     req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
-    waitQueuesResponse.forEach(
-        waitQueue -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).build()));
+    waitQueuesResponse.forEach(waitQueue
+        -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));
 
     return notificationId;
   }

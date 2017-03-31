@@ -77,7 +77,7 @@ public class JenkinsStateTest {
   @Test
   public void shouldExecute() throws Exception {
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
-    assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("asynch", true);
+    assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     assertThat(delegateTaskArgumentCaptor.getValue())

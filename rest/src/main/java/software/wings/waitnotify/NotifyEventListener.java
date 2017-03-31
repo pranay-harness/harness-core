@@ -115,6 +115,8 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       notifyResponseMap.put(notifyResponse.getUuid(), notifyResponse);
     });
 
+    boolean isError = notifyResponses.stream().filter(NotifyResponse::isError).findFirst().isPresent();
+
     boolean lockAcquired = false;
     try {
       lockAcquired = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId);
@@ -128,7 +130,11 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       injector.injectMembers(callback);
       if (callback != null) {
         try {
-          callback.notify(responseMap);
+          if (isError) {
+            callback.notifyError(responseMap);
+          } else {
+            callback.notify(responseMap);
+          }
         } catch (Exception exception) {
           status = ExecutionStatus.ERROR;
           logger.error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);

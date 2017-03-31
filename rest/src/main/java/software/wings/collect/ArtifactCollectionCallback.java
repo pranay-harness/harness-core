@@ -77,6 +77,14 @@ public class ArtifactCollectionCallback implements NotifyCallback {
                                                   .build());
   }
 
+  @Override
+  public void notifyError(Map<String, NotifyResponseData> response) {
+    Artifact artifact = artifactService.get(appId, artifactId);
+    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.ERROR);
+    eventEmitter.send(Channel.ARTIFACTS,
+        anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
+  }
+
   public String getAppId() {
     return appId;
   }

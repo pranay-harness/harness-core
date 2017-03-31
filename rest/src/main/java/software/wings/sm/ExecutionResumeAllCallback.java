@@ -77,4 +77,9 @@ public class ExecutionResumeAllCallback implements NotifyCallback {
   public void notify(Map<String, NotifyResponseData> response) {
     stateMachineExecutor.startExecution(appId, stateExecutionInstanceId);
   }
+
+  @Override
+  public void notifyError(Map<String, NotifyResponseData> response) {
+    // Do nothing.
+  }
 }

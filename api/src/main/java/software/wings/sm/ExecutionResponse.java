@@ -13,7 +13,7 @@ import java.util.List;
  * @author Rishi
  */
 public class ExecutionResponse {
-  private boolean asynch;
+  private boolean async;
   private List<String> correlationIds = Lists.newArrayList();
   private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
   private String errorMessage;
@@ -22,21 +22,21 @@ public class ExecutionResponse {
   private List<ContextElement> contextElements;
 
   /**
-   * Is asynch boolean.
+   * Is async boolean.
    *
    * @return the boolean
    */
   public boolean isAsync() {
-    return asynch;
+    return async;
   }
 
   /**
-   * Sets asynch.
+   * Sets async.
    *
-   * @param asynch the asynch
+   * @param asynch the async
    */
   public void setAsync(boolean asynch) {
-    this.asynch = asynch;
+    this.async = asynch;
   }
 
   /**
@@ -131,7 +131,7 @@ public class ExecutionResponse {
    * The type Builder.
    */
   public static final class Builder {
-    private boolean asynch;
+    private boolean async;
     private List<String> correlationIds = Lists.newArrayList();
     private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     private String errorMessage;
@@ -151,13 +151,13 @@ public class ExecutionResponse {
     }
 
     /**
-     * With asynch builder.
+     * With async builder.
      *
-     * @param asynch the asynch
+     * @param async the async
      * @return the builder
      */
-    public Builder withAsync(boolean asynch) {
-      this.asynch = asynch;
+    public Builder withAsync(boolean async) {
+      this.async = async;
       return this;
     }
 
@@ -251,7 +251,7 @@ public class ExecutionResponse {
      */
     public Builder but() {
       return anExecutionResponse()
-          .withAsync(asynch)
+          .withAsync(async)
           .withCorrelationIds(correlationIds)
           .withExecutionStatus(executionStatus)
           .withErrorMessage(errorMessage)
@@ -265,7 +265,7 @@ public class ExecutionResponse {
      */
     public ExecutionResponse build() {
       ExecutionResponse executionResponse = new ExecutionResponse();
-      executionResponse.setAsync(asynch);
+      executionResponse.setAsync(async);
       executionResponse.setCorrelationIds(correlationIds);
       executionResponse.setExecutionStatus(executionStatus);
       executionResponse.setErrorMessage(errorMessage);

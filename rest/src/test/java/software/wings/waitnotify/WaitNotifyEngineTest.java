@@ -176,5 +176,10 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
       callCount.incrementAndGet();
       responseMap.putAll(response);
     }
+
+    @Override
+    public void notifyError(Map<String, NotifyResponseData> response) {
+      // Do Nothing.
+    }
   }
 }
