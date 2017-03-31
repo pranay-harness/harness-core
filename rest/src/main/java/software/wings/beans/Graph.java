@@ -722,6 +722,17 @@ public class Graph {
       this.inValidFieldMessages = inValidFieldMessages;
     }
 
+    public boolean validate() {
+      if (inValidFieldMessages == null || inValidFieldMessages.isEmpty()) {
+        valid = true;
+        validationMessage = null;
+      } else {
+        valid = false;
+        validationMessage = String.format(Constants.STEP_VALIDATION_MESSAGE, inValidFieldMessages.keySet());
+      }
+      return valid;
+    }
+
     /*
      * (non-Javadoc)
      *

@@ -57,10 +57,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private Set<EntityType> requiredEntityTypes;
 
-  private boolean valid;
-
-  private String validationMessage;
-
   public PhaseStep getPreDeploymentSteps() {
     return preDeploymentSteps;
   }
@@ -287,19 +283,19 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   }
 
   public boolean validate() {
-    valid = true;
-    validationMessage = null;
+    setValid(true);
+    setValidationMessage(null);
     if (workflowPhases != null) {
       List<String> invalidChildren = workflowPhases.stream()
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
                                          .collect(Collectors.toList());
       if (invalidChildren != null && !invalidChildren.isEmpty()) {
-        valid = false;
-        validationMessage = String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalidChildren.toString());
+        setValid(false);
+        setValidationMessage(String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalidChildren.toString()));
       }
     }
-    return valid;
+    return isValid();
   }
 
   public static final class CanaryOrchestrationWorkflowBuilder {

@@ -18,12 +18,32 @@ import java.util.Set;
 public abstract class OrchestrationWorkflow {
   private OrchestrationWorkflowType orchestrationWorkflowType;
 
+  private boolean valid;
+
+  private String validationMessage;
+
   public OrchestrationWorkflowType getOrchestrationWorkflowType() {
     return orchestrationWorkflowType;
   }
 
   public void setOrchestrationWorkflowType(OrchestrationWorkflowType orchestrationWorkflowType) {
     this.orchestrationWorkflowType = orchestrationWorkflowType;
+  }
+
+  public boolean isValid() {
+    return valid;
+  }
+
+  public void setValid(boolean valid) {
+    this.valid = valid;
+  }
+
+  public String getValidationMessage() {
+    return validationMessage;
+  }
+
+  public void setValidationMessage(String validationMessage) {
+    this.validationMessage = validationMessage;
   }
 
   public abstract List<String> getServiceIds();

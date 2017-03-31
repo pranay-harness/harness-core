@@ -109,6 +109,10 @@ public class StateMachine extends Base {
       logger.error("Error in Statemachine transform", wingsException);
     }
     orchestrationWorkflow.validate();
+    if (orchestrationWorkflow.isValid() && !valid) {
+      orchestrationWorkflow.setValid(false);
+      orchestrationWorkflow.setValidationMessage("Error in Statemachine transform");
+    }
   }
 
   public StateMachine(Graph graph, Map<String, StateTypeDescriptor> stencilMap) {

@@ -225,10 +225,7 @@ public class PhaseStep {
     validationMessage = null;
     if (steps != null) {
       List<String> invalidChildren =
-          steps.stream()
-              .filter(steps -> steps.getInValidFieldMessages() != null && !steps.getInValidFieldMessages().isEmpty())
-              .flatMap(node -> node.getInValidFieldMessages().keySet().stream())
-              .collect(Collectors.toList());
+          steps.stream().filter(step -> !step.validate()).map(Node::getName).collect(Collectors.toList());
       if (invalidChildren != null && !invalidChildren.isEmpty()) {
         valid = false;
         validationMessage = String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
