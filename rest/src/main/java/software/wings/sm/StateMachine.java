@@ -7,7 +7,6 @@ import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.Transition.Builder.aTransition;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
-import static software.wings.sm.states.WaitState.Builder.aWaitState;
 
 import com.google.common.collect.Lists;
 
@@ -33,7 +32,6 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
-import software.wings.sm.states.WaitState;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayDeque;
@@ -276,7 +274,6 @@ public class StateMachine extends Base {
       validate();
 
       addRepeatersBasedOnRequiredContextElement();
-      addWaitState();
       clearCache();
     } catch (IllegalArgumentException e) {
       throw new WingsException(e);
@@ -677,26 +674,6 @@ public class StateMachine extends Base {
   /**
    * Add repeaters based on state required context element.
    */
-  void addWaitState() {
-    List<State> statesWithWait = states.stream()
-                                     .filter(state -> state.getWaitInterval() != null && state.getWaitInterval() > 0)
-                                     .collect(toList());
-    statesWithWait.forEach(state -> {
-      WaitState waitState =
-          aWaitState().withName(state.getName() + " Wait").withDuration(state.getWaitInterval()).build();
-      Transition waitStateTransition =
-          aTransition().withFromState(waitState).withToState(state).withTransitionType(TransitionType.SUCCESS).build();
-      transitions.stream()
-          .filter(transition -> state.getName().equals(transition.getToState().getName()))
-          .forEach(transition -> { transition.setToState(waitState); });
-      addState(waitState);
-      addTransition(waitStateTransition);
-    });
-  }
-
-  /**
-   * Add repeaters based on state required context element.
-   */
   void addRepeatersBasedOnRequiredContextElement() {
     for (List<State> path : getPaths()) {
       List<ContextElementType> contextElementsPresent = Lists.newArrayList(ContextElementType.OTHER);
@@ -762,7 +739,7 @@ public class StateMachine extends Base {
   private ContextElementType scanRequiredContextElementType(List<String> patternsForRequiredContextElementType) {
     InstanceExpressionProcessor instanceExpressionProcessor = new InstanceExpressionProcessor(null);
     if (patternsForRequiredContextElementType.stream().anyMatch(
-            pattern -> pattern.contains(ContextElementType.INSTANCE.name().toLowerCase()))) {
+            pattern -> pattern != null && pattern.contains(ContextElementType.INSTANCE.name().toLowerCase()))) {
       return ContextElementType.INSTANCE;
     }
 

@@ -114,6 +114,7 @@ public class AppDynamicsState extends HttpState {
   }
 
   @Override
+  @Attributes(title = "Wait Interval(s)")
   public Integer getWaitInterval() {
     return super.getWaitInterval();
   }
