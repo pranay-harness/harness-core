@@ -351,7 +351,7 @@ public class HttpState extends State {
             .withCommandType(getStateType())
             .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
 
-    if (instanceElement != null) {
+    if (instanceElement != null && instanceElement.getServiceTemplateElement() != null) {
       activityBuilder.withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
           .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
           .withServiceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())

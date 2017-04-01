@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
+import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
@@ -971,26 +972,31 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               .getInstances()
               .get(0)
               .getPrivateIpAddress();
-      TaskMetadata taskMetadata = null;
+
       try {
         logger.info("requesting data from http://" + ipAddress + ":51678/v1/tasks");
-        taskMetadata = Request.Get("http://" + ipAddress + ":51678/v1/tasks")
-                           .execute()
-                           .handleResponse(response
-                               -> JsonUtils.asObject(
-                                   CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
-                                   TaskMetadata.class));
-        logger.info("TaskMetadata = " + taskMetadata);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+        TaskMetadata taskMetadata =
+            Request.Get("http://" + ipAddress + ":51678/v1/tasks")
+                .execute()
+                .handleResponse(response
+                    -> JsonUtils.asObject(
+                        CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
+                        TaskMetadata.class));
 
-      taskMetadata.getTasks()
-          .stream()
-          .filter(task -> taskArns.contains(task.getArn()))
-          .findFirst()
-          .ifPresent(
-              task -> dockerContainerIds.add(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12)));
+        taskMetadata.getTasks()
+            .stream()
+            .filter(task -> taskArns.contains(task.getArn()))
+            .findFirst()
+            .ifPresent(task
+                -> dockerContainerIds.add(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12)));
+        logger.info("TaskMetadata = " + taskMetadata);
+      } catch (IOException ex) {
+        executionLogCallback.saveExecutionLog(
+            "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
+        logger.error(ex.getMessage());
+        throw new WingsException(
+            UNKNOWN_ERROR, "message", "Container meta data fetch failed on EC2 host: " + ipAddress);
+      }
     });
     logger.info("Docker container ids = " + dockerContainerIds);
     return dockerContainerIds;

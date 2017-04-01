@@ -720,22 +720,21 @@ public class StateMachine extends Base {
         List<Transition> transitionsFromOldState = getTransitionFrom(state);
 
         String newStateName =
-            state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name());
-        State newRepeatState = addState(
-            aRepeatState()
-                .withName(state.getName())
-                .withRepeatElementType(state.getRequiredContextElementType())
-                .withExecutionStrategy(ExecutionStrategy.PARALLEL)
-                .withRepeatElementExpression(
-                    WingsExpressionProcessorFactory.getDefaultExpression(state.getRequiredContextElementType()))
-                .withRepeatTransitionStateName(newStateName)
-                .build());
+            state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, requiredContextElementType.name());
+        State newRepeatState =
+            addState(aRepeatState()
+                         .withName(state.getName())
+                         .withRepeatElementType(requiredContextElementType)
+                         .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                         .withRepeatElementExpression(
+                             WingsExpressionProcessorFactory.getDefaultExpression(requiredContextElementType))
+                         .withRepeatTransitionStateName(newStateName)
+                         .build());
 
         transitions.removeAll(transitionsToOldState);
         transitions.removeAll(transitionsFromOldState);
 
-        state.setName(
-            state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name()));
+        state.setName(state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, requiredContextElementType.name()));
 
         addTransition(aTransition()
                           .withTransitionType(TransitionType.REPEAT)
@@ -763,7 +762,7 @@ public class StateMachine extends Base {
   private ContextElementType scanRequiredContextElementType(List<String> patternsForRequiredContextElementType) {
     InstanceExpressionProcessor instanceExpressionProcessor = new InstanceExpressionProcessor(null);
     if (patternsForRequiredContextElementType.stream().anyMatch(
-            pattern -> instanceExpressionProcessor.matches(pattern))) {
+            pattern -> pattern.contains(ContextElementType.INSTANCE.name().toLowerCase()))) {
       return ContextElementType.INSTANCE;
     }
 
