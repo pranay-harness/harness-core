@@ -123,4 +123,6 @@ public interface Constants {
   String PHASE_STEP_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
   String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
   String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
+
+  String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
 }

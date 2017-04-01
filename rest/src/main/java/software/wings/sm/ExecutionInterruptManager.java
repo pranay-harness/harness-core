@@ -110,7 +110,7 @@ public class ExecutionInterruptManager {
     executionInterrupt = wingsPersistence.saveAndGet(ExecutionInterrupt.class, executionInterrupt);
 
     if (inlineHandle) {
-      stateMachineExecutor.handleEvent(executionInterrupt);
+      stateMachineExecutor.handleInterrupt(executionInterrupt);
     }
 
     return executionInterrupt;

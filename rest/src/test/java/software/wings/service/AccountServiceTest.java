@@ -15,7 +15,7 @@ import software.wings.service.intfc.AccountService;
 import javax.inject.Inject;
 
 /**
- * Created by peeyushaggarwal on 10/11/16.//Reflect
+ * Created by peeyushaggarwal on 10/11/16.
  */
 public class AccountServiceTest extends WingsBaseTest {
   @Mock private LicenseManager licenseManager;

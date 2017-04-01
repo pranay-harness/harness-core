@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.beans.EntityType;
 import software.wings.waitnotify.NotifyResponseData;
@@ -132,6 +133,7 @@ public abstract class State {
   }
 
   @SchemaIgnore
+  @Attributes(title = "Wait interval before execution(in seconds)")
   public Integer getWaitInterval() {
     return waitInterval;
   }

@@ -114,7 +114,7 @@ public class AppDynamicsState extends HttpState {
   }
 
   @Override
-  @Attributes(title = "Wait Interval(s)")
+  @Attributes(title = "Wait interval before execution(in seconds)")
   public Integer getWaitInterval() {
     return super.getWaitInterval();
   }
