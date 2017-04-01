@@ -112,6 +112,11 @@ public class AppDynamicsState extends HttpState {
     return asList(metricPath, getAssertion());
   }
 
+  @Override
+  public Integer getWaitInterval() {
+    return super.getWaitInterval();
+  }
+
   /**
    * Gets application identifier.
    *

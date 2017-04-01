@@ -23,6 +23,8 @@ public abstract class State {
 
   @SchemaIgnore private boolean rollback;
 
+  @SchemaIgnore private Integer waitInterval;
+
   /**
    * Instantiates a new state.
    *
@@ -127,6 +129,16 @@ public abstract class State {
   @SchemaIgnore
   public void setRollback(boolean rollback) {
     this.rollback = rollback;
+  }
+
+  @SchemaIgnore
+  public Integer getWaitInterval() {
+    return waitInterval;
+  }
+
+  @SchemaIgnore
+  public void setWaitInterval(Integer waitInterval) {
+    this.waitInterval = waitInterval;
   }
 
   /**
