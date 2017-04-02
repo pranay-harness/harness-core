@@ -42,6 +42,7 @@
         <alpnboot.version>8.1.11.v20170118</alpnboot.version>
         <newrelic.version>3.32.0</newrelic.version>
         <aws.sdk.version>1.11.70</aws.sdk.version>
+        <nexus.version>2.14.3-02</nexus.version>
     </properties>
 
     <repositories>
@@ -238,8 +239,13 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
-            <dependency>
+          <!-- For Nexus Integration -->
+           <dependency>
+            <groupId>org.sonatype.nexus.plugins</groupId>
+            <artifactId>nexus-restlet1x-model</artifactId>
+            <version>${nexus.version}</version>
+          </dependency>
+          <dependency>
                 <groupId>xml-apis</groupId>
                 <artifactId>xml-apis</artifactId>
                 <version>1.4.01</version>
@@ -508,7 +514,11 @@
                 <artifactId>converter-jackson</artifactId>
                 <version>2.2.0</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>converter-simplexml</artifactId>
+                <version>2.1.0</version>
+            </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>

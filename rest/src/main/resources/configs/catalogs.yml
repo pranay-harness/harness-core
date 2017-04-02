@@ -27,6 +27,8 @@ ARTIFACT_SOURCE_TYPE:
       value: BAMBOO
     - name: Docker Repository
       value: DOCKER
+    - name: Nexus Repository
+      value: NEXUS
 
 DEPLOYMENT_STRATEGY:
     - name: Serial

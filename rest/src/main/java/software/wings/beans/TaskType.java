@@ -35,7 +35,10 @@ public enum TaskType {
   BAMBOO_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
   BAMBOO_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
   BAMBOO_GET_PLANS(ServiceImplDelegateTask.class),
-  DOCKER_GET_BUILDS(ServiceImplDelegateTask.class);
+  DOCKER_GET_BUILDS(ServiceImplDelegateTask.class),
+  NEXUS_GET_JOBS(ServiceImplDelegateTask.class),
+  NEXUS_GET_PLANS(ServiceImplDelegateTask.class),
+  NEXUS_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
@@ -43,8 +46,14 @@ public enum TaskType {
     this.delegateRunnableTaskClass = delegateRunnableTaskClass;
   }
 
+<<<<<<< Updated upstream
   public DelegateRunnableTask getDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
       Consumer<? extends NotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
     return on(delegateRunnableTaskClass).create(delegateId, delegateTask, postExecute, preExecute).get();
+=======
+  public DelegateRunnableTask getDelegateRunnableTask(
+      String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
+    return on(delegateRunnableTaskClass).create(delegateId, delegateTask, consumer).get();
+>>>>>>> Stashed changes
   }
 }
