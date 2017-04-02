@@ -21,6 +21,7 @@ public class StateExecutionData {
   private Long endTs;
   private ExecutionStatus status;
   private String errorMsg;
+  private Integer waitInterval;
 
   /**
    * Gets state name.
@@ -112,6 +113,14 @@ public class StateExecutionData {
     this.errorMsg = errorMsg;
   }
 
+  public Integer getWaitInterval() {
+    return waitInterval;
+  }
+
+  public void setWaitInterval(Integer waitInterval) {
+    this.waitInterval = waitInterval;
+  }
+
   /**
    * Gets execution summary.
    *
@@ -188,6 +197,62 @@ public class StateExecutionData {
   protected void putNotNull(Map<String, ExecutionDataValue> orderedMap, String name, ExecutionDataValue value) {
     if (value != null && value.getValue() != null) {
       orderedMap.put(name, value);
+    }
+  }
+
+  public static final class StateExecutionDataBuilder {
+    private String stateName;
+    private Long startTs;
+    private Long endTs;
+    private ExecutionStatus status;
+    private String errorMsg;
+    private Integer waitInterval;
+
+    private StateExecutionDataBuilder() {}
+
+    public static StateExecutionDataBuilder aStateExecutionData() {
+      return new StateExecutionDataBuilder();
+    }
+
+    public StateExecutionDataBuilder withStateName(String stateName) {
+      this.stateName = stateName;
+      return this;
+    }
+
+    public StateExecutionDataBuilder withStartTs(Long startTs) {
+      this.startTs = startTs;
+      return this;
+    }
+
+    public StateExecutionDataBuilder withEndTs(Long endTs) {
+      this.endTs = endTs;
+      return this;
+    }
+
+    public StateExecutionDataBuilder withStatus(ExecutionStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public StateExecutionDataBuilder withErrorMsg(String errorMsg) {
+      this.errorMsg = errorMsg;
+      return this;
+    }
+
+    public StateExecutionDataBuilder withWaitInterval(Integer waitInterval) {
+      this.waitInterval = waitInterval;
+      return this;
+    }
+
+    public StateExecutionData build() {
+      StateExecutionData stateExecutionData = new StateExecutionData();
+      stateExecutionData.setStateName(stateName);
+      stateExecutionData.setStartTs(startTs);
+      stateExecutionData.setEndTs(endTs);
+      stateExecutionData.setStatus(status);
+      stateExecutionData.setErrorMsg(errorMsg);
+      stateExecutionData.setWaitInterval(waitInterval);
+      return stateExecutionData;
     }
   }
 }

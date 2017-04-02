@@ -3,10 +3,14 @@ package software.wings.sm;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -16,14 +20,18 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
+import software.wings.sm.states.SimpleNotifier;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -33,6 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -48,7 +58,9 @@ public class StateMachineExecutor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
   @Inject private ExecutionInterruptManager executionInterruptManager;
+  @Inject private JobScheduler jobScheduler;
 
+  @Inject @Named("waitStateResumer") private ScheduledExecutorService scheduledExecutorService;
   /**
    * Execute.
    *
@@ -196,8 +208,8 @@ public class StateMachineExecutor {
           executionInterrupt.getUuid());
       return;
     }
-    StateMachine stateMachine = context.getStateMachine();
 
+    StateMachine stateMachine = context.getStateMachine();
     boolean updated = updateStartStatus(stateExecutionInstance, ExecutionStatus.STARTING,
         Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR));
     if (!updated) {
@@ -206,15 +218,63 @@ public class StateMachineExecutor {
       logger.error(ex.getMessage(), ex);
       throw ex;
     }
+    State currentState =
+        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
+      StateExecutionData stateExecutionData = aStateExecutionData()
+                                                  .withWaitInterval(currentState.getWaitInterval())
+                                                  .withErrorMsg("Waiting before execution")
+                                                  .build();
+      updated = updateStateExecutionData(
+          stateExecutionInstance, stateExecutionData, ExecutionStatus.RUNNING, null, null, null);
+      if (!updated) {
+        throw new WingsException("updateStateExecutionData failed");
+      }
+      String resumeId = UUIDGenerator.getUuid();
 
+      // TODO: Fix the test cases and then checkin the persistent notification
+      //      long wakeupTs = System.currentTimeMillis() + (currentState.getWaitInterval() * 1000);
+      //      JobDetail job = JobBuilder.newJob(NotifyJob.class).withIdentity(Constants.WAIT_RESUME_GROUP, resumeId)
+      //          .usingJobData("correlationId", resumeId).usingJobData("executionStatus",
+      //          ExecutionStatus.SUCCESS.name()).build();
+      //      Trigger trigger = TriggerBuilder.newTrigger().withIdentity(resumeId).startAt(new
+      //      Date(wakeupTs)).forJob(job).build(); jobScheduler.scheduleJob(job, trigger);
+
+      scheduledExecutorService.schedule(
+          new SimpleNotifier(
+              waitNotifyEngine, resumeId, anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()),
+          currentState.getWaitInterval(), TimeUnit.SECONDS);
+
+      logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", currentState.getWaitInterval());
+      waitNotifyEngine.waitForAll(
+          new ExecutionWaitCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid()), resumeId);
+      return;
+    }
+
+    startStateExecution(context, stateExecutionInstance);
+  }
+
+  void startStateExecution(String appId, String stateExecutionInstanceId) {
+    logger.info("startStateExecution called after wait");
+
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+    injector.injectMembers(context);
+    startStateExecution(context, stateExecutionInstance);
+  }
+
+  private void startStateExecution(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
     State currentState = null;
     ExecutionResponse executionResponse = null;
     Exception ex = null;
     try {
+      StateMachine stateMachine = context.getStateMachine();
       currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
-      invokedvisors(context, currentState);
+      invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
       logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
@@ -228,7 +288,7 @@ public class StateMachineExecutor {
     }
   }
 
-  private ExecutionEventAdvice invokedvisors(ExecutionContextImpl context, State state) {
+  private ExecutionEventAdvice invokeAdvisors(ExecutionContextImpl context, State state) {
     List<ExecutionEventAdvisor> advisors = context.getStateExecutionInstance().getExecutionEventAdvisors();
     if (advisors == null || advisors.isEmpty()) {
       return null;
@@ -274,7 +334,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
-      invokedvisors(context, currentState);
+      invokeAdvisors(context, currentState);
       handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
 
     } else {
@@ -284,7 +344,7 @@ public class StateMachineExecutor {
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
-      ExecutionEventAdvice executionEventAdvice = invokedvisors(context, currentState);
+      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
       if (executionEventAdvice != null
           && (executionEventAdvice.getNextChildStateMachineId() != null
                  || executionEventAdvice.getNextStateName() != null)) {
@@ -430,7 +490,7 @@ public class StateMachineExecutor {
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
           Lists.newArrayList(ExecutionStatus.ABORTING), null, null);
-      invokedvisors(context, currentState);
+      invokeAdvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
     } catch (Exception e) {
@@ -480,7 +540,7 @@ public class StateMachineExecutor {
   /**
    * @param stateExecutionInstance
    * @param childStateMachineId
-   *@param nextState  @return
+   * @param nextState              @return
    */
   private StateExecutionInstance clone(
       StateExecutionInstance stateExecutionInstance, String childStateMachineId, State nextState) {
@@ -491,7 +551,7 @@ public class StateMachineExecutor {
 
   /**
    * @param stateExecutionInstance
-   *@param nextState  @return
+   * @param nextState              @return
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
@@ -648,7 +708,8 @@ public class StateMachineExecutor {
    * @param stateExecutionInstanceId stateMachineInstance to resume.
    * @param response                 map of responses from state machine instances this state was waiting on.
    */
-  public void resume(String appId, String stateExecutionInstanceId, Map<String, NotifyResponseData> response) {
+  public void resume(
+      String appId, String stateExecutionInstanceId, Map<String, NotifyResponseData> response, boolean asyncError) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
@@ -671,7 +732,7 @@ public class StateMachineExecutor {
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
-    executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this));
+    executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this, asyncError));
   }
 
   /**
@@ -679,7 +740,7 @@ public class StateMachineExecutor {
    *
    * @param workflowExecutionInterrupt the workflow execution event
    */
-  public void handleEvent(ExecutionInterrupt workflowExecutionInterrupt) {
+  public void handleInterrupt(ExecutionInterrupt workflowExecutionInterrupt) {
     switch (workflowExecutionInterrupt.getExecutionInterruptType()) {
       case RESUME: {
         StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
@@ -882,6 +943,7 @@ public class StateMachineExecutor {
     private StateMachineExecutor stateMachineExecutor;
     private State state;
     private Map<String, NotifyResponseData> response;
+    private boolean asyncError = false;
 
     /**
      * Instantiates a new Sm execution dispatcher.
@@ -892,11 +954,12 @@ public class StateMachineExecutor {
      * @param stateMachineExecutor the state machine executor
      */
     public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
-        StateMachineExecutor stateMachineExecutor) {
+        StateMachineExecutor stateMachineExecutor, boolean asyncError) {
       this.context = context;
       this.state = state;
       this.response = response;
       this.stateMachineExecutor = stateMachineExecutor;
+      this.asyncError = asyncError;
     }
 
     /* (non-Javadoc)
@@ -905,8 +968,22 @@ public class StateMachineExecutor {
     @Override
     public void run() {
       try {
-        ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
-        stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+        if (!asyncError) {
+          ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
+          stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+        } else {
+          StateExecutionData stateExecutionData = context.getStateExecutionInstance().getStateExecutionData();
+          ErrorNotifyResponseData errorNotifyResponseData =
+              (ErrorNotifyResponseData) response.values().iterator().next();
+          stateExecutionData.setErrorMsg(errorNotifyResponseData.getErrorMessage());
+          stateExecutionData.setStatus(ExecutionStatus.ERROR);
+          stateMachineExecutor.handleExecuteResponse(context,
+              anExecutionResponse()
+                  .withExecutionStatus(ExecutionStatus.ERROR)
+                  .withStateExecutionData(stateExecutionData)
+                  .withErrorMessage(errorNotifyResponseData.getErrorMessage())
+                  .build());
+        }
       } catch (Exception ex) {
         stateMachineExecutor.handleExecuteResponseException(context, ex);
       }

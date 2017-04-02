@@ -1,7 +1,10 @@
 package software.wings.sm.states;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -11,11 +14,14 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EcsServiceElement;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -24,6 +30,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
@@ -39,6 +46,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -58,6 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 2/8/17.
@@ -83,6 +92,8 @@ public class EcsServiceDeploy extends State {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
+
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -239,11 +250,32 @@ public class EcsServiceDeploy extends State {
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-    return anExecutionResponse().withStateExecutionData(commandStateExecutionData).withExecutionStatus(status).build();
+    List<InstanceElement> instanceElements = commandStateExecutionData.getInstanceStatusSummaries()
+                                                 .stream()
+                                                 .map(InstanceStatusSummary::getInstanceElement)
+                                                 .collect(Collectors.toList());
+
+    InstanceElementListParam instanceElementListParam =
+        anInstanceElementListParam()
+            .withInstanceElements(instanceElements == null ? new ArrayList<>() : instanceElements)
+            .build();
+    return anExecutionResponse()
+        .withStateExecutionData(commandStateExecutionData)
+        .withExecutionStatus(status)
+        .addNotifyElement(instanceElementListParam)
+        .build();
   }
 
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(
       ExecutionContext context, Map<String, NotifyResponseData> response) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    Environment env = workflowStandardParams.getEnv();
+    Key<ServiceTemplate> serviceTemplateKey =
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
+
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
@@ -257,7 +289,15 @@ public class EcsServiceDeploy extends State {
                   anInstanceStatusSummary()
                       .withStatus(ExecutionStatus.SUCCESS)
                       .withInstanceElement(
-                          anInstanceElement().withUuid(containerId).withDisplayName(containerId).build())
+                          anInstanceElement()
+                              .withUuid(containerId)
+                              .withHostElement(aHostElement().withHostName(containerId).build())
+                              .withServiceTemplateElement(aServiceTemplateElement()
+                                                              .withUuid(serviceTemplateKey.getId().toString())
+                                                              .withServiceElement(phaseElement.getServiceElement())
+                                                              .build())
+                              .withDisplayName(containerId)
+                              .build())
                       .build()));
     }
     return instanceStatusSummaries;

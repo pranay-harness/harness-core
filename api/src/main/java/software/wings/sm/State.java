@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.beans.EntityType;
 import software.wings.waitnotify.NotifyResponseData;
@@ -22,6 +23,8 @@ public abstract class State {
   @SchemaIgnore private String stateType;
 
   @SchemaIgnore private boolean rollback;
+
+  @SchemaIgnore private Integer waitInterval;
 
   /**
    * Instantiates a new state.
@@ -84,6 +87,11 @@ public abstract class State {
     return requiredContextElementType;
   }
 
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    return null;
+  }
+
   /**
    * Sets required context element type.
    *
@@ -122,6 +130,17 @@ public abstract class State {
   @SchemaIgnore
   public void setRollback(boolean rollback) {
     this.rollback = rollback;
+  }
+
+  @SchemaIgnore
+  @Attributes(title = "Wait interval before execution(in seconds)")
+  public Integer getWaitInterval() {
+    return waitInterval;
+  }
+
+  @SchemaIgnore
+  public void setWaitInterval(Integer waitInterval) {
+    this.waitInterval = waitInterval;
   }
 
   /**

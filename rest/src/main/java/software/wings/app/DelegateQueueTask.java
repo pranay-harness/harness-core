@@ -4,6 +4,7 @@ import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.query.Query;
@@ -16,7 +17,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Spliterator;
@@ -73,12 +73,10 @@ public class DelegateQueueTask implements Runnable {
             wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.ERROR));
 
         if (delegateTask != null) {
-          waitNotifyEngine.notify(delegateTask.getWaitId(), new NotifyResponseData() {
-            @Override
-            public int hashCode() {
-              return super.hashCode();
-            }
-          });
+          waitNotifyEngine.notify(delegateTask.getWaitId(),
+              anErrorNotifyResponseData()
+                  .withErrorMessage("Delegate " + delegateTask.getDelegateId() + " timeout out.")
+                  .build());
         }
       } while (delegateTask != null);
 

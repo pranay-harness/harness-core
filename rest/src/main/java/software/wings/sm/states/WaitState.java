@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.common.UUIDGenerator;
+import software.wings.scheduler.JobScheduler;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -29,6 +30,8 @@ public class WaitState extends State {
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject private JobScheduler jobScheduler;
 
   @Attributes(title = "Wait Duration") private long duration;
 
@@ -52,9 +55,21 @@ public class WaitState extends State {
     waitStateExecutionData.setWakeupTs(wakeupTs);
     waitStateExecutionData.setResumeId(UUIDGenerator.getUuid());
 
+    // TODO: Fix the test cases and then checkin the persistent notification
+    //    JobDetail job = JobBuilder.newJob(NotifyJob.class).withIdentity(Constants.WAIT_RESUME_GROUP,
+    //    waitStateExecutionData.getResumeId())
+    //        .usingJobData("correlationId", waitStateExecutionData.getResumeId()).usingJobData("executionStatus",
+    //        ExecutionStatus.SUCCESS.name()).build();
+    //
+    //    Trigger trigger = TriggerBuilder.newTrigger().withIdentity(waitStateExecutionData.getResumeId()).startAt(new
+    //    Date(wakeupTs)).forJob(job).build();
+    //
+    //    jobScheduler.scheduleJob(job, trigger);
+
     executorService.schedule(new SimpleNotifier(waitNotifyEngine, waitStateExecutionData.getResumeId(),
                                  anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()),
         duration, TimeUnit.SECONDS);
+
     return anExecutionResponse()
         .withAsync(true)
         .addCorrelationIds(waitStateExecutionData.getResumeId())

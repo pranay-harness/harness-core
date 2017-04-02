@@ -46,6 +46,8 @@ public interface Constants {
    */
   String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
 
+  String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";
+
   String PHASE_PARAM = "PHASE_PARAM";
   /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
@@ -121,4 +123,6 @@ public interface Constants {
   String PHASE_STEP_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
   String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
   String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
+
+  String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
 }

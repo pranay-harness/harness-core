@@ -32,8 +32,11 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.inject.Injector;
+import com.google.inject.name.Named;
 
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,8 +91,10 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -109,6 +114,35 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Mock private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
+
+  @Inject @Named("waitStateResumer") private ScheduledExecutorService executorService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @InjectMocks @Inject private Injector injector;
+
+  //  @Mock
+  //  JobScheduler jobScheduler;
+
+  //  @Before
+  //  public void setup() {
+  //    when(jobScheduler.scheduleJob(any(JobDetail.class), any(Trigger.class))).thenAnswer(new Answer<Object>() {
+  //      @Override
+  //      public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+  //        JobDetail jobDetail = (JobDetail) invocationOnMock.getArguments()[0];
+  //        Trigger trigger = (Trigger) invocationOnMock.getArguments()[1];
+  //
+  //        long duration = trigger.getNextFireTime().getTime() - System.currentTimeMillis();
+  //        if (duration < 0 ) {
+  //          duration = 0;
+  //        }
+  //        String resumeId = jobDetail.getJobDataMap().getString("correlationId");
+  //        executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
+  //            anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()), duration,
+  //            TimeUnit.SECONDS);
+  //        return null;
+  //      }
+  //    });
+  //  }
 
   /**
    * Should trigger simple workflow.

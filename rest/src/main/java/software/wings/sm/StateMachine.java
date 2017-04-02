@@ -26,6 +26,8 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
+import software.wings.common.InstanceExpressionProcessor;
+import software.wings.common.ServiceExpressionProcessor;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
@@ -179,6 +181,7 @@ public class StateMachine extends Base {
     }
     setInitialStateName(originStateName);
     validate();
+    addRepeatersBasedOnRequiredContextElement();
     clearCache();
   }
 
@@ -270,7 +273,7 @@ public class StateMachine extends Base {
       setInitialStateName(originStateName);
       validate();
 
-      addRepeatersBasedOnStateRequiredContextElement();
+      addRepeatersBasedOnRequiredContextElement();
       clearCache();
     } catch (IllegalArgumentException e) {
       throw new WingsException(e);
@@ -671,7 +674,7 @@ public class StateMachine extends Base {
   /**
    * Add repeaters based on state required context element.
    */
-  void addRepeatersBasedOnStateRequiredContextElement() {
+  void addRepeatersBasedOnRequiredContextElement() {
     for (List<State> path : getPaths()) {
       List<ContextElementType> contextElementsPresent = Lists.newArrayList(ContextElementType.OTHER);
       for (int i = 0; i < path.size(); i++) {
@@ -679,52 +682,74 @@ public class StateMachine extends Base {
 
         if (state instanceof RepeatState) {
           contextElementsPresent.add(((RepeatState) state).getRepeatElementType());
+          continue;
+        }
+        ContextElementType requiredContextElementType = state.getRequiredContextElementType();
+        if (requiredContextElementType == null && state.getPatternsForRequiredContextElementType() != null) {
+          requiredContextElementType = scanRequiredContextElementType(state.getPatternsForRequiredContextElementType());
+        }
 
-        } else if (state.getRequiredContextElementType() != null
-            && !contextElementsPresent.contains(state.getRequiredContextElementType())) {
-          List<Transition> transitionsToOldState = getTransitionsTo(state);
-          List<Transition> transitionsFromOldState = getTransitionFrom(state);
+        if (requiredContextElementType == null || contextElementsPresent.contains(requiredContextElementType)) {
+          continue;
+        }
 
-          String newStateName =
-              state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name());
-          State newRepeatState = addState(
-              aRepeatState()
-                  .withName(state.getName())
-                  .withRepeatElementType(state.getRequiredContextElementType())
-                  .withExecutionStrategy(ExecutionStrategy.PARALLEL)
-                  .withRepeatElementExpression(
-                      WingsExpressionProcessorFactory.getDefaultExpression(state.getRequiredContextElementType()))
-                  .withRepeatTransitionStateName(newStateName)
-                  .build());
+        List<Transition> transitionsToOldState = getTransitionsTo(state);
+        List<Transition> transitionsFromOldState = getTransitionFrom(state);
 
-          transitions.removeAll(transitionsToOldState);
-          transitions.removeAll(transitionsFromOldState);
+        String newStateName =
+            state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, requiredContextElementType.name());
+        State newRepeatState =
+            addState(aRepeatState()
+                         .withName(state.getName())
+                         .withRepeatElementType(requiredContextElementType)
+                         .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                         .withRepeatElementExpression(
+                             WingsExpressionProcessorFactory.getDefaultExpression(requiredContextElementType))
+                         .withRepeatTransitionStateName(newStateName)
+                         .build());
 
-          state.setName(
-              state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name()));
+        transitions.removeAll(transitionsToOldState);
+        transitions.removeAll(transitionsFromOldState);
 
+        state.setName(state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, requiredContextElementType.name()));
+
+        addTransition(aTransition()
+                          .withTransitionType(TransitionType.REPEAT)
+                          .withFromState(newRepeatState)
+                          .withToState(state)
+                          .build());
+        for (Transition transitionToOldState : transitionsToOldState) {
           addTransition(aTransition()
-                            .withTransitionType(TransitionType.REPEAT)
-                            .withFromState(newRepeatState)
-                            .withToState(state)
+                            .withTransitionType(transitionToOldState.getTransitionType())
+                            .withFromState(transitionToOldState.getFromState())
+                            .withToState(newRepeatState)
                             .build());
-          for (Transition transitionToOldState : transitionsToOldState) {
+          for (Transition transitionFromOldState : transitionsFromOldState) {
             addTransition(aTransition()
-                              .withTransitionType(transitionToOldState.getTransitionType())
-                              .withFromState(transitionToOldState.getFromState())
-                              .withToState(newRepeatState)
+                              .withTransitionType(transitionFromOldState.getTransitionType())
+                              .withFromState(newRepeatState)
+                              .withToState(transitionFromOldState.getToState())
                               .build());
-            for (Transition transitionFromOldState : transitionsFromOldState) {
-              addTransition(aTransition()
-                                .withTransitionType(transitionFromOldState.getTransitionType())
-                                .withFromState(newRepeatState)
-                                .withToState(transitionFromOldState.getToState())
-                                .build());
-            }
           }
         }
       }
     }
+  }
+
+  private ContextElementType scanRequiredContextElementType(List<String> patternsForRequiredContextElementType) {
+    InstanceExpressionProcessor instanceExpressionProcessor = new InstanceExpressionProcessor(null);
+    if (patternsForRequiredContextElementType.stream().anyMatch(
+            pattern -> pattern != null && pattern.contains(ContextElementType.INSTANCE.name().toLowerCase()))) {
+      return ContextElementType.INSTANCE;
+    }
+
+    ServiceExpressionProcessor serviceExpressionProcessor = new ServiceExpressionProcessor(null);
+    if (patternsForRequiredContextElementType.stream().anyMatch(
+            pattern -> serviceExpressionProcessor.matches(pattern))) {
+      return ContextElementType.SERVICE;
+    }
+
+    return null;
   }
 
   private List<Transition> getTransitionsTo(State state) {

@@ -17,6 +17,8 @@ public class NotifyEvent extends Queuable {
 
   private List<String> correlationIds;
 
+  private boolean error;
+
   /**
    * Instantiates a new notify event.
    */
@@ -31,6 +33,7 @@ public class NotifyEvent extends Queuable {
     super(other);
     this.waitInstanceId = other.waitInstanceId;
     this.correlationIds = other.correlationIds;
+    this.error = other.error;
   }
 
   /**
@@ -69,6 +72,24 @@ public class NotifyEvent extends Queuable {
     this.correlationIds = correlationIds;
   }
 
+  /**
+   * Getter for property 'error'.
+   *
+   * @return Value for property 'error'.
+   */
+  public boolean isError() {
+    return error;
+  }
+
+  /**
+   * Setter for property 'error'.
+   *
+   * @param error Value to set for property 'error'.
+   */
+  public void setError(boolean error) {
+    this.error = error;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
@@ -77,15 +98,14 @@ public class NotifyEvent extends Queuable {
     return MoreObjects.toStringHelper(this)
         .add("waitInstanceId", waitInstanceId)
         .add("correlationIds", correlationIds)
+        .add("error", error)
         .toString();
   }
 
-  /**
-   * The Class Builder.
-   */
-  public static class Builder {
+  public static final class Builder {
     private String waitInstanceId;
     private List<String> correlationIds;
+    private boolean error;
     private String id;
     private boolean running = false;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
@@ -96,24 +116,65 @@ public class NotifyEvent extends Queuable {
 
     private Builder() {}
 
-    /**
-     * A notify event.
-     *
-     * @return the builder
-     */
     public static Builder aNotifyEvent() {
       return new Builder();
     }
 
-    /**
-     * But.
-     *
-     * @return copy of Builder object.
-     */
+    public Builder withWaitInstanceId(String waitInstanceId) {
+      this.waitInstanceId = waitInstanceId;
+      return this;
+    }
+
+    public Builder withCorrelationIds(List<String> correlationIds) {
+      this.correlationIds = correlationIds;
+      return this;
+    }
+
+    public Builder withError(boolean error) {
+      this.error = error;
+      return this;
+    }
+
+    public Builder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder withRunning(boolean running) {
+      this.running = running;
+      return this;
+    }
+
+    public Builder withResetTimestamp(Date resetTimestamp) {
+      this.resetTimestamp = resetTimestamp;
+      return this;
+    }
+
+    public Builder withEarliestGet(Date earliestGet) {
+      this.earliestGet = earliestGet;
+      return this;
+    }
+
+    public Builder withPriority(double priority) {
+      this.priority = priority;
+      return this;
+    }
+
+    public Builder withCreated(Date created) {
+      this.created = created;
+      return this;
+    }
+
+    public Builder withRetries(int retries) {
+      this.retries = retries;
+      return this;
+    }
+
     public Builder but() {
       return aNotifyEvent()
           .withWaitInstanceId(waitInstanceId)
           .withCorrelationIds(correlationIds)
+          .withError(error)
           .withId(id)
           .withRunning(running)
           .withResetTimestamp(resetTimestamp)
@@ -123,114 +184,11 @@ public class NotifyEvent extends Queuable {
           .withRetries(retries);
     }
 
-    /**
-     * With retries.
-     *
-     * @param retries the retries
-     * @return the builder
-     */
-    public Builder withRetries(int retries) {
-      this.retries = retries;
-      return this;
-    }
-
-    /**
-     * With created.
-     *
-     * @param created the created
-     * @return the builder
-     */
-    public Builder withCreated(Date created) {
-      this.created = created;
-      return this;
-    }
-
-    /**
-     * With priority.
-     *
-     * @param priority the priority
-     * @return the builder
-     */
-    public Builder withPriority(double priority) {
-      this.priority = priority;
-      return this;
-    }
-
-    /**
-     * With earliest get.
-     *
-     * @param earliestGet the earliest get
-     * @return the builder
-     */
-    public Builder withEarliestGet(Date earliestGet) {
-      this.earliestGet = earliestGet;
-      return this;
-    }
-
-    /**
-     * With reset timestamp.
-     *
-     * @param resetTimestamp the reset timestamp
-     * @return the builder
-     */
-    public Builder withResetTimestamp(Date resetTimestamp) {
-      this.resetTimestamp = resetTimestamp;
-      return this;
-    }
-
-    /**
-     * With running.
-     *
-     * @param running the running
-     * @return the builder
-     */
-    public Builder withRunning(boolean running) {
-      this.running = running;
-      return this;
-    }
-
-    /**
-     * With id.
-     *
-     * @param id the id
-     * @return the builder
-     */
-    public Builder withId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    /**
-     * With correlation ids.
-     *
-     * @param correlationIds the correlation ids
-     * @return the builder
-     */
-    public Builder withCorrelationIds(List<String> correlationIds) {
-      this.correlationIds = correlationIds;
-      return this;
-    }
-
-    /**
-     * With wait instance id.
-     *
-     * @param waitInstanceId the wait instance id
-     * @return the builder
-     */
-    public Builder withWaitInstanceId(String waitInstanceId) {
-      this.waitInstanceId = waitInstanceId;
-      return this;
-    }
-
-    /**
-     * Builds the.
-     *
-     * @return new NotifyEvent object.
-     */
     public NotifyEvent build() {
       NotifyEvent notifyEvent = new NotifyEvent();
       notifyEvent.setWaitInstanceId(waitInstanceId);
       notifyEvent.setCorrelationIds(correlationIds);
+      notifyEvent.setError(error);
       notifyEvent.setId(id);
       notifyEvent.setRunning(running);
       notifyEvent.setResetTimestamp(resetTimestamp);
