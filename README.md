@@ -27,6 +27,10 @@
 
 1) Clone form git repository: https://github.com/wings-software/wings
 2) Start mongo db (mongod)
+   You may need to create a blank mongo db directory to do this. If mongod fails:
+   sudo mkdir /data
+   sudo mkdir /data/db
+   sudo chmod 777 /data/db
 3) Go to wings directory and run 
 
     `mvn clean install`
@@ -42,7 +46,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 5) Import codeStyle/intellij-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
 
 ### Run from IntelliJ
-1) Run  API Server : Run 'WingsApplication' class  with the following configurations.
+1) Run API Server : Run 'WingsApplication' class (found at wings/rest/target/classes/software/wings/app/WingsApplication.class) with the following configurations.
     * Environment Variable: 
     
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
