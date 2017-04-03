@@ -1,12 +1,13 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Maps.newHashMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -272,8 +273,8 @@ public class EcsServiceSetup extends State {
     }
 
     containerDefinition.setLogConfiguration(new LogConfiguration().withLogDriver("splunk").withOptions(
-        ImmutableMap.of("splunk-url", "http://ec2-52-54-103-49.compute-1.amazonaws.com:8088", "splunk-token",
-            "5E16E8E8-BAFC-4125-A6C9-9914E78C3E78", "splunk-insecureskipverify", "true")));
+        newHashMap(of("splunk-url", "http://ec2-52-54-103-49.compute-1.amazonaws.com:8088", "splunk-token",
+            "5E16E8E8-BAFC-4125-A6C9-9914E78C3E78", "splunk-insecureskipverify", "true"))));
 
     return containerDefinition;
   }
