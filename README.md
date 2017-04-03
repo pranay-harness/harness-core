@@ -42,8 +42,6 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 1) Install IntelliJ community edition
 2) Import wings portal as maven project
 3) Import Code Style codeStyle/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
-4) Import portal in intellij as maven project.
-5) Import codeStyle/intellij-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
 
 ### Run from IntelliJ
 1) Run API Server : Run 'WingsApplication' class (found at wings/rest/target/classes/software/wings/app/WingsApplication.class) with the following configurations.
