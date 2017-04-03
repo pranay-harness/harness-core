@@ -28,9 +28,9 @@
 1) Clone form git repository: https://github.com/wings-software/wings
 2) Start mongo db (mongod)
    You may need to create a blank mongo db directory to do this. If mongod fails:
-   sudo mkdir /data
-   sudo mkdir /data/db
-   sudo chmod 777 /data/db
+   `sudo mkdir /data`
+   `sudo mkdir /data/db`
+   `sudo chmod 777 /data/db`
 3) Go to wings directory and run 
 
     `mvn clean install`
