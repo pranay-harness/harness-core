@@ -389,7 +389,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return ImmutableMap.of(ArtifactStreamType.DOCKER.name(), ArtifactStreamType.DOCKER.name());
     } else {
       return ImmutableMap.of(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name(),
-          ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name());
+          ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.NEXUS.name(),
+          ArtifactStreamType.NEXUS.name());
     }
   }
 

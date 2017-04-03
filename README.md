@@ -42,7 +42,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 5) Import codeStyle/intellij-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
 
 ### Run from IntelliJ
-1) Run  API Server : Run 'WingsApplication' class  with following configurations.
+1) Run  API Server : Run 'WingsApplication' class  with the following configurations.
     * Environment Variable: 
     
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
@@ -55,7 +55,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     * Working Directory: 
     
         `$MODULE_DIR$`
-2) Run/Debug API Server : Run 'DelegateApplication' classp  with following configurations.
+2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
     * Environment Variable: 
     
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
