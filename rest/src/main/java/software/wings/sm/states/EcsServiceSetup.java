@@ -6,6 +6,7 @@ import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExe
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -141,16 +142,6 @@ public class EcsServiceSetup extends State {
 
     TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
 
-    /*
-    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerName);
-
-    if (loadBalancerSetting == null ||
-    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
-    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
-    }
-    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
-    */
-
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
     String lastEcsServiceName = lastECSService(
@@ -279,6 +270,10 @@ public class EcsServiceSetup extends State {
     if (wingsContainerDefinition.getStorageConfigurations() != null) {
       // TODO:: fill volume amd mount points here
     }
+
+    containerDefinition.setLogConfiguration(new LogConfiguration().withLogDriver("splunk").withOptions(
+        ImmutableMap.of("splunk-url", "http://ec2-52-54-103-49.compute-1.amazonaws.com:8088", "splunk-token",
+            "5E16E8E8-BAFC-4125-A6C9-9914E78C3E78", "splunk-insecureskipverify", "true")));
 
     return containerDefinition;
   }
