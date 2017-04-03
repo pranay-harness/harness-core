@@ -57,7 +57,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     * Working Directory: 
     
         `$MODULE_DIR$`
-2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
+2) Run/Debug API Server : Run 'DelegateApplication' class (found at wings/delegate/target/classes/software/wings/delegate/app) with the following configurations.
     * Environment Variable: 
     
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
