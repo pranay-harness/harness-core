@@ -45,15 +45,8 @@ public enum TaskType {
   TaskType(Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass) {
     this.delegateRunnableTaskClass = delegateRunnableTaskClass;
   }
-
-<<<<<<< Updated upstream
   public DelegateRunnableTask getDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
       Consumer<? extends NotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
     return on(delegateRunnableTaskClass).create(delegateId, delegateTask, postExecute, preExecute).get();
-=======
-  public DelegateRunnableTask getDelegateRunnableTask(
-      String delegateId, DelegateTask delegateTask, Consumer<? extends NotifyResponseData> consumer) {
-    return on(delegateRunnableTaskClass).create(delegateId, delegateTask, consumer).get();
->>>>>>> Stashed changes
   }
 }
