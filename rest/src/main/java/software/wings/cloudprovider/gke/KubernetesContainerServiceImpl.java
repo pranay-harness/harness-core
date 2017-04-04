@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.KubernetesHelperService;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Created by brett on 2/9/17
  */
@@ -58,6 +61,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public int getControllerPodCount(KubernetesConfig kubernetesConfig, String name) {
     return getController(kubernetesConfig, name).getSpec().getReplicas();
+  }
+
+  @Override
+  public List<String> getPodNames(KubernetesConfig kubernetesConfig, String replicationControllerName) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
+        .pods()
+        .withLabels(getController(kubernetesConfig, replicationControllerName).getMetadata().getLabels())
+        .list()
+        .getItems()
+        .stream()
+        .map(pod -> pod.getMetadata().getName())
+        .collect(Collectors.toList());
   }
 
   @Override

@@ -1,41 +1,44 @@
 package software.wings.beans.command;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by brett on 3/3/17
  */
 public class KubernetesResizeCommandUnitExecutionData extends CommandExecutionData {
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
-    private Builder() {}
+  private List<String> podNames = new ArrayList<>();
 
-    /**
-     * A resize command unit execution data builder.
-     *
-     * @return the builder
-     */
-    public static Builder aKubernetesResizeCommandUnitExecutionData() {
-      return new Builder();
+  public List<String> getPodNames() {
+    return podNames;
+  }
+
+  public void setPodNames(List<String> podNames) {
+    this.podNames = podNames;
+  }
+
+  public static final class KubernetesResizeCommandUnitExecutionDataBuilder {
+    private List<String> podNames = new ArrayList<>();
+
+    private KubernetesResizeCommandUnitExecutionDataBuilder() {}
+
+    public static KubernetesResizeCommandUnitExecutionDataBuilder aKubernetesResizeCommandUnitExecutionData() {
+      return new KubernetesResizeCommandUnitExecutionDataBuilder();
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aKubernetesResizeCommandUnitExecutionData();
+    public KubernetesResizeCommandUnitExecutionDataBuilder withPodNames(List<String> podNames) {
+      this.podNames = podNames;
+      return this;
     }
 
-    /**
-     * Build resize command unit execution data.
-     *
-     * @return the resize command unit execution data
-     */
+    public KubernetesResizeCommandUnitExecutionDataBuilder but() {
+      return aKubernetesResizeCommandUnitExecutionData().withPodNames(podNames);
+    }
+
     public KubernetesResizeCommandUnitExecutionData build() {
       KubernetesResizeCommandUnitExecutionData kubernetesResizeCommandUnitExecutionData =
           new KubernetesResizeCommandUnitExecutionData();
+      kubernetesResizeCommandUnitExecutionData.setPodNames(podNames);
       return kubernetesResizeCommandUnitExecutionData;
     }
   }

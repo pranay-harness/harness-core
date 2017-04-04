@@ -6,6 +6,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import software.wings.beans.KubernetesConfig;
 
+import java.util.List;
+
 /**
  * Created by brett on 2/10/17.
  */
@@ -39,6 +41,11 @@ public interface KubernetesContainerService {
    * Gets the pod count of a replication controller.
    */
   int getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
+
+  /**
+   * Gets the pod names for a replication controller.
+   */
+  List<String> getPodNames(KubernetesConfig kubernetesConfig, String replicationControllerName);
 
   /**
    * Creates a service.
