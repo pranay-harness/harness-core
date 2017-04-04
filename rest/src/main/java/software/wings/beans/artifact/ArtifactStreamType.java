@@ -28,7 +28,11 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   BAMBOO(BambooArtifactStream.class, "BAMBOO"), /**
                                                  * Docker source type.
                                                  */
-  DOCKER(DockerArtifactStream.class, "DOCKER");
+  DOCKER(DockerArtifactStream.class, "DOCKER"),
+  /**
+   * Nexus Artifact source type.
+   */
+  NEXUS(NexusArtifactStream.class, "NEXUS");
 
   private static final String stencilsPath = "/templates/artifactstreams/";
   private static final String uiSchemaSuffix = "-ArtifactStreamUISchema.json";

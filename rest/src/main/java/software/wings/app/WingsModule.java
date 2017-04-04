@@ -13,6 +13,7 @@ import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.EcsContainerService;
@@ -33,6 +34,8 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
@@ -65,6 +68,7 @@ import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
+import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.NotificationSetupServiceImpl;
@@ -111,6 +115,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -213,6 +218,8 @@ public class WingsModule extends AbstractModule {
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
     bind(LicenseManager.class).to(LicenseManagerImpl.class);
     bind(LicenseProvider.class).to(DatabaseLicenseProviderImpl.class);
+    bind(NexusService.class).to(NexusServiceImpl.class);
+    bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -228,6 +235,7 @@ public class WingsModule extends AbstractModule {
     buildServiceMapBinder.addBinding(JenkinsConfig.class).toInstance(JenkinsBuildService.class);
     buildServiceMapBinder.addBinding(BambooConfig.class).toInstance(BambooBuildService.class);
     buildServiceMapBinder.addBinding(DockerConfig.class).toInstance(DockerBuildService.class);
+    buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

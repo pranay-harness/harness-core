@@ -27,6 +27,8 @@ ARTIFACT_SOURCE_TYPE:
       value: BAMBOO
     - name: Docker Repository
       value: DOCKER
+    - name: Nexus Repository
+      value: NEXUS
 
 DEPLOYMENT_STRATEGY:
     - name: Serial
@@ -159,3 +161,23 @@ SERVICE_VARIABLE_TYPE:
       value: TEXT
     - name: Load Balancer
       value: LB
+
+LOG_DRIVER:
+    - name: <none>
+      value: ""
+    - name: awslogs
+      value: awslogs
+    - name: splunk
+      value: splunk
+    - name: fluentd
+      value: fluentd
+    - name: gelf
+      value: gelf
+    - name: journald
+      value: journald
+    - name: json-file
+      value: json-file
+    - name: splunk
+      value: splunk
+    - name: syslog
+      value: syslog
