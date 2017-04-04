@@ -42,6 +42,8 @@ public class PhaseStep {
   private boolean valid = true;
   private String validationMessage;
 
+  private Integer waitInterval;
+
   public PhaseStep() {}
 
   public PhaseStep(PhaseStepType phaseStepType, String name) {
@@ -138,6 +140,14 @@ public class PhaseStep {
     this.validationMessage = validationMessage;
   }
 
+  public Integer getWaitInterval() {
+    return waitInterval;
+  }
+
+  public void setWaitInterval(Integer waitInterval) {
+    this.waitInterval = waitInterval;
+  }
+
   public Node generatePhaseStepNode() {
     return aNode()
         .withId(uuid)
@@ -147,6 +157,7 @@ public class PhaseStep {
         .addProperty("phaseStepType", phaseStepType)
         .addProperty("stepsInParallel", stepsInParallel)
         .addProperty("failureStrategies", failureStrategies)
+        .addProperty("waitInterval", waitInterval)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .build();
   }
