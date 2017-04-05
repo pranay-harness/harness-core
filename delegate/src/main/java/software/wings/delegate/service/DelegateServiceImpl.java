@@ -35,6 +35,7 @@ import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.RestResponse;
+import software.wings.beans.TaskType;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.http.ExponentialBackOff;
@@ -84,8 +85,12 @@ public class DelegateServiceImpl implements DelegateService {
       String ip = InetAddress.getLocalHost().getHostAddress();
       String hostName = InetAddress.getLocalHost().getHostName();
       String accountId = delegateConfiguration.getAccountId();
-      Delegate.Builder builder =
-          aDelegate().withIp(ip).withAccountId(accountId).withHostName(hostName).withVersion(getVersion());
+      Delegate.Builder builder = aDelegate()
+                                     .withIp(ip)
+                                     .withAccountId(accountId)
+                                     .withHostName(hostName)
+                                     .withVersion(getVersion())
+                                     .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
 
       if (upgrade) {
         System.out.println("Delegate started.");

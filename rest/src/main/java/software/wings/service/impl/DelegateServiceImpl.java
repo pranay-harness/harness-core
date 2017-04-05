@@ -101,6 +101,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "status", delegate.getStatus());
     setUnset(updateOperations, "lastHeartBeat", delegate.getLastHeartBeat());
     setUnset(updateOperations, "connected", delegate.isConnected());
+    setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
 
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
@@ -354,6 +355,7 @@ public class DelegateServiceImpl implements DelegateService {
             .addFilter("accountId", IN, task.getAccountId(), GLOBAL_ACCOUNT_ID)
             .addFilter(ID_KEY, EQ, delegateId)
             .addFilter("status", EQ, Status.ENABLED)
+            .addFilter("supportedTaskTypes", EQ, task.getTaskType())
             .build());
 
     if (delegate != null) {
