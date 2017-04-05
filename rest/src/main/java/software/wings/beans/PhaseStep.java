@@ -40,6 +40,7 @@ public class PhaseStep {
   private boolean rollback;
   private String phaseStepNameForRollback;
   private ExecutionStatus statusForRollback;
+  private boolean artifactNeeded;
 
   private boolean valid = true;
   private String validationMessage;
@@ -156,6 +157,14 @@ public class PhaseStep {
 
   public void setWaitInterval(Integer waitInterval) {
     this.waitInterval = waitInterval;
+  }
+
+  public boolean isArtifactNeeded() {
+    return artifactNeeded;
+  }
+
+  public void setArtifactNeeded(boolean artifactNeeded) {
+    this.artifactNeeded = artifactNeeded;
   }
 
   public Node generatePhaseStepNode() {

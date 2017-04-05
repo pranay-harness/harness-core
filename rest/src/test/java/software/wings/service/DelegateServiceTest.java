@@ -23,6 +23,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.util.Lists;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.junit.Before;
@@ -62,6 +63,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withHostName("localhost")
                                                       .withVersion("1.0.0")
                                                       .withStatus(Status.ENABLED)
+                                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.HTTP))
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -240,7 +242,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Cache
   @Test
   public void shouldAcquireTaskWhenQueued() throws Exception {
-    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -255,7 +257,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Cache
   @Test
   public void shouldNotAcquireTaskWhenAlreadyAcquired() throws Exception {
-    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -271,7 +273,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldFilterTaskForAccount() throws Exception {
-    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID + "1")
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -285,7 +287,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldFilterTaskWhenDelegateIsDisabled() throws Exception {
-    Delegate delegate = wingsPersistence.saveAndGet(
+    wingsPersistence.saveAndGet(
         Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
@@ -302,7 +304,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() throws Exception {
-    Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
+    wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(UUIDGenerator.getUuid())
@@ -312,5 +314,22 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .build();
     wingsPersistence.save(delegateTask);
     assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isTrue();
+  }
+
+  @Test
+  public void shouldFilterTaskWhenDelegateIsNotCapable() throws Exception {
+    wingsPersistence.saveAndGet(
+        Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(UUIDGenerator.getUuid())
+                                    .withTaskType(TaskType.COMMAND)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withDelegateId(DELEGATE_ID)
+                                    .withStatus(DelegateTask.Status.STARTED)
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
   }
 }

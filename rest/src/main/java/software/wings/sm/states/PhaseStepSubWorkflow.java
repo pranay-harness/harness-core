@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
@@ -9,6 +10,10 @@ import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.EXISTS;
+import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 
@@ -22,12 +27,16 @@ import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.beans.Activity;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -55,6 +64,8 @@ import javax.inject.Inject;
  * Created by rishi on 1/12/17.
  */
 public class PhaseStepSubWorkflow extends SubWorkflowState {
+  @Inject private ActivityService activityService;
+
   public PhaseStepSubWorkflow(String name) {
     super(name, StateType.PHASE_STEP.name());
   }
@@ -69,6 +80,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   // Only for rollback phases
   @SchemaIgnore private String phaseStepNameForRollback;
   @SchemaIgnore private ExecutionStatus statusForRollback;
+  @SchemaIgnore private boolean artifactNeeded;
 
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
@@ -82,13 +94,13 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       validatePreRequisites(contextIntf, phaseElement);
       response = super.execute(contextIntf);
     } else {
-      ContextElement rollbackRequiredParam = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
-      if (rollbackRequiredParam == null) {
+      List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
+      if (rollbackRequiredParams == null) {
         response = new ExecutionResponse();
       } else {
         SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) super.execute(contextIntf);
         for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
-          instance.getContextElements().push(rollbackRequiredParam);
+          rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
         }
         response = spawningExecutionResponse;
       }
@@ -102,7 +114,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     return response;
   }
 
-  private ContextElement getRollbackRequiredParam(
+  private List<ContextElement> getRollbackRequiredParam(
       PhaseStepType phaseStepType, PhaseElement phaseElement, ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
     PhaseExecutionData stateExecutionData =
@@ -131,7 +143,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                             .distinct()
                                             .collect(Collectors.toList());
 
-      return aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build();
+      List<ContextElement> contextParams =
+          Lists.newArrayList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
+      if (artifactNeeded) {
+        ServiceInstanceArtifactParam serviceInstanceArtifactParam = buildInstanceArtifactParam(
+            contextIntf.getAppId(), contextIntf.getWorkflowExecutionId(), serviceInstanceIds);
+        contextParams.add(serviceInstanceArtifactParam);
+      }
+      return contextParams;
     } else if (phaseStepType == CONTAINER_DEPLOY) {
       Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                  .stream()
@@ -146,9 +165,35 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                                 .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
                                                 .withClusterName(commandStepExecutionSummary.getClusterName())
                                                 .build();
-      return ecsServiceElement;
+      return asList(ecsServiceElement);
     }
     return null;
+  }
+
+  private ServiceInstanceArtifactParam buildInstanceArtifactParam(
+      String appId, String workflowExecutionId, List<String> serviceInstanceIds) {
+    if (serviceInstanceIds == null) {
+      return null;
+    }
+    ServiceInstanceArtifactParam serviceInstanceArtifactParam = new ServiceInstanceArtifactParam();
+    serviceInstanceIds.forEach(serviceInstanceId -> {
+      PageResponse<Activity> pageResponse =
+          activityService.list(aPageRequest()
+                                   .withLimit("1")
+                                   .addFilter("appId", EQ, appId)
+                                   .addFilter("serviceInstanceId", EQ, serviceInstanceId)
+                                   .addFilter("status", EQ, ExecutionStatus.SUCCESS)
+                                   .addFilter("workflowExecutionId", NOT_EQ, workflowExecutionId)
+                                   .addFilter("artifactId", EXISTS)
+                                   .build());
+
+      if (pageResponse != null && !pageResponse.isEmpty()) {
+        serviceInstanceArtifactParam.getInstanceArtifactMap().put(
+            serviceInstanceId, pageResponse.getResponse().get(0).getArtifactId());
+      }
+    });
+
+    return serviceInstanceArtifactParam;
   }
 
   private void validatePreRequisites(ExecutionContext contextIntf, PhaseElement phaseElement) {
@@ -337,5 +382,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   public void setPhaseStepType(PhaseStepType phaseStepType) {
     this.phaseStepType = phaseStepType;
+  }
+
+  @SchemaIgnore
+  public boolean isArtifactNeeded() {
+    return artifactNeeded;
+  }
+
+  public void setArtifactNeeded(boolean artifactNeeded) {
+    this.artifactNeeded = artifactNeeded;
   }
 }

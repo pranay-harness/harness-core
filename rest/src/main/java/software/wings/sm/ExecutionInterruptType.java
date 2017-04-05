@@ -31,9 +31,12 @@ public enum ExecutionInterruptType {
                                       * Ignore state event.
                                       */
   IGNORE("Ignore error and go to next"), /**
-                                          * Mark fixed state event.
+                                          * Mark as failed.
                                           */
-  MARK_SUCCESS("Mark the node as success and go to next");
+  MARK_FAILED("Mark the node as failed"), /**
+                                           * Mark as success.
+                                           */
+  MARK_SUCCESS("Mark the node as success");
 
   private String description;
 

@@ -344,7 +344,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       orchestrationWorkflow.onSave();
-      orchestrationWorkflow.setRequiredEntityTypes(getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
+      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
@@ -379,8 +379,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
-        orchestrationWorkflow.setRequiredEntityTypes(
-            getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
+        updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       }
 
       EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW,
@@ -769,20 +768,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getUserVariables();
   }
 
-  private Set<EntityType> getRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+  private Set<EntityType> updateRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-      return ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
-          .getWorkflowPhases()
-          .stream()
-          .flatMap(phase -> getRequiredEntityTypes(appId, phase).stream())
-          .collect(Collectors.toSet());
+      Set<EntityType> requiredEntityTypes = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+                                                .getWorkflowPhases()
+                                                .stream()
+                                                .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
+                                                .collect(Collectors.toSet());
+      orchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      return requiredEntityTypes;
     }
-
     return null;
   }
 
-  private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
+  private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
 
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
@@ -819,7 +819,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               appId, serviceId, (String) step.getProperties().get("commandName"));
           if (command.getCommand().isArtifactNeeded()) {
             requiredEntityTypes.add(EntityType.ARTIFACT);
-            return requiredEntityTypes;
+            phaseStep.setArtifactNeeded(true);
+            break;
           }
         }
       }
@@ -950,7 +951,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase generateRollbackWorkflowPhaseForECS(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
 
     WorkflowPhase rollbackWorkflowPhase =
         aWorkflowPhase()
@@ -963,7 +963,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
+                              .addStep(aNode()
+                                           .withId(getUuid())
+                                           .withType(ECS_SERVICE_DEPLOY.name())
+                                           .withName(Constants.ECS_SERVICE_DEPLOY)
+                                           .addProperty("rollback", true)
+                                           .build())
                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)

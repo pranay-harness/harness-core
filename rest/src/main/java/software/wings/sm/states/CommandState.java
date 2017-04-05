@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
+import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
@@ -47,9 +48,11 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.Host;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -120,6 +123,8 @@ public class CommandState extends State {
   @Inject @Transient private DelegateService delegateService;
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
+
+  @Transient @Inject private transient ArtifactService artifactService;
 
   @Inject @Transient private transient WaitNotifyEngine waitNotifyEngine;
 
@@ -281,7 +286,7 @@ public class CommandState extends State {
       }
 
       if (command.isArtifactNeeded()) {
-        Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getServiceId());
+        Artifact artifact = findArtifact(context, workflowStandardParams, serviceTemplate.getServiceId());
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
@@ -335,6 +340,22 @@ public class CommandState extends State {
         .build();
   }
 
+  private Artifact findArtifact(
+      ExecutionContext context, WorkflowStandardParams workflowStandardParams, String serviceId) {
+    ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
+    if (instanceElement != null) {
+      ServiceInstanceArtifactParam serviceArtifactElement =
+          context.getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
+      if (serviceArtifactElement != null) {
+        String artifactId = serviceArtifactElement.getInstanceArtifactMap().get(instanceElement.getUuid());
+        if (artifactId != null) {
+          return artifactService.get(context.getAppId(), artifactId);
+        }
+      }
+    }
+
+    return workflowStandardParams.getArtifactForService(serviceId);
+  }
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {
     if (activityId != null) {
       activityService.updateStatus(activityId, appId, ExecutionStatus.FAILED);

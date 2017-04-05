@@ -24,10 +24,10 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -69,6 +69,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
+import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -352,8 +353,9 @@ public class CommandStateTest extends WingsBaseTest {
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowType();
     verify(context, times(4)).renderExpression(anyString());
@@ -397,7 +399,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
 
     verify(context, times(3)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowExecutionName();
