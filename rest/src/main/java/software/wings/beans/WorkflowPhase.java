@@ -32,9 +32,10 @@ public class WorkflowPhase {
   private DeploymentType deploymentType;
   private String computeProviderId;
   private String infraMappingName;
+  private boolean provisionNodes;
 
   private boolean rollback;
-  private String rollbackPhaseName;
+  private String phaseNameForRollback;
 
   private boolean valid;
   private String validationMessage;
@@ -89,6 +90,14 @@ public class WorkflowPhase {
     this.infraMappingName = infraMappingName;
   }
 
+  public boolean isProvisionNodes() {
+    return provisionNodes;
+  }
+
+  public void setProvisionNodes(boolean provisionNodes) {
+    this.provisionNodes = provisionNodes;
+  }
+
   public List<PhaseStep> getPhaseSteps() {
     return phaseSteps;
   }
@@ -109,12 +118,12 @@ public class WorkflowPhase {
     this.rollback = rollback;
   }
 
-  public String getRollbackPhaseName() {
-    return rollbackPhaseName;
+  public String getPhaseNameForRollback() {
+    return phaseNameForRollback;
   }
 
-  public void setRollbackPhaseName(String rollbackPhaseName) {
-    this.rollbackPhaseName = rollbackPhaseName;
+  public void setPhaseNameForRollback(String phaseNameForRollback) {
+    this.phaseNameForRollback = phaseNameForRollback;
   }
 
   public boolean isValid() {
@@ -145,6 +154,7 @@ public class WorkflowPhase {
         .addProperty("infraMappingName", infraMappingName)
         .addProperty("infraMappingId", infraMappingId)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
+        .addProperty("phaseNameForRollback", phaseNameForRollback)
         .build();
   }
 
@@ -217,7 +227,9 @@ public class WorkflowPhase {
     private String computeProviderId;
     private String infraMappingName;
     private boolean rollback;
-    private String rollbackPhaseName;
+    private String phaseNameForRollback;
+    private boolean valid;
+    private String validationMessage;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
 
     private WorkflowPhaseBuilder() {}
@@ -266,33 +278,24 @@ public class WorkflowPhase {
       return this;
     }
 
-    public WorkflowPhaseBuilder withRollbackPhaseName(String rollbackPhaseName) {
-      this.rollbackPhaseName = rollbackPhaseName;
+    public WorkflowPhaseBuilder withPhaseNameForRollback(String phaseNameForRollback) {
+      this.phaseNameForRollback = phaseNameForRollback;
       return this;
     }
 
-    public WorkflowPhaseBuilder withPhaseSteps(List<PhaseStep> phaseSteps) {
-      this.phaseSteps = phaseSteps;
+    public WorkflowPhaseBuilder withValid(boolean valid) {
+      this.valid = valid;
+      return this;
+    }
+
+    public WorkflowPhaseBuilder withValidationMessage(String validationMessage) {
+      this.validationMessage = validationMessage;
       return this;
     }
 
     public WorkflowPhaseBuilder addPhaseStep(PhaseStep phaseStep) {
       this.phaseSteps.add(phaseStep);
       return this;
-    }
-
-    public WorkflowPhaseBuilder but() {
-      return aWorkflowPhase()
-          .withUuid(uuid)
-          .withName(name)
-          .withServiceId(serviceId)
-          .withInfraMappingId(infraMappingId)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderId(computeProviderId)
-          .withInfraMappingName(infraMappingName)
-          .withRollback(rollback)
-          .withRollbackPhaseName(rollbackPhaseName)
-          .withPhaseSteps(phaseSteps);
     }
 
     public WorkflowPhase build() {
@@ -305,7 +308,9 @@ public class WorkflowPhase {
       workflowPhase.setComputeProviderId(computeProviderId);
       workflowPhase.setInfraMappingName(infraMappingName);
       workflowPhase.setRollback(rollback);
-      workflowPhase.setRollbackPhaseName(rollbackPhaseName);
+      workflowPhase.setPhaseNameForRollback(phaseNameForRollback);
+      workflowPhase.setValid(valid);
+      workflowPhase.setValidationMessage(validationMessage);
       workflowPhase.setPhaseSteps(phaseSteps);
       return workflowPhase;
     }

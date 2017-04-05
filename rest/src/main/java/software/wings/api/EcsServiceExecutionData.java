@@ -9,6 +9,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class EcsServiceExecutionData extends StateExecutionData implements NotifyResponseData {
   private String ecsClusterName;
   private String ecsServiceName;
+  private String ecsOldServiceName;
   private String dockerImageName;
   private String commandName;
   private int instanceCount;
@@ -40,6 +42,14 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
 
   public void setEcsServiceName(String ecsServiceName) {
     this.ecsServiceName = ecsServiceName;
+  }
+
+  public String getEcsOldServiceName() {
+    return ecsOldServiceName;
+  }
+
+  public void setEcsOldServiceName(String ecsOldServiceName) {
+    this.ecsOldServiceName = ecsOldServiceName;
   }
 
   public String getCommandName() {
@@ -127,6 +137,8 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
         anExecutionDataValue().withValue(ecsClusterName).withDisplayName("ECS Cluster Name").build());
     putNotNull(executionDetails, "ecsServiceName",
         anExecutionDataValue().withValue(ecsServiceName).withDisplayName("ECS Service Name").build());
+    putNotNull(executionDetails, "ecsOldServiceName",
+        anExecutionDataValue().withValue(ecsOldServiceName).withDisplayName("ECS Old Service Name").build());
     putNotNull(executionDetails, "dockerImageName",
         anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
     putNotNull(executionDetails, "commandName",
@@ -151,6 +163,8 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
         anExecutionDataValue().withValue(ecsClusterName).withDisplayName("ECS Cluster Name").build());
     putNotNull(executionDetails, "ecsServiceName",
         anExecutionDataValue().withValue(ecsServiceName).withDisplayName("ECS Service Name").build());
+    putNotNull(executionDetails, "ecsOldServiceName",
+        anExecutionDataValue().withValue(ecsOldServiceName).withDisplayName("ECS Old Service Name").build());
     putNotNull(executionDetails, "dockerImageName",
         anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
     putNotNull(executionDetails, "commandName",
@@ -168,6 +182,16 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
     return executionDetails;
   }
 
+  @Override
+  public StepExecutionSummary getStepExecutionSummary() {
+    EcsStepExecutionSummary ecsStepExecutionSummary = new EcsStepExecutionSummary();
+    populateStepExecutionSummary(ecsStepExecutionSummary);
+    ecsStepExecutionSummary.setEcsServiceName(ecsServiceName);
+    ecsStepExecutionSummary.setEcsOldServiceName(ecsOldServiceName);
+    ecsStepExecutionSummary.setInstanceCount(instanceCount);
+    return ecsStepExecutionSummary;
+  }
+
   private String getTargetGroupName() {
     String targetGroupName = null;
     String[] targetGroupArnParts = split(targetGroupArn, "/");
@@ -179,6 +203,7 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
 
   public static final class Builder {
     private String ecsClusterName;
+    private String ecsOldServiceName;
     private String ecsServiceName;
     private String stateName;
     private String dockerImageName;
@@ -205,6 +230,11 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
 
     public Builder withEcsServiceName(String ecsServiceName) {
       this.ecsServiceName = ecsServiceName;
+      return this;
+    }
+
+    public Builder withEcsOldServiceName(String ecsOldServiceName) {
+      this.ecsOldServiceName = ecsOldServiceName;
       return this;
     }
 
@@ -268,6 +298,7 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
           .withEcsClusterName(ecsClusterName)
           .withEcsServiceName(ecsServiceName)
           .withStateName(stateName)
+          .withEcsOldServiceName(ecsOldServiceName)
           .withDockerImageName(dockerImageName)
           .withStartTs(startTs)
           .withCommandName(commandName)
@@ -284,6 +315,7 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
       EcsServiceExecutionData ecsServiceExecutionData = new EcsServiceExecutionData();
       ecsServiceExecutionData.setEcsClusterName(ecsClusterName);
       ecsServiceExecutionData.setEcsServiceName(ecsServiceName);
+      ecsServiceExecutionData.setEcsOldServiceName(ecsOldServiceName);
       ecsServiceExecutionData.setStateName(stateName);
       ecsServiceExecutionData.setDockerImageName(dockerImageName);
       ecsServiceExecutionData.setStartTs(startTs);

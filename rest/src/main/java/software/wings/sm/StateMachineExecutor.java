@@ -665,6 +665,7 @@ public class StateMachineExecutor {
       ops.set("notifyElements", stateExecutionInstance.getNotifyElements());
     }
 
+    stateExecutionData.setElement(stateExecutionInstance.getContextElement());
     stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
     if (stateExecutionInstance.getEndTs() != null) {
       stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());

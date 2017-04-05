@@ -45,7 +45,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepSubWorkflowExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -102,7 +102,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
           .addContextElement(anEcsServiceElement().withUuid(serviceElement.getUuid()).build())
-          .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
+          .addStateExecutionData(new PhaseStepExecutionData())
           .build();
   private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 

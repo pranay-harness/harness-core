@@ -6,6 +6,7 @@ import static software.wings.api.ElbStateExecutionData.Builder.anElbStateExecuti
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.InstanceElement;
@@ -47,7 +48,7 @@ public class LoadBalancerState extends State {
 
   @DefaultValue("Instance") @Attributes(title = "Entity") private Entity entity;
 
-  @Attributes(title = "Custom Entity") private String custom;
+  @Attributes(title = "Custom Entity") @SchemaIgnore private String custom;
 
   public LoadBalancerState(String name) {
     super(name, StateType.LOAD_BALANCER.name());

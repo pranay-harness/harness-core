@@ -74,6 +74,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -958,11 +959,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withRollbackPhaseName(workflowPhase.getName())
+            .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
+            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                               .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
                               .build())
             .build();
@@ -981,7 +984,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withRollbackPhaseName(workflowPhase.getName())
+            .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
@@ -1004,20 +1007,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withRollbackPhaseName(workflowPhase.getName())
+            .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE, Constants.DISABLE_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.DISABLE, true))
+                              .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
                               .withRollback(true)
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+                              .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
+                              .withRollback(true)
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE, Constants.ENABLE_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.ENABLE, true))
                               .withRollback(true)
+                              .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .build())
             .build();
 

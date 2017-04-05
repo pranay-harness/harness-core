@@ -115,6 +115,10 @@ public class ExecutionContextImpl implements ExecutionContext {
     return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName());
   }
 
+  public StateExecutionData getStateExecutionData(String stateName) {
+    return stateExecutionInstance.getStateExecutionMap().get(stateName);
+  }
+
   /**
    * {@inheritDoc}
    */

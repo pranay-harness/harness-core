@@ -4,6 +4,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.common.collect.Maps;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
@@ -22,6 +23,7 @@ public class StateExecutionData {
   private ExecutionStatus status;
   private String errorMsg;
   private Integer waitInterval;
+  private ContextElement element;
 
   /**
    * Gets state name.
@@ -121,6 +123,14 @@ public class StateExecutionData {
     this.waitInterval = waitInterval;
   }
 
+  public ContextElement getElement() {
+    return element;
+  }
+
+  public void setElement(ContextElement element) {
+    this.element = element;
+  }
+
   /**
    * Gets execution summary.
    *
@@ -200,6 +210,20 @@ public class StateExecutionData {
     }
   }
 
+  @JsonIgnore
+  public StepExecutionSummary getStepExecutionSummary() {
+    StepExecutionSummary stepExecutionSummary = new StepExecutionSummary();
+    populateStepExecutionSummary(stepExecutionSummary);
+    return stepExecutionSummary;
+  }
+
+  protected void populateStepExecutionSummary(StepExecutionSummary stepExecutionSummary) {
+    stepExecutionSummary.setElement(element);
+    stepExecutionSummary.setStepName(stateName);
+    stepExecutionSummary.setStatus(status);
+    stepExecutionSummary.setMessage(errorMsg);
+  }
+
   public static final class StateExecutionDataBuilder {
     private String stateName;
     private Long startTs;
@@ -207,6 +231,7 @@ public class StateExecutionData {
     private ExecutionStatus status;
     private String errorMsg;
     private Integer waitInterval;
+    private ContextElement element;
 
     private StateExecutionDataBuilder() {}
 
@@ -244,6 +269,11 @@ public class StateExecutionData {
       return this;
     }
 
+    public StateExecutionDataBuilder withElement(ContextElement element) {
+      this.element = element;
+      return this;
+    }
+
     public StateExecutionData build() {
       StateExecutionData stateExecutionData = new StateExecutionData();
       stateExecutionData.setStateName(stateName);
@@ -252,6 +282,7 @@ public class StateExecutionData {
       stateExecutionData.setStatus(status);
       stateExecutionData.setErrorMsg(errorMsg);
       stateExecutionData.setWaitInterval(waitInterval);
+      stateExecutionData.setElement(element);
       return stateExecutionData;
     }
   }

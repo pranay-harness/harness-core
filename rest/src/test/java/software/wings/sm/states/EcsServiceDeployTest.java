@@ -48,7 +48,7 @@ import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepSubWorkflowExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -111,19 +111,18 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .build();
-  private StateExecutionInstance stateExecutionInstance =
-      aStateExecutionInstance()
-          .withStateName(STATE_NAME)
-          .addContextElement(workflowStandardParams)
-          .addContextElement(phaseElement)
-          .addContextElement(anEcsServiceElement()
-                                 .withUuid(serviceElement.getUuid())
-                                 .withClusterName(CLUSTER_NAME)
-                                 .withName(ECS_SERVICE_NAME)
-                                 .withOldName(ECS_SERVICE_OLD_NAME)
-                                 .build())
-          .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
-          .build();
+  private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                              .withStateName(STATE_NAME)
+                                                              .addContextElement(workflowStandardParams)
+                                                              .addContextElement(phaseElement)
+                                                              .addContextElement(anEcsServiceElement()
+                                                                                     .withUuid(serviceElement.getUuid())
+                                                                                     .withClusterName(CLUSTER_NAME)
+                                                                                     .withName(ECS_SERVICE_NAME)
+                                                                                     .withOldName(ECS_SERVICE_OLD_NAME)
+                                                                                     .build())
+                                                              .addStateExecutionData(new PhaseStepExecutionData())
+                                                              .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();

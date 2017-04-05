@@ -3,7 +3,6 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
@@ -59,18 +58,20 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return null;
       }
 
-      RepairActionCode repairActionCode = rollbackStrategy(orchestrationWorkflow);
-      if (repairActionCode == null
-          || (repairActionCode == repairActionCode.ROLLBACK_PHASE && !phaseSubWorkflow.isRollback())) {
-        return null;
-      }
-
-      if (phaseSubWorkflow.isRollback() && repairActionCode == repairActionCode.ROLLBACK_WORKFLOW) {
+      if (phaseSubWorkflow.isRollback()) {
         // TODO:: rollback previously successful phases
         return null;
       }
+
+      RepairActionCode repairActionCode = rollbackStrategy(orchestrationWorkflow);
+      if (repairActionCode != repairActionCode.ROLLBACK_PHASE
+          & repairActionCode != repairActionCode.ROLLBACK_WORKFLOW) {
+        return null;
+      }
+
       return ExecutionEventAdviceBuilder.anExecutionEventAdvice()
-          .withNextStateName(Constants.ROLLBACK_PREFIX + phaseSubWorkflow.getName())
+          .withNextStateName(
+              orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
           .build();
     }
     return null;

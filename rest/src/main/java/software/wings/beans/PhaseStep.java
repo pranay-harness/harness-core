@@ -17,6 +17,7 @@ import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
 
@@ -37,7 +38,8 @@ public class PhaseStep {
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   private boolean rollback;
-  private String rollbackPhaseStepName;
+  private String phaseStepNameForRollback;
+  private ExecutionStatus statusForRollback;
 
   private boolean valid = true;
   private String validationMessage;
@@ -114,12 +116,12 @@ public class PhaseStep {
     this.rollback = rollback;
   }
 
-  public String getRollbackPhaseStepName() {
-    return rollbackPhaseStepName;
+  public String getPhaseStepNameForRollback() {
+    return phaseStepNameForRollback;
   }
 
-  public void setRollbackPhaseStepName(String rollbackPhaseStepName) {
-    this.rollbackPhaseStepName = rollbackPhaseStepName;
+  public void setPhaseStepNameForRollback(String phaseStepNameForRollback) {
+    this.phaseStepNameForRollback = phaseStepNameForRollback;
   }
 
   public boolean isValid() {
@@ -138,6 +140,14 @@ public class PhaseStep {
     this.validationMessage = validationMessage;
   }
 
+  public ExecutionStatus getStatusForRollback() {
+    return statusForRollback;
+  }
+
+  public void setStatusForRollback(ExecutionStatus statusForRollback) {
+    this.statusForRollback = statusForRollback;
+  }
+
   public Node generatePhaseStepNode() {
     return aNode()
         .withId(uuid)
@@ -148,6 +158,8 @@ public class PhaseStep {
         .addProperty("stepsInParallel", stepsInParallel)
         .addProperty("failureStrategies", failureStrategies)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
+        .addProperty("phaseStepNameForRollback", phaseStepNameForRollback)
+        .addProperty("statusForRollback", statusForRollback)
         .build();
   }
 
@@ -260,8 +272,8 @@ public class PhaseStep {
     if (failureStrategies != null ? !failureStrategies.equals(phaseStep.failureStrategies)
                                   : phaseStep.failureStrategies != null)
       return false;
-    return rollbackPhaseStepName != null ? rollbackPhaseStepName.equals(phaseStep.rollbackPhaseStepName)
-                                         : phaseStep.rollbackPhaseStepName == null;
+    return phaseStepNameForRollback != null ? phaseStepNameForRollback.equals(phaseStep.phaseStepNameForRollback)
+                                            : phaseStep.phaseStepNameForRollback == null;
   }
 
   @Override
@@ -274,7 +286,7 @@ public class PhaseStep {
     result = 31 * result + (stepsInParallel ? 1 : 0);
     result = 31 * result + (failureStrategies != null ? failureStrategies.hashCode() : 0);
     result = 31 * result + (rollback ? 1 : 0);
-    result = 31 * result + (rollbackPhaseStepName != null ? rollbackPhaseStepName.hashCode() : 0);
+    result = 31 * result + (phaseStepNameForRollback != null ? phaseStepNameForRollback.hashCode() : 0);
     return result;
   }
 
@@ -282,11 +294,15 @@ public class PhaseStep {
     private String uuid = UUIDGenerator.getUuid();
     private String name;
     private PhaseStepType phaseStepType;
+    private List<String> stepsIds = new ArrayList<>();
     private List<Node> steps = new ArrayList<>();
     private boolean stepsInParallel;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private boolean rollback;
-    private String rollbackPhaseStepName;
+    private String phaseStepNameForRollback;
+    private ExecutionStatus statusForRollback;
+    private boolean valid = true;
+    private String validationMessage;
 
     private PhaseStepBuilder() {}
 
@@ -296,11 +312,6 @@ public class PhaseStep {
       phaseStepBuilder.name = name;
       phaseStepBuilder.uuid = UUIDGenerator.getUuid();
       return phaseStepBuilder;
-    }
-
-    public PhaseStepBuilder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
     }
 
     public PhaseStepBuilder withPhaseStepType(PhaseStepType phaseStepType) {
@@ -333,8 +344,23 @@ public class PhaseStep {
       return this;
     }
 
-    public PhaseStepBuilder withRollbackPhaseStepName(String rollbackPhaseStepName) {
-      this.rollbackPhaseStepName = rollbackPhaseStepName;
+    public PhaseStepBuilder withPhaseStepNameForRollback(String phaseStepNameForRollback) {
+      this.phaseStepNameForRollback = phaseStepNameForRollback;
+      return this;
+    }
+
+    public PhaseStepBuilder withStatusForRollback(ExecutionStatus statusForRollback) {
+      this.statusForRollback = statusForRollback;
+      return this;
+    }
+
+    public PhaseStepBuilder withValid(boolean valid) {
+      this.valid = valid;
+      return this;
+    }
+
+    public PhaseStepBuilder withValidationMessage(String validationMessage) {
+      this.validationMessage = validationMessage;
       return this;
     }
 
@@ -343,11 +369,15 @@ public class PhaseStep {
       phaseStep.setUuid(uuid);
       phaseStep.setName(name);
       phaseStep.setPhaseStepType(phaseStepType);
+      phaseStep.setStepsIds(stepsIds);
       phaseStep.setSteps(steps);
       phaseStep.setStepsInParallel(stepsInParallel);
       phaseStep.setFailureStrategies(failureStrategies);
       phaseStep.setRollback(rollback);
-      phaseStep.setRollbackPhaseStepName(rollbackPhaseStepName);
+      phaseStep.setPhaseStepNameForRollback(phaseStepNameForRollback);
+      phaseStep.setStatusForRollback(statusForRollback);
+      phaseStep.setValid(valid);
+      phaseStep.setValidationMessage(validationMessage);
       return phaseStep;
     }
   }

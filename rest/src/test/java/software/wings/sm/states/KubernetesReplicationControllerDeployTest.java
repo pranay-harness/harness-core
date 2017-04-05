@@ -49,7 +49,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepSubWorkflowExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -125,7 +125,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
                                  .withOldName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
                                  .build())
-          .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
+          .addStateExecutionData(new PhaseStepExecutionData())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
