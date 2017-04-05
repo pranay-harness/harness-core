@@ -4,12 +4,14 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -63,9 +65,10 @@ public interface PipelineService {
    *
    * @param appId      the app id
    * @param pipelineId the pipeline id
+   * @param withServices
    * @return the pipeline
    */
-  Pipeline readPipeline(String appId, String pipelineId);
+  Pipeline readPipeline(String appId, String pipelineId, boolean withServices);
 
   /**
    * Create pipeline pipeline.

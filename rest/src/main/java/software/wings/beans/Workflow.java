@@ -31,7 +31,7 @@ public class Workflow extends Base {
 
   @Transient private OrchestrationWorkflow orchestrationWorkflow;
 
-  @Transient private List<Service> services;
+  @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
   /**

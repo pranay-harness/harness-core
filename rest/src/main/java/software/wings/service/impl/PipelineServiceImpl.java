@@ -30,6 +30,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -273,9 +274,29 @@ public class PipelineServiceImpl implements PipelineService {
    * {@inheritDoc}
    */
   @Override
-  public Pipeline readPipeline(String appId, String pipelineId) {
+  public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    if (withServices) {
+      populateAssociatedWorkflowServices(pipeline);
+    }
     return pipeline;
+  }
+
+  private void populateAssociatedWorkflowServices(Pipeline pipeline) {
+    List<Service> services = new ArrayList<>();
+
+    services.addAll(
+        pipeline.getPipelineStages()
+            .stream()
+            .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+            .filter(pipelineStageElement -> ENV_STATE.name().equals(pipelineStageElement.getType()))
+            .flatMap(pse
+                -> workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"))
+                       .getServices()
+                       .stream())
+            .collect(Collectors.toMap(Service::getUuid, id -> id, (id1, id2) -> id1))
+            .values());
+    pipeline.setServices(services);
   }
 
   @Override

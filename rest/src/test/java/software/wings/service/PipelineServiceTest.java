@@ -12,6 +12,7 @@ import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecuti
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -26,9 +27,11 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
@@ -45,7 +48,10 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
@@ -66,7 +72,6 @@ import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.EnvState;
 import software.wings.utils.WingsTestConstants;
 
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -78,7 +83,6 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private AppService appService;
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private ExecutorService executorService;
   @Mock private ArtifactService artifactService;
   @Mock private Query<PipelineExecution> query;
   @Mock private FieldEnd end;
@@ -114,6 +118,40 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     assertThat(pipelineExecutions.getResponse()).hasSize(1);
     assertThat(pipelineExecutions.getResponse()).containsOnly(pipelineExecution);
+  }
+
+  @Test
+  public void shouldGetPipeline() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.Builder.aPipeline()
+                        .withAppId(APP_ID)
+                        .withUuid(PIPELINE_ID)
+                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
+                            "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                        .build());
+
+    Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, false);
+    assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
+    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
+  public void shouldGetPipelineWithServices() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.Builder.aPipeline()
+                        .withAppId(APP_ID)
+                        .withUuid(PIPELINE_ID)
+                        .withPipelineStages(asList(new PipelineStage(asList(new PipelineStageElement(
+                            "SE", ENV_STATE.name(), ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))))))
+                        .build());
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build())).build());
+
+    Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
+    assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
+    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   /**
