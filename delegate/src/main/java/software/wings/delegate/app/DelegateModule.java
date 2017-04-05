@@ -38,16 +38,20 @@ import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
+import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.EcsCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
+import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.util.concurrent.ExecutorService;
@@ -94,6 +98,8 @@ public class DelegateModule extends AbstractModule {
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
+    bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
+    bind(NexusService.class).to(NexusServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

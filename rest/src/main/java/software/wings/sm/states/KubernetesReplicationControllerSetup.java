@@ -56,6 +56,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.KubernetesConvention;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -163,7 +164,13 @@ public class KubernetesReplicationControllerSetup extends State {
       }
       serviceClusterIP = service.getSpec().getClusterIP();
       LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-      if (loadBalancer != null && !loadBalancer.getIngress().isEmpty()) {
+      if (loadBalancer != null) {
+        while (loadBalancer.getIngress().isEmpty()) {
+          Misc.quietSleep(1000);
+          loadBalancer = kubernetesContainerService.getService(kubernetesConfig, kubernetesServiceName)
+                             .getStatus()
+                             .getLoadBalancer();
+        }
         serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
       }
     }

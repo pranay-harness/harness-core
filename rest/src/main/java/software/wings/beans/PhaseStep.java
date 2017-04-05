@@ -44,6 +44,8 @@ public class PhaseStep {
   private boolean valid = true;
   private String validationMessage;
 
+  private Integer waitInterval;
+
   public PhaseStep() {}
 
   public PhaseStep(PhaseStepType phaseStepType, String name) {
@@ -148,6 +150,14 @@ public class PhaseStep {
     this.statusForRollback = statusForRollback;
   }
 
+  public Integer getWaitInterval() {
+    return waitInterval;
+  }
+
+  public void setWaitInterval(Integer waitInterval) {
+    this.waitInterval = waitInterval;
+  }
+
   public Node generatePhaseStepNode() {
     return aNode()
         .withId(uuid)
@@ -160,6 +170,7 @@ public class PhaseStep {
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .addProperty("phaseStepNameForRollback", phaseStepNameForRollback)
         .addProperty("statusForRollback", statusForRollback)
+        .addProperty("waitInterval", waitInterval)
         .build();
   }
 

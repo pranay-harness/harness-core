@@ -18,6 +18,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.PluginService;
@@ -74,6 +75,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("DOCKER")
             .withPluginCategories(asList(Artifact))
             .withUiSchema(readUiSchema("DOCKER"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(NexusConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Nexus")
+            .withType("NEXUS")
+            .withPluginCategories(asList(Artifact))
+            .withUiSchema(readUiSchema("NEXUS"))
             .build(),
         anAccountPlugin()
             .withSettingClass(AppDynamicsConfig.class)

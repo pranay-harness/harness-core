@@ -4,8 +4,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
@@ -13,6 +15,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
@@ -49,6 +52,16 @@ public class BambooServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldGetPlanKeysException() {
+    wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/plan.json?authType=basic"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withFault(Fault.MALFORMED_RESPONSE_CHUNK)
+                                             .withHeader("Content-Type", "application/json")));
+    assertThat(bambooService.getPlanKeys(bambooConfig)).hasSize(0);
+  }
+
+  @Test
   @Ignore
   public void shouldGetLastSuccessfulBuild() {}
 
@@ -67,6 +80,16 @@ public class BambooServiceTest extends WingsBaseTest {
     Assertions.assertThat(bamboo_plan_key)
         .containsExactly(aBuildDetails().withNumber("11").withRevision("REV_11").build(),
             aBuildDetails().withNumber("12").withRevision("REV_12").build());
+  }
+
+  @Test
+  public void shouldGetBuildsForJobError() {
+    wireMockRule.stubFor(get(
+        urlEqualTo(
+            "/rest/api/latest/result/BAMBOO_PLAN_KEY.json?authType=basic&buildState=Successful&expand=results.result&max-result=50"))
+                             .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+    List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50);
+    Assertions.assertThat(bamboo_plan_key).hasSize(0);
   }
 
   @Test
