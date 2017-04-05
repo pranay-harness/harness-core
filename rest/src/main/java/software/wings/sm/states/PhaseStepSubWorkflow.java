@@ -210,6 +210,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       }
     }
   }
+
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
@@ -301,6 +302,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           (KubernetesReplicationControllerElement) notifiedElement(
               response, KubernetesReplicationControllerElement.class, "Missing KubernetesReplicationControllerElement");
       executionResponse.setContextElements(Lists.newArrayList(kubernetesReplicationControllerElement));
+    } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
+        && phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+          response, InstanceElementListParam.class, "Missing InstanceListParam Element");
+      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      executionResponse.setNotifyElements(Lists.newArrayList(instanceElementListParam));
     }
   }
 

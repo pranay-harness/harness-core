@@ -1,7 +1,10 @@
 package software.wings.sm.states;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -12,10 +15,13 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.InstanceElement;
+import software.wings.api.InstanceElementListParam;
 import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
@@ -26,6 +32,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
@@ -33,7 +40,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.ResizeCommandUnitExecutionData;
+import software.wings.beans.command.KubernetesResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
@@ -42,6 +49,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -59,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/1/17
@@ -86,6 +95,8 @@ public class KubernetesReplicationControllerDeploy extends State {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
+
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
   public KubernetesReplicationControllerDeploy(String name) {
     super(name, StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name());
@@ -238,10 +249,7 @@ public class KubernetesReplicationControllerDeploy extends State {
           .build();
 
     } else {
-      return anExecutionResponse()
-          .withStateExecutionData(commandStateExecutionData)
-          .withExecutionStatus(ExecutionStatus.SUCCESS)
-          .build();
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
   }
 
@@ -249,27 +257,57 @@ public class KubernetesReplicationControllerDeploy extends State {
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-    return anExecutionResponse().withStateExecutionData(commandStateExecutionData).withExecutionStatus(status).build();
+    List<InstanceElement> instanceElements = commandStateExecutionData.getInstanceStatusSummaries()
+                                                 .stream()
+                                                 .map(InstanceStatusSummary::getInstanceElement)
+                                                 .collect(Collectors.toList());
+
+    InstanceElementListParam instanceElementListParam =
+        anInstanceElementListParam()
+            .withInstanceElements(instanceElements == null ? new ArrayList<>() : instanceElements)
+            .build();
+    return anExecutionResponse()
+        .withStateExecutionData(commandStateExecutionData)
+        .withExecutionStatus(status)
+        .addNotifyElement(instanceElementListParam)
+        .build();
   }
 
   private List<InstanceStatusSummary> buildInstanceStatusSummaries(
       ExecutionContext context, Map<String, NotifyResponseData> response) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    Environment env = workflowStandardParams.getEnv();
+    Key<ServiceTemplate> serviceTemplateKey =
+        serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
+
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
-    if (commandExecutionData instanceof ResizeCommandUnitExecutionData
-        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerIds() != null) {
-      ((ResizeCommandUnitExecutionData) commandExecutionData)
-          .getContainerIds()
-          .forEach(containerId
+    if (commandExecutionData instanceof KubernetesResizeCommandUnitExecutionData
+        && ((KubernetesResizeCommandUnitExecutionData) commandExecutionData).getPodNames() != null) {
+      ((KubernetesResizeCommandUnitExecutionData) commandExecutionData)
+          .getPodNames()
+          .forEach(podName
               -> instanceStatusSummaries.add(
                   anInstanceStatusSummary()
                       .withStatus(ExecutionStatus.SUCCESS)
                       .withInstanceElement(
-                          anInstanceElement().withUuid(containerId).withDisplayName(containerId).build())
+                          anInstanceElement()
+                              .withUuid(podName)
+                              .withHostElement(aHostElement().withHostName(podName).build())
+                              .withServiceTemplateElement(aServiceTemplateElement()
+                                                              .withUuid(serviceTemplateKey.getId().toString())
+                                                              .withServiceElement(phaseElement.getServiceElement())
+                                                              .build())
+                              .withDisplayName(podName)
+                              .build())
                       .build()));
     }
+
     return instanceStatusSummaries;
   }
 
