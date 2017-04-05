@@ -342,7 +342,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     commandStepExecutionSummary.setInstanceCount(instanceCount);
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
-    return super.getStepExecutionSummary();
+    return commandStepExecutionSummary;
   }
 
   /**
