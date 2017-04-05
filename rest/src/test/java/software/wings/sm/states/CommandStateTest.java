@@ -399,7 +399,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
 
     verify(context, times(3)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowExecutionName();
