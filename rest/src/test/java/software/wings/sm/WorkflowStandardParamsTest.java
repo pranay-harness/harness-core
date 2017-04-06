@@ -14,11 +14,13 @@ import com.google.inject.MembersInjector;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
@@ -36,7 +38,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   /**
    * The App service.
    */
-  @Inject AppService appService;
+  @Inject @InjectMocks AppService appService;
   /**
    * The Environment service.
    */
@@ -47,6 +49,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Inject MembersInjector<WorkflowStandardParams> injector;
 
   @Mock SettingsService settingsService;
+  @Mock private JobScheduler jobScheduler;
 
   @Before
   public void setup() {

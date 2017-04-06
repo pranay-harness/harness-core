@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
@@ -19,6 +20,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.common.UUIDGenerator;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
@@ -39,11 +41,13 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   /**
    * The App service.
    */
-  @Inject AppService appService;
+  @Inject @InjectMocks AppService appService;
   /**
    * The Environment service.
    */
   @Inject EnvironmentService environmentService;
+
+  @Mock private JobScheduler jobScheduler;
 
   @Mock SettingsService settingsService;
 

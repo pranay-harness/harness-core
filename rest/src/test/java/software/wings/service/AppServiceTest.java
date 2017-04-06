@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,6 +33,8 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.quartz.JobDetail;
+import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Notification;
@@ -41,6 +44,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -84,6 +88,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationService notificationService;
   @Mock private SetupService setupService;
+  @Mock private JobScheduler jobScheduler;
 
   /**
    * Sets up.
@@ -123,6 +128,14 @@ public class AppServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Application.class, app);
     verify(settingsService).createDefaultSettings(APP_ID, "ACCOUNT_ID");
     verify(notificationService).sendNotificationAsync(any(Notification.class));
+    ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
+    ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);
+    verify(jobScheduler).scheduleJob(jobDetailArgumentCaptor.capture(), triggerArgumentCaptor.capture());
+
+    assertThat(jobDetailArgumentCaptor.getValue()).isNotNull();
+    assertThat(jobDetailArgumentCaptor.getValue().getJobDataMap().getString("appId")).isEqualTo(savedApp.getUuid());
+    assertThat(triggerArgumentCaptor.getValue()).isNotNull();
+    assertThat(triggerArgumentCaptor.getValue().getKey().getName()).isEqualTo(savedApp.getUuid());
   }
 
   /**

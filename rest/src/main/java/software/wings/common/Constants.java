@@ -130,4 +130,8 @@ public interface Constants {
   String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
 
   String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
+
+  Integer DEFAULT_STATE_TIMEOUT_MILLIS = 30 * 60 * 1000; // 30 minutes
+
+  Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
 }

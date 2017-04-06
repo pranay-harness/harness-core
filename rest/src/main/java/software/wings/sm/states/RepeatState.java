@@ -335,6 +335,12 @@ public class RepeatState extends State {
   }
 
   @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return Constants.DEFAULT_PARENT_STATE_TIMEOUT_MILLIS;
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(logger, repeatElementType, repeatElementExpression, executionStrategy,
         executionStrategyExpression, repeatTransitionStateName);

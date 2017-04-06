@@ -53,10 +53,11 @@ public class StateExecutionInstance extends Base {
   @Indexed private String cloneInstanceId;
 
   private String notifyId;
-  private ExecutionStatus status = ExecutionStatus.NEW;
+  @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
 
   private Long startTs;
   private Long endTs;
+  @Indexed private Long expiryTs;
 
   /**
    * Gets parent instance id.
@@ -242,6 +243,14 @@ public class StateExecutionInstance extends Base {
    */
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
+  }
+
+  public Long getExpiryTs() {
+    return expiryTs;
+  }
+
+  public void setExpiryTs(Long expiryTs) {
+    this.expiryTs = expiryTs;
   }
 
   /**

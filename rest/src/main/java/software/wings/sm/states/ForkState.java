@@ -113,6 +113,12 @@ public class ForkState extends State {
     return executionResponse;
   }
 
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return Constants.DEFAULT_PARENT_STATE_TIMEOUT_MILLIS;
+  }
+
   /**
    * Gets fork state names.
    *

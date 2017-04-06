@@ -19,6 +19,11 @@ import com.google.common.collect.Lists;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Notification;
@@ -32,6 +37,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.StateMachineExecutionCleanupJob;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -63,6 +70,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class AppServiceImpl implements AppService {
+  private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
+  private static final int SM_CLEANUP_POLL_INTERVAL = 60;
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -77,6 +87,7 @@ public class AppServiceImpl implements AppService {
   @Inject private ArtifactService artifactService;
   @Inject private StatisticsService statisticsService;
   @Inject private RoleService roleService;
+  @Inject private JobScheduler jobScheduler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -93,7 +104,7 @@ public class AppServiceImpl implements AppService {
             .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
             .build());
-
+    addCronForStateMachineExecutionCleanup(application);
     return get(application.getUuid(), INCOMPLETE, true, 0);
   }
 
@@ -125,6 +136,22 @@ public class AppServiceImpl implements AppService {
                              .withAppId(app.getUuid())
                              .withAppName(app.getName())
                              .build()));
+  }
+
+  private void addCronForStateMachineExecutionCleanup(Application application) {
+    JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
+                        .withIdentity(SM_CLEANUP_CRON_GROUP, application.getUuid())
+                        .usingJobData("appId", application.getUuid())
+                        .build();
+
+    Trigger trigger =
+        TriggerBuilder.newTrigger()
+            .withIdentity(application.getUuid())
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(SM_CLEANUP_POLL_INTERVAL).repeatForever())
+            .build();
+
+    jobScheduler.scheduleJob(job, trigger);
   }
 
   /* (non-Javadoc)

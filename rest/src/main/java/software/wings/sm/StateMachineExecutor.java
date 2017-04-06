@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -167,6 +168,14 @@ public class StateMachineExecutor {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "StateExecutionInstance was already created");
     }
 
+    Integer timeout = state.getTimeoutMillis();
+    if (timeout == null) {
+      timeout = Constants.DEFAULT_STATE_TIMEOUT_MILLIS;
+    }
+    if (state.getWaitInterval() != null) {
+      timeout += state.getWaitInterval() * 1000;
+    }
+    stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + timeout);
     stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
 
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);

@@ -1,8 +1,10 @@
 package software.wings.sm.states;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.common.Constants;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -106,6 +108,12 @@ public class SubWorkflowState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  @SchemaIgnore
+  public Integer getTimeoutMillis() {
+    return Constants.DEFAULT_PARENT_STATE_TIMEOUT_MILLIS;
+  }
 
   public String getSubWorkflowId() {
     return subWorkflowId;

@@ -25,6 +25,7 @@ import com.google.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
@@ -40,6 +41,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -74,7 +76,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   /**
    * The App service.
    */
-  @Inject AppService appService;
+  @Inject @InjectMocks AppService appService;
   /**
    * The Environment service.
    */
@@ -97,6 +99,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Mock ServiceTemplateService serviceTemplateServiceMock;
 
   @Mock SettingsService settingsService;
+
+  @Mock private JobScheduler jobScheduler;
+
   /**
    * The Host service.
    */

@@ -26,6 +26,8 @@ public abstract class State {
 
   @SchemaIgnore private Integer waitInterval;
 
+  @SchemaIgnore private Integer timeoutMillis;
+
   /**
    * Instantiates a new state.
    *
@@ -166,6 +168,15 @@ public abstract class State {
   @SchemaIgnore
   public List<EntityType> getRequiredExecutionArgumentTypes() {
     return null;
+  }
+
+  @Attributes(title = "Timeout (milliseconds)")
+  public Integer getTimeoutMillis() {
+    return timeoutMillis;
+  }
+
+  public void setTimeoutMillis(Integer timeoutMillis) {
+    this.timeoutMillis = timeoutMillis;
   }
 
   /* (non-Javadoc)
