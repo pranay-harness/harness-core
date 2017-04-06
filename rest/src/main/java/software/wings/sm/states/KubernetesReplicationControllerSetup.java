@@ -186,9 +186,7 @@ public class KubernetesReplicationControllerSetup extends State {
                              .getStatus()
                              .getLoadBalancer();
         }
-        if (!loadBalancer.getIngress().isEmpty()) {
-          serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
-        }
+        serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
       }
     }
 
