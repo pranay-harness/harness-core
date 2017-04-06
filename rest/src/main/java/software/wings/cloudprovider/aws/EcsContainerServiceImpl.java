@@ -3,7 +3,6 @@ package software.wings.cloudprovider.aws;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -56,6 +55,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.utils.JsonUtils;
@@ -928,7 +928,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public List<String> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
+  public List<ContainerInfo> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
       Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
     AmazonECSClient amazonECSClient =
@@ -962,7 +962,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                             .withCluster(clusterName)
                                             .withContainerInstances(containerInstances))
             .getContainerInstances();
-    List<String> dockerContainerIds = Lists.newArrayList();
+    List<ContainerInfo> containerInfos = new ArrayList<>();
     containerInstanceList.forEach(containerInstance -> {
       String ipAddress =
           amazonEC2Client
@@ -988,7 +988,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .filter(task -> taskArns.contains(task.getArn()))
             .findFirst()
             .ifPresent(task
-                -> dockerContainerIds.add(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12)));
+                -> containerInfos.add(
+                    new ContainerInfo(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12))));
         logger.info("TaskMetadata = " + taskMetadata);
       } catch (IOException ex) {
         executionLogCallback.saveExecutionLog(
@@ -998,8 +999,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             UNKNOWN_ERROR, "message", "Container meta data fetch failed on EC2 host: " + ipAddress);
       }
     });
-    logger.info("Docker container ids = " + dockerContainerIds);
-    return dockerContainerIds;
+    logger.info("Docker container ids = " + containerInfos);
+    return containerInfos;
   }
 
   @Override

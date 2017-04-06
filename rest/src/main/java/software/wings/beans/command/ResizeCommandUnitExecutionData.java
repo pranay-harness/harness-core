@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import software.wings.cloudprovider.ContainerInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,28 +9,18 @@ import java.util.List;
  * Created by anubhaw on 2/28/17.
  */
 public class ResizeCommandUnitExecutionData extends CommandExecutionData {
-  private List<String> hostNames = new ArrayList<>();
-  private List<String> containerIds = new ArrayList<>();
+  private List<ContainerInfo> containerInfos = new ArrayList<>();
 
-  public List<String> getHostNames() {
-    return hostNames;
+  public List<ContainerInfo> getContainerInfos() {
+    return containerInfos;
   }
 
-  public void setHostNames(List<String> hostNames) {
-    this.hostNames = hostNames;
-  }
-
-  public List<String> getContainerIds() {
-    return containerIds;
-  }
-
-  public void setContainerIds(List<String> containerIds) {
-    this.containerIds = containerIds;
+  public void setContainerInfos(List<ContainerInfo> containerInfos) {
+    this.containerInfos = containerInfos;
   }
 
   public static final class ResizeCommandUnitExecutionDataBuilder {
-    private List<String> hostNames = new ArrayList<>();
-    private List<String> containerIds = new ArrayList<>();
+    private List<ContainerInfo> containerInfos = new ArrayList<>();
 
     private ResizeCommandUnitExecutionDataBuilder() {}
 
@@ -36,24 +28,18 @@ public class ResizeCommandUnitExecutionData extends CommandExecutionData {
       return new ResizeCommandUnitExecutionDataBuilder();
     }
 
-    public ResizeCommandUnitExecutionDataBuilder withHostNames(List<String> hostNames) {
-      this.hostNames = hostNames;
-      return this;
-    }
-
-    public ResizeCommandUnitExecutionDataBuilder withContainerIds(List<String> containerIds) {
-      this.containerIds = containerIds;
+    public ResizeCommandUnitExecutionDataBuilder withContainerInfos(List<ContainerInfo> containerInfos) {
+      this.containerInfos = containerInfos;
       return this;
     }
 
     public ResizeCommandUnitExecutionDataBuilder but() {
-      return aResizeCommandUnitExecutionData().withHostNames(hostNames).withContainerIds(containerIds);
+      return aResizeCommandUnitExecutionData().withContainerInfos(containerInfos);
     }
 
     public ResizeCommandUnitExecutionData build() {
       ResizeCommandUnitExecutionData resizeCommandUnitExecutionData = new ResizeCommandUnitExecutionData();
-      resizeCommandUnitExecutionData.setHostNames(hostNames);
-      resizeCommandUnitExecutionData.setContainerIds(containerIds);
+      resizeCommandUnitExecutionData.setContainerInfos(containerInfos);
       return resizeCommandUnitExecutionData;
     }
   }

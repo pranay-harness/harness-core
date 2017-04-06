@@ -7,19 +7,17 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder.aResizeCommandUnitExecutionData;
 
-import com.google.common.collect.Multimap;
-
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -50,12 +48,9 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
     try {
       KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
       kubernetesContainerService.setControllerPodCount(kubernetesConfig, replicationControllerName, desiredCount);
-      Multimap<String, String> podInfo =
-          kubernetesContainerService.getPodInfo(kubernetesConfig, replicationControllerName, desiredCount);
-      List<String> podNames = new ArrayList<>(podInfo.get("podNames"));
-      List<String> containerIds = new ArrayList<>(podInfo.get("containerIds"));
-      context.setCommandExecutionData(
-          aResizeCommandUnitExecutionData().withHostNames(podNames).withContainerIds(containerIds).build());
+      List<ContainerInfo> containerInfos =
+          kubernetesContainerService.getContainerInfos(kubernetesConfig, replicationControllerName, desiredCount);
+      context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       commandExecutionStatus = SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);

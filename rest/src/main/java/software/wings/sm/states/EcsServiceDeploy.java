@@ -281,22 +281,23 @@ public class EcsServiceDeploy extends State {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
     if (commandExecutionData instanceof ResizeCommandUnitExecutionData
-        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerIds() != null) {
+        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerInfos() != null) {
       ((ResizeCommandUnitExecutionData) commandExecutionData)
-          .getContainerIds()
-          .forEach(containerId
+          .getContainerInfos()
+          .forEach(containerInfo
               -> instanceStatusSummaries.add(
                   anInstanceStatusSummary()
                       .withStatus(ExecutionStatus.SUCCESS)
                       .withInstanceElement(
                           anInstanceElement()
-                              .withUuid(containerId)
-                              .withHostElement(aHostElement().withHostName(containerId).build())
+                              .withUuid(containerInfo.getContainerId())
+                              .withHostName(containerInfo.getHostName())
+                              .withHostElement(aHostElement().withHostName(containerInfo.getHostName()).build())
                               .withServiceTemplateElement(aServiceTemplateElement()
                                                               .withUuid(serviceTemplateKey.getId().toString())
                                                               .withServiceElement(phaseElement.getServiceElement())
                                                               .build())
-                              .withDisplayName(containerId)
+                              .withDisplayName(containerInfo.getContainerId())
                               .build())
                       .build()));
     }
