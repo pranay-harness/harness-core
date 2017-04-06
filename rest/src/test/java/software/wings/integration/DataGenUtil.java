@@ -348,6 +348,20 @@ private void createGlobalSettings() {
 
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
+                        .withName("Wings Nexus")
+                        .withCategory(Category.CONNECTOR)
+                        .withAccountId(accountId)
+                        .withValue(aJenkinsConfig()
+                                       .withJenkinsUrl("https://nexus.wings.software/")
+                                       .withUsername("admin")
+                                       .withPassword("wings123!")
+                                       .build())
+                        .build(),
+          APPLICATION_JSON),
+      new GenericType<RestResponse<SettingAttribute>>() {});
+
+  getRequestWithAuthHeader(target).post(
+      Entity.entity(aSettingAttribute()
                         .withName("Wings BambooService")
                         .withCategory(Category.CONNECTOR)
                         .withAccountId(accountId)

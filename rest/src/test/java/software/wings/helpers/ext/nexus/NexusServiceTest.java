@@ -186,4 +186,149 @@ public class NexusServiceTest {
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("unexpected end of stream");
   }
+
+  @Test
+  public void shouldGetGroupIdPaths() {
+    wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withBody("<indexBrowserTreeViewResponse>\n"
+                                                 + "  <data>\n"
+                                                 + "    <type>G</type>\n"
+                                                 + "    <leaf>false</leaf>\n"
+                                                 + "    <nodeName>/</nodeName>\n"
+                                                 + "    <path>/</path>\n"
+                                                 + "    <children>\n"
+                                                 + "      <indexBrowserTreeNode>\n"
+                                                 + "        <type>G</type>\n"
+                                                 + "        <leaf>false</leaf>\n"
+                                                 + "        <nodeName>fakepath</nodeName>\n"
+                                                 + "        <path>/fakepath/</path>\n"
+                                                 + "        <repositoryId>releases</repositoryId>\n"
+                                                 + "        <locallyAvailable>false</locallyAvailable>\n"
+                                                 + "        <artifactTimestamp>0</artifactTimestamp>\n"
+                                                 + "      </indexBrowserTreeNode>\n"
+                                                 + "    </children>\n"
+                                                 + "    <repositoryId>releases</repositoryId>\n"
+                                                 + "    <locallyAvailable>false</locallyAvailable>\n"
+                                                 + "    <artifactTimestamp>0</artifactTimestamp>\n"
+                                                 + "  </data>\n"
+                                                 + "</indexBrowserTreeViewResponse>")
+                                             .withHeader("Content-Type", "application/xml")));
+
+    wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/fakepath/"))
+                             .willReturn(aResponse()
+                                             .withStatus(200)
+                                             .withBody("<indexBrowserTreeViewResponse>\n"
+                                                 + "  <data>\n"
+                                                 + "    <type>G</type>\n"
+                                                 + "    <leaf>false</leaf>\n"
+                                                 + "    <nodeName>nexus-client-core</nodeName>\n"
+                                                 + "    <path>/fakepath/nexus-cleint-core</path>\n"
+                                                 + "    <children>\n"
+                                                 + "      <indexBrowserTreeNode>\n"
+                                                 + "        <type>A</type>\n"
+                                                 + "        <leaf>false</leaf>\n"
+                                                 + "        <nodeName>nexus-client-core</nodeName>\n"
+                                                 + "        <path>/fakepath/</path>\n"
+                                                 + "        <repositoryId>releases</repositoryId>\n"
+                                                 + "        <locallyAvailable>false</locallyAvailable>\n"
+                                                 + "        <artifactTimestamp>0</artifactTimestamp>\n"
+                                                 + "      </indexBrowserTreeNode>\n"
+                                                 + "    </children>\n"
+                                                 + "    <repositoryId>releases</repositoryId>\n"
+                                                 + "    <locallyAvailable>false</locallyAvailable>\n"
+                                                 + "    <artifactTimestamp>0</artifactTimestamp>\n"
+                                                 + "  </data>\n"
+                                                 + "</indexBrowserTreeViewResponse>")
+                                             .withHeader("Content-Type", "application/xml")));
+
+    assertThat(nexusService.getGroupIdPaths(nexusConfig, "releases")).hasSize(1).contains("/fakepath/");
+  }
+
+  @Test
+  public void shouldGetArtifactNames() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody("<indexBrowserTreeViewResponse>\n"
+                        + "  <data>\n"
+                        + "    <type>G</type>\n"
+                        + "    <leaf>false</leaf>\n"
+                        + "    <nodeName>nexus</nodeName>\n"
+                        + "    <path>/software/wings/nexus/</path>\n"
+                        + "    <children>\n"
+                        + "      <indexBrowserTreeNode>\n"
+                        + "        <type>A</type>\n"
+                        + "        <leaf>false</leaf>\n"
+                        + "        <nodeName>rest-client</nodeName>\n"
+                        + "        <path>/software/wings/nexus/rest-client/</path>\n"
+                        + "        <children>\n"
+                        + "          <indexBrowserTreeNode>\n"
+                        + "            <type>V</type>\n"
+                        + "            <leaf>false</leaf>\n"
+                        + "            <nodeName>2.1.2</nodeName>\n"
+                        + "            <path>/software/wings/nexus/rest-client/2.1.2/</path>\n"
+                        + "            <children>\n"
+                        + "              <indexBrowserTreeNode>\n"
+                        + "                <type>artifact</type>\n"
+                        + "                <leaf>true</leaf>\n"
+                        + "                <nodeName>rest-client-2.1.2.pom</nodeName>\n"
+                        + "                <path>/software/wings/nexus/rest-client/2.1.2/rest-client-2.1.2.pom</path>\n"
+                        + "                <groupId>software.wings.nexus</groupId>\n"
+                        + "                <artifactId>rest-client</artifactId>\n"
+                        + "                <version>2.1.2</version>\n"
+                        + "                <repositoryId>releases</repositoryId>\n"
+                        + "                <locallyAvailable>false</locallyAvailable>\n"
+                        + "                <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "                <extension>pom</extension>\n"
+                        + "                <artifactUri></artifactUri>\n"
+                        + "                <pomUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=2.1.2&amp;p=pom</pomUri>\n"
+                        + "              </indexBrowserTreeNode>\n"
+                        + "              <indexBrowserTreeNode>\n"
+                        + "                <type>artifact</type>\n"
+                        + "                <leaf>true</leaf>\n"
+                        + "                <nodeName>rest-client-2.1.2-capsule.jar</nodeName>\n"
+                        + "                <path>/software/wings/nexus/rest-client/2.1.2/rest-client-2.1.2-capsule.jar</path>\n"
+                        + "                <groupId>software.wings.nexus</groupId>\n"
+                        + "                <artifactId>rest-client</artifactId>\n"
+                        + "                <version>2.1.2</version>\n"
+                        + "                <repositoryId>releases</repositoryId>\n"
+                        + "                <locallyAvailable>false</locallyAvailable>\n"
+                        + "                <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "                <classifier>capsule</classifier>\n"
+                        + "                <extension>jar</extension>\n"
+                        + "                <packaging>jar</packaging>\n"
+                        + "                <artifactUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=2.1.2&amp;p=jar</artifactUri>\n"
+                        + "                <pomUri></pomUri>\n"
+                        + "              </indexBrowserTreeNode>\n"
+                        + "            </children>\n"
+                        + "            <groupId>software.wings.nexus</groupId>\n"
+                        + "            <artifactId>rest-client</artifactId>\n"
+                        + "            <version>2.1.2</version>\n"
+                        + "            <repositoryId>releases</repositoryId>\n"
+                        + "            <locallyAvailable>false</locallyAvailable>\n"
+                        + "            <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "          </indexBrowserTreeNode>\n"
+                        + "        </children>\n"
+                        + "        <groupId>software.wings.nexus</groupId>\n"
+                        + "        <artifactId>rest-client</artifactId>\n"
+                        + "        <repositoryId>releases</repositoryId>\n"
+                        + "        <locallyAvailable>false</locallyAvailable>\n"
+                        + "        <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "      </indexBrowserTreeNode>\n"
+                        + "    </children>\n"
+                        + "    <repositoryId>releases</repositoryId>\n"
+                        + "    <locallyAvailable>false</locallyAvailable>\n"
+                        + "    <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "  </data>\n"
+                        + "</indexBrowserTreeViewResponse>")
+                    .withHeader("Content-Type", "application/xml")));
+
+    assertThat(nexusService.getArtifactNames(nexusConfig, "releases", "/software/wings/nexus/"))
+        .hasSize(1)
+        .contains("rest-client");
+  }
 }

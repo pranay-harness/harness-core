@@ -15,5 +15,7 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
   @DelegateTaskType(TaskType.NEXUS_GET_PLANS) Map<String, String> getPlans(NexusConfig config);
 
   @DelegateTaskType(TaskType.NEXUS_GET_ARTIFACT_PATHS)
-  List<String> getArtifactPaths(String jobName, NexusConfig config);
+  List<String> getArtifactPaths(String jobName, String groupId, NexusConfig config);
+
+  @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS) List<String> getGroupIds(String repoType, NexusConfig config);
 }

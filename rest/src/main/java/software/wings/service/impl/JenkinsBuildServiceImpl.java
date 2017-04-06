@@ -74,7 +74,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, JenkinsConfig jenkinsConfig) {
+  public List<String> getArtifactPaths(String jobName, String groupId, JenkinsConfig jenkinsConfig) {
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     List<String> artifactPaths = new ArrayList<>();
@@ -115,5 +115,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       jobs.forEach(jobKey -> jobKeyMap.put(jobKey, jobKey));
     }
     return jobKeyMap;
+  }
+
+  @Override
+  public List<String> getGroupIds(String jobName, JenkinsConfig jenkinsConfig) {
+    throw new WingsException(
+        ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Jenkins Artifact Stream");
   }
 }

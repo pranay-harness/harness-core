@@ -64,7 +64,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactPaths() {
     when(nexusService.getArtifactPaths(nexusConfig, "releases")).thenReturn(ImmutableList.of("/fakepath"));
-    List<String> jobs = nexusBuildService.getArtifactPaths("releases", nexusConfig);
+    List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig);
     assertThat(jobs).hasSize(1).containsExactlyInAnyOrder("/fakepath");
   }
 

@@ -19,7 +19,7 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
   @DelegateTaskType(TaskType.BAMBOO_GET_JOBS) List<String> getJobs(BambooConfig jenkinsConfig);
 
   @DelegateTaskType(TaskType.BAMBOO_GET_ARTIFACT_PATHS)
-  List<String> getArtifactPaths(String jobName, BambooConfig config);
+  List<String> getArtifactPaths(String jobName, String groupId, BambooConfig config);
 
   @DelegateTaskType(TaskType.BAMBOO_LAST_SUCCESSFUL_BUILD)
   BuildDetails getLastSuccessfulBuild(

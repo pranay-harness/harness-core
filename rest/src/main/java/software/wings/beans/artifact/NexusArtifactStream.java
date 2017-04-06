@@ -25,9 +25,9 @@ public class NexusArtifactStream extends ArtifactStream {
     this.jobname = jobname;
   }
 
-  @NotEmpty @Attributes(title = "Repository Name", required = true) private String jobname;
+  @NotEmpty @Attributes(title = "Repository Type", required = true) private String jobname;
 
-  @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
+  @NotEmpty @Attributes(title = "Group Id", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new Nexus artifact stream.
