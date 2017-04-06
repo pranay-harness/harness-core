@@ -1,18 +1,20 @@
 package software.wings.sm.states;
 
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
-import static software.wings.api.PhaseSubWorkflowExecutionData.PhaseSubWorkflowExecutionDataBuilder.aPhaseSubWorkflowExecutionData;
+import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
@@ -38,12 +40,14 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     super(name, StateType.PHASE.name());
   }
 
+  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
+
   private String uuid;
   private String serviceId;
   private String infraMappingId;
 
   // Only for rollback phase steps
-  @SchemaIgnore private String rollbackPhaseName;
+  @SchemaIgnore private String phaseNameForRollback;
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
@@ -59,7 +63,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
     ExecutionResponse response = super.execute(context);
     response.setStateExecutionData(
-        aPhaseSubWorkflowExecutionData()
+        aPhaseExecutionData()
             .withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
             .withInfraMappingId(infraMappingId)
             .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()))
@@ -83,6 +87,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(infrastructureMapping.getDeploymentType())
                                     .withInfraMappingId(infraMappingId)
+                                    .withPhaseNameForRollback(phaseNameForRollback)
                                     .build();
     spawningInstance.getContextElements().push(phaseElement);
     spawningInstance.setContextElement(phaseElement);
@@ -92,7 +97,8 @@ public class PhaseSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
+    ExecutionResponse executionResponse = new ExecutionResponse();
+    super.handleStatusSummary(workflowExecutionService, context, response, executionResponse);
     response.values().forEach(notifyResponseData -> {
       if (notifyResponseData instanceof ElementNotifyResponseData) {
         List<ContextElement> notifyElements = ((ElementNotifyResponseData) notifyResponseData).getContextElements();
@@ -104,6 +110,10 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         }
       }
     });
+    PhaseExecutionData phaseExecutionData = (PhaseExecutionData) context.getStateExecutionData();
+    phaseExecutionData.setPhaseExecutionSummary(workflowExecutionService.getPhaseExecutionSummary(
+        context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
+    executionResponse.setStateExecutionData(phaseExecutionData);
     return executionResponse;
   }
 
@@ -124,14 +134,15 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     this.uuid = uuid;
   }
 
-  @SchemaIgnore
-  public String getRollbackPhaseName() {
-    return rollbackPhaseName;
+  public String getPhaseNameForRollback() {
+    return phaseNameForRollback;
   }
 
-  public void setRollbackPhaseName(String rollbackPhaseName) {
-    this.rollbackPhaseName = rollbackPhaseName;
+  public void setPhaseNameForRollback(String phaseNameForRollback) {
+    this.phaseNameForRollback = phaseNameForRollback;
   }
+
+  @SchemaIgnore
 
   public String getInfraMappingId() {
     return infraMappingId;

@@ -37,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 
@@ -46,10 +47,11 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerListBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepSubWorkflowExecutionData;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -59,6 +61,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
@@ -73,6 +76,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -81,6 +85,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -102,6 +107,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private KubernetesConfig kubernetesConfig;
+  @Mock private ServiceTemplateService serviceTemplateService;
 
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
@@ -125,7 +131,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
                                  .withOldName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
                                  .build())
-          .addStateExecutionData(new PhaseStepSubWorkflowExecutionData())
+          .addStateExecutionData(new PhaseStepExecutionData())
           .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
@@ -160,6 +166,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     on(kubernetesReplicationControllerDeploy).set("infrastructureMappingService", infrastructureMappingService);
     on(kubernetesReplicationControllerDeploy).set("gkeClusterService", gkeClusterService);
     on(kubernetesReplicationControllerDeploy).set("kubernetesContainerService", kubernetesContainerService);
+    on(kubernetesReplicationControllerDeploy).set("serviceTemplateService", serviceTemplateService);
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
@@ -171,6 +178,9 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     when(activityService.save(any(Activity.class))).thenReturn(activity);
 
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProvider);
+
+    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
+        .thenReturn(Arrays.asList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
   }
 
   @Test

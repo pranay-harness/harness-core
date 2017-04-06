@@ -1,9 +1,14 @@
 package software.wings.cloudprovider.gke;
 
+import static org.awaitility.Awaitility.with;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.model.DoneableService;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
@@ -15,11 +20,20 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.service.impl.KubernetesHelperService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 /**
  * Created by brett on 2/9/17
  */
 @Singleton
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
+  private static final String RUNNING = "Running";
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
 
@@ -61,6 +75,24 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public Multimap<String, String> getPodInfo(
+      KubernetesConfig kubernetesConfig, String replicationControllerName, int number) {
+    Multimap<String, String> result = Multimaps.newListMultimap(new HashMap<>(), ArrayList::new);
+
+    waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number).forEach(pod -> {
+      result.put("podNames", pod.getMetadata().getName());
+      result.putAll("containerIds",
+          pod.getStatus()
+              .getContainerStatuses()
+              .stream()
+              .map(containerStatus -> containerStatus.getContainerID().substring(9, 21))
+              .collect(Collectors.toList()));
+    });
+
+    return result;
+  }
+
+  @Override
   public Service createService(KubernetesConfig kubernetesConfig, Service definition) {
     logger.info("Creating service {}", definition.getMetadata().getName());
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().createOrReplace(definition);
@@ -83,6 +115,26 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         kubernetesHelperService.getKubernetesClient(kubernetesConfig).services().withName(name);
     service.delete();
     logger.info("Deleted service {}", name);
+  }
+
+  private List<Pod> waitForPodsToBeRunning(
+      KubernetesConfig kubernetesConfig, String replicationControllerName, int number) {
+    Map<String, String> labels = getController(kubernetesConfig, replicationControllerName).getMetadata().getLabels();
+
+    with().pollInterval(1, TimeUnit.SECONDS).await().atMost(60, TimeUnit.SECONDS).until(() -> {
+      List<Pod> pods =
+          kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list().getItems();
+      if (pods.size() != number) {
+        return false;
+      }
+      boolean allRunning = true;
+      for (Pod pod : pods) {
+        allRunning = allRunning && pod.getStatus().getPhase().equals(RUNNING);
+      }
+      return allRunning;
+    });
+
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig).pods().withLabels(labels).list().getItems();
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, String rcName, String serviceName) {

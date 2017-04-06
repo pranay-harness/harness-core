@@ -12,6 +12,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StepExecutionSummary;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,9 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private String newContainerServiceName;
   private String oldContainerServiceName;
+  private int instanceCount;
+  private String clusterName;
+
   private List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
   @Transient @Inject private transient ActivityService activityService;
@@ -261,6 +265,22 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.instanceStatusSummaries = instanceStatusSummaries;
   }
 
+  public int getInstanceCount() {
+    return instanceCount;
+  }
+
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
+
+  public String getClusterName() {
+    return clusterName;
+  }
+
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
@@ -313,6 +333,18 @@ public class CommandStateExecutionData extends StateExecutionData {
     return executionDetails;
   }
 
+  @Override
+  public StepExecutionSummary getStepExecutionSummary() {
+    CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
+    populateStepExecutionSummary(commandStepExecutionSummary);
+    commandStepExecutionSummary.setOldContainerServiceName(oldContainerServiceName);
+    commandStepExecutionSummary.setNewContainerServiceName(newContainerServiceName);
+    commandStepExecutionSummary.setInstanceCount(instanceCount);
+    commandStepExecutionSummary.setClusterName(clusterName);
+    commandStepExecutionSummary.setServiceId(serviceId);
+    return commandStepExecutionSummary;
+  }
+
   /**
    * Gets app id.
    *
@@ -354,6 +386,8 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String newContainerServiceName;
     private String oldContainerServiceName;
     private List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+    private int instanceCount;
+    private String clusterName;
 
     private Builder() {}
 
@@ -567,6 +601,28 @@ public class CommandStateExecutionData extends StateExecutionData {
     /**
      * With artifact name builder.
      *
+     * @param clusterName the clusterName
+     * @return the builder
+     */
+    public Builder withClusterName(String clusterName) {
+      this.clusterName = clusterName;
+      return this;
+    }
+
+    /**
+     * With artifact name builder.
+     *
+     * @param instanceCount the instanceCount
+     * @return the builder
+     */
+    public Builder withInstanceCount(int instanceCount) {
+      this.instanceCount = instanceCount;
+      return this;
+    }
+
+    /**
+     * With artifact name builder.
+     *
      * @param instanceStatusSummaries the instanceStatusSummaries
      * @return the builder
      */
@@ -600,7 +656,9 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withArtifactName(artifactName)
           .withNewContainerServiceName(newContainerServiceName)
           .withOldContainerServiceName(oldContainerServiceName)
-          .withInstanceStatusSummaries(instanceStatusSummaries);
+          .withInstanceStatusSummaries(instanceStatusSummaries)
+          .withInstanceCount(instanceCount)
+          .withClusterName(clusterName);
     }
 
     /**
@@ -629,6 +687,8 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setNewContainerServiceName(newContainerServiceName);
       commandStateExecutionData.setOldContainerServiceName(oldContainerServiceName);
       commandStateExecutionData.setInstanceStatusSummaries(instanceStatusSummaries);
+      commandStateExecutionData.setInstanceCount(instanceCount);
+      commandStateExecutionData.setClusterName(clusterName);
       return commandStateExecutionData;
     }
   }

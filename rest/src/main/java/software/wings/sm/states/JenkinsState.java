@@ -153,6 +153,12 @@ public class JenkinsState extends State {
   }
 
   @Override
+  @Attributes(title = "Wait interval before execution(in seconds)")
+  public Integer getWaitInterval() {
+    return super.getWaitInterval();
+  }
+
+  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
     ExecutionResponse response = executeInternal(context, activityId);

@@ -10,6 +10,7 @@ import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
+import software.wings.api.SelectedNodeExecutionData;
 import software.wings.beans.ServiceInstance;
 import software.wings.common.Constants;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -61,12 +62,15 @@ public class DcNodeSelectState extends State {
       serviceInstances = infrastructureMappingService.selectServiceInstances(appId, envId, infraMappingId,
           ImmutableMap.of("specificHosts", specificHosts, "instanceCount", instanceCount));
     }
+    SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
+    selectedNodeExecutionData.setServiceInstanceList(serviceInstances);
     List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
     ContextElement serviceIdParamElement =
         aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
     return anExecutionResponse()
         .addContextElement(serviceIdParamElement)
         .addNotifyElement(serviceIdParamElement)
+        .withStateExecutionData(selectedNodeExecutionData)
         .build();
   }
 

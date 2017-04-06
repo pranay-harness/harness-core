@@ -71,6 +71,7 @@ public class SubWorkflowState extends State {
     childStateExecutionInstance.setPrevInstanceId(null);
     childStateExecutionInstance.setContextTransition(true);
     childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
+    childStateExecutionInstance.setContextElement(null);
     childStateExecutionInstance.setStartTs(null);
     childStateExecutionInstance.setEndTs(null);
     return childStateExecutionInstance;
@@ -84,12 +85,12 @@ public class SubWorkflowState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
-    handleStatusSummary(context, response, executionResponse);
+    handleStatusSummary(workflowExecutionService, context, response, executionResponse);
     return executionResponse;
   }
 
-  protected void handleStatusSummary(
-      ExecutionContext context, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
+  protected void handleStatusSummary(WorkflowExecutionService workflowExecutionService, ExecutionContext context,
+      Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
     ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponse.setExecutionStatus(executionStatus);

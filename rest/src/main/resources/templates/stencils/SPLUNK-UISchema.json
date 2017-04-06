@@ -1,5 +1,5 @@
 {
-  "ui:order": ["query", "assertion"],
+  "ui:order": ["query", "assertion", "waitInterval"],
   "query": {
     "ui:widget": "textarea"
   },

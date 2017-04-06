@@ -74,6 +74,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -343,7 +344,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       orchestrationWorkflow.onSave();
-      orchestrationWorkflow.setRequiredEntityTypes(getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
+      updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
@@ -378,8 +379,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (orchestrationWorkflow != null) {
       if (onSaveCallNeeded) {
         orchestrationWorkflow.onSave();
-        orchestrationWorkflow.setRequiredEntityTypes(
-            getRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow));
+        updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       }
 
       EntityVersion entityVersion = entityVersionService.newEntityVersion(workflow.getAppId(), EntityType.WORKFLOW,
@@ -768,20 +768,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getUserVariables();
   }
 
-  private Set<EntityType> getRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+  private Set<EntityType> updateRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-      return ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
-          .getWorkflowPhases()
-          .stream()
-          .flatMap(phase -> getRequiredEntityTypes(appId, phase).stream())
-          .collect(Collectors.toSet());
+      Set<EntityType> requiredEntityTypes = ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
+                                                .getWorkflowPhases()
+                                                .stream()
+                                                .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
+                                                .collect(Collectors.toSet());
+      orchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
+      return requiredEntityTypes;
     }
-
     return null;
   }
 
-  private Set<EntityType> getRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
+  private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
 
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
@@ -818,7 +819,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               appId, serviceId, (String) step.getProperties().get("commandName"));
           if (command.getCommand().isArtifactNeeded()) {
             requiredEntityTypes.add(EntityType.ARTIFACT);
-            return requiredEntityTypes;
+            phaseStep.setArtifactNeeded(true);
+            break;
           }
         }
       }
@@ -949,7 +951,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase generateRollbackWorkflowPhaseForECS(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
 
     WorkflowPhase rollbackWorkflowPhase =
         aWorkflowPhase()
@@ -958,11 +959,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withRollbackPhaseName(workflowPhase.getName())
+            .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
+            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                              .addStep(aNode()
+                                           .withId(getUuid())
+                                           .withType(ECS_SERVICE_DEPLOY.name())
+                                           .withName(Constants.ECS_SERVICE_DEPLOY)
+                                           .addProperty("rollback", true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
                               .build())
             .build();
@@ -981,7 +989,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withRollbackPhaseName(workflowPhase.getName())
+            .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
@@ -1004,20 +1012,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withServiceId(workflowPhase.getServiceId())
             .withComputeProviderId(workflowPhase.getComputeProviderId())
             .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withRollbackPhaseName(workflowPhase.getName())
+            .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE, Constants.DISABLE_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.DISABLE, true))
+                              .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
                               .withRollback(true)
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+                              .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
+                              .withRollback(true)
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE, Constants.ENABLE_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.ENABLE, true))
                               .withRollback(true)
+                              .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .build())
             .build();
 

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
@@ -68,12 +69,16 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.PhaseExecutionSummary;
+import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
+import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.MapperUtils;
@@ -992,11 +997,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
-      if (stateExecutionInstance.getContextElement() == null) {
-        logger.error(
-            "refreshSummary - no contextElement for stateExecutionInstance: {}", stateExecutionInstance.getUuid());
-        continue;
-      }
       ContextElement contextElement = stateExecutionInstance.getContextElement();
       ElementExecutionSummary elementExecutionSummary = anElementExecutionSummary()
                                                             .withContextElement(contextElement)
@@ -1032,7 +1032,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
         elementExecutionSummary.setEndTs(last.getEndTs());
       }
-      if (contextElement.getElementType() == ContextElementType.INSTANCE) {
+      if (contextElement != null && contextElement.getElementType() == ContextElementType.INSTANCE) {
         instanceStatusSummaries.add(anInstanceStatusSummary()
                                         .withInstanceElement((InstanceElement) contextElement)
                                         .withStatus(last.getStatus())
@@ -1045,5 +1045,83 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return elementExecutionSummaries;
+  }
+
+  @Override
+  public PhaseExecutionSummary getPhaseExecutionSummary(
+      String appId, String executionUuid, String stateExecutionInstanceId) {
+    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", Operator.EQ, appId)
+            .addFilter("executionUuid", Operator.EQ, executionUuid)
+            .addFilter("parentInstanceId", Operator.IN, stateExecutionInstanceId)
+            .addFilter("stateType", Operator.EQ, StateType.PHASE_STEP.name())
+            .addFieldsIncluded(
+                "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
+            .build();
+
+    PageResponse<StateExecutionInstance> pageResponse =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    if (pageResponse == null || pageResponse.getResponse() == null || pageResponse.getResponse().isEmpty()) {
+      return phaseExecutionSummary;
+    }
+
+    pageResponse.getResponse().forEach(instance -> {
+      StateExecutionData stateExecutionData = instance.getStateExecutionData();
+      if (stateExecutionData instanceof PhaseStepExecutionData) {
+        PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) stateExecutionData;
+        phaseExecutionSummary.getPhaseStepExecutionSummaryMap().put(
+            instance.getStateName(), phaseStepExecutionData.getPhaseStepExecutionSummary());
+      }
+    });
+
+    return phaseExecutionSummary;
+  }
+
+  @Override
+  public PhaseStepExecutionSummary getPhaseStepExecutionSummary(
+      String appId, String executionUuid, String stateExecutionInstanceId) {
+    PhaseStepExecutionSummary phaseStepExecutionSummary = new PhaseStepExecutionSummary();
+    List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+
+    List<String> parentInstanceIds = asList(stateExecutionInstanceId);
+    while (parentInstanceIds != null && !parentInstanceIds.isEmpty()) {
+      PageRequest<StateExecutionInstance> pageRequest =
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter("appId", Operator.EQ, appId)
+              .addFilter("executionUuid", Operator.EQ, executionUuid)
+              .addFilter("parentInstanceId", Operator.IN, parentInstanceIds.toArray())
+              .addFieldsIncluded(
+                  "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
+              .build();
+
+      PageResponse<StateExecutionInstance> pageResponse =
+          wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+      if (pageResponse == null || pageResponse.getResponse() == null || pageResponse.getResponse().isEmpty()) {
+        break;
+      }
+
+      pageResponse.getResponse()
+          .stream()
+          .filter(instance
+              -> !StateType.REPEAT.name().equals(instance.getStateType())
+                  && !StateType.FORK.name().equals(instance.getStateType()))
+          .forEach(instance -> {
+            stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary());
+          });
+
+      parentInstanceIds = pageResponse.getResponse()
+                              .stream()
+                              .filter(instance
+                                  -> StateType.REPEAT.name().equals(instance.getStateType())
+                                      || StateType.FORK.name().equals(instance.getStateType()))
+                              .map(StateExecutionInstance::getUuid)
+                              .collect(Collectors.toList());
+    }
+
+    return phaseStepExecutionSummary;
   }
 }

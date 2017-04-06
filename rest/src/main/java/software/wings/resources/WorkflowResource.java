@@ -4,6 +4,8 @@
 
 package software.wings.resources;
 
+import static software.wings.utils.Validator.validateUuid;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -12,6 +14,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
@@ -67,7 +70,14 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Workflow> pageRequest,
-      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
+      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
+      @QueryParam("workflowType") List<String> workflowTypes) {
+    if ((workflowTypes == null || workflowTypes.isEmpty())
+        && (pageRequest.getFilters() == null
+               || pageRequest.getFilters().stream().noneMatch(
+                      searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
+      pageRequest.addFilter("workflowType", WorkflowType.ORCHESTRATION, Operator.EQ);
+    }
     PageResponse<Workflow> workflows = workflowService.listWorkflows(pageRequest, previousExecutionsCount);
     return new RestResponse<>(workflows);
   }
@@ -134,7 +144,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Workflow> updatePreDeployment(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
-    workflow.setUuid(workflowId);
+    validateUuid(workflow, "workflowId", workflowId);
     workflow.setAppId(appId);
     return new RestResponse<>(workflowService.updateWorkflow(workflow, null));
   }
@@ -205,6 +215,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<WorkflowPhase> update(@QueryParam("appId") String appId,
       @PathParam("workflowId") String workflowId, @PathParam("phaseId") String phaseId, WorkflowPhase workflowPhase) {
+    validateUuid(workflowPhase, "phaseId", phaseId);
     return new RestResponse<>(workflowService.updateWorkflowPhase(appId, workflowId, workflowPhase));
   }
 

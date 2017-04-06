@@ -4,6 +4,7 @@ package software.wings.beans;
  * Created by rishi on 12/22/16.
  */
 public enum PhaseStepType {
+  SELECT_NODE,
   PROVISION_NODE,
   DISABLE_SERVICE,
   DEPLOY_SERVICE,
@@ -16,5 +17,6 @@ public enum PhaseStepType {
   STOP_SERVICE,
   DE_PROVISION_NODE,
   CONTAINER_SETUP,
-  CONTAINER_DEPLOY;
+  CONTAINER_DEPLOY,
+  START_SERVICE;
 }

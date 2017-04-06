@@ -4,25 +4,16 @@ package software.wings.sm;
  * Created by rishi on 1/26/17.
  */
 public class ExecutionEventAdvice {
-  private ExecutionInterrupt executionInterrupt;
-  private boolean roollback;
+  private ExecutionInterruptType executionInterruptType;
   private String nextStateName;
   private String nextChildStateMachineId;
 
-  public ExecutionInterrupt getExecutionInterrupt() {
-    return executionInterrupt;
+  public ExecutionInterruptType getExecutionInterruptType() {
+    return executionInterruptType;
   }
 
-  public void setExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
-    this.executionInterrupt = executionInterrupt;
-  }
-
-  public boolean isRoollback() {
-    return roollback;
-  }
-
-  public void setRoollback(boolean roollback) {
-    this.roollback = roollback;
+  public void setExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
+    this.executionInterruptType = executionInterruptType;
   }
 
   public String getNextStateName() {
@@ -42,8 +33,7 @@ public class ExecutionEventAdvice {
   }
 
   public static final class ExecutionEventAdviceBuilder {
-    private ExecutionInterrupt executionInterrupt;
-    private boolean roollback;
+    private ExecutionInterruptType executionInterruptType;
     private String nextStateName;
     private String nextChildStateMachineId;
 
@@ -53,13 +43,8 @@ public class ExecutionEventAdvice {
       return new ExecutionEventAdviceBuilder();
     }
 
-    public ExecutionEventAdviceBuilder withExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
-      this.executionInterrupt = executionInterrupt;
-      return this;
-    }
-
-    public ExecutionEventAdviceBuilder withRoollback(boolean roollback) {
-      this.roollback = roollback;
+    public ExecutionEventAdviceBuilder withExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
+      this.executionInterruptType = executionInterruptType;
       return this;
     }
 
@@ -75,8 +60,7 @@ public class ExecutionEventAdvice {
 
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
-      executionEventAdvice.setExecutionInterrupt(executionInterrupt);
-      executionEventAdvice.setRoollback(roollback);
+      executionEventAdvice.setExecutionInterruptType(executionInterruptType);
       executionEventAdvice.setNextStateName(nextStateName);
       executionEventAdvice.setNextChildStateMachineId(nextChildStateMachineId);
       return executionEventAdvice;

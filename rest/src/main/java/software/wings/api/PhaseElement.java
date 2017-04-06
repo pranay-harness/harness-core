@@ -21,6 +21,7 @@ public class PhaseElement implements ContextElement {
   private ServiceElement serviceElement;
   private String infraMappingId;
   private String deploymentType;
+  private String phaseNameForRollback;
 
   @Override
   public ContextElementType getElementType() {
@@ -71,6 +72,14 @@ public class PhaseElement implements ContextElement {
     return map;
   }
 
+  public String getPhaseNameForRollback() {
+    return phaseNameForRollback;
+  }
+
+  public void setPhaseNameForRollback(String phaseNameForRollback) {
+    this.phaseNameForRollback = phaseNameForRollback;
+  }
+
   /**
    * Gets infr mapping id.
    *
@@ -115,6 +124,7 @@ public class PhaseElement implements ContextElement {
     private ServiceElement serviceElement;
     private String infraMappingId;
     private String deploymentType;
+    private String phaseNameForRollback;
 
     private PhaseElementBuilder() {}
 
@@ -160,6 +170,11 @@ public class PhaseElement implements ContextElement {
       return this;
     }
 
+    public PhaseElementBuilder withPhaseNameForRollback(String phaseNameForRollback) {
+      this.phaseNameForRollback = phaseNameForRollback;
+      return this;
+    }
+
     /**
      * With deployment type phase element builder.
      *
@@ -181,7 +196,8 @@ public class PhaseElement implements ContextElement {
           .withUuid(uuid)
           .withServiceElement(serviceElement)
           .withInfraMappingId(infraMappingId)
-          .withDeploymentType(deploymentType);
+          .withDeploymentType(deploymentType)
+          .withPhaseNameForRollback(phaseNameForRollback);
     }
 
     /**
@@ -195,6 +211,7 @@ public class PhaseElement implements ContextElement {
       phaseElement.setServiceElement(serviceElement);
       phaseElement.setInfraMappingId(infraMappingId);
       phaseElement.setDeploymentType(deploymentType);
+      phaseElement.setPhaseNameForRollback(phaseNameForRollback);
       return phaseElement;
     }
   }

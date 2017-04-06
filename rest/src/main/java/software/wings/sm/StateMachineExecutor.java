@@ -345,10 +345,13 @@ public class StateMachineExecutor {
         throw new WingsException("updateStateExecutionData failed");
       }
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
-      if (executionEventAdvice != null
-          && (executionEventAdvice.getNextChildStateMachineId() != null
-                 || executionEventAdvice.getNextStateName() != null)) {
-        executionEventAdviceTransition(context, executionEventAdvice);
+      if (executionEventAdvice != null) {
+        if (executionEventAdvice.getExecutionInterruptType() == ExecutionInterruptType.MARK_FAILED) {
+          endTransition(context, stateExecutionInstance, ExecutionStatus.FAILED, null);
+        } else if (executionEventAdvice.getNextChildStateMachineId() != null
+            || executionEventAdvice.getNextStateName() != null) {
+          executionEventAdviceTransition(context, executionEventAdvice);
+        }
       } else if (status == ExecutionStatus.SUCCESS) {
         return successTransition(context);
       } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR) {
@@ -665,6 +668,7 @@ public class StateMachineExecutor {
       ops.set("notifyElements", stateExecutionInstance.getNotifyElements());
     }
 
+    stateExecutionData.setElement(stateExecutionInstance.getContextElement());
     stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
     if (stateExecutionInstance.getEndTs() != null) {
       stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());

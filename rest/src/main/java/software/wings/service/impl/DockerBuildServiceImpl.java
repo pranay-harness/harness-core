@@ -38,7 +38,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, DockerConfig config) {
+  public List<String> getArtifactPaths(String jobName, String groupId, DockerConfig config) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 
@@ -50,6 +50,11 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public Map<String, String> getPlans(DockerConfig config) {
+    throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
+  }
+
+  @Override
+  public List<String> getGroupIds(String jobName, DockerConfig config) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Docker Artifact Stream");
   }
 }

@@ -1,5 +1,14 @@
 package software.wings.beans.command;
 
+import static java.lang.String.format;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder.aResizeCommandUnitExecutionData;
+
+import com.google.common.collect.Multimap;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
@@ -10,14 +19,9 @@ import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.inject.Inject;
-
-import static java.lang.String.format;
-import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.beans.command.KubernetesResizeCommandUnitExecutionData.Builder.aKubernetesResizeCommandUnitExecutionData;
 
 /**
  * Created by brett on 3/3/17
@@ -35,7 +39,7 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     Validator.equalCheck(cloudProviderSetting.getValue().getType(), SettingVariableTypes.GCP.name());
     String clusterName = context.getClusterName();
-    String serviceName = context.getServiceName();
+    String replicationControllerName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
@@ -45,8 +49,13 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
 
     try {
       KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
-      kubernetesContainerService.setControllerPodCount(kubernetesConfig, serviceName, desiredCount);
-      context.setCommandExecutionData(aKubernetesResizeCommandUnitExecutionData().build());
+      kubernetesContainerService.setControllerPodCount(kubernetesConfig, replicationControllerName, desiredCount);
+      Multimap<String, String> podInfo =
+          kubernetesContainerService.getPodInfo(kubernetesConfig, replicationControllerName, desiredCount);
+      List<String> podNames = new ArrayList<>(podInfo.get("podNames"));
+      List<String> containerIds = new ArrayList<>(podInfo.get("containerIds"));
+      context.setCommandExecutionData(
+          aResizeCommandUnitExecutionData().withHostNames(podNames).withContainerIds(containerIds).build());
       commandExecutionStatus = SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);

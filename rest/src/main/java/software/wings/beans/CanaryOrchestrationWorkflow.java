@@ -186,6 +186,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
         WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
         rollbackPhase.setName(Constants.ROLLBACK_PREFIX + workflowPhase.getName());
+        rollbackPhase.setPhaseNameForRollback(workflowPhase.getName());
         populatePhaseStepIds(rollbackPhase);
       }
     }
@@ -236,7 +237,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       return;
     }
     if (phaseStep.getStepsIds() == null || phaseStep.getStepsIds().isEmpty()) {
-      logger.info("Empty stepList for the phaseStep: {}", phaseStep);
+      //      logger.info("Empty stepList for the phaseStep: {}", phaseStep);
       return;
     }
 

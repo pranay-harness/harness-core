@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.awaitility.Awaitility.with;
 import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -62,6 +63,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -69,11 +71,6 @@ import java.util.stream.Collectors;
  */
 public class KubernetesReplicationControllerSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerSetup.class);
-
-  private enum ServiceType { None, ClusterIP, LoadBalancer, NodePort, ExternalName }
-
-  private enum PortProtocol { TCP, UDP }
-
   private ServiceType serviceType;
   private Integer port;
   private Integer targetPort;
@@ -83,17 +80,11 @@ public class KubernetesReplicationControllerSetup extends State {
   private String loadBalancerIP;
   private Integer nodePort;
   private String externalName;
-
   @Inject @Transient private transient GkeClusterService gkeClusterService;
-
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
-
   @Inject @Transient private transient SettingsService settingsService;
-
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
-
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-
   @Inject @Transient private transient ArtifactStreamService artifactStreamService;
 
   /**
@@ -121,12 +112,25 @@ public class KubernetesReplicationControllerSetup extends State {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
-    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-
-    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    KubernetesConfig kubernetesConfig;
+
+    if ("RUNTIME".equals(clusterName)) {
+      // TODO:: Don't hardcode, collect in another step
+      clusterName =
+          "us-west1-a/runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+      kubernetesConfig = gkeClusterService.createCluster(computeProviderSetting, clusterName,
+          ImmutableMap.<String, String>builder()
+              .put("nodeCount", "2")
+              .put("masterUser", "master")
+              .put("masterPwd", "foo!!bar$$")
+              .build());
+    } else {
+      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    }
 
     String lastReplicationControllerName = lastReplicationController(
         kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
@@ -163,7 +167,26 @@ public class KubernetesReplicationControllerSetup extends State {
       }
       serviceClusterIP = service.getSpec().getClusterIP();
       LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-      if (loadBalancer != null && !loadBalancer.getIngress().isEmpty()) {
+
+      if (loadBalancer != null) {
+        if (loadBalancer.getIngress().isEmpty()) {
+          String finalKubernetesServiceName = kubernetesServiceName;
+
+          with()
+              .pollInterval(1, TimeUnit.SECONDS)
+              .await()
+              .atMost(60, TimeUnit.SECONDS)
+              .until(()
+                         -> !kubernetesContainerService.getService(kubernetesConfig, finalKubernetesServiceName)
+                                 .getStatus()
+                                 .getLoadBalancer()
+                                 .getIngress()
+                                 .isEmpty());
+
+          loadBalancer = kubernetesContainerService.getService(kubernetesConfig, finalKubernetesServiceName)
+                             .getStatus()
+                             .getLoadBalancer();
+        }
         serviceLoadBalancerIP = loadBalancer.getIngress().get(0).getIp();
       }
     }
@@ -483,6 +506,10 @@ public class KubernetesReplicationControllerSetup extends State {
   public void setExternalName(String externalName) {
     this.externalName = externalName;
   }
+
+  private enum ServiceType { None, ClusterIP, LoadBalancer, NodePort, ExternalName }
+
+  private enum PortProtocol { TCP, UDP }
 
   public static final class KubernetesReplicationControllerSetupBuilder {
     private String id;

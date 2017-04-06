@@ -10,6 +10,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.PhaseExecutionSummary;
+import software.wings.sm.PhaseStepExecutionSummary;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -193,4 +195,9 @@ public interface WorkflowExecutionService {
 
   List<ElementExecutionSummary> getElementsSummary(
       String appId, String executionUuid, String parentStateExecutionInstanceId);
+
+  PhaseExecutionSummary getPhaseExecutionSummary(String appId, String executionUuid, String stateExecutionInstanceId);
+
+  PhaseStepExecutionSummary getPhaseStepExecutionSummary(
+      String appId, String executionUuid, String stateExecutionInstanceId);
 }

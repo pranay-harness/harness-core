@@ -68,7 +68,7 @@ public class BambooBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactPaths() {
-    List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, bambooConfig);
+    List<String> artifactPaths = bambooBuildService.getArtifactPaths(BUILD_JOB_NAME, null, bambooConfig);
     assertThat(artifactPaths.size()).isEqualTo(0);
   }
 

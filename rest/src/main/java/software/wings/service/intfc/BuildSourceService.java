@@ -32,9 +32,11 @@ public interface BuildSourceService {
    *
    * @param jobName   the job name
    * @param settingId the setting id
+   * @param groupId the group id
    * @return the artifact paths
    */
-  Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId);
+  Set<String> getArtifactPaths(
+      @NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId, String groupId);
 
   /**
    * Gets builds.
@@ -55,4 +57,13 @@ public interface BuildSourceService {
    * @return the last successful build
    */
   BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId);
+
+  /**
+   * Gets group Id paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @return the groupId paths
+   */
+  Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId);
 }

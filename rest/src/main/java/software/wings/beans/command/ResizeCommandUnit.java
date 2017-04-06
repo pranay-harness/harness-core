@@ -1,5 +1,12 @@
 package software.wings.beans.command;
 
+import static java.lang.String.format;
+import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder.aResizeCommandUnitExecutionData;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
@@ -9,15 +16,8 @@ import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
-import javax.inject.Inject;
 import java.util.List;
-
-import static java.lang.String.format;
-import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.beans.command.ResizeCommandUnitExecutionData.Builder.aResizeCommandUnitExecutionData;
+import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -46,8 +46,10 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     try {
       List<String> containerInstanceArns = awsClusterService.resizeCluster(
           cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
-      context.setCommandExecutionData(
-          aResizeCommandUnitExecutionData().withContainerIds(containerInstanceArns).build());
+      context.setCommandExecutionData(aResizeCommandUnitExecutionData()
+                                          .withHostNames(containerInstanceArns)
+                                          .withContainerIds(containerInstanceArns)
+                                          .build());
       commandExecutionStatus = SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);

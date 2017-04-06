@@ -19,7 +19,7 @@ public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
   @DelegateTaskType(TaskType.JENKINS_GET_JOBS) List<String> getJobs(JenkinsConfig jenkinsConfig);
 
   @DelegateTaskType(TaskType.JENKINS_GET_ARTIFACT_PATHS)
-  List<String> getArtifactPaths(String jobName, JenkinsConfig config);
+  List<String> getArtifactPaths(String jobName, String groupId, JenkinsConfig config);
 
   @DelegateTaskType(TaskType.JENKINS_LAST_SUCCESSFUL_BUILD)
   BuildDetails getLastSuccessfulBuild(

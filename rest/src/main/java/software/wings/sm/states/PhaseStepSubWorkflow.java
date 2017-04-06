@@ -1,43 +1,76 @@
 package software.wings.sm.states;
 
-import static software.wings.api.PhaseStepSubWorkflowExecutionData.PhaseStepSubWorkflowExecutionDataBuilder.aPhaseStepSubWorkflowExecutionData;
-import static software.wings.sm.ServiceInstancesProvisionState.ServiceInstancesProvisionStateBuilder.aServiceInstancesProvisionState;
+import static java.util.Arrays.asList;
+import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
+import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.START_SERVICE;
+import static software.wings.beans.PhaseStepType.STOP_SERVICE;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.EXISTS;
+import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepSubWorkflowExecutionData;
+import software.wings.api.PhaseExecutionData;
+import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.beans.Activity;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.PhaseExecutionSummary;
+import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.SpawningExecutionResponse;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.StepExecutionSummary;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 /**
  * Created by rishi on 1/12/17.
  */
 public class PhaseStepSubWorkflow extends SubWorkflowState {
+  @Inject private ActivityService activityService;
+
   public PhaseStepSubWorkflow(String name) {
     super(name, StateType.PHASE_STEP.name());
   }
+
+  @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
@@ -45,17 +78,125 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   // Only for rollback phases
-  @SchemaIgnore private String rollbackPhaseStepName;
+  @SchemaIgnore private String phaseStepNameForRollback;
+  @SchemaIgnore private ExecutionStatus statusForRollback;
+  @SchemaIgnore private boolean artifactNeeded;
 
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     if (phaseStepType == null) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "null phaseStepType");
     }
-    ExecutionResponse response = super.execute(contextIntf);
 
+    ExecutionResponse response;
     PhaseElement phaseElement = contextIntf.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    if (!isRollback()) {
+      validatePreRequisites(contextIntf, phaseElement);
+      response = super.execute(contextIntf);
+    } else {
+      List<ContextElement> rollbackRequiredParams = getRollbackRequiredParam(phaseStepType, phaseElement, contextIntf);
+      if (rollbackRequiredParams == null) {
+        response = new ExecutionResponse();
+      } else {
+        SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) super.execute(contextIntf);
+        for (StateExecutionInstance instance : spawningExecutionResponse.getStateExecutionInstanceList()) {
+          rollbackRequiredParams.forEach(p -> instance.getContextElements().push(p));
+        }
+        response = spawningExecutionResponse;
+      }
+    }
 
+    response.setStateExecutionData(aPhaseStepExecutionData()
+                                       .withStepsInParallel(stepsInParallel)
+                                       .withDefaultFailureStrategy(defaultFailureStrategy)
+                                       .withFailureStrategies(failureStrategies)
+                                       .build());
+    return response;
+  }
+
+  private List<ContextElement> getRollbackRequiredParam(
+      PhaseStepType phaseStepType, PhaseElement phaseElement, ExecutionContext contextIntf) {
+    ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
+    PhaseExecutionData stateExecutionData =
+        (PhaseExecutionData) context.getStateExecutionData(phaseElement.getPhaseNameForRollback());
+    if (stateExecutionData == null) {
+      return null;
+    }
+    PhaseExecutionSummary phaseExecutionSummary = stateExecutionData.getPhaseExecutionSummary();
+    if (phaseExecutionSummary == null || phaseExecutionSummary.getPhaseStepExecutionSummaryMap() == null
+        || phaseExecutionSummary.getPhaseStepExecutionSummaryMap().get(phaseStepNameForRollback) == null) {
+      return null;
+    }
+    PhaseStepExecutionSummary phaseStepExecutionSummary =
+        phaseExecutionSummary.getPhaseStepExecutionSummaryMap().get(phaseStepNameForRollback);
+    if (phaseStepExecutionSummary.getStepExecutionSummaryList() == null) {
+      return null;
+    }
+
+    if (phaseStepType == DISABLE_SERVICE || phaseStepType == DEPLOY_SERVICE || phaseStepType == STOP_SERVICE
+        || phaseStepType == START_SERVICE || phaseStepType == ENABLE_SERVICE) {
+      // Needs service instance id param
+      List<String> serviceInstanceIds = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                            .stream()
+                                            .filter(s -> s.getElement() != null)
+                                            .map(s -> s.getElement().getUuid())
+                                            .distinct()
+                                            .collect(Collectors.toList());
+
+      List<ContextElement> contextParams =
+          Lists.newArrayList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
+      if (artifactNeeded) {
+        ServiceInstanceArtifactParam serviceInstanceArtifactParam = buildInstanceArtifactParam(
+            contextIntf.getAppId(), contextIntf.getWorkflowExecutionId(), serviceInstanceIds);
+        contextParams.add(serviceInstanceArtifactParam);
+      }
+      return contextParams;
+    } else if (phaseStepType == CONTAINER_DEPLOY) {
+      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                 .stream()
+                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                 .findFirst();
+      if (!first.isPresent()) {
+        return null;
+      }
+      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+      EcsServiceElement ecsServiceElement = anEcsServiceElement()
+                                                .withName(commandStepExecutionSummary.getOldContainerServiceName())
+                                                .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
+                                                .withClusterName(commandStepExecutionSummary.getClusterName())
+                                                .build();
+      return asList(ecsServiceElement);
+    }
+    return null;
+  }
+
+  private ServiceInstanceArtifactParam buildInstanceArtifactParam(
+      String appId, String workflowExecutionId, List<String> serviceInstanceIds) {
+    if (serviceInstanceIds == null) {
+      return null;
+    }
+    ServiceInstanceArtifactParam serviceInstanceArtifactParam = new ServiceInstanceArtifactParam();
+    serviceInstanceIds.forEach(serviceInstanceId -> {
+      PageResponse<Activity> pageResponse =
+          activityService.list(aPageRequest()
+                                   .withLimit("1")
+                                   .addFilter("appId", EQ, appId)
+                                   .addFilter("serviceInstanceId", EQ, serviceInstanceId)
+                                   .addFilter("status", EQ, ExecutionStatus.SUCCESS)
+                                   .addFilter("workflowExecutionId", NOT_EQ, workflowExecutionId)
+                                   .addFilter("artifactId", EXISTS)
+                                   .build());
+
+      if (pageResponse != null && !pageResponse.isEmpty()) {
+        serviceInstanceArtifactParam.getInstanceArtifactMap().put(
+            serviceInstanceId, pageResponse.getResponse().get(0).getArtifactId());
+      }
+    });
+
+    return serviceInstanceArtifactParam;
+  }
+
+  private void validatePreRequisites(ExecutionContext contextIntf, PhaseElement phaseElement) {
     switch (phaseStepType) {
       case CONTAINER_DEPLOY: {
         validateServiceElement(contextIntf, phaseElement);
@@ -68,13 +209,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         break;
       }
     }
-
-    response.setStateExecutionData(aPhaseStepSubWorkflowExecutionData()
-                                       .withStepsInParallel(stepsInParallel)
-                                       .withDefaultFailureStrategy(defaultFailureStrategy)
-                                       .withFailureStrategies(failureStrategies)
-                                       .build());
-    return response;
   }
 
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
@@ -134,8 +268,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     handleElementNotifyResponseData(context, phaseElement, response, executionResponse);
-
-    super.handleStatusSummary(context, response, executionResponse);
+    PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) context.getStateExecutionData();
+    phaseStepExecutionData.setPhaseStepExecutionSummary(workflowExecutionService.getPhaseStepExecutionSummary(
+        context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
+    executionResponse.setStateExecutionData(phaseStepExecutionData);
+    super.handleStatusSummary(workflowExecutionService, context, response, executionResponse);
     return executionResponse;
   }
 
@@ -146,14 +283,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
           response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
-      PhaseStepSubWorkflowExecutionData phaseStepSubWorkflowExecutionData =
-          (PhaseStepSubWorkflowExecutionData) context.getStateExecutionData();
-      phaseStepSubWorkflowExecutionData.setPhaseStepExecutionState(
-          aServiceInstancesProvisionState()
-              .withInstanceIds(serviceInstanceIdsParam.getInstanceIds())
-              .withServiceId(serviceInstanceIdsParam.getServiceId())
-              .build());
-      executionResponse.setStateExecutionData(phaseStepSubWorkflowExecutionData);
       executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
@@ -166,13 +295,17 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           response, InstanceElementListParam.class, "Missing InstanceListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-      executionResponse.setNotifyElements(Lists.newArrayList(instanceElementListParam));
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
           (KubernetesReplicationControllerElement) notifiedElement(
               response, KubernetesReplicationControllerElement.class, "Missing KubernetesReplicationControllerElement");
       executionResponse.setContextElements(Lists.newArrayList(kubernetesReplicationControllerElement));
+    } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
+        && phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+          response, InstanceElementListParam.class, "Missing InstanceListParam Element");
+      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
     }
   }
 
@@ -223,12 +356,21 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   }
 
   @SchemaIgnore
-  public String getRollbackPhaseStepName() {
-    return rollbackPhaseStepName;
+  public String getPhaseStepNameForRollback() {
+    return phaseStepNameForRollback;
   }
 
-  public void setRollbackPhaseStepName(String rollbackPhaseStepName) {
-    this.rollbackPhaseStepName = rollbackPhaseStepName;
+  public void setPhaseStepNameForRollback(String phaseStepNameForRollback) {
+    this.phaseStepNameForRollback = phaseStepNameForRollback;
+  }
+
+  @SchemaIgnore
+  public ExecutionStatus getStatusForRollback() {
+    return statusForRollback;
+  }
+
+  public void setStatusForRollback(ExecutionStatus statusForRollback) {
+    this.statusForRollback = statusForRollback;
   }
 
   @SchemaIgnore
@@ -238,5 +380,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   public void setPhaseStepType(PhaseStepType phaseStepType) {
     this.phaseStepType = phaseStepType;
+  }
+
+  @SchemaIgnore
+  public boolean isArtifactNeeded() {
+    return artifactNeeded;
+  }
+
+  public void setArtifactNeeded(boolean artifactNeeded) {
+    this.artifactNeeded = artifactNeeded;
   }
 }

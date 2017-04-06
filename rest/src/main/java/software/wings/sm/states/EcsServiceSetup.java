@@ -1,5 +1,9 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Maps.newHashMap;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
@@ -13,6 +17,7 @@ import com.amazonaws.services.ecs.model.ContainerDefinition;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.DeploymentConfiguration;
 import com.amazonaws.services.ecs.model.LogConfiguration;
+import com.amazonaws.services.ecs.model.MountPoint;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
@@ -53,7 +58,6 @@ import software.wings.utils.EcsConvention;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -132,7 +136,7 @@ public class EcsServiceSetup extends State {
         ecsContainerTask.getContainerDefinitions()
             .stream()
             .map(containerDefinition -> createContainerDefinition(imageName, containerName, containerDefinition))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     RegisterTaskDefinitionRequest registerTaskDefinitionRequest =
         new RegisterTaskDefinitionRequest()
@@ -140,16 +144,6 @@ public class EcsServiceSetup extends State {
             .withFamily(EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
 
     TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
-
-    /*
-    SettingAttribute loadBalancerSetting = settingsService.get(loadBalancerName);
-
-    if (loadBalancerSetting == null ||
-    !loadBalancerSetting.getValue().getType().equals(SettingVariableTypes.ALB.name())) { throw new
-    WingsException(ErrorCode.INVALID_REQUEST, "message", "Load balancer is not of ALB type");
-    }
-    ApplicationLoadBalancerConfig albConfig = (ApplicationLoadBalancerConfig) loadBalancerSetting.getValue();
-    */
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
@@ -218,7 +212,7 @@ public class EcsServiceSetup extends State {
         services.stream()
             .filter(
                 service -> (service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     com.amazonaws.services.ecs.model.Service lastECSService = null;
     for (com.amazonaws.services.ecs.model.Service service : serviceList) {
@@ -257,7 +251,7 @@ public class EcsServiceSetup extends State {
                                                       .withContainerPort(portMapping.getContainerPort())
                                                       .withHostPort(portMapping.getHostPort())
                                                       .withProtocol(TransportProtocol.Tcp))
-                                           .collect(Collectors.toList());
+                                           .collect(toList());
       containerDefinition.setPortMappings(portMappings);
     }
 
@@ -265,20 +259,35 @@ public class EcsServiceSetup extends State {
                                 .orElse(Collections.emptyList())
                                 .stream()
                                 .filter(s -> isNotBlank(s))
-                                .collect(Collectors.toList());
+                                .collect(toList());
     containerDefinition.setCommand(commands);
 
     if (wingsContainerDefinition.getLogConfiguration() != null) {
       EcsContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
-      LogConfiguration logConfiguration = new LogConfiguration().withLogDriver(wingsLogConfiguration.getLogDriver());
-      wingsLogConfiguration.getOptions().forEach(
-          logOption -> logConfiguration.addOptionsEntry(logOption.getKey(), logOption.getValue()));
-      containerDefinition.setLogConfiguration(logConfiguration);
+      if (isNotBlank(wingsLogConfiguration.getLogDriver())) {
+        LogConfiguration logConfiguration = new LogConfiguration().withLogDriver(wingsLogConfiguration.getLogDriver());
+        Optional.ofNullable(wingsLogConfiguration.getOptions())
+            .get()
+            .forEach(logOption -> logConfiguration.addOptionsEntry(logOption.getKey(), logOption.getValue()));
+        containerDefinition.setLogConfiguration(logConfiguration);
+      }
     }
 
-    if (wingsContainerDefinition.getStorageConfigurations() != null) {
-      // TODO:: fill volume amd mount points here
+    if (isNotEmpty(wingsContainerDefinition.getStorageConfigurations())) {
+      List<EcsContainerTask.StorageConfiguration> wingsStorageConfigurations =
+          wingsContainerDefinition.getStorageConfigurations();
+      containerDefinition.setMountPoints(wingsStorageConfigurations.stream()
+                                             .map(storageConfiguration
+                                                 -> new MountPoint()
+                                                        .withContainerPath(storageConfiguration.getContainerPath())
+                                                        .withSourceVolume(storageConfiguration.getHostSourcePath())
+                                                        .withReadOnly(storageConfiguration.isReadonly()))
+                                             .collect(toList()));
     }
+
+    containerDefinition.setLogConfiguration(new LogConfiguration().withLogDriver("splunk").withOptions(
+        newHashMap(of("splunk-url", "http://ec2-52-54-103-49.compute-1.amazonaws.com:8088", "splunk-token",
+            "5E16E8E8-BAFC-4125-A6C9-9914E78C3E78", "splunk-insecureskipverify", "true"))));
 
     return containerDefinition;
   }
