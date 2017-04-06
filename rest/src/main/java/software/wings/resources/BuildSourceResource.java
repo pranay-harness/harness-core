@@ -69,8 +69,25 @@ public class BuildSourceResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Set<String>> getArtifactPaths(@QueryParam("appId") String appId,
-      @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId));
+      @PathParam("jobName") String jobName, @QueryParam("settingId") String settingId,
+      @QueryParam("groupId") String groupId) {
+    return new RestResponse<>(buildSourceService.getArtifactPaths(appId, jobName, settingId, groupId));
+  }
+
+  /**
+   * Gets artifact paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @return group Ids
+   */
+  @GET
+  @Path("jobs/{jobName}/groupIds")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> getGroupIds(@QueryParam("appId") String appId, @PathParam("jobName") String jobName,
+      @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getGroupIds(appId, jobName, settingId));
   }
 
   /**

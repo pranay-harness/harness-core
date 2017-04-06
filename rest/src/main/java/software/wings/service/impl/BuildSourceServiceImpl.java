@@ -5,6 +5,7 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -49,11 +50,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public Set<String> getArtifactPaths(String appId, String jobName, String settingId) {
+  public Set<String> getArtifactPaths(String appId, String jobName, String settingId, String groupId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     return Sets.newHashSet(
-        getBuildService(settingAttribute, appId).getArtifactPaths(jobName, settingAttribute.getValue()));
+        getBuildService(settingAttribute, appId).getArtifactPaths(jobName, groupId, settingAttribute.getValue()));
   }
 
   @Override
@@ -76,6 +77,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     notNullCheck("artifactStream", artifactStream);
     return getBuildService(settingAttribute, appId)
         .getLastSuccessfulBuild(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
+  }
+
+  @Override
+  public Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String repoType, @NotEmpty String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    notNullCheck("Setting", settingAttribute);
+    return Sets.newHashSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, settingAttribute.getValue()));
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
