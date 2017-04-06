@@ -119,6 +119,7 @@ public class KubernetesReplicationControllerSetup extends State {
     KubernetesConfig kubernetesConfig;
 
     if ("RUNTIME".equals(clusterName)) {
+      // TODO:: Don't hardcode, collect in another step
       clusterName =
           "us-west1-a/runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
       kubernetesConfig = gkeClusterService.createCluster(computeProviderSetting, clusterName,
