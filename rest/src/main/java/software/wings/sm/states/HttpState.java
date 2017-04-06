@@ -22,7 +22,9 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ContextElementType;
@@ -36,6 +38,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.Map;
 
@@ -372,6 +375,14 @@ public class HttpState extends State {
    */
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
+  }
+
+  protected String urlEncodeString(String queryString) {
+    try {
+      return URLEncoder.encode(queryString, "UTF-8");
+    } catch (UnsupportedEncodingException ex) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
+    }
   }
 
   /**
