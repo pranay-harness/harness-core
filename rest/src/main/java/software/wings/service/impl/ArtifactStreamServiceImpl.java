@@ -193,7 +193,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       Environment environment = environmentService.get(appId, artifactStreamAction.getEnvId(), false);
       artifactStreamAction.setEnvName(environment.getName());
     } else {
-      Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId());
+      Pipeline pipeline = pipelineService.readPipeline(appId, artifactStreamAction.getWorkflowId(), false);
       artifactStreamAction.setWorkflowName(pipeline.getName());
     }
 

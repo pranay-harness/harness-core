@@ -7,6 +7,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ public class Pipeline extends Base {
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
+  @Transient private List<Service> services = new ArrayList<>();
 
   /**
    * Gets state eta map.
@@ -129,6 +131,14 @@ public class Pipeline extends Base {
         .add("pipelineStages", pipelineStages)
         .add("stateEtaMap", stateEtaMap)
         .toString();
+  }
+
+  public List<Service> getServices() {
+    return services;
+  }
+
+  public void setServices(List<Service> services) {
+    this.services = services;
   }
 
   /**
