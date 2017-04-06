@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static com.google.common.collect.ImmutableSortedMap.of;
+import static java.util.Arrays.asList;
 import static software.wings.api.SplunkStateExecutionData.Builder.aSplunkStateExecutionData;
 
 import com.google.inject.Inject;
@@ -26,6 +27,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -96,6 +98,18 @@ public class SplunkState extends HttpState {
    */
   public void setQuery(String query) {
     this.query = query;
+  }
+
+  @SchemaIgnore
+  @Override
+  public List<String> getPatternsForRequiredContextElementType() {
+    return asList(query, getAssertion());
+  }
+
+  @Override
+  @Attributes(title = "Wait interval before execution(in seconds)")
+  public Integer getWaitInterval() {
+    return super.getWaitInterval();
   }
 
   @SchemaIgnore
