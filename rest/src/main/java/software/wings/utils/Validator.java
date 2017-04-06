@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import software.wings.beans.ErrorCode;
+import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 
 import java.util.HashMap;
@@ -35,6 +36,13 @@ public class Validator {
       map.put("appId", appId);
       map.put("uuid", uuid);
       throw new WingsException(map, ErrorCode.INVALID_ARGUMENT);
+    }
+  }
+
+  public static void validateUuid(UuidAware base, String fieldName, String fieldValue) {
+    notNullCheck(fieldValue, fieldName);
+    if (!fieldValue.equals(base.getUuid())) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", fieldName + " mismatch with object uuid");
     }
   }
 }

@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public class Base {
+public class Base implements UuidAware {
   /**
    * The constant GLOBAL_APP_ID.
    */
