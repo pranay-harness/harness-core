@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.exception.WingsException;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
+import software.wings.stencils.UISchemaProcessor;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
@@ -28,10 +29,9 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
   BAMBOO(BambooArtifactStream.class, "BAMBOO"), /**
                                                  * Docker source type.
                                                  */
-  DOCKER(DockerArtifactStream.class, "DOCKER"),
-  /**
-   * Nexus Artifact source type.
-   */
+  DOCKER(DockerArtifactStream.class, "DOCKER"), /**
+                                                 * Nexus Artifact source type.
+                                                 */
   NEXUS(NexusArtifactStream.class, "NEXUS");
 
   private static final String stencilsPath = "/templates/artifactstreams/";
@@ -47,9 +47,14 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
     this.artifactStreamClass = artifactStreamClass;
     this.name = name;
     try {
-      uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+      uiSchema = UISchemaProcessor.generate(artifactStreamClass);
+
     } catch (Exception e) {
-      uiSchema = new HashMap<String, String>();
+      try {
+        uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+      } catch (Exception ex) {
+        uiSchema = new HashMap<String, String>();
+      }
     }
     jsonSchema = JsonUtils.jsonSchema(artifactStreamClass);
   }

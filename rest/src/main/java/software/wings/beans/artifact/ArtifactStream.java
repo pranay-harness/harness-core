@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.stencils.EnumData;
+import software.wings.stencils.UIOrder;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -28,6 +29,7 @@ import javax.validation.constraints.NotNull;
 public abstract class ArtifactStream extends Base {
   @SchemaIgnore private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
+  @UIOrder(1)
   @NotNull
   @Attributes(title = "Source Type")
   @EnumData(enumDataProvider = ArtifactSourceTypeEnumDataProvider.class)
@@ -35,9 +37,9 @@ public abstract class ArtifactStream extends Base {
 
   @NotEmpty @SchemaIgnore private String sourceName;
 
-  @NotEmpty @Attributes(title = "Source Server") private String settingId;
+  @UIOrder(2) @NotEmpty @Attributes(title = "Source Server") private String settingId;
 
-  @SchemaIgnore private String serviceId;
+  @UIOrder(3) @SchemaIgnore private String serviceId;
 
   @SchemaIgnore private boolean autoDownload = false;
 
