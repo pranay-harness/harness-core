@@ -11,9 +11,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -22,7 +20,6 @@ import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -97,14 +94,6 @@ public class AppDynamicsState extends HttpState {
 
   protected TaskType getTaskType() {
     return TaskType.APP_DYNAMICS;
-  }
-
-  private String urlEncodeString(String queryString) {
-    try {
-      return URLEncoder.encode(queryString, "UTF-8");
-    } catch (UnsupportedEncodingException ex) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", "Couldn't url-encode " + queryString);
-    }
   }
 
   @SchemaIgnore
