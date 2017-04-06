@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import java.util.Set;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -35,10 +36,11 @@ public interface BuildService<T> {
    * Gets artifact paths.
    *
    * @param jobName the job name
+   * @param  groupId the Group Id
    * @param config  the jenkins config
    * @return the artifact paths
    */
-  List<String> getArtifactPaths(String jobName, T config);
+  List<String> getArtifactPaths(String jobName, String groupId, T config);
 
   /**
    * Gets last successful build.
@@ -57,4 +59,13 @@ public interface BuildService<T> {
    * @return the plans
    */
   Map<String, String> getPlans(T config);
+
+  /**
+   * Gets group Id paths.
+   *
+   * @param repoType   The repo type
+   * @param config  the config
+   * @return the groupId paths
+   */
+  List<String> getGroupIds(String repoType, T config);
 }

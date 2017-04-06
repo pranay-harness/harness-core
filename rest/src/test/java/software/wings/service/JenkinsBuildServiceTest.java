@@ -130,6 +130,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     artifact.setRelativePath("relativePath");
     when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
     when(jobWithDetails.getLastSuccessfulBuild().details().getArtifacts()).thenReturn(ImmutableList.of(artifact));
-    assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, jenkinsConfig)).containsExactly("relativePath");
+    assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, null, jenkinsConfig))
+        .containsExactly("relativePath");
   }
 }

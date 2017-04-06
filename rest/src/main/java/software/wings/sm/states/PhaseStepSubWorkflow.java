@@ -295,7 +295,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           response, InstanceElementListParam.class, "Missing InstanceListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-      executionResponse.setNotifyElements(Lists.newArrayList(instanceElementListParam));
     } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
         && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
@@ -307,7 +306,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           response, InstanceElementListParam.class, "Missing InstanceListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-      executionResponse.setNotifyElements(Lists.newArrayList(instanceElementListParam));
     }
   }
 

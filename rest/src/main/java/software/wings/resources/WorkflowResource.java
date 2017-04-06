@@ -4,6 +4,8 @@
 
 package software.wings.resources;
 
+import static software.wings.utils.Validator.validateUuid;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -142,7 +144,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Workflow> updatePreDeployment(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
-    workflow.setUuid(workflowId);
+    validateUuid(workflow, "workflowId", workflowId);
     workflow.setAppId(appId);
     return new RestResponse<>(workflowService.updateWorkflow(workflow, null));
   }
@@ -213,6 +215,7 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<WorkflowPhase> update(@QueryParam("appId") String appId,
       @PathParam("workflowId") String workflowId, @PathParam("phaseId") String phaseId, WorkflowPhase workflowPhase) {
+    validateUuid(workflowPhase, "phaseId", phaseId);
     return new RestResponse<>(workflowService.updateWorkflowPhase(appId, workflowId, workflowPhase));
   }
 

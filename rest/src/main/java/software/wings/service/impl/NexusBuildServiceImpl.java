@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import org.apache.commons.lang.StringUtils;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
@@ -37,9 +38,16 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public List<String> getArtifactPaths(String jobName, NexusConfig config) {
-    // Here Jobname as repo Id
-    return nexusService.getArtifactPaths(config, jobName);
+  public List<String> getArtifactPaths(String repoId, String groupId, NexusConfig config) {
+    if (StringUtils.isBlank(groupId)) {
+      return nexusService.getArtifactPaths(config, repoId);
+    }
+    return nexusService.getArtifactNames(config, repoId, groupId);
+  }
+
+  @Override
+  public List<String> getGroupIds(String repoType, NexusConfig config) {
+    return nexusService.getGroupIdPaths(config, repoType);
   }
 
   @Override

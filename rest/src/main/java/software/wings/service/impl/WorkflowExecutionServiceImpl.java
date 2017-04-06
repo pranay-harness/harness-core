@@ -997,11 +997,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
-      if (stateExecutionInstance.getContextElement() == null) {
-        logger.error(
-            "refreshSummary - no contextElement for stateExecutionInstance: {}", stateExecutionInstance.getUuid());
-        continue;
-      }
       ContextElement contextElement = stateExecutionInstance.getContextElement();
       ElementExecutionSummary elementExecutionSummary = anElementExecutionSummary()
                                                             .withContextElement(contextElement)
@@ -1037,7 +1032,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
         elementExecutionSummary.setEndTs(last.getEndTs());
       }
-      if (contextElement.getElementType() == ContextElementType.INSTANCE) {
+      if (contextElement != null && contextElement.getElementType() == ContextElementType.INSTANCE) {
         instanceStatusSummaries.add(anInstanceStatusSummary()
                                         .withInstanceElement((InstanceElement) contextElement)
                                         .withStatus(last.getStatus())

@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rishi on 12/21/16.
  */
-public class WorkflowPhase {
+public class WorkflowPhase implements UuidAware {
   private String uuid = UUIDGenerator.getUuid();
   private String name;
   private @NotNull String serviceId;
