@@ -112,12 +112,24 @@ public class KubernetesReplicationControllerSetup extends State {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
-    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
-
-    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+    String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    KubernetesConfig kubernetesConfig;
+
+    if ("RUNTIME".equals(clusterName)) {
+      clusterName =
+          "us-west1-a/runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+      kubernetesConfig = gkeClusterService.createCluster(computeProviderSetting, clusterName,
+          ImmutableMap.<String, String>builder()
+              .put("nodeCount", "2")
+              .put("masterUser", "master")
+              .put("masterPwd", "foo!!bar$$")
+              .build());
+    } else {
+      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    }
 
     String lastReplicationControllerName = lastReplicationController(
         kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
