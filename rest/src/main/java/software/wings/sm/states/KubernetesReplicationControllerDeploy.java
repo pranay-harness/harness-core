@@ -40,7 +40,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.KubernetesResizeCommandUnitExecutionData;
+import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.common.Constants;
@@ -287,10 +287,10 @@ public class KubernetesReplicationControllerDeploy extends State {
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
-    if (commandExecutionData instanceof KubernetesResizeCommandUnitExecutionData
-        && ((KubernetesResizeCommandUnitExecutionData) commandExecutionData).getPodNames() != null) {
-      ((KubernetesResizeCommandUnitExecutionData) commandExecutionData)
-          .getPodNames()
+    if (commandExecutionData instanceof ResizeCommandUnitExecutionData
+        && ((ResizeCommandUnitExecutionData) commandExecutionData).getHostNames() != null) {
+      ((ResizeCommandUnitExecutionData) commandExecutionData)
+          .getHostNames()
           .forEach(podName
               -> instanceStatusSummaries.add(
                   anInstanceStatusSummary()

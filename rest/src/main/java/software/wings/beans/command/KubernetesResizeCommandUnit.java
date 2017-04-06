@@ -5,7 +5,9 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.beans.command.KubernetesResizeCommandUnitExecutionData.KubernetesResizeCommandUnitExecutionDataBuilder.aKubernetesResizeCommandUnitExecutionData;
+import static software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder.aResizeCommandUnitExecutionData;
+
+import com.google.common.collect.Multimap;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
@@ -17,6 +19,7 @@ import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -47,8 +50,12 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
     try {
       KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
       kubernetesContainerService.setControllerPodCount(kubernetesConfig, replicationControllerName, desiredCount);
-      List<String> podNames = kubernetesContainerService.getPodNames(kubernetesConfig, replicationControllerName);
-      context.setCommandExecutionData(aKubernetesResizeCommandUnitExecutionData().withPodNames(podNames).build());
+      Multimap<String, String> podInfo =
+          kubernetesContainerService.getPodInfo(kubernetesConfig, replicationControllerName, desiredCount);
+      List<String> podNames = new ArrayList<>(podInfo.get("podNames"));
+      List<String> containerIds = new ArrayList<>(podInfo.get("containerIds"));
+      context.setCommandExecutionData(
+          aResizeCommandUnitExecutionData().withHostNames(podNames).withContainerIds(containerIds).build());
       commandExecutionStatus = SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);
