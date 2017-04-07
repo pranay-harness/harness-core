@@ -89,12 +89,7 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
       return -1;
     }
 
-    int desiredCount = replicationController.getSpec().getReplicas() - instanceCount;
-
-    if (desiredCount < 0) {
-      desiredCount = 0;
-    }
-
+    int desiredCount = Math.max(replicationController.getSpec().getReplicas() - instanceCount, 0);
     logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
     return desiredCount;
   }

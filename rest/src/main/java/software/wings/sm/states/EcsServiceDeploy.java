@@ -79,12 +79,8 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
       logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
       return -1;
     }
-    int desiredCount = ecsService.get().getDesiredCount() - instanceCount;
 
-    if (desiredCount < 0) {
-      desiredCount = 0;
-    }
-
+    int desiredCount = Math.max(ecsService.get().getDesiredCount() - instanceCount, 0);
     logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
     return desiredCount;
   }
