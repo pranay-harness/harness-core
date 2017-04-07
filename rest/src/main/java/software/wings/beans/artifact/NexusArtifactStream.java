@@ -59,13 +59,13 @@ public class NexusArtifactStream extends ArtifactStream {
 
   @UIOrder(7)
   @Attributes(title = "Automatic Download")
-  public boolean isAutoDownload() {
+  public boolean getAutoDownload() {
     return super.isAutoDownload();
   }
 
   @UIOrder(8)
   @Attributes(title = "Auto-approved for Production")
-  public boolean isAutoApproveForProduction() {
+  public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 
