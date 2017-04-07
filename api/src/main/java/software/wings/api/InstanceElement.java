@@ -18,6 +18,7 @@ import java.util.Map;
 public class InstanceElement implements ContextElement {
   private String uuid;
   private String displayName;
+  private String hostName;
   private HostElement hostElement;
   private ServiceTemplateElement serviceTemplateElement;
 
@@ -71,6 +72,14 @@ public class InstanceElement implements ContextElement {
     this.displayName = displayName;
   }
 
+  public String getHostName() {
+    return hostName;
+  }
+
+  public void setHostName(String hostName) {
+    this.hostName = hostName;
+  }
+
   /**
    * Gets host element.
    *
@@ -113,6 +122,7 @@ public class InstanceElement implements ContextElement {
   public static final class Builder {
     private String uuid;
     private String displayName;
+    private String hostName;
     private HostElement hostElement;
     private ServiceTemplateElement serviceTemplateElement;
 
@@ -149,6 +159,11 @@ public class InstanceElement implements ContextElement {
       return this;
     }
 
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
     /**
      * With host element builder.
      *
@@ -180,6 +195,7 @@ public class InstanceElement implements ContextElement {
       InstanceElement instanceElement = new InstanceElement();
       instanceElement.setUuid(uuid);
       instanceElement.setDisplayName(displayName);
+      instanceElement.setHostName(hostName);
       instanceElement.setHostElement(hostElement);
       instanceElement.setServiceTemplateElement(serviceTemplateElement);
       return instanceElement;

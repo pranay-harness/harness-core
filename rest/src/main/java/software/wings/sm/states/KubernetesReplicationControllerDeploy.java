@@ -288,36 +288,36 @@ public class KubernetesReplicationControllerDeploy extends State {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
 
     if (commandExecutionData instanceof ResizeCommandUnitExecutionData
-        && ((ResizeCommandUnitExecutionData) commandExecutionData).getHostNames() != null) {
+        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerInfos() != null) {
       ((ResizeCommandUnitExecutionData) commandExecutionData)
-          .getHostNames()
-          .forEach(podName
+          .getContainerInfos()
+          .forEach(containerInfo
               -> instanceStatusSummaries.add(
                   anInstanceStatusSummary()
                       .withStatus(ExecutionStatus.SUCCESS)
                       .withInstanceElement(
                           anInstanceElement()
-                              .withUuid(podName)
-                              .withHostElement(aHostElement().withHostName(podName).build())
+                              .withUuid(containerInfo.getContainerId())
+                              .withHostName(containerInfo.getHostName())
+                              .withHostElement(aHostElement().withHostName(containerInfo.getHostName()).build())
                               .withServiceTemplateElement(aServiceTemplateElement()
                                                               .withUuid(serviceTemplateKey.getId().toString())
                                                               .withServiceElement(phaseElement.getServiceElement())
                                                               .build())
-                              .withDisplayName(podName)
+                              .withDisplayName(containerInfo.getContainerId())
                               .build())
                       .build()));
     }
-
     return instanceStatusSummaries;
   }
 
   private CommandExecutionContext buildCommandExecutionContext(Application app, String envId, String clusterName,
-      String ecsServiceName, int desiredCount, String activityId, SettingAttribute settingAttribute) {
+      String replicationControllerName, int desiredCount, String activityId, SettingAttribute settingAttribute) {
     CommandExecutionContext commandExecutionContext =
         aCommandExecutionContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).withEnvId(envId).build();
     commandExecutionContext.setClusterName(clusterName);
 
-    commandExecutionContext.setServiceName(ecsServiceName);
+    commandExecutionContext.setServiceName(replicationControllerName);
     commandExecutionContext.setActivityId(activityId);
     commandExecutionContext.setCloudProviderSetting(settingAttribute);
     commandExecutionContext.setDesiredCount(desiredCount);

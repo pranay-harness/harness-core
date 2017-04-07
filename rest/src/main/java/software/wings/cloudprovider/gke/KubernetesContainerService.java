@@ -1,12 +1,13 @@
 package software.wings.cloudprovider.gke;
 
-import com.google.common.collect.Multimap;
-
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import software.wings.beans.KubernetesConfig;
+import software.wings.cloudprovider.ContainerInfo;
+
+import java.util.List;
 
 /**
  * Created by brett on 2/10/17.
@@ -43,9 +44,10 @@ public interface KubernetesContainerService {
   int getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
 
   /**
-   * Gets the container IDs for a replication controller.
+   * Gets the container infos for a replication controller.
    */
-  Multimap<String, String> getPodInfo(KubernetesConfig kubernetesConfig, String replicationControllerName, int number);
+  List<ContainerInfo> getContainerInfos(
+      KubernetesConfig kubernetesConfig, String replicationControllerName, int number);
 
   /**
    * Creates a service.

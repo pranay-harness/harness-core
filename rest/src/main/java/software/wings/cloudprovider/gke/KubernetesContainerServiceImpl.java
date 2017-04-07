@@ -2,8 +2,6 @@ package software.wings.cloudprovider.gke;
 
 import static org.awaitility.Awaitility.with;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -15,13 +13,14 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.service.impl.KubernetesHelperService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -75,21 +74,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Multimap<String, String> getPodInfo(
+  public List<ContainerInfo> getContainerInfos(
       KubernetesConfig kubernetesConfig, String replicationControllerName, int number) {
-    Multimap<String, String> result = Multimaps.newListMultimap(new HashMap<>(), ArrayList::new);
+    List<ContainerInfo> containerInfos = new ArrayList<>();
 
-    waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number).forEach(pod -> {
-      result.put("podNames", pod.getMetadata().getName());
-      result.putAll("containerIds",
-          pod.getStatus()
-              .getContainerStatuses()
-              .stream()
-              .map(containerStatus -> containerStatus.getContainerID().substring(9, 21))
-              .collect(Collectors.toList()));
-    });
+    waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number)
+        .forEach(pod
+            -> containerInfos.addAll(pod.getStatus()
+                                         .getContainerStatuses()
+                                         .stream()
+                                         .map(containerStatus
+                                             -> new ContainerInfo(pod.getMetadata().getName(),
+                                                 StringUtils.substring(containerStatus.getContainerID(), 9, 21)))
+                                         .collect(Collectors.toList())));
 
-    return result;
+    return containerInfos;
   }
 
   @Override

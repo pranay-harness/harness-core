@@ -11,6 +11,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -44,12 +45,9 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      List<String> containerInstanceArns = awsClusterService.resizeCluster(
+      List<ContainerInfo> containerInfos = awsClusterService.resizeCluster(
           cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
-      context.setCommandExecutionData(aResizeCommandUnitExecutionData()
-                                          .withHostNames(containerInstanceArns)
-                                          .withContainerIds(containerInstanceArns)
-                                          .build());
+      context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       commandExecutionStatus = SUCCESS;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);

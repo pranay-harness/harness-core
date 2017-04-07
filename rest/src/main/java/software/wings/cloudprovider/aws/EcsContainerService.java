@@ -6,6 +6,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,7 @@ public interface EcsContainerService {
    * @param executionLogCallback the execution log callback
    * @return the list
    */
-  List<String> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
+  List<ContainerInfo> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
       Integer desiredCount, ExecutionLogCallback executionLogCallback);
 
   /**

@@ -7,6 +7,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ClusterConfiguration;
+import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public interface AwsClusterService {
    * @param executionLogCallback the execution log callback
    * @return the list
    */
-  List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
+  List<ContainerInfo> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
       Integer desiredSize, ExecutionLogCallback executionLogCallback);
 
   /**

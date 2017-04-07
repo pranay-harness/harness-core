@@ -1,18 +1,19 @@
 package software.wings.cloudprovider.aws;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.hazelcast.internal.cluster.impl.ClusterServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ClusterConfiguration;
+import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,16 +50,16 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   }
 
   @Override
-  public List<String> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
-      Integer desiredSize, ExecutionLogCallback executionLogCallback) {
+  public List<ContainerInfo> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName,
+      String serviceName, Integer desiredSize, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(
         String.format("Resize service [%s] in cluster [%s] to %s instances", serviceName, clusterName, desiredSize),
         LogLevel.INFO);
-    List<String> containerInstanceArns = ecsContainerService.provisionTasks(
+    List<ContainerInfo> containerInfos = ecsContainerService.provisionTasks(
         cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     executionLogCallback.saveExecutionLog(
         String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
-    return containerInstanceArns;
+    return containerInfos;
   }
 
   @Override

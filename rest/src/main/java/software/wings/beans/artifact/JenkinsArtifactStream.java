@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
+import software.wings.stencils.UIOrder;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,9 +18,9 @@ import java.util.List;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsArtifactStream extends ArtifactStream {
-  @NotEmpty @Attributes(title = "Job Name*") private String jobname;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Job Name*") private String jobname;
 
-  @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
+  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -70,13 +71,15 @@ public class JenkinsArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
+  @UIOrder(6)
   @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
+  public boolean isAutoDownload() {
     return super.isAutoDownload();
   }
 
+  @UIOrder(7)
   @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
+  public boolean isAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 

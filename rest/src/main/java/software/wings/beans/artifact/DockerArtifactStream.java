@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
+import software.wings.stencils.UIOrder;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,7 +19,7 @@ import java.util.List;
  */
 @JsonTypeName("DOCKER")
 public class DockerArtifactStream extends ArtifactStream {
-  @NotEmpty @Attributes(title = "Docker Image name") private String imageName;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Docker Image name") private String imageName;
 
   /**
    * Instantiates a new Docker artifact stream.
@@ -74,8 +75,9 @@ public class DockerArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
+  @UIOrder(5)
   @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
+  public boolean isAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 

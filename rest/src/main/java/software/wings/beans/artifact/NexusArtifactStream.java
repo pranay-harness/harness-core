@@ -5,12 +5,13 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.EmbeddedUser;
+import software.wings.stencils.UIOrder;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.EmbeddedUser;
-import software.wings.beans.artifact.BambooArtifactStream.Builder;
 
 /**
  * Created by srinivas on 3/31/17.
@@ -25,9 +26,11 @@ public class NexusArtifactStream extends ArtifactStream {
     this.jobname = jobname;
   }
 
-  @NotEmpty @Attributes(title = "Repository Type", required = true) private String jobname;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Repository Type", required = true) private String jobname;
 
-  @NotEmpty @Attributes(title = "Group Id", required = true) private List<String> artifactPaths;
+  @UIOrder(5) @NotEmpty @Attributes(title = "Group Id", required = true) private String groupId;
+
+  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Name", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new Nexus artifact stream.
@@ -54,13 +57,15 @@ public class NexusArtifactStream extends ArtifactStream {
     return super.getSettingId();
   }
 
+  @UIOrder(7)
   @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
+  public boolean isAutoDownload() {
     return super.isAutoDownload();
   }
 
+  @UIOrder(8)
   @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
+  public boolean isAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 
@@ -82,6 +87,22 @@ public class NexusArtifactStream extends ArtifactStream {
     this.artifactPaths = artifactPaths;
   }
 
+  /**
+   *
+   * @return groupId
+   */
+  public String getGroupId() {
+    return groupId;
+  }
+
+  /**
+   * Set Group Id
+   * @param groupId
+   */
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+  }
+
   @Override
   @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
@@ -92,6 +113,7 @@ public class NexusArtifactStream extends ArtifactStream {
    */
   public static final class Builder {
     private String jobname;
+    private String groupId;
     private List<String> artifactPaths;
     private String sourceName;
     private String settingId;
@@ -125,6 +147,17 @@ public class NexusArtifactStream extends ArtifactStream {
      */
     public NexusArtifactStream.Builder withJobname(String jobname) {
       this.jobname = jobname;
+      return this;
+    }
+
+    /**
+     * With groupId builder.
+     *
+     * @param groupId the groupId
+     * @return the builder
+     */
+    public NexusArtifactStream.Builder withGroupId(String groupId) {
+      this.groupId = groupId;
       return this;
     }
 
@@ -279,6 +312,7 @@ public class NexusArtifactStream extends ArtifactStream {
     public NexusArtifactStream.Builder but() {
       return aNexusArtifactStream()
           .withJobname(jobname)
+          .withGroupId(groupId)
           .withArtifactPaths(artifactPaths)
           .withSourceName(sourceName)
           .withSettingId(settingId)
@@ -302,6 +336,7 @@ public class NexusArtifactStream extends ArtifactStream {
     public NexusArtifactStream build() {
       NexusArtifactStream nexusArtifactStream = new NexusArtifactStream();
       nexusArtifactStream.setJobname(jobname);
+      nexusArtifactStream.setGroupId(groupId);
       nexusArtifactStream.setArtifactPaths(artifactPaths);
       nexusArtifactStream.setSourceName(sourceName);
       nexusArtifactStream.setSettingId(settingId);
