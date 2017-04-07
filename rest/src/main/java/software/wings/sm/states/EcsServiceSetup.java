@@ -166,13 +166,15 @@ public class EcsServiceSetup extends State {
                                                                          .withEcsServiceName(ecsServiceName)
                                                                          .withDockerImageName(imageName);
 
-    int portToExpose = ecsContainerTask.getContainerDefinitions()
-                           .stream()
-                           .flatMap(containerDefinition -> containerDefinition.getPortMappings().stream())
-                           .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
-                           .findFirst()
-                           .map(EcsContainerTask.PortMapping::getContainerPort)
-                           .orElse(0);
+    int portToExpose =
+        ecsContainerTask.getContainerDefinitions()
+            .stream()
+            .flatMap(containerDefinition
+                -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(Collections.emptyList()).stream())
+            .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
+            .findFirst()
+            .map(EcsContainerTask.PortMapping::getContainerPort)
+            .orElse(0);
     if (useLoadBalancer && portToExpose != 0) {
       createServiceRequest
           .withLoadBalancers(new com.amazonaws.services.ecs.model.LoadBalancer()
