@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -249,12 +250,13 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID))
         .thenReturn(anApplication().withUuid(APP_ID).withName("APP_NAME").build());
     appService.delete(APP_ID);
-    InOrder inOrder =
-        inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService, appContainerService);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
+        appContainerService, jobScheduler);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
     inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(appContainerService).deleteByAppId(APP_ID);
+    inOrder.verify(jobScheduler).deleteJob(anyString(), eq(APP_ID));
   }
 }

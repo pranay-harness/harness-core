@@ -264,6 +264,8 @@ public class AppServiceImpl implements AppService {
               .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                   ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
               .build());
+
+      jobScheduler.deleteJob(SM_CLEANUP_CRON_GROUP, appId);
     }
   }
 
