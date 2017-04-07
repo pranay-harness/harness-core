@@ -353,7 +353,7 @@ public class KubernetesReplicationControllerSetup extends State {
 
     Map<String, Quantity> limits = new HashMap<>();
     if (wingsContainerDefinition.getCpu() != null) {
-      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu() + "m"));
+      limits.put("cpu", new Quantity(wingsContainerDefinition.getCpu().toString()));
     }
 
     if (wingsContainerDefinition.getMemory() != null) {
@@ -396,6 +396,7 @@ public class KubernetesReplicationControllerSetup extends State {
           -> containerBuilder.addNewVolumeMount()
                  .withName(KubernetesConvention.getVolumeName(storageConfiguration.getHostSourcePath()))
                  .withMountPath(storageConfiguration.getContainerPath())
+                 .withReadOnly(storageConfiguration.isReadonly())
                  .endVolumeMount());
     }
 
