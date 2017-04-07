@@ -77,7 +77,7 @@ public class DockerArtifactStream extends ArtifactStream {
 
   @UIOrder(5)
   @Attributes(title = "Auto-approved for Production")
-  public boolean isAutoApproveForProduction() {
+  public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 
