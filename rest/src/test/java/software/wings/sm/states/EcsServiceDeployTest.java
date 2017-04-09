@@ -195,6 +195,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   public void shouldExecuteThrowInvalidRequest() {
     try {
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+      on(context).set("variableProcessor", variableProcessor);
       ecsServiceDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {

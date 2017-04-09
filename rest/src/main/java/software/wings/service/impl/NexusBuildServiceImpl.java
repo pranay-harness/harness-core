@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.Validator.equalCheck;
+
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +11,7 @@ import javax.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.NexusService;
@@ -29,7 +32,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config) {
-    return new ArrayList<>();
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
+    return nexusService.getVersions(config, artifactStreamAttributes.getJobName(),
+        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
   }
 
   @Override
@@ -53,6 +58,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config) {
-    return null;
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
+    return nexusService.getLatestVersion(config, artifactStreamAttributes.getJobName(),
+        artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
   }
 }

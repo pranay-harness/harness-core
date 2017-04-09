@@ -18,6 +18,8 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.NexusConfig;
 import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.exception.WingsException;
@@ -109,6 +111,21 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withParameters(
                 new Object[] {bambooConfig.getBambooUrl(), bambooConfig.getUsername(), bambooConfig.getPassword(),
                     bambooArtifactStream.getJobname(), bambooArtifactStream.getArtifactPaths(), artifact.getMetadata()})
+            .build();
+      }
+      case NEXUS: {
+        NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
+        SettingAttribute settingAttribute = settingsService.get(nexusArtifactStream.getSettingId());
+        NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
+
+        return aDelegateTask()
+            .withTaskType(TaskType.NEXUS_COLLECTION)
+            .withAccountId(accountId)
+            .withAppId(nexusArtifactStream.getAppId())
+            .withWaitId(waitId)
+            .withParameters(new Object[] {nexusConfig.getNexusUrl(), nexusConfig.getUsername(),
+                nexusConfig.getPassword(), nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
+                nexusArtifactStream.getArtifactPaths(), artifact.getMetadata()})
             .build();
       }
 

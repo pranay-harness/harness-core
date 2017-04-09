@@ -55,7 +55,7 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
         Pair<String, InputStream> fileInfo =
             bambooService.downloadArtifact(bambooConfig, planKey, arguments.get(BUILD_NO), artifactPath);
         if (fileInfo == null) {
-          throw new FileNotFoundException("Unable to get artifact from jenkins for path " + artifactPath);
+          throw new FileNotFoundException("Unable to get artifact from bamboo for path " + artifactPath);
         }
         in = fileInfo.getValue();
 
