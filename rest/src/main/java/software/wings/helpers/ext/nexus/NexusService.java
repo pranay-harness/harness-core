@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.config.NexusConfig;
+import software.wings.delegatetasks.NexusCollectionTask;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 
 /**
  * Created by srinivas on 3/28/17.
@@ -34,12 +36,24 @@ public interface NexusService {
    * Download artifact pair
    * @param nexusConfig
    * @param repoType
-   * @param buildNumber
-   * @param artifactPathRegex
-   * @return
+   * @param groupId
+   * @param artifactNames
+   * @return Input stream
    */
   Pair<String, InputStream> downloadArtifact(
-      NexusConfig nexusConfig, String repoType, String buildNumber, String artifactPathRegex);
+      NexusConfig nexusConfig, String repoType, String groupId, String artifactNames);
+
+  /**
+   * Download artifact pair
+   * @param nexusConfig
+   * @param repoType
+   * @param groupId
+   * @param artifactName
+   * @param version
+   * @return Input stream
+   */
+  Pair<String, InputStream> downloadArtifact(
+      NexusConfig nexusConfig, String repoType, String groupId, String artifactName, String version);
 
   /***
    * Get GroupId paths
@@ -57,4 +71,24 @@ public interface NexusService {
    * @return
    */
   List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path);
+
+  /**
+   * @param nexusConfig
+   * @param repoId Repository Type
+   * @param groupId Group Id
+   * @param  artifactName artifact name
+   * @return list of versions
+   *
+   */
+  List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName);
+
+  /**
+   * Gets the latest version of the given artifact
+   * @param nexusConfig
+   * @param repoId
+   * @param groupId
+   * @param artifactName
+   * @return
+   */
+  BuildDetails getLatestVersion(NexusConfig nexusConfig, String repoId, String groupId, String artifactName);
 }

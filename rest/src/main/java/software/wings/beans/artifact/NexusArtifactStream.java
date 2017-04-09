@@ -88,7 +88,6 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   /**
-   *
    * @return groupId
    */
   public String getGroupId() {
@@ -97,7 +96,6 @@ public class NexusArtifactStream extends ArtifactStream {
 
   /**
    * Set Group Id
-   * @param groupId
    */
   public void setGroupId(String groupId) {
     this.groupId = groupId;
@@ -106,8 +104,14 @@ public class NexusArtifactStream extends ArtifactStream {
   @Override
   @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
-    return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
+    return anArtifactStreamAttributes()
+        .withArtifactStreamType(getArtifactStreamType())
+        .withJobName(jobname)
+        .withGroupId(groupId)
+        .withArtifactName(artifactPaths.get(0))
+        .build();
   }
+
   /**
    * The type Builder.
    */
