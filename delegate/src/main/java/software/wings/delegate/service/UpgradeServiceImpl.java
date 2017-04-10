@@ -77,6 +77,10 @@ public class UpgradeServiceImpl implements UpgradeService {
           signalService.pause();
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
           signalService.stop();
+          logger.info("CAPSULE_CACHE_DIR = " + System.getenv());
+          logger.info("CAPSULE_DIR = " + System.getProperty("capsule.dir"));
+          logger.info(
+              "CAPSULE_DIR_PARENT = " + new File(System.getProperty("capsule.dir")).getParentFile().getAbsolutePath());
           FileUtils
               .listFilesAndDirs(new File(System.getProperty("capsule.dir")).getParentFile(),
                   FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-"))
