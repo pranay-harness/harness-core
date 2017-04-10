@@ -9,7 +9,6 @@ import static software.wings.beans.command.ResizeCommandUnitExecutionData.Resize
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.cloudprovider.ContainerInfo;
@@ -46,12 +45,16 @@ public class KubernetesResizeCommandUnit extends ContainerOrchestrationCommandUn
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(cloudProviderSetting, clusterName);
-      kubernetesContainerService.setControllerPodCount(kubernetesConfig, replicationControllerName, desiredCount);
-      List<ContainerInfo> containerInfos =
-          kubernetesContainerService.getContainerInfos(kubernetesConfig, replicationControllerName, desiredCount);
+      List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
+          gkeClusterService.getCluster(cloudProviderSetting, clusterName), replicationControllerName, desiredCount);
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
-      commandExecutionStatus = SUCCESS;
+      boolean allContainersSuccess = true;
+      for (ContainerInfo info : containerInfos) {
+        allContainersSuccess = allContainersSuccess && info.getStatus() == ContainerInfo.Status.SUCCESS;
+      }
+      if (containerInfos.size() == desiredCount && allContainersSuccess) {
+        commandExecutionStatus = SUCCESS;
+      }
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);
