@@ -1,10 +1,9 @@
 package software.wings.sm.states;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -23,6 +22,7 @@ import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceElement;
@@ -235,7 +235,8 @@ public class EcsServiceSetup extends State {
    */
   private ContainerDefinition createContainerDefinition(
       String imageName, String containerName, EcsContainerTask.ContainerDefinition wingsContainerDefinition) {
-    ContainerDefinition containerDefinition = new ContainerDefinition().withName(containerName).withImage(imageName);
+    ContainerDefinition containerDefinition =
+        new ContainerDefinition().withName(strip(containerName)).withImage(strip(imageName));
 
     if (wingsContainerDefinition.getCpu() != null && wingsContainerDefinition.getMemory().intValue() > 0) {
       containerDefinition.setCpu(wingsContainerDefinition.getCpu());
@@ -261,16 +262,19 @@ public class EcsServiceSetup extends State {
                                 .orElse(Collections.emptyList())
                                 .stream()
                                 .filter(s -> isNotBlank(s))
+                                .map(StringUtils::strip)
                                 .collect(toList());
     containerDefinition.setCommand(commands);
 
     if (wingsContainerDefinition.getLogConfiguration() != null) {
       EcsContainerTask.LogConfiguration wingsLogConfiguration = wingsContainerDefinition.getLogConfiguration();
       if (isNotBlank(wingsLogConfiguration.getLogDriver())) {
-        LogConfiguration logConfiguration = new LogConfiguration().withLogDriver(wingsLogConfiguration.getLogDriver());
+        LogConfiguration logConfiguration =
+            new LogConfiguration().withLogDriver(strip(wingsLogConfiguration.getLogDriver()));
         Optional.ofNullable(wingsLogConfiguration.getOptions())
             .get()
-            .forEach(logOption -> logConfiguration.addOptionsEntry(logOption.getKey(), logOption.getValue()));
+            .forEach(
+                logOption -> logConfiguration.addOptionsEntry(strip(logOption.getKey()), strip(logOption.getValue())));
         containerDefinition.setLogConfiguration(logConfiguration);
       }
     }
@@ -278,18 +282,15 @@ public class EcsServiceSetup extends State {
     if (isNotEmpty(wingsContainerDefinition.getStorageConfigurations())) {
       List<EcsContainerTask.StorageConfiguration> wingsStorageConfigurations =
           wingsContainerDefinition.getStorageConfigurations();
-      containerDefinition.setMountPoints(wingsStorageConfigurations.stream()
-                                             .map(storageConfiguration
-                                                 -> new MountPoint()
-                                                        .withContainerPath(storageConfiguration.getContainerPath())
-                                                        .withSourceVolume(storageConfiguration.getHostSourcePath())
-                                                        .withReadOnly(storageConfiguration.isReadonly()))
-                                             .collect(toList()));
+      containerDefinition.setMountPoints(
+          wingsStorageConfigurations.stream()
+              .map(storageConfiguration
+                  -> new MountPoint()
+                         .withContainerPath(strip(storageConfiguration.getContainerPath()))
+                         .withSourceVolume(strip(storageConfiguration.getHostSourcePath()))
+                         .withReadOnly(storageConfiguration.isReadonly()))
+              .collect(toList()));
     }
-
-    containerDefinition.setLogConfiguration(new LogConfiguration().withLogDriver("splunk").withOptions(
-        newHashMap(of("splunk-url", "http://ec2-52-54-103-49.compute-1.amazonaws.com:8088", "splunk-token",
-            "5E16E8E8-BAFC-4125-A6C9-9914E78C3E78", "splunk-insecureskipverify", "true"))));
 
     return containerDefinition;
   }

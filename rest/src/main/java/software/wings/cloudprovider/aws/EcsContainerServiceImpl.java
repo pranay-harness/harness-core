@@ -1,7 +1,6 @@
 package software.wings.cloudprovider.aws;
 
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
@@ -901,6 +900,17 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
+  private void waitForTasksToBeInRunningStateButDontThrowException(AmazonECSClient amazonECSClient, String clusterName,
+      String serviceName, ExecutionLogCallback executionLogCallback) {
+    int retryCount = RETRY_COUNTER;
+    while (!allDesiredTaskRuning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
+      if (retryCount-- <= 0) {
+        break;
+      }
+      Misc.quietSleep(SLEEP_INTERVAL);
+    }
+  }
+
   private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
     Service service =
@@ -940,7 +950,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
     UpdateServiceResult updateServiceResult = amazonECSClient.updateService(updateServiceRequest);
     executionLogCallback.saveExecutionLog("Service updated request successfully submitted.", LogLevel.INFO);
-    waitForTasksToBeInRunningState(amazonECSClient, clusterName, serviceName, executionLogCallback);
+    waitForTasksToBeInRunningStateButDontThrowException(
+        amazonECSClient, clusterName, serviceName, executionLogCallback);
 
     List<String> taskArns =
         amazonECSClient.listTasks(new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
@@ -989,14 +1000,15 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .findFirst()
             .ifPresent(task
                 -> containerInfos.add(
-                    new ContainerInfo(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12))));
+                    new ContainerInfo(StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12),
+                        ContainerInfo.Status.SUCCESS)));
         logger.info("TaskMetadata = " + taskMetadata);
       } catch (IOException ex) {
         executionLogCallback.saveExecutionLog(
             "Could not fetch container meta data. Verification steps using containerId may not work", LogLevel.WARN);
         logger.error(ex.getMessage());
-        throw new WingsException(
-            UNKNOWN_ERROR, "message", "Container meta data fetch failed on EC2 host: " + ipAddress);
+        logger.error("Container meta data fetch failed on EC2 host: " + ipAddress);
+        containerInfos.add(new ContainerInfo(ipAddress, ContainerInfo.Status.FAILURE));
       }
     });
     logger.info("Docker container ids = " + containerInfos);

@@ -8,9 +8,9 @@
             <!-- daily rollover -->
             <fileNamePattern>delegate.%d{yyyy-MM-dd}.log</fileNamePattern>
 
-            <!-- keep 30 days' worth of history capped at 3GB total size -->
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>3GB</totalSizeCap>
+            <!-- keep 3 days' worth of history capped at 3GB total size -->
+            <maxHistory>3</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
 
         </rollingPolicy>
 

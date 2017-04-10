@@ -36,18 +36,12 @@ public interface KubernetesContainerService {
   /**
    * Scales controller to specified number of nodes.
    */
-  void setControllerPodCount(KubernetesConfig kubernetesConfig, String name, int number);
+  List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String name, int number);
 
   /**
    * Gets the pod count of a replication controller.
    */
   int getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
-
-  /**
-   * Gets the container infos for a replication controller.
-   */
-  List<ContainerInfo> getContainerInfos(
-      KubernetesConfig kubernetesConfig, String replicationControllerName, int number);
 
   /**
    * Creates a service.

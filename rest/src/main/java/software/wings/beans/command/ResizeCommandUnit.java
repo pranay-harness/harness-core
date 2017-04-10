@@ -48,7 +48,13 @@ public class ResizeCommandUnit extends ContainerOrchestrationCommandUnit {
       List<ContainerInfo> containerInfos = awsClusterService.resizeCluster(
           cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
-      commandExecutionStatus = SUCCESS;
+      boolean allContainersSuccess = true;
+      for (ContainerInfo info : containerInfos) {
+        allContainersSuccess = allContainersSuccess && info.getStatus() == ContainerInfo.Status.SUCCESS;
+      }
+      if (containerInfos.size() == desiredCount && allContainersSuccess) {
+        commandExecutionStatus = SUCCESS;
+      }
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Command execution failed", ERROR);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);

@@ -35,6 +35,7 @@ import software.wings.beans.command.CommandExecutionData;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
+import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -255,7 +256,8 @@ public abstract class CloudServiceDeploy extends State {
           .forEach(containerInfo
               -> instanceStatusSummaries.add(
                   anInstanceStatusSummary()
-                      .withStatus(ExecutionStatus.SUCCESS)
+                      .withStatus(containerInfo.getStatus() == ContainerInfo.Status.SUCCESS ? ExecutionStatus.SUCCESS
+                                                                                            : ExecutionStatus.FAILED)
                       .withInstanceElement(
                           anInstanceElement()
                               .withUuid(containerInfo.getContainerId())
