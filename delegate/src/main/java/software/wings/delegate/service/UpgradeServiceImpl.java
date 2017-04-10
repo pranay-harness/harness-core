@@ -4,6 +4,8 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -75,6 +77,14 @@ public class UpgradeServiceImpl implements UpgradeService {
           signalService.pause();
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
           signalService.stop();
+          FileUtils
+              .listFilesAndDirs(new File(System.getProperty("capsule.dir")).getParentFile(),
+                  FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-"))
+              .forEach(file -> {
+                if (!file.getName().contains(version) || !file.getName().contains(delegate.getVersion())) {
+                  FileUtils.deleteQuietly(file);
+                }
+              });
         } finally {
           signalService.resume();
         }
