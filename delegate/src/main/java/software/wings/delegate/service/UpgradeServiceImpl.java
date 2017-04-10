@@ -81,6 +81,7 @@ public class UpgradeServiceImpl implements UpgradeService {
                   FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-"))
               .forEach(file -> {
                 if (!file.getName().contains(version) || !file.getName().contains(delegate.getVersion())) {
+                  logger.info("File Name to be deleted = " + file.getAbsolutePath());
                   FileUtils.deleteQuietly(file);
                 }
               });
