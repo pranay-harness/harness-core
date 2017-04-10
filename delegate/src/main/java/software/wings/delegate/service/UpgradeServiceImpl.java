@@ -76,7 +76,6 @@ public class UpgradeServiceImpl implements UpgradeService {
         try {
           signalService.pause();
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
-          signalService.stop();
           FileUtils
               .listFilesAndDirs(new File(System.getProperty("capsule.dir")).getParentFile(),
                   FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-"))
@@ -85,6 +84,7 @@ public class UpgradeServiceImpl implements UpgradeService {
                   FileUtils.deleteQuietly(file);
                 }
               });
+          signalService.stop();
         } finally {
           signalService.resume();
         }
