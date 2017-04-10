@@ -79,7 +79,7 @@ public class UpgradeServiceImpl implements UpgradeService {
           signalService.stop();
           FileUtils
               .listFilesAndDirs(new File(System.getProperty("capsule.dir")).getParentFile(),
-                  FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter(" delegate-"))
+                  FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-"))
               .forEach(file -> {
                 if (!file.getName().contains(version) || !file.getName().contains(delegate.getVersion())) {
                   FileUtils.deleteQuietly(file);
