@@ -5,17 +5,22 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
-import java.util.Map;
-import org.junit.Before;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import software.wings.beans.BambooConfig;
+import org.mockito.Mock;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -330,5 +335,230 @@ public class NexusServiceTest {
     assertThat(nexusService.getArtifactNames(nexusConfig, "releases", "/software/wings/nexus/"))
         .hasSize(1)
         .contains("rest-client");
+  }
+
+  @Test
+  public void shouldGetVersions() {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody("<indexBrowserTreeViewResponse>\n"
+                        + "  <data>\n"
+                        + "    <type>G</type>\n"
+                        + "    <leaf>false</leaf>\n"
+                        + "    <nodeName>rest-client</nodeName>\n"
+                        + "    <path>/software/wings/nexus/rest-client/</path>\n"
+                        + "    <children>\n"
+                        + "      <indexBrowserTreeNode>\n"
+                        + "        <type>A</type>\n"
+                        + "        <leaf>false</leaf>\n"
+                        + "        <nodeName>rest-client</nodeName>\n"
+                        + "        <path>/software/wings/nexus/rest-client/</path>\n"
+                        + "        <children>\n"
+                        + "          <indexBrowserTreeNode>\n"
+                        + "            <type>V</type>\n"
+                        + "            <leaf>false</leaf>\n"
+                        + "            <nodeName>2.1.2</nodeName>\n"
+                        + "            <path>/software/wings/nexus/rest-client/2.1.2/</path>\n"
+                        + "            <children>\n"
+                        + "              <indexBrowserTreeNode>\n"
+                        + "                <type>artifact</type>\n"
+                        + "                <leaf>true</leaf>\n"
+                        + "                <nodeName>rest-client-2.1.2.pom</nodeName>\n"
+                        + "                <path>/software/wings/nexus/rest-client/2.1.2/rest-client-2.1.2.pom</path>\n"
+                        + "                <groupId>software.wings.nexus</groupId>\n"
+                        + "                <artifactId>rest-client</artifactId>\n"
+                        + "                <version>2.1.2</version>\n"
+                        + "                <repositoryId>releases</repositoryId>\n"
+                        + "                <locallyAvailable>false</locallyAvailable>\n"
+                        + "                <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "                <extension>pom</extension>\n"
+                        + "                <artifactUri></artifactUri>\n"
+                        + "                <pomUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=2.1.2&amp;p=pom</pomUri>\n"
+                        + "              </indexBrowserTreeNode>\n"
+                        + "              <indexBrowserTreeNode>\n"
+                        + "                <type>artifact</type>\n"
+                        + "                <leaf>true</leaf>\n"
+                        + "                <nodeName>rest-client-2.1.2-capsule.jar</nodeName>\n"
+                        + "                <path>/software/wings/nexus/rest-client/2.1.2/rest-client-2.1.2-capsule.jar</path>\n"
+                        + "                <groupId>software.wings.nexus</groupId>\n"
+                        + "                <artifactId>rest-client</artifactId>\n"
+                        + "                <version>2.1.2</version>\n"
+                        + "                <repositoryId>releases</repositoryId>\n"
+                        + "                <locallyAvailable>false</locallyAvailable>\n"
+                        + "                <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "                <classifier>capsule</classifier>\n"
+                        + "                <extension>jar</extension>\n"
+                        + "                <packaging>jar</packaging>\n"
+                        + "                <artifactUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=2.1.2&amp;p=jar</artifactUri>\n"
+                        + "                <pomUri></pomUri>\n"
+                        + "              </indexBrowserTreeNode>\n"
+                        + "            </children>\n"
+                        + "            <groupId>software.wings.nexus</groupId>\n"
+                        + "            <artifactId>rest-client</artifactId>\n"
+                        + "            <version>2.1.2</version>\n"
+                        + "            <repositoryId>releases</repositoryId>\n"
+                        + "            <locallyAvailable>false</locallyAvailable>\n"
+                        + "            <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "          </indexBrowserTreeNode>\n"
+                        + "          <indexBrowserTreeNode>\n"
+                        + "            <type>V</type>\n"
+                        + "            <leaf>false</leaf>\n"
+                        + "            <nodeName>3.0</nodeName>\n"
+                        + "            <path>/software/wings/nexus/rest-client/3.0/</path>\n"
+                        + "            <children>\n"
+                        + "              <indexBrowserTreeNode>\n"
+                        + "                <type>artifact</type>\n"
+                        + "                <leaf>true</leaf>\n"
+                        + "                <nodeName>rest-client-3.0.jar</nodeName>\n"
+                        + "                <path>/software/wings/nexus/rest-client/3.0/rest-client-3.0.jar</path>\n"
+                        + "                <groupId>software.wings.nexus</groupId>\n"
+                        + "                <artifactId>rest-client</artifactId>\n"
+                        + "                <version>3.0</version>\n"
+                        + "                <repositoryId>releases</repositoryId>\n"
+                        + "                <locallyAvailable>false</locallyAvailable>\n"
+                        + "                <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "                <extension>jar</extension>\n"
+                        + "                <packaging>jar</packaging>\n"
+                        + "                <artifactUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=3.0&amp;p=jar</artifactUri>\n"
+                        + "                <pomUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=3.0&amp;p=pom</pomUri>\n"
+                        + "              </indexBrowserTreeNode>\n"
+                        + "            </children>\n"
+                        + "            <groupId>software.wings.nexus</groupId>\n"
+                        + "            <artifactId>rest-client</artifactId>\n"
+                        + "            <version>3.0</version>\n"
+                        + "            <repositoryId>releases</repositoryId>\n"
+                        + "            <locallyAvailable>false</locallyAvailable>\n"
+                        + "            <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "          </indexBrowserTreeNode>\n"
+                        + "        </children>\n"
+                        + "        <groupId>software.wings.nexus</groupId>\n"
+                        + "        <artifactId>rest-client</artifactId>\n"
+                        + "        <repositoryId>releases</repositoryId>\n"
+                        + "        <locallyAvailable>false</locallyAvailable>\n"
+                        + "        <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "      </indexBrowserTreeNode>\n"
+                        + "    </children>\n"
+                        + "    <repositoryId>releases</repositoryId>\n"
+                        + "    <locallyAvailable>false</locallyAvailable>\n"
+                        + "    <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "  </data>\n"
+                        + "</indexBrowserTreeViewResponse>")
+                    .withHeader("Content-Type", "application/xml")));
+
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusConfig, "releases", "/software/wings/nexus/", "rest-client");
+    assertThat(buildDetails)
+        .hasSize(2)
+        .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
+        .containsExactly(tuple("2.1.2", "2.1.2"), tuple("3.0", "3.0"));
+  }
+
+  @Test
+  @Ignore
+  public void shouldDownloadArtifact() {
+    setPomModelWireMock();
+
+    // Return artifacts under version
+    wireMockRule.stubFor(
+        get(urlEqualTo(
+                "/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/3.0/"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody("<indexBrowserTreeViewResponse>\n"
+                        + "  <data>\n"
+                        + "    <type>G</type>\n"
+                        + "    <leaf>false</leaf>\n"
+                        + "    <nodeName>3.0</nodeName>\n"
+                        + "    <path>/software/wings/nexus/rest-client/3.0/</path>\n"
+                        + "    <children>\n"
+                        + "      <indexBrowserTreeNode>\n"
+                        + "        <type>A</type>\n"
+                        + "        <leaf>false</leaf>\n"
+                        + "        <nodeName>rest-client</nodeName>\n"
+                        + "        <path>/software/wings/nexus/rest-client/</path>\n"
+                        + "        <children>\n"
+                        + "          <indexBrowserTreeNode>\n"
+                        + "            <type>V</type>\n"
+                        + "            <leaf>false</leaf>\n"
+                        + "            <nodeName>3.0</nodeName>\n"
+                        + "            <path>/software/wings/nexus/rest-client/3.0/</path>\n"
+                        + "            <children>\n"
+                        + "              <indexBrowserTreeNode>\n"
+                        + "                <type>artifact</type>\n"
+                        + "                <leaf>true</leaf>\n"
+                        + "                <nodeName>rest-client-3.0.jar</nodeName>\n"
+                        + "                <path>/software/wings/nexus/rest-client/3.0/rest-client-3.0.jar</path>\n"
+                        + "                <groupId>software.wings.nexus</groupId>\n"
+                        + "                <artifactId>rest-client</artifactId>\n"
+                        + "                <version>3.0</version>\n"
+                        + "                <repositoryId>releases</repositoryId>\n"
+                        + "                <locallyAvailable>false</locallyAvailable>\n"
+                        + "                <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "                <extension>jar</extension>\n"
+                        + "                <packaging>jar</packaging>\n"
+                        + "                <artifactUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=3.0&amp;p=jar</artifactUri>\n"
+                        + "                <pomUri>http://localhost:8081/nexus/service/local/artifact/maven/redirect?r=releases&amp;g=software.wings.nexus&amp;a=rest-client&amp;v=3.0&amp;p=pom</pomUri>\n"
+                        + "              </indexBrowserTreeNode>\n"
+                        + "            </children>\n"
+                        + "            <groupId>software.wings.nexus</groupId>\n"
+                        + "            <artifactId>rest-client</artifactId>\n"
+                        + "            <version>3.0</version>\n"
+                        + "            <repositoryId>releases</repositoryId>\n"
+                        + "            <locallyAvailable>false</locallyAvailable>\n"
+                        + "            <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "          </indexBrowserTreeNode>\n"
+                        + "        </children>\n"
+                        + "        <groupId>software.wings.nexus</groupId>\n"
+                        + "        <artifactId>rest-client</artifactId>\n"
+                        + "        <repositoryId>releases</repositoryId>\n"
+                        + "        <locallyAvailable>false</locallyAvailable>\n"
+                        + "        <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "      </indexBrowserTreeNode>\n"
+                        + "    </children>\n"
+                        + "    <repositoryId>releases</repositoryId>\n"
+                        + "    <locallyAvailable>false</locallyAvailable>\n"
+                        + "    <artifactTimestamp>0</artifactTimestamp>\n"
+                        + "  </data>\n"
+                        + "</indexBrowserTreeViewResponse>")
+                    .withHeader("Content-Type", "application/xml")));
+
+    wireMockRule.stubFor(get(
+        urlEqualTo(
+            "/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/3.0/rest-client-3.0.jar"))
+                             .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
+    // TODO: Need to mock the file input stream
+    Pair<String, InputStream> fileInfo =
+        nexusService.downloadArtifact(nexusConfig, "releases", "/software/wings/nexus/", "rest-client", "LATEST");
+
+    assertThat(fileInfo).isNotNull();
+    assertThat(fileInfo.getKey()).isEqualTo("rest-client-3.0.jar");
+  }
+
+  @Test
+  public void shouldGetLatestVersion() {
+    setPomModelWireMock();
+    BuildDetails buildDetails =
+        nexusService.getLatestVersion(nexusConfig, "releases", "/software/wings/nexus/", "rest-client");
+    assertThat(buildDetails).extracting(BuildDetails::getNumber).containsExactly("3.0");
+  }
+  private void setPomModelWireMock() {
+    // First return the POM Model
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/local/artifact/maven?r=releases&g=software.wings.nexus&a=rest-client&v=LATEST"))
+            .willReturn(aResponse()
+                            .withStatus(200)
+                            .withBody("<project>\n"
+                                + "  <modelVersion>4.0.0</modelVersion>\n"
+                                + "  <groupId>software.wings.nexus</groupId>\n"
+                                + "  <artifactId>rest-client</artifactId>\n"
+                                + "  <version>3.0</version>\n"
+                                + "  <packaging>jar</packaging>\n"
+                                + "  <description>POM was created by Sonatype Nexus</description>\n"
+                                + "</project>")
+                            .withHeader("Content-Type", "application/xml")));
   }
 }

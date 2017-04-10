@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.nexus;
 
+import java.util.Map;
+import javax.ws.rs.QueryParam;
 import okhttp3.ResponseBody;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
 import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
@@ -7,8 +9,10 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
+import retrofit2.http.QueryMap;
 import retrofit2.http.Url;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
+import software.wings.helpers.ext.nexus.model.Project;
 
 /**
  * Created by srinivas on 3/30/17.
@@ -66,4 +70,8 @@ public interface NexusRestClient {
   @GET
   Call<IndexBrowserTreeViewResponse> getIndexContentByUrl(
       @Header("Authorization") String authorization, @Url String url);
+
+  @GET
+  Call<Project> getPomModel(
+      @Header("Authorization") String authorization, @Url String url, @QueryMap Map<String, String> options);
 }

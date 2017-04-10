@@ -57,6 +57,8 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     * Working Directory: 
     
         `$MODULE_DIR$`
+    * Ensure [IntelliJ -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
+    * Ensure [IntelliJ -> Preferences -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
 2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
     * Environment Variable: 
     

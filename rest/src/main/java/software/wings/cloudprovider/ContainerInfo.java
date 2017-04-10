@@ -1,5 +1,7 @@
 package software.wings.cloudprovider;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * Created by brett on 4/6/17
  */
@@ -9,6 +11,8 @@ public class ContainerInfo {
   private String hostName;
   private String containerId;
   private Status status;
+
+  public ContainerInfo() {}
 
   public ContainerInfo(String containerId, Status status) {
     this.hostName = containerId;
@@ -26,11 +30,32 @@ public class ContainerInfo {
     return hostName;
   }
 
+  public void setHostName(String hostName) {
+    this.hostName = hostName;
+  }
+
   public String getContainerId() {
     return containerId;
   }
 
+  public void setContainerId(String containerId) {
+    this.containerId = containerId;
+  }
+
   public Status getStatus() {
     return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("hostName", hostName)
+        .add("containerId", containerId)
+        .add("status", status)
+        .toString();
   }
 }

@@ -346,18 +346,17 @@ private void createGlobalSettings() {
           APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
 
-  getRequestWithAuthHeader(target).post(
-      Entity.entity(aSettingAttribute()
-                        .withName("Wings Nexus")
-                        .withCategory(Category.CONNECTOR)
-                        .withAccountId(accountId)
-                        .withValue(aJenkinsConfig()
-                                       .withJenkinsUrl("https://nexus.wings.software/")
-                                       .withUsername("admin")
-                                       .withPassword("wings123!")
-                                       .build())
-                        .build(),
-          APPLICATION_JSON),
+  getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
+                                                          .withName("Wings Nexus")
+                                                          .withCategory(Category.CONNECTOR)
+                                                          .withAccountId(accountId)
+                                                          .withValue(aJenkinsConfig()
+                                                                         .withJenkinsUrl("https://nexus.wings.software")
+                                                                         .withUsername("admin")
+                                                                         .withPassword("wings123!")
+                                                                         .build())
+                                                          .build(),
+                                            APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
 
   getRequestWithAuthHeader(target).post(
