@@ -44,17 +44,6 @@ public class UpgradeServiceImpl implements UpgradeService {
 
   @Inject private SignalService signalService;
 
-  public static void main(String... args) {
-    FileUtils
-        .listFilesAndDirs(new File("/Users/peeyushaggarwal/.capsule/apps"), falseFileFilter(),
-            FileFilterUtils.prefixFileFilter("delegate-"))
-        .forEach(file -> {
-          if (!file.getAbsolutePath().equals("/Users/peeyushaggarwal/.capsule/apps")) {
-            System.out.println("File Name to be deleted = " + file.getAbsolutePath());
-          }
-        });
-  }
-
   @Override
   public void doUpgrade(Delegate delegate, String version) throws IOException, TimeoutException, InterruptedException {
     Files.deleteIfExists(Paths.get("upgrade.sh"));
