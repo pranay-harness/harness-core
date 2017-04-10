@@ -78,8 +78,8 @@ public class UpgradeServiceImpl implements UpgradeService {
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
           signalService.stop();
           FileUtils
-              .listFilesAndDirs(new File(System.getenv("CAPSULE_CACHE_DIR")), FileFilterUtils.falseFileFilter(),
-                  FileFilterUtils.prefixFileFilter(" delegate-"))
+              .listFilesAndDirs(new File(System.getProperty("capsule.dir")).getParentFile(),
+                  FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter(" delegate-"))
               .forEach(file -> {
                 if (!file.getName().contains(version) || !file.getName().contains(delegate.getVersion())) {
                   FileUtils.deleteQuietly(file);
