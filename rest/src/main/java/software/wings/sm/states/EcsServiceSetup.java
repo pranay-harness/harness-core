@@ -1,7 +1,5 @@
 package software.wings.sm.states;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.google.common.collect.Maps.newHashMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -286,10 +284,6 @@ public class EcsServiceSetup extends State {
                                                         .withReadOnly(storageConfiguration.isReadonly()))
                                              .collect(toList()));
     }
-
-    containerDefinition.setLogConfiguration(new LogConfiguration().withLogDriver("splunk").withOptions(
-        newHashMap(of("splunk-url", "http://ec2-52-54-103-49.compute-1.amazonaws.com:8088", "splunk-token",
-            "5E16E8E8-BAFC-4125-A6C9-9914E78C3E78", "splunk-insecureskipverify", "true"))));
 
     return containerDefinition;
   }
