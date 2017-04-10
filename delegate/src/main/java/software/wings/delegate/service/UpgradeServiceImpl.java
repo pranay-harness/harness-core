@@ -1,5 +1,7 @@
 package software.wings.delegate.service;
 
+import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Singleton;
@@ -76,14 +78,13 @@ public class UpgradeServiceImpl implements UpgradeService {
         try {
           signalService.pause();
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
-          FileUtils
-              .listFilesAndDirs(new File(System.getProperty("capsule.dir")).getParentFile(),
-                  FileFilterUtils.falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-"))
-              .forEach(file -> {
-                if (!file.getName().contains(version) || !file.getName().contains(delegate.getVersion())) {
-                  FileUtils.deleteQuietly(file);
-                }
-              });
+
+          // Cleanup capsule cache.
+          cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion());
+
+          // Cleanup old backup.
+          cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion());
+
           signalService.stop();
         } finally {
           signalService.resume();
@@ -117,5 +118,14 @@ public class UpgradeServiceImpl implements UpgradeService {
       }
     }
     return false;
+  }
+
+  private void cleanup(File dir, String currentVersion, String newVersion) {
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-")).forEach(file -> {
+      if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
+        logger.info("File Name to be deleted = " + file.getAbsolutePath());
+        FileUtils.deleteQuietly(file);
+      }
+    });
   }
 }
