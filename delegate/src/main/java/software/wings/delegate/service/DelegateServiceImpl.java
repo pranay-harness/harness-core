@@ -43,7 +43,6 @@ import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
 import software.wings.utils.JsonUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -101,11 +100,6 @@ public class DelegateServiceImpl implements DelegateService {
           line = it.nextLine();
         }
       }
-
-      logger.info("CAPSULE_CACHE_DIR = " + System.getenv());
-      logger.info("CAPSULE_DIR = " + System.getProperty("capsule.dir"));
-      logger.info(
-          "CAPSULE_DIR_PARENT = " + new File(System.getProperty("capsule.dir")).getParentFile().getAbsolutePath());
 
       URI uri = new URI(delegateConfiguration.getManagerUrl());
 
