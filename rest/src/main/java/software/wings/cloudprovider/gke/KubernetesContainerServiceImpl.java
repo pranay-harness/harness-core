@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import static org.awaitility.Awaitility.with;
+import static software.wings.cloudprovider.aws.AwsClusterServiceImpl.DASH_STRING;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +19,8 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.Log;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.service.impl.KubernetesHelperService;
@@ -64,18 +67,29 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String name, int number) {
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig).replicationControllers().withName(name).scale(number);
-    logger.info("Scaled controller {} to {} instances", name, number);
-    return waitForPodsToBeRunning(kubernetesConfig, name, number)
-        .stream()
-        .map(pod
-            -> new ContainerInfo(pod.getMetadata().getName(),
-                !pod.getStatus().getContainerStatuses().isEmpty()
-                    ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
-                    : "",
-                pod.getStatus().getPhase().equals(RUNNING) ? Status.SUCCESS : Status.FAILURE))
-        .collect(Collectors.toList());
+  public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
+      String replicationControllerName, int number, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] to %s instances",
+                                              replicationControllerName, clusterName, number),
+        Log.LogLevel.INFO);
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig)
+        .replicationControllers()
+        .withName(replicationControllerName)
+        .scale(number);
+    logger.info("Scaled controller {} to {} instances", replicationControllerName, number);
+    List<ContainerInfo> containerInfos =
+        waitForPodsToBeRunning(kubernetesConfig, replicationControllerName, number)
+            .stream()
+            .map(pod
+                -> new ContainerInfo(pod.getMetadata().getName(),
+                    !pod.getStatus().getContainerStatuses().isEmpty()
+                        ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
+                        : "",
+                    pod.getStatus().getPhase().equals(RUNNING) ? Status.SUCCESS : Status.FAILURE))
+            .collect(Collectors.toList());
+    executionLogCallback.saveExecutionLog(
+        String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), Log.LogLevel.INFO);
+    return containerInfos;
   }
 
   @Override

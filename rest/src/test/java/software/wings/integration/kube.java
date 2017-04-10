@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 
@@ -219,7 +220,7 @@ public class kube {
             .endSpec()
             .build());
 
-    kubernetesService.setControllerPodCount(config, "frontend-ctrl", 5);
+    kubernetesService.setControllerPodCount(config, ZONE_CLUSTER, "frontend-ctrl", 5, new ExecutionLogCallback());
 
     int backendCount = kubernetesService.getControllerPodCount(config, "backend-ctrl");
     int frontendCount = kubernetesService.getControllerPodCount(config, "frontend-ctrl");
