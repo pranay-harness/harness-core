@@ -71,7 +71,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .stream()
         .map(pod
             -> new ContainerInfo(pod.getMetadata().getName(),
-                StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21),
+                !pod.getStatus().getContainerStatuses().isEmpty()
+                    ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
+                    : "",
                 pod.getStatus().getPhase().equals(RUNNING) ? Status.SUCCESS : Status.FAILURE))
         .collect(Collectors.toList());
   }
