@@ -1,8 +1,5 @@
 package software.wings.beans.command;
 
-import static java.lang.String.format;
-import static software.wings.beans.Log.LogLevel.ERROR;
-import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder.aResizeCommandUnitExecutionData;
@@ -45,8 +42,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     Integer desiredCount = context.getDesiredCount();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
-
-    executionLogCallback.saveExecutionLog(format("Begin execution of command: %s", getName()), INFO);
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
@@ -61,7 +56,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
         commandExecutionStatus = SUCCESS;
       }
     } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog("Command execution failed", ERROR);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", ex);
     }
     return commandExecutionStatus;
