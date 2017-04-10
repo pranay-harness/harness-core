@@ -46,18 +46,6 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   @Inject private MainConfiguration configuration;
 
   @Override
-  public void dispatchNotification(Notification notification) {
-    List<NotificationRule> notificationRules = notificationSetupService.listNotificationRules(notification.getAppId());
-    if (notificationRules == null || notificationRules.isEmpty()) {
-      logger.debug("No notification rule found for the appId: {}.. skipping dispatch for notificationID: {}",
-          notification.getAppId(), notification.getUuid());
-      return;
-    }
-
-    dispatchNotification(notification, notificationRules);
-  }
-
-  @Override
   public void dispatchNotification(Notification notification, List<NotificationRule> notificationRules) {
     // TODO: match the rule based on filter
 
@@ -74,6 +62,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     }
 
     for (NotificationGroup notificationGroup : notificationGroups) {
+      notificationGroup =
+          notificationSetupService.readNotificationGroup(notification.getAppId(), notificationGroup.getUuid());
       if (notificationGroup.getAddressesByChannelType() == null) {
         continue;
       }

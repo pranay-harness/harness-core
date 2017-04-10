@@ -4,10 +4,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
+import software.wings.beans.NotificationRule;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -22,14 +24,6 @@ public interface NotificationService {
    * @return the page response
    */
   PageResponse<Notification> list(PageRequest<Notification> pageRequest);
-
-  /**
-   * Save notification.
-   *
-   * @param notification the notification
-   * @return the notification
-   */
-  @ValidationGroups(Create.class) Notification save(Notification notification);
 
   /**
    * Get notification.
@@ -71,4 +65,11 @@ public interface NotificationService {
    * @param appId the app id
    */
   void deleteByApplication(String appId);
+
+  /**
+   * Send notification async.
+   *  @param notification      the notification
+   * @param notificationRules the notification rules
+   */
+  void sendNotificationAsync(Notification notification, List<NotificationRule> notificationRules);
 }

@@ -42,6 +42,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -61,15 +63,10 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     String appId = UUIDGenerator.getUuid();
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
     String uuid = UUIDGenerator.getUuid();
-    List<NotificationRule> notificationRules = Lists.newArrayList(
-        aNotificationRule()
-            .withAppId(appId)
-            .addNotificationGroup(aNotificationGroup()
-                                      .withAppId(appId)
-                                      .addAddressesByChannelType(NotificationChannelType.EMAIL, toAddresses)
-                                      .build())
-            .build());
-    when(notificationSetupService.listNotificationRules(appId)).thenReturn(notificationRules);
+    //    List<NotificationRule> notificationRules = Lists.newArrayList(aNotificationRule().withAppId(appId)
+    //        .addNotificationGroup(aNotificationGroup().withAppId(appId).addAddressesByChannelType(NotificationChannelType.EMAIL,
+    //        toAddresses).build()).build());
+    //    when(notificationSetupService.listNotificationRules(appId)).thenReturn(notificationRules);
 
     InformationNotification notification = anInformationNotification()
                                                .withUuid(uuid)
@@ -77,7 +74,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
                                                .withEnvironmentId(ENV_ID)
                                                .withDisplayText("TEXT")
                                                .build();
-    notificationDispatcherService.dispatchNotification(notification);
+    notificationDispatcherService.dispatchNotification(notification, new ArrayList<>());
     verify(emailNotificationService).sendAsync(toAddresses, null, notification.getUuid(), notification.getUuid());
   }
 
@@ -91,22 +88,28 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
                                                     .withLastUpdatedBy(anEmbeddedUser().withName(USER_NAME).build())
                                                     .build();
 
-    when(notificationSetupService.listNotificationRules(APP_ID))
-        .thenReturn(asList(
-            aNotificationRule()
-                .withAppId(APP_ID)
-                .addNotificationGroup(aNotificationGroup()
-                                          .withAppId(APP_ID)
-                                          .addAddressesByChannelType(NotificationChannelType.SLACK, asList("#channel"))
-                                          .build())
-                .build()));
+    NotificationRule notificationRule =
+        aNotificationRule()
+            .withAppId(APP_ID)
+            .addNotificationGroup(aNotificationGroup()
+                                      .withUuid("NOTIFICATION_GROUP_ID")
+                                      .withAppId(APP_ID)
+                                      .addAddressesByChannelType(NotificationChannelType.SLACK, asList("#channel"))
+                                      .build())
+            .build();
 
     SlackConfig slackConfig = new SlackConfig();
     slackConfig.setOutgoingWebhookUrl(WingsTestConstants.PORTAL_URL);
     when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SLACK.name()))
         .thenReturn(asList(SettingAttribute.Builder.aSettingAttribute().withValue(slackConfig).build()));
+    when(notificationSetupService.readNotificationGroup(APP_ID, "NOTIFICATION_GROUP_ID"))
+        .thenReturn(aNotificationGroup()
+                        .withUuid("NOTIFICATION_GROUP_ID")
+                        .withAppId(APP_ID)
+                        .addAddressesByChannelType(NotificationChannelType.SLACK, asList("#channel"))
+                        .build());
 
-    notificationDispatcherService.dispatchNotification(approvalNotification);
+    notificationDispatcherService.dispatchNotification(approvalNotification, Arrays.asList(notificationRule));
     verify(slackNotificationService).sendMessage(eq(slackConfig), eq("#channel"), anyString(), anyString());
   }
 }

@@ -5,7 +5,6 @@ import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -19,21 +18,11 @@ public class NotificationRule extends Base {
 
   private ExecutionScope executionScope;
 
-  @NotNull @Size(min = 1) private Map<String, Object> notificationFilters;
-
   @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
   private int batchIntervalInSecs;
 
   private boolean active = true;
-
-  public Map<String, Object> getNotificationFilters() {
-    return notificationFilters;
-  }
-
-  public void setNotificationFilters(Map<String, Object> notificationFilters) {
-    this.notificationFilters = notificationFilters;
-  }
 
   public List<NotificationGroup> getNotificationGroups() {
     return notificationGroups;
@@ -78,7 +67,6 @@ public class NotificationRule extends Base {
   public static final class NotificationRuleBuilder {
     private List<ExecutionStatus> conditions = new ArrayList<>();
     private ExecutionScope executionScope;
-    private Map<String, Object> notificationFilters;
     private List<NotificationGroup> notificationGroups = new ArrayList<>();
     private int batchIntervalInSecs;
     private boolean active = true;
@@ -102,11 +90,6 @@ public class NotificationRule extends Base {
 
     public NotificationRuleBuilder withExecutionScope(ExecutionScope executionScope) {
       this.executionScope = executionScope;
-      return this;
-    }
-
-    public NotificationRuleBuilder withNotificationFilters(Map<String, Object> notificationFilters) {
-      this.notificationFilters = notificationFilters;
       return this;
     }
 
@@ -159,7 +142,6 @@ public class NotificationRule extends Base {
       NotificationRule notificationRule = new NotificationRule();
       notificationRule.setConditions(conditions);
       notificationRule.setExecutionScope(executionScope);
-      notificationRule.setNotificationFilters(notificationFilters);
       notificationRule.setNotificationGroups(notificationGroups);
       notificationRule.setBatchIntervalInSecs(batchIntervalInSecs);
       notificationRule.setActive(active);

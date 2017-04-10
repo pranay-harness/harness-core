@@ -80,17 +80,6 @@ public class NotificationServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should save.
-   */
-  @Test
-  public void shouldSave() {
-    InformationNotification notification =
-        anInformationNotification().withAppId(APP_ID).withEnvironmentId(ENV_ID).withDisplayText("TEXT").build();
-    notificationService.save(notification);
-    verify(wingsPersistence).saveAndGet(Notification.class, notification);
-  }
-
-  /**
    * Should get.
    */
   @Test
@@ -113,7 +102,7 @@ public class NotificationServiceTest extends WingsBaseTest {
         anInformationNotification().withAppId(APP_ID).withEnvironmentId(ENV_ID).withDisplayText("TEXT").build();
     notificationService.sendNotificationAsync(notification);
     verify(wingsPersistence).saveAndGet(Notification.class, notification);
-    verify(notificationDispatcherService).dispatchNotification(any());
+    verify(notificationDispatcherService).dispatchNotification(any(), any());
     verifyNoMoreInteractions(wingsPersistence, injector);
   }
 

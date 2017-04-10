@@ -12,6 +12,7 @@ import software.wings.beans.ActionableNotification;
 import software.wings.beans.Application;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
+import software.wings.beans.NotificationRule;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -20,6 +21,8 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -44,11 +47,6 @@ public class NotificationServiceImpl implements NotificationService {
   @Override
   public PageResponse<Notification> list(PageRequest<Notification> pageRequest) {
     return wingsPersistence.query(Notification.class, pageRequest);
-  }
-
-  @Override
-  public Notification save(Notification notification) {
-    return wingsPersistence.saveAndGet(Notification.class, notification);
   }
 
   @Override
@@ -77,7 +75,7 @@ public class NotificationServiceImpl implements NotificationService {
       markNotificationCompleted(appId, notificationId);
     }
     Notification savedNotification = get(appId, notificationId);
-    notificationDispatcherService.dispatchNotification(savedNotification);
+    notificationDispatcherService.dispatchNotification(savedNotification, new ArrayList<>());
     return savedNotification;
   }
 
@@ -92,6 +90,18 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
+  public void sendNotificationAsync(Notification notification, List<NotificationRule> notificationRules) {
+    executorService.execute(() -> sendNotification(notification, notificationRules));
+  }
+
+  private void sendNotification(Notification notification, List<NotificationRule> notificationRules) {
+    Application application = appService.get(notification.getAppId());
+    notification.setAccountId(application.getAccountId());
+    Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);
+    notificationDispatcherService.dispatchNotification(savedNotification, notificationRules);
+  }
+
+  @Override
   public void sendNotificationAsync(@Valid Notification notification) {
     executorService.execute(() -> sendNotification(notification));
   }
@@ -99,7 +109,7 @@ public class NotificationServiceImpl implements NotificationService {
   private void sendNotification(Notification notification) {
     Application application = appService.get(notification.getAppId());
     notification.setAccountId(application.getAccountId());
-    Notification savedNotification = save(notification);
-    notificationDispatcherService.dispatchNotification(savedNotification);
+    Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);
+    notificationDispatcherService.dispatchNotification(savedNotification, new ArrayList<>());
   }
 }

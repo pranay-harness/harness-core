@@ -173,7 +173,6 @@ public abstract class Notification extends Base {
              * Failure notification type.
              */
     FAILURE,
-
     /**
      * Information notification type.
      */

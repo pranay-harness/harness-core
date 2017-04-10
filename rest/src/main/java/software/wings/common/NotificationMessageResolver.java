@@ -45,10 +45,22 @@ public class NotificationMessageResolver {
       "${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}";
 
   /**
-   * The constant DEPLOYMENT_COMPLETED_NOTIFICATION.
+   * The constant DEPLOYMENT_SUCCESSFUL_NOTIFICATION.
    */
-  public static final String DEPLOYMENT_COMPLETED_NOTIFICATION =
-      "${DATE} : Deployment {NAME} completed on ${HOST_COUNT} in ${ENV_NAME} environment.";
+  public static final String DEPLOYMENT_SUCCESSFUL_NOTIFICATION =
+      "Deployment ${NAME} completed successfully in ${ENV_NAME} environment at ${DATE}";
+
+  /**
+   * The constant DEPLOYMENT_PAUSED_NOTIFICATION.
+   */
+  public static final String DEPLOYMENT_PAUSED_NOTIFICATION =
+      "Deployment ${NAME} completed successfully in ${ENV_NAME} environment at ${DATE}";
+
+  /**
+   * The constant DEPLOYMENT_FAILED_NOTIFICATION.
+   */
+  public static final String DEPLOYMENT_FAILED_NOTIFICATION =
+      "Deployment ${NAME} paused in ${ENV_NAME} environment at ${DATE}";
 
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
 

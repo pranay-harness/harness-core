@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
@@ -19,17 +18,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by rishi on 10/30/16.
  */
 @Singleton
+@ValidateOnExecution
 public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private SettingsService settingsService;
 
-  @Override
   public Map<NotificationChannelType, Object> getSupportedChannelTypeDetails(String appId) {
     Map<NotificationChannelType, Object> supportedChannelTypeDetails = new HashMap<>();
     for (NotificationChannelType notificationChannelType : NotificationChannelType.values()) {
@@ -74,37 +74,5 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Override
   public boolean deleteNotificationGroups(String appId, String notificationGroupId) {
     return wingsPersistence.delete(NotificationGroup.class, appId, notificationGroupId);
-  }
-
-  @Override
-  public List<NotificationRule> listNotificationRules(String appId) {
-    return wingsPersistence.query(NotificationRule.class, aPageRequest().addFilter("appId", Operator.EQ, appId).build())
-        .getResponse();
-  }
-
-  @Override
-  public PageResponse<NotificationRule> listNotificationRules(PageRequest<NotificationRule> pageRequest) {
-    return wingsPersistence.query(NotificationRule.class, pageRequest);
-  }
-
-  @Override
-  public NotificationRule readNotificationRule(String appId, String notificationRuleId) {
-    return wingsPersistence.get(NotificationRule.class, appId, notificationRuleId);
-  }
-
-  @Override
-  public NotificationRule createNotificationRule(NotificationRule notificationRule) {
-    return wingsPersistence.saveAndGet(NotificationRule.class, notificationRule);
-  }
-
-  @Override
-  public NotificationRule updateNotificationRule(NotificationRule notificationRule) {
-    // TODO:
-    return null;
-  }
-
-  @Override
-  public boolean deleteNotificationRule(String appId, String notificationRuleId) {
-    return wingsPersistence.delete(NotificationRule.class, appId, notificationRuleId);
   }
 }

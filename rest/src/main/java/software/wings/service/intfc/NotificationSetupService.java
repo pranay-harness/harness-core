@@ -1,42 +1,67 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.NotificationChannelType;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 
 import java.util.List;
-import java.util.Map;
+import javax.validation.Valid;
 
 /**
  * Created by rishi on 10/30/16.
  */
 public interface NotificationSetupService {
-  Map<NotificationChannelType, Object> getSupportedChannelTypeDetails(String appId);
-
+  /**
+   * List notification groups list.
+   *
+   * @param appId the app id
+   * @return the list
+   */
   List<NotificationGroup> listNotificationGroups(String appId);
 
+  /**
+   * List notification groups page response.
+   *
+   * @param pageRequest the page request
+   * @return the page response
+   */
   PageResponse<NotificationGroup> listNotificationGroups(PageRequest<NotificationGroup> pageRequest);
 
+  /**
+   * Read notification group notification group.
+   *
+   * @param appId               the app id
+   * @param notificationGroupId the notification group id
+   * @return the notification group
+   */
   NotificationGroup readNotificationGroup(String appId, String notificationGroupId);
 
-  NotificationGroup createNotificationGroup(NotificationGroup notificationGroup);
+  /**
+   * Create notification group notification group.
+   *
+   * @param notificationGroup the notification group
+   * @return the notification group
+   */
+  @ValidationGroups(Create.class) NotificationGroup createNotificationGroup(@Valid NotificationGroup notificationGroup);
 
-  NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup);
+  /**
+   * Update notification group notification group.
+   *
+   * @param notificationGroup the notification group
+   * @return the notification group
+   */
+  @ValidationGroups(Update.class) NotificationGroup updateNotificationGroup(@Valid NotificationGroup notificationGroup);
 
+  /**
+   * Delete notification groups boolean.
+   *
+   * @param appId               the app id
+   * @param notificationGroupId the notification group id
+   * @return the boolean
+   */
   boolean deleteNotificationGroups(@NotEmpty String appId, @NotEmpty String notificationGroupId);
-
-  List<NotificationRule> listNotificationRules(String appId);
-
-  PageResponse<NotificationRule> listNotificationRules(PageRequest<NotificationRule> pageRequest);
-
-  NotificationRule readNotificationRule(String appId, String notificationRuleId);
-
-  NotificationRule createNotificationRule(NotificationRule notificationRule);
-
-  NotificationRule updateNotificationRule(NotificationRule notificationRule);
-
-  boolean deleteNotificationRule(@NotEmpty String appId, @NotEmpty String notificationRuleId);
 }
