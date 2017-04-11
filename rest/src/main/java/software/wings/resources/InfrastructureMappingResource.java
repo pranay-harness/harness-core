@@ -113,7 +113,7 @@ public class InfrastructureMappingResource {
   @Path("stencils")
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Map<String, Object>>> infrastructureMappingSchema(@QueryParam("appId") String appId) {
+  public RestResponse<Map<String, Object>> infrastructureMappingSchema(@QueryParam("appId") String appId) {
     return new RestResponse<>(infrastructureMappingService.getInfraMappingStencils(appId));
   }
 

@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMapping.InfrastructureMappingType;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;

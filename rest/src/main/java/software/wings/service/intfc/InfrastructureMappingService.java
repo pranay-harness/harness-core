@@ -67,7 +67,7 @@ public interface InfrastructureMappingService {
    * @param appId the app id
    * @return the infra mapping stencils
    */
-  Map<String, Map<String, Object>> getInfraMappingStencils(String appId);
+  Map<String, Object> getInfraMappingStencils(String appId);
 
   /**
    * List service instances list.
