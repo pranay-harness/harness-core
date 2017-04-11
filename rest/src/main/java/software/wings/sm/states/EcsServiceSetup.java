@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -25,7 +25,7 @@ import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsServiceElement;
+import software.wings.api.CloudServiceElement;
 import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
@@ -189,17 +189,17 @@ public class EcsServiceSetup extends State {
 
     awsClusterService.createService(computeProviderSetting, createServiceRequest);
 
-    EcsServiceElement ecsServiceElement = anEcsServiceElement()
-                                              .withUuid(serviceId)
-                                              .withName(ecsServiceName)
-                                              .withOldName(lastEcsServiceName)
-                                              .withClusterName(clusterName)
-                                              .build();
+    CloudServiceElement cloudServiceElement = aCloudServiceElement()
+                                                  .withUuid(serviceId)
+                                                  .withName(ecsServiceName)
+                                                  .withOldName(lastEcsServiceName)
+                                                  .withClusterName(clusterName)
+                                                  .build();
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(ecsServiceElement)
-        .addNotifyElement(ecsServiceElement)
+        .addContextElement(cloudServiceElement)
+        .addNotifyElement(cloudServiceElement)
         .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
         .build();
   }

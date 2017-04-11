@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.CloudServiceElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -226,6 +227,26 @@ public abstract class CloudServiceDeploy extends State {
     return invalidFields;
   }
 
+  public int getInstanceCount() {
+    return instanceCount;
+  }
+
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
+
+  protected String getClusterName(ExecutionContext context) {
+    return context.<CloudServiceElement>getContextElement(ContextElementType.CLOUD_SERVICE).getClusterName();
+  }
+
+  protected String getServiceName(ExecutionContext context) {
+    return context.<CloudServiceElement>getContextElement(ContextElementType.CLOUD_SERVICE).getName();
+  }
+
+  protected String getOldServiceName(ExecutionContext context) {
+    return context.<CloudServiceElement>getContextElement(ContextElementType.CLOUD_SERVICE).getOldName();
+  }
+
   private ExecutionResponse buildEndStateExecution(
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
@@ -299,18 +320,7 @@ public abstract class CloudServiceDeploy extends State {
     return commandExecutionContext;
   }
 
-  public int getInstanceCount() {
-    return instanceCount;
-  }
-
-  public void setInstanceCount(int instanceCount) {
-    this.instanceCount = instanceCount;
-  }
-
   public abstract String getCommandName();
-  protected abstract String getClusterName(ExecutionContext context);
-  protected abstract String getServiceName(ExecutionContext context);
-  protected abstract String getOldServiceName(ExecutionContext context);
   protected abstract int getServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute);
   protected abstract int getOldServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute);
 }

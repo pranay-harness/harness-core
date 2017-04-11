@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
-import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
+import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -21,9 +20,8 @@ import org.joor.Reflect;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudServiceElement;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsServiceElement;
-import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
@@ -125,7 +123,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                                           .withStateName(STATE_NAME)
                                                           .addContextElement(workflowStandardParams)
                                                           .addContextElement(phaseElement)
-                                                          .addContextElement(anEcsServiceElement().build())
+                                                          .addContextElement(aCloudServiceElement().build())
                                                           .addStateExecutionData(new PhaseStepExecutionData())
                                                           .build();
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
@@ -140,7 +138,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message"))
           .asString()
-          .contains("ecsServiceElement not present for the service");
+          .contains("cloudServiceElement not present for the service");
     }
   }
 
@@ -153,7 +151,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
             .withStateName(STATE_NAME)
             .addContextElement(workflowStandardParams)
             .addContextElement(phaseElement)
-            .addContextElement(anEcsServiceElement().withUuid(serviceElement.getUuid()).build())
+            .addContextElement(aCloudServiceElement().withUuid(serviceElement.getUuid()).build())
             .addStateExecutionData(new PhaseStepExecutionData())
             .build();
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
@@ -243,7 +241,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                     .withDeploymentType(DeploymentType.ECS.name())
                                     .build();
 
-    EcsServiceElement ecsServiceElement = anEcsServiceElement().withUuid(serviceElement.getUuid()).build();
+    CloudServiceElement cloudServiceElement = aCloudServiceElement().withUuid(serviceElement.getUuid()).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withStateName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
@@ -254,13 +252,13 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(ecsServiceElement).build());
+    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(cloudServiceElement).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
 
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
     assertThat(response.getContextElements()).isNotNull().hasSize(1);
-    assertThat(response.getContextElements().get(0)).isNotNull().isEqualTo(ecsServiceElement);
+    assertThat(response.getContextElements().get(0)).isNotNull().isEqualTo(cloudServiceElement);
   }
 
   @Test
@@ -292,7 +290,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Missing ECSServiceElement");
+      assertThat(exception.getParams().get("message")).asString().contains("Missing CloudServiceElement");
     }
   }
 
@@ -309,8 +307,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
                                     .withDeploymentType(DeploymentType.KUBERNETES.name())
                                     .build();
 
-    KubernetesReplicationControllerElement ecsServiceElement =
-        aKubernetesReplicationControllerElement().withUuid(serviceElement.getUuid()).build();
+    CloudServiceElement cloudServiceElement = aCloudServiceElement().withUuid(serviceElement.getUuid()).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withStateName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
@@ -321,13 +318,13 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_SETUP);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(ecsServiceElement).build());
+    notifyResponse.put("key", anElementNotifyResponseData().addContextElement(cloudServiceElement).build());
     Reflect.on(phaseStepSubWorkflow).set("workflowExecutionService", workflowExecutionService);
 
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull().hasFieldOrProperty("stateExecutionData");
     assertThat(response.getContextElements()).isNotNull().hasSize(1);
-    assertThat(response.getContextElements().get(0)).isNotNull().isEqualTo(ecsServiceElement);
+    assertThat(response.getContextElements().get(0)).isNotNull().isEqualTo(cloudServiceElement);
   }
 
   @Test
@@ -359,9 +356,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message"))
-          .asString()
-          .contains("Missing KubernetesReplicationControllerElement");
+      assertThat(exception.getParams().get("message")).asString().contains("Missing CloudServiceElement");
     }
   }
 }
