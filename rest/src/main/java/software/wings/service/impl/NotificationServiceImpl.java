@@ -103,7 +103,8 @@ public class NotificationServiceImpl implements NotificationService {
     if (notification instanceof InformationNotification) {
       ((InformationNotification) notification)
           .setDisplayText(NotificationMessageResolver.getDecoratedNotificationMessage(
-              notification.getNotificationTemplateId(), notification.getNotificationTemplateVariables()));
+              notificationMessageResolver.getWebTemplate(notification.getNotificationTemplateId()),
+              notification.getNotificationTemplateVariables()));
     }
 
     Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);

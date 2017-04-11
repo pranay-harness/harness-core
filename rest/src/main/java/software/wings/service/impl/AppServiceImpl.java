@@ -99,6 +99,7 @@ public class AppServiceImpl implements AppService {
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(application.getUuid())
+            .withAccountId(application.getAccountId())
             .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
             .withNotificationTemplateVariables(
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
@@ -245,6 +246,7 @@ public class AppServiceImpl implements AppService {
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())
+                .withAccountId(application.getAccountId())
                 .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
                 .withNotificationTemplateVariables(
                     ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
