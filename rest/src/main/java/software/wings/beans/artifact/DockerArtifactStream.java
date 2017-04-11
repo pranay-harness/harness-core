@@ -19,7 +19,7 @@ import java.util.List;
  */
 @JsonTypeName("DOCKER")
 public class DockerArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Docker Image name") private String imageName;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String imageName;
 
   /**
    * Instantiates a new Docker artifact stream.
