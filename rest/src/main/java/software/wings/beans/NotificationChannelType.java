@@ -7,7 +7,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
  */
 public enum NotificationChannelType {
   EMAIL("Email", SettingVariableTypes.SMTP),
-  SLACK("Slack", SettingVariableTypes.SLACK);
+  SLACK("Slack", SettingVariableTypes.SLACK),
+  WEB("WEB", null);
 
   private final String displayName;
   private final SettingVariableTypes settingVariableTypes;

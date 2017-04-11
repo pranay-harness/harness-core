@@ -10,9 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.Application;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.beans.NotificationRule;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -26,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -41,6 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private ExecutorService executorService;
   @Inject private AppService appService;
   @Inject private NotificationDispatcherService notificationDispatcherService;
+  @Inject private NotificationMessageResolver notificationMessageResolver;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -97,19 +99,19 @@ public class NotificationServiceImpl implements NotificationService {
   private void sendNotification(Notification notification, List<NotificationRule> notificationRules) {
     Application application = appService.get(notification.getAppId());
     notification.setAccountId(application.getAccountId());
+
+    if (notification instanceof InformationNotification) {
+      ((InformationNotification) notification)
+          .setDisplayText(NotificationMessageResolver.getDecoratedNotificationMessage(
+              notification.getNotificationTemplateId(), notification.getNotificationTemplateVariables()));
+    }
+
     Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);
     notificationDispatcherService.dispatchNotification(savedNotification, notificationRules);
   }
 
   @Override
-  public void sendNotificationAsync(@Valid Notification notification) {
-    executorService.execute(() -> sendNotification(notification));
-  }
-
-  private void sendNotification(Notification notification) {
-    Application application = appService.get(notification.getAppId());
-    notification.setAccountId(application.getAccountId());
-    Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);
-    notificationDispatcherService.dispatchNotification(savedNotification, new ArrayList<>());
+  public void sendNotificationAsync(Notification notification) {
+    sendNotificationAsync(notification, new ArrayList<>());
   }
 }

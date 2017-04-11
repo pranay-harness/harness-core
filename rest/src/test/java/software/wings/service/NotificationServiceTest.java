@@ -36,6 +36,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ApprovalNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -99,7 +100,11 @@ public class NotificationServiceTest extends WingsBaseTest {
   @Test
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
-        anInformationNotification().withAppId(APP_ID).withEnvironmentId(ENV_ID).withDisplayText("TEXT").build();
+        anInformationNotification()
+            .withAppId(APP_ID)
+            .withEnvironmentId(ENV_ID)
+            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .build();
     notificationService.sendNotificationAsync(notification);
     verify(wingsPersistence).saveAndGet(Notification.class, notification);
     verify(notificationDispatcherService).dispatchNotification(any(), any());

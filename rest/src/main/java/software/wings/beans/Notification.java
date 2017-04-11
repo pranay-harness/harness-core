@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -24,6 +26,9 @@ public abstract class Notification extends Base {
   @NotNull private NotificationType notificationType;
   @Indexed @NotNull private boolean complete = true;
   @Indexed @NotNull private boolean actionable = false;
+
+  private String notificationTemplateId;
+  private Map<String, String> notificationTemplateVariables = new HashMap<>();
 
   /**
    * Instantiates a new Notification.
@@ -160,6 +165,32 @@ public abstract class Notification extends Base {
   }
 
   /**
+   * Gets notification template id.
+   *
+   * @return the notification template id
+   */
+  public String getNotificationTemplateId() {
+    return notificationTemplateId;
+  }
+
+  /**
+   * Sets notification template id.
+   *
+   * @param notificationTemplateId the notification template id
+   */
+  public void setNotificationTemplateId(String notificationTemplateId) {
+    this.notificationTemplateId = notificationTemplateId;
+  }
+
+  public Map<String, String> getNotificationTemplateVariables() {
+    return notificationTemplateVariables;
+  }
+
+  public void setNotificationTemplateVariables(Map<String, String> notificationTemplateVariables) {
+    this.notificationTemplateVariables = notificationTemplateVariables;
+  }
+
+  /**
    * The enum Notification type.
    */
   public enum NotificationType {
@@ -172,10 +203,9 @@ public abstract class Notification extends Base {
     CHANGE, /**
              * Failure notification type.
              */
-    FAILURE,
-    /**
-     * Information notification type.
-     */
+    FAILURE, /**
+              * Information notification type.
+              */
     INFORMATION
   }
 

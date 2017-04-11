@@ -47,6 +47,15 @@ public interface NotificationService {
   /**
    * Send notification async.
    *
+   * @param notification      the notification
+   * @param notificationRules the notification rules
+   */
+  @ValidationGroups(Create.class)
+  void sendNotificationAsync(@Valid Notification notification, List<NotificationRule> notificationRules);
+
+  /**
+   * Send notification async.
+   *
    * @param notification the notification
    */
   @ValidationGroups(Create.class) void sendNotificationAsync(@Valid Notification notification);
@@ -65,11 +74,4 @@ public interface NotificationService {
    * @param appId the app id
    */
   void deleteByApplication(String appId);
-
-  /**
-   * Send notification async.
-   *  @param notification      the notification
-   * @param notificationRules the notification rules
-   */
-  void sendNotificationAsync(Notification notification, List<NotificationRule> notificationRules);
 }

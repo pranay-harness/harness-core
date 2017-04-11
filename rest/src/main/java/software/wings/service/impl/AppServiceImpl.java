@@ -10,8 +10,6 @@ import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +30,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.stats.AppKeyStatistics;
-import software.wings.common.NotificationMessageResolver;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -101,8 +99,9 @@ public class AppServiceImpl implements AppService {
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(application.getUuid())
-            .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
-                ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(
+                ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
     addCronForStateMachineExecutionCleanup(application);
     return get(application.getUuid(), INCOMPLETE, true, 0);
@@ -246,8 +245,9 @@ public class AppServiceImpl implements AppService {
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())
-                .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
-                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+                .withNotificationTemplateVariables(
+                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
                 .build());
 
         serviceResourceService.deleteByApp(appId);
@@ -261,8 +261,9 @@ public class AppServiceImpl implements AppService {
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(application.getUuid())
-              .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
-                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+              .withNotificationTemplateVariables(
+                  ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
               .build());
       deleteCronForStateMachineExecutionCleanup(appId);
     }

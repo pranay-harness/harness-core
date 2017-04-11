@@ -37,6 +37,11 @@ public interface Constants {
    * The constant STATIC_CATALOG_URL.
    */
   String STATIC_CATALOG_URL = "/configs/catalogs.yml";
+
+  /**
+   * The constant NOTIFICATION_TEMPLATE_PATH.
+   */
+  String NOTIFICATION_TEMPLATE_PATH = "/notificationtemplates/notification_templates.yml";
   /**
    * The constant SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL.
    */
@@ -51,8 +56,14 @@ public interface Constants {
    */
   String SERVICE_INSTANCE_ARTIFACT_PARAMS = "SERVICE_INSTANCE_ARTIFACT_PARAMS";
 
+  /**
+   * The constant INSTANCE_LIST_PARAMS.
+   */
   String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";
 
+  /**
+   * The constant PHASE_PARAM.
+   */
   String PHASE_PARAM = "PHASE_PARAM";
   /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
@@ -93,45 +104,129 @@ public interface Constants {
    */
   String DEV_ENV = "Development";
 
+  /**
+   * The constant ALL.
+   */
   String ALL = "All";
   /**
    * The constant to represent all environment
    */
   String ALL_ENV = "__ALL_ENVIRONMENTS__";
 
+  /**
+   * The constant WINGS_VARIABLE_PREFIX.
+   */
   String WINGS_VARIABLE_PREFIX = "${";
+  /**
+   * The constant WINGS_VARIABLE_SUFFIX.
+   */
   String WINGS_VARIABLE_SUFFIX = "}";
 
+  /**
+   * The constant PRE_DEPLOYMENT.
+   */
   String PRE_DEPLOYMENT = "Pre-Deployment";
+  /**
+   * The constant POST_DEPLOYMENT.
+   */
   String POST_DEPLOYMENT = "Post-Deployment";
+  /**
+   * The constant DISABLE_SERVICE.
+   */
   String DISABLE_SERVICE = "Disable Service";
+  /**
+   * The constant ENABLE_SERVICE.
+   */
   String ENABLE_SERVICE = "Enable Service";
+  /**
+   * The constant DEPLOY_SERVICE.
+   */
   String DEPLOY_SERVICE = "Deploy Service";
+  /**
+   * The constant STOP_SERVICE.
+   */
   String STOP_SERVICE = "Stop Service";
+  /**
+   * The constant VERIFY_SERVICE.
+   */
   String VERIFY_SERVICE = "Verify Service";
 
+  /**
+   * The constant DEPLOY_CONTAINERS.
+   */
   String DEPLOY_CONTAINERS = "Deploy Containers";
+  /**
+   * The constant SETUP_CONTAINER.
+   */
   String SETUP_CONTAINER = "Setup Container";
 
+  /**
+   * The constant ECS_SERVICE_SETUP.
+   */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
+  /**
+   * The constant ECS_SERVICE_DEPLOY.
+   */
   String ECS_SERVICE_DEPLOY = "Upgrade Containers";
 
+  /**
+   * The constant SUB_WORKFLOW_ID.
+   */
   String SUB_WORKFLOW_ID = "subWorkflowId";
+  /**
+   * The constant SUB_WORKFLOW.
+   */
   String SUB_WORKFLOW = "SUB_WORKFLOW";
+  /**
+   * The constant ROLLBACK_PREFIX.
+   */
   String ROLLBACK_PREFIX = "Rollback ";
+  /**
+   * The constant PHASE_NAME_PREFIX.
+   */
   String PHASE_NAME_PREFIX = "Phase ";
 
+  /**
+   * The constant WRAP_UP.
+   */
   String WRAP_UP = "Wrap Up";
+  /**
+   * The constant PROVISION_NODE_NAME.
+   */
   String PROVISION_NODE_NAME = "Provision Nodes";
+  /**
+   * The constant DE_PROVISION_NODE.
+   */
   String DE_PROVISION_NODE = "De-Provision Nodes";
+  /**
+   * The constant STEP_VALIDATION_MESSAGE.
+   */
   String STEP_VALIDATION_MESSAGE = "Some fields %s are found to be invalid/incomplete.";
+  /**
+   * The constant PHASE_STEP_VALIDATION_MESSAGE.
+   */
   String PHASE_STEP_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
+  /**
+   * The constant PHASE_VALIDATION_MESSAGE.
+   */
   String PHASE_VALIDATION_MESSAGE = "Some steps %s are found to be invalid/incomplete.";
+  /**
+   * The constant WORKFLOW_VALIDATION_MESSAGE.
+   */
   String WORKFLOW_VALIDATION_MESSAGE = "Some phases %s are found to be invalid/incomplete.";
 
+  /**
+   * The constant WAIT_RESUME_GROUP.
+   */
   String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
 
+  /**
+   * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
+   */
   Integer DEFAULT_STATE_TIMEOUT_MILLIS = 30 * 60 * 1000; // 30 minutes
 
+  /**
+   * The constant DEFAULT_PARENT_STATE_TIMEOUT_MILLIS.
+   */
   Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
 }

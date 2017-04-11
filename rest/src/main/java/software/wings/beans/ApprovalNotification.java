@@ -19,6 +19,8 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 
@@ -123,26 +125,126 @@ public class ApprovalNotification extends ActionableNotification {
     REJECTED
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
-    private String artifactStreamId;
     private String environmentId;
     private String entityId;
     private EntityType entityType;
     private String accountId;
     private boolean complete = true;
+    private String notificationTemplateId;
+    private Map<String, String> notificationTemplateVariables = new HashMap<>();
     private String uuid;
+    private String entityName;
     private String appId;
     private EmbeddedUser createdBy;
-    private long createdAt;
-    private String entityName;
-    private EmbeddedUser lastUpdatedBy;
     private ApprovalStage stage = PENDING;
+    private long createdAt;
+    private String artifactStreamId;
+    private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private transient WingsPersistence wingsPersistence;
+    private transient ArtifactService artifactService;
 
     private Builder() {}
 
+    /**
+     * An approval notification builder.
+     *
+     * @return the builder
+     */
     public static Builder anApprovalNotification() {
       return new Builder();
+    }
+
+    /**
+     * With environment id builder.
+     *
+     * @param environmentId the environment id
+     * @return the builder
+     */
+    public Builder withEnvironmentId(String environmentId) {
+      this.environmentId = environmentId;
+      return this;
+    }
+
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
+    public Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
+    public Builder withEntityType(EntityType entityType) {
+      this.entityType = entityType;
+      return this;
+    }
+
+    /**
+     * With account id builder.
+     *
+     * @param accountId the account id
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
+     * With complete builder.
+     *
+     * @param complete the complete
+     * @return the builder
+     */
+    public Builder withComplete(boolean complete) {
+      this.complete = complete;
+      return this;
+    }
+
+    /**
+     * With notification template id builder.
+     *
+     * @param notificationTemplateId the notification template id
+     * @return the builder
+     */
+    public Builder withNotificationTemplateId(String notificationTemplateId) {
+      this.notificationTemplateId = notificationTemplateId;
+      return this;
+    }
+
+    /**
+     * With notificatio template variables builder.
+     *
+     * @param notificatioTemplateVariables the notificatio template variables
+     * @return the builder
+     */
+    public Builder withNotificatioTemplateVariables(Map<String, String> notificatioTemplateVariables) {
+      this.notificationTemplateVariables = notificatioTemplateVariables;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
     }
 
     /**
@@ -153,6 +255,28 @@ public class ApprovalNotification extends ActionableNotification {
      */
     public Builder withEntityName(String entityName) {
       this.entityName = entityName;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
       return this;
     }
 
@@ -168,6 +292,17 @@ public class ApprovalNotification extends ActionableNotification {
     }
 
     /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
      * With artifact stream id builder.
      *
      * @param artifactStreamId the artifact stream id
@@ -179,100 +314,101 @@ public class ApprovalNotification extends ActionableNotification {
     }
 
     /**
-     * With environment id builder.
+     * With last updated by builder.
      *
-     * @param environmentId the environment id
+     * @param lastUpdatedBy the last updated by
      * @return the builder
      */
-    public Builder withEnvironmentId(String environmentId) {
-      this.environmentId = environmentId;
-      return this;
-    }
-
-    public Builder withEntityId(String entityId) {
-      this.entityId = entityId;
-      return this;
-    }
-
-    public Builder withEntityType(EntityType entityType) {
-      this.entityType = entityType;
-      return this;
-    }
-
-    public Builder withAccountId(String accountId) {
-      this.accountId = accountId;
-      return this;
-    }
-
-    public Builder withComplete(boolean complete) {
-      this.complete = complete;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With wings persistence builder.
+     *
+     * @param wingsPersistence the wings persistence
+     * @return the builder
+     */
+    public Builder withWingsPersistence(WingsPersistence wingsPersistence) {
+      this.wingsPersistence = wingsPersistence;
+      return this;
+    }
+
+    /**
+     * With artifact service builder.
+     *
+     * @param artifactService the artifact service
+     * @return the builder
+     */
+    public Builder withArtifactService(ArtifactService artifactService) {
+      this.artifactService = artifactService;
+      return this;
+    }
+
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anApprovalNotification()
-          .withEntityName(entityName)
-          .withStage(stage)
-          .withArtifactStreamId(artifactStreamId)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
+          .withAccountId(accountId)
+          .withComplete(complete)
+          .withNotificationTemplateId(notificationTemplateId)
+          .withNotificatioTemplateVariables(notificationTemplateVariables)
           .withUuid(uuid)
+          .withEntityName(entityName)
           .withAppId(appId)
           .withCreatedBy(createdBy)
+          .withStage(stage)
           .withCreatedAt(createdAt)
+          .withArtifactStreamId(artifactStreamId)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withWingsPersistence(wingsPersistence)
+          .withArtifactService(artifactService);
     }
 
+    /**
+     * Build approval notification.
+     *
+     * @return the approval notification
+     */
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
-      approvalNotification.setEntityName(entityName);
-      approvalNotification.setStage(stage);
-      approvalNotification.setArtifactStreamId(artifactStreamId);
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);
       approvalNotification.setAccountId(accountId);
       approvalNotification.setComplete(complete);
+      approvalNotification.setNotificationTemplateId(notificationTemplateId);
+      approvalNotification.setNotificationTemplateVariables(notificationTemplateVariables);
       approvalNotification.setUuid(uuid);
+      approvalNotification.setEntityName(entityName);
       approvalNotification.setAppId(appId);
       approvalNotification.setCreatedBy(createdBy);
-      approvalNotification.setCreatedAt(createdAt);
-      approvalNotification.setEntityName(entityName);
-      approvalNotification.setLastUpdatedBy(lastUpdatedBy);
       approvalNotification.setStage(stage);
+      approvalNotification.setCreatedAt(createdAt);
+      approvalNotification.setArtifactStreamId(artifactStreamId);
+      approvalNotification.setLastUpdatedBy(lastUpdatedBy);
       approvalNotification.setLastUpdatedAt(lastUpdatedAt);
+      approvalNotification.artifactService = this.artifactService;
+      approvalNotification.wingsPersistence = this.wingsPersistence;
       return approvalNotification;
     }
   }

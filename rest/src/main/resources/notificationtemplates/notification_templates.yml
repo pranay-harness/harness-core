@@ -1,0 +1,49 @@
+ENTITY_CREATE_NOTIFICATION:
+      web: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
+      slack: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
+      email:
+          subject: ENTITY_CREATE_NOTIFICATION
+          body: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
+
+ENTITY_DELETE_NOTIFICATION:
+      web: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
+      slack: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
+      email:
+          subject: ENTITY_DELETE_NOTIFICATION
+          body: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
+
+APPROVAL_NOTIFICATION:
+      web: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
+      slack: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
+      email:
+          subject: APPROVAL_NOTIFICATION
+          body: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
+
+APPROVAL_NOTIFICATION_STATUS:
+      web: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
+      slack: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
+      email:
+          subject: APPROVAL_NOTIFICATION_STATUS
+          body: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
+
+DEPLOYMENT_SUCCESSFUL_NOTIFICATION:
+      web: Deployment ${NAME} completed successfully in ${ENV_NAME} environment at ${DATE}
+      slack: Deployment ${NAME} completed successfully in ${ENV_NAME} environment at ${DATE}
+      email:
+          subject: DEPLOYMENT_SUCCESSFUL_NOTIFICATION
+          body: Deployment ${NAME} completed successfully in ${ENV_NAME} environment at ${DATE}
+
+DEPLOYMENT_FAILED_NOTIFICATION:
+      web: Deployment ${NAME} failed in ${ENV_NAME} environment at ${DATE}
+      slack: Deployment ${NAME} failed in ${ENV_NAME} environment at ${DATE}
+      email:
+          subject: DEPLOYMENT_FAILED_NOTIFICATION
+          body: Deployment ${NAME} failed in ${ENV_NAME} environment at ${DATE}
+
+DEPLOYMENT_PAUSED_NOTIFICATION:
+      web: Deployment ${NAME} paused in ${ENV_NAME} environment at ${DATE}
+      slack: Deployment ${NAME} paused in ${ENV_NAME} environment at ${DATE}
+      email:
+          subject: DEPLOYMENT_PAUSED_NOTIFICATION
+          body: Deployment ${NAME} paused in ${ENV_NAME} environment at ${DATE}
+

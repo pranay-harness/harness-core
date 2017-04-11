@@ -17,6 +17,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseSubWorkflow;
+import software.wings.utils.WorkflowNotificationHelper;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
   @Inject @Transient private transient WorkflowService workflowService;
 
+  @Inject @Transient private transient WorkflowNotificationHelper workflowNotificationHelper;
+
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
     ExecutionContext context = executionEvent.getContext();
@@ -42,6 +45,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
     PhaseSubWorkflow phaseSubWorkflow = (PhaseSubWorkflow) state;
+
+    workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
+        context, executionEvent.getExecutionStatus(), phaseSubWorkflow);
+
     if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() != ExecutionStatus.FAILED) {
       return null;
     }
