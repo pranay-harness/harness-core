@@ -61,14 +61,13 @@ public class WorkflowNotificationHelper {
     WorkflowExecution executionDetails =
         workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
     Map<String, String> placeHolders = new HashMap<>();
-    placeHolders.put("NAME", context.getWorkflowExecutionName());
+    placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolders.put("ENV_NAME", env.getName());
     placeHolders.put("DATE", getDateString(executionDetails.getEndTs()));
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
-      String messageTemplate = status.equals(SUCCESS)
-          ? NotificationMessageType.DEPLOYMENT_SUCCESSFUL_NOTIFICATION.name()
-          : NotificationMessageType.DEPLOYMENT_PAUSED_NOTIFICATION.name();
+      String messageTemplate = status.equals(SUCCESS) ? NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION.name()
+                                                      : NotificationMessageType.WORKFLOW_PAUSED_NOTIFICATION.name();
       InformationNotification notification = anInformationNotification()
                                                  .withAccountId(app.getAccountId())
                                                  .withAppId(context.getAppId())
@@ -85,7 +84,7 @@ public class WorkflowNotificationHelper {
               .withEntityId(context.getWorkflowExecutionId())
               .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
               .withEntityName("Deployment")
-              .withNotificationTemplateId(NotificationMessageType.DEPLOYMENT_FAILED_NOTIFICATION.name())
+              .withNotificationTemplateId(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name())
               .withNotificationTemplateVariables(placeHolders)
               .withExecutionId(context.getWorkflowExecutionId())
               .build();
@@ -132,14 +131,15 @@ public class WorkflowNotificationHelper {
         workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
 
     Map<String, String> placeHolders = new HashMap<>();
-    placeHolders.put("NAME", context.getWorkflowExecutionName());
+    placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolders.put("PHASE_NAME", phaseSubWorkflow.getName());
     placeHolders.put("ENV_NAME", env.getName());
-    placeHolders.put("DATE", getDateString(executionDetails.getEndTs()));
+    placeHolders.put("DATE", getDateString(executionDetails.getStartTs()));
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       String messageTemplate = status.equals(SUCCESS)
-          ? NotificationMessageType.DEPLOYMENT_SUCCESSFUL_NOTIFICATION.name()
-          : NotificationMessageType.DEPLOYMENT_PAUSED_NOTIFICATION.name();
+          ? NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION.name()
+          : NotificationMessageType.WORKFLOW_PHASE_PAUSED_NOTIFICATION.name();
       InformationNotification notification = anInformationNotification()
                                                  .withAccountId(app.getAccountId())
                                                  .withAppId(context.getAppId())
@@ -156,7 +156,7 @@ public class WorkflowNotificationHelper {
               .withEntityId(context.getWorkflowExecutionId())
               .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
               .withEntityName("Deployment")
-              .withNotificationTemplateId(NotificationMessageType.DEPLOYMENT_FAILED_NOTIFICATION.name())
+              .withNotificationTemplateId(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name())
               .withNotificationTemplateVariables(placeHolders)
               .withExecutionId(context.getWorkflowExecutionId())
               .build();
