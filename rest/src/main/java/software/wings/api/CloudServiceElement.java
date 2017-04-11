@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import static software.wings.sm.ContextElementType.ECS_SERVICE;
+import static software.wings.sm.ContextElementType.CLOUD_SERVICE;
 
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Created by rishi on 2/10/17.
  */
-public class EcsServiceElement implements ContextElement {
+public class CloudServiceElement implements ContextElement {
   private String uuid;
   private String name;
   private String oldName;
@@ -18,7 +18,7 @@ public class EcsServiceElement implements ContextElement {
 
   @Override
   public ContextElementType getElementType() {
-    return ECS_SERVICE;
+    return CLOUD_SERVICE;
   }
 
   @Override
@@ -60,45 +60,49 @@ public class EcsServiceElement implements ContextElement {
     this.clusterName = clusterName;
   }
 
-  public static final class EcsServiceElementBuilder {
+  public static final class CloudServiceElementBuilder {
     private String uuid;
     private String name;
     private String oldName;
     private String clusterName;
 
-    private EcsServiceElementBuilder() {}
+    private CloudServiceElementBuilder() {}
 
-    public static EcsServiceElementBuilder anEcsServiceElement() {
-      return new EcsServiceElementBuilder();
+    public static CloudServiceElementBuilder aCloudServiceElement() {
+      return new CloudServiceElementBuilder();
     }
 
-    public EcsServiceElementBuilder withUuid(String uuid) {
+    public CloudServiceElementBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public EcsServiceElementBuilder withName(String name) {
+    public CloudServiceElementBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
-    public EcsServiceElementBuilder withOldName(String oldName) {
+    public CloudServiceElementBuilder withOldName(String oldName) {
       this.oldName = oldName;
       return this;
     }
 
-    public EcsServiceElementBuilder withClusterName(String clusterName) {
+    public CloudServiceElementBuilder withClusterName(String clusterName) {
       this.clusterName = clusterName;
       return this;
     }
 
-    public EcsServiceElement build() {
-      EcsServiceElement ecsServiceElement = new EcsServiceElement();
-      ecsServiceElement.setUuid(uuid);
-      ecsServiceElement.setName(name);
-      ecsServiceElement.setOldName(oldName);
-      ecsServiceElement.setClusterName(clusterName);
-      return ecsServiceElement;
+    public CloudServiceElementBuilder but() {
+      return aCloudServiceElement().withUuid(uuid).withName(name).withOldName(oldName).withClusterName(clusterName);
+    }
+
+    public CloudServiceElement build() {
+      CloudServiceElement cloudServiceElement = new CloudServiceElement();
+      cloudServiceElement.setUuid(uuid);
+      cloudServiceElement.setName(name);
+      cloudServiceElement.setOldName(oldName);
+      cloudServiceElement.setClusterName(clusterName);
+      return cloudServiceElement;
     }
   }
 }

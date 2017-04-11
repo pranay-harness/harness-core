@@ -40,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.service.impl.KubernetesHelperService;
 
@@ -141,7 +142,8 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldSetControllerPodCount() {
-    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(KUBERNETES_CONFIG, "foo", 3);
+    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(
+        KUBERNETES_CONFIG, "foo", "bar", 3, new ExecutionLogCallback());
 
     ArgumentCaptor<Integer> args = ArgumentCaptor.forClass(Integer.class);
     verify(scalableReplicationController).scale(args.capture());

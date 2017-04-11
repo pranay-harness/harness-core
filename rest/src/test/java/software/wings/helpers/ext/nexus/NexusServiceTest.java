@@ -248,7 +248,7 @@ public class NexusServiceTest {
                                                  + "</indexBrowserTreeViewResponse>")
                                              .withHeader("Content-Type", "application/xml")));
 
-    assertThat(nexusService.getGroupIdPaths(nexusConfig, "releases")).hasSize(1).contains("/fakepath/");
+    assertThat(nexusService.getGroupIdPaths(nexusConfig, "releases")).hasSize(1).contains("fakepath");
   }
 
   @Test
@@ -332,7 +332,7 @@ public class NexusServiceTest {
                         + "</indexBrowserTreeViewResponse>")
                     .withHeader("Content-Type", "application/xml")));
 
-    assertThat(nexusService.getArtifactNames(nexusConfig, "releases", "/software/wings/nexus/"))
+    assertThat(nexusService.getArtifactNames(nexusConfig, "releases", "software.wings.nexus"))
         .hasSize(1)
         .contains("rest-client");
   }
@@ -449,7 +449,7 @@ public class NexusServiceTest {
                     .withHeader("Content-Type", "application/xml")));
 
     List<BuildDetails> buildDetails =
-        nexusService.getVersions(nexusConfig, "releases", "/software/wings/nexus/", "rest-client");
+        nexusService.getVersions(nexusConfig, "releases", "software.wings.nexus", "rest-client");
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)

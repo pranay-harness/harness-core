@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.sm.states.LoadBalancerDataProvider;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.EnumData;
 
@@ -16,10 +17,13 @@ import java.util.stream.Collectors;
 @JsonTypeName("AWS_SSH")
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Restrictions")
-  @EnumData(enumDataProvider = AwsInfrastructureRestrictionProvider.class)
+  //@EnumData(enumDataProvider = AwsInfrastructureRestrictionProvider.class)
   @SchemaIgnore
   private String restrictionType;
   @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
+  @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
+  @Attributes(title = "Load Balancer")
+  private String loadBalancerId;
 
   /**
    * Instantiates a new Aws infrastructure mapping.
@@ -62,6 +66,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   public void setRestrictionExpression(String restrictionExpression) {
     this.restrictionExpression = restrictionExpression;
+  }
+
+  public String getLoadBalancerId() {
+    return loadBalancerId;
+  }
+
+  public void setLoadBalancerId(String loadBalancerId) {
+    this.loadBalancerId = loadBalancerId;
   }
 
   /**
@@ -117,6 +129,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @Attributes(title = "Connection Type")
   @Override
+  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
   public String getHostConnectionAttrs() {
     return super.getHostConnectionAttrs();
   }

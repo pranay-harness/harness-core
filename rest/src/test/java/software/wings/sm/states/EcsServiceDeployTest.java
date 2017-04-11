@@ -6,8 +6,8 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -115,7 +115,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                                               .withStateName(STATE_NAME)
                                                               .addContextElement(workflowStandardParams)
                                                               .addContextElement(phaseElement)
-                                                              .addContextElement(anEcsServiceElement()
+                                                              .addContextElement(aCloudServiceElement()
                                                                                      .withUuid(serviceElement.getUuid())
                                                                                      .withClusterName(CLUSTER_NAME)
                                                                                      .withName(ECS_SERVICE_NAME)

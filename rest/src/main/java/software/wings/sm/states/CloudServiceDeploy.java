@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.CloudServiceElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -155,7 +156,7 @@ public abstract class CloudServiceDeploy extends State {
     }
 
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
-      commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
+      commandStateExecutionData.setNewInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -199,6 +200,17 @@ public abstract class CloudServiceDeploy extends State {
           .build();
 
     } else {
+      CommandExecutionData commandExecutionData = commandExecutionResult.getCommandExecutionData();
+      if (commandExecutionData instanceof ResizeCommandUnitExecutionData) {
+        int actualOldInstanceCount =
+            ((ResizeCommandUnitExecutionData) commandExecutionData)
+                .getContainerInfos()
+                .stream()
+                .filter(containerInfo -> containerInfo.getStatus() == ContainerInfo.Status.SUCCESS)
+                .collect(Collectors.toList())
+                .size();
+        commandStateExecutionData.setOldInstanceCount(actualOldInstanceCount);
+      }
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
   }
@@ -215,11 +227,31 @@ public abstract class CloudServiceDeploy extends State {
     return invalidFields;
   }
 
+  public int getInstanceCount() {
+    return instanceCount;
+  }
+
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
+
+  protected String getClusterName(ExecutionContext context) {
+    return context.<CloudServiceElement>getContextElement(ContextElementType.CLOUD_SERVICE).getClusterName();
+  }
+
+  protected String getServiceName(ExecutionContext context) {
+    return context.<CloudServiceElement>getContextElement(ContextElementType.CLOUD_SERVICE).getName();
+  }
+
+  protected String getOldServiceName(ExecutionContext context) {
+    return context.<CloudServiceElement>getContextElement(ContextElementType.CLOUD_SERVICE).getOldName();
+  }
+
   private ExecutionResponse buildEndStateExecution(
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-    List<InstanceElement> instanceElements = commandStateExecutionData.getInstanceStatusSummaries()
+    List<InstanceElement> instanceElements = commandStateExecutionData.getNewInstanceStatusSummaries()
                                                  .stream()
                                                  .map(InstanceStatusSummary::getInstanceElement)
                                                  .collect(Collectors.toList());
@@ -288,18 +320,7 @@ public abstract class CloudServiceDeploy extends State {
     return commandExecutionContext;
   }
 
-  public int getInstanceCount() {
-    return instanceCount;
-  }
-
-  public void setInstanceCount(int instanceCount) {
-    this.instanceCount = instanceCount;
-  }
-
   public abstract String getCommandName();
-  protected abstract String getClusterName(ExecutionContext context);
-  protected abstract String getServiceName(ExecutionContext context);
-  protected abstract String getOldServiceName(ExecutionContext context);
   protected abstract int getServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute);
   protected abstract int getOldServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute);
 }

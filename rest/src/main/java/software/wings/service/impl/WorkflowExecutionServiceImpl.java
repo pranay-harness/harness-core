@@ -1024,7 +1024,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             && next.getStateExecutionData() instanceof CommandStateExecutionData) {
           CommandStateExecutionData commandStateExecutionData =
               (CommandStateExecutionData) next.getStateExecutionData();
-          instanceStatusSummaries.addAll(commandStateExecutionData.getInstanceStatusSummaries());
+          instanceStatusSummaries.addAll(commandStateExecutionData.getNewInstanceStatusSummaries());
         }
         last = next;
       }

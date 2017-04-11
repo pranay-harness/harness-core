@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
 import static software.wings.api.EcsServiceExecutionData.Builder.anEcsServiceExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
@@ -25,7 +25,7 @@ import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsServiceElement;
+import software.wings.api.CloudServiceElement;
 import software.wings.api.EcsServiceExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
@@ -52,7 +52,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
 import java.util.Collections;
@@ -65,16 +64,11 @@ import java.util.Optional;
 public class EcsServiceSetup extends State {
   @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
 
-  @Attributes(title = "Elastic Load Balancer")
-  @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
-  private String loadBalancerName;
+  @Attributes(title = "Elastic Load Balancer") private String loadBalancerName;
 
-  @Attributes(title = "Target Group")
-  @EnumData(enumDataProvider = LoadBalancerTargetGroupDataProvider.class)
-  private String targetGroupArn;
+  @Attributes(title = "Target Group") private String targetGroupArn;
 
   @Attributes(title = "IAM Role", description = "Role with AmazonEC2ContainerServiceRole policy attached.")
-  @EnumData(enumDataProvider = AWSRolesDataProvider.class)
   private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
@@ -189,17 +183,17 @@ public class EcsServiceSetup extends State {
 
     awsClusterService.createService(computeProviderSetting, createServiceRequest);
 
-    EcsServiceElement ecsServiceElement = anEcsServiceElement()
-                                              .withUuid(serviceId)
-                                              .withName(ecsServiceName)
-                                              .withOldName(lastEcsServiceName)
-                                              .withClusterName(clusterName)
-                                              .build();
+    CloudServiceElement cloudServiceElement = aCloudServiceElement()
+                                                  .withUuid(serviceId)
+                                                  .withName(ecsServiceName)
+                                                  .withOldName(lastEcsServiceName)
+                                                  .withClusterName(clusterName)
+                                                  .build();
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(ecsServiceElement)
-        .addNotifyElement(ecsServiceElement)
+        .addContextElement(cloudServiceElement)
+        .addNotifyElement(cloudServiceElement)
         .withStateExecutionData(ecsServiceExecutionDataBuilder.build())
         .build();
   }

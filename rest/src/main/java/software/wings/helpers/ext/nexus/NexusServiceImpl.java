@@ -170,7 +170,9 @@ public class NexusServiceImpl implements NexusService {
         final List<IndexBrowserTreeNode> treeNodes = data.getChildren();
         treeNodes.forEach(treeNode -> {
           if (treeNode.getType().equals("G")) {
-            groupIds.add(treeNode.getPath());
+            String groupId = treeNode.getPath();
+            groupId = groupId.replace("/", ".");
+            groupIds.add(groupId.substring(1, groupId.length() - 1));
             getGroupIdPaths(nexusConfig, repoId, treeNode.getPath(), groupIds);
           } else {
             return;
@@ -204,7 +206,9 @@ public class NexusServiceImpl implements NexusService {
         final List<IndexBrowserTreeNode> treeNodes = data.getChildren();
         treeNodes.forEach(treeNode -> {
           if (treeNode.getType().equals("G")) {
-            groupIds.add(treeNode.getPath());
+            String groupId = treeNode.getPath();
+            groupId = groupId.replace("/", ".");
+            groupIds.add(groupId.substring(1, groupId.length() - 1));
             getGroupIdPaths(nexusConfig, repoId, treeNode.getPath(), groupIds);
           }
         }
@@ -224,8 +228,13 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path) {
-    final String url = getIndexContentPathUrl(nexusConfig, repoId, path);
     final List<String> artifactNames = new ArrayList<>();
+    String modifiedPath = path;
+    if (modifiedPath.contains(".")) {
+      modifiedPath = path.replace(".", "/");
+      modifiedPath = "/" + modifiedPath + "/";
+    }
+    final String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     try {
       final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
       // Check if response successful or not
@@ -254,7 +263,12 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
-    String url = getIndexContentPathUrl(nexusConfig, repoId, groupId);
+    String modifiedPath = groupId;
+    if (modifiedPath.contains(".")) {
+      modifiedPath = groupId.replace(".", "/");
+      modifiedPath = "/" + modifiedPath + "/";
+    }
+    String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     url = url + artifactName + "/";
     List<BuildDetails> buildDetails = new ArrayList<>();
     try {

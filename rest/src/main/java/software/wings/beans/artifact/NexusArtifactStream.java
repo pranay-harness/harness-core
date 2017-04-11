@@ -26,11 +26,11 @@ public class NexusArtifactStream extends ArtifactStream {
     this.jobname = jobname;
   }
 
-  @UIOrder(4) @NotEmpty @Attributes(title = "Repository Type", required = true) private String jobname;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Group Id", required = true) private String groupId;
+  @UIOrder(5) @NotEmpty @Attributes(title = "Group", required = true) private String groupId;
 
-  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Name", required = true) private List<String> artifactPaths;
+  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new Nexus artifact stream.

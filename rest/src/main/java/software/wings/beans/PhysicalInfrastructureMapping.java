@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import software.wings.stencils.EnumData;
 
 import java.util.List;
 import java.util.Objects;
@@ -42,6 +43,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
 
   @Override
   @Attributes(title = "Connection Type")
+  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
   public String getHostConnectionAttrs() {
     return super.getHostConnectionAttrs();
   }

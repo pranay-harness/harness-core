@@ -7,7 +7,6 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -37,27 +36,6 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
 
   public KubernetesReplicationControllerDeploy(String name) {
     super(name, StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name());
-  }
-
-  @Override
-  protected String getClusterName(ExecutionContext context) {
-    return context
-        .<KubernetesReplicationControllerElement>getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER)
-        .getClusterName();
-  }
-
-  @Override
-  protected String getServiceName(ExecutionContext context) {
-    return context
-        .<KubernetesReplicationControllerElement>getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER)
-        .getName();
-  }
-
-  @Override
-  protected String getOldServiceName(ExecutionContext context) {
-    return context
-        .<KubernetesReplicationControllerElement>getContextElement(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER)
-        .getOldName();
   }
 
   @Override

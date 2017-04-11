@@ -18,9 +18,9 @@ import java.util.List;
  */
 @JsonTypeName("BAMBOO")
 public class BambooArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Plan name") private String jobname;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Plan Name", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
+  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new Bamboo artifact stream.

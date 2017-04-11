@@ -6,7 +6,6 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.EcsServiceElement;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -35,21 +34,6 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
-  }
-
-  @Override
-  protected String getClusterName(ExecutionContext context) {
-    return context.<EcsServiceElement>getContextElement(ContextElementType.ECS_SERVICE).getClusterName();
-  }
-
-  @Override
-  protected String getServiceName(ExecutionContext context) {
-    return context.<EcsServiceElement>getContextElement(ContextElementType.ECS_SERVICE).getName();
-  }
-
-  @Override
-  protected String getOldServiceName(ExecutionContext context) {
-    return context.<EcsServiceElement>getContextElement(ContextElementType.ECS_SERVICE).getOldName();
   }
 
   @Override
@@ -85,6 +69,7 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
     return desiredCount;
   }
 
+  @Override
   public String getCommandName() {
     return commandName;
   }
