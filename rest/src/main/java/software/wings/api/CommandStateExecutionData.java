@@ -36,10 +36,11 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private String newContainerServiceName;
   private String oldContainerServiceName;
-  private int instanceCount;
+  private int newInstanceCount;
+  private int oldInstanceCount;
   private String clusterName;
 
-  private List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+  private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -257,20 +258,28 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.oldContainerServiceName = oldContainerServiceName;
   }
 
-  public List<InstanceStatusSummary> getInstanceStatusSummaries() {
-    return instanceStatusSummaries;
+  public List<InstanceStatusSummary> getNewInstanceStatusSummaries() {
+    return newInstanceStatusSummaries;
   }
 
-  public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
-    this.instanceStatusSummaries = instanceStatusSummaries;
+  public void setNewInstanceStatusSummaries(List<InstanceStatusSummary> newInstanceStatusSummaries) {
+    this.newInstanceStatusSummaries = newInstanceStatusSummaries;
   }
 
-  public int getInstanceCount() {
-    return instanceCount;
+  public int getNewInstanceCount() {
+    return newInstanceCount;
   }
 
-  public void setInstanceCount(int instanceCount) {
-    this.instanceCount = instanceCount;
+  public void setNewInstanceCount(int newInstanceCount) {
+    this.newInstanceCount = newInstanceCount;
+  }
+
+  public int getOldInstanceCount() {
+    return oldInstanceCount;
+  }
+
+  public void setOldInstanceCount(int oldInstanceCount) {
+    this.oldInstanceCount = oldInstanceCount;
   }
 
   public String getClusterName() {
@@ -339,7 +348,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     populateStepExecutionSummary(commandStepExecutionSummary);
     commandStepExecutionSummary.setOldContainerServiceName(oldContainerServiceName);
     commandStepExecutionSummary.setNewContainerServiceName(newContainerServiceName);
-    commandStepExecutionSummary.setInstanceCount(instanceCount);
+    commandStepExecutionSummary.setInstanceCount(newInstanceCount);
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
     return commandStepExecutionSummary;
@@ -385,8 +394,9 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String artifactName;
     private String newContainerServiceName;
     private String oldContainerServiceName;
-    private List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    private int instanceCount;
+    private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
+    private int newInstanceCount;
+    private int oldInstanceCount;
     private String clusterName;
 
     private Builder() {}
@@ -612,22 +622,33 @@ public class CommandStateExecutionData extends StateExecutionData {
     /**
      * With artifact name builder.
      *
-     * @param instanceCount the instanceCount
+     * @param newInstanceCount the newInstanceCount
      * @return the builder
      */
-    public Builder withInstanceCount(int instanceCount) {
-      this.instanceCount = instanceCount;
+    public Builder withNewInstanceCount(int newInstanceCount) {
+      this.newInstanceCount = newInstanceCount;
       return this;
     }
 
     /**
      * With artifact name builder.
      *
-     * @param instanceStatusSummaries the instanceStatusSummaries
+     * @param oldInstanceCount the oldInstanceCount
      * @return the builder
      */
-    public Builder withInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
-      this.instanceStatusSummaries = instanceStatusSummaries;
+    public Builder withOldInstanceCount(int oldInstanceCount) {
+      this.oldInstanceCount = oldInstanceCount;
+      return this;
+    }
+
+    /**
+     * With artifact name builder.
+     *
+     * @param newInstanceStatusSummaries the newInstanceStatusSummaries
+     * @return the builder
+     */
+    public Builder withNewInstanceStatusSummaries(List<InstanceStatusSummary> newInstanceStatusSummaries) {
+      this.newInstanceStatusSummaries = newInstanceStatusSummaries;
       return this;
     }
 
@@ -656,8 +677,9 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withArtifactName(artifactName)
           .withNewContainerServiceName(newContainerServiceName)
           .withOldContainerServiceName(oldContainerServiceName)
-          .withInstanceStatusSummaries(instanceStatusSummaries)
-          .withInstanceCount(instanceCount)
+          .withNewInstanceStatusSummaries(newInstanceStatusSummaries)
+          .withNewInstanceCount(newInstanceCount)
+          .withOldInstanceCount(oldInstanceCount)
           .withClusterName(clusterName);
     }
 
@@ -686,8 +708,9 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setArtifactName(artifactName);
       commandStateExecutionData.setNewContainerServiceName(newContainerServiceName);
       commandStateExecutionData.setOldContainerServiceName(oldContainerServiceName);
-      commandStateExecutionData.setInstanceStatusSummaries(instanceStatusSummaries);
-      commandStateExecutionData.setInstanceCount(instanceCount);
+      commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
+      commandStateExecutionData.setNewInstanceCount(newInstanceCount);
+      commandStateExecutionData.setOldInstanceCount(oldInstanceCount);
       commandStateExecutionData.setClusterName(clusterName);
       return commandStateExecutionData;
     }

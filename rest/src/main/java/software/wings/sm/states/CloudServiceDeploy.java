@@ -155,7 +155,7 @@ public abstract class CloudServiceDeploy extends State {
     }
 
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
-      commandStateExecutionData.setInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
+      commandStateExecutionData.setNewInstanceStatusSummaries(buildInstanceStatusSummaries(context, response));
 
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -199,6 +199,17 @@ public abstract class CloudServiceDeploy extends State {
           .build();
 
     } else {
+      CommandExecutionData commandExecutionData = commandExecutionResult.getCommandExecutionData();
+      if (commandExecutionData instanceof ResizeCommandUnitExecutionData) {
+        int actualOldInstanceCount =
+            ((ResizeCommandUnitExecutionData) commandExecutionData)
+                .getContainerInfos()
+                .stream()
+                .filter(containerInfo -> containerInfo.getStatus() == ContainerInfo.Status.SUCCESS)
+                .collect(Collectors.toList())
+                .size();
+        commandStateExecutionData.setOldInstanceCount(actualOldInstanceCount);
+      }
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
   }
@@ -219,7 +230,7 @@ public abstract class CloudServiceDeploy extends State {
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-    List<InstanceElement> instanceElements = commandStateExecutionData.getInstanceStatusSummaries()
+    List<InstanceElement> instanceElements = commandStateExecutionData.getNewInstanceStatusSummaries()
                                                  .stream()
                                                  .map(InstanceStatusSummary::getInstanceElement)
                                                  .collect(Collectors.toList());
