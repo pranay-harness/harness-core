@@ -1,27 +1,24 @@
 package software.wings.service.impl;
 
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.List;
-
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 /**
- * Created by bzane on 2/27/17
- * TODO(brett): Implement
+ * Created by brett on 2/27/17
  */
 @Singleton
 public class GcpInfrastructureProvider implements InfrastructureProvider {
@@ -30,56 +27,33 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   private final Logger logger = LoggerFactory.getLogger(GcpInfrastructureProvider.class);
 
-  @Inject private GcpHelperService gcpHelperService;
   @Inject private GkeClusterService gkeClusterService;
+  @Inject private HostService hostService;
 
   @Override
   public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
-    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
-    // TODO(brett): Implement
     return aPageResponse().withResponse(null).build();
   }
 
   @Override
   public void deleteHost(String appId, String infraMappingId, String hostName) {
-    // TODO(brett): Implement
+    hostService.deleteByHostName(appId, infraMappingId, hostName);
   }
 
   @Override
   public void updateHostConnAttrs(InfrastructureMapping infrastructureMapping, String hostConnectionAttrs) {
-    // TODO(brett): Implement
+    hostService.updateHostConnectionAttrByInfraMappingId(
+        infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), hostConnectionAttrs);
   }
 
   @Override
   public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
-    // TODO(brett): Implement
-  }
-
-  private GcpConfig validateAndGetGcpConfig(SettingAttribute computeProviderSetting) {
-    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
-    }
-
-    return (GcpConfig) computeProviderSetting.getValue();
+    hostService.deleteByInfraMappingId(appId, infraMappingId);
   }
 
   @Override
   public Host saveHost(Host host) {
-    // TODO(brett): Implement
-    return null;
-  }
-
-  public List<Host> provisionHosts(
-      SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
-    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
-    // TODO(brett): Implement
-    return null;
-  }
-
-  public void deProvisionHosts(
-      String appId, String infraMappingId, SettingAttribute computeProviderSetting, List<String> hostNames) {
-    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
-    // TODO(brett): Implement
+    return hostService.saveHost(host);
   }
 
   public List<String> listClusterNames(SettingAttribute computeProviderSetting) {

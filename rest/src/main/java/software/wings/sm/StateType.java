@@ -35,8 +35,6 @@ import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
-import software.wings.sm.states.GcpAutoScaleProvisionState;
-import software.wings.sm.states.GcpNodeSelectState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
@@ -161,18 +159,6 @@ public enum StateType implements StateTypeDescriptor {
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
-
-  /**
-   * GCP Node Select state.
-   */
-  GCP_NODE_SELECT(GcpNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS),
-
-  /**
-   * GCP Node Provision state.
-   */
-  GCP_AUTOSCALE_PROVISION(GcpAutoScaleProvisionState.class, CLOUD,
-      Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES), ORCHESTRATION_STENCILS),
 
   /**
    * Phase state type.

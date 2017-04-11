@@ -629,9 +629,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           infrastructureMapping.getUuid(),
           ImmutableMap.of(
               "specificHosts", true, "hostNames", hosts.stream().map(Host::getHostName).collect(Collectors.toList())));
-    } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      // TODO(brett): Implement
-      return null;
     } else {
       throw new WingsException(
           ErrorCode.INVALID_REQUEST, "message", "Node Provisioning is only supported for AWS and GCP infra mapping");
@@ -667,8 +664,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       awsInfrastructureProvider.deProvisionHosts(
           appId, infrastructureMapping.getUuid(), computeProviderSetting, hostNames);
       updateHostsAndServiceInstances(infrastructureMapping, ImmutableList.of(), hostNames);
-    } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      // TODO(brett): Implement
     } else {
       throw new WingsException(
           ErrorCode.INVALID_REQUEST, "message", "Node deprovisioning is only supported for AWS infra mapping");
