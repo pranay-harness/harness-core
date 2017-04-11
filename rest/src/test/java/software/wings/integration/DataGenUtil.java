@@ -501,10 +501,11 @@ private String createLoadBalancer(String appId, String serviceId, String value) 
 }
 
 private String createLoadBalancerConfig(String appId, String envId, String lbName) {
-  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId);
+  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId + "&accountId=" + accountId);
   RestResponse<SettingAttribute> restResponse = getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withAppId(appId)
+                        .withAccountId(accountId)
                         .withEnvId(envId)
                         .withName("Elastic Load Balancer")
                         .withValue(anElasticLoadBalancerConfig()

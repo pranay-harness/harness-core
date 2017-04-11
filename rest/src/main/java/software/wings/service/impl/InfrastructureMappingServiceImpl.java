@@ -1,12 +1,13 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toMap;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.GCP_KUBERNETES;
-import static software.wings.beans.InfrastructureMapping.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
+import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
@@ -16,12 +17,11 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +33,7 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -53,6 +54,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Validator;
@@ -67,6 +70,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -78,20 +82,18 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
+  private static final String stencilsPath = "/templates/inframapping/";
+  private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
-
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private SettingsService settingsService;
   @Inject private HostService hostService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  private static final String stencilsPath = "/templates/inframapping/";
-  private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";
+  @Inject private StencilPostProcessor stencilPostProcessor;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -225,40 +227,43 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public Map<String, Map<String, Object>> getInfraMappingStencils(String appId) {
-    // TODO:: dynamically read
+  public Map<String, Object> getInfraMappingStencils(String appId) {
+    return stencilPostProcessor.postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId)
+        .stream()
+        .collect(toMap(Stencil::getName, Function.identity()));
+
+    /*System.out.println();
+    //TODO:: dynamically read
     Map<String, Map<String, Object>> infraStencils = new HashMap<>();
 
-    // TODO:: InfraMapping remove this hack and use stencils model
+    //TODO:: InfraMapping remove this hack and use stencils model
 
     JsonNode physicalJsonSchema = JsonUtils.jsonSchema(PhysicalInfrastructureMapping.class);
-    List<SettingAttribute> settingAttributes =
-        settingsService.getSettingAttributesByType(appId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
+    List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(appId,
+    SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
 
-    Map<String, String> data =
-        settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+    Map<String, String> data = settingAttributes.stream().collect(toMap(SettingAttribute::getUuid,
+    SettingAttribute::getName));
 
     ObjectNode jsonSchemaField = ((ObjectNode) physicalJsonSchema.get("properties").get("hostConnectionAttrs"));
     jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
     jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
 
-    infraStencils.put(PHYSICAL_DATA_CENTER_SSH.name(),
-        ImmutableMap.of("jsonSchema", physicalJsonSchema, "uiSchema", readUiSchema(PHYSICAL_DATA_CENTER_SSH.name())));
+    infraStencils
+        .put(PHYSICAL_DATA_CENTER_SSH.name(), ImmutableMap.of("jsonSchema", physicalJsonSchema, "uiSchema",
+    readUiSchema(PHYSICAL_DATA_CENTER_SSH.name())));
 
     JsonNode awsJsonSchema = JsonUtils.jsonSchema(AwsInfrastructureMapping.class);
     jsonSchemaField = ((ObjectNode) awsJsonSchema.get("properties").get("hostConnectionAttrs"));
     jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
     jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
 
-    infraStencils.put(
-        AWS_SSH.name(), ImmutableMap.of("jsonSchema", awsJsonSchema, "uiSchema", readUiSchema(AWS_SSH.name())));
-    infraStencils.put(AWS_ECS.name(),
-        ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema",
-            readUiSchema(AWS_ECS.name())));
+    infraStencils.put(AWS_SSH.name(), ImmutableMap.of("jsonSchema", awsJsonSchema, "uiSchema",
+    readUiSchema(AWS_SSH.name()))); infraStencils .put(AWS_ECS.name(), ImmutableMap.of("jsonSchema",
+    JsonUtils.jsonSchema(EcsInfrastructureMapping.class), "uiSchema", readUiSchema(AWS_ECS.name())));
     infraStencils.put(GCP_KUBERNETES.name(),
         ImmutableMap.of("jsonSchema", JsonUtils.jsonSchema(GcpKubernetesInfrastructureMapping.class), "uiSchema",
-            readUiSchema(GCP_KUBERNETES.name())));
-    return infraStencils;
+    readUiSchema(GCP_KUBERNETES.name()))); return infraStencils;*/
   }
 
   @Override

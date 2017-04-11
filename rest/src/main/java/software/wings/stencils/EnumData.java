@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * Created by peeyushaggarwal on 6/3/16.
  */
 @Retention(value = RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.FIELD})
+@Target(value = {ElementType.FIELD, ElementType.METHOD})
 public @interface EnumData {
   /**
    * Enum data provider class.

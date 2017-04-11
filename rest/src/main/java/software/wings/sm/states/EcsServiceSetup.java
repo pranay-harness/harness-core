@@ -52,7 +52,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
 import java.util.Collections;
@@ -65,16 +64,11 @@ import java.util.Optional;
 public class EcsServiceSetup extends State {
   @Attributes(title = "Use Load Balancer?") private boolean useLoadBalancer;
 
-  @Attributes(title = "Elastic Load Balancer")
-  @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
-  private String loadBalancerName;
+  @Attributes(title = "Elastic Load Balancer") private String loadBalancerName;
 
-  @Attributes(title = "Target Group")
-  @EnumData(enumDataProvider = LoadBalancerTargetGroupDataProvider.class)
-  private String targetGroupArn;
+  @Attributes(title = "Target Group") private String targetGroupArn;
 
   @Attributes(title = "IAM Role", description = "Role with AmazonEC2ContainerServiceRole policy attached.")
-  @EnumData(enumDataProvider = AWSRolesDataProvider.class)
   private String roleArn;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;

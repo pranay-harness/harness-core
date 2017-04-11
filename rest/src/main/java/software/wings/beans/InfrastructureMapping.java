@@ -8,9 +8,16 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.stencils.DataProvider;
 import software.wings.utils.validation.Update;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -29,32 +36,6 @@ public abstract class InfrastructureMapping extends Base {
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @Attributes(title = "Connection Type") private String hostConnectionAttrs;
   @SchemaIgnore private String displayName;
-
-  /**
-   * The enum Infra mapping type.
-   */
-  public enum InfrastructureMappingType {
-    /**
-     * Physical data center ssh infra mapping type.
-     */
-    PHYSICAL_DATA_CENTER_SSH,
-    /**
-     * Aws ssh infra mapping type.
-     */
-    AWS_SSH,
-    /**
-     * Aws ecs infra mapping type.
-     */
-    AWS_ECS,
-    /**
-     * Aws kubernetes infra mapping type.
-     */
-    AWS_KUBERNETES,
-    /**
-     * Gcp kubernetes infra mapping type.
-     */
-    GCP_KUBERNETES
-  }
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -277,5 +258,17 @@ public abstract class InfrastructureMapping extends Base {
         && Objects.equals(this.infraMappingType, other.infraMappingType)
         && Objects.equals(this.deploymentType, other.deploymentType)
         && Objects.equals(this.hostConnectionAttrs, other.hostConnectionAttrs);
+  }
+
+  @Singleton
+  public static class HostConnectionAttributesDataProvider implements DataProvider {
+    @Inject private SettingsService settingsService;
+
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return settingsService.getSettingAttributesByType(appId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name())
+          .stream()
+          .collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+    }
   }
 }
