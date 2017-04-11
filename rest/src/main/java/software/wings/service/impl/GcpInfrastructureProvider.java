@@ -1,18 +1,15 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
@@ -35,7 +32,6 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
-    GcpConfig gcpConfig = validateAndGetGcpConfig(computeProviderSetting);
     return aPageResponse().withResponse(null).build();
   }
 
@@ -53,14 +49,6 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   @Override
   public void deleteHostByInfraMappingId(String appId, String infraMappingId) {
     hostService.deleteByInfraMappingId(appId, infraMappingId);
-  }
-
-  private GcpConfig validateAndGetGcpConfig(SettingAttribute computeProviderSetting) {
-    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof GcpConfig)) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "InvalidConfiguration");
-    }
-
-    return (GcpConfig) computeProviderSetting.getValue();
   }
 
   @Override
