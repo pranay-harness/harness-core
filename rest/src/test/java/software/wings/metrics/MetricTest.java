@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.math.Stats;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,8 @@ import java.util.concurrent.TimeUnit;
 public class MetricTest {
   @Test
   public void shouldTruncateByAge() {
-    Metric<Integer> metric = new Metric<>("test", "test", MetricType.COUNT);
+    Metric<Integer> metric = Mockito.mock(Metric.class, Mockito.CALLS_REAL_METHODS);
+    metric.setValues(new TreeMap<>());
     metric.add(1, 10);
     metric.add(2, 20);
     metric.add(3, 30);
@@ -27,7 +29,8 @@ public class MetricTest {
 
   @Test
   public void shouldGenerateBucketsWithCorrectStats() {
-    Metric<Integer> metric = new Metric<>("test", "test", MetricType.COUNT);
+    Metric<Integer> metric = Mockito.mock(Metric.class, Mockito.CALLS_REAL_METHODS);
+    metric.setValues(new TreeMap<>());
     metric.add(2, 10);
     metric.add(4, 20);
     metric.add(6, 30);
