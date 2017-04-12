@@ -348,7 +348,8 @@ public class CommandStateExecutionData extends StateExecutionData {
     populateStepExecutionSummary(commandStepExecutionSummary);
     commandStepExecutionSummary.setOldContainerServiceName(oldContainerServiceName);
     commandStepExecutionSummary.setNewContainerServiceName(newContainerServiceName);
-    commandStepExecutionSummary.setInstanceCount(newInstanceCount);
+    commandStepExecutionSummary.setNewInstanceCount(newInstanceCount);
+    commandStepExecutionSummary.setOldInstanceCount(oldInstanceCount);
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
     return commandStepExecutionSummary;

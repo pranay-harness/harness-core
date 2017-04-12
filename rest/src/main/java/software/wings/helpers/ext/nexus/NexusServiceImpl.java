@@ -204,6 +204,9 @@ public class NexusServiceImpl implements NexusService {
         final IndexBrowserTreeViewResponse treeViewResponse = response.body();
         final Data data = treeViewResponse.getData();
         final List<IndexBrowserTreeNode> treeNodes = data.getChildren();
+        if (treeNodes == null) {
+          return groupIds;
+        }
         treeNodes.forEach(treeNode -> {
           if (treeNode.getType().equals("G")) {
             String groupId = treeNode.getPath();
@@ -229,11 +232,8 @@ public class NexusServiceImpl implements NexusService {
   @Override
   public List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path) {
     final List<String> artifactNames = new ArrayList<>();
-    String modifiedPath = path;
-    if (modifiedPath.contains(".")) {
-      modifiedPath = path.replace(".", "/");
-      modifiedPath = "/" + modifiedPath + "/";
-    }
+    String modifiedPath = path.replace(".", "/");
+    modifiedPath = "/" + modifiedPath + "/";
     final String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     try {
       final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
@@ -263,11 +263,8 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
-    String modifiedPath = groupId;
-    if (modifiedPath.contains(".")) {
-      modifiedPath = groupId.replace(".", "/");
-      modifiedPath = "/" + modifiedPath + "/";
-    }
+    String modifiedPath = groupId.replace(".", "/");
+    modifiedPath = "/" + modifiedPath + "/";
     String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     url = url + artifactName + "/";
     List<BuildDetails> buildDetails = new ArrayList<>();

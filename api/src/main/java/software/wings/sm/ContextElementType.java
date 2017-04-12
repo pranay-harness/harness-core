@@ -57,7 +57,7 @@ public enum ContextElementType {
   FORK,
 
   /**
-   * Cloud service cluster context element type.
+   * Container cluster - ECS/Kubernetes context element type.
    */
-  CLOUD_SERVICE,
+  CONTAINER_SERVICE;
 }

@@ -50,7 +50,7 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
           "Kubernetes replication controller setup not done, controllerName: " + replicationControllerName);
     }
 
-    int desiredCount = replicationController.getSpec().getReplicas() + instanceCount;
+    int desiredCount = replicationController.getSpec().getReplicas() + getNewInstanceCount(context);
     logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
 
     return desiredCount;
@@ -67,7 +67,7 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
       return -1;
     }
 
-    int desiredCount = Math.max(replicationController.getSpec().getReplicas() - instanceCount, 0);
+    int desiredCount = Math.max(replicationController.getSpec().getReplicas() - getOldInstanceCount(context), 0);
     logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
     return desiredCount;
   }
