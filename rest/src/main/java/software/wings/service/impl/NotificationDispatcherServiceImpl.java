@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.common.NotificationMessageResolver;
+import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
@@ -75,58 +78,44 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     if (channels == null || channels.size() == 0) {
       return;
     }
+    String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
+    if (slackTemplate == null) {
+      logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
+      return;
+    }
+
     List<SettingAttribute> settingAttributes =
         settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SLACK.name());
-    if (settingAttributes != null && settingAttributes.size() > 0) {
-      SettingAttribute settingAttribute = settingAttributes.iterator().next();
-      SlackConfig slackConfig = (SlackConfig) settingAttribute.getValue();
-      String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
-      if (slackTemplate == null) {
-        logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
-        return;
-      }
-      Map<String, String> notificationTemplateVariables = notification.getNotificationTemplateVariables();
-      String decoratedNotificationMessage =
-          NotificationMessageResolver.getDecoratedNotificationMessage(slackTemplate, notificationTemplateVariables);
-      channels.forEach(channel
-          -> slackNotificationService.sendMessage(
-              slackConfig, channel, "Wings Notification Bot", decoratedNotificationMessage));
-
-      //      if (notification.isActionable() && notification instanceof ApprovalNotification) {
-      //        ApprovalNotification approvalNotification = (ApprovalNotification) notification;
-      //        String actionUrl =
-      //            configuration.getPortal().getUrl() +
-      //            String.format(configuration.getPortal().getApplicationOverviewUrlPattern(),
-      //            approvalNotification.getAppId());
-      //        Map<String, String> placeHolderData = new HashMap<>();
-      //        placeHolderData.put("ENTITY_TYPE", approvalNotification.getEntityType().name());
-      //        placeHolderData.put("ENTITY_NAME", approvalNotification.getEntityName());
-      //        placeHolderData.put("ACTION_URL", actionUrl);
-      //        String templateName;
-      //        String notificationMessage;
-      //        if (approvalNotification.getStage().equals(ApprovalStage.APPROVED) ||
-      //        approvalNotification.getStage().equals(ApprovalStage.REJECTED)) {
-      //          templateName = SLACK_APPROVAL_NOTIFICATION_STATUS;
-      //          placeHolderData.put("NOTIFICATION_STATUS", approvalNotification.getStage().name().toLowerCase());
-      //          placeHolderData
-      //              .put("USER_NAME", approvalNotification.getLastUpdatedBy() == null ? "Wings System" :
-      //              approvalNotification.getLastUpdatedBy().getName());
-      //        } else {
-      //          templateName = SLACK_APPROVAL_NOTIFICATION;
-      //        }
-      //        notificationMessage = getDecoratedNotificationMessage(templateName, placeHolderData);
-      //        channels.forEach(channel -> slackNotificationService.sendMessage(slackConfig, channel, "Wings
-      //        Notification Bot", notificationMessage));
-      //      } else if (notification instanceof InformationNotification) {
-      //        channels.forEach(channel -> slackNotificationService
-      //            .sendMessage(slackConfig, channel, "Wings Notification Bot", ((InformationNotification)
-      //            notification).getDisplayText()));
-      //      }
+    if (settingAttributes == null || settingAttributes.size() == 0) {
+      logger.error("No slack configuration found ");
+      return;
     }
+
+    SettingAttribute settingAttribute = settingAttributes.iterator().next();
+    SlackConfig slackConfig = (SlackConfig) settingAttribute.getValue();
+    Map<String, String> notificationTemplateVariables = notification.getNotificationTemplateVariables();
+    String decoratedNotificationMessage = getDecoratedNotificationMessage(slackTemplate, notificationTemplateVariables);
+    channels.forEach(channel
+        -> slackNotificationService.sendMessage(
+            slackConfig, channel, "Wings Notification Bot", decoratedNotificationMessage));
   }
 
   private void dispatchEmail(Notification notification, List<String> toAddress) {
+    if (toAddress == null || toAddress.size() == 0) {
+      return;
+    }
+
+    EmailTemplate emailTemplate =
+        notificationMessageResolver.getEmailTemplate(notification.getNotificationTemplateId());
+    if (emailTemplate == null) {
+      logger.error("No email template found for templateId {}", notification.getNotificationTemplateId());
+      return;
+    }
+    String subject =
+        getDecoratedNotificationMessage(emailTemplate.getSubject(), notification.getNotificationTemplateVariables());
+    String body =
+        getDecoratedNotificationMessage(emailTemplate.getBody(), notification.getNotificationTemplateVariables());
     // TODO: determine the right template for the notification
-    emailNotificationService.sendAsync(toAddress, null, notification.getUuid(), notification.getUuid());
+    emailNotificationService.sendAsync(toAddress, null, subject, body);
   }
 }

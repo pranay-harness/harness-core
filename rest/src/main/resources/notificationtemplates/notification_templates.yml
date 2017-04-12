@@ -2,68 +2,68 @@ ENTITY_CREATE_NOTIFICATION:
       web: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
       slack: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
       email:
-          subject: ENTITY_CREATE_NOTIFICATION
+          subject: ${ENTITY_TYPE} is created
           body: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
 
 ENTITY_DELETE_NOTIFICATION:
       web: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
       slack: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
       email:
-          subject: ENTITY_DELETE_NOTIFICATION
+          subject: ${ENTITY_TYPE} is deleted
           body: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
 
 ARTIFACT_APPROVAL_NOTIFICATION:
       web: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
       slack: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
       email:
-          subject: APPROVAL_NOTIFICATION
+          subject: Artifact approval required
           body: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
 
 ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
       web: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
       slack: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
       email:
-          subject: APPROVAL_NOTIFICATION_STATUS
+          subject: Artifact status changed
           body: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
 
 WORKFLOW_SUCCESSFUL_NOTIFICATION:
       web: ${WORKFLOW_NAME} completed successfully in ${ENV_NAME} environment at ${DATE}
       slack: ${WORKFLOW_NAME} completed successfully in ${ENV_NAME} environment at ${DATE}
       email:
-          subject: WORKFLOW_SUCCESSFUL_NOTIFICATION
+          subject: ${WORKFLOW_NAME} completed successfully
           body: ${WORKFLOW_NAME} completed successfully in ${ENV_NAME} environment at ${DATE}
 
 WORKFLOW_FAILED_NOTIFICATION:
       web: ${WORKFLOW_NAME} failed in ${ENV_NAME} environment at ${DATE}
       slack: ${WORKFLOW_NAME} failed in ${ENV_NAME} environment at ${DATE}
       email:
-          subject: WORKFLOW_FAILED_NOTIFICATION
+          subject: ${WORKFLOW_NAME} failed
           body: ${WORKFLOW_NAME} failed in ${ENV_NAME} environment at ${DATE}
 
 WORKFLOW_PAUSED_NOTIFICATION:
       web: ${WORKFLOW_NAME} paused in ${ENV_NAME} environment at ${DATE}
       slack: ${WORKFLOW_NAME} paused in ${ENV_NAME} environment at ${DATE}
       email:
-          subject: WORKFLOW_PAUSED_NOTIFICATION
+          subject: ${WORKFLOW_NAME} paused
           body: ${WORKFLOW_NAME} paused in ${ENV_NAME} environment at ${DATE}
 
 WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully at ${DATE}
       slack: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully at ${DATE}
       email:
-          subject: WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION
+          subject: ${PHASE_NAME} of ${WORKFLOW_NAME} completed
           body: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully at ${DATE}
 
 WORKFLOW_PHASE_FAILED_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} failed at ${DATE}
       slack: ${PHASE_NAME} of ${WORKFLOW_NAME} failed at ${DATE}
       email:
-          subject: WORKFLOW_PHASE_FAILED_NOTIFICATION
+          subject: ${PHASE_NAME} of ${WORKFLOW_NAME} failed
           body: ${PHASE_NAME} of ${WORKFLOW_NAME} failed at ${DATE}
 
 WORKFLOW_PHASE_PAUSED_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} paused at ${DATE}
       slack: ${PHASE_NAME} of ${WORKFLOW_NAME} failed at ${DATE}
       email:
-          subject: WORKFLOW_PHASE_PAUSED_NOTIFICATION
+          subject: ${PHASE_NAME} of ${WORKFLOW_NAME} paused
           body: ${PHASE_NAME} of ${WORKFLOW_NAME} paused at ${DATE}
