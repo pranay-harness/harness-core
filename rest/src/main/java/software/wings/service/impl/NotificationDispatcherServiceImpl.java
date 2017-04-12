@@ -4,7 +4,6 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
@@ -36,7 +35,6 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   @Inject private EmailNotificationService<EmailData> emailNotificationService;
   @Inject private SlackNotificationService slackNotificationService;
   @Inject private SettingsService settingsService;
-  @Inject private MainConfiguration configuration;
   @Inject private NotificationMessageResolver notificationMessageResolver;
 
   @Override

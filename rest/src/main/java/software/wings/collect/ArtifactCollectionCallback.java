@@ -6,6 +6,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ApprovalNotification;
+import software.wings.beans.ApprovalNotification.ApprovalStage;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
@@ -68,13 +69,15 @@ public class ArtifactCollectionCallback implements NotifyCallback {
     eventEmitter.send(Channel.ARTIFACTS,
         anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 
-    notificationService.sendNotificationAsync(ApprovalNotification.Builder.anApprovalNotification()
-                                                  .withAppId(artifact.getAppId())
-                                                  .withEntityId(artifact.getUuid())
-                                                  .withEntityType(EntityType.ARTIFACT)
-                                                  .withEntityName(artifact.getDisplayName())
-                                                  .withArtifactStreamId(artifact.getArtifactStreamId())
-                                                  .build());
+    notificationService.sendNotificationAsync(
+        ApprovalNotification.Builder.anApprovalNotification()
+            .withAppId(artifact.getAppId())
+            .withStage(artifactStream.isAutoApproveForProduction() ? ApprovalStage.APPROVED : ApprovalStage.PENDING)
+            .withEntityId(artifact.getUuid())
+            .withEntityType(EntityType.ARTIFACT)
+            .withEntityName(artifact.getDisplayName())
+            .withArtifactStreamId(artifact.getArtifactStreamId())
+            .build());
   }
 
   @Override

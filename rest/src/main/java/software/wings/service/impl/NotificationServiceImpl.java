@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ARTIFACT_APPROVAL_NOTIFICATION_STATUS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;
@@ -8,8 +10,11 @@ import com.google.inject.Injector;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.Application;
+import software.wings.beans.ApprovalNotification;
+import software.wings.beans.ApprovalNotification.ApprovalStage;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
@@ -24,7 +29,9 @@ import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -43,6 +50,7 @@ public class NotificationServiceImpl implements NotificationService {
   @Inject private AppService appService;
   @Inject private NotificationDispatcherService notificationDispatcherService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
+  @Inject private MainConfiguration configuration;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -105,6 +113,26 @@ public class NotificationServiceImpl implements NotificationService {
           .setDisplayText(NotificationMessageResolver.getDecoratedNotificationMessage(
               notificationMessageResolver.getWebTemplate(notification.getNotificationTemplateId()),
               notification.getNotificationTemplateVariables()));
+    } else if (notification instanceof ApprovalNotification) {
+      ApprovalNotification approvalNotification = (ApprovalNotification) notification;
+      String actionUrl = configuration.getPortal().getUrl()
+          + String.format(
+                configuration.getPortal().getApplicationOverviewUrlPattern(), approvalNotification.getAppId());
+      Map<String, String> placeHolderData = new HashMap<>();
+      placeHolderData.put("ENTITY_TYPE", approvalNotification.getEntityType().name());
+      placeHolderData.put("ENTITY_NAME", approvalNotification.getEntityName());
+      placeHolderData.put("ACTION_URL", actionUrl);
+      if (approvalNotification.getStage().equals(ApprovalStage.APPROVED)
+          || approvalNotification.getStage().equals(ApprovalStage.REJECTED)) {
+        notification.setNotificationTemplateId(ARTIFACT_APPROVAL_NOTIFICATION_STATUS.name());
+        placeHolderData.put("NOTIFICATION_STATUS", approvalNotification.getStage().name().toLowerCase());
+        placeHolderData.put("USER_NAME",
+            approvalNotification.getLastUpdatedBy() == null ? "Wings System"
+                                                            : approvalNotification.getLastUpdatedBy().getName());
+      } else {
+        notification.setNotificationTemplateId(ARTIFACT_APPROVAL_NOTIFICATION.name());
+      }
+      notification.getNotificationTemplateVariables().putAll(placeHolderData);
     }
 
     Notification savedNotification = wingsPersistence.saveAndGet(Notification.class, notification);

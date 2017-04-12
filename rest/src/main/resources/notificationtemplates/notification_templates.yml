@@ -12,14 +12,14 @@ ENTITY_DELETE_NOTIFICATION:
           subject: ENTITY_DELETE_NOTIFICATION
           body: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
 
-APPROVAL_NOTIFICATION:
+ARTIFACT_APPROVAL_NOTIFICATION:
       web: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
       slack: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
       email:
           subject: APPROVAL_NOTIFICATION
           body: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
 
-APPROVAL_NOTIFICATION_STATUS:
+ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
       web: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
       slack: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
       email:
