@@ -49,14 +49,14 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
       NexusConfig nexusConfig =
           aNexusConfig().withNexusUrl(nexusUrl).withUsername(username).withPassword(password).build();
       for (String artifactPath : artifactPaths) {
-        logger.debug("Collecting artifact {}  from Nexus server {}", artifactPath, nexusUrl);
+        logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusUrl);
         Pair<String, InputStream> fileInfo =
             nexusService.downloadArtifact(nexusConfig, repoType, groupId, artifactPath);
         if (fileInfo == null) {
           throw new FileNotFoundException("Unable to get artifact from nexus for path " + artifactPath);
         }
         in = fileInfo.getValue();
-
+        logger.info("Uploading the file {} ", fileInfo.getKey());
         DelegateFile delegateFile = aDelegateFile()
                                         .withFileName(fileInfo.getKey())
                                         .withDelegateId(getDelegateId())
@@ -64,7 +64,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
                                         .withAccountId(getAccountId())
                                         .build(); // TODO: more about delegate and task info
         DelegateFile fileRes = delegateFileManager.upload(delegateFile, in);
-
+        logger.info("Uploaded the file {} ", fileInfo.getKey());
         ArtifactFile artifactFile = new ArtifactFile();
         artifactFile.setFileUuid(fileRes.getFileId());
         artifactFile.setName(fileInfo.getKey());

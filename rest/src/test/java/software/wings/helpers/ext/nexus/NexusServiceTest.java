@@ -532,7 +532,7 @@ public class NexusServiceTest {
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     // TODO: Need to mock the file input stream
     Pair<String, InputStream> fileInfo =
-        nexusService.downloadArtifact(nexusConfig, "releases", "/software/wings/nexus/", "rest-client", "LATEST");
+        nexusService.downloadArtifact(nexusConfig, "releases", "software.wings.nexus", "rest-client", "LATEST");
 
     assertThat(fileInfo).isNotNull();
     assertThat(fileInfo.getKey()).isEqualTo("rest-client-3.0.jar");
@@ -542,7 +542,7 @@ public class NexusServiceTest {
   public void shouldGetLatestVersion() {
     setPomModelWireMock();
     BuildDetails buildDetails =
-        nexusService.getLatestVersion(nexusConfig, "releases", "/software/wings/nexus/", "rest-client");
+        nexusService.getLatestVersion(nexusConfig, "releases", "software.wings.nexus", "rest-client");
     assertThat(buildDetails).extracting(BuildDetails::getNumber).containsExactly("3.0");
   }
   private void setPomModelWireMock() {
