@@ -90,7 +90,6 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                     .withPhaseNameForRollback(phaseNameForRollback)
                                     .build();
     spawningInstance.getContextElements().push(phaseElement);
-    spawningInstance.setContextElement(phaseElement);
 
     return spawningInstance;
   }

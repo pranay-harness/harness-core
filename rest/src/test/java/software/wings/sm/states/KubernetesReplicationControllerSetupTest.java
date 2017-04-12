@@ -8,7 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
+import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -108,7 +108,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
-          .addContextElement(aCloudServiceElement().withUuid(serviceElement.getUuid()).build())
+          .addContextElement(aContainerServiceElement().withUuid(serviceElement.getUuid()).build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
   private ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);

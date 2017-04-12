@@ -91,7 +91,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -583,8 +582,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .get())
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(Constants.STEP_VALIDATION_MESSAGE, asList("instanceCount")));
+        .hasFieldOrPropertyWithValue("validationMessage",
+            String.format(Constants.STEP_VALIDATION_MESSAGE, asList("commandName, instanceCount")));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -593,8 +592,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .get(0)
                    .getInValidFieldMessages())
         .isNotNull()
-        .hasSize(1)
-        .contains(new AbstractMap.SimpleEntry("instanceCount", "instanceCount needs to be greater than 0"));
+        .hasSize(2)
+        .containsKeys("commandName", "instanceCount");
   }
 
   @Test
