@@ -148,7 +148,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
                         .equals("RUNNING");
           } catch (IOException e) {
             logger.error("Error checking operation status", e);
-            return false;
+            return true;
           }
         });
     String status;

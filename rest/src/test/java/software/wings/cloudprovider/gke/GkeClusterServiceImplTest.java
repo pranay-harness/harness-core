@@ -1,5 +1,16 @@
 package software.wings.cloudprovider.gke;
 
+import static junit.framework.TestCase.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpHeaders;
@@ -16,6 +27,7 @@ import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -26,21 +38,10 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.GcpHelperService;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static junit.framework.TestCase.fail;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static software.wings.beans.GcpConfig.GcpConfigBuilder.aGcpConfig;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
+import javax.inject.Inject;
 
 /**
  * Created by brett on 2/10/17.
@@ -107,6 +108,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(gcpHelperService.getGkeContainerService(anyString())).thenReturn(container);
     when(gcpHelperService.getSleepIntervalSecs()).thenReturn(0);
+    when(gcpHelperService.getTimeoutMins()).thenReturn(1);
     when(container.projects()).thenReturn(projects);
     when(projects.zones()).thenReturn(zones);
     when(zones.clusters()).thenReturn(clusters);
