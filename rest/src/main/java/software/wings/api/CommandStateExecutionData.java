@@ -36,8 +36,8 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private String newContainerServiceName;
   private String oldContainerServiceName;
-  private int newInstanceCount;
-  private int oldInstanceCount;
+  private int newInstanceAddedCount;
+  private int oldInstanceReducedCount;
   private String clusterName;
 
   private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
@@ -266,20 +266,20 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.newInstanceStatusSummaries = newInstanceStatusSummaries;
   }
 
-  public int getNewInstanceCount() {
-    return newInstanceCount;
+  public int getNewInstanceAddedCount() {
+    return newInstanceAddedCount;
   }
 
-  public void setNewInstanceCount(int newInstanceCount) {
-    this.newInstanceCount = newInstanceCount;
+  public void setNewInstanceAddedCount(int newInstanceAddedCount) {
+    this.newInstanceAddedCount = newInstanceAddedCount;
   }
 
-  public int getOldInstanceCount() {
-    return oldInstanceCount;
+  public int getOldInstanceReducedCount() {
+    return oldInstanceReducedCount;
   }
 
-  public void setOldInstanceCount(int oldInstanceCount) {
-    this.oldInstanceCount = oldInstanceCount;
+  public void setOldInstanceReducedCount(int oldInstanceReducedCount) {
+    this.oldInstanceReducedCount = oldInstanceReducedCount;
   }
 
   public String getClusterName() {
@@ -348,8 +348,8 @@ public class CommandStateExecutionData extends StateExecutionData {
     populateStepExecutionSummary(commandStepExecutionSummary);
     commandStepExecutionSummary.setOldContainerServiceName(oldContainerServiceName);
     commandStepExecutionSummary.setNewContainerServiceName(newContainerServiceName);
-    commandStepExecutionSummary.setNewInstanceCount(newInstanceCount);
-    commandStepExecutionSummary.setOldInstanceCount(oldInstanceCount);
+    commandStepExecutionSummary.setNewInstanceAddedCount(newInstanceAddedCount);
+    commandStepExecutionSummary.setOldInstanceReducedCount(oldInstanceReducedCount);
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
     return commandStepExecutionSummary;
@@ -623,7 +623,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     /**
      * With artifact name builder.
      *
-     * @param newInstanceCount the newInstanceCount
+     * @param newInstanceCount the newInstanceAddedCount
      * @return the builder
      */
     public Builder withNewInstanceCount(int newInstanceCount) {
@@ -634,7 +634,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     /**
      * With artifact name builder.
      *
-     * @param oldInstanceCount the oldInstanceCount
+     * @param oldInstanceCount the oldInstanceReducedCount
      * @return the builder
      */
     public Builder withOldInstanceCount(int oldInstanceCount) {
@@ -710,8 +710,8 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setNewContainerServiceName(newContainerServiceName);
       commandStateExecutionData.setOldContainerServiceName(oldContainerServiceName);
       commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
-      commandStateExecutionData.setNewInstanceCount(newInstanceCount);
-      commandStateExecutionData.setOldInstanceCount(oldInstanceCount);
+      commandStateExecutionData.setNewInstanceAddedCount(newInstanceCount);
+      commandStateExecutionData.setOldInstanceReducedCount(oldInstanceCount);
       commandStateExecutionData.setClusterName(clusterName);
       return commandStateExecutionData;
     }

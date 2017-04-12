@@ -170,8 +170,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           aContainerUpgradeRequestElement()
-              .withOldInstanceCount(commandStepExecutionSummary.getNewInstanceCount())
-              .withNewInstanceCount(commandStepExecutionSummary.getOldInstanceCount())
+              .withOldInstanceCount(commandStepExecutionSummary.getNewInstanceAddedCount())
+              .withNewInstanceCount(commandStepExecutionSummary.getOldInstanceReducedCount())
               .withContainerServiceElement(contextElement)
               .build();
       return asList(containerUpgradeRequestElement);

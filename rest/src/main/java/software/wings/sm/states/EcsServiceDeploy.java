@@ -64,7 +64,7 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
       return -1;
     }
 
-    int desiredCount = Math.max(ecsService.get().getDesiredCount() - +getOldInstanceCount(context), 0);
+    int desiredCount = Math.max(ecsService.get().getDesiredCount() - getOldInstanceCount(context), 0);
     logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
     return desiredCount;
   }

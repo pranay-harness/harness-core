@@ -8,9 +8,9 @@ import software.wings.sm.StepExecutionSummary;
 public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private String newContainerServiceName;
-  private Integer newInstanceCount;
+  private Integer newInstanceAddedCount;
   private String oldContainerServiceName;
-  private Integer oldInstanceCount;
+  private Integer oldInstanceReducedCount;
   private String clusterName;
 
   public String getServiceId() {
@@ -37,20 +37,20 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
     this.oldContainerServiceName = oldContainerServiceName;
   }
 
-  public Integer getNewInstanceCount() {
-    return newInstanceCount;
+  public Integer getNewInstanceAddedCount() {
+    return newInstanceAddedCount;
   }
 
-  public void setNewInstanceCount(Integer newInstanceCount) {
-    this.newInstanceCount = newInstanceCount;
+  public void setNewInstanceAddedCount(Integer newInstanceAddedCount) {
+    this.newInstanceAddedCount = newInstanceAddedCount;
   }
 
-  public Integer getOldInstanceCount() {
-    return oldInstanceCount;
+  public Integer getOldInstanceReducedCount() {
+    return oldInstanceReducedCount;
   }
 
-  public void setOldInstanceCount(Integer oldInstanceCount) {
-    this.oldInstanceCount = oldInstanceCount;
+  public void setOldInstanceReducedCount(Integer oldInstanceReducedCount) {
+    this.oldInstanceReducedCount = oldInstanceReducedCount;
   }
 
   public String getClusterName() {

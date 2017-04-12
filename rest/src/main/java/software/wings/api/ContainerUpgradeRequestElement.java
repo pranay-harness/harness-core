@@ -11,8 +11,8 @@ import java.util.Map;
  */
 public class ContainerUpgradeRequestElement implements ContextElement {
   private ContainerServiceElement containerServiceElement;
-  private int newInstanceCount;
-  private int oldInstanceCount;
+  private int newInstanceAddedCount;
+  private int oldInstanceReducedCount;
 
   public ContainerServiceElement getContainerServiceElement() {
     return containerServiceElement;
@@ -22,20 +22,20 @@ public class ContainerUpgradeRequestElement implements ContextElement {
     this.containerServiceElement = containerServiceElement;
   }
 
-  public int getNewInstanceCount() {
-    return newInstanceCount;
+  public int getNewInstanceAddedCount() {
+    return newInstanceAddedCount;
   }
 
-  public void setNewInstanceCount(int newInstanceCount) {
-    this.newInstanceCount = newInstanceCount;
+  public void setNewInstanceAddedCount(int newInstanceAddedCount) {
+    this.newInstanceAddedCount = newInstanceAddedCount;
   }
 
-  public int getOldInstanceCount() {
-    return oldInstanceCount;
+  public int getOldInstanceReducedCount() {
+    return oldInstanceReducedCount;
   }
 
-  public void setOldInstanceCount(int oldInstanceCount) {
-    this.oldInstanceCount = oldInstanceCount;
+  public void setOldInstanceReducedCount(int oldInstanceReducedCount) {
+    this.oldInstanceReducedCount = oldInstanceReducedCount;
   }
 
   @Override
@@ -88,8 +88,8 @@ public class ContainerUpgradeRequestElement implements ContextElement {
     public ContainerUpgradeRequestElement build() {
       ContainerUpgradeRequestElement containerUpgradeRequestElement = new ContainerUpgradeRequestElement();
       containerUpgradeRequestElement.setContainerServiceElement(containerServiceElement);
-      containerUpgradeRequestElement.setNewInstanceCount(newInstanceCount);
-      containerUpgradeRequestElement.setOldInstanceCount(oldInstanceCount);
+      containerUpgradeRequestElement.setNewInstanceAddedCount(newInstanceCount);
+      containerUpgradeRequestElement.setOldInstanceReducedCount(oldInstanceCount);
       return containerUpgradeRequestElement;
     }
   }

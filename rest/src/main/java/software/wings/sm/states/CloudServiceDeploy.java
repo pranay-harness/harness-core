@@ -177,7 +177,7 @@ public abstract class CloudServiceDeploy extends State {
                 .filter(containerInfo -> containerInfo.getStatus() == ContainerInfo.Status.SUCCESS)
                 .collect(Collectors.toList())
                 .size();
-        commandStateExecutionData.setOldInstanceCount(actualOldInstanceCount);
+        commandStateExecutionData.setOldInstanceReducedCount(actualOldInstanceCount);
       }
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
@@ -300,7 +300,7 @@ public abstract class CloudServiceDeploy extends State {
     }
 
     commandStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
-    commandStateExecutionData.setNewInstanceCount(
+    commandStateExecutionData.setNewInstanceAddedCount(
         (int) instanceStatusSummaries.stream()
             .filter(instanceStatusSummary -> instanceStatusSummary.getStatus() == ExecutionStatus.SUCCESS)
             .count());
@@ -333,7 +333,7 @@ public abstract class CloudServiceDeploy extends State {
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.<ContainerUpgradeRequestElement>getContextElement(
               ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      return containerUpgradeRequestElement.getNewInstanceCount();
+      return containerUpgradeRequestElement.getNewInstanceAddedCount();
     } else {
       return instanceCount;
     }
@@ -344,7 +344,7 @@ public abstract class CloudServiceDeploy extends State {
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.<ContainerUpgradeRequestElement>getContextElement(
               ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      return containerUpgradeRequestElement.getOldInstanceCount();
+      return containerUpgradeRequestElement.getOldInstanceReducedCount();
     } else {
       return instanceCount;
     }
