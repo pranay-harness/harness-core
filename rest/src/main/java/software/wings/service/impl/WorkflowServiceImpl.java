@@ -386,12 +386,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
       workflow.setDefaultVersion(entityVersion.getVersion());
 
-      if (orchestrationWorkflow != null) {
-        StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-            ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
-        stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-      }
-
+      StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
+          ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
+      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
     }
 
@@ -910,7 +907,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addStep(aNode()
                                                 .withType(stateType.name())
                                                 .withName("Select Nodes")
-                                                .withOrigin(true)
                                                 .addProperty("specificHosts", false)
                                                 .addProperty("instanceCount", 1)
                                                 .build())

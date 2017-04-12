@@ -355,12 +355,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    StateMachine stateMachine = workflowService.readLatestStateMachine(appId, workflowId);
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+
+    StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + workflowId);
     }
-
-    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
