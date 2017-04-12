@@ -50,6 +50,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
@@ -119,6 +120,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                           .withUuid(getUuid())
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withDeploymentType(DeploymentType.KUBERNETES.name())
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
@@ -130,6 +132,8 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
                                  .withOldName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
+                                 .withInfraMappingId(INFRA_MAPPING_ID)
+                                 .withDeploymentType(DeploymentType.KUBERNETES)
                                  .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
