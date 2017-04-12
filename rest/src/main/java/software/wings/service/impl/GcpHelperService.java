@@ -23,7 +23,8 @@ public class GcpHelperService {
   public static final String ZONE_DELIMITER = "/";
   public static final String ALL_ZONES = "-";
 
-  private static final int SLEEP_INTERVAL_MS = 5 * 1000;
+  private static final int SLEEP_INTERVAL_SECS = 5;
+  private static final int TIMEOUT_MINS = 10;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -48,7 +49,11 @@ public class GcpHelperService {
     return null;
   }
 
-  public int getSleepIntervalMs() {
-    return SLEEP_INTERVAL_MS;
+  public int getSleepIntervalSecs() {
+    return SLEEP_INTERVAL_SECS;
+  }
+
+  public int getTimeoutMins() {
+    return TIMEOUT_MINS;
   }
 }

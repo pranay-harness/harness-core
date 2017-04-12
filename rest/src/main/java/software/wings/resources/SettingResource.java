@@ -21,7 +21,6 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -102,8 +101,6 @@ public class SettingResource {
   /**
    * Save uploaded GCP service account key file.
    *
-   * @param uploadedInputStream the uploaded input stream
-   * @param fileDetail          the file detail
    * @return the rest response
    */
   @POST
@@ -114,7 +111,8 @@ public class SettingResource {
   public RestResponse<SettingAttribute> saveUpload(@FormDataParam("appId") String appId,
       @FormDataParam("accountId") String accountId, @FormDataParam("type") String type,
       @FormDataParam("name") String name, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam SettingAttribute variable)
+      throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
@@ -181,11 +179,6 @@ public class SettingResource {
   /**
    * Update.
    *
-   * @param appId               the app id
-   * @param attrId              the attr id
-   * @param variable            the variable
-   * @param uploadedInputStream the uploaded input stream
-   * @param fileDetail          the file detail
    * @return the rest response
    */
   @PUT
@@ -193,17 +186,31 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> update(@QueryParam("appId") String appId, @PathParam("attrId") String attrId,
-      SettingAttribute variable, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+  public RestResponse<SettingAttribute> update(@PathParam("attrId") String attrId, @FormDataParam("appId") String appId,
+      @FormDataParam("accountId") String accountId, @FormDataParam("type") String type,
+      @FormDataParam("name") String name, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam SettingAttribute variable)
+      throws IOException {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
+    SettingValue value = null;
+    if (GCP.name().equals(type)) {
+      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
+    }
+    if (isNullOrEmpty(name)) {
+      String fileName = fileDetail.getFileName();
+      name = fileName.substring(0,
+          fileName.contains("-") ? fileName.lastIndexOf("-")
+                                 : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
+    }
+
     variable.setUuid(attrId);
     variable.setAppId(appId);
-    if (variable.getValue().getType().equals(GCP.name())) {
-      ((GcpConfig) variable.getValue()).setServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream));
-    }
+    variable.setAccountId(accountId);
+    variable.setName(name);
+    variable.setValue(value);
+
     return new RestResponse<>(attributeService.update(variable));
   }
 
