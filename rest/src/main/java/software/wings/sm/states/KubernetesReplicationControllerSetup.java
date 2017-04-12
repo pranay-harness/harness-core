@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.awaitility.Awaitility.with;
-import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
+import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.KubernetesReplicationControllerExecutionData.KubernetesReplicationControllerExecutionDataBuilder.aKubernetesReplicationControllerExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
@@ -29,7 +29,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.CloudServiceElement;
+import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
@@ -191,16 +191,18 @@ public class KubernetesReplicationControllerSetup extends State {
       }
     }
 
-    CloudServiceElement cloudServiceElement = aCloudServiceElement()
-                                                  .withUuid(serviceId)
-                                                  .withName(replicationControllerName)
-                                                  .withOldName(lastReplicationControllerName)
-                                                  .withClusterName(clusterName)
-                                                  .build();
+    ContainerServiceElement containerServiceElement = aContainerServiceElement()
+                                                          .withUuid(serviceId)
+                                                          .withName(replicationControllerName)
+                                                          .withOldName(lastReplicationControllerName)
+                                                          .withClusterName(clusterName)
+                                                          .withDeploymentType(DeploymentType.KUBERNETES)
+                                                          .withInfraMappingId(phaseElement.getInfraMappingId())
+                                                          .build();
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addContextElement(cloudServiceElement)
-        .addNotifyElement(cloudServiceElement)
+        .addContextElement(containerServiceElement)
+        .addNotifyElement(containerServiceElement)
         .withStateExecutionData(aKubernetesReplicationControllerExecutionData()
                                     .withGkeClusterName(clusterName)
                                     .withKubernetesReplicationControllerName(replicationControllerName)

@@ -1,7 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
-import static software.wings.api.CloudServiceElement.CloudServiceElementBuilder.aCloudServiceElement;
+import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
+import static software.wings.api.ContainerUpgradeRequestElement.ContainerUpgradeRequestElementBuilder.aContainerUpgradeRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -19,8 +20,9 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.api.CloudServiceElement;
 import software.wings.api.CommandStepExecutionSummary;
+import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContainerUpgradeRequestElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -159,13 +161,20 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return null;
       }
       CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-      CloudServiceElement cloudServiceElement =
-          aCloudServiceElement()
+      ContainerServiceElement contextElement =
+          aContainerServiceElement()
               .withName(commandStepExecutionSummary.getOldContainerServiceName())
               .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
               .withClusterName(commandStepExecutionSummary.getClusterName())
               .build();
-      return asList(cloudServiceElement);
+
+      ContainerUpgradeRequestElement containerUpgradeRequestElement =
+          aContainerUpgradeRequestElement()
+              .withOldInstanceCount(commandStepExecutionSummary.getNewInstanceCount())
+              .withNewInstanceCount(commandStepExecutionSummary.getOldInstanceCount())
+              .withContainerServiceElement(contextElement)
+              .build();
+      return asList(containerUpgradeRequestElement);
     }
     return null;
   }
@@ -214,27 +223,20 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
-    List<ContextElement> cloudServiceElements = context.getContextElementList(ContextElementType.CLOUD_SERVICE);
-    if (cloudServiceElements != null && !cloudServiceElements.isEmpty()) {
-      validateCLoudServiceElement(cloudServiceElements, phaseElement);
-    }
-
-    if (cloudServiceElements == null || cloudServiceElements.isEmpty()) {
+    List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
+    if ((contextElements == null || contextElements.isEmpty())) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Setup not done");
     }
-  }
-
-  private void validateCLoudServiceElement(List<ContextElement> elements, PhaseElement phaseElement) {
-    Optional<ContextElement> cloudServiceElement =
-        elements.parallelStream()
+    Optional<ContextElement> containerServiceElement =
+        contextElements.parallelStream()
             .filter(contextElement
-                -> contextElement instanceof CloudServiceElement && contextElement.getUuid() != null
+                -> contextElement instanceof ContainerServiceElement && contextElement.getUuid() != null
                     && contextElement.getUuid().equals(phaseElement.getServiceElement().getUuid()))
             .findFirst();
 
-    if (!cloudServiceElement.isPresent()) {
+    if (!containerServiceElement.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "cloudServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
+          "containerServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
     }
   }
 
@@ -262,16 +264,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
       executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
-    } else if ((deploymentType.equals(DeploymentType.ECS.name())
-                   || deploymentType.equals(DeploymentType.KUBERNETES.name()))
-        && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      CloudServiceElement cloudServiceElement =
-          (CloudServiceElement) notifiedElement(response, CloudServiceElement.class, "Missing CloudServiceElement");
-      executionResponse.setContextElements(Lists.newArrayList(cloudServiceElement));
-      executionResponse.setNotifyElements(Lists.newArrayList(cloudServiceElement));
-    } else if ((deploymentType.equals(DeploymentType.ECS.name())
-                   || deploymentType.equals(DeploymentType.KUBERNETES.name()))
-        && phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+    } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
+      ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+          response, ContainerServiceElement.class, "Missing ContainerServiceElement");
+      executionResponse.setContextElements(asList(containerServiceElement));
+      executionResponse.setNotifyElements(asList(containerServiceElement));
+    } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           response, InstanceElementListParam.class, "Missing InstanceListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
