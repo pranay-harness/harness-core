@@ -1,8 +1,12 @@
 package software.wings.metrics;
 
 import com.github.reinert.jjschema.Attributes;
+
+import com.google.common.math.DoubleMath;
 import com.google.common.math.Stats;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by mike@ on 4/7/17.
  */
-public class Metric<T extends Number> {
+public abstract class Metric<T extends Number> {
   @Attributes(required = true, title = "Name", description = "Average Response Time") protected String name;
   @Attributes(
       required = true, title = "Path", description = "Overall Application Performance|Average Response Time (ms)")
@@ -54,6 +58,12 @@ public class Metric<T extends Number> {
     }
     return output;
   }
+
+  public abstract ArrayList<BucketData> generateDisplayData(int bucketSize, TimeUnit bucketTimeUnit);
+
+  public abstract RiskLevel generateRiskLevelForStats(Stats stats);
+
+  public abstract String getDisplayValueForStats(Stats stats);
 
   public void add(T value, long timestampInMillis) {
     values.put(timestampInMillis, value);

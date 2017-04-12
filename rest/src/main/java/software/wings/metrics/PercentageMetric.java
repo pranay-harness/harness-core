@@ -1,6 +1,14 @@
 package software.wings.metrics;
 
+import com.google.common.math.DoubleMath;
+import com.google.common.math.Stats;
+
 import com.github.reinert.jjschema.Attributes;
+
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Metrics that reflect the time taken to do something.
@@ -16,6 +24,34 @@ public class PercentageMetric<T extends Number> extends Metric<T> {
     super(name, path, type);
     this.threshold = threshold;
     this.alertWhenMoreThan = alertWhenMoreThan;
+  }
+
+  @Override
+  public RiskLevel generateRiskLevelForStats(Stats stats) {
+    if ((stats.mean() >= threshold) == alertWhenMoreThan) {
+      return RiskLevel.HIGH;
+    }
+    return RiskLevel.LOW;
+  }
+
+  @Override
+  public String getDisplayValueForStats(Stats stats) {
+    return String.valueOf(DoubleMath.roundToInt(stats.mean(), RoundingMode.HALF_UP));
+  }
+
+  @Override
+  public ArrayList<BucketData> generateDisplayData(int bucketSize, TimeUnit bucketTimeUnit) {
+    ArrayList<BucketData> outputList = new ArrayList<>();
+    long bucketSizeInMillis = bucketTimeUnit.toMillis(bucketSize);
+    TreeMap<Long, Stats> statsTreeMap = super.generateBuckets(bucketSize, bucketTimeUnit);
+    for (Long key : statsTreeMap.keySet()) {
+      Stats stats = statsTreeMap.get(key);
+      RiskLevel riskLevel = generateRiskLevelForStats(stats);
+      String displayValue = getDisplayValueForStats(stats);
+      BucketData bucketData = new BucketData(key, key + bucketSizeInMillis, riskLevel, stats, displayValue);
+      outputList.add(bucketData);
+    }
+    return outputList;
   }
 
   public double getThreshold() {
