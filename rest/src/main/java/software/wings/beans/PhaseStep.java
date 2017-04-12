@@ -207,10 +207,11 @@ public class PhaseStep {
       graphBuilder.addNodes(repeatNode);
     }
 
-    if (stepsInParallel) {
+    if (stepsInParallel && steps.size() > 1) {
       Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(name + "-FORK").build();
       graphBuilder.addNodes(forkNode);
-      for (Node step : getSteps()) {
+      for (Node step : steps) {
+        step.setOrigin(false);
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()
                                   .withId(getUuid())
@@ -227,6 +228,7 @@ public class PhaseStep {
       String id2;
       for (Node step : getSteps()) {
         id2 = step.getId();
+        step.setOrigin(false);
         graphBuilder.addNodes(step);
         if (id1 == null && originNode == null) {
           originNode = step;
