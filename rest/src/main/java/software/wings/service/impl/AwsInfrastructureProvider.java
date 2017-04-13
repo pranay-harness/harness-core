@@ -12,6 +12,7 @@ import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import com.google.common.collect.Lists;
 
 import ch.qos.logback.classic.Level;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
@@ -32,6 +33,7 @@ import com.amazonaws.services.ec2.model.Vpc;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
 import com.amazonaws.services.ecs.model.ListClustersResult;
+import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancersRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
@@ -400,6 +402,22 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .stream()
         .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
         .map(LoadBalancer::getLoadBalancerName)
+        .collect(Collectors.toList());
+  }
+
+  public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+
+    com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+        awsHelperService.getClassicElbClient(
+            Regions.valueOf(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+    return amazonElasticLoadBalancingClient
+        .describeLoadBalancers(
+            new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
+        .getLoadBalancerDescriptions()
+        .stream()
+        .map(LoadBalancerDescription::getLoadBalancerName)
         .collect(Collectors.toList());
   }
 

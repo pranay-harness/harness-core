@@ -11,8 +11,8 @@ import java.util.Map;
  */
 public class ContainerUpgradeRequestElement implements ContextElement {
   private ContainerServiceElement containerServiceElement;
-  private int newInstanceCount;
-  private int oldInstanceCount;
+  private int newServiceInstanceCount;
+  private int oldServiceInstanceCount;
 
   public ContainerServiceElement getContainerServiceElement() {
     return containerServiceElement;
@@ -22,20 +22,20 @@ public class ContainerUpgradeRequestElement implements ContextElement {
     this.containerServiceElement = containerServiceElement;
   }
 
-  public int getNewInstanceCount() {
-    return newInstanceCount;
+  public int getNewServiceInstanceCount() {
+    return newServiceInstanceCount;
   }
 
-  public void setNewInstanceCount(int newInstanceCount) {
-    this.newInstanceCount = newInstanceCount;
+  public void setNewServiceInstanceCount(int newServiceInstanceCount) {
+    this.newServiceInstanceCount = newServiceInstanceCount;
   }
 
-  public int getOldInstanceCount() {
-    return oldInstanceCount;
+  public int getOldServiceInstanceCount() {
+    return oldServiceInstanceCount;
   }
 
-  public void setOldInstanceCount(int oldInstanceCount) {
-    this.oldInstanceCount = oldInstanceCount;
+  public void setOldServiceInstanceCount(int oldServiceInstanceCount) {
+    this.oldServiceInstanceCount = oldServiceInstanceCount;
   }
 
   @Override
@@ -60,8 +60,8 @@ public class ContainerUpgradeRequestElement implements ContextElement {
 
   public static final class ContainerUpgradeRequestElementBuilder {
     private ContainerServiceElement containerServiceElement;
-    private int newInstanceCount;
-    private int oldInstanceCount;
+    private int newServiceInstanceCount;
+    private int oldServiceInstanceCount;
 
     private ContainerUpgradeRequestElementBuilder() {}
 
@@ -75,21 +75,21 @@ public class ContainerUpgradeRequestElement implements ContextElement {
       return this;
     }
 
-    public ContainerUpgradeRequestElementBuilder withNewInstanceCount(int newInstanceCount) {
-      this.newInstanceCount = newInstanceCount;
+    public ContainerUpgradeRequestElementBuilder withNewServiceInstanceCount(int newServiceInstanceCount) {
+      this.newServiceInstanceCount = newServiceInstanceCount;
       return this;
     }
 
-    public ContainerUpgradeRequestElementBuilder withOldInstanceCount(int oldInstanceCount) {
-      this.oldInstanceCount = oldInstanceCount;
+    public ContainerUpgradeRequestElementBuilder withOldServiceInstanceCount(int oldServiceInstanceCount) {
+      this.oldServiceInstanceCount = oldServiceInstanceCount;
       return this;
     }
 
     public ContainerUpgradeRequestElement build() {
       ContainerUpgradeRequestElement containerUpgradeRequestElement = new ContainerUpgradeRequestElement();
       containerUpgradeRequestElement.setContainerServiceElement(containerServiceElement);
-      containerUpgradeRequestElement.setNewInstanceCount(newInstanceCount);
-      containerUpgradeRequestElement.setOldInstanceCount(oldInstanceCount);
+      containerUpgradeRequestElement.setNewServiceInstanceCount(newServiceInstanceCount);
+      containerUpgradeRequestElement.setOldServiceInstanceCount(oldServiceInstanceCount);
       return containerUpgradeRequestElement;
     }
   }

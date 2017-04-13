@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static org.eclipse.jetty.util.StringUtil.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.jcraft.jsch.JSch;

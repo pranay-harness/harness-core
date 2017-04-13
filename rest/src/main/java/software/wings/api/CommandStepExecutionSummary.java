@@ -8,9 +8,11 @@ import software.wings.sm.StepExecutionSummary;
 public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private String newContainerServiceName;
-  private Integer newInstanceCount;
   private String oldContainerServiceName;
-  private Integer oldInstanceCount;
+  private Integer newServiceRunningInstanceCount;
+  private Integer oldServiceRunningInstanceCount;
+  private Integer newServicePreviousInstanceCount;
+  private Integer oldServicePreviousInstanceCount;
   private String clusterName;
 
   public String getServiceId() {
@@ -37,20 +39,36 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
     this.oldContainerServiceName = oldContainerServiceName;
   }
 
-  public Integer getNewInstanceCount() {
-    return newInstanceCount;
+  public Integer getNewServiceRunningInstanceCount() {
+    return newServiceRunningInstanceCount;
   }
 
-  public void setNewInstanceCount(Integer newInstanceCount) {
-    this.newInstanceCount = newInstanceCount;
+  public void setNewServiceRunningInstanceCount(Integer newServiceRunningInstanceCount) {
+    this.newServiceRunningInstanceCount = newServiceRunningInstanceCount;
   }
 
-  public Integer getOldInstanceCount() {
-    return oldInstanceCount;
+  public Integer getOldServiceRunningInstanceCount() {
+    return oldServiceRunningInstanceCount;
   }
 
-  public void setOldInstanceCount(Integer oldInstanceCount) {
-    this.oldInstanceCount = oldInstanceCount;
+  public void setOldServiceRunningInstanceCount(Integer oldServiceRunningInstanceCount) {
+    this.oldServiceRunningInstanceCount = oldServiceRunningInstanceCount;
+  }
+
+  public Integer getNewServicePreviousInstanceCount() {
+    return newServicePreviousInstanceCount;
+  }
+
+  public void setNewServicePreviousInstanceCount(Integer newServicePreviousInstanceCount) {
+    this.newServicePreviousInstanceCount = newServicePreviousInstanceCount;
+  }
+
+  public Integer getOldServicePreviousInstanceCount() {
+    return oldServicePreviousInstanceCount;
+  }
+
+  public void setOldServicePreviousInstanceCount(Integer oldServicePreviousInstanceCount) {
+    this.oldServicePreviousInstanceCount = oldServicePreviousInstanceCount;
   }
 
   public String getClusterName() {

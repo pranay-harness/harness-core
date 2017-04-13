@@ -186,6 +186,8 @@ public interface InfrastructureMappingService {
 
   List<String> listLoadBalancers(String appId, String deploymentType, String computeProviderId);
 
+  List<String> listClassicLoadBalancers(String appId, String computeProviderId, String region);
+
   Map<String, String> listTargetGroups(
       String appId, String deploymentType, String computeProviderId, String loadBalancerName);
 

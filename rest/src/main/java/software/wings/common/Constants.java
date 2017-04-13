@@ -171,6 +171,10 @@ public interface Constants {
    * The constant ECS_SERVICE_DEPLOY.
    */
   String ECS_SERVICE_DEPLOY = "Upgrade Containers";
+  /**
+   * The constant UPGRADE_CONTAINERS.
+   */
+  String UPGRADE_CONTAINERS = "Upgrade Containers";
 
   /**
    * The constant SUB_WORKFLOW_ID.

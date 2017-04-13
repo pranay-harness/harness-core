@@ -357,6 +357,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
 
+    if (!workflow.getOrchestrationWorkflow().isValid()) {
+      throw new WingsException(
+          ErrorCode.INVALID_REQUEST, "message", "Workflow requested for execution is not valid/complete.");
+    }
     StateMachine stateMachine = workflowService.readStateMachine(appId, workflowId, workflow.getDefaultVersion());
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + workflowId);

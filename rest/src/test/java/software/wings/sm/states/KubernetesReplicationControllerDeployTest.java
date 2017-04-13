@@ -224,9 +224,7 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message"))
-          .asString()
-          .contains("Kubernetes replication controller setup not done, controllerName");
+      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, serviceName:");
     }
   }
 
