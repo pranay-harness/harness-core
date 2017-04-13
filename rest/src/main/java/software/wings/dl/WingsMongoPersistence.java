@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static java.lang.System.currentTimeMillis;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static org.eclipse.jetty.util.LazyList.remove;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
@@ -15,6 +16,7 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -203,7 +205,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     }
     updateOperations.setOnInsert("createdAt", currentTimeMillis());
     updateOperations.setOnInsert("_id", UUIDGenerator.getUuid());
-    return primaryDatastore.findAndModify(query, updateOperations, false, true);
+    return primaryDatastore.findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true));
   }
 
   /**

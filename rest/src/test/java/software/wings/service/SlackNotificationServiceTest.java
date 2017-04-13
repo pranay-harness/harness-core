@@ -75,8 +75,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
 
       NotificationGroup savedNotificationGrp = notificationSetupService.createNotificationGroup(notificationGroup);
 
-      NotificationRule notificationRule =
-          aNotificationRule().withAppId(application.getAppId()).addNotificationGroup(savedNotificationGrp).build();
+      NotificationRule notificationRule = aNotificationRule().addNotificationGroup(savedNotificationGrp).build();
       //      NotificationRule savedNotificationRule =
       //      notificationSetupService.createNotificationRule(notificationRule);
     });

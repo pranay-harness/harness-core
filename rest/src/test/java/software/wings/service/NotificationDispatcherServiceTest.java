@@ -94,7 +94,6 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
 
     NotificationRule notificationRule =
         aNotificationRule()
-            .withAppId(APP_ID)
             .addNotificationGroup(aNotificationGroup()
                                       .withUuid("NOTIFICATION_GROUP_ID")
                                       .withAppId(APP_ID)

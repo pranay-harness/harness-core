@@ -71,6 +71,8 @@ public class WorkflowNotificationHelper {
       InformationNotification notification = anInformationNotification()
                                                  .withAccountId(app.getAccountId())
                                                  .withAppId(context.getAppId())
+                                                 .withEntityId(context.getWorkflowExecutionId())
+                                                 .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                                  .withNotificationTemplateId(messageTemplate)
                                                  .withNotificationTemplateVariables(placeHolders)
                                                  .build();
@@ -143,6 +145,8 @@ public class WorkflowNotificationHelper {
       InformationNotification notification = anInformationNotification()
                                                  .withAccountId(app.getAccountId())
                                                  .withAppId(context.getAppId())
+                                                 .withEntityId(context.getWorkflowExecutionId())
+                                                 .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                                  .withNotificationTemplateId(messageTemplate)
                                                  .withNotificationTemplateVariables(placeHolders)
                                                  .build();

@@ -1,156 +1,298 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.Entity;
+import com.google.common.base.MoreObjects;
+
+import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
  * Created by rishi on 10/30/16.
  */
-
-@Entity(value = "notificationRules", noClassnameStored = true)
-public class NotificationRule extends Base {
+public class NotificationRule {
+  private String uuid = UUIDGenerator.getUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
-
   private ExecutionScope executionScope;
 
   @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
-  private int batchIntervalInSecs;
+  private boolean batchNotifications;
 
   private boolean active = true;
 
+  /**
+   * Gets notification groups.
+   *
+   * @return the notification groups
+   */
   public List<NotificationGroup> getNotificationGroups() {
     return notificationGroups;
   }
 
+  /**
+   * Sets notification groups.
+   *
+   * @param notificationGroups the notification groups
+   */
   public void setNotificationGroups(List<NotificationGroup> notificationGroups) {
     this.notificationGroups = notificationGroups;
   }
 
+  /**
+   * Is active boolean.
+   *
+   * @return the boolean
+   */
   public boolean isActive() {
     return active;
   }
 
+  /**
+   * Sets active.
+   *
+   * @param active the active
+   */
   public void setActive(boolean active) {
     this.active = active;
   }
 
+  /**
+   * Gets conditions.
+   *
+   * @return the conditions
+   */
   public List<ExecutionStatus> getConditions() {
     return conditions;
   }
 
+  /**
+   * Sets conditions.
+   *
+   * @param conditions the conditions
+   */
   public void setConditions(List<ExecutionStatus> conditions) {
     this.conditions = conditions;
   }
 
+  /**
+   * Gets execution scope.
+   *
+   * @return the execution scope
+   */
   public ExecutionScope getExecutionScope() {
     return executionScope;
   }
 
+  /**
+   * Sets execution scope.
+   *
+   * @param executionScope the execution scope
+   */
   public void setExecutionScope(ExecutionScope executionScope) {
     this.executionScope = executionScope;
   }
 
-  public int getBatchIntervalInSecs() {
-    return batchIntervalInSecs;
+  /**
+   * Gets uuid.
+   *
+   * @return the uuid
+   */
+  public String getUuid() {
+    return uuid;
   }
 
-  public void setBatchIntervalInSecs(int batchIntervalInSecs) {
-    this.batchIntervalInSecs = batchIntervalInSecs;
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
+  /**
+   * Is batch notifications boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isBatchNotifications() {
+    return batchNotifications;
+  }
+
+  /**
+   * Sets batch notifications.
+   *
+   * @param batchNotifications the batch notifications
+   */
+  public void setBatchNotifications(boolean batchNotifications) {
+    this.batchNotifications = batchNotifications;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("uuid", uuid)
+        .add("conditions", conditions)
+        .add("executionScope", executionScope)
+        .add("notificationGroups", notificationGroups)
+        .add("batchNotifications", batchNotifications)
+        .add("active", active)
+        .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(uuid, conditions, executionScope, notificationGroups, batchNotifications, active);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final NotificationRule other = (NotificationRule) obj;
+    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.conditions, other.conditions)
+        && Objects.equals(this.executionScope, other.executionScope)
+        && Objects.equals(this.notificationGroups, other.notificationGroups)
+        && Objects.equals(this.batchNotifications, other.batchNotifications)
+        && Objects.equals(this.active, other.active);
+  }
+
+  /**
+   * The type Notification rule builder.
+   */
   public static final class NotificationRuleBuilder {
+    private String uuid = UUIDGenerator.getUuid();
     private List<ExecutionStatus> conditions = new ArrayList<>();
     private ExecutionScope executionScope;
     private List<NotificationGroup> notificationGroups = new ArrayList<>();
-    private int batchIntervalInSecs;
+    private boolean batchNotifications;
     private boolean active = true;
-    private String uuid;
-    private String appId;
-    private EmbeddedUser createdBy;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private long lastUpdatedAt;
 
     private NotificationRuleBuilder() {}
 
-    public static NotificationRuleBuilder aNotificationRule() {
-      return new NotificationRuleBuilder();
-    }
-
-    public NotificationRuleBuilder withConditions(List<ExecutionStatus> conditions) {
-      this.conditions = conditions;
-      return this;
-    }
-
-    public NotificationRuleBuilder withExecutionScope(ExecutionScope executionScope) {
-      this.executionScope = executionScope;
-      return this;
-    }
-
+    /**
+     * Add notification group notification rule builder.
+     *
+     * @param notificationGroup the notification group
+     * @return the notification rule builder
+     */
     public NotificationRuleBuilder addNotificationGroup(NotificationGroup notificationGroup) {
       this.notificationGroups.add(notificationGroup);
       return this;
     }
 
-    public NotificationRuleBuilder withBatchIntervalInSecs(int batchIntervalInSecs) {
-      this.batchIntervalInSecs = batchIntervalInSecs;
-      return this;
+    /**
+     * A notification rule notification rule builder.
+     *
+     * @return the notification rule builder
+     */
+    public static NotificationRuleBuilder aNotificationRule() {
+      return new NotificationRuleBuilder();
     }
 
-    public NotificationRuleBuilder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
+    /**
+     * With uuid notification rule builder.
+     *
+     * @param uuid the uuid
+     * @return the notification rule builder
+     */
     public NotificationRuleBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public NotificationRuleBuilder withAppId(String appId) {
-      this.appId = appId;
+    /**
+     * With conditions notification rule builder.
+     *
+     * @param conditions the conditions
+     * @return the notification rule builder
+     */
+    public NotificationRuleBuilder withConditions(List<ExecutionStatus> conditions) {
+      this.conditions = conditions;
       return this;
     }
 
-    public NotificationRuleBuilder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
+    /**
+     * With execution scope notification rule builder.
+     *
+     * @param executionScope the execution scope
+     * @return the notification rule builder
+     */
+    public NotificationRuleBuilder withExecutionScope(ExecutionScope executionScope) {
+      this.executionScope = executionScope;
       return this;
     }
 
-    public NotificationRuleBuilder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
+    /**
+     * With notification groups notification rule builder.
+     *
+     * @param notificationGroups the notification groups
+     * @return the notification rule builder
+     */
+    public NotificationRuleBuilder withNotificationGroups(List<NotificationGroup> notificationGroups) {
+      this.notificationGroups = notificationGroups;
       return this;
     }
 
-    public NotificationRuleBuilder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
+    /**
+     * With batch notifications notification rule builder.
+     *
+     * @param batchNotifications the batch notifications
+     * @return the notification rule builder
+     */
+    public NotificationRuleBuilder withBatchNotifications(boolean batchNotifications) {
+      this.batchNotifications = batchNotifications;
       return this;
     }
 
-    public NotificationRuleBuilder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
+    /**
+     * With active notification rule builder.
+     *
+     * @param active the active
+     * @return the notification rule builder
+     */
+    public NotificationRuleBuilder withActive(boolean active) {
+      this.active = active;
       return this;
     }
 
+    /**
+     * But notification rule builder.
+     *
+     * @return the notification rule builder
+     */
+    public NotificationRuleBuilder but() {
+      return aNotificationRule()
+          .withUuid(uuid)
+          .withConditions(conditions)
+          .withExecutionScope(executionScope)
+          .withNotificationGroups(notificationGroups)
+          .withBatchNotifications(batchNotifications)
+          .withActive(active);
+    }
+
+    /**
+     * Build notification rule.
+     *
+     * @return the notification rule
+     */
     public NotificationRule build() {
       NotificationRule notificationRule = new NotificationRule();
+      notificationRule.setUuid(uuid);
       notificationRule.setConditions(conditions);
       notificationRule.setExecutionScope(executionScope);
       notificationRule.setNotificationGroups(notificationGroups);
-      notificationRule.setBatchIntervalInSecs(batchIntervalInSecs);
+      notificationRule.setBatchNotifications(batchNotifications);
       notificationRule.setActive(active);
-      notificationRule.setUuid(uuid);
-      notificationRule.setAppId(appId);
-      notificationRule.setCreatedBy(createdBy);
-      notificationRule.setCreatedAt(createdAt);
-      notificationRule.setLastUpdatedBy(lastUpdatedBy);
-      notificationRule.setLastUpdatedAt(lastUpdatedAt);
       return notificationRule;
     }
   }
