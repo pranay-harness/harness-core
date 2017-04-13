@@ -147,39 +147,40 @@ public abstract class CloudServiceDeploy extends State {
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
       desiredCount = containerUpgradeRequestElement.getNewServiceInstanceCount();
+      if (desiredCount == 0) {
+        // This is a rollback of a deployment where the new version was the first one, so there isn't an old one to
+        // scale up during rollback. We just need to downsize the new one (which is called 'old' during rollback
+        // execution)
+        return downsizeOldInstances(context, executionDataBuilder.build());
+      }
     } else {
       Optional<Integer> previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, serviceName);
-      if (previousDesiredCount.isPresent()) {
-        executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount.get());
-        desiredCount = previousDesiredCount.get() + instanceCount;
-      } else {
+      if (!previousDesiredCount.isPresent()) {
         throw new WingsException(
             ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + serviceName);
       }
+      executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount.get());
+      desiredCount = previousDesiredCount.get() + instanceCount;
     }
 
-    if (desiredCount > 0) {
-      logger.info("Desired count for service {} is {}", serviceName, desiredCount);
+    logger.info("Desired count for service {} is {}", serviceName, desiredCount);
 
-      CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(
-          app, env.getUuid(), clusterName, serviceName, desiredCount, activity.getUuid(), settingAttribute);
+    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(
+        app, env.getUuid(), clusterName, serviceName, desiredCount, activity.getUuid(), settingAttribute);
 
-      delegateService.queueTask(aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getAppId())
-                                    .withTaskType(TaskType.COMMAND)
-                                    .withWaitId(activity.getUuid())
-                                    .withParameters(new Object[] {command, commandExecutionContext})
-                                    .build());
+    delegateService.queueTask(aDelegateTask()
+                                  .withAccountId(app.getAccountId())
+                                  .withAppId(app.getAppId())
+                                  .withTaskType(TaskType.COMMAND)
+                                  .withWaitId(activity.getUuid())
+                                  .withParameters(new Object[] {command, commandExecutionContext})
+                                  .build());
 
-      return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(activity.getUuid()))
-          .withStateExecutionData(executionDataBuilder.build())
-          .build();
-    } else {
-      return downsizeOldInstances(context, executionDataBuilder.build());
-    }
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(activity.getUuid()))
+        .withStateExecutionData(executionDataBuilder.build())
+        .build();
   }
 
   @Override
@@ -223,7 +224,7 @@ public abstract class CloudServiceDeploy extends State {
 
     commandStateExecutionData.setOldContainerServiceName(oldServiceName);
 
-    int desiredCount = -1;
+    int desiredCount;
 
     if (isRollback()) {
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
@@ -231,43 +232,40 @@ public abstract class CloudServiceDeploy extends State {
       desiredCount = containerUpgradeRequestElement.getOldServiceInstanceCount();
     } else {
       Optional<Integer> previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, oldServiceName);
-      if (previousDesiredCount.isPresent()) {
-        commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount.get());
-        desiredCount = Math.max(previousDesiredCount.get() - instanceCount, 0);
+      if (!previousDesiredCount.isPresent()) {
+        // Old service doesn't exist so we don't need to do anything
+        return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
       }
+      commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount.get());
+      desiredCount = Math.max(previousDesiredCount.get() - instanceCount, 0);
     }
 
-    if (desiredCount >= 0) {
-      logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
+    logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
 
-      Application app = workflowStandardParams.getApp();
-      Environment env = workflowStandardParams.getEnv();
+    Application app = workflowStandardParams.getApp();
+    Environment env = workflowStandardParams.getEnv();
 
-      Command command = serviceResourceService
-                            .getCommandByName(workflowStandardParams.getAppId(),
-                                phaseElement.getServiceElement().getUuid(), env.getUuid(), getCommandName())
-                            .getCommand();
+    Command command = serviceResourceService
+                          .getCommandByName(workflowStandardParams.getAppId(),
+                              phaseElement.getServiceElement().getUuid(), env.getUuid(), getCommandName())
+                          .getCommand();
 
-      CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(), clusterName,
-          oldServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
+    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(), clusterName,
+        oldServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
 
-      delegateService.queueTask(aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getAppId())
-                                    .withTaskType(TaskType.COMMAND)
-                                    .withWaitId(commandStateExecutionData.getActivityId())
-                                    .withParameters(new Object[] {command, commandExecutionContext})
-                                    .build());
+    delegateService.queueTask(aDelegateTask()
+                                  .withAccountId(app.getAccountId())
+                                  .withAppId(app.getAppId())
+                                  .withTaskType(TaskType.COMMAND)
+                                  .withWaitId(commandStateExecutionData.getActivityId())
+                                  .withParameters(new Object[] {command, commandExecutionContext})
+                                  .build());
 
-      return anExecutionResponse()
-          .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(commandStateExecutionData.getActivityId()))
-          .withStateExecutionData(commandStateExecutionData)
-          .build();
-    } else {
-      logger.info("Old service [{}] does not exist.. nothing to do", oldServiceName);
-      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
-    }
+    return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(commandStateExecutionData.getActivityId()))
+        .withStateExecutionData(commandStateExecutionData)
+        .build();
   }
 
   @Override
@@ -371,6 +369,7 @@ public abstract class CloudServiceDeploy extends State {
   }
 
   public abstract String getCommandName();
+
   protected abstract Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName);
 
