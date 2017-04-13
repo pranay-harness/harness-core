@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -15,6 +16,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Created by brett on 3/1/17
@@ -35,12 +37,14 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, String serviceName) {
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
-    ReplicationController replicationController =
-        kubernetesContainerService.getController(kubernetesConfig, serviceName);
-    if (replicationController != null) {
-      return Optional.of(replicationController.getSpec().getReplicas());
+      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
+    if (StringUtils.isNotEmpty(serviceName)) {
+      KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+      ReplicationController replicationController =
+          kubernetesContainerService.getController(kubernetesConfig, serviceName);
+      if (replicationController != null) {
+        return Optional.of(replicationController.getSpec().getReplicas());
+      }
     }
     return Optional.empty();
   }

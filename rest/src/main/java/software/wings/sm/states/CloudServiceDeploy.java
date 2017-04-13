@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * Created by brett on 4/7/17
@@ -236,37 +237,37 @@ public abstract class CloudServiceDeploy extends State {
       }
     }
 
-    if (oldServiceName == null || desiredCount < 0) {
+    if (desiredCount >= 0) {
+      logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
+
+      Application app = workflowStandardParams.getApp();
+      Environment env = workflowStandardParams.getEnv();
+
+      Command command = serviceResourceService
+                            .getCommandByName(workflowStandardParams.getAppId(),
+                                phaseElement.getServiceElement().getUuid(), env.getUuid(), getCommandName())
+                            .getCommand();
+
+      CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(), clusterName,
+          oldServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
+
+      delegateService.queueTask(aDelegateTask()
+                                    .withAccountId(app.getAccountId())
+                                    .withAppId(app.getAppId())
+                                    .withTaskType(TaskType.COMMAND)
+                                    .withWaitId(commandStateExecutionData.getActivityId())
+                                    .withParameters(new Object[] {command, commandExecutionContext})
+                                    .build());
+
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Collections.singletonList(commandStateExecutionData.getActivityId()))
+          .withStateExecutionData(commandStateExecutionData)
+          .build();
+    } else {
       logger.info("Old service [{}] does not exist.. nothing to do", oldServiceName);
       return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
-
-    logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
-
-    Application app = workflowStandardParams.getApp();
-    Environment env = workflowStandardParams.getEnv();
-
-    Command command = serviceResourceService
-                          .getCommandByName(workflowStandardParams.getAppId(),
-                              phaseElement.getServiceElement().getUuid(), env.getUuid(), getCommandName())
-                          .getCommand();
-
-    CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(), clusterName,
-        oldServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
-
-    delegateService.queueTask(aDelegateTask()
-                                  .withAccountId(app.getAccountId())
-                                  .withAppId(app.getAppId())
-                                  .withTaskType(TaskType.COMMAND)
-                                  .withWaitId(commandStateExecutionData.getActivityId())
-                                  .withParameters(new Object[] {command, commandExecutionContext})
-                                  .build());
-
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(commandStateExecutionData.getActivityId()))
-        .withStateExecutionData(commandStateExecutionData)
-        .build();
   }
 
   @Override
@@ -371,7 +372,7 @@ public abstract class CloudServiceDeploy extends State {
 
   public abstract String getCommandName();
   protected abstract Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, String serviceName);
+      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName);
 
   private ContainerServiceElement getContainerServiceElement(ExecutionContext context) {
     if (isRollback()) {

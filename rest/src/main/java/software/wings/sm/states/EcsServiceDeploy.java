@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -13,6 +14,7 @@ import software.wings.stencils.EnumData;
 
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Created by rishi on 2/8/17.
@@ -31,13 +33,15 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, String serviceName) {
-    List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(settingAttribute, clusterName);
-    Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-        services.stream().filter(svc -> svc.getServiceName().equals(serviceName)).findFirst();
-    if (ecsService.isPresent()) {
-      return Optional.of(ecsService.get().getDesiredCount());
+      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
+    if (StringUtils.isNotEmpty(serviceName)) {
+      List<com.amazonaws.services.ecs.model.Service> services =
+          awsClusterService.getServices(settingAttribute, clusterName);
+      Optional<com.amazonaws.services.ecs.model.Service> ecsService =
+          services.stream().filter(svc -> svc.getServiceName().equals(serviceName)).findFirst();
+      if (ecsService.isPresent()) {
+        return Optional.of(ecsService.get().getDesiredCount());
+      }
     }
     return Optional.empty();
   }
