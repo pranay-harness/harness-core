@@ -277,18 +277,17 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
     verify(delegateService).queueTask(any(DelegateTask.class));
   }
 
-  @Test
-  public void shouldExecuteAsyncWithOldReplicationControllerWithNoInstance() {
-    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-    stateExecutionInstance.getStateExecutionMap().put(
-        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
-    assertThat(response)
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("async", false)
-        .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
-  }
+  //  @Test
+  //  public void shouldExecuteAsyncWithOldReplicationControllerWithNoInstance() {
+  //
+  //    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+  //    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
+  //    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(),
+  //    aCommandStateExecutionData().build()); ExecutionContextImpl context = new
+  //    ExecutionContextImpl(stateExecutionInstance);
+  //
+  //    ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
+  //    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async",
+  //    false).hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
+  //  }
 }

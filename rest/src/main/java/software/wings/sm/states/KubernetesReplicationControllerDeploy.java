@@ -5,8 +5,6 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
@@ -14,7 +12,6 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -23,8 +20,6 @@ import software.wings.stencils.EnumData;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesReplicationControllerDeploy.class);
-
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")
@@ -39,37 +34,15 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
   }
 
   @Override
-  protected int getServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute) {
-    String replicationControllerName = getServiceName(context);
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, getClusterName(context));
+  protected int getServiceDesiredCount(SettingAttribute settingAttribute, String clusterName, String serviceName) {
+    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
     ReplicationController replicationController =
-        kubernetesContainerService.getController(kubernetesConfig, replicationControllerName);
-
+        kubernetesContainerService.getController(kubernetesConfig, serviceName);
     if (replicationController == null) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "Kubernetes replication controller setup not done, controllerName: " + replicationControllerName);
+          "Kubernetes replication controller setup not done, controllerName: " + serviceName);
     }
-
-    int desiredCount = replicationController.getSpec().getReplicas() + getNewInstanceCount(context);
-    logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
-
-    return desiredCount;
-  }
-
-  @Override
-  protected int getOldServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute) {
-    String replicationControllerName = getOldServiceName(context);
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, getClusterName(context));
-    ReplicationController replicationController =
-        kubernetesContainerService.getController(kubernetesConfig, replicationControllerName);
-    if (replicationController == null) {
-      logger.info("Old kubernetes replication controller {} does not exist.. nothing to do", replicationControllerName);
-      return -1;
-    }
-
-    int desiredCount = Math.max(replicationController.getSpec().getReplicas() - getOldInstanceCount(context), 0);
-    logger.info("Desired count for service {} is {}", replicationControllerName, desiredCount);
-    return desiredCount;
+    return replicationController.getSpec().getReplicas();
   }
 
   @Override
