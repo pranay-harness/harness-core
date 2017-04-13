@@ -42,7 +42,7 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.DockerBuildServiceImpl;
-import software.wings.service.impl.EcsCommandUnitExecutorServiceImpl;
+import software.wings.service.impl.ContainerCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
@@ -104,9 +104,9 @@ public class DelegateModule extends AbstractModule {
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.ECS.name())
-        .to(EcsCommandUnitExecutorServiceImpl.class);
+        .to(ContainerCommandUnitExecutorServiceImpl.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.KUBERNETES.name())
-        .to(EcsCommandUnitExecutorServiceImpl.class);
+        .to(ContainerCommandUnitExecutorServiceImpl.class);
     serviceCommandExecutorServiceMapBinder.addBinding(DeploymentType.SSH.name())
         .to(SshCommandUnitExecutorServiceImpl.class);
   }

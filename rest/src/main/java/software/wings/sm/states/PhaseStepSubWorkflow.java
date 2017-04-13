@@ -1,7 +1,8 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
+import static software.wings.api.ContainerUpgradeRequestElement.ContainerUpgradeRequestElementBuilder.aContainerUpgradeRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -20,10 +21,10 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStepExecutionSummary;
+import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContainerUpgradeRequestElement;
 import software.wings.api.DeploymentType;
-import software.wings.api.EcsServiceElement;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.KubernetesReplicationControllerElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
@@ -160,12 +161,20 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return null;
       }
       CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-      EcsServiceElement ecsServiceElement = anEcsServiceElement()
-                                                .withName(commandStepExecutionSummary.getOldContainerServiceName())
-                                                .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
-                                                .withClusterName(commandStepExecutionSummary.getClusterName())
-                                                .build();
-      return asList(ecsServiceElement);
+      ContainerServiceElement contextElement =
+          aContainerServiceElement()
+              .withName(commandStepExecutionSummary.getOldContainerServiceName())
+              .withOldName(commandStepExecutionSummary.getNewContainerServiceName())
+              .withClusterName(commandStepExecutionSummary.getClusterName())
+              .build();
+
+      ContainerUpgradeRequestElement containerUpgradeRequestElement =
+          aContainerUpgradeRequestElement()
+              .withOldServiceInstanceCount(commandStepExecutionSummary.getNewServicePreviousInstanceCount())
+              .withNewServiceInstanceCount(commandStepExecutionSummary.getOldServicePreviousInstanceCount())
+              .withContainerServiceElement(contextElement)
+              .build();
+      return asList(containerUpgradeRequestElement);
     }
     return null;
   }
@@ -214,49 +223,20 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void validateServiceInstanceIdsParams(ExecutionContext contextIntf) {}
 
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
-    List<ContextElement> ecsElements = context.getContextElementList(ContextElementType.ECS_SERVICE);
-    if (ecsElements != null && !ecsElements.isEmpty()) {
-      validateEcsServiceElement(ecsElements, phaseElement);
-    }
-
-    List<ContextElement> kubernetesElements =
-        context.getContextElementList(ContextElementType.KUBERNETES_REPLICATION_CONTROLLER);
-    if (kubernetesElements != null && !kubernetesElements.isEmpty()) {
-      validateKubernetesServiceElement(kubernetesElements, phaseElement);
-    }
-
-    if ((ecsElements == null || ecsElements.isEmpty())
-        && (kubernetesElements == null || kubernetesElements.isEmpty())) {
+    List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
+    if ((contextElements == null || contextElements.isEmpty())) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Setup not done");
     }
-  }
-
-  private void validateEcsServiceElement(List<ContextElement> elements, PhaseElement phaseElement) {
-    Optional<ContextElement> ecsServiceElement =
-        elements.parallelStream()
+    Optional<ContextElement> containerServiceElement =
+        contextElements.parallelStream()
             .filter(contextElement
-                -> contextElement instanceof EcsServiceElement && contextElement.getUuid() != null
+                -> contextElement instanceof ContainerServiceElement && contextElement.getUuid() != null
                     && contextElement.getUuid().equals(phaseElement.getServiceElement().getUuid()))
             .findFirst();
 
-    if (!ecsServiceElement.isPresent()) {
+    if (!containerServiceElement.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "ecsServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
-    }
-  }
-
-  private void validateKubernetesServiceElement(List<ContextElement> elements, PhaseElement phaseElement) {
-    Optional<ContextElement> kubernetesReplicationControllerElement =
-        elements.parallelStream()
-            .filter(contextElement
-                -> contextElement instanceof KubernetesReplicationControllerElement && contextElement.getUuid() != null
-                    && contextElement.getUuid().equals(phaseElement.getServiceElement().getUuid()))
-            .findFirst();
-
-    if (!kubernetesReplicationControllerElement.isPresent()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "kubernetesReplicationControllerElement not present for the service "
-              + phaseElement.getServiceElement().getUuid());
+          "containerServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
     }
   }
 
@@ -278,31 +258,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
       Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
-    if (phaseElement.getDeploymentType().equals(DeploymentType.SSH.name())
-        && phaseStepType == PhaseStepType.PROVISION_NODE) {
+    String deploymentType = phaseElement.getDeploymentType();
+    if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
       ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
           response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
       executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
-    } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
-        && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      EcsServiceElement ecsServiceElement =
-          (EcsServiceElement) notifiedElement(response, EcsServiceElement.class, "Missing ECSServiceElement");
-      executionResponse.setContextElements(Lists.newArrayList(ecsServiceElement));
-      executionResponse.setNotifyElements(Lists.newArrayList(ecsServiceElement));
-    } else if (phaseElement.getDeploymentType().equals(DeploymentType.ECS.name())
-        && phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          response, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
-    } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
-        && phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      KubernetesReplicationControllerElement kubernetesReplicationControllerElement =
-          (KubernetesReplicationControllerElement) notifiedElement(
-              response, KubernetesReplicationControllerElement.class, "Missing KubernetesReplicationControllerElement");
-      executionResponse.setContextElements(Lists.newArrayList(kubernetesReplicationControllerElement));
-    } else if (phaseElement.getDeploymentType().equals(DeploymentType.KUBERNETES.name())
-        && phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+    } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
+      ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+          response, ContainerServiceElement.class, "Missing ContainerServiceElement");
+      executionResponse.setContextElements(asList(containerServiceElement));
+      executionResponse.setNotifyElements(asList(containerServiceElement));
+    } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           response, InstanceElementListParam.class, "Missing InstanceListParam Element");
       executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));

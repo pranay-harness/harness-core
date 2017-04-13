@@ -76,6 +76,11 @@ public class WingsTestConstants {
   public static final String BUILD_JOB_NAME = "BUILD_JOB_NAME";
 
   /**
+   * The constant ARTIFACT_GROUP_ID.
+   */
+  public static final String ARTIFACT_GROUP_ID = "ARTIFACT_GROUP_ID";
+
+  /**
    * The constant RELEASE_NAME.
    */
   public static final String RELEASE_NAME = "RELEASE_NAME";

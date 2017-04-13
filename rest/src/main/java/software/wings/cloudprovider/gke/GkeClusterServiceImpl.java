@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.gke;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.awaitility.Awaitility.with;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
@@ -13,6 +14,7 @@ import com.google.api.services.container.model.ClusterUpdate;
 import com.google.api.services.container.model.CreateClusterRequest;
 import com.google.api.services.container.model.ListClustersResponse;
 import com.google.api.services.container.model.MasterAuth;
+import com.google.api.services.container.model.NodeConfig;
 import com.google.api.services.container.model.NodePool;
 import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.api.services.container.model.Operation;
@@ -31,11 +33,11 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -70,6 +72,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       CreateClusterRequest content = new CreateClusterRequest().setCluster(
           new Cluster()
               .setName(clusterName)
+              .setNodeConfig(new NodeConfig().setMachineType("n1-highcpu-4"))
               .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
               .setMasterAuth(
                   new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd"))));
@@ -130,20 +133,37 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       Operation operation, Container gkeContainerService, String projectId, String zone, String operationLogMessage) {
     logger.info(operationLogMessage + "...");
     int i = 0;
-    while (operation.getStatus().equals("RUNNING")) {
-      try {
-        Misc.quietSleep(gcpHelperService.getSleepIntervalMs());
-        operation =
-            gkeContainerService.projects().zones().operations().get(projectId, zone, operation.getName()).execute();
-      } catch (IOException e) {
-        logger.error("Error checking operation status", e);
-        break;
-      }
-      i += gcpHelperService.getSleepIntervalMs() / 1000;
-      logger.info(operationLogMessage + "... " + i);
+    with()
+        .pollInterval(gcpHelperService.getSleepIntervalSecs(), TimeUnit.SECONDS)
+        .await()
+        .atMost(gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES)
+        .until(() -> {
+          try {
+            return !gkeContainerService.projects()
+                        .zones()
+                        .operations()
+                        .get(projectId, zone, operation.getName())
+                        .execute()
+                        .getStatus()
+                        .equals("RUNNING");
+          } catch (IOException e) {
+            logger.error("Error checking operation status", e);
+            return true;
+          }
+        });
+    String status;
+    try {
+      status = gkeContainerService.projects()
+                   .zones()
+                   .operations()
+                   .get(projectId, zone, operation.getName())
+                   .execute()
+                   .getStatus();
+    } catch (IOException e) {
+      status = "UNKNOWN";
     }
-    logger.info(operationLogMessage + ": " + operation.getStatus());
-    return operation.getStatus();
+    logger.info(operationLogMessage + ": " + status);
+    return status;
   }
 
   @Override

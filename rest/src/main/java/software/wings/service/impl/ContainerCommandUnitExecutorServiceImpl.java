@@ -23,11 +23,11 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
- * The Class EcsCommandUnitExecutorServiceImpl.
+ * The Class CloudCommandUnitExecutorServiceImpl.
  */
 @ValidateOnExecution
 @Singleton
-public class EcsCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
+public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Log service.

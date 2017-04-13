@@ -28,6 +28,8 @@ public abstract class State {
 
   @SchemaIgnore private Integer timeoutMillis;
 
+  @SchemaIgnore private boolean ignoreFailure;
+
   /**
    * Instantiates a new state.
    *
@@ -145,6 +147,15 @@ public abstract class State {
     this.waitInterval = waitInterval;
   }
 
+  @SchemaIgnore
+  public boolean isIgnoreFailure() {
+    return ignoreFailure;
+  }
+
+  public void setIgnoreFailure(boolean ignoreFailure) {
+    this.ignoreFailure = ignoreFailure;
+  }
+
   /**
    * Execute.
    *
@@ -171,6 +182,7 @@ public abstract class State {
   }
 
   @Attributes(title = "Timeout (milliseconds)")
+  @SchemaIgnore
   public Integer getTimeoutMillis() {
     return timeoutMillis;
   }

@@ -38,7 +38,7 @@ public class StateMachineExecutionCleanupJob implements Job {
     PageResponse<StateExecutionInstance> pageResponse = wingsPersistence.query(StateExecutionInstance.class,
         aPageRequest()
             .addFilter("status", Operator.IN, RUNNING, NEW, STARTING, PAUSED)
-            .addFilter("expiryTs", Operator.GT, System.currentTimeMillis())
+            .addFilter("expiryTs", Operator.LT, System.currentTimeMillis())
             .withLimit("1000")
             .addFilter("appId", Operator.EQ, appId)
             .build());

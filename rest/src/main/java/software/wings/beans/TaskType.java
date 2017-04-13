@@ -2,17 +2,17 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import software.wings.delegatetasks.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsCollectionTask;
 import software.wings.delegatetasks.JenkinsTask;
+import software.wings.delegatetasks.NexusCollectionTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.waitnotify.NotifyResponseData;
-
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by peeyushaggarwal on 12/8/16.
@@ -40,7 +40,10 @@ public enum TaskType {
   NEXUS_GET_PLANS(ServiceImplDelegateTask.class),
   NEXUS_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
   NEXUS_GET_GROUP_IDS(ServiceImplDelegateTask.class),
-  NEXUS_GET_ARTIFACT_NAMES(ServiceImplDelegateTask.class);
+  NEXUS_GET_ARTIFACT_NAMES(ServiceImplDelegateTask.class),
+  NEXUS_GET_BUILDS(ServiceImplDelegateTask.class),
+  NEXUS_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
+  NEXUS_COLLECTION(NexusCollectionTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

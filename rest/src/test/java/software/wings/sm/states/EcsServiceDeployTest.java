@@ -7,7 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.EcsServiceElement.EcsServiceElementBuilder.anEcsServiceElement;
+import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -47,6 +47,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
@@ -110,19 +111,23 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                           .withUuid(getUuid())
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withDeploymentType(DeploymentType.ECS.name())
                                           .build();
-  private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                              .withStateName(STATE_NAME)
-                                                              .addContextElement(workflowStandardParams)
-                                                              .addContextElement(phaseElement)
-                                                              .addContextElement(anEcsServiceElement()
-                                                                                     .withUuid(serviceElement.getUuid())
-                                                                                     .withClusterName(CLUSTER_NAME)
-                                                                                     .withName(ECS_SERVICE_NAME)
-                                                                                     .withOldName(ECS_SERVICE_OLD_NAME)
-                                                                                     .build())
-                                                              .addStateExecutionData(new PhaseStepExecutionData())
-                                                              .build();
+  private StateExecutionInstance stateExecutionInstance =
+      aStateExecutionInstance()
+          .withStateName(STATE_NAME)
+          .addContextElement(workflowStandardParams)
+          .addContextElement(phaseElement)
+          .addContextElement(aContainerServiceElement()
+                                 .withUuid(serviceElement.getUuid())
+                                 .withClusterName(CLUSTER_NAME)
+                                 .withName(ECS_SERVICE_NAME)
+                                 .withOldName(ECS_SERVICE_OLD_NAME)
+                                 .withDeploymentType(DeploymentType.ECS)
+                                 .withInfraMappingId(INFRA_MAPPING_ID)
+                                 .build())
+          .addStateExecutionData(new PhaseStepExecutionData())
+          .build();
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
@@ -195,14 +200,13 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   public void shouldExecuteThrowInvalidRequest() {
     try {
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+      on(context).set("variableProcessor", variableProcessor);
       ecsServiceDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message"))
-          .asString()
-          .contains("ECS Service setup not done, ecsServiceName");
+      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, serviceName:");
     }
   }
 

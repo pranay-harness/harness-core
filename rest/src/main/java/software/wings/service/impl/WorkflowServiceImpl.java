@@ -386,12 +386,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflow.getUuid(), workflow.getName(), ChangeType.UPDATED, workflow.getNotes());
       workflow.setDefaultVersion(entityVersion.getVersion());
 
-      if (orchestrationWorkflow != null) {
-        StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
-            ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
-        stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-      }
-
+      StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
+          ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
+      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
       setUnset(ops, "defaultVersion", workflow.getDefaultVersion());
     }
 
@@ -858,7 +855,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addStep(aNode()
                                                 .withId(getUuid())
                                                 .withType(ECS_SERVICE_DEPLOY.name())
-                                                .withName(Constants.ECS_SERVICE_DEPLOY)
+                                                .withName(Constants.UPGRADE_CONTAINERS)
                                                 .build())
                                    .build());
 
@@ -910,7 +907,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addStep(aNode()
                                                 .withType(stateType.name())
                                                 .withName("Select Nodes")
-                                                .withOrigin(true)
                                                 .addProperty("specificHosts", false)
                                                 .addProperty("instanceCount", 1)
                                                 .build())
@@ -966,7 +962,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .addStep(aNode()
                                            .withId(getUuid())
                                            .withType(ECS_SERVICE_DEPLOY.name())
-                                           .withName(Constants.ECS_SERVICE_DEPLOY)
+                                           .withName(Constants.UPGRADE_CONTAINERS)
                                            .addProperty("rollback", true)
                                            .build())
                               .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
@@ -992,8 +988,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withPhaseNameForRollback(workflowPhase.getName())
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, Constants.STOP_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.RESIZE, true))
+            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                              .addStep(aNode()
+                                           .withId(getUuid())
+                                           .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
+                                           .withName(Constants.UPGRADE_CONTAINERS)
+                                           .addProperty("rollback", true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
                               .build())
             .build();

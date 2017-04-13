@@ -16,6 +16,7 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
@@ -346,18 +347,17 @@ private void createGlobalSettings() {
           APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
 
-  getRequestWithAuthHeader(target).post(
-      Entity.entity(aSettingAttribute()
-                        .withName("Wings Nexus")
-                        .withCategory(Category.CONNECTOR)
-                        .withAccountId(accountId)
-                        .withValue(aJenkinsConfig()
-                                       .withJenkinsUrl("https://nexus.wings.software/")
-                                       .withUsername("admin")
-                                       .withPassword("wings123!")
-                                       .build())
-                        .build(),
-          APPLICATION_JSON),
+  getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
+                                                          .withName("Wings Nexus")
+                                                          .withCategory(Category.CONNECTOR)
+                                                          .withAccountId(accountId)
+                                                          .withValue(aNexusConfig()
+                                                                         .withNexusUrl("https://nexus.wings.software")
+                                                                         .withUsername("admin")
+                                                                         .withPassword("wings123!")
+                                                                         .build())
+                                                          .build(),
+                                            APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
 
   getRequestWithAuthHeader(target).post(
@@ -502,10 +502,11 @@ private String createLoadBalancer(String appId, String serviceId, String value) 
 }
 
 private String createLoadBalancerConfig(String appId, String envId, String lbName) {
-  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId);
+  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId + "&accountId=" + accountId);
   RestResponse<SettingAttribute> restResponse = getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withAppId(appId)
+                        .withAccountId(accountId)
                         .withEnvId(envId)
                         .withName("Elastic Load Balancer")
                         .withValue(anElasticLoadBalancerConfig()

@@ -90,6 +90,28 @@ public class StencilPostProcessor {
       }
     }
 
+    for (Method method : t.getTypeClass().getDeclaredMethods()) {
+      String field = getField(method);
+      if (isNotBlank(field)) {
+        EnumData enumData = method.getAnnotation(EnumData.class);
+        DefaultValue defaultValue = method.getAnnotation(DefaultValue.class);
+        if (enumData != null || defaultValue != null) {
+          if (enumData != null) {
+            DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
+            Map<String, String> data = dataProvider.getData(appId, args);
+            if (data == null) {
+              data = new HashMap<>();
+            }
+            stencil = addEnumDataToNode(stencil, data, field);
+          }
+        }
+
+        if (defaultValue != null) {
+          stencil = addDefaultValueToStencil(stencil, field, defaultValue.value());
+        }
+      }
+    }
+
     Stream<Stencil> returnValue = Stream.of(stencil);
 
     if (stream(t.getTypeClass().getDeclaredFields())
@@ -214,5 +236,13 @@ public class StencilPostProcessor {
       logger.warn("Unable to fill in values for stencil {}:field {} with data {}", t, fieldName, data);
     }
     return t;
+  }
+
+  private static Stream<Field> fieldStream(Class<?> klass) {
+    if (klass != null && klass != Object.class) {
+      return Stream.concat(stream(klass.getDeclaredFields()), fieldStream(klass.getSuperclass()));
+    } else {
+      return Stream.empty();
+    }
   }
 }

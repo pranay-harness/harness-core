@@ -10,6 +10,9 @@ public class ArtifactStreamAttributes {
   private String imageName;
   private String artifactStreamType;
   private SettingAttribute serverSetting;
+  // TODO : Refactoring has to be done
+  private String groupId; // For nexus integration
+  private String artifactName;
 
   /**
    * Gets job name.
@@ -84,6 +87,38 @@ public class ArtifactStreamAttributes {
   }
 
   /**
+   * Gets group Id
+   * @return
+   */
+  public String getGroupId() {
+    return groupId;
+  }
+
+  /**
+   * Set group Id
+   * @param groupId
+   */
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
+  }
+
+  /**
+   * Get Artifact Name
+   * @return
+   */
+  public String getArtifactName() {
+    return artifactName;
+  }
+
+  /**
+   * Set Artifact Name
+   * @param artifactName
+   */
+  public void setArtifactName(String artifactName) {
+    this.artifactName = artifactName;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -91,6 +126,9 @@ public class ArtifactStreamAttributes {
     private String imageName;
     private String artifactStreamType;
     private SettingAttribute serverSetting;
+    // TODO : Refactoring has to be done
+    private String groupId; // For nexus integration
+    private String artifactName;
 
     private Builder() {}
 
@@ -148,6 +186,25 @@ public class ArtifactStreamAttributes {
     }
 
     /**
+     * With group id
+     * @param groupId
+     * @return
+     */
+    public Builder withGroupId(String groupId) {
+      this.groupId = groupId;
+      return this;
+    }
+
+    /**
+     * with artifactName
+     * @param artifactName
+     * @return
+     */
+    public Builder withArtifactName(String artifactName) {
+      this.artifactName = artifactName;
+      return this;
+    }
+    /**
      * But builder.
      *
      * @return the builder
@@ -157,7 +214,9 @@ public class ArtifactStreamAttributes {
           .withJobName(jobName)
           .withImageName(imageName)
           .withArtifactStreamType(artifactStreamType)
-          .withServerSetting(serverSetting);
+          .withServerSetting(serverSetting)
+          .withGroupId(groupId)
+          .withArtifactName(artifactName);
     }
 
     /**
@@ -171,6 +230,8 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setImageName(imageName);
       artifactStreamAttributes.setArtifactStreamType(artifactStreamType);
       artifactStreamAttributes.setServerSetting(serverSetting);
+      artifactStreamAttributes.setGroupId(groupId);
+      artifactStreamAttributes.setArtifactName(artifactName);
       return artifactStreamAttributes;
     }
   }

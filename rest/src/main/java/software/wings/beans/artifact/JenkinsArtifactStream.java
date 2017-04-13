@@ -18,9 +18,9 @@ import java.util.List;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Job Name*") private String jobname;
+  @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
 
-  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path*") private List<String> artifactPaths;
+  @UIOrder(5) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -73,13 +73,13 @@ public class JenkinsArtifactStream extends ArtifactStream {
 
   @UIOrder(6)
   @Attributes(title = "Automatic Download")
-  public boolean isAutoDownload() {
+  public boolean getAutoDownload() {
     return super.isAutoDownload();
   }
 
   @UIOrder(7)
   @Attributes(title = "Auto-approved for Production")
-  public boolean isAutoApproveForProduction() {
+  public boolean getAutoApproveForProduction() {
     return super.isAutoApproveForProduction();
   }
 

@@ -138,7 +138,7 @@ public class AppServiceImpl implements AppService {
                              .build()));
   }
 
-  private void addCronForStateMachineExecutionCleanup(Application application) {
+  void addCronForStateMachineExecutionCleanup(Application application) {
     JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
                         .withIdentity(SM_CLEANUP_CRON_GROUP, application.getUuid())
                         .usingJobData("appId", application.getUuid())
@@ -264,9 +264,12 @@ public class AppServiceImpl implements AppService {
               .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                   ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
               .build());
-
-      jobScheduler.deleteJob(SM_CLEANUP_CRON_GROUP, appId);
+      deleteCronForStateMachineExecutionCleanup(appId);
     }
+  }
+
+  void deleteCronForStateMachineExecutionCleanup(String appId) {
+    jobScheduler.deleteJob(SM_CLEANUP_CRON_GROUP, appId);
   }
 
   @Override

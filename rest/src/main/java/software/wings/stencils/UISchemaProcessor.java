@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.utils.JsonUtils;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -52,7 +54,7 @@ public class UISchemaProcessor {
     }
   }
 
-  /*public static void main(String... args) throws IntrospectionException {
-    System.out.println(JsonUtils.asJson(UISchemaProcessor.generate(BambooArtifactStream.class)));
-  }*/
+  public static void main(String... args) throws IntrospectionException {
+    System.out.println(JsonUtils.asJson(UISchemaProcessor.generate(JenkinsArtifactStream.class)));
+  }
 }

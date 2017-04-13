@@ -9,7 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.KubernetesReplicationControllerElement.KubernetesReplicationControllerElementBuilder.aKubernetesReplicationControllerElement;
+import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -50,6 +50,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
@@ -119,17 +120,20 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
                                           .withUuid(getUuid())
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withDeploymentType(DeploymentType.KUBERNETES.name())
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
-          .addContextElement(aKubernetesReplicationControllerElement()
+          .addContextElement(aContainerServiceElement()
                                  .withUuid(serviceElement.getUuid())
                                  .withClusterName(CLUSTER_NAME)
                                  .withName(KUBERNETES_REPLICATION_CONTROLLER_NAME)
                                  .withOldName(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
+                                 .withInfraMappingId(INFRA_MAPPING_ID)
+                                 .withDeploymentType(DeploymentType.KUBERNETES)
                                  .build())
           .addStateExecutionData(new PhaseStepExecutionData())
           .build();
@@ -214,14 +218,13 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   public void shouldExecuteThrowInvalidRequest() {
     try {
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+      on(context).set("variableProcessor", variableProcessor);
       kubernetesReplicationControllerDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message"))
-          .asString()
-          .contains("Kubernetes replication controller setup not done, controllerName");
+      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, serviceName:");
     }
   }
 

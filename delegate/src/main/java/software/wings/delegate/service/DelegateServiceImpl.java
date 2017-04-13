@@ -100,6 +100,7 @@ public class DelegateServiceImpl implements DelegateService {
           line = it.nextLine();
         }
       }
+
       URI uri = new URI(delegateConfiguration.getManagerUrl());
 
       String delegateId = registerDelegate(accountId, builder);

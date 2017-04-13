@@ -29,6 +29,7 @@ import software.wings.beans.Workflow;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.common.ServiceExpressionProcessor;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
@@ -104,16 +105,21 @@ public class StateMachine extends Base {
     setAppId(workflow.getAppId());
     this.originId = workflow.getUuid();
     this.originVersion = originVersion;
+    StringBuilder sb = new StringBuilder();
     try {
       deepTransform(graph, stencilMap);
       valid = true;
     } catch (WingsException wingsException) {
       logger.error("Error in Statemachine transform", wingsException);
+      wingsException.getResponseMessageList().stream().forEach(responseMessage -> {
+        sb.append(
+            ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(), wingsException.getParams()));
+      });
     }
     orchestrationWorkflow.validate();
     if (orchestrationWorkflow.isValid() && !valid) {
       orchestrationWorkflow.setValid(false);
-      orchestrationWorkflow.setValidationMessage("Error in Statemachine transform");
+      orchestrationWorkflow.setValidationMessage(sb.toString());
     }
   }
 

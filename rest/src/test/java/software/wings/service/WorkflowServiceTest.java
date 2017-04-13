@@ -91,7 +91,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -541,7 +540,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                               .addStep(aNode()
                                                            .withId(getUuid())
                                                            .withType(ECS_SERVICE_DEPLOY.name())
-                                                           .withName(Constants.ECS_SERVICE_DEPLOY)
+                                                           .withName(Constants.UPGRADE_CONTAINERS)
                                                            .build())
                                               .build())
                             .build())
@@ -559,7 +558,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .hasFieldOrProperty("preDeploymentSteps")
         .hasFieldOrProperty("postDeploymentSteps")
         .hasFieldOrProperty("graph")
-        .hasFieldOrPropertyWithValue("valid", false)
         .hasFieldOrPropertyWithValue(
             "validationMessage", String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, "[Phase 1]"));
     assertThat(orchestrationWorkflow.getWorkflowPhases().get(0))
@@ -571,20 +569,20 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
         .hasFieldOrPropertyWithValue("validationMessage",
-            String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, asList(Constants.ECS_SERVICE_DEPLOY)));
+            String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, asList(Constants.UPGRADE_CONTAINERS)));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
                    .get(0)
                    .getSteps()
                    .stream()
-                   .filter(n -> n.getName().equals(Constants.ECS_SERVICE_DEPLOY))
+                   .filter(n -> n.getName().equals(Constants.UPGRADE_CONTAINERS))
                    .findFirst()
                    .get())
         .isNotNull()
         .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue(
-            "validationMessage", String.format(Constants.STEP_VALIDATION_MESSAGE, asList("instanceCount")));
+        .hasFieldOrPropertyWithValue("validationMessage",
+            String.format(Constants.STEP_VALIDATION_MESSAGE, asList("commandName, instanceCount")));
     assertThat(orchestrationWorkflow.getWorkflowPhases()
                    .get(0)
                    .getPhaseSteps()
@@ -593,8 +591,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
                    .get(0)
                    .getInValidFieldMessages())
         .isNotNull()
-        .hasSize(1)
-        .contains(new AbstractMap.SimpleEntry("instanceCount", "instanceCount needs to be greater than 0"));
+        .hasSize(2)
+        .containsKeys("commandName", "instanceCount");
   }
 
   @Test

@@ -51,6 +51,11 @@ public interface Constants {
    */
   String SERVICE_INSTANCE_ARTIFACT_PARAMS = "SERVICE_INSTANCE_ARTIFACT_PARAMS";
 
+  /**
+   * The constant CONTAINER_UPGRADE_REQUEST_PARAM.
+   */
+  String CONTAINER_UPGRADE_REQUEST_PARAM = "CONTAINER_UPGRADE_REQUEST_PARAM";
+
   String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";
 
   String PHASE_PARAM = "PHASE_PARAM";
@@ -114,7 +119,7 @@ public interface Constants {
   String SETUP_CONTAINER = "Setup Container";
 
   String ECS_SERVICE_SETUP = "ECS Service Setup";
-  String ECS_SERVICE_DEPLOY = "Upgrade Containers";
+  String UPGRADE_CONTAINERS = "Upgrade Containers";
 
   String SUB_WORKFLOW_ID = "subWorkflowId";
   String SUB_WORKFLOW = "SUB_WORKFLOW";

@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 
 import java.util.List;
@@ -36,18 +37,13 @@ public interface KubernetesContainerService {
   /**
    * Scales controller to specified number of nodes.
    */
-  void setControllerPodCount(KubernetesConfig kubernetesConfig, String name, int number);
+  public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig, String clusterName,
+      String replicationControllerName, int number, ExecutionLogCallback executionLogCallback);
 
   /**
    * Gets the pod count of a replication controller.
    */
   int getControllerPodCount(KubernetesConfig kubernetesConfig, String name);
-
-  /**
-   * Gets the container infos for a replication controller.
-   */
-  List<ContainerInfo> getContainerInfos(
-      KubernetesConfig kubernetesConfig, String replicationControllerName, int number);
 
   /**
    * Creates a service.

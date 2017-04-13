@@ -9,7 +9,10 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private String newContainerServiceName;
   private String oldContainerServiceName;
-  private int instanceCount;
+  private Integer newServiceRunningInstanceCount;
+  private Integer oldServiceRunningInstanceCount;
+  private Integer newServicePreviousInstanceCount;
+  private Integer oldServicePreviousInstanceCount;
   private String clusterName;
 
   public String getServiceId() {
@@ -36,12 +39,36 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
     this.oldContainerServiceName = oldContainerServiceName;
   }
 
-  public int getInstanceCount() {
-    return instanceCount;
+  public Integer getNewServiceRunningInstanceCount() {
+    return newServiceRunningInstanceCount;
   }
 
-  public void setInstanceCount(int instanceCount) {
-    this.instanceCount = instanceCount;
+  public void setNewServiceRunningInstanceCount(Integer newServiceRunningInstanceCount) {
+    this.newServiceRunningInstanceCount = newServiceRunningInstanceCount;
+  }
+
+  public Integer getOldServiceRunningInstanceCount() {
+    return oldServiceRunningInstanceCount;
+  }
+
+  public void setOldServiceRunningInstanceCount(Integer oldServiceRunningInstanceCount) {
+    this.oldServiceRunningInstanceCount = oldServiceRunningInstanceCount;
+  }
+
+  public Integer getNewServicePreviousInstanceCount() {
+    return newServicePreviousInstanceCount;
+  }
+
+  public void setNewServicePreviousInstanceCount(Integer newServicePreviousInstanceCount) {
+    this.newServicePreviousInstanceCount = newServicePreviousInstanceCount;
+  }
+
+  public Integer getOldServicePreviousInstanceCount() {
+    return oldServicePreviousInstanceCount;
+  }
+
+  public void setOldServicePreviousInstanceCount(Integer oldServicePreviousInstanceCount) {
+    this.oldServicePreviousInstanceCount = oldServicePreviousInstanceCount;
   }
 
   public String getClusterName() {
