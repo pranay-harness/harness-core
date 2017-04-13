@@ -119,7 +119,7 @@ public interface Constants {
   String SETUP_CONTAINER = "Setup Container";
 
   String ECS_SERVICE_SETUP = "ECS Service Setup";
-  String ECS_SERVICE_DEPLOY = "Upgrade Containers";
+  String UPGRADE_CONTAINERS = "Upgrade Containers";
 
   String SUB_WORKFLOW_ID = "subWorkflowId";
   String SUB_WORKFLOW = "SUB_WORKFLOW";

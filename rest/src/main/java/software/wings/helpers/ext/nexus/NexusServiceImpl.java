@@ -104,10 +104,11 @@ public class NexusServiceImpl implements NexusService {
   public Pair<String, InputStream> downloadArtifact(
       NexusConfig nexusConfig, String repoType, String groupId, String artifactName, String version) {
     // First Get the maven
+    logger.debug(
+        "Downloading artifact of repo {} group {} artifact {} and version  ", repoType, groupId, artifactName, version);
     final Project project = getPomModel(nexusConfig, repoType, groupId, artifactName, version);
-    final String relativePath = groupId + project.getArtifactId() + "/" + project.getVersion() + "/";
+    final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/" + project.getVersion() + "/";
     final String url = getIndexContentPathUrl(nexusConfig, repoType, relativePath);
-    Map<String, String> artifactToUrls = new HashMap<>();
     try {
       final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
       if (isSuccessful(response)) {
@@ -117,7 +118,7 @@ public class NexusServiceImpl implements NexusService {
         return getUrlInputStream(nexusConfig, project, treeNodes, repoType);
       }
     } catch (IOException e) {
-      logger.error("Error occured while downloading the artifact ");
+      logger.error("Error occurred while downloading the artifact ");
     }
     return null;
   }
@@ -232,8 +233,7 @@ public class NexusServiceImpl implements NexusService {
   @Override
   public List<String> getArtifactNames(NexusConfig nexusConfig, String repoId, String path) {
     final List<String> artifactNames = new ArrayList<>();
-    String modifiedPath = path.replace(".", "/");
-    modifiedPath = "/" + modifiedPath + "/";
+    String modifiedPath = getGroupId(path);
     final String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     try {
       final Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(nexusConfig, url);
@@ -261,10 +261,15 @@ public class NexusServiceImpl implements NexusService {
     return artifactNames;
   }
 
+  private String getGroupId(String path) {
+    String modifiedPath = path.replace(".", "/");
+    modifiedPath = "/" + modifiedPath + "/";
+    return modifiedPath;
+  }
+
   @Override
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
-    String modifiedPath = groupId.replace(".", "/");
-    modifiedPath = "/" + modifiedPath + "/";
+    String modifiedPath = getGroupId(groupId);
     String url = getIndexContentPathUrl(nexusConfig, repoId, modifiedPath);
     url = url + artifactName + "/";
     List<BuildDetails> buildDetails = new ArrayList<>();
@@ -304,6 +309,7 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public BuildDetails getLatestVersion(NexusConfig nexusConfig, String repoId, String groupId, String artifactName) {
+    logger.debug("Retrieving the latest version for repo {} group {} and artifact {}", repoId, groupId, artifactName);
     Project project = getPomModel(nexusConfig, repoId, groupId, artifactName, "LATEST");
     return aBuildDetails().withNumber(project.getVersion()).withRevision(project.getVersion()).build();
   }
@@ -343,8 +349,7 @@ public class NexusServiceImpl implements NexusService {
     String resolveUrl = getBaseUrl(nexusConfig) + "service/local/artifact/maven";
     Map<String, String> queryParams = new LinkedHashMap<>();
     queryParams.put("r", repoType);
-    groupId = groupId.substring(1, groupId.length() - 1);
-    queryParams.put("g", groupId.replace("/", "."));
+    queryParams.put("g", groupId);
     queryParams.put("a", artifactName);
     queryParams.put("v", version);
     Call<Project> request = getRestClient(nexusConfig)
@@ -354,6 +359,9 @@ public class NexusServiceImpl implements NexusService {
       final Response<Project> response = request.execute();
       if (isSuccessful(response)) {
         project = response.body();
+      } else {
+        ErrorCode errorCode = ErrorCode.DEFAULT_ERROR_CODE;
+        throw new WingsException(errorCode, "message", response.message());
       }
     } catch (IOException e) {
       logger.error("Error occurred while retrieving pom model from url {} ", resolveUrl, e);
@@ -401,7 +409,7 @@ public class NexusServiceImpl implements NexusService {
         case 404:
           return false;
       }
-      throw new WingsException(errorCode, "msg", response.message());
+      throw new WingsException(errorCode, "message", response.message());
     }
     return true;
   }
