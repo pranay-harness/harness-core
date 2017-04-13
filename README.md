@@ -44,7 +44,7 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 3) Import Code Style codeStyle/intellij-java-google-style.xml (Preferences->Editor->CodeStyle)
 
 ### Run from IntelliJ
-1) Run API Server : Run 'WingsApplication' class (found at wings/rest/target/classes/software/wings/app/WingsApplication.class) with the following configurations.
+1) Run API Server : Make sure your mongodb is running first. Run 'WingsApplication' class (found at wings/rest/target/classes/software/wings/app/WingsApplication.class) with the following configurations.
     * Environment Variable: 
     
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
@@ -58,8 +58,9 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     
         `$MODULE_DIR$`
     * Ensure [IntelliJ -> Project Structure -> Project SDK] "java version" is 1.8.0_121.
-    * Ensure [IntelliJ -> Preferences -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
-2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.
+    * Ensure [IntelliJ -> Preferences -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.  
+
+2) Run/Debug API Server : Run 'DelegateApplication' class  with the following configurations.  
     * Environment Variable: 
     
         `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home`
@@ -79,3 +80,6 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 2) To apply database migrations run following command in dbmigrations folder:
 
     ```mvn clean compile exec:java```
+
+### Common problems:
+* If you get an error about missing build.properties when you start the server, do a mvn clean install.  
