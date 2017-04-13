@@ -406,6 +406,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public List<String> listClassicLoadBalancers(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listClassicLoadBalancers(computeProviderSetting, region);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
   public Map<String, String> listTargetGroups(
       String appId, String deploymentType, String computeProviderId, String loadBalancerName) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
