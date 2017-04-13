@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 /**
  * Created by brett on 3/1/17
  */
-public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
+public class KubernetesReplicationControllerDeploy extends ContainerServiceDeploy {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")

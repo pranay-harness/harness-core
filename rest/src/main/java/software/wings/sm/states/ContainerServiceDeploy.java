@@ -71,8 +71,8 @@ import javax.annotation.Nullable;
 /**
  * Created by brett on 4/7/17
  */
-public abstract class CloudServiceDeploy extends State {
-  private static final Logger logger = LoggerFactory.getLogger(CloudServiceDeploy.class);
+public abstract class ContainerServiceDeploy extends State {
+  private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
   @Attributes(title = "Number of instances") protected int instanceCount;
 
@@ -88,7 +88,7 @@ public abstract class CloudServiceDeploy extends State {
 
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
 
-  public CloudServiceDeploy(String name, String type) {
+  public ContainerServiceDeploy(String name, String type) {
     super(name, type);
   }
 
