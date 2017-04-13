@@ -558,7 +558,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .hasFieldOrProperty("preDeploymentSteps")
         .hasFieldOrProperty("postDeploymentSteps")
         .hasFieldOrProperty("graph")
-        .hasFieldOrPropertyWithValue("valid", false)
         .hasFieldOrPropertyWithValue(
             "validationMessage", String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, "[Phase 1]"));
     assertThat(orchestrationWorkflow.getWorkflowPhases().get(0))
