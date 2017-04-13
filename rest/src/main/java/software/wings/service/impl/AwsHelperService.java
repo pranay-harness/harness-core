@@ -5,7 +5,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
@@ -94,6 +96,16 @@ public class AwsHelperService {
   public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, String secretKey) {
     return new AmazonElasticLoadBalancingClient(new BasicAWSCredentials(accessKey, secretKey));
   }
+
+  public com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient getClassicElbClient(
+      Regions region, String accessKey, String secretKey) {
+    return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient)
+        com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder.standard()
+            .withRegion(region)
+            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+            .build();
+  }
+
   public String getHostnameFromDnsName(String dnsName) {
     return (!isNullOrEmpty(dnsName) && dnsName.endsWith(".ec2.internal"))
         ? dnsName.substring(0, dnsName.length() - ".ec2.internal".length())

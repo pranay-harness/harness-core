@@ -48,6 +48,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("delegateMetadataUrl") private String delegateMetadataUrl;
   @JsonProperty("awsEcsAMIByRegion") private Map<String, String> awsEcsAMIByRegion;
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
+  @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
 
   /**
    * Instantiates a new Main configuration.
@@ -256,6 +257,14 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setAwsInstanceTypes(List<String> awsInstanceTypes) {
     this.awsInstanceTypes = awsInstanceTypes;
+  }
+
+  public Map<String, String> getAwsRegionIdToName() {
+    return awsRegionIdToName;
+  }
+
+  public void setAwsRegionIdToName(Map<String, String> awsRegionIdToName) {
+    this.awsRegionIdToName = awsRegionIdToName;
   }
 
   /**

@@ -115,8 +115,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         SettingVariableTypes.PHYSICAL_DATA_CENTER.name().equals(infraMapping.getComputeProviderType())
         ? "Data Center"
         : infraMapping.getComputeProviderType();
-    infraMapping.setDisplayName(String.format("%s (Cloud provider: %s, Deployment type: %s)",
-        computeProviderSetting.getName(), computeProviderType, infraMapping.getDeploymentType()));
+    String details =
+        String.format("Cloud provider: %s, Deployment type: %s", computeProviderType, infraMapping.getDeploymentType());
+
+    String clusterName = null;
+    if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
+      clusterName = ((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName();
+    } else if (infraMapping instanceof EcsInfrastructureMapping) {
+      clusterName = ((EcsInfrastructureMapping) infraMapping).getClusterName();
+    }
+
+    if (clusterName != null) {
+      details += String.format(", Cluster name: %s", clusterName);
+    }
+
+    infraMapping.setDisplayName(String.format("%s (%s)", computeProviderSetting.getName(), details));
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
@@ -388,6 +401,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listLoadBalancers(computeProviderSetting);
+    }
+    return Collections.emptyList();
+  }
+
+  @Override
+  public List<String> listClassicLoadBalancers(String appId, String computeProviderId, String region) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    Validator.notNullCheck("ComputeProvider", computeProviderSetting);
+
+    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
+      AwsInfrastructureProvider infrastructureProvider =
+          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+      return infrastructureProvider.listClassicLoadBalancers(computeProviderSetting, region);
     }
     return Collections.emptyList();
   }
