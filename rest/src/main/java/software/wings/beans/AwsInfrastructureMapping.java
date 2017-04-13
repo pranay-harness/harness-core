@@ -1,15 +1,19 @@
 package software.wings.beans;
 
+import static java.util.stream.Collectors.toMap;
+
+import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.sm.states.LoadBalancerDataProvider;
+import software.wings.app.MainConfiguration;
 import software.wings.stencils.DataProvider;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -21,9 +25,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @SchemaIgnore
   private String restrictionType;
   @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
-  @EnumData(enumDataProvider = LoadBalancerDataProvider.class)
-  @Attributes(title = "Load Balancer")
-  private String loadBalancerId;
+
+  @Attributes(title = "Region")
+  @DefaultValue("us-east-1")
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  private String region;
+
+  @Attributes(title = "Load Balancer") private String loadBalancerId;
 
   /**
    * Instantiates a new Aws infrastructure mapping.
@@ -76,15 +84,19 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.loadBalancerId = loadBalancerId;
   }
 
-  /**
-   * The type Aws infrastructure restriction provider.
-   */
-  public static class AwsInfrastructureRestrictionProvider implements DataProvider {
-    @Override
-    public Map<String, String> getData(String appId, String... params) {
-      return Arrays.stream(RestrictionType.values())
-          .collect(Collectors.toMap(RestrictionType::name, RestrictionType::getDisplayName));
-    }
+  @Attributes(title = "Connection Type")
+  @Override
+  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
+  public String getHostConnectionAttrs() {
+    return super.getHostConnectionAttrs();
+  }
+
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
   }
 
   /**
@@ -102,11 +114,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
                                         */
     CUSTOM("By zone/tags etc");
 
+    private String displayName;
+
     RestrictionType(String displayName) {
       this.displayName = displayName;
     }
-
-    private String displayName;
 
     /**
      * Gets display name.
@@ -127,11 +139,25 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
-  @Attributes(title = "Connection Type")
-  @Override
-  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
-  public String getHostConnectionAttrs() {
-    return super.getHostConnectionAttrs();
+  /**
+   * The type Aws infrastructure restriction provider.
+   */
+  public static class AwsInfrastructureRestrictionProvider implements DataProvider {
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return Arrays.stream(RestrictionType.values())
+          .collect(toMap(RestrictionType::name, RestrictionType::getDisplayName));
+    }
+  }
+
+  public static class AwsRegionDataProvider implements DataProvider {
+    @Inject private MainConfiguration mainConfiguration;
+
+    @Override
+    public Map<String, String> getData(String appId, String... params) {
+      return Arrays.stream(Regions.values())
+          .collect(toMap(Regions::getName, regions -> mainConfiguration.getAwsRegionIdToName().get(regions.getName())));
+    }
   }
 
   /**

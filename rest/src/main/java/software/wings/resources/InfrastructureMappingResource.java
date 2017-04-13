@@ -212,6 +212,15 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("compute-providers/{computeProviderId}/classic-load-balancers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getClassicLoadBalancers(@QueryParam("appId") String appId,
+      @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listClassicLoadBalancers(appId, region, computeProviderId));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/load-balancer/{loadbalancerName}/target-groups")
   @Timed
   @ExceptionMetered
