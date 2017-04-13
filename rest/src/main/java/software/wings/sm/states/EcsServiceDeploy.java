@@ -4,10 +4,8 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
-import software.wings.exception.WingsException;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
@@ -32,16 +30,16 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
   }
 
   @Override
-  protected int getServiceDesiredCount(SettingAttribute settingAttribute, String clusterName, String serviceName) {
+  protected Optional<Integer> getServiceDesiredCount(
+      SettingAttribute settingAttribute, String clusterName, String serviceName) {
     List<com.amazonaws.services.ecs.model.Service> services =
         awsClusterService.getServices(settingAttribute, clusterName);
     Optional<com.amazonaws.services.ecs.model.Service> ecsService =
         services.stream().filter(svc -> svc.getServiceName().equals(serviceName)).findFirst();
-    if (!ecsService.isPresent()) {
-      throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + serviceName);
+    if (ecsService.isPresent()) {
+      return Optional.of(ecsService.get().getDesiredCount());
     }
-    return ecsService.get().getDesiredCount();
+    return Optional.empty();
   }
 
   @Override

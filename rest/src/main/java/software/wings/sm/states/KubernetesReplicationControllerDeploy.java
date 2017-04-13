@@ -5,16 +5,16 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.WingsException;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+
+import java.util.Optional;
 
 /**
  * Created by brett on 3/1/17
@@ -34,15 +34,15 @@ public class KubernetesReplicationControllerDeploy extends CloudServiceDeploy {
   }
 
   @Override
-  protected int getServiceDesiredCount(SettingAttribute settingAttribute, String clusterName, String serviceName) {
+  protected Optional<Integer> getServiceDesiredCount(
+      SettingAttribute settingAttribute, String clusterName, String serviceName) {
     KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
     ReplicationController replicationController =
         kubernetesContainerService.getController(kubernetesConfig, serviceName);
-    if (replicationController == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-          "Kubernetes replication controller setup not done, controllerName: " + serviceName);
+    if (replicationController != null) {
+      return Optional.of(replicationController.getSpec().getReplicas());
     }
-    return replicationController.getSpec().getReplicas();
+    return Optional.empty();
   }
 
   @Override

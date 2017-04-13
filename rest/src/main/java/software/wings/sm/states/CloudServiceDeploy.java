@@ -28,6 +28,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -41,6 +42,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -145,9 +147,14 @@ public abstract class CloudServiceDeploy extends State {
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
       desiredCount = containerUpgradeRequestElement.getNewServiceInstanceCount();
     } else {
-      int previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, serviceName);
-      executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount);
-      desiredCount = previousDesiredCount + instanceCount;
+      Optional<Integer> previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, serviceName);
+      if (previousDesiredCount.isPresent()) {
+        executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount.get());
+        desiredCount = previousDesiredCount.get() + instanceCount;
+      } else {
+        throw new WingsException(
+            ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + serviceName);
+      }
     }
 
     if (desiredCount > 0) {
@@ -213,22 +220,25 @@ public abstract class CloudServiceDeploy extends State {
     String clusterName = serviceElement.getClusterName();
     String oldServiceName = serviceElement.getOldName();
 
-    if (oldServiceName == null) {
-      logger.info("Old service does not exist.. nothing to do", oldServiceName);
-      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
-    }
-
     commandStateExecutionData.setOldContainerServiceName(oldServiceName);
 
-    int desiredCount;
+    int desiredCount = -1;
+
     if (isRollback()) {
       ContainerUpgradeRequestElement containerUpgradeRequestElement =
           context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
       desiredCount = containerUpgradeRequestElement.getOldServiceInstanceCount();
     } else {
-      int previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, oldServiceName);
-      commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount);
-      desiredCount = Math.max(previousDesiredCount - instanceCount, 0);
+      Optional<Integer> previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, oldServiceName);
+      if (previousDesiredCount.isPresent()) {
+        commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount.get());
+        desiredCount = Math.max(previousDesiredCount.get() - instanceCount, 0);
+      }
+    }
+
+    if (oldServiceName == null || desiredCount < 0) {
+      logger.info("Old service [{}] does not exist.. nothing to do", oldServiceName);
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
 
     logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
@@ -360,7 +370,7 @@ public abstract class CloudServiceDeploy extends State {
   }
 
   public abstract String getCommandName();
-  protected abstract int getServiceDesiredCount(
+  protected abstract Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String clusterName, String serviceName);
 
   private ContainerServiceElement getContainerServiceElement(ExecutionContext context) {

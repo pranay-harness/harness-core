@@ -206,9 +206,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message"))
-          .asString()
-          .contains("ECS Service setup not done, ecsServiceName");
+      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, serviceName:");
     }
   }
 
@@ -251,17 +249,18 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     verify(delegateService).queueTask(any(DelegateTask.class));
   }
 
-  //  @Test
-  //  public void shouldExecuteAsyncWithOldServiceWithNoInstance() {
-  //
-  //    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-  //    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-  //    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(),
-  //    aCommandStateExecutionData().build()); ExecutionContextImpl context = new
-  //    ExecutionContextImpl(stateExecutionInstance);
-  //
-  //    ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
-  //    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async",
-  //    false).hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
-  //  }
+  @Test
+  public void shouldExecuteAsyncWithOldServiceWithNoInstance() {
+    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
+    stateExecutionInstance.getStateExecutionMap().put(
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+
+    ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
+    assertThat(response)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("async", false)
+        .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
+  }
 }
