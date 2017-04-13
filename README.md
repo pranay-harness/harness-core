@@ -74,6 +74,9 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     
         `$MODULE_DIR$`
 
+### Before you can use the client:
+1) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles. The admin username and password are in DataGenUtil.
+
 ### Note:
 1) To build UI Go to wings-ui and follow READ me instructions.
 
