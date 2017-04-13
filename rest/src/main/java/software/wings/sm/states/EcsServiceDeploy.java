@@ -4,14 +4,11 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -23,8 +20,6 @@ import java.util.Optional;
  * Created by rishi on 2/8/17.
  */
 public class EcsServiceDeploy extends CloudServiceDeploy {
-  private static final Logger logger = LoggerFactory.getLogger(EcsServiceDeploy.class);
-
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Service Cluster")
@@ -37,36 +32,16 @@ public class EcsServiceDeploy extends CloudServiceDeploy {
   }
 
   @Override
-  protected int getServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute) {
-    String ecsServiceName = getServiceName(context);
+  protected int getServiceDesiredCount(SettingAttribute settingAttribute, String clusterName, String serviceName) {
     List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(settingAttribute, getClusterName(context));
+        awsClusterService.getServices(settingAttribute, clusterName);
     Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-        services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
+        services.stream().filter(svc -> svc.getServiceName().equals(serviceName)).findFirst();
     if (!ecsService.isPresent()) {
       throw new WingsException(
-          ErrorCode.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + ecsServiceName);
+          ErrorCode.INVALID_REQUEST, "message", "ECS Service setup not done, ecsServiceName: " + serviceName);
     }
-    int desiredCount = ecsService.get().getDesiredCount() + getNewInstanceCount(context);
-    logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
-    return desiredCount;
-  }
-
-  @Override
-  protected int getOldServiceDesiredCount(ExecutionContext context, SettingAttribute settingAttribute) {
-    String ecsServiceName = getOldServiceName(context);
-    List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(settingAttribute, getClusterName(context));
-    Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-        services.stream().filter(svc -> svc.getServiceName().equals(ecsServiceName)).findFirst();
-    if (!ecsService.isPresent()) {
-      logger.info("Old ECS Service {} does not exist.. nothing to do", ecsServiceName);
-      return -1;
-    }
-
-    int desiredCount = Math.max(ecsService.get().getDesiredCount() - getOldInstanceCount(context), 0);
-    logger.info("Desired count for service {} is {}", ecsServiceName, desiredCount);
-    return desiredCount;
+    return ecsService.get().getDesiredCount();
   }
 
   @Override
