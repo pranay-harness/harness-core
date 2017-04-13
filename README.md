@@ -83,3 +83,4 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 
 ### Common problems:
 * If you get an error about missing build.properties when you start the server, do a mvn clean install.  
+* If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.  
