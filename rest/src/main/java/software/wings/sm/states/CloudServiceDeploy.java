@@ -28,7 +28,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -42,7 +41,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -141,14 +139,19 @@ public abstract class CloudServiceDeploy extends State {
     Activity activity = activityService.save(activityBuilder.build());
     executionDataBuilder.withActivityId(activity.getUuid()).withNewContainerServiceName(serviceName);
 
-    int newInstanceCount = getNewInstanceCount(context);
-
-    if (newInstanceCount > 0) {
+    int desiredCount;
+    if (isRollback()) {
+      ContainerUpgradeRequestElement containerUpgradeRequestElement =
+          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
+      desiredCount = containerUpgradeRequestElement.getNewServiceInstanceCount();
+    } else {
       int previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, serviceName);
-      int desiredCount = previousDesiredCount + newInstanceCount;
-      logger.info("Desired count for service {} is {}", serviceName, desiredCount);
-
       executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount);
+      desiredCount = previousDesiredCount + instanceCount;
+    }
+
+    if (desiredCount > 0) {
+      logger.info("Desired count for service {} is {}", serviceName, desiredCount);
 
       CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(
           app, env.getUuid(), clusterName, serviceName, desiredCount, activity.getUuid(), settingAttribute);
@@ -210,22 +213,24 @@ public abstract class CloudServiceDeploy extends State {
     String clusterName = serviceElement.getClusterName();
     String oldServiceName = serviceElement.getOldName();
 
-    int previousDesiredCount = 0;
-    try {
-      previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, oldServiceName);
-    } catch (WingsException e) {
-      if (e.getResponseMessageList().size() == 1
-          && e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_REQUEST) {
-        // Old service does not exist
-        logger.info("Old service {} does not exist.. nothing to do", oldServiceName);
-        return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
-      }
+    if (oldServiceName == null) {
+      logger.info("Old service does not exist.. nothing to do", oldServiceName);
+      return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
     }
 
     commandStateExecutionData.setOldContainerServiceName(oldServiceName);
-    commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount);
 
-    int desiredCount = Math.max(previousDesiredCount - getOldInstanceCount(context), 0);
+    int desiredCount;
+    if (isRollback()) {
+      ContainerUpgradeRequestElement containerUpgradeRequestElement =
+          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
+      desiredCount = containerUpgradeRequestElement.getOldServiceInstanceCount();
+    } else {
+      int previousDesiredCount = getServiceDesiredCount(settingAttribute, clusterName, oldServiceName);
+      commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount);
+      desiredCount = Math.max(previousDesiredCount - instanceCount, 0);
+    }
+
     logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
 
     Application app = workflowStandardParams.getApp();
@@ -352,26 +357,6 @@ public abstract class CloudServiceDeploy extends State {
 
   public void setInstanceCount(int instanceCount) {
     this.instanceCount = instanceCount;
-  }
-
-  private int getNewInstanceCount(ExecutionContext context) {
-    if (isRollback()) {
-      ContainerUpgradeRequestElement containerUpgradeRequestElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      return containerUpgradeRequestElement.getNewServiceInstanceCount();
-    } else {
-      return instanceCount;
-    }
-  }
-
-  private int getOldInstanceCount(ExecutionContext context) {
-    if (isRollback()) {
-      ContainerUpgradeRequestElement containerUpgradeRequestElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      return containerUpgradeRequestElement.getOldServiceInstanceCount();
-    } else {
-      return instanceCount;
-    }
   }
 
   public abstract String getCommandName();
