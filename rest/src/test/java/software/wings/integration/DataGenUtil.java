@@ -9,20 +9,19 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
-import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.beans.config.NexusConfig.Builder.aNexusConfig;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -35,7 +34,6 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -481,43 +479,6 @@ private String createPort(String appId, String serviceId) {
                                                               .build(),
                                                 APPLICATION_JSON),
           new GenericType<RestResponse<ServiceVariable>>() {});
-
-  return restResponse.getResource().getUuid();
-}
-
-private String createLoadBalancer(String appId, String serviceId, String value) {
-  WebTarget target = client.target(API_BASE + "/service-variables/?appId=" + appId);
-  RestResponse<ServiceVariable> restResponse =
-      getRequestWithAuthHeader(target).post(Entity.entity(aServiceVariable()
-                                                              .withName("PORT")
-                                                              .withType(Type.LB)
-                                                              .withEntityId(serviceId)
-                                                              .withEntityType(EntityType.SERVICE)
-                                                              .withValue(value)
-                                                              .build(),
-                                                APPLICATION_JSON),
-          new GenericType<RestResponse<ServiceVariable>>() {});
-
-  return restResponse.getResource().getUuid();
-}
-
-private String createLoadBalancerConfig(String appId, String envId, String lbName) {
-  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId + "&accountId=" + accountId);
-  RestResponse<SettingAttribute> restResponse = getRequestWithAuthHeader(target).post(
-      Entity.entity(aSettingAttribute()
-                        .withAppId(appId)
-                        .withAccountId(accountId)
-                        .withEnvId(envId)
-                        .withName("Elastic Load Balancer")
-                        .withValue(anElasticLoadBalancerConfig()
-                                       .withRegion(Regions.US_EAST_1)
-                                       .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
-                                       .withSecretKey("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")
-                                       .withLoadBalancerName(lbName)
-                                       .build())
-                        .build(),
-          APPLICATION_JSON),
-      new GenericType<RestResponse<SettingAttribute>>() {});
 
   return restResponse.getResource().getUuid();
 }
