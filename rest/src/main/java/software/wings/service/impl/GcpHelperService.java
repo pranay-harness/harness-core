@@ -24,7 +24,7 @@ public class GcpHelperService {
   public static final String ALL_ZONES = "-";
 
   private static final int SLEEP_INTERVAL_SECS = 5;
-  private static final int TIMEOUT_MINS = 10;
+  private static final int TIMEOUT_MINS = 30;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 

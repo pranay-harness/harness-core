@@ -14,6 +14,7 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
   private String clusterName;
   private String zone;
   private int nodeCount;
+  private String machineType;
 
   public String getClusterName() {
     return clusterName;
@@ -39,6 +40,14 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
     this.nodeCount = nodeCount;
   }
 
+  public String getMachineType() {
+    return machineType;
+  }
+
+  public void setMachineType(String machineType) {
+    this.machineType = machineType;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
@@ -47,6 +56,8 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
     putNotNull(executionDetails, "zone", anExecutionDataValue().withValue(zone).withDisplayName("Zone").build());
     putNotNull(executionDetails, "nodeCount",
         anExecutionDataValue().withValue(nodeCount).withDisplayName("Node Count").build());
+    putNotNull(executionDetails, "machineType",
+        anExecutionDataValue().withValue(machineType).withDisplayName("Machine Type").build());
     return executionDetails;
   }
 
@@ -58,6 +69,8 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
     putNotNull(executionDetails, "zone", anExecutionDataValue().withValue(zone).withDisplayName("Zone").build());
     putNotNull(executionDetails, "nodeCount",
         anExecutionDataValue().withValue(nodeCount).withDisplayName("Node Count").build());
+    putNotNull(executionDetails, "machineType",
+        anExecutionDataValue().withValue(machineType).withDisplayName("Machine Type").build());
     return executionDetails;
   }
 
@@ -65,6 +78,7 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
     private String clusterName;
     private String zone;
     private int nodeCount;
+    private String machineType;
 
     private GcpClusterExecutionDataBuilder() {}
 
@@ -87,8 +101,17 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
       return this;
     }
 
+    public GcpClusterExecutionDataBuilder withMachineType(String machineType) {
+      this.machineType = machineType;
+      return this;
+    }
+
     public GcpClusterExecutionDataBuilder but() {
-      return aGcpClusterExecutionData().withClusterName(clusterName).withZone(zone).withNodeCount(nodeCount);
+      return aGcpClusterExecutionData()
+          .withClusterName(clusterName)
+          .withZone(zone)
+          .withNodeCount(nodeCount)
+          .withMachineType(machineType);
     }
 
     public GcpClusterExecutionData build() {
@@ -96,6 +119,7 @@ public class GcpClusterExecutionData extends StateExecutionData implements Notif
       gcpClusterExecutionData.setClusterName(clusterName);
       gcpClusterExecutionData.setZone(zone);
       gcpClusterExecutionData.setNodeCount(nodeCount);
+      gcpClusterExecutionData.setMachineType(machineType);
       return gcpClusterExecutionData;
     }
   }

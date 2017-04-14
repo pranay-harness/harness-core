@@ -873,16 +873,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-      if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        if (((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName().equals("RUNTIME")) {
-          workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                         .addStep(aNode()
-                                                      .withId(getUuid())
-                                                      .withType(StateType.GCP_CLUSTER_SETUP.name())
-                                                      .withName("Cluster Setup")
-                                                      .build())
-                                         .build());
-        }
+      if (infraMapping instanceof GcpKubernetesInfrastructureMapping
+          && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
+        workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                                       .addStep(aNode()
+                                                    .withId(getUuid())
+                                                    .withType(StateType.GCP_CLUSTER_SETUP.name())
+                                                    .withName("Cluster Setup")
+                                                    .build())
+                                       .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()

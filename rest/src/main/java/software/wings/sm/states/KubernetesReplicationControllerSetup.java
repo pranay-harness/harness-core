@@ -29,6 +29,7 @@ import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ClusterElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -113,24 +114,14 @@ public class KubernetesReplicationControllerSetup extends State {
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    KubernetesConfig kubernetesConfig;
-
-    if ("RUNTIME".equals(clusterName)) {
-      // TODO:: Get cluster info from previous step
-      clusterName =
-          "us-west1-a/runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
-      kubernetesConfig = gkeClusterService.createCluster(computeProviderSetting, clusterName,
-          ImmutableMap.<String, String>builder()
-              .put("nodeCount", "2")
-              .put("masterUser", "master")
-              .put("masterPwd", "foo!!bar$$")
-              .build());
-    } else {
-      kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
+    String clusterName = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName();
+    if (Constants.RUNTIME.equals(clusterName)) {
+      clusterName = getClusterElement(context).getName();
     }
+
+    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(computeProviderSetting, clusterName);
 
     String lastReplicationControllerName = lastReplicationController(
         kubernetesConfig, KubernetesConvention.getReplicationControllerNamePrefix(app.getName(), serviceName, env));
@@ -199,6 +190,7 @@ public class KubernetesReplicationControllerSetup extends State {
                                                           .withDeploymentType(DeploymentType.KUBERNETES)
                                                           .withInfraMappingId(phaseElement.getInfraMappingId())
                                                           .build();
+
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .addContextElement(containerServiceElement)
@@ -418,6 +410,17 @@ public class KubernetesReplicationControllerSetup extends State {
     DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
 
     return dockerArtifactStream.getImageName();
+  }
+
+  private ClusterElement getClusterElement(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    List<ClusterElement> clusterElements = context.getContextElementList(ContextElementType.CLUSTER);
+
+    return clusterElements.stream()
+        .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
+        .findFirst()
+        .map(element -> element)
+        .orElse(null);
   }
 
   @Override

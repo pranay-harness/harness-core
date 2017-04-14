@@ -49,7 +49,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -375,26 +374,21 @@ public abstract class ContainerServiceDeploy extends State {
 
   private ContainerServiceElement getContainerServiceElement(ExecutionContext context) {
     if (isRollback()) {
-      ContainerUpgradeRequestElement containerUpgradeRequestElement =
-          context.<ContainerUpgradeRequestElement>getContextElement(
-              ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
-      return containerUpgradeRequestElement.getContainerServiceElement();
+      ContainerUpgradeRequestElement upgradeElement =
+          context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_UPGRADE_REQUEST_PARAM);
+      return upgradeElement.getContainerServiceElement();
     } else {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      List<ContextElement> contextElementList = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
+      List<ContainerServiceElement> containerServiceElements =
+          context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
 
-      Optional<ContextElement> first =
-          contextElementList.stream()
-              .filter(contextElement
-                  -> phaseElement.getDeploymentType().equals(
-                         ((ContainerServiceElement) contextElement).getDeploymentType().name())
-                      && phaseElement.getInfraMappingId().equals(
-                             ((ContainerServiceElement) contextElement).getInfraMappingId()))
-              .findFirst();
-      if (first.isPresent()) {
-        return (ContainerServiceElement) first.get();
-      }
-      return null;
+      return containerServiceElements.stream()
+          .filter(containerServiceElement
+              -> phaseElement.getDeploymentType().equals(containerServiceElement.getDeploymentType().name())
+                  && phaseElement.getInfraMappingId().equals(containerServiceElement.getInfraMappingId()))
+          .findFirst()
+          .map(element -> element)
+          .orElse(null);
     }
   }
 }

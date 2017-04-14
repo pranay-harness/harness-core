@@ -72,7 +72,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       CreateClusterRequest content = new CreateClusterRequest().setCluster(
           new Cluster()
               .setName(clusterName)
-              .setNodeConfig(new NodeConfig().setMachineType("n1-highcpu-4"))
+              .setNodeConfig(new NodeConfig().setMachineType(params.get("machineType")))
               .setInitialNodeCount(Integer.valueOf(params.get("nodeCount")))
               .setMasterAuth(
                   new MasterAuth().setUsername(params.get("masterUser")).setPassword(params.get("masterPwd"))));

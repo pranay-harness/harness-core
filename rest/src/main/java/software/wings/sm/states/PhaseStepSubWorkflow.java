@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.ContainerUpgradeRequestElement.ContainerUpgradeRequestElementBuilder.aContainerUpgradeRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
@@ -20,6 +21,7 @@ import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ClusterElement;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerUpgradeRequestElement;
@@ -264,11 +266,16 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
       executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+    } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
+      ClusterElement clusterElement =
+          (ClusterElement) notifiedElement(response, ClusterElement.class, "Missing ClusterElement");
+      executionResponse.setContextElements(singletonList(clusterElement));
+      executionResponse.setNotifyElements(singletonList(clusterElement));
     } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
       ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
           response, ContainerServiceElement.class, "Missing ContainerServiceElement");
-      executionResponse.setContextElements(asList(containerServiceElement));
-      executionResponse.setNotifyElements(asList(containerServiceElement));
+      executionResponse.setContextElements(singletonList(containerServiceElement));
+      executionResponse.setNotifyElements(singletonList(containerServiceElement));
     } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
       InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
           response, InstanceElementListParam.class, "Missing InstanceListParam Element");
