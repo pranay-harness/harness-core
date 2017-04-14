@@ -17,6 +17,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -104,6 +105,7 @@ public class NotificationServiceTest extends WingsBaseTest {
             .withAppId(APP_ID)
             .withEnvironmentId(ENV_ID)
             .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", APP_NAME))
             .build();
     notificationService.sendNotificationAsync(notification);
     verify(wingsPersistence).saveAndGet(Notification.class, notification);

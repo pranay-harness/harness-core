@@ -27,16 +27,40 @@ public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap = new HashMap<>();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /**
+   * The enum Notification message type.
+   */
   public enum NotificationMessageType {
-    ENTITY_CREATE_NOTIFICATION,
-    ENTITY_DELETE_NOTIFICATION,
-    ARTIFACT_APPROVAL_NOTIFICATION,
-    ARTIFACT_APPROVAL_NOTIFICATION_STATUS,
-    WORKFLOW_SUCCESSFUL_NOTIFICATION,
-    WORKFLOW_PAUSED_NOTIFICATION,
-    WORKFLOW_FAILED_NOTIFICATION,
-    WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION,
-    WORKFLOW_PHASE_PAUSED_NOTIFICATION,
+    /**
+     * Entity create notification notification message type.
+     */
+    ENTITY_CREATE_NOTIFICATION, /**
+                                 * Entity delete notification notification message type.
+                                 */
+    ENTITY_DELETE_NOTIFICATION, /**
+                                 * Artifact approval notification notification message type.
+                                 */
+    ARTIFACT_APPROVAL_NOTIFICATION, /**
+                                     * Artifact approval notification status notification message type.
+                                     */
+    ARTIFACT_APPROVAL_NOTIFICATION_STATUS, /**
+                                            * Workflow successful notification notification message type.
+                                            */
+    WORKFLOW_SUCCESSFUL_NOTIFICATION, /**
+                                       * Workflow paused notification notification message type.
+                                       */
+    WORKFLOW_PAUSED_NOTIFICATION, /**
+                                   * Workflow failed notification notification message type.
+                                   */
+    WORKFLOW_FAILED_NOTIFICATION, /**
+                                   * Workflow phase successful notification notification message type.
+                                   */
+    WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION, /**
+                                             * Workflow phase paused notification notification message type.
+                                             */
+    WORKFLOW_PHASE_PAUSED_NOTIFICATION, /**
+                                         * Workflow phase failed notification notification message type.
+                                         */
     WORKFLOW_PHASE_FAILED_NOTIFICATION
   }
 
@@ -64,6 +88,11 @@ public class NotificationMessageResolver {
     }
   }
 
+  /**
+   * Instantiates a new Notification message resolver.
+   *
+   * @param yamlUtils the yaml utils
+   */
   @Inject
   public NotificationMessageResolver(YamlUtils yamlUtils) {
     try {
@@ -76,63 +105,137 @@ public class NotificationMessageResolver {
     }
   }
 
+  /**
+   * Gets slack template.
+   *
+   * @param templateName the template name
+   * @return the slack template
+   */
   public String getSlackTemplate(String templateName) {
     return templateMap.getOrDefault(templateName, new ChannelTemplate()).getSlack();
   }
 
+  /**
+   * Gets web template.
+   *
+   * @param templateName the template name
+   * @return the web template
+   */
   public String getWebTemplate(String templateName) {
     return templateMap.getOrDefault(templateName, new ChannelTemplate()).getWeb();
   }
 
+  /**
+   * Gets email template.
+   *
+   * @param templateName the template name
+   * @return the email template
+   */
   public EmailTemplate getEmailTemplate(String templateName) {
     return templateMap.getOrDefault(templateName, new ChannelTemplate()).getEmail();
   }
 
+  /**
+   * The type Channel template.
+   */
   public static class ChannelTemplate {
     private String web;
     private String slack;
     private EmailTemplate email;
 
+    /**
+     * Gets web.
+     *
+     * @return the web
+     */
     public String getWeb() {
       return web;
     }
 
+    /**
+     * Sets web.
+     *
+     * @param web the web
+     */
     public void setWeb(String web) {
       this.web = web;
     }
 
+    /**
+     * Gets slack.
+     *
+     * @return the slack
+     */
     public String getSlack() {
       return slack;
     }
 
+    /**
+     * Sets slack.
+     *
+     * @param slack the slack
+     */
     public void setSlack(String slack) {
       this.slack = slack;
     }
 
+    /**
+     * Gets email.
+     *
+     * @return the email
+     */
     public EmailTemplate getEmail() {
       return email;
     }
 
+    /**
+     * Sets email.
+     *
+     * @param email the email
+     */
     public void setEmail(EmailTemplate email) {
       this.email = email;
     }
 
+    /**
+     * The type Email template.
+     */
     public static class EmailTemplate {
       private String subject;
       private String body;
 
+      /**
+       * Gets subject.
+       *
+       * @return the subject
+       */
       public String getSubject() {
         return subject;
       }
 
+      /**
+       * Sets subject.
+       *
+       * @param subject the subject
+       */
       public void setSubject(String subject) {
         this.subject = subject;
       }
 
+      /**
+       * Gets body.
+       *
+       * @return the body
+       */
       public String getBody() {
         return body;
       }
 
+      /**
+       * Sets body.
+       *
+       * @param body the body
+       */
       public void setBody(String body) {
         this.body = body;
       }

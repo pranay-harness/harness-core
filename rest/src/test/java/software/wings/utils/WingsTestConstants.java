@@ -278,12 +278,20 @@ public class WingsTestConstants {
    */
   public static final String PORTAL_URL = "PORTAL_URL";
 
+  /**
+   * The constant VERIFICATION_PATH.
+   */
   public static final String VERIFICATION_PATH = "VERIFICATION_PATH";
 
   /**
    * The constant NOTIFICATION_ID.
    */
   public static final String NOTIFICATION_ID = "NOTIFICATION_ID";
+
+  /**
+   * The constant NOTIFICATION_GROUP_ID.
+   */
+  public static final String NOTIFICATION_GROUP_ID = "NOTIFICATION_GROUP_ID";
   /**
    * The constant ROLE_NAME.
    */
@@ -371,23 +379,53 @@ public class WingsTestConstants {
    */
   public static final String INFRA_MAPPING_ID = "INFRA_MAPPING_ID";
 
+  /**
+   * The constant COMPUTE_PROVIDER_ID.
+   */
   public static final String COMPUTE_PROVIDER_ID = "COMPUTE_PROVIDER_ID";
 
+  /**
+   * The constant STATE_NAME.
+   */
   public static final String STATE_NAME = "STATE_NAME";
 
+  /**
+   * The constant DOCKER_IMAGE.
+   */
   public static final String DOCKER_IMAGE = "DOCKER_IMAGE";
 
+  /**
+   * The constant TASK_FAMILY.
+   */
   public static final String TASK_FAMILY = "TASK_FAMILY";
 
+  /**
+   * The constant TASK_REVISION.
+   */
   public static final Integer TASK_REVISION = 100;
 
+  /**
+   * The constant TASK_DEF_FAMILY.
+   */
   public static final String TASK_DEF_FAMILY = "TASK_DEF_FAMILY";
 
+  /**
+   * The constant TASK_DEF_REVISION.
+   */
   public static final Integer TASK_DEF_REVISION = 1;
 
+  /**
+   * The constant ECS_SERVICE_NAME.
+   */
   public static final String ECS_SERVICE_NAME = "ECS_SERVICE_NAME";
 
+  /**
+   * The constant ECS_SERVICE_OLD_NAME.
+   */
   public static final String ECS_SERVICE_OLD_NAME = "ECS_SERVICE_OLD_NAME";
 
+  /**
+   * The constant PHASE_STEP.
+   */
   public static final String PHASE_STEP = "PHASE_STEP";
 }
