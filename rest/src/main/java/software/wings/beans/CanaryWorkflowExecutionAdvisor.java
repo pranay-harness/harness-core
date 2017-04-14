@@ -17,7 +17,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.states.PhaseSubWorkflow;
-import software.wings.utils.WorkflowNotificationHelper;
+import software.wings.service.impl.WorkflowNotificationHelper;
 
 import java.util.List;
 import java.util.Optional;

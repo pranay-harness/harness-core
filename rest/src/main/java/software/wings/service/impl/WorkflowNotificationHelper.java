@@ -1,4 +1,4 @@
-package software.wings.utils;
+package software.wings.service.impl;
 
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -23,11 +23,9 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.util.ArrayList;
@@ -49,21 +47,21 @@ public class WorkflowNotificationHelper {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
-    List<NotificationRule> notificationRules = getNotificationApplicableToScope(context, ExecutionScope.WORKFLOW);
+    List<NotificationRule> notificationRules =
+        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW);
     if (notificationRules == null || notificationRules.size() == 0) {
       return;
     }
 
-    WorkflowStandardParams stdParam = context.getContextElement(ContextElementType.STANDARD);
-    Environment env = stdParam.getEnv();
-    Application app = stdParam.getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    Application app = ((ExecutionContextImpl) context).getApp();
 
     WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     Map<String, String> placeHolders = new HashMap<>();
     placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolders.put("ENV_NAME", env.getName());
-    placeHolders.put("DATE", getDateString(executionDetails.getEndTs()));
+    placeHolders.put("DATE", getDateString(executionDetails.getStartTs()));
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       String messageTemplate = status.equals(SUCCESS) ? NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION.name()
@@ -97,17 +95,14 @@ public class WorkflowNotificationHelper {
   }
 
   private List<NotificationRule> getNotificationApplicableToScope(
-      ExecutionContext context, ExecutionScope executionScope) {
-    if (context instanceof ExecutionContextImpl) {
-      OrchestrationWorkflow orchestrationWorkflow =
-          ((ExecutionContextImpl) context).getStateMachine().getOrchestrationWorkflow();
-      if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-        List<NotificationRule> notificationRules =
-            ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getNotificationRules();
-        return notificationRules.stream()
-            .filter(notificationRule -> executionScope.equals(notificationRule.getExecutionScope()))
-            .collect(Collectors.toList());
-      }
+      ExecutionContextImpl context, ExecutionScope executionScope) {
+    OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      List<NotificationRule> notificationRules =
+          ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getNotificationRules();
+      return notificationRules.stream()
+          .filter(notificationRule -> executionScope.equals(notificationRule.getExecutionScope()))
+          .collect(Collectors.toList());
     }
     return new ArrayList<>();
   }
@@ -121,16 +116,17 @@ public class WorkflowNotificationHelper {
       ExecutionContext context, ExecutionStatus status, PhaseSubWorkflow phaseSubWorkflow) {
     // TODO:: use phaseSubworkflow to send rollback notifications
 
-    List<NotificationRule> notificationRules = getNotificationApplicableToScope(context, ExecutionScope.WORKFLOW_PHASE);
+    List<NotificationRule> notificationRules =
+        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW_PHASE);
     if (notificationRules == null || notificationRules.size() == 0) {
       return;
     }
 
-    WorkflowStandardParams stdParam = context.getContextElement(ContextElementType.STANDARD);
-    Environment env = stdParam.getEnv();
-    Application app = stdParam.getApp();
+    Environment env = ((ExecutionContextImpl) context).getEnv();
+    Application app = ((ExecutionContextImpl) context).getApp();
+
     WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(context.getAppId(), context.getWorkflowExecutionId());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
 
     Map<String, String> placeHolders = new HashMap<>();
     placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
