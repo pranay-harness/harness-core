@@ -74,6 +74,9 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
     
         `$MODULE_DIR$`
 
+### Before you can use the client:
+1) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles. The admin username and password are in DataGenUtil.
+
 ### Note:
 1) To build UI Go to wings-ui and follow READ me instructions.
 
@@ -83,3 +86,5 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 
 ### Common problems:
 * If you get an error about missing build.properties when you start the server, do a mvn clean install.  
+* If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.  
+* If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
