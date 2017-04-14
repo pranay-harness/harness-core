@@ -40,8 +40,9 @@ public final class ExponentialBackOff {
   }
 
   private static void handleFailure(int attempt, IOException e) throws IOException {
-    if (e.getCause() != null) {
-      throw e;
+    IOException ex = peel(e);
+    if (ex.getCause() != null) {
+      throw ex;
     }
     doWait(attempt);
   }
@@ -52,5 +53,12 @@ public final class ExponentialBackOff {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static IOException peel(IOException t) {
+    while (t.getCause() != null && t.getCause() instanceof IOException) {
+      t = (IOException) t.getCause();
+    }
+    return t;
   }
 }
