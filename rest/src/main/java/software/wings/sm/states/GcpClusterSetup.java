@@ -8,6 +8,8 @@ import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +40,12 @@ import software.wings.utils.KubernetesConvention;
  */
 public class GcpClusterSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(GcpClusterSetup.class);
-  private String zone;
-  private int nodeCount;
-  private String machineType;
+  @Attributes(title = "Zone") private String zone;
+
+  @Attributes(title = "Node Count") private int nodeCount;
+
+  @Attributes(title = "Machine Type") private String machineType;
+
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
@@ -71,7 +76,16 @@ public class GcpClusterSetup extends State {
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    String clusterName = "runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+    if (StringUtils.isEmpty(zone)) {
+      zone = "us-west1-a";
+    }
+    if (nodeCount <= 0) {
+      nodeCount = 2;
+    }
+    if (StringUtils.isEmpty(machineType)) {
+      machineType = "n1-standard-2";
+    }
+    String clusterName = "wings-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
     String zoneCluster = zone + "/" + clusterName;
     gkeClusterService.createCluster(computeProviderSetting, zoneCluster,
         ImmutableMap.<String, String>builder()
