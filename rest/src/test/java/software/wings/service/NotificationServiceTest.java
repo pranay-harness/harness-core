@@ -17,6 +17,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -36,6 +37,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ApprovalNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -80,17 +82,6 @@ public class NotificationServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should save.
-   */
-  @Test
-  public void shouldSave() {
-    InformationNotification notification =
-        anInformationNotification().withAppId(APP_ID).withEnvironmentId(ENV_ID).withDisplayText("TEXT").build();
-    notificationService.save(notification);
-    verify(wingsPersistence).saveAndGet(Notification.class, notification);
-  }
-
-  /**
    * Should get.
    */
   @Test
@@ -110,10 +101,15 @@ public class NotificationServiceTest extends WingsBaseTest {
   @Test
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
-        anInformationNotification().withAppId(APP_ID).withEnvironmentId(ENV_ID).withDisplayText("TEXT").build();
+        anInformationNotification()
+            .withAppId(APP_ID)
+            .withEnvironmentId(ENV_ID)
+            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", APP_NAME))
+            .build();
     notificationService.sendNotificationAsync(notification);
     verify(wingsPersistence).saveAndGet(Notification.class, notification);
-    verify(notificationDispatcherService).dispatchNotification(any());
+    verify(notificationDispatcherService).dispatchNotification(any(), any());
     verifyNoMoreInteractions(wingsPersistence, injector);
   }
 

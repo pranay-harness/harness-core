@@ -14,9 +14,6 @@ import static software.wings.beans.InformationNotification.Builder.anInformation
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +38,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
@@ -134,8 +132,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(savedService.getAppId())
-            .withDisplayText(getDecoratedNotificationMessage(ENTITY_CREATE_NOTIFICATION,
-                ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName())))
+            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(
+                ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
     return savedService;
   }
@@ -232,8 +231,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(service.getAppId())
-                .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
-                    ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName())))
+                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+                .withNotificationTemplateVariables(
+                    ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
                 .build());
         serviceTemplateService.deleteByService(appId, serviceId);
         artifactStreamService.deleteByService(appId, serviceId);

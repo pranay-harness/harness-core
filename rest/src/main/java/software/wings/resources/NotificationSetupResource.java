@@ -4,7 +4,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -80,54 +79,5 @@ public class NotificationSetupResource {
       @QueryParam("appId") String appId, NotificationGroup notificationGroup) {
     notificationGroup.setAppId(appId);
     return new RestResponse<>(notificationSetupService.createNotificationGroup(notificationGroup));
-  }
-
-  /**
-   * List.
-   *
-   * @param appId       the app id
-   * @param pageRequest the page request
-   * @return the rest response
-   */
-  @GET
-  @Path("notification-rules")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<PageResponse<NotificationRule>> listNotificationRules(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<NotificationRule> pageRequest) {
-    return new RestResponse<>(notificationSetupService.listNotificationRules(pageRequest));
-  }
-
-  /**
-   * Get.
-   *
-   * @param appId       the app id
-   * @param notificationRuleId the notificationRuleId
-   * @return the rest response
-   */
-  @GET
-  @Path("notification-rules/{notificationGroupId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<NotificationRule> readNotificationRule(
-      @QueryParam("appId") String appId, @PathParam("notificationGroupId") String notificationRuleId) {
-    return new RestResponse<>(notificationSetupService.readNotificationRule(appId, notificationRuleId));
-  }
-
-  /**
-   * Create.
-   *
-   * @param appId       the app id
-   * @param notificationRule       the notificationRule
-   * @return the rest response
-   */
-  @POST
-  @Path("notification-rules")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<NotificationRule> createNotificationRule(
-      @QueryParam("appId") String appId, NotificationRule notificationRule) {
-    notificationRule.setAppId(appId);
-    return new RestResponse<>(notificationSetupService.createNotificationRule(notificationRule));
   }
 }

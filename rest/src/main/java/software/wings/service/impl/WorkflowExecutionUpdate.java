@@ -22,6 +22,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
+import software.wings.utils.WorkflowNotificationHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private PipelineService pipelineService;
+  @Inject private WorkflowNotificationHelper workflowNotificationHelper;
 
   /**
    * Instantiates a new workflow execution update.
@@ -118,7 +120,11 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                                         .set("endTs", System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
 
-    if (context.getWorkflowType() != null && context.getWorkflowType().equals(WorkflowType.PIPELINE)) {
+    if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
+      workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
+    }
+
+    if (WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
       pipelineService.refreshPipelineExecution(appId, workflowExecutionId);
     }
 

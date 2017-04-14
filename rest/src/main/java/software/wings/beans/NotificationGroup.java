@@ -1,6 +1,10 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +16,8 @@ import javax.validation.constraints.Size;
  * Created by rishi on 10/30/16.
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("name") }, options = @IndexOptions(unique = true)))
 public class NotificationGroup extends Base {
   @NotNull private String name;
 

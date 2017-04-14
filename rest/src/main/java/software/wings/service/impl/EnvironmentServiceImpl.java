@@ -8,7 +8,6 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -18,7 +17,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.common.Constants;
-import software.wings.common.NotificationMessageResolver;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -129,8 +128,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(environment.getAppId())
-            .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
-                ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
+            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(
+                ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
             .build());
     return environment;
   }
@@ -166,8 +166,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(environment.getAppId())
-                .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION,
-                    ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
+                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+                .withNotificationTemplateVariables(
+                    ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
                 .build());
       });
     }
