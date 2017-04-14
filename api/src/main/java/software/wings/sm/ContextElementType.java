@@ -59,5 +59,10 @@ public enum ContextElementType {
   /**
    * Container cluster - ECS/Kubernetes context element type.
    */
-  CONTAINER_SERVICE;
+  CONTAINER_SERVICE,
+
+  /**
+   * Cluster context element type.
+   */
+  CLUSTER,
 }

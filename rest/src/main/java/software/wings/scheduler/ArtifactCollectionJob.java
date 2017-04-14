@@ -80,6 +80,7 @@ public class ArtifactCollectionJob implements Job {
         }
       });
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
+      logger.debug("Collecting Artifact for artifact stream {} ", NEXUS.name());
       BuildDetails latestVersion =
           buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
       if (latestVersion != null) {
@@ -87,7 +88,7 @@ public class ArtifactCollectionJob implements Job {
         String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get("buildNo") != null)
             ? lastCollectedArtifact.getMetadata().get("buildNo")
             : "";
-        if (versionCompare(latestVersion.getNumber(), buildNo) > 0) {
+        if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
           logger.info(
               "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
               buildNo, latestVersion.getNumber(), artifactStreamId);
@@ -99,6 +100,8 @@ public class ArtifactCollectionJob implements Job {
                                   .withRevision(latestVersion.getRevision())
                                   .build();
           artifactService.create(artifact);
+        } else {
+          logger.debug("Artifact of the version {} already collected.", buildNo);
         }
       }
     } else {
@@ -161,6 +164,6 @@ public class ArtifactCollectionJob implements Job {
   }
 
   public static void main(String... args) {
-    System.out.println("Version compare " + versionCompare("3.0", "2.1.2"));
+    System.out.println("Version compare " + versionCompare("3.0", "0.0"));
   }
 }

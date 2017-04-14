@@ -237,4 +237,6 @@ public interface Constants {
    * The constant DEFAULT_PARENT_STATE_TIMEOUT_MILLIS.
    */
   Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
+
+  String RUNTIME = "RUNTIME";
 }

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
@@ -7,9 +8,13 @@ import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ClusterElement;
+import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
@@ -35,8 +40,12 @@ import software.wings.utils.KubernetesConvention;
  */
 public class GcpClusterSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(GcpClusterSetup.class);
-  private String zone;
-  private int nodeCount;
+  @Attributes(title = "Zone") private String zone;
+
+  @Attributes(title = "Node Count") private int nodeCount;
+
+  @Attributes(title = "Machine Type") private String machineType;
+
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
@@ -67,20 +76,42 @@ public class GcpClusterSetup extends State {
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    // TODO:: Collect and/or generate all needed fields
-    String clusterName =
-        "us-west1-a/runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
-    gkeClusterService.createCluster(computeProviderSetting, clusterName,
+    if (StringUtils.isEmpty(zone)) {
+      zone = "us-west1-a";
+    }
+    if (nodeCount <= 0) {
+      nodeCount = 2;
+    }
+    if (StringUtils.isEmpty(machineType)) {
+      machineType = "n1-standard-2";
+    }
+    String clusterName = "wings-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
+    String zoneCluster = zone + "/" + clusterName;
+    gkeClusterService.createCluster(computeProviderSetting, zoneCluster,
         ImmutableMap.<String, String>builder()
             .put("nodeCount", Integer.toString(nodeCount))
-            .put("masterUser", "master")
-            .put("masterPwd", "foo!!bar$$")
+            .put("machineType", machineType)
+            .put("masterUser", "admin")
+            .put("masterPwd", "admin")
             .build());
+
+    ClusterElement clusterElement = aClusterElement()
+                                        .withUuid(serviceId)
+                                        .withName(zoneCluster)
+                                        .withDeploymentType(DeploymentType.KUBERNETES)
+                                        .withInfraMappingId(phaseElement.getInfraMappingId())
+                                        .build();
 
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .withStateExecutionData(
-            aGcpClusterExecutionData().withClusterName(clusterName).withZone(zone).withNodeCount(nodeCount).build())
+        .addContextElement(clusterElement)
+        .addNotifyElement(clusterElement)
+        .withStateExecutionData(aGcpClusterExecutionData()
+                                    .withClusterName(clusterName)
+                                    .withZone(zone)
+                                    .withNodeCount(nodeCount)
+                                    .withMachineType(machineType)
+                                    .build())
         .build();
   }
 
@@ -103,20 +134,29 @@ public class GcpClusterSetup extends State {
     this.nodeCount = nodeCount;
   }
 
+  public String getMachineType() {
+    return machineType;
+  }
+
+  public void setMachineType(String machineType) {
+    this.machineType = machineType;
+  }
+
   public static final class GcpClusterSetupBuilder {
     private String name;
     private String zone;
     private int nodeCount;
+    private String machineType;
 
     private GcpClusterSetupBuilder() {}
+
+    public static GcpClusterSetupBuilder aGcpClusterSetup() {
+      return new GcpClusterSetupBuilder();
+    }
 
     public GcpClusterSetupBuilder withName(String name) {
       this.name = name;
       return this;
-    }
-
-    public static GcpClusterSetupBuilder aGcpClusterSetup() {
-      return new GcpClusterSetupBuilder();
     }
 
     public GcpClusterSetupBuilder withZone(String zone) {
@@ -129,14 +169,20 @@ public class GcpClusterSetup extends State {
       return this;
     }
 
+    public GcpClusterSetupBuilder withMachineType(String machineType) {
+      this.machineType = machineType;
+      return this;
+    }
+
     public GcpClusterSetupBuilder but() {
-      return aGcpClusterSetup().withZone(zone).withNodeCount(nodeCount);
+      return aGcpClusterSetup().withName(name).withZone(zone).withNodeCount(nodeCount).withMachineType(machineType);
     }
 
     public GcpClusterSetup build() {
       GcpClusterSetup gcpClusterSetup = new GcpClusterSetup(name);
       gcpClusterSetup.setZone(zone);
       gcpClusterSetup.setNodeCount(nodeCount);
+      gcpClusterSetup.setMachineType(machineType);
       return gcpClusterSetup;
     }
   }

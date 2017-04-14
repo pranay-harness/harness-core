@@ -96,6 +96,7 @@ public class kube {
     //    KubernetesConfig config = gkeClusterService.createCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER,
     //        ImmutableMap.<String, String>builder()
     //            .put("nodeCount", "1")
+    //            .put("machineType", "n1-highcpu-4")
     //            .put("masterUser", "master")
     //            .put("masterPwd", "foo!!bar$$")
     //            .build());

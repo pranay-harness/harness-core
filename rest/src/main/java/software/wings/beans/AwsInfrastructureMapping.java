@@ -156,6 +156,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     @Override
     public Map<String, String> getData(String appId, String... params) {
       return Arrays.stream(Regions.values())
+          .filter(regions -> regions != Regions.GovCloud)
           .collect(toMap(Regions::getName, regions -> mainConfiguration.getAwsRegionIdToName().get(regions.getName())));
     }
   }
