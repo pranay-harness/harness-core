@@ -117,6 +117,7 @@ public interface Constants {
 
   String DEPLOY_CONTAINERS = "Deploy Containers";
   String SETUP_CONTAINER = "Setup Container";
+  String SETUP_CLUSTER = "Setup Cluster";
 
   String ECS_SERVICE_SETUP = "ECS Service Setup";
   String UPGRADE_CONTAINERS = "Upgrade Containers";

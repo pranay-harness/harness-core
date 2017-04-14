@@ -119,7 +119,7 @@ public class KubernetesReplicationControllerSetup extends State {
     KubernetesConfig kubernetesConfig;
 
     if ("RUNTIME".equals(clusterName)) {
-      // TODO:: Don't hardcode, collect in another step
+      // TODO:: Get cluster info from previous step
       clusterName =
           "us-west1-a/runtime-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
       kubernetesConfig = gkeClusterService.createCluster(computeProviderSetting, clusterName,
@@ -520,12 +520,6 @@ public class KubernetesReplicationControllerSetup extends State {
     private String stateType;
     private boolean rollback;
     private String serviceType;
-    private transient GkeClusterService gkeClusterService;
-    private transient KubernetesContainerService kubernetesContainerService;
-    private transient SettingsService settingsService;
-    private transient ServiceResourceService serviceResourceService;
-    private transient InfrastructureMappingService infrastructureMappingService;
-    private transient ArtifactStreamService artifactStreamService;
 
     private KubernetesReplicationControllerSetupBuilder() {}
 
@@ -564,40 +558,6 @@ public class KubernetesReplicationControllerSetup extends State {
       return this;
     }
 
-    public KubernetesReplicationControllerSetupBuilder withGkeClusterService(GkeClusterService gkeClusterService) {
-      this.gkeClusterService = gkeClusterService;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withKubernetesContainerService(
-        KubernetesContainerService kubernetesContainerService) {
-      this.kubernetesContainerService = kubernetesContainerService;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withSettingsService(SettingsService settingsService) {
-      this.settingsService = settingsService;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withServiceResourceService(
-        ServiceResourceService serviceResourceService) {
-      this.serviceResourceService = serviceResourceService;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withInfrastructureMappingService(
-        InfrastructureMappingService infrastructureMappingService) {
-      this.infrastructureMappingService = infrastructureMappingService;
-      return this;
-    }
-
-    public KubernetesReplicationControllerSetupBuilder withArtifactStreamService(
-        ArtifactStreamService artifactStreamService) {
-      this.artifactStreamService = artifactStreamService;
-      return this;
-    }
-
     public KubernetesReplicationControllerSetupBuilder but() {
       return aKubernetesReplicationControllerSetup()
           .withId(id)
@@ -605,13 +565,7 @@ public class KubernetesReplicationControllerSetup extends State {
           .withRequiredContextElementType(requiredContextElementType)
           .withStateType(stateType)
           .withRollback(rollback)
-          .withServiceType(serviceType)
-          .withGkeClusterService(gkeClusterService)
-          .withKubernetesContainerService(kubernetesContainerService)
-          .withSettingsService(settingsService)
-          .withServiceResourceService(serviceResourceService)
-          .withInfrastructureMappingService(infrastructureMappingService)
-          .withArtifactStreamService(artifactStreamService);
+          .withServiceType(serviceType);
     }
 
     public KubernetesReplicationControllerSetup build() {
@@ -622,12 +576,6 @@ public class KubernetesReplicationControllerSetup extends State {
       kubernetesReplicationControllerSetup.setStateType(stateType);
       kubernetesReplicationControllerSetup.setRollback(rollback);
       kubernetesReplicationControllerSetup.setServiceType(serviceType);
-      kubernetesReplicationControllerSetup.settingsService = this.settingsService;
-      kubernetesReplicationControllerSetup.serviceResourceService = this.serviceResourceService;
-      kubernetesReplicationControllerSetup.infrastructureMappingService = this.infrastructureMappingService;
-      kubernetesReplicationControllerSetup.gkeClusterService = this.gkeClusterService;
-      kubernetesReplicationControllerSetup.kubernetesContainerService = this.kubernetesContainerService;
-      kubernetesReplicationControllerSetup.artifactStreamService = this.artifactStreamService;
       return kubernetesReplicationControllerSetup;
     }
   }

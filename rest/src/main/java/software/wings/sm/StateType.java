@@ -35,6 +35,7 @@ import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
+import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
@@ -179,8 +180,8 @@ public enum StateType implements StateTypeDescriptor {
   ECS_SERVICE_SETUP(
       EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, StencilCategory.COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_DEPLOY(
+      EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
 
   KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
@@ -188,6 +189,9 @@ public enum StateType implements StateTypeDescriptor {
 
   KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      ORCHESTRATION_STENCILS),
+
+  GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
       ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

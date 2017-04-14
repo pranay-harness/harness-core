@@ -40,6 +40,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
@@ -606,7 +607,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       for (String phaseId : orchestrationWorkflow.getWorkflowPhaseIds()) {
         WorkflowPhase existingPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
         if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
-            && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()) {
+            && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
+            && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
           serviceRepeat = true;
           break;
         }
@@ -870,6 +872,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.KUBERNETES);
 
     if (serviceSetupRequired) {
+      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+      if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
+        if (((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName().equals("RUNTIME")) {
+          workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                                         .addStep(aNode()
+                                                      .withId(getUuid())
+                                                      .withType(StateType.GCP_CLUSTER_SETUP.name())
+                                                      .withName("Cluster Setup")
+                                                      .build())
+                                         .build());
+        }
+      }
       workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()
                                                   .withId(getUuid())
@@ -878,6 +892,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                   .build())
                                      .build());
     }
+
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                    .addStep(aNode()
                                                 .withId(getUuid())
