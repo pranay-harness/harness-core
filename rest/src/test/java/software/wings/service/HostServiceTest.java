@@ -37,7 +37,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionCredential;
-import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
@@ -169,7 +168,6 @@ public class HostServiceTest extends WingsBaseTest {
     verify(hostQuery).field(ID_KEY);
     verify(hostQueryEnd).equal(HOST_ID);
     verify(wingsPersistence).delete(host);
-    verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
   /**

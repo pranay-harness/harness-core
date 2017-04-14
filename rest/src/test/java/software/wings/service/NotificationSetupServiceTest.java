@@ -1,9 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
@@ -14,10 +12,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationRule;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SettingAttribute;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -25,7 +20,6 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
-import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -36,14 +30,15 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Mock SettingsService settingsService;
 
-  @Test
-  public void shouldReturnSupportedChannelTypes() {
-    List<SettingAttribute> settingList = Lists.newArrayList(new SettingAttribute());
-    String appId = UUIDGenerator.getUuid();
-    when(settingsService.getSettingAttributesByType(appId, SettingVariableTypes.SMTP.name())).thenReturn(settingList);
-    Map<NotificationChannelType, Object> channelTypes = notificationSetupService.getSupportedChannelTypeDetails(appId);
-    assertThat(channelTypes).isNotNull().hasSize(1).containsKey(NotificationChannelType.EMAIL);
-  }
+  //  @Test
+  //  public void shouldReturnSupportedChannelTypes() {
+  //    List<SettingAttribute> settingList = Lists.newArrayList(new SettingAttribute());
+  //    String appId = UUIDGenerator.getUuid();
+  //    when(settingsService.getSettingAttributesByType(appId,
+  //    SettingVariableTypes.SMTP.name())).thenReturn(settingList); Map<NotificationChannelType, Object> channelTypes =
+  //    notificationSetupService.getSupportedChannelTypeDetails(appId);
+  //    assertThat(channelTypes).isNotNull().hasSize(1).containsKey(NotificationChannelType.EMAIL);
+  //  }
 
   @Test
   public void shouldCreateNotificationGroup() {
@@ -120,70 +115,66 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
     return created;
   }
 
-  @Test
-  public void shouldCreateNotificationRule() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertNotificationRule(appId);
-  }
+  // Move these under workflow service
 
-  @Test
-  public void shouldListNotificationRule() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertNotificationRule(appId);
-    createAndAssertNotificationRule(appId);
-    createAndAssertNotificationRule(appId);
-    createAndAssertNotificationRule(UUIDGenerator.getUuid());
+  //
+  //  @Test
+  //  public void shouldCreateNotificationRule() {
+  //    String appId = UUIDGenerator.getUuid();
+  //    createAndAssertNotificationRule(appId);
+  //  }
 
-    PageRequest<NotificationRule> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
-    PageResponse<NotificationRule> pageResponse = notificationSetupService.listNotificationRules(pageRequest);
-    assertThat(pageResponse)
-        .isNotNull()
-        .hasSize(3)
-        .doesNotContainNull()
-        .extracting("appId")
-        .containsExactly(appId, appId, appId);
-  }
-
-  @Test
-  public void shouldListNotificationRuleByAppId() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertNotificationRule(appId);
-    createAndAssertNotificationRule(appId);
-    createAndAssertNotificationRule(appId);
-    createAndAssertNotificationRule(UUIDGenerator.getUuid());
-
-    List<NotificationRule> res = notificationSetupService.listNotificationRules(appId);
-    assertThat(res).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(
-        appId, appId, appId);
-  }
-
-  @Test
-  public void shouldReadNotificationRule() {
-    String appId = UUIDGenerator.getUuid();
-    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
-    NotificationRule notificationRule2 =
-        notificationSetupService.readNotificationRule(notificationRule.getAppId(), notificationRule.getUuid());
-    assertThat(notificationRule2).isNotNull().isEqualToIgnoringGivenFields(notificationRule);
-  }
-
-  @Test
-  public void shouldDeleteNotificationRule() {
-    String appId = UUIDGenerator.getUuid();
-    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
-    boolean deleted =
-        notificationSetupService.deleteNotificationRule(notificationRule.getAppId(), notificationRule.getUuid());
-    assertThat(deleted).isTrue();
-  }
-
-  private NotificationRule createAndAssertNotificationRule(String appId) {
-    NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
-    NotificationRule notificationRule =
-        aNotificationRule().withAppId(appId).addNotificationGroup(notificationGroup).build();
-    NotificationRule created = notificationSetupService.createNotificationRule(notificationRule);
-    assertThat(created)
-        .isNotNull()
-        .isEqualToComparingOnlyGivenFields(notificationRule, "appId", "notificationGroups")
-        .hasFieldOrPropertyWithValue("active", true);
-    return created;
-  }
+  //  @Test
+  //  public void shouldListNotificationRule() {
+  //    String appId = UUIDGenerator.getUuid();
+  //    createAndAssertNotificationRule(appId);
+  //    createAndAssertNotificationRule(appId);
+  //    createAndAssertNotificationRule(appId);
+  //    createAndAssertNotificationRule(UUIDGenerator.getUuid());
+  //
+  //    PageRequest<NotificationRule> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
+  //    PageResponse<NotificationRule> pageResponse = notificationSetupService.listNotificationRules(pageRequest);
+  //    assertThat(pageResponse).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(appId,
+  //    appId, appId);
+  //  }
+  //
+  //  @Test
+  //  public void shouldListNotificationRuleByAppId() {
+  //    String appId = UUIDGenerator.getUuid();
+  //    createAndAssertNotificationRule(appId);
+  //    createAndAssertNotificationRule(appId);
+  //    createAndAssertNotificationRule(appId);
+  //    createAndAssertNotificationRule(UUIDGenerator.getUuid());
+  //
+  //    List<NotificationRule> res = notificationSetupService.listNotificationRules(appId);
+  //    assertThat(res).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(appId, appId,
+  //    appId);
+  //  }
+  //
+  //  @Test
+  //  public void shouldReadNotificationRule() {
+  //    String appId = UUIDGenerator.getUuid();
+  //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
+  //    NotificationRule notificationRule2 = notificationSetupService.readNotificationRule(notificationRule.getAppId(),
+  //    notificationRule.getUuid());
+  //    assertThat(notificationRule2).isNotNull().isEqualToIgnoringGivenFields(notificationRule);
+  //  }
+  //
+  //  @Test
+  //  public void shouldDeleteNotificationRule() {
+  //    String appId = UUIDGenerator.getUuid();
+  //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
+  //    boolean deleted = notificationSetupService.deleteNotificationRule(notificationRule.getAppId(),
+  //    notificationRule.getUuid()); assertThat(deleted).isTrue();
+  //  }
+  //
+  //  private NotificationRule createAndAssertNotificationRule(String appId) {
+  //
+  //    NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
+  //    NotificationRule notificationRule =
+  //    aNotificationRule().withAppId(appId).addNotificationGroup(notificationGroup).build(); NotificationRule created =
+  //    notificationSetupService.createNotificationRule(notificationRule);
+  //    assertThat(created).isNotNull().isEqualToComparingOnlyGivenFields(notificationRule, "appId",
+  //    "notificationGroups").hasFieldOrPropertyWithValue("active", true); return created;
+  //  }
 }

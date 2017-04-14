@@ -2,6 +2,9 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by anubhaw on 7/27/16.
  */
@@ -34,6 +37,9 @@ public class InformationNotification extends Notification {
     this.displayText = displayText;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String displayText;
     private String environmentId;
@@ -41,6 +47,8 @@ public class InformationNotification extends Notification {
     private EntityType entityType;
     private String accountId;
     private boolean complete = true;
+    private String notificationTemplateId;
+    private Map<String, String> notificationTemplateVariables = new HashMap<>();
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -84,6 +92,16 @@ public class InformationNotification extends Notification {
       return this;
     }
 
+    public Builder withNotificationTemplateId(String notificationTemplateId) {
+      this.notificationTemplateId = notificationTemplateId;
+      return this;
+    }
+
+    public Builder withNotificationTemplateVariables(Map<String, String> notificationTemplateVariables) {
+      this.notificationTemplateVariables = notificationTemplateVariables;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
@@ -122,6 +140,8 @@ public class InformationNotification extends Notification {
           .withEntityType(entityType)
           .withAccountId(accountId)
           .withComplete(complete)
+          .withNotificationTemplateId(notificationTemplateId)
+          .withNotificationTemplateVariables(notificationTemplateVariables)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -138,6 +158,8 @@ public class InformationNotification extends Notification {
       informationNotification.setEntityType(entityType);
       informationNotification.setAccountId(accountId);
       informationNotification.setComplete(complete);
+      informationNotification.setNotificationTemplateId(notificationTemplateId);
+      informationNotification.setNotificationTemplateVariables(notificationTemplateVariables);
       informationNotification.setUuid(uuid);
       informationNotification.setAppId(appId);
       informationNotification.setCreatedBy(createdBy);

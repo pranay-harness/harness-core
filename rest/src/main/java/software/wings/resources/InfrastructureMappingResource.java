@@ -217,7 +217,7 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<List<String>> getClassicLoadBalancers(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listClassicLoadBalancers(appId, region, computeProviderId));
+    return new RestResponse<>(infrastructureMappingService.listClassicLoadBalancers(appId, computeProviderId, region));
   }
 
   @GET

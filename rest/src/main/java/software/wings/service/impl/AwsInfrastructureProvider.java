@@ -410,7 +410,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         awsHelperService.getClassicElbClient(
-            Regions.valueOf(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+            Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     return amazonElasticLoadBalancingClient
         .describeLoadBalancers(

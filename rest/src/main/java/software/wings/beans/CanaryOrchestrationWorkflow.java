@@ -7,6 +7,7 @@ import static software.wings.common.UUIDGenerator.getUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
 
-  private List<NotificationRule> notificationRules = new ArrayList<>();
+  @Embedded private List<NotificationRule> notificationRules = new ArrayList<>();
 
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
 

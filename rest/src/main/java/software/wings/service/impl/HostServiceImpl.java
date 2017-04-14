@@ -1,9 +1,6 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
@@ -167,12 +164,10 @@ public class HostServiceImpl implements HostService {
     Host applicationHost = get(appId, envId, hostId);
     if (delete(applicationHost)) {
       Environment environment = environmentService.get(applicationHost.getAppId(), applicationHost.getEnvId(), false);
-      notificationService.sendNotificationAsync(
-          anInformationNotification()
-              .withAppId(applicationHost.getAppId())
-              .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
-                  ImmutableMap.of("HOST_NAME", applicationHost.getHostName(), "ENV_NAME", environment.getName())))
-              .build());
+      //      notificationService.sendNotificationAsync(
+      //          anInformationNotification().withAppId(applicationHost.getAppId()).withNotificationTemplateId(HOST_DELETE_NOTIFICATION)
+      //              .withNotificationTemplateVariables(ImmutableMap.of("HOST_NAME", applicationHost.getHostName(),
+      //              "ENV_NAME", environment.getName())).build());
     }
   }
 
