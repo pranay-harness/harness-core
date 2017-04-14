@@ -292,6 +292,17 @@ public class WingsTestConstants {
    * The constant NOTIFICATION_GROUP_ID.
    */
   public static final String NOTIFICATION_GROUP_ID = "NOTIFICATION_GROUP_ID";
+
+  /**
+   * The constant NOTIFICATION_RULE_ID.
+   */
+  public static final String NOTIFICATION_RULE_ID = "NOTIFICATION_RULE_ID";
+
+  /**
+   * The constant NOTIFICATION_BATCH_ID.
+   */
+  public static final String NOTIFICATION_BATCH_ID = "NOTIFICATION_BATCH_ID";
+
   /**
    * The constant ROLE_NAME.
    */

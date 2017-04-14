@@ -1,17 +1,22 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
+import static software.wings.beans.ExecutionScope.WORKFLOW;
+import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationBatch;
 import software.wings.beans.NotificationChannelType;
@@ -21,6 +26,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
@@ -31,7 +37,6 @@ import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -42,14 +47,17 @@ import javax.inject.Inject;
  */
 @Singleton
 public class NotificationDispatcherServiceImpl implements NotificationDispatcherService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailNotificationService<EmailData> emailNotificationService;
   @Inject private SlackNotificationService slackNotificationService;
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private WingsPersistence wingsPersistence;
+
+  private static final ImmutableMap<ExecutionScope, List<NotificationMessageType>> BATCH_END_TEMPLATES =
+      ImmutableMap.of(WORKFLOW, asList(WORKFLOW_FAILED_NOTIFICATION, WORKFLOW_SUCCESSFUL_NOTIFICATION), WORKFLOW_PHASE,
+          asList(WORKFLOW_PHASE_FAILED_NOTIFICATION, WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION));
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public void dispatchNotification(Notification notification, List<NotificationRule> notificationRules) {
@@ -60,13 +68,13 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       if (notificationRule.isBatchNotifications()) {
         batchDispatch(notification, notificationRule);
       } else {
-        dispatch(Arrays.asList(notification), notificationRule.getNotificationGroups());
+        dispatch(asList(notification), notificationRule.getNotificationGroups());
       }
     }
   }
 
   private void batchDispatch(Notification notification, NotificationRule notificationRule) {
-    String batchId = notificationRule.getUuid() + notification.getEntityId();
+    String batchId = String.join("-", notificationRule.getUuid(), notification.getEntityId());
 
     Query<NotificationBatch> query = wingsPersistence.createQuery(NotificationBatch.class)
                                          .field("appId")
@@ -81,18 +89,16 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
     NotificationBatch notificationBatch = wingsPersistence.upsert(query, updateOperations);
 
-    if (isLastNotificationInBatch(notification)) {
+    if (isLastNotificationInBatch(notification, notificationRule)) {
       dispatch(notificationBatch.getNotifications(), notificationBatch.getNotificationRule().getNotificationGroups());
       wingsPersistence.delete(notificationBatch);
     }
   }
 
-  private boolean isLastNotificationInBatch(Notification notification) {
+  private boolean isLastNotificationInBatch(Notification notification, NotificationRule notificationRule) {
     // TODO:: revisit. not sure if this logic belongs here.
-    List<String> batchEndTemplates =
-        Arrays.asList(WORKFLOW_FAILED_NOTIFICATION.name(), WORKFLOW_SUCCESSFUL_NOTIFICATION.name(),
-            WORKFLOW_PHASE_FAILED_NOTIFICATION.name(), WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION.name());
-    return batchEndTemplates.contains(notification.getNotificationTemplateId());
+    return BATCH_END_TEMPLATES.get(notificationRule.getExecutionScope())
+        .contains(NotificationMessageType.valueOf(notification.getNotificationTemplateId()));
   }
 
   private void dispatch(List<Notification> notifications, List<NotificationGroup> notificationGroups) {
@@ -136,7 +142,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
     List<String> messages = new ArrayList<>();
 
-    notifications.stream().forEach(notification -> {
+    notifications.forEach(notification -> {
       String slackTemplate = notificationMessageResolver.getSlackTemplate(notification.getNotificationTemplateId());
       if (slackTemplate == null) {
         logger.error("No slack template found for templateId {}", notification.getNotificationTemplateId());
@@ -157,7 +163,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
 
     List<String> emailBodyList = new ArrayList<>();
     List<String> emailSubjectList = new ArrayList<>();
-    notifications.stream().forEach(notification -> {
+    notifications.forEach(notification -> {
       EmailTemplate emailTemplate =
           notificationMessageResolver.getEmailTemplate(notification.getNotificationTemplateId());
       if (emailTemplate == null) {

@@ -1,18 +1,27 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.NotificationBatch.Builder.aNotificationBatch;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.SlackConfig.Builder.aSlackConfig;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.NOTIFICATION_BATCH_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.NOTIFICATION_RULE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -21,11 +30,17 @@ import com.google.common.collect.Lists;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.InformationNotification;
+import software.wings.beans.NotificationBatch;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -61,6 +76,21 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   @Mock private NotificationMessageResolver notificationMessageResolver;
   @Mock private WingsPersistence wingsPersistence;
 
+  @Mock private Query<NotificationBatch> query;
+  @Mock private FieldEnd end;
+  @Mock private UpdateOperations<NotificationBatch> updateOperations;
+
+  @Before
+  public void setUp() throws Exception {
+    when(wingsPersistence.createQuery(NotificationBatch.class)).thenReturn(query);
+    when(query.field(any())).thenReturn(end);
+    when(end.equal(any())).thenReturn(query);
+
+    when(wingsPersistence.createUpdateOperations(NotificationBatch.class)).thenReturn(updateOperations);
+    when(updateOperations.set(anyString(), any())).thenReturn(updateOperations);
+    when(updateOperations.addToSet(anyString(), any())).thenReturn(updateOperations);
+  }
+
   @Test
   public void shouldDispatchEmailNotification() throws EmailException, TemplateException, IOException {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
@@ -92,6 +122,112 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
     verify(emailNotificationService)
         .sendAsync(toAddresses, null, ENTITY_CREATE_NOTIFICATION.name(), ENTITY_CREATE_NOTIFICATION.name());
+  }
+
+  @Test
+  public void shouldNotSendNotificationIfNotLastMessageInTheBatch() {
+    List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
+
+    NotificationGroup notificationGroup = aNotificationGroup()
+                                              .withUuid(NOTIFICATION_GROUP_ID)
+                                              .withAppId(APP_ID)
+                                              .addAddressesByChannelType(NotificationChannelType.EMAIL, toAddresses)
+                                              .build();
+
+    when(notificationSetupService.readNotificationGroup(APP_ID, NOTIFICATION_GROUP_ID)).thenReturn(notificationGroup);
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withUuid(NOTIFICATION_RULE_ID)
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withBatchNotifications(true)
+                                            .addNotificationGroup(notificationGroup)
+                                            .build();
+
+    InformationNotification notification =
+        anInformationNotification()
+            .withAccountId(ACCOUNT_ID)
+            .withAppId(APP_ID)
+            .withEntityId(WORKFLOW_EXECUTION_ID)
+            .withEntityType(ORCHESTRATED_DEPLOYMENT)
+            .withNotificationTemplateId(WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION.name())
+            .withNotificationTemplateVariables(
+                ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
+            .build();
+
+    when(wingsPersistence.upsert(any(Query.class), any(UpdateOperations.class)))
+        .thenReturn(aNotificationBatch()
+                        .withBatchId(NOTIFICATION_BATCH_ID)
+                        .withNotificationRule(notificationRule)
+                        .withNotifications(asList(notification))
+                        .build());
+
+    notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
+
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("batchId");
+    verify(end).equal("NOTIFICATION_RULE_ID-WORKFLOW_EXECUTION_ID");
+    verify(updateOperations).set("batchId", "NOTIFICATION_RULE_ID-WORKFLOW_EXECUTION_ID");
+    verify(updateOperations).set("notificationRule", notificationRule);
+    verify(updateOperations).addToSet("notifications", notification);
+    verify(wingsPersistence).upsert(any(Query.class), any(UpdateOperations.class));
+    verify(wingsPersistence, never()).delete(any(NotificationBatch.class));
+    verifyZeroInteractions(emailNotificationService);
+  }
+
+  @Test
+  public void shouldSendBatchedNotificationsOnLastBatchNotification()
+      throws EmailException, TemplateException, IOException {
+    List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
+
+    NotificationGroup notificationGroup = aNotificationGroup()
+                                              .withUuid(NOTIFICATION_GROUP_ID)
+                                              .withAppId(APP_ID)
+                                              .addAddressesByChannelType(NotificationChannelType.EMAIL, toAddresses)
+                                              .build();
+
+    when(notificationSetupService.readNotificationGroup(APP_ID, NOTIFICATION_GROUP_ID)).thenReturn(notificationGroup);
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withUuid(NOTIFICATION_RULE_ID)
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withBatchNotifications(true)
+                                            .addNotificationGroup(notificationGroup)
+                                            .build();
+
+    InformationNotification notification = anInformationNotification()
+                                               .withAccountId(ACCOUNT_ID)
+                                               .withAppId(APP_ID)
+                                               .withEntityId(WORKFLOW_EXECUTION_ID)
+                                               .withEntityType(ORCHESTRATED_DEPLOYMENT)
+                                               .withNotificationTemplateId(WORKFLOW_FAILED_NOTIFICATION.name())
+                                               .withNotificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
+                                                   WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
+                                               .build();
+
+    when(wingsPersistence.upsert(any(Query.class), any(UpdateOperations.class)))
+        .thenReturn(aNotificationBatch()
+                        .withBatchId(NOTIFICATION_BATCH_ID)
+                        .withNotificationRule(notificationRule)
+                        .withNotifications(asList(notification))
+                        .build());
+
+    EmailTemplate emailTemplate = new EmailTemplate();
+    emailTemplate.setBody(WORKFLOW_FAILED_NOTIFICATION.name());
+    emailTemplate.setSubject(WORKFLOW_FAILED_NOTIFICATION.name());
+    when(notificationMessageResolver.getEmailTemplate(WORKFLOW_FAILED_NOTIFICATION.name())).thenReturn(emailTemplate);
+
+    notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
+
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("batchId");
+    verify(end).equal("NOTIFICATION_RULE_ID-WORKFLOW_EXECUTION_ID");
+    verify(updateOperations).set("batchId", "NOTIFICATION_RULE_ID-WORKFLOW_EXECUTION_ID");
+    verify(updateOperations).set("notificationRule", notificationRule);
+    verify(updateOperations).addToSet("notifications", notification);
+    verify(wingsPersistence).upsert(any(Query.class), any(UpdateOperations.class));
+    verify(wingsPersistence).delete(any(NotificationBatch.class));
+    verify(emailNotificationService)
+        .sendAsync(toAddresses, null, WORKFLOW_FAILED_NOTIFICATION.name(), WORKFLOW_FAILED_NOTIFICATION.name());
   }
 
   @Test
