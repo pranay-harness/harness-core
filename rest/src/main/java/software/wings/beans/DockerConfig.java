@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 
@@ -12,8 +13,8 @@ import software.wings.settings.SettingValue;
 @JsonTypeName("DOCKER")
 public class DockerConfig extends SettingValue {
   @Attributes(title = "Docker Registry URL") private String dockerRegistryUrl;
-  private String username;
-  @JsonView(JsonViews.Internal.class) private String password;
+  @Attributes(title = "Username") @NotEmpty private String username;
+  @Attributes(title = "Password") @NotEmpty @JsonView(JsonViews.Internal.class) private String password;
 
   /**
    * Instantiates a new Docker registry config.
