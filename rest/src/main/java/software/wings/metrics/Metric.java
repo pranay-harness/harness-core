@@ -1,13 +1,10 @@
 package software.wings.metrics;
 
 import com.github.reinert.jjschema.Attributes;
+import software.wings.common.UUIDGenerator;
 
-import com.google.common.math.DoubleMath;
 import com.google.common.math.Stats;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -15,19 +12,23 @@ import java.util.concurrent.TimeUnit;
  * Created by mike@ on 4/7/17.
  */
 public abstract class Metric<T extends Number> {
+  @Attributes(required = true, title = "Uuid", description = "UUID") protected String uuid;
   @Attributes(required = true, title = "Name", description = "Average Response Time") protected String name;
   @Attributes(
       required = true, title = "Path", description = "Overall Application Performance|Average Response Time (ms)")
   protected String path;
   @Attributes(required = true, title = "Type", description = "Type of metric (e.g. Time, Count)")
   protected MetricType type;
+  @Attributes(required = true, title = "Active", description = "Is metric actively analyzed") protected boolean active;
   @Attributes(required = true, title = "Values", description = "Map of timestamp to value")
   protected TreeMap<Long, T> values;
 
-  public Metric(String name, String path, MetricType type) {
+  public Metric(String name, String path, MetricType type, boolean active) {
+    this.uuid = UUIDGenerator.getUuid();
     this.name = name;
     this.path = path;
     this.type = type;
+    this.active = active;
     this.values = new TreeMap<>();
   }
 
@@ -65,6 +66,14 @@ public abstract class Metric<T extends Number> {
 
   public abstract String getDisplayValueForStats(Stats stats);
 
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
   public void add(T value, long timestampInMillis) {
     values.put(timestampInMillis, value);
   }
@@ -95,6 +104,14 @@ public abstract class Metric<T extends Number> {
 
   public void setType(MetricType type) {
     this.type = type;
+  }
+
+  public boolean isActive() {
+    return active;
+  }
+
+  public void setActive(boolean active) {
+    this.active = active;
   }
 
   public TreeMap<Long, T> getValues() {
