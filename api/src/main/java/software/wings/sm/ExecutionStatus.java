@@ -40,8 +40,12 @@ public enum ExecutionStatus {
                 * Paused on error execution status.
                 */
   PAUSED_ON_ERROR, /**
-                    * Paused execution status.
+                    * Pausing on execution
                     */
+  PAUSING,
+  /**
+   * Paused execution status.
+   */
   PAUSED;
 
   private boolean finalStatus = false;

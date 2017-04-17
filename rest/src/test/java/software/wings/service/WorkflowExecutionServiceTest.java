@@ -49,7 +49,7 @@ import javax.inject.Inject;
 @Listeners(NotifyEventListener.class)
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
   private static String appId = UUIDGenerator.getUuid();
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Inject private WorkflowService workflowService;

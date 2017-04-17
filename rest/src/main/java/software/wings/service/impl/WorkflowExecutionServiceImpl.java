@@ -67,6 +67,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
+import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
@@ -173,7 +174,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     for (WorkflowExecution workflowExecution : res) {
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         // populateGraph(workflowExecution, null, null, null, false);
-        populateNodeHierarchy(workflowExecution, false);
+        populateNodeHierarchy(workflowExecution);
       }
     }
     return res;
@@ -199,7 +200,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       expandedGroupIds = new ArrayList<>();
     }
     if (workflowExecution != null) {
-      populateNodeHierarchy(workflowExecution, false);
+      populateNodeHierarchy(workflowExecution);
     }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
     return workflowExecution;
@@ -235,7 +236,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return workflowExecution;
   }
 
-  private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean expandLastOnly) {
+  private void populateNodeHierarchy(WorkflowExecution workflowExecution) {
     List<StateExecutionInstance> allInstances = queryAllInstances(workflowExecution);
     if (allInstances == null || allInstances.isEmpty()) {
       return;
@@ -245,17 +246,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    String commandName = null;
-    if (workflowExecution.getExecutionArgs() != null) {
-      commandName = workflowExecution.getExecutionArgs().getCommandName();
-    }
     List<StateExecutionInstance> pausedInstances =
         allInstances.stream()
             .filter(i -> (i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSED_ON_ERROR))
             .collect(Collectors.toList());
     if (pausedInstances != null && !pausedInstances.isEmpty()) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
+    } else {
+      ExecutionInterrupt executionInterrupt = executionInterruptManager.checkForExecutionInterrupt(
+          workflowExecution.getAppId(), workflowExecution.getUuid());
+      if (executionInterrupt != null
+          && executionInterrupt.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL) {
+        workflowExecution.setStatus(ExecutionStatus.PAUSING);
+      }
     }
+
     workflowExecution.setExecutionNode(
         graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
   }
