@@ -102,10 +102,11 @@ public class NotificationSetupResource {
   @Path("notification-groups/{notificationGroupId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<NotificationGroup> updateNotificationGroups(
-      @QueryParam("accountId") String accountId, NotificationGroup notificationGroup) {
+  public RestResponse<NotificationGroup> updateNotificationGroups(@QueryParam("accountId") String accountId,
+      @PathParam("notificationGroupId") String notificationGroupId, NotificationGroup notificationGroup) {
     notificationGroup.setAccountId(accountId);
     notificationGroup.setAppId(GLOBAL_APP_ID);
+    notificationGroup.setUuid(notificationGroupId);
     return new RestResponse<>(notificationSetupService.updateNotificationGroup(notificationGroup));
   }
 

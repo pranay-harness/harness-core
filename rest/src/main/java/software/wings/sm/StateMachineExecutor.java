@@ -4,7 +4,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.common.collect.Lists;
@@ -15,6 +14,10 @@ import com.google.inject.name.Named;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -28,8 +31,8 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.NotifyJob;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
-import software.wings.sm.states.SimpleNotifier;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
@@ -38,12 +41,12 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 /**
@@ -241,18 +244,15 @@ public class StateMachineExecutor {
       }
       String resumeId = UUIDGenerator.getUuid();
 
-      // TODO: Fix the test cases and then checkin the persistent notification
-      //      long wakeupTs = System.currentTimeMillis() + (currentState.getWaitInterval() * 1000);
-      //      JobDetail job = JobBuilder.newJob(NotifyJob.class).withIdentity(Constants.WAIT_RESUME_GROUP, resumeId)
-      //          .usingJobData("correlationId", resumeId).usingJobData("executionStatus",
-      //          ExecutionStatus.SUCCESS.name()).build();
-      //      Trigger trigger = TriggerBuilder.newTrigger().withIdentity(resumeId).startAt(new
-      //      Date(wakeupTs)).forJob(job).build(); jobScheduler.scheduleJob(job, trigger);
-
-      scheduledExecutorService.schedule(
-          new SimpleNotifier(
-              waitNotifyEngine, resumeId, anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()),
-          currentState.getWaitInterval(), TimeUnit.SECONDS);
+      long wakeupTs = System.currentTimeMillis() + (currentState.getWaitInterval() * 1000);
+      JobDetail job = JobBuilder.newJob(NotifyJob.class)
+                          .withIdentity(Constants.WAIT_RESUME_GROUP, resumeId)
+                          .usingJobData("correlationId", resumeId)
+                          .usingJobData("executionStatus", ExecutionStatus.SUCCESS.name())
+                          .build();
+      Trigger trigger =
+          TriggerBuilder.newTrigger().withIdentity(resumeId).startAt(new Date(wakeupTs)).forJob(job).build();
+      jobScheduler.scheduleJob(job, trigger);
 
       logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", currentState.getWaitInterval());
       waitNotifyEngine.waitForAll(
