@@ -21,7 +21,7 @@ public class CountMetric<T extends Number> extends Metric<T> {
   @Attributes(required = true, title = "Alert When More Than?", description = "True") private boolean alertWhenMoreThan;
 
   public CountMetric(String name, String path, MetricType type, int threshold, boolean alertWhenMoreThan) {
-    super(name, path, type);
+    super(name, path, type, true);
     this.threshold = threshold;
     this.alertWhenMoreThan = alertWhenMoreThan;
   }

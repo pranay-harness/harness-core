@@ -81,6 +81,6 @@ public class MetricContainer {
   }
 
   public void removeMetric(Metric metric) {
-    this.metricMap.remove(metric.getUuid())
+    this.metricMap.remove(metric.getUuid());
   }
 }

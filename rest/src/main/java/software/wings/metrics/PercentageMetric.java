@@ -21,7 +21,7 @@ public class PercentageMetric<T extends Number> extends Metric<T> {
   @Attributes(required = true, title = "Alert When More Than?", description = "True") private boolean alertWhenMoreThan;
 
   public PercentageMetric(String name, String path, MetricType type, double threshold, boolean alertWhenMoreThan) {
-    super(name, path, type);
+    super(name, path, type, true);
     this.threshold = threshold;
     this.alertWhenMoreThan = alertWhenMoreThan;
   }
