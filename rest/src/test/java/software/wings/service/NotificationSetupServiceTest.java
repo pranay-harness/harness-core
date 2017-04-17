@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.SearchFilter.Operator;
@@ -42,76 +43,77 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateNotificationGroup() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertNotificationGroup(appId);
+    String accountId = UUIDGenerator.getUuid();
+    createAndAssertNotificationGroup(accountId);
   }
 
   @Test
   public void shouldListNotificationGroups() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertNotificationGroup(appId);
-    createAndAssertNotificationGroup(appId);
-    createAndAssertNotificationGroup(appId);
+    String accountId = UUIDGenerator.getUuid();
+    createAndAssertNotificationGroup(accountId);
+    createAndAssertNotificationGroup(accountId);
+    createAndAssertNotificationGroup(accountId);
 
     createAndAssertNotificationGroup(UUIDGenerator.getUuid());
 
-    PageRequest<NotificationGroup> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
+    PageRequest<NotificationGroup> pageRequest = aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
     PageResponse<NotificationGroup> pageResponse = notificationSetupService.listNotificationGroups(pageRequest);
     assertThat(pageResponse)
         .isNotNull()
         .hasSize(3)
         .doesNotContainNull()
-        .extracting("appId")
-        .containsExactly(appId, appId, appId);
+        .extracting("accountId")
+        .containsExactly(accountId, accountId, accountId);
   }
 
   @Test
-  public void shouldListNotificationGroupsByAppId() {
-    String appId = UUIDGenerator.getUuid();
-    createAndAssertNotificationGroup(appId);
-    createAndAssertNotificationGroup(appId);
-    createAndAssertNotificationGroup(appId);
+  public void shouldListNotificationGroupsByAccountId() {
+    String accountId = UUIDGenerator.getUuid();
+    createAndAssertNotificationGroup(accountId);
+    createAndAssertNotificationGroup(accountId);
+    createAndAssertNotificationGroup(accountId);
 
     createAndAssertNotificationGroup(UUIDGenerator.getUuid());
 
-    List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(appId);
+    List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
     assertThat(notificationGroups)
         .isNotNull()
         .hasSize(3)
         .doesNotContainNull()
-        .extracting("appId")
-        .containsExactly(appId, appId, appId);
+        .extracting("accountId")
+        .containsExactly(accountId, accountId, accountId);
   }
 
   @Test
   public void shouldDeleteNotificationGroup() {
-    String appId = UUIDGenerator.getUuid();
-    NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
-    boolean deleted =
-        notificationSetupService.deleteNotificationGroups(notificationGroup.getAppId(), notificationGroup.getUuid());
+    String accountId = UUIDGenerator.getUuid();
+    NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
+    boolean deleted = notificationSetupService.deleteNotificationGroups(
+        notificationGroup.getAccountId(), notificationGroup.getUuid());
     assertThat(deleted).isTrue();
   }
 
   @Test
   public void shouldReadNotificationGroup() {
-    String appId = UUIDGenerator.getUuid();
-    NotificationGroup notificationGroup = createAndAssertNotificationGroup(appId);
+    String accountId = UUIDGenerator.getUuid();
+    NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
     NotificationGroup notificationGroup2 =
-        notificationSetupService.readNotificationGroup(notificationGroup.getAppId(), notificationGroup.getUuid());
+        notificationSetupService.readNotificationGroup(notificationGroup.getAccountId(), notificationGroup.getUuid());
     assertThat(notificationGroup2).isNotNull().isEqualToIgnoringGivenFields(notificationGroup);
   }
 
-  private NotificationGroup createAndAssertNotificationGroup(String appId) {
+  private NotificationGroup createAndAssertNotificationGroup(String accountId) {
     NotificationGroup notificationGroup =
         aNotificationGroup()
             .withName("prod_ops")
-            .withAppId(appId)
+            .withAppId(Base.GLOBAL_APP_ID)
+            .withAccountId(accountId)
             .addAddressesByChannelType(NotificationChannelType.EMAIL, Lists.newArrayList("a@b.com", "b@c.com"))
             .build();
 
     NotificationGroup created = notificationSetupService.createNotificationGroup(notificationGroup);
     assertThat(created).isNotNull().isEqualToComparingOnlyGivenFields(
-        notificationGroup, "name", "appId", "addressesByChannelType");
+        notificationGroup, "name", "accountId", "addressesByChannelType");
     return created;
   }
 

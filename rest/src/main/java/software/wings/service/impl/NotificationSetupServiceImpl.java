@@ -4,6 +4,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
+import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.SearchFilter.Operator;
@@ -30,12 +31,18 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Inject private SettingsService settingsService;
 
-  public Map<NotificationChannelType, Object> getSupportedChannelTypeDetails(String appId) {
+  /**
+   * Gets supported channel type details.
+   *
+   * @param accountId the app id
+   * @return the supported channel type details
+   */
+  public Map<NotificationChannelType, Object> getSupportedChannelTypeDetails(String accountId) {
     Map<NotificationChannelType, Object> supportedChannelTypeDetails = new HashMap<>();
     for (NotificationChannelType notificationChannelType : NotificationChannelType.values()) {
       if (notificationChannelType.getSettingVariableTypes() != null) {
-        List<SettingAttribute> settingAttributes =
-            settingsService.getSettingAttributesByType(appId, notificationChannelType.getSettingVariableTypes().name());
+        List<SettingAttribute> settingAttributes = settingsService.getSettingAttributesByType(
+            accountId, notificationChannelType.getSettingVariableTypes().name());
         if (settingAttributes != null && !settingAttributes.isEmpty()) {
           supportedChannelTypeDetails.put(notificationChannelType, new Object());
           // Put more details for the given notificationChannelType, else leave it as blank object.
@@ -46,8 +53,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
-  public List<NotificationGroup> listNotificationGroups(String appId) {
-    return listNotificationGroups(aPageRequest().addFilter("appId", Operator.EQ, appId).build()).getResponse();
+  public List<NotificationGroup> listNotificationGroups(String accountId) {
+    return listNotificationGroups(aPageRequest().addFilter("accountId", Operator.EQ, accountId).build()).getResponse();
   }
 
   @Override
@@ -56,8 +63,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
-  public NotificationGroup readNotificationGroup(String appId, String notificationGroupId) {
-    return wingsPersistence.get(NotificationGroup.class, appId, notificationGroupId);
+  public NotificationGroup readNotificationGroup(String accountId, String notificationGroupId) {
+    return wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
   }
 
   @Override
@@ -67,12 +74,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup) {
-    // TODO:
-    return null;
+    return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
   }
 
   @Override
-  public boolean deleteNotificationGroups(String appId, String notificationGroupId) {
-    return wingsPersistence.delete(NotificationGroup.class, appId, notificationGroupId);
+  public boolean deleteNotificationGroups(String accountId, String notificationGroupId) {
+    return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
   }
 }

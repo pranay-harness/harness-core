@@ -34,11 +34,11 @@ public interface NotificationSetupService {
   /**
    * Read notification group notification group.
    *
-   * @param appId               the app id
+   * @param accountId           the account id
    * @param notificationGroupId the notification group id
    * @return the notification group
    */
-  NotificationGroup readNotificationGroup(String appId, String notificationGroupId);
+  NotificationGroup readNotificationGroup(String accountId, String notificationGroupId);
 
   /**
    * Create notification group notification group.
@@ -59,9 +59,9 @@ public interface NotificationSetupService {
   /**
    * Delete notification groups boolean.
    *
-   * @param appId               the app id
+   * @param accountId           the account id
    * @param notificationGroupId the notification group id
    * @return the boolean
    */
-  boolean deleteNotificationGroups(@NotEmpty String appId, @NotEmpty String notificationGroupId);
+  boolean deleteNotificationGroups(@NotEmpty String accountId, @NotEmpty String notificationGroupId);
 }
