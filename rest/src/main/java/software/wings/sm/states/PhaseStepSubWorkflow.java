@@ -260,26 +260,30 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
       Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
-    String deploymentType = phaseElement.getDeploymentType();
-    if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
-      ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
-          response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
+    NotifyResponseData notifiedResponseData = response.values().iterator().next();
+    ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
+    if (elementNotifyResponseData.getExecutionStatus() != ExecutionStatus.ABORTED) {
+      String deploymentType = phaseElement.getDeploymentType();
+      if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
+        ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
+            response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
-      executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
-    } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
-      ClusterElement clusterElement =
-          (ClusterElement) notifiedElement(response, ClusterElement.class, "Missing ClusterElement");
-      executionResponse.setContextElements(singletonList(clusterElement));
-      executionResponse.setNotifyElements(singletonList(clusterElement));
-    } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
-          response, ContainerServiceElement.class, "Missing ContainerServiceElement");
-      executionResponse.setContextElements(singletonList(containerServiceElement));
-      executionResponse.setNotifyElements(singletonList(containerServiceElement));
-    } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          response, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+        executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+      } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
+        ClusterElement clusterElement =
+            (ClusterElement) notifiedElement(response, ClusterElement.class, "Missing ClusterElement");
+        executionResponse.setContextElements(singletonList(clusterElement));
+        executionResponse.setNotifyElements(singletonList(clusterElement));
+      } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
+        ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+            response, ContainerServiceElement.class, "Missing ContainerServiceElement");
+        executionResponse.setContextElements(singletonList(containerServiceElement));
+        executionResponse.setNotifyElements(singletonList(containerServiceElement));
+      } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+        InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+            response, InstanceElementListParam.class, "Missing InstanceListParam Element");
+        executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      }
     }
   }
 
