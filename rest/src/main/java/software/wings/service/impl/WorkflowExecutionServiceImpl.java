@@ -328,6 +328,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
+    workflowExecution.setExecutionArgs(executionArgs);
 
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
@@ -478,6 +479,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     workflowExecutionUpdate.setAppId(workflowExecution.getAppId());
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
+    workflowExecutionUpdate.setNeedToNotifyPipeline(workflowExecution.getExecutionArgs().isTriggeredFromPipeline());
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
     if (workflowExecutionAdvisor != null) {
       stateExecutionInstance.setExecutionEventAdvisors(newArrayList(workflowExecutionAdvisor));

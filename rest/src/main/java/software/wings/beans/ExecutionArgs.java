@@ -27,6 +27,7 @@ public class ExecutionArgs {
   private Map<String, String> serviceInstanceIdNames;
   @Transient private ExecutionCredential executionCredential;
   private ErrorStrategy errorStrategy;
+  private boolean triggeredFromPipeline;
 
   /**
    * Gets service id.
@@ -224,5 +225,13 @@ public class ExecutionArgs {
    */
   public void setErrorStrategy(ErrorStrategy errorStrategy) {
     this.errorStrategy = errorStrategy;
+  }
+
+  public boolean isTriggeredFromPipeline() {
+    return triggeredFromPipeline;
+  }
+
+  public void setTriggeredFromPipeline(boolean triggeredFromPipeline) {
+    this.triggeredFromPipeline = triggeredFromPipeline;
   }
 }
