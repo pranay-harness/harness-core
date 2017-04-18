@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -21,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerUpgradeRequestElement;
-import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
@@ -59,7 +60,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +177,7 @@ public abstract class ContainerServiceDeploy extends State {
 
     return anExecutionResponse()
         .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(activity.getUuid()))
+        .withCorrelationIds(singletonList(activity.getUuid()))
         .withStateExecutionData(executionDataBuilder.build())
         .build();
   }
@@ -262,7 +262,7 @@ public abstract class ContainerServiceDeploy extends State {
 
     return anExecutionResponse()
         .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(commandStateExecutionData.getActivityId()))
+        .withCorrelationIds(singletonList(commandStateExecutionData.getActivityId()))
         .withStateExecutionData(commandStateExecutionData)
         .build();
   }
@@ -286,18 +286,20 @@ public abstract class ContainerServiceDeploy extends State {
       CommandStateExecutionData commandStateExecutionData, ExecutionStatus status) {
     activityService.updateStatus(
         commandStateExecutionData.getActivityId(), commandStateExecutionData.getAppId(), status);
-    List<InstanceElement> instanceElements = commandStateExecutionData.getNewInstanceStatusSummaries()
-                                                 .stream()
-                                                 .map(InstanceStatusSummary::getInstanceElement)
-                                                 .collect(Collectors.toList());
 
     InstanceElementListParam instanceElementListParam =
         anInstanceElementListParam()
-            .withInstanceElements(instanceElements == null ? new ArrayList<>() : instanceElements)
+            .withInstanceElements(Optional
+                                      .ofNullable(commandStateExecutionData.getNewInstanceStatusSummaries()
+                                                      .stream()
+                                                      .map(InstanceStatusSummary::getInstanceElement)
+                                                      .collect(Collectors.toList()))
+                                      .orElse(emptyList()))
             .build();
     return anExecutionResponse()
         .withStateExecutionData(commandStateExecutionData)
         .withExecutionStatus(status)
+        .addContextElement(instanceElementListParam)
         .addNotifyElement(instanceElementListParam)
         .build();
   }
@@ -387,7 +389,6 @@ public abstract class ContainerServiceDeploy extends State {
               -> phaseElement.getDeploymentType().equals(containerServiceElement.getDeploymentType().name())
                   && phaseElement.getInfraMappingId().equals(containerServiceElement.getInfraMappingId()))
           .findFirst()
-          .map(element -> element)
           .orElse(null);
     }
   }

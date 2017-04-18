@@ -818,15 +818,14 @@ public class StateMachineExecutor {
           logger.warn(
               "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
               workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
-        }
-
-        StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-            stateExecutionInstances.get(0).getStateMachineId());
-
-        for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-          ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-          injector.injectMembers(context);
-          abortMarkedInstance(context, stateExecutionInstance);
+        } else {
+          for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+            StateMachine sm = wingsPersistence.get(
+                StateMachine.class, workflowExecutionInterrupt.getAppId(), stateExecutionInstance.getStateMachineId());
+            ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+            injector.injectMembers(context);
+            abortMarkedInstance(context, stateExecutionInstance);
+          }
         }
         break;
       }

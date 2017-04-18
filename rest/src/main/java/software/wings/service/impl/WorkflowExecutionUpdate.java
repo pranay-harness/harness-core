@@ -36,6 +36,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdate.class);
   private String appId;
   private String workflowExecutionId;
+  private boolean needToNotifyPipeline;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -127,7 +128,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
       pipelineService.refreshPipelineExecution(appId, workflowExecutionId);
     }
 
-    if (!isNullOrEmpty(workflowExecutionId)) { // TODO:: remove this check.
+    if (!isNullOrEmpty(workflowExecutionId) && needToNotifyPipeline) { // TODO:: remove this check.
       waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
     }
 
@@ -140,5 +141,13 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     } catch (Exception e) {
       logger.error("Error in breakdown refresh", e);
     }
+  }
+
+  public boolean isNeedToNotifyPipeline() {
+    return needToNotifyPipeline;
+  }
+
+  public void setNeedToNotifyPipeline(boolean needToNotifyPipeline) {
+    this.needToNotifyPipeline = needToNotifyPipeline;
   }
 }
