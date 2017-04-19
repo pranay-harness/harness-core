@@ -307,7 +307,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(verificationQuery.get())
         .thenReturn(anEmailVerificationToken().withUuid("TOKEN_ID").withUserId(USER_ID).withToken("TOKEN").build());
 
-    userService.verifyEmail("TOKEN");
+    userService.verifyToken("TOKEN");
 
     verify(verificationQuery).field("appId");
     verify(verificationQueryEnd).equal(GLOBAL_APP_ID);
