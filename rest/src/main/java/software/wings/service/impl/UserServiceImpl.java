@@ -190,7 +190,13 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean verifyEmail(String emailToken) {
+  public boolean verifyEmail(String emailAddress) {
+    User existingUser = getUserByEmail(emailAddress);
+    return existingUser != null;
+  }
+
+  @Override
+  public boolean verifyToken(String emailToken) {
     EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
                                                    .field("appId")
                                                    .equal(Base.GLOBAL_APP_ID)

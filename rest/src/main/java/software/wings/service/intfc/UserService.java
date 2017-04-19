@@ -84,13 +84,15 @@ public interface UserService {
    */
   public User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 
+  boolean verifyEmail(String emailAddress);
+
   /**
    * Verify email string.
    *
    * @param token the token
    * @return the string
    */
-  boolean verifyEmail(String token);
+  boolean verifyToken(String token);
 
   /**
    * Update stats fetched on.

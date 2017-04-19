@@ -6,6 +6,7 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
@@ -108,7 +109,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
-    if (requiredPermissionAttributes == null || allLoggedInScope(requiredPermissionAttributes)) {
+    if (requiredPermissionAttributes == null) {
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    if (allLoggedInScope(requiredPermissionAttributes)) {
       return;
     }
 

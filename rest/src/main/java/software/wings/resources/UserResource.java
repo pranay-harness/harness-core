@@ -240,7 +240,7 @@ public class UserResource {
   }
 
   /**
-   * Verify email rest response.
+   * Verify token rest response.
    *
    * @param token the token
    * @return the rest response
@@ -251,8 +251,24 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Object>> verifyEmail(@PathParam("token") String token) throws URISyntaxException {
-    return new RestResponse<>(of("success", userService.verifyEmail(token)));
+  public RestResponse<Map<String, Object>> verifyToken(@PathParam("token") String token) throws URISyntaxException {
+    return new RestResponse<>(of("success", userService.verifyToken(token)));
+  }
+
+  /**
+   * Verify email rest response.
+   *
+   * @param email the token
+   * @return the rest response
+   * @throws URISyntaxException the uri syntax exception
+   */
+  @GET
+  @Path("verify-email/{email}")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> verifyEmail(@PathParam("email") String email) throws URISyntaxException {
+    return new RestResponse<>(userService.verifyEmail(email));
   }
 
   /**
