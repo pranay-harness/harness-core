@@ -16,6 +16,9 @@ import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -75,20 +78,39 @@ public class CatalogResource {
    * returns catalog items.
    *
    * @param catalogTypes types of catalog items.
-   * @param uriInfo      uriInfo from jersey.
    * @return RestReponse containing map of catalog objects.
    * @throws IOException exception.
    */
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Object>> list(
-      @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) throws IOException {
-    Map<String, Object> catalogs = getCatalogs(catalogTypes, uriInfo);
+  @PublicApi
+  public RestResponse<Map<String, Object>> list(@QueryParam("catalogType") List<String> catalogTypes)
+      throws IOException {
+    Map<String, Object> catalogs = getCatalogs(catalogTypes, null);
     return new RestResponse<>(catalogs);
   }
 
-  private Map<String, Object> getCatalogs(List<String> catalogTypes, UriInfo uriInfo) throws IOException {
+  /**
+   * returns catalog items.
+   *
+   * @param catalogTypes types of catalog items.
+   * @param uriInfo      uriInfo from jersey.
+   * @return RestReponse containing map of catalog objects.
+   * @throws IOException exception.
+   */
+  @GET
+  @Path("app-catalogs")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(ResourceType.APPLICATION)
+  public RestResponse<Map<String, Object>> listForApp(
+      @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) throws IOException {
+    Map<String, Object> catalogs = getCatalogs(catalogTypes, uriInfo.getQueryParameters().getFirst(APP_ID));
+    return new RestResponse<>(catalogs);
+  }
+
+  private Map<String, Object> getCatalogs(List<String> catalogTypes, String appId) throws IOException {
     Map<String, Object> catalogs = new HashMap<>();
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
@@ -99,15 +121,19 @@ public class CatalogResource {
       for (String catalogType : catalogTypes) {
         switch (catalogType) {
           case CONNECTION_ATTRIBUTES: {
-            catalogs.put(CONNECTION_ATTRIBUTES,
-                settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst(APP_ID),
-                    SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name()));
+            if (appId != null) {
+              catalogs.put(CONNECTION_ATTRIBUTES,
+                  settingsService.getSettingAttributesByType(
+                      appId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name()));
+            }
             break;
           }
           case BASTION_HOST_ATTRIBUTES: {
-            catalogs.put(BASTION_HOST_ATTRIBUTES,
-                settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst(APP_ID),
-                    SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name()));
+            if (appId != null) {
+              catalogs.put(BASTION_HOST_ATTRIBUTES,
+                  settingsService.getSettingAttributesByType(
+                      appId, SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name()));
+            }
             break;
           }
           case CatalogNames.EXECUTION_TYPE: {
