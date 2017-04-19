@@ -9,8 +9,8 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("AWS")
 public class AwsConfig extends SettingValue {
-  @Attributes(title = "Access key") private String accessKey;
-  @Attributes(title = "Secret key") private String secretKey;
+  @Attributes(title = "Access Key") private String accessKey;
+  @Attributes(title = "Secret Key") private String secretKey;
 
   /**
    * Instantiates a new Aws config.

@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.GATEWAY_TIMEOUT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
@@ -71,7 +73,7 @@ public enum ErrorCode {
   /**
    * Access denied error codes.
    */
-  ACCESS_DENIED("ACCESS_DENIED", Status.FORBIDDEN),
+  ACCESS_DENIED("ACCESS_DENIED", FORBIDDEN),
 
   /**
    * Invalid credential error codes.
@@ -281,9 +283,18 @@ public enum ErrorCode {
                                                    */
   INIT_TIMEOUT("INIT_TIMEOUT"),
 
+  /**
+   * License expired error code.
+   */
   LICENSE_EXPIRED("LICENSE_EXPIRED"),
 
-  NOT_LICENSED("NOT_LICENSED");
+  /**
+   * Not licensed error code.
+   */
+  NOT_LICENSED("NOT_LICENSED"), /**
+                                 * Request timeout error code.
+                                 */
+  REQUEST_TIMEOUT("REQUEST_TIMEOUT", GATEWAY_TIMEOUT);
 
   /**
    * The constant ARGS_NAME.

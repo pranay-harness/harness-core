@@ -287,16 +287,15 @@ public class StateMachineExecutionSimulator {
   }
 
   private boolean isArtifactNeeded(ExecutionContextImpl context, CommandState state, Map<String, Command> commandMap) {
-    ContextElement service = context.getContextElement(ContextElementType.SERVICE);
-    Command command = commandMap.get(state.getName());
-    if (command == null) {
-      command = serviceResourceService
-                    .getCommandByName(context.getApp().getUuid(), service.getUuid(), context.getEnv().getUuid(),
-                        ((CommandState) state).getCommandName())
-                    .getCommand();
-      commandMap.put(state.getName(), command);
-    }
-    return command.isArtifactNeeded();
+    return commandMap
+        .computeIfAbsent(state.getName(),
+            key
+            -> serviceResourceService
+                   .getCommandByName(context.getApp().getUuid(),
+                       context.getContextElement(ContextElementType.SERVICE).getUuid(), context.getEnv().getUuid(),
+                       state.getCommandName())
+                   .getCommand())
+        .isArtifactNeeded();
   }
 
   /**

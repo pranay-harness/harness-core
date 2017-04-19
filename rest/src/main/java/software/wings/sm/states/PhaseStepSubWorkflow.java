@@ -249,7 +249,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return executionResponse;
     }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    handleElementNotifyResponseData(context, phaseElement, response, executionResponse);
+    handleElementNotifyResponseData(phaseElement, response, executionResponse);
     PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) context.getStateExecutionData();
     phaseStepExecutionData.setPhaseStepExecutionSummary(workflowExecutionService.getPhaseStepExecutionSummary(
         context.getAppId(), context.getWorkflowExecutionId(), context.getStateExecutionInstanceId()));
@@ -258,42 +258,43 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
     return executionResponse;
   }
 
-  private void handleElementNotifyResponseData(ExecutionContext context, PhaseElement phaseElement,
-      Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
-    String deploymentType = phaseElement.getDeploymentType();
-    if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
-      ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
-          response, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
+  private void handleElementNotifyResponseData(
+      PhaseElement phaseElement, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
+    if (response == null || response.isEmpty()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Missing response");
+    }
+    NotifyResponseData notifiedResponseData = response.values().iterator().next();
+    if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Response data has wrong type");
+    }
+    ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
+    if (elementNotifyResponseData.getExecutionStatus() != ExecutionStatus.ABORTED) {
+      String deploymentType = phaseElement.getDeploymentType();
+      if (deploymentType.equals(DeploymentType.SSH.name()) && phaseStepType == PhaseStepType.PROVISION_NODE) {
+        ServiceInstanceIdsParam serviceInstanceIdsParam = (ServiceInstanceIdsParam) notifiedElement(
+            elementNotifyResponseData, ServiceInstanceIdsParam.class, "Missing ServiceInstanceIdsParam");
 
-      executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
-    } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
-      ClusterElement clusterElement =
-          (ClusterElement) notifiedElement(response, ClusterElement.class, "Missing ClusterElement");
-      executionResponse.setContextElements(singletonList(clusterElement));
-      executionResponse.setNotifyElements(singletonList(clusterElement));
-    } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-      ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
-          response, ContainerServiceElement.class, "Missing ContainerServiceElement");
-      executionResponse.setContextElements(singletonList(containerServiceElement));
-      executionResponse.setNotifyElements(singletonList(containerServiceElement));
-    } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
-      InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
-          response, InstanceElementListParam.class, "Missing InstanceListParam Element");
-      executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+        executionResponse.setContextElements(Lists.newArrayList(serviceInstanceIdsParam));
+      } else if (phaseStepType == PhaseStepType.CLUSTER_SETUP) {
+        ClusterElement clusterElement =
+            (ClusterElement) notifiedElement(elementNotifyResponseData, ClusterElement.class, "Missing ClusterElement");
+        executionResponse.setContextElements(singletonList(clusterElement));
+        executionResponse.setNotifyElements(singletonList(clusterElement));
+      } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
+        ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+            elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
+        executionResponse.setContextElements(singletonList(containerServiceElement));
+        executionResponse.setNotifyElements(singletonList(containerServiceElement));
+      } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+        InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+            elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
+        executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+      }
     }
   }
 
   private ContextElement notifiedElement(
-      Map<String, NotifyResponseData> response, Class<? extends ContextElement> cls, String message) {
-    if (response == null || response.isEmpty()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
-    }
-    NotifyResponseData notifiedResponseData = response.values().iterator().next();
-
-    if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);
-    }
-    ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
+      ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (elements == null || elements.isEmpty()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", message);

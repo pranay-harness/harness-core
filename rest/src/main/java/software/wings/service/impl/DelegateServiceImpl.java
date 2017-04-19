@@ -40,11 +40,13 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
@@ -218,7 +220,11 @@ public class DelegateServiceImpl implements DelegateService {
     IQueue<T> topic = hazelcastInstance.getQueue(queueName);
     CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(queueName, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-    return topic.poll(30000, TimeUnit.MILLISECONDS);
+    T responseData = topic.poll(30000, TimeUnit.MILLISECONDS);
+    if (responseData == null) {
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT);
+    }
+    return responseData;
   }
 
   @Override
