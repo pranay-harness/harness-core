@@ -57,6 +57,7 @@ import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -65,8 +66,8 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -77,7 +78,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -111,8 +114,7 @@ public class UserServiceImpl implements UserService {
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
-    User existingUser = getUserByEmail(user.getEmail());
-    if (existingUser != null) {
+    if (verifyEmail(user.getEmail())) {
       throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
     }
     Account account = setupAccount(user.getAccountName(), user.getCompanyName());
@@ -140,15 +142,24 @@ public class UserServiceImpl implements UserService {
   }
 
   private User registerNewUser(User user, Account account) {
-    user.setAppId(Base.GLOBAL_APP_ID);
-    user.getAccounts().add(account);
-    user.setEmailVerified(false);
-    String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
-    user.setPasswordHash(hashed);
-    user.setPasswordChangedAt(System.currentTimeMillis());
-    user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
-    User savedUser = wingsPersistence.saveAndGet(User.class, user);
-    return savedUser;
+    User existingUser = getUserByEmail(user.getEmail());
+    if (existingUser == null) {
+      user.setAppId(Base.GLOBAL_APP_ID);
+      user.getAccounts().add(account);
+      user.setEmailVerified(false);
+      String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
+      user.setPasswordHash(hashed);
+      user.setPasswordChangedAt(System.currentTimeMillis());
+      user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
+      User savedUser = wingsPersistence.saveAndGet(User.class, user);
+      return savedUser;
+    } else {
+      Map<String, Object> map = new HashMap();
+      map.put("name", user.getName());
+      map.put("password", hashpw(user.getPassword(), BCrypt.gensalt()));
+      wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
+      return existingUser;
+    }
   }
 
   private User getUserByEmail(String email) {
@@ -189,7 +200,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean verifyEmail(String emailAddress) {
     User existingUser = getUserByEmail(emailAddress);
-    return existingUser != null;
+    return existingUser != null && existingUser.isEmailVerified();
   }
 
   @Override
@@ -245,11 +256,21 @@ public class UserServiceImpl implements UserService {
 
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
+      user = anUser()
+                 .withAccounts(Lists.newArrayList(account))
+                 .withEmail(userInvite.getEmail())
+                 .withEmailVerified(true)
+                 .withName(Constants.NOT_REGISTERED)
+                 .withRoles(userInvite.getRoles())
+                 .withAppId(Base.GLOBAL_APP_ID)
+                 .withEmailVerified(false)
+                 .build();
+      wingsPersistence.save(user);
       sendNewInvitationMail(userInvite, account);
     } else {
       boolean userAlreadyAddedToAccount =
           user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(userInvite.getAccountId()));
-      if (!userAlreadyAddedToAccount) {
+      if (userAlreadyAddedToAccount) {
         addRoles(user, userInvite.getRoles());
       } else {
         addAccountRoles(user, account, userInvite.getRoles());
@@ -323,19 +344,15 @@ public class UserServiceImpl implements UserService {
     Account account = accountService.get(existingInvite.getAccountId());
     User existingUser = getUserByEmail(existingInvite.getEmail());
     if (existingUser == null) {
-      User user = anUser()
-                      .withAccounts(Lists.newArrayList(account))
-                      .withEmail(existingInvite.getEmail())
-                      .withEmailVerified(true)
-                      .withName(userInvite.getName())
-                      .withPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()))
-                      .withRoles(existingInvite.getRoles())
-                      .withAppId(Base.GLOBAL_APP_ID)
-                      .build();
-      wingsPersistence.save(user);
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
     } else {
-      addAccountRoles(existingUser, account, userInvite.getRoles());
+      Map<String, Object> map = new HashMap();
+      map.put("name", userInvite.getName());
+      map.put("passwordHash", hashpw(userInvite.getPassword(), BCrypt.gensalt()));
+      map.put("emailVerified", true);
+      wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
     }
+
     wingsPersistence.updateField(UserInvite.class, existingInvite.getUuid(), "completed", true);
     existingInvite.setCompleted(true);
     return existingInvite;

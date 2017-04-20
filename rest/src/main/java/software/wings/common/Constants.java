@@ -239,4 +239,5 @@ public interface Constants {
   Integer DEFAULT_PARENT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
 
   String RUNTIME = "RUNTIME";
+  String NOT_REGISTERED = "<Not registered yet>";
 }
