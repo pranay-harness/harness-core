@@ -34,7 +34,9 @@ vercomp () {
     done
     echo "0"
 }
+</#noparse>
 
+<#noparse>
 dircomp () {
     if [[ $1 == $2 ]]
     then
@@ -66,7 +68,9 @@ dircomp () {
     done
     return 0
 }
+</#noparse>
 
+<#noparse>
 qsort() {
    (($#<=1)) && return 0
    local compare_fun=$1
