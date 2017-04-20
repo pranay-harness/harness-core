@@ -11,6 +11,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceVariableService;
 
 import javax.ws.rs.BeanParam;
@@ -30,6 +32,7 @@ import javax.ws.rs.QueryParam;
 @Api("service-variables")
 @Path("/service-variables")
 @Produces("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class ServiceVariableResource {
   private ServiceVariableService serviceVariablesService;
 

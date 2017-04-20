@@ -18,6 +18,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
@@ -40,6 +42,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("executions")
 @Path("/executions")
+@AuthRule(ResourceType.APPLICATION)
 public class ExecutionResource {
   private AppService appService;
   private WorkflowExecutionService workflowExecutionService;

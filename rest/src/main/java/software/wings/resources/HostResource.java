@@ -12,6 +12,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HostService;
 import software.wings.utils.BoundedInputStream;
 
@@ -37,6 +39,7 @@ import javax.ws.rs.core.Response;
 @Path("/hosts")
 @Produces("application/json")
 @Consumes("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class HostResource {
   private HostService hostService;
   private MainConfiguration configuration;

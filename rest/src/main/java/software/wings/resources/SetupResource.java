@@ -8,6 +8,8 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -27,6 +29,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Consumes("application/json")
 @Path("setup")
+@AuthRule(ResourceType.SETTING)
 public class SetupResource {
   @Inject private SetupService setupService;
   @Inject private AppService appService;

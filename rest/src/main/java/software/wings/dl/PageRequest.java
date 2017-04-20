@@ -1,8 +1,5 @@
 package software.wings.dl;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.base.MoreObjects;
@@ -14,21 +11,16 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.Base;
-import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.User;
-import software.wings.security.UserThreadLocal;
 import software.wings.utils.Misc;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -254,8 +246,6 @@ public class PageRequest<T> {
     }
     MultivaluedMap<String, String> map = uriInfo.getQueryParameters();
 
-    addFiltersForListApi(mappedClass, map);
-
     int fieldCount = 0;
     int orderCount = 0;
     for (String key : map.keySet()) {
@@ -328,78 +318,6 @@ public class PageRequest<T> {
       order.setFieldName(map.getFirst(key + "[field]"));
       order.setOrderType(OrderType.valueOf(map.getFirst(key + "[direction]").toUpperCase()));
       orders.add(order);
-    }
-  }
-
-  private void addFiltersForListApi(MappedClass mappedClass, MultivaluedMap<String, String> map) {
-    // TODO: Simplify and possibly move parts of it in AuthFilter
-    if (requestContext != null && requestContext.getProperty("pageRequestType") != null) {
-      User user = UserThreadLocal.get();
-      if (user != null && user.getRoles() != null) {
-        PageRequestType pageRequestType = (PageRequestType) requestContext.getProperty("pageRequestType");
-        if (pageRequestType.equals(PageRequestType.LIST_WITHOUT_APP_ID)) { // add app filter based on user permissions
-
-          // TODO: Should do better handling of permissions
-          //          List<String> appIds = user.getRoles().stream().flatMap(role -> role.getPermissions().stream())
-          //              .filter(permission ->
-          //              permission.getPermissionScope().equals(PermissionScope.APP)).map(Permission::getAppId).collect(Collectors.toList());
-          //          if (!appIds.contains(Base.GLOBAL_APP_ID)) {
-          //            String fieldName = mappedClass.getClazz().equals(Application.class) ? "uuid" : "appId";
-          //            filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.IN,
-          //            appIds.stream().toArray()).build());
-          //          }
-          //        } else if (pageRequestType.equals(PageRequestType.LIST_WITHOUT_ENV_ID)) { // add env filter based on
-          //        user permissions
-          //          List<Environment> appEnvironments = (List<Environment>)
-          //          requestContext.getProperty("appEnvironments"); Set<String> appEnvIds =
-          //          appEnvironments.stream().map(Environment::getUuid).collect(Collectors.toSet());
-          //          Map<EnvironmentType, List<String>> appEnvIdsByType = appEnvironments.stream()
-          //              .collect(Collectors.groupingBy(Environment::getEnvironmentType,
-          //              Collectors.mapping(Environment::getUuid, Collectors.toList())));
-          //
-          //          //TODO :: Needs to fix the env access at upper layer
-          //          List<String> envIds = new ArrayList<>();
-          //          user.getRoles().stream().flatMap(role -> role.getPermissions().stream()).filter(
-          //              permission -> permission.getPermissionScope().equals(PermissionScope.ENV) &&
-          //              (permission.getAppId().equals(map.getFirst("appId")) || permission
-          //                  .getAppId().equals(Base.GLOBAL_APP_ID))).forEach(permission -> {
-          //            if (Base.GLOBAL_ENV_ID.equals(permission.getEnvId())) {
-          //              envIds.add(Base.GLOBAL_ENV_ID);
-          //            } else if (permission.getEnvId() != null && appEnvIds.contains(permission.getEnvId())) {
-          //              envIds.add(permission.getEnvId());
-          //            } else if (permission.getEnvironmentType() != null) {
-          //              envIds.addAll(getEnvIdsByType(appEnvironments, permission.getEnvironmentType()));
-          //            }
-          //          });
-          //
-          //          if (!envIds.contains(Base.GLOBAL_ENV_ID)) {
-          //            String fieldName = mappedClass.getClazz().equals(Environment.class) ? "uuid" : "envId";
-          //            if (envIds.size() == 0) {
-          //              filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.EQ,
-          //              "").build());
-          //            } else {
-          //              filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, Operator.IN,
-          //              envIds.stream().toArray()).build());
-          //            }
-          //          }
-        }
-      }
-    }
-  }
-
-  private List<String> getEnvIdsByType(List<Environment> appEnvironments, EnvironmentType environmentType) {
-    if (ALL.equals(environmentType)) {
-      return appEnvironments.stream().map(Environment::getUuid).collect(Collectors.toList());
-    } else if (NON_PROD.equals(environmentType)) {
-      return appEnvironments.stream()
-          .filter(env -> !PROD.equals(environmentType))
-          .map(Environment::getUuid)
-          .collect(Collectors.toList());
-    } else {
-      return appEnvironments.stream()
-          .filter(env -> env.getEnvironmentType().equals(environmentType))
-          .map(Environment::getUuid)
-          .collect(Collectors.toList());
     }
   }
 
@@ -598,7 +516,7 @@ public class PageRequest<T> {
      * @return the builder
      */
     public Builder addFilter(String fieldName, Operator op, Object... fieldValues) {
-      this.filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, op, fieldValues).build());
+      this.filters.add(aSearchFilter().withField(fieldName, op, fieldValues).build());
       return this;
     }
 

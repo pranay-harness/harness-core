@@ -14,6 +14,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
@@ -65,6 +67,7 @@ public class PipelineResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
     return new RestResponse<>(pipelineService.listPipelines(pageRequest));
@@ -81,6 +84,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId,
       @QueryParam("withServices") boolean withServices) {
     return new RestResponse<>(pipelineService.readPipeline(appId, pipelineId, withServices));
@@ -96,6 +100,7 @@ public class PipelineResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     return new RestResponse<>(pipelineService.createPipeline(pipeline));
@@ -113,6 +118,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
@@ -132,6 +138,7 @@ public class PipelineResource {
   @Path("{pipelineId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipelineService.deletePipeline(appId, pipelineId);
@@ -148,6 +155,7 @@ public class PipelineResource {
   @Path("executions")
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.CD)
   public RestResponse<PageResponse<PipelineExecution>> listExecutions(
       @BeanParam PageRequest<PipelineExecution> pageRequest) {
     return new RestResponse<>(pipelineService.listPipelineExecutions(pageRequest));
@@ -165,6 +173,7 @@ public class PipelineResource {
   @Path("executions")
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.CD)
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     return new RestResponse<>(pipelineService.execute(appId, pipelineId, executionArgs));
@@ -181,6 +190,7 @@ public class PipelineResource {
   @Path("stencils")
   @Timed
   @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
     return new RestResponse<>(workflowService.stencils(appId, null, null, StateTypeScope.PIPELINE_STENCILS)
                                   .get(StateTypeScope.PIPELINE_STENCILS));

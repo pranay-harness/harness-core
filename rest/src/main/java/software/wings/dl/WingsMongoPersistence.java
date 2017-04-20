@@ -2,11 +2,9 @@ package software.wings.dl;
 
 import static java.lang.System.currentTimeMillis;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
-import static org.eclipse.jetty.util.LazyList.remove;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
-import static software.wings.security.PermissionAttribute.PermissionScope.APP;
-import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.inject.Singleton;
 
@@ -26,9 +24,7 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.User;
 import software.wings.common.UUIDGenerator;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 
@@ -303,7 +299,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       sortOrder.setOrderType(OrderType.DESC);
       req.addOrder(sortOrder);
     }
-    includeAuthFilters(req);
+    if (!authFilters(req)) {
+      return PageResponse.Builder.aPageResponse().withTotal(0).build();
+    }
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
   }
 
@@ -380,32 +378,26 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     close();
   }
 
-  private void includeAuthFilters(PageRequest pageRequest) {
-    User user = UserThreadLocal.get();
-    if (user == null || user.getUserRequestInfo() == null || user.getUserRequestInfo().isAllAppsAllowed()) {
-      return;
+  private boolean authFilters(PageRequest pageRequest) {
+    if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
+      return true;
     }
-
-    UserRequestInfo userRequestInfo = user.getUserRequestInfo();
-
-    if (!userRequestInfo.isAllAppsAllowed()
-        && userRequestInfo.getPermissionAttributes()
-               .stream()
-               .map(PermissionAttribute::getScope)
-               .anyMatch(scope -> scope == APP)) {
-      // make sure APP_ID is one of the filter parameter
-      pageRequest.addFilter("appId", userRequestInfo.getAllowedAppIds().toArray(), Operator.EQ);
-      return;
+    UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
+    if (userRequestInfo.isAppIdFilterRequired()) {
+      // TODO: field name should be dynamic
+      if (userRequestInfo.getAppId() == null
+          && (userRequestInfo.getAllowedAppIds() == null || userRequestInfo.getAllowedAppIds().isEmpty())) {
+        return false;
+      } else if (userRequestInfo.getAppId() == null && !userRequestInfo.getAllowedAppIds().isEmpty()) {
+        pageRequest.getFilters().add(
+            aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray()).build());
+      } else {
+        pageRequest.getFilters().add(
+            aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAppId()).build());
+      }
+    } else if (userRequestInfo.isEnvIdFilterRequired()) {
+      // TODO:
     }
-
-    if (!userRequestInfo.isAllEnvironmentsAllowed()
-        && userRequestInfo.getPermissionAttributes()
-               .stream()
-               .map(PermissionAttribute::getScope)
-               .anyMatch(scope -> scope == ENV)) {
-      // make sure envId is one of the filter parameter
-      pageRequest.addFilter("envId", userRequestInfo.getAllowedEnvIds().toArray(), Operator.EQ);
-      return;
-    }
+    return true;
   }
 }

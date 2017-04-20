@@ -1,6 +1,7 @@
 package software.wings.security;
 
 import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -12,15 +13,20 @@ import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anU
 
 import com.google.common.collect.ImmutableList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AccountRole;
+import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
+import software.wings.dl.PageRequest.Builder;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionScope;
@@ -54,6 +60,8 @@ import javax.ws.rs.core.MultivaluedMap;
 @Singleton
 @Priority(AUTHENTICATION)
 public class AuthRuleFilter implements ContainerRequestFilter {
+  private final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
+
   @Context private ResourceInfo resourceInfo;
 
   private AuditService auditService;
@@ -89,6 +97,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
+    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+    if (requiredPermissionAttributes == null || requiredPermissionAttributes.isEmpty()) {
+      logger.error("Requested Resource: {}", requestContext.getUriInfo().getPath());
+      throw new WingsException(ACCESS_DENIED);
+    }
 
     MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
@@ -99,6 +112,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
       return; // do nothing
     }
+
     String tokenString = extractToken(requestContext);
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
@@ -106,11 +120,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       requestContext.setProperty("USER", user);
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
-    }
-    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
-
-    if (requiredPermissionAttributes == null) {
-      throw new WingsException(ACCESS_DENIED);
     }
 
     if (allLoggedInScope(requiredPermissionAttributes)) {
@@ -135,6 +144,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
       userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
+      if (appId == null && isPresent(requiredPermissionAttributes, PermissionScope.APP)) {
+        userRequestInfoBuilder.withAppIdFilterRequired(true).withAllowedAppIds(
+            ImmutableList.copyOf(getAppIds(accountId)));
+      }
     } else {
       AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
       ImmutableList<String> appIds = copyOf(userAccountRole.getApplicationRoles()
@@ -164,6 +177,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     user.setUserRequestInfo(userRequestInfo);
 
     authService.authorize(accountId, appId, envId, user, requiredPermissionAttributes, userRequestInfo);
+  }
+
+  private boolean isPresent(List<PermissionAttribute> requiredPermissionAttributes, PermissionScope permissionScope) {
+    for (PermissionAttribute permissionAttribute : requiredPermissionAttributes) {
+      if (permissionAttribute.getScope() == permissionScope) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean allLoggedInScope(List<PermissionAttribute> requiredPermissionAttributes) {
@@ -201,9 +223,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
 
-    return resourceMethod.getAnnotation(AuthRule.class) == null && resourceClass.getAnnotation(AuthRule.class) == null
-        && (resourceMethod.getAnnotation(DelegateAuth.class) != null
-               || resourceClass.getAnnotation(DelegateAuth.class) != null);
+    return resourceMethod.getAnnotation(DelegateAuth.class) != null
+        || resourceClass.getAnnotation(DelegateAuth.class) != null;
+  }
+
+  private List<String> getAppIds(String accountId) {
+    List<Application> response =
+        appService
+            .list(
+                Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("uuid").build())
+            .getResponse();
+    return response.stream().map(Application::getUuid).collect(toImmutableList());
   }
 
   private List<String> getAppIds(List<Role> roles) {

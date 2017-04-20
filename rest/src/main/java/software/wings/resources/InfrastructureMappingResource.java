@@ -12,6 +12,8 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.util.List;
@@ -34,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @Path("infrastructure-mappings")
 @Produces("application/json")
 @Consumes("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
 

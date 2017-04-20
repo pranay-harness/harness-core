@@ -19,6 +19,8 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.JsonUtils;
@@ -48,6 +50,7 @@ import javax.ws.rs.core.Response;
 @Api("configs")
 @Path("/configs")
 @Produces("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class ConfigResource {
   @Inject private ConfigService configService;
   @Inject private MainConfiguration configuration;

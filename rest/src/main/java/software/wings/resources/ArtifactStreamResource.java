@@ -17,7 +17,8 @@ import software.wings.beans.artifact.ArtifactStreamAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
-import software.wings.security.annotations.PublicApi;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.stencils.Stencil;
@@ -47,7 +48,7 @@ import javax.ws.rs.QueryParam;
 @Path("/artifactstreams")
 @Produces("application/json")
 @Consumes("application/json")
-@PublicApi
+@AuthRule(ResourceType.APPLICATION)
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
 

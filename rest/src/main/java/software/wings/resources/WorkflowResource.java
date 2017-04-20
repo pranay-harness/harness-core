@@ -21,6 +21,8 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
@@ -45,6 +47,7 @@ import javax.ws.rs.QueryParam;
 @Api("workflows")
 @Path("/workflows")
 @Produces("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class WorkflowResource {
   private WorkflowService workflowService;
 

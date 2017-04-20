@@ -115,9 +115,9 @@ public class PermissionAttribute {
     ENVIRONMENT(APP, ENV, ENV, APP), /**
                                       * Role resource.
                                       */
-    ROLE(APP), /**
-                * Deployment resource.
-                */
+    ROLE(ACCOUNT), /**
+                    * Deployment resource.
+                    */
     DEPLOYMENT(ENV), /**
                       * Artifcats resource.
                       */
@@ -128,9 +128,17 @@ public class PermissionAttribute {
                      * User resource.
                      */
     USER(ACCOUNT), /**
-                    * User resource.
+                    * CD resource.
                     */
-    SETTING(ACCOUNT);
+    CD(APP), /**
+              * Pipeline resource.
+              */
+    PIPELINE(APP), /**
+                    * Setting resource.
+                    */
+    SETTING(ACCOUNT),
+
+    DELEGATE(PermissionScope.DELEGATE);
 
     private ImmutableMap<Action, PermissionScope> actionPermissionScopeMap;
 
@@ -185,15 +193,15 @@ public class PermissionAttribute {
     ACCOUNT, /**
               * Multiple App permission type.
               */
-    MULTI_APP, /**
-                * App permission type.
-                */
     APP, /**
           * Env permission type.
           */
     ENV, /**
           * Logged In permission type.
           */
-    LOGGED_IN
+    LOGGED_IN, /**
+                * Delegate In permission type.
+                */
+    DELEGATE
   }
 }

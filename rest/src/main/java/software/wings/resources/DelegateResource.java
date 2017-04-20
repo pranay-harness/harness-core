@@ -15,6 +15,8 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.DelegateService;
@@ -45,6 +47,7 @@ import javax.ws.rs.core.Response;
 @Api("delegates")
 @Path("/delegates")
 @Produces("application/json")
+@AuthRule(ResourceType.DELEGATE)
 public class DelegateResource {
   private DelegateService delegateService;
   private DownloadTokenService downloadTokenService;

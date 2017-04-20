@@ -187,9 +187,8 @@ public class AuthServiceImpl implements AuthService {
         continue;
       }
       if (permissionScope == PermissionScope.APP) {
-        if (reqAction == Action.READ
-            && (userRequestInfo != null
-                   && (userRequestInfo.isAllAppsAllowed() || !userRequestInfo.getAllowedAppIds().isEmpty()))) {
+        if (userRequestInfo != null
+            && (userRequestInfo.isAllAppsAllowed() || userRequestInfo.getAllowedAppIds().contains(appId))) {
           return true;
         }
         if (permission.getAppId() != null
@@ -197,9 +196,8 @@ public class AuthServiceImpl implements AuthService {
           return true;
         }
       } else if (permissionScope == PermissionScope.ENV) {
-        if (reqAction == Action.READ
-            && (userRequestInfo != null
-                   && (userRequestInfo.isAllEnvironmentsAllowed() || !userRequestInfo.getAllowedEnvIds().isEmpty()))) {
+        if (userRequestInfo != null
+            && (userRequestInfo.isAllEnvironmentsAllowed() || userRequestInfo.getAllowedEnvIds().contains(envId))) {
           return true;
         }
 

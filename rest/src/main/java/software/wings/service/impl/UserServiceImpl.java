@@ -111,17 +111,14 @@ public class UserServiceImpl implements UserService {
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
-    Account account = setupAccount(user.getAccountName(), user.getCompanyName());
     User existingUser = getUserByEmail(user.getEmail());
     if (existingUser != null) {
-      addAccountAdminRole(existingUser, account);
-      executorService.execute(() -> sendSuccessfullyAddedToNewAccountEmail(existingUser, account));
-      return existingUser;
-    } else {
-      User savedUser = registerNewUser(user, account);
-      executorService.execute(() -> sendVerificationEmail(savedUser));
-      return savedUser;
+      throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
     }
+    Account account = setupAccount(user.getAccountName(), user.getCompanyName());
+    User savedUser = registerNewUser(user, account);
+    executorService.execute(() -> sendVerificationEmail(savedUser));
+    return savedUser;
   }
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {

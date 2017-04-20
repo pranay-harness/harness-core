@@ -16,6 +16,9 @@ public class UserRequestInfo {
   private ImmutableList<String> allowedAppIds;
   private ImmutableList<String> allowedEnvIds;
 
+  private boolean appIdFilterRequired;
+  private boolean envIdFilterRequired;
+
   private ImmutableList<PermissionAttribute> permissionAttributes;
 
   public String getAccountId() {
@@ -82,6 +85,22 @@ public class UserRequestInfo {
     this.permissionAttributes = permissionAttributes;
   }
 
+  public boolean isAppIdFilterRequired() {
+    return appIdFilterRequired;
+  }
+
+  public void setAppIdFilterRequired(boolean appIdFilterRequired) {
+    this.appIdFilterRequired = appIdFilterRequired;
+  }
+
+  public boolean isEnvIdFilterRequired() {
+    return envIdFilterRequired;
+  }
+
+  public void setEnvIdFilterRequired(boolean envIdFilterRequired) {
+    this.envIdFilterRequired = envIdFilterRequired;
+  }
+
   public static final class UserRequestInfoBuilder {
     private String accountId;
     private String appId;
@@ -91,6 +110,7 @@ public class UserRequestInfo {
     private ImmutableList<String> allowedAppIds;
     private ImmutableList<String> allowedEnvIds;
     private ImmutableList<PermissionAttribute> permissionAttributes;
+    private boolean appIdFilterRequired;
 
     private UserRequestInfoBuilder() {}
 
@@ -138,6 +158,11 @@ public class UserRequestInfo {
       return this;
     }
 
+    public UserRequestInfoBuilder withAppIdFilterRequired(boolean appIdFilterRequired) {
+      this.appIdFilterRequired = appIdFilterRequired;
+      return this;
+    }
+
     public UserRequestInfo build() {
       UserRequestInfo userRequestInfo = new UserRequestInfo();
       userRequestInfo.setAccountId(accountId);
@@ -148,6 +173,7 @@ public class UserRequestInfo {
       userRequestInfo.setAllowedAppIds(allowedAppIds);
       userRequestInfo.setAllowedEnvIds(allowedEnvIds);
       userRequestInfo.setPermissionAttributes(permissionAttributes);
+      userRequestInfo.setAppIdFilterRequired(appIdFilterRequired);
       return userRequestInfo;
     }
   }

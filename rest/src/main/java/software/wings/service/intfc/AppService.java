@@ -20,6 +20,11 @@ public interface AppService {
    */
   Application save(Application app);
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
+   */
+  PageResponse<Application> list(PageRequest<Application> req);
+
   /**
    * List.
    *

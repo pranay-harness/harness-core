@@ -14,7 +14,8 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.PublicApi;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
@@ -38,7 +39,7 @@ import javax.ws.rs.QueryParam;
 @Path("services")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@PublicApi
+@AuthRule(ResourceType.APPLICATION)
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
 

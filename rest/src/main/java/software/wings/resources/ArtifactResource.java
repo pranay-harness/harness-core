@@ -8,6 +8,8 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ArtifactService;
 
 import java.io.File;
@@ -36,6 +38,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api("artifacts")
 @Path("/artifacts")
 @Produces("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class ArtifactResource {
   private ArtifactService artifactService;
 

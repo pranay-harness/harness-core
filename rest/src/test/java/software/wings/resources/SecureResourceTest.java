@@ -59,6 +59,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
+import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.GenericDbCache;
@@ -72,7 +73,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.ResourceTestRule;
 
@@ -197,13 +197,15 @@ public class SecureResourceTest {
                                       .build()))
           .build();
 
-  private User user = anUser()
-                          .withUuid(USER_ID)
-                          .withAppId(GLOBAL_APP_ID)
-                          .withEmail(USER_EMAIL)
-                          .withName(USER_NAME)
-                          .withPassword(PASSWORD)
-                          .build();
+  private User user =
+      anUser()
+          .withUuid(USER_ID)
+          .withAppId(GLOBAL_APP_ID)
+          .withEmail(USER_EMAIL)
+          .withName(USER_NAME)
+          .withPassword(PASSWORD)
+          .withRoles(asList(aRole().withAccountId(ACCOUNT_ID).withRoleType(RoleType.ACCOUNT_ADMIN).build()))
+          .build();
 
   /**
    * Sets up.
@@ -275,7 +277,7 @@ public class SecureResourceTest {
   @Test
   public void shouldRequireAuthorizationByDefaultForNonPublicResource() {
     RestResponse<User> response = resources.client()
-                                      .target("/secure-resources/NonPublicApi")
+                                      .target("/secure-resources/NonPublicApi?appId=" + APP_ID)
                                       .request()
                                       .header(HttpHeaders.AUTHORIZATION, "Bearer VALID_TOKEN")
                                       .get(new GenericType<RestResponse<User>>() {});

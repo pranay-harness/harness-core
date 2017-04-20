@@ -158,6 +158,13 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
+  public PageResponse<Application> list(PageRequest<Application> req) {
+    return list(req, false, 0, 0);
+  }
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
+   */
+  @Override
   public PageResponse<Application> list(
       PageRequest<Application> req, boolean overview, int numberOfExecutions, int overviewDays) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);

@@ -17,6 +17,8 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -40,6 +42,7 @@ import javax.ws.rs.core.StreamingOutput;
 @Api("delegateFiles")
 @Path("/delegateFiles")
 @Produces("application/json")
+@AuthRule(ResourceType.DELEGATE)
 public class DelegateFileResource {
   private final Logger logger = LoggerFactory.getLogger(DelegateFileResource.class);
 

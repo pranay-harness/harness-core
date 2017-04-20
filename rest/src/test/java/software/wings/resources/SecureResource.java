@@ -39,6 +39,7 @@ public class SecureResource {
    */
   @GET
   @Path("NonPublicApi")
+  @AuthRule(ResourceType.APPLICATION)
   public RestResponse<User> NonPublicApi() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -93,6 +94,7 @@ public class SecureResource {
 
   @GET
   @Path("delegateAuth")
+  @AuthRule(ResourceType.DELEGATE)
   @DelegateAuth
   public RestResponse<String> delegateAuth() {
     return new RestResponse<>("test");

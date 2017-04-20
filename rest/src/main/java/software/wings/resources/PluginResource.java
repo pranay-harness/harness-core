@@ -9,6 +9,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.PluginService;
 
 import java.util.List;
@@ -27,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/plugins")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@AuthRule(ResourceType.SETTING)
 public class PluginResource {
   private PluginService pluginService;
 

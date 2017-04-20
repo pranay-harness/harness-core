@@ -17,6 +17,8 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.utils.BoundedInputStream;
 
@@ -43,6 +45,7 @@ import javax.ws.rs.core.Response;
 @Api("app-containers")
 @Path("/app-containers")
 @Produces("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
   @Inject private MainConfiguration configuration;

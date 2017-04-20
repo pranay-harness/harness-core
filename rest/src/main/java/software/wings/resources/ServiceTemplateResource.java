@@ -13,6 +13,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -35,6 +37,7 @@ import javax.ws.rs.QueryParam;
 @Path("/service-templates")
 @Produces("application/json")
 @Consumes("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class ServiceTemplateResource {
   /**
    * The Service template service.

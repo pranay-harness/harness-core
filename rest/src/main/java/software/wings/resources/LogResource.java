@@ -5,6 +5,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.LogService;
 
@@ -19,6 +21,7 @@ import javax.ws.rs.Produces;
 @Api("logs")
 @Path("/logs")
 @Produces("application/json")
+@AuthRule(ResourceType.APPLICATION)
 public class LogResource {
   private LogService logService;
 
