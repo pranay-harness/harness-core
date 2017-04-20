@@ -14,7 +14,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
@@ -83,7 +82,28 @@ public class UserResource {
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     Account account = accountService.get(accountId);
     pageRequest.addFilter("accounts", account, Operator.HAS);
-    return new RestResponse<>(userService.list(pageRequest));
+    PageResponse<User> pageResponse = userService.list(pageRequest);
+    if (pageResponse != null && !pageResponse.isEmpty()) {
+      pageResponse.forEach(user -> {
+        int i = 0;
+        while (i < user.getAccounts().size()) {
+          if (!accountId.equals(user.getAccounts().get(i).getUuid())) {
+            user.getAccounts().remove(i);
+          } else {
+            i++;
+          }
+        }
+        i = 0;
+        while (i < user.getRoles().size()) {
+          if (!accountId.equals(user.getRoles().get(i).getAccountId())) {
+            user.getRoles().remove(i);
+          } else {
+            i++;
+          }
+        }
+      });
+    }
+    return new RestResponse<>(pageResponse);
   }
 
   /**
