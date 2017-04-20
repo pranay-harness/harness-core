@@ -357,7 +357,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, workflowId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
-      throw new WingsException("Orchestration Workflow has already been triggered");
+      throw new WingsException(ErrorCode.WORKFLOW_ALREADY_TRIGGERED);
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
