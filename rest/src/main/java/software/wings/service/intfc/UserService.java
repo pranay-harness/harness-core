@@ -86,6 +86,8 @@ public interface UserService {
 
   boolean verifyEmail(String emailAddress);
 
+  boolean resendVerificationEmail(String email);
+
   /**
    * Verify email string.
    *
