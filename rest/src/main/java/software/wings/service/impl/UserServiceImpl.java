@@ -204,6 +204,17 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public boolean resendVerificationEmail(String email) {
+    User existingUser = getUserByEmail(email);
+    if (existingUser == null) {
+      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
+    }
+
+    sendVerificationEmail(existingUser);
+    return true;
+  }
+
+  @Override
   public boolean verifyToken(String emailToken) {
     EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
                                                    .field("appId")

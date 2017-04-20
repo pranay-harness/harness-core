@@ -5,7 +5,6 @@ REMOTE_DELEGATE_METADATA=$(curl ${delegateMetadataUrl} --fail --silent --show-er
 REMOTE_DELEGATE_URL="$REMOTE_HOST/$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f2)"
 REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
 
-KEEP_N_BACKUPS=3
 CURRENT_VERSION=0
 
 if [ -e delegate.jar ]
@@ -17,13 +16,6 @@ then
     mkdir -p backup.$CURRENT_VERSION
     cp delegate.jar backup.$CURRENT_VERSION
     curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
-    BACKUPS='backup.*/'
-    qsort dircomp $BACKUPS
-    <#noparse>
-    for i in ${qsort_ret[@]:${KEEP_N_BACKUPS}}; do
-      rm -rf ${i}
-    done
-    </#noparse>
   else
     exit 1
   fi

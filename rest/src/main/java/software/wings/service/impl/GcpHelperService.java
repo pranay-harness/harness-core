@@ -10,6 +10,8 @@ import com.google.inject.Singleton;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -43,10 +45,11 @@ public class GcpHelperService {
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Wings").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service.", e);
+      throw new WingsException(ErrorCode.INVALID_CREDENTIAL, "Invalid Google Cloud Platform credentials.", e);
     } catch (IOException e) {
       logger.error("Error getting Google container service.", e);
+      throw new WingsException(ErrorCode.INVALID_CREDENTIAL, "Invalid Google Cloud Platform credentials.", e);
     }
-    return null;
   }
 
   public int getSleepIntervalSecs() {

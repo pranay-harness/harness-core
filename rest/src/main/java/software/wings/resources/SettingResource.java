@@ -21,13 +21,16 @@ import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -57,6 +60,7 @@ import javax.ws.rs.QueryParam;
 public class SettingResource {
   @Inject private SettingsService attributeService;
   @Inject private MainConfiguration configuration;
+  @Inject private GcpHelperService gcpHelperService;
 
   /**
    * List.
@@ -118,15 +122,9 @@ public class SettingResource {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
-    SettingValue value = null;
-    if (GCP.name().equals(type)) {
-      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
-    }
+    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream);
     if (isNullOrEmpty(name)) {
-      String fileName = fileDetail.getFileName();
-      name = fileName.substring(0,
-          fileName.contains("-") ? fileName.lastIndexOf("-")
-                                 : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
+      name = getNameFromFileName(fileDetail.getFileName());
     }
     return new RestResponse<>(
         attributeService.save(aSettingAttribute()
@@ -192,19 +190,30 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    SettingValue value = null;
-    if (GCP.name().equals(type)) {
-      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
-    }
+    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream);
     if (isNullOrEmpty(name)) {
-      String fileName = fileDetail.getFileName();
-      name = fileName.substring(0,
-          fileName.contains("-") ? fileName.lastIndexOf("-")
-                                 : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
+      name = getNameFromFileName(fileDetail.getFileName());
     }
 
     return new RestResponse<>(
         attributeService.update(aSettingAttribute().withUuid(attrId).withName(name).withValue(value).build()));
+  }
+
+  private SettingValue getValidatedCredentialsSettingValue(String type, InputStream uploadedInputStream)
+      throws IOException {
+    if (GCP.name().equals(type)) {
+      String credentials = IOUtils.toString(uploadedInputStream);
+      gcpHelperService.getGkeContainerService(credentials);
+      return aGcpConfig().withServiceAccountKeyFileContent(credentials).build();
+    } else {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
+    }
+  }
+
+  private String getNameFromFileName(String fileName) {
+    return fileName.substring(0,
+        fileName.contains("-") ? fileName.lastIndexOf("-")
+                               : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
   }
 
   /**

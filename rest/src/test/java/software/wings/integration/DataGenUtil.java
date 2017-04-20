@@ -255,7 +255,7 @@ public void populateData() throws IOException {
   Map<String, List<Service>> services = new HashMap<>();
   Map<String, List<Environment>> appEnvs = new HashMap<>();
 
-  containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID));
+  //    containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID)); // TODO:: upload Real Tomcat and Jboss server.
 
   for (Application application : apps) {
     appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
@@ -512,7 +512,8 @@ private List<Service> addServices(String appId, List<AppContainer> appContainers
     serviceMap.put("description", randomText(40));
     serviceMap.put("appId", appId);
     serviceMap.put("artifactType", WAR.name());
-    serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size())));
+    //      serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size()))); //TODO:: create
+    //      service with tomcat/jboss family container type
     RestResponse<Service> response = getRequestWithAuthHeader(target).post(
         Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() { // FIXME
         });
