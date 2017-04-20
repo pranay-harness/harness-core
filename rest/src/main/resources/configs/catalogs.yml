@@ -99,7 +99,7 @@ NOTIFICATION_CONDITION:
       value: PAUSED
 
 REPAIR_ACTION_CODE:
-    - name: Maanual Intervention
+    - name: Manual Intervention
       value: MANUAL_INTERVENTION
     - name: Rollback Workflow Execution
       value: ROLLBACK_WORKFLOW
