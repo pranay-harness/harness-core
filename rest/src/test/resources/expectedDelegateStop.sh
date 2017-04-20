@@ -34,6 +34,64 @@ vercomp () {
     echo "0"
 }
 
+dircomp () {
+    if [[ $1 == $2 ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local len1=${#1} len2=${#2}
+    local i ver1=(${1:7:$len1 - 8}) ver2=(${2:7:$len2 - 8})
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 0
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 1
+        fi
+    done
+    return 0
+}
+
+qsort() {
+   (($#<=1)) && return 0
+   local compare_fun=$1
+   shift
+   local stack=( 0 $(($#-1)) ) beg end i pivot smaller larger
+   qsort_ret=("$@")
+   while ((${#stack[@]})); do
+      beg=${stack[0]}
+      end=${stack[1]}
+      stack=( "${stack[@]:2}" )
+      smaller=() larger=()
+      pivot=${qsort_ret[beg]}
+      for ((i=beg+1;i<=end;++i)); do
+         if "$compare_fun" "${qsort_ret[i]}" "$pivot"; then
+            smaller+=( "${qsort_ret[i]}" )
+         else
+            larger+=( "${qsort_ret[i]}" )
+         fi
+      done
+      qsort_ret=( "${qsort_ret[@]:0:beg}" "${smaller[@]}" "$pivot" "${larger[@]}" "${qsort_ret[@]:end+1}"\
+ )
+      if ((${#smaller[@]}>=2)); then stack+=( "$beg" "$((beg+${#smaller[@]}-1))" ); fi
+      if ((${#larger[@]}>=2)); then stack+=( "$((end-${#larger[@]}+1))" "$end" ); fi
+   done
+}
+
 JRE_DIR=jre1.8.0_121
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in

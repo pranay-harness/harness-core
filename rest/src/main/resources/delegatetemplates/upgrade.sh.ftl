@@ -19,9 +19,11 @@ then
     curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
     BACKUPS='backup.*/'
     qsort dircomp $BACKUPS
+    <#noparse>
     for i in ${qsort_ret[@]:${KEEP_N_BACKUPS}}; do
       rm -rf ${i}
     done
+    </#noparse>
   else
     exit 1
   fi
