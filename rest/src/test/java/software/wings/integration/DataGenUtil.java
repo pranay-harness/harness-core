@@ -261,7 +261,7 @@ public void populateData() throws IOException {
     appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
     containers.put(application.getUuid(), addAppContainers(application.getUuid()));
     services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
-    createAppSettings(application.getUuid());
+    createAppSettings(application.getAccountId());
   }
 }
 
@@ -330,7 +330,7 @@ private Builder getRequestWithAuthHeader(WebTarget target) {
 }
 
 private void createGlobalSettings() {
-  WebTarget target = client.target(API_BASE + "/settings/?appId=" + GLOBAL_APP_ID);
+  WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
                         .withName("Wings Jenkins")
@@ -425,8 +425,8 @@ private void createGlobalSettings() {
   */
 }
 
-private void createAppSettings(String appId) {
-  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId);
+private void createAppSettings(String accountId) {
+  WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
   getRequestWithAuthHeader(target).post(
       Entity.entity(
           aSettingAttribute()
