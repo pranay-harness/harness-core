@@ -45,6 +45,7 @@ public class RoleResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Role>> list(
       @BeanParam PageRequest<Role> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
+    pageRequest.setLimit(PageRequest.UNLIMITED);
     return new RestResponse<>(roleService.list(pageRequest));
   }
 
