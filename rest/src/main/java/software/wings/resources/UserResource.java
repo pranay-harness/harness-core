@@ -263,11 +263,11 @@ public class UserResource {
    * @throws URISyntaxException the uri syntax exception
    */
   @GET
-  @Path("verify-email/{email}")
+  @Path("verify-email")
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> verifyEmail(@PathParam("email") String email) throws URISyntaxException {
+  public RestResponse<Boolean> verifyEmail(@QueryParam("email") String email) throws URISyntaxException {
     return new RestResponse<>(userService.verifyEmail(email));
   }
 
