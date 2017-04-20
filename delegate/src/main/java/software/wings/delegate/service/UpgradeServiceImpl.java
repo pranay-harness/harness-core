@@ -80,10 +80,11 @@ public class UpgradeServiceImpl implements UpgradeService {
           new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
 
           // Cleanup capsule cache.
-          cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion());
+          cleanup(
+              new File(System.getProperty("capsule.dir")).getParentFile(), version, delegate.getVersion(), "delegate-");
 
           // Cleanup old backup.
-          cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion());
+          cleanup(new File(System.getProperty("user.dir")), version, delegate.getVersion(), "backup.");
 
           signalService.stop();
         } finally {
@@ -120,8 +121,8 @@ public class UpgradeServiceImpl implements UpgradeService {
     return false;
   }
 
-  private void cleanup(File dir, String currentVersion, String newVersion) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter("delegate-")).forEach(file -> {
+  private void cleanup(File dir, String currentVersion, String newVersion, String pattern) {
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
       if (!dir.equals(file) && !file.getName().contains(currentVersion) && !file.getName().contains(newVersion)) {
         logger.info("File Name to be deleted = " + file.getAbsolutePath());
         FileUtils.deleteQuietly(file);
