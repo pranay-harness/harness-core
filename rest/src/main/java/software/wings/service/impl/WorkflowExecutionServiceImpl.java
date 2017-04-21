@@ -357,7 +357,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, workflowId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
-      throw new WingsException("Orchestration Workflow has already been triggered");
+      throw new WingsException(ErrorCode.WORKFLOW_ALREADY_TRIGGERED);
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -692,7 +692,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
-    Validator.notNullCheck("Workflow Type", executionArgs.getWorkflowType());
+    Validator.notNullCheck("workflowType", executionArgs.getWorkflowType());
 
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION
         || executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
