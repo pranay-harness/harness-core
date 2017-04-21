@@ -51,26 +51,27 @@ public interface AppContainerService {
   /**
    * Gets the.
    *
-   * @param appId          the app id
+   *
+   * @param accountId
    * @param appContainerId the app container id
    * @return the app container
    */
-  AppContainer get(@NotEmpty String appId, @NotEmpty String appContainerId);
+  AppContainer get(@NotEmpty String accountId, @NotEmpty String appContainerId);
 
   /**
    * Delete.
    *
-   * @param appId          the app id
+   * @param accountId
    * @param appContainerId the app container id
    */
-  void delete(String appId, @NotEmpty String appContainerId);
+  void delete(String accountId, @NotEmpty String appContainerId);
 
   /**
-   * Delete by app id.
+   * Download file.
    *
-   * @param appId the app id
+   * @param accountId      the account id
+   * @param appContainerId the app container id
+   * @return the file
    */
-  void deleteByAppId(@NotEmpty String appId);
-
   File download(String accountId, String appContainerId);
 }

@@ -7,8 +7,9 @@ import static javax.ws.rs.core.Response.Status.GATEWAY_TIMEOUT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
-import com.google.common.base.CaseFormat;
+import com.google.common.base.Splitter;
 
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response.Status;
 
 /**
@@ -299,7 +300,12 @@ public enum ErrorCode {
   /**
    * Workflow already triggered
    */
-  WORKFLOW_ALREADY_TRIGGERED("WORKFLOW_ALREADY_TRIGGERED");
+  WORKFLOW_ALREADY_TRIGGERED("WORKFLOW_ALREADY_TRIGGERED"),
+
+  /**
+   * Jenkins response error
+   */
+  JENKINS_ERROR("JENKINS_ERROR");
 
   /**
    * The constant ARGS_NAME.
@@ -353,6 +359,14 @@ public enum ErrorCode {
    * @return the description
    */
   public String getDescription() {
-    return description != null ? description : CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, code);
+    return description != null ? description : upperUnderscoreToSpaceSepratedCamelCase(code);
+  }
+
+  public static String upperUnderscoreToSpaceSepratedCamelCase(String original) {
+    return Splitter.on("_").splitToList(original).stream().map(ErrorCode::capitalize).collect(Collectors.joining(" "));
+  }
+
+  public static String capitalize(final String line) {
+    return line.length() > 1 ? line.charAt(0) + line.substring(1).toLowerCase() : line;
   }
 }

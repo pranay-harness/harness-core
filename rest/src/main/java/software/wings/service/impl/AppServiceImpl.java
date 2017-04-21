@@ -265,7 +265,6 @@ public class AppServiceImpl implements AppService {
         artifactService.deleteByApplication(appId);
         workflowService.deleteWorkflowByApplication(appId);
         workflowService.deleteStateMachinesByApplication(appId);
-        appContainerService.deleteByAppId(appId);
       });
       notificationService.sendNotificationAsync(
           anInformationNotification()

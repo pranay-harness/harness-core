@@ -19,7 +19,7 @@ import java.util.Objects;
  *
  * @author Rishi
  */
-@Indexes(@Index(fields = { @Field("appId")
+@Indexes(@Index(fields = { @Field("accountId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 @Entity(value = "appContainers", noClassnameStored = true)
 public class AppContainer extends BaseFile {
@@ -29,7 +29,7 @@ public class AppContainer extends BaseFile {
   @FormDataParam("family") private ContainerFamily family;
   private String stackRootDirectory;
   private FileType fileType;
-  @FormDataParam("accountId") @NotEmpty private String accountId;
+  @NotEmpty private String accountId;
 
   /**
    * Is standard boolean.

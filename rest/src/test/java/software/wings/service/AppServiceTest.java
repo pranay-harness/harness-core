@@ -256,7 +256,6 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
     inOrder.verify(environmentService).deleteByApp(APP_ID);
-    inOrder.verify(appContainerService).deleteByAppId(APP_ID);
     inOrder.verify(jobScheduler).deleteJob(anyString(), eq(APP_ID));
   }
 }
