@@ -200,7 +200,7 @@ public class WingsRule implements MethodRule {
 
     if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
       System.setProperty("hazelcast.jcache.provider.type", "server");
-      CacheModule cacheModule = new CacheModule();
+      CacheModule cacheModule = new CacheModule(null);
       modules.add(0, cacheModule);
       hazelcastInstance = cacheModule.getHazelcastInstance();
     }

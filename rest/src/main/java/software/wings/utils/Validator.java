@@ -20,7 +20,7 @@ public class Validator {
    */
   public static void notNullCheck(String name, Object value) {
     if (value == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", name);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "message", name + " not found");
     }
   }
 

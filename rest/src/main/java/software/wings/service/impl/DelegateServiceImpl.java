@@ -323,7 +323,7 @@ public class DelegateServiceImpl implements DelegateService {
     run = new File(run.getAbsolutePath());
     ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, "wings-delegate/run.sh");
 
-    runZipArchiveEntry.setUnixMode(0755);
+    runZipArchiveEntry.setUnixMode(0755 << 16L);
     AsiExtraField permissions = new AsiExtraField();
     permissions.setMode(0755);
     runZipArchiveEntry.addExtraField(permissions);
@@ -339,7 +339,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
     run = new File(run.getAbsolutePath());
     ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(run, "wings-delegate/stop.sh");
-    stopZipArchiveEntry.setUnixMode(0755);
+    stopZipArchiveEntry.setUnixMode(0755 << 16L);
     permissions = new AsiExtraField();
     permissions.setMode(0755);
     stopZipArchiveEntry.addExtraField(permissions);

@@ -63,7 +63,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     notNullCheck("Setting", settingAttribute);
 
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("artifactStream", artifactStream);
+    notNullCheck("Artifact Stream", artifactStream);
 
     return getBuildService(settingAttribute, appId)
         .getBuilds(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
@@ -74,7 +74,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("artifactStream", artifactStream);
+    notNullCheck("Artifact Stream", artifactStream);
     return getBuildService(settingAttribute, appId)
         .getLastSuccessfulBuild(appId, artifactStream.getArtifactStreamAttributes(), settingAttribute.getValue());
   }

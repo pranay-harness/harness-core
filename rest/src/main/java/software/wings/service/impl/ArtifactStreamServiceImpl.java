@@ -262,7 +262,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                       .equal(workflowId);
 
     ArtifactStream artifactStream = query.get();
-    Validator.notNullCheck("ArtifactStream", artifactStream);
+    Validator.notNullCheck("Artifact Stream", artifactStream);
 
     ArtifactStreamAction streamAction =
         artifactStream.getStreamActions()
@@ -270,7 +270,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .filter(artifactStreamAction -> artifactStreamAction.getWorkflowId().equals(workflowId))
             .findFirst()
             .orElseGet(null);
-    Validator.notNullCheck("StreamAction", streamAction);
+    Validator.notNullCheck("Stream Action", streamAction);
 
     UpdateOperations<ArtifactStream> operations =
         wingsPersistence.createUpdateOperations(ArtifactStream.class).removeAll("streamActions", streamAction);
@@ -358,7 +358,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void triggerStreamActionPostArtifactCollection(Artifact artifact) {
     ArtifactStream artifactStream = get(artifact.getAppId(), artifact.getArtifactStreamId());
-    Validator.notNullCheck("ArtifactStream", artifactStream);
+    Validator.notNullCheck("Artifact Stream", artifactStream);
     artifactStream.getStreamActions()
         .stream()
         .filter(streamAction -> !streamAction.isCustomAction())

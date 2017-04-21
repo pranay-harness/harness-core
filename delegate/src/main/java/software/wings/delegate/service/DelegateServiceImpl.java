@@ -195,7 +195,6 @@ public class DelegateServiceImpl implements DelegateService {
       startHeartbeat(builder, socket);
 
       startUpgradeCheck(accountId, delegateId, getVersion());
-      // startHeartbeat(accountId, builder, delegateId);
 
       logger.info("Delegate started.");
 

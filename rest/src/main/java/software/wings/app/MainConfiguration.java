@@ -49,6 +49,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsEcsAMIByRegion") private Map<String, String> awsEcsAMIByRegion;
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
+  @JsonProperty("hazelcastManCenterConfigUrl") private String hazelcastManCenterConfigUrl;
 
   /**
    * Instantiates a new Main configuration.
@@ -265,6 +266,14 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setAwsRegionIdToName(Map<String, String> awsRegionIdToName) {
     this.awsRegionIdToName = awsRegionIdToName;
+  }
+
+  public String getHazelcastManCenterConfigUrl() {
+    return hazelcastManCenterConfigUrl;
+  }
+
+  public void setHazelcastManCenterConfigUrl(String hazelcastManCenterConfigUrl) {
+    this.hazelcastManCenterConfigUrl = hazelcastManCenterConfigUrl;
   }
 
   /**

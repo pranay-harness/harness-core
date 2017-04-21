@@ -92,7 +92,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT);
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-    Validator.notNullCheck("artifactStream", artifactStream);
+    Validator.notNullCheck("Artifact Stream", artifactStream);
 
     artifact.setServiceIds(Arrays.asList(artifactStream.getServiceId()));
     Status status = getArtifactStatus(artifactStream);
