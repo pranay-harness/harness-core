@@ -14,6 +14,7 @@ public class CacheHelper {
   public static <K, V> Cache<K, V> getCache(
       String cacheName, Class<K> keyType, Class<V> valueType, Factory<ExpiryPolicy> expiryPolicy) {
     MutableConfiguration<K, V> configuration = new MutableConfiguration<>();
+    configuration.setTypes(keyType, valueType);
     configuration.setStoreByValue(true);
     configuration.setExpiryPolicyFactory(expiryPolicy);
     return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))
@@ -23,6 +24,7 @@ public class CacheHelper {
   public static <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
     MutableConfiguration<K, V> configuration = new MutableConfiguration<>();
     configuration.setStoreByValue(true);
+    configuration.setTypes(keyType, valueType);
     return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))
         .orElseGet(() -> Caching.getCachingProvider().getCacheManager().createCache(cacheName, configuration));
   }

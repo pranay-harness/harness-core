@@ -692,7 +692,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
-    Validator.notNullCheck("Workflow Type", executionArgs.getWorkflowType());
+    Validator.notNullCheck("workflowType", executionArgs.getWorkflowType());
 
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION
         || executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
