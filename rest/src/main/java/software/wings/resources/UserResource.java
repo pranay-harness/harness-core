@@ -295,9 +295,12 @@ public class UserResource {
     try {
       userService.verifyEmail(email);
     } catch (WingsException e) {
-      return RestResponse.Builder.aRestResponse().withResponseMessages(e.getResponseMessageList()).build();
+      return RestResponse.Builder.aRestResponse()
+          .withResource(false)
+          .withResponseMessages(e.getResponseMessageList())
+          .build();
     }
-    return new RestResponse<>(false);
+    return new RestResponse<>(true);
   }
 
   /**
