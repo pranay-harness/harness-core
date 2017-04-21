@@ -7,6 +7,7 @@ import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
+import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
@@ -53,7 +54,7 @@ import javax.inject.Inject;
 @Singleton
 public class AuthServiceImpl implements AuthService {
   private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
-  private GenericDbCache dbCache;
+  private GenericDbCache dbCache; // TODO:: replace with Hazelcast distributed cache
 
   private AccountService accountService;
   private WingsPersistence wingsPersistence;
@@ -61,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
   /**
    * Instantiates a new Auth service.
    *
-   * @param dbCache the db cache
+   * @param dbCache          the db cache
    * @param wingsPersistence
    */
   @Inject
@@ -74,11 +75,18 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthToken validateToken(String tokenString) {
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
+
     if (authToken == null) {
       throw new WingsException(INVALID_TOKEN);
     } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
       throw new WingsException(EXPIRED_TOKEN);
     }
+    User user = dbCache.get(User.class, authToken.getUserId());
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+    authToken.setUser(user);
+
     return authToken;
   }
 

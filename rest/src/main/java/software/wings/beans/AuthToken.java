@@ -3,48 +3,28 @@ package software.wings.beans;
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
-
-import javax.validation.constraints.NotNull;
+import org.simpleframework.xml.Transient;
 
 /**
  * Created by anubhaw on 3/14/16.
  */
 @Entity(value = "authTokens", noClassnameStored = true)
 public class AuthToken extends Base {
-  @Reference(idOnly = true) @NotNull private User user;
-
+  @Transient private User user;
+  private String userId;
   private long expireAt;
 
   /**
    * Instantiates a new auth token.
    *
-   * @param user                the user
+   * @param userId              the user id
    * @param tokenExpiryInMillis the token expiry in millis
    */
-  public AuthToken(User user, Long tokenExpiryInMillis) {
-    this.user = user;
+  public AuthToken(String userId, Long tokenExpiryInMillis) {
+    this.userId = userId;
     setUuid(secureRandAlphaNumString(32));
     setAppId(Base.GLOBAL_APP_ID);
     expireAt = System.currentTimeMillis() + tokenExpiryInMillis;
-  }
-
-  /**
-   * Gets user.
-   *
-   * @return the user
-   */
-  public User getUser() {
-    return user;
-  }
-
-  /**
-   * Sets user.
-   *
-   * @param user the user
-   */
-  public void setUser(User user) {
-    this.user = user;
   }
 
   /**
@@ -63,5 +43,21 @@ public class AuthToken extends Base {
    */
   public void setExpireAt(long expireAt) {
     this.expireAt = expireAt;
+  }
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
   }
 }

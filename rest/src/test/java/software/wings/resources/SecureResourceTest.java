@@ -214,7 +214,8 @@ public class SecureResourceTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(user, TOKEN_EXPIRY_IN_MILLIS));
+    when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, TOKEN_EXPIRY_IN_MILLIS));
+    when(genericDbCache.get(User.class, USER_ID)).thenReturn(user);
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(genericDbCache.get(Application.class, APP_ID))

@@ -8,6 +8,7 @@ import javax.validation.constraints.Size;
 /**
  * Created by rishi on 10/31/16.
  */
+
 public class FailureStrategy {
   @NotNull @Size(min = 1) private List<FailureType> failureTypes = new ArrayList<>();
   private ExecutionScope executionScope;

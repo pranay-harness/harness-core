@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
+import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.nimbusds.jose.EncryptionMethod;
@@ -78,8 +79,9 @@ public class AuthServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(userBuilder.but().build(), 86400000L));
-    when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(userBuilder.but().build(), 0L));
+    when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, 86400000L));
+    when(cache.get(User.class, USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
+    when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(USER_ID, 0L));
     when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).build());
     when(cache.get(Environment.class, ENV_ID))
         .thenReturn(

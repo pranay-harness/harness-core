@@ -24,7 +24,7 @@ public interface UserService {
    * @param user the user
    * @return the user
    */
-  @ValidationGroups(Create.class) public User register(@Valid User user);
+  @ValidationGroups(Create.class) User register(@Valid User user);
 
   /**
    * Match password.
@@ -33,7 +33,7 @@ public interface UserService {
    * @param hash     the hash
    * @return true, if successful
    */
-  public boolean matchPassword(@NotEmpty String password, @NotEmpty String hash);
+  boolean matchPassword(@NotEmpty String password, @NotEmpty String hash);
 
   /**
    * Adds the role.
@@ -42,7 +42,7 @@ public interface UserService {
    * @param roleId the role id
    * @return the user
    */
-  public User addRole(@NotEmpty String userId, @NotEmpty String roleId);
+  User addRole(@NotEmpty String userId, @NotEmpty String roleId);
 
   /**
    * Update.
@@ -50,7 +50,7 @@ public interface UserService {
    * @param user the user
    * @return the user
    */
-  @ValidationGroups(Update.class) public User update(@Valid User user);
+  @ValidationGroups(Update.class) User update(@Valid User user);
 
   /**
    * List.
@@ -58,14 +58,14 @@ public interface UserService {
    * @param pageRequest the page request
    * @return the page response
    */
-  public PageResponse<User> list(PageRequest<User> pageRequest);
+  PageResponse<User> list(PageRequest<User> pageRequest);
 
   /**
    * Delete.
    *
    * @param userId the user id
    */
-  public void delete(@NotEmpty String userId);
+  void delete(@NotEmpty String userId);
 
   /**
    * Gets the.
@@ -73,7 +73,7 @@ public interface UserService {
    * @param userId the user id
    * @return the user
    */
-  public User get(@NotEmpty String userId);
+  User get(@NotEmpty String userId);
 
   /**
    * Revoke role.
@@ -82,7 +82,7 @@ public interface UserService {
    * @param roleId the role id
    * @return the user
    */
-  public User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
+  User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 
   boolean verifyEmail(String emailAddress);
 

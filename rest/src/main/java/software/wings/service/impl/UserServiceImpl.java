@@ -58,6 +58,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.common.Constants;
+import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -105,6 +106,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private AppService appService;
+  @Inject private GenericDbCache dbCache;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -151,8 +153,7 @@ public class UserServiceImpl implements UserService {
       user.setPasswordHash(hashed);
       user.setPasswordChangedAt(System.currentTimeMillis());
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
-      User savedUser = wingsPersistence.saveAndGet(User.class, user);
-      return savedUser;
+      return save(user);
     } else {
       Map<String, Object> map = new HashMap();
       map.put("name", user.getName());
@@ -265,7 +266,7 @@ public class UserServiceImpl implements UserService {
                  .withAppId(Base.GLOBAL_APP_ID)
                  .withEmailVerified(false)
                  .build();
-      wingsPersistence.save(user);
+      user = save(user);
       sendNewInvitationMail(userInvite, account);
     } else {
       boolean userAlreadyAddedToAccount =
@@ -462,6 +463,12 @@ public class UserServiceImpl implements UserService {
     return BCrypt.checkpw(password, hash);
   }
 
+  private User save(User user) {
+    user = wingsPersistence.saveAndGet(User.class, user);
+    dbCache.invalidate(User.class, user.getUuid());
+    return user;
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#update(software.wings.beans.User)
    */
@@ -481,6 +488,7 @@ public class UserServiceImpl implements UserService {
       builder.put("roles", user.getRoles());
     }
     wingsPersistence.updateFields(User.class, user.getUuid(), builder.build());
+    dbCache.invalidate(User.class, user.getUuid());
     return wingsPersistence.get(User.class, user.getAppId(), user.getUuid());
   }
 
@@ -497,7 +505,9 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public void delete(String userId) {
-    wingsPersistence.delete(User.class, userId);
+    if (wingsPersistence.delete(User.class, userId)) {
+      dbCache.invalidate(User.class, userId);
+    }
   }
 
   /* (non-Javadoc)
@@ -523,6 +533,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
+    dbCache.invalidate(User.class, userId);
     return wingsPersistence.get(User.class, userId);
   }
 
@@ -537,6 +548,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).removeAll("roles", role);
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
+    dbCache.invalidate(User.class, userId);
     return wingsPersistence.get(User.class, userId);
   }
 

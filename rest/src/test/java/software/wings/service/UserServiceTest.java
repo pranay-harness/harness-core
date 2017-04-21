@@ -77,6 +77,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -117,6 +118,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private AppService appService;
   @Mock private AuthService authService;
+  @Mock private GenericDbCache dbCache;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
 
   @Inject @InjectMocks private UserService userService;
@@ -191,6 +193,7 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
         .startsWith(PORTAL_URL + "#" + VERIFICATION_PATH);
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   /**
@@ -231,6 +234,7 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
         .contains(VERIFICATION_PATH + "/token123");
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   /**
@@ -255,6 +259,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.update(user);
     verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME, "roles", roles));
     verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   /**
@@ -277,8 +282,10 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteUser() {
+    when(wingsPersistence.delete(User.class, USER_ID)).thenReturn(true);
     userService.delete(USER_ID);
     verify(wingsPersistence).delete(User.class, USER_ID);
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   /**
@@ -346,6 +353,7 @@ public class UserServiceTest extends WingsBaseTest {
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(USER_ID);
     verify(updateOperations).add("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   /**
@@ -362,6 +370,7 @@ public class UserServiceTest extends WingsBaseTest {
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(USER_ID);
     verify(updateOperations).removeAll("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   @Test
@@ -377,12 +386,16 @@ public class UserServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
+        .thenReturn(userBuilder.withUuid(USER_ID).build());
 
     userService.inviteUsers(userInvite);
 
     verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).save(userInvite);
     verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
+    verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
+    verify(dbCache).invalidate(User.class, USER_ID);
   }
 
   @Test
