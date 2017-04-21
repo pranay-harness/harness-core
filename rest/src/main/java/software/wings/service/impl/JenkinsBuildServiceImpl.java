@@ -69,7 +69,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     try {
       return Lists.newArrayList(jenkins.getJobs().keySet());
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching jobs from jenkins server", e);
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, e);
+      wingsException.addParam("message", "Error in fetching jobs from jenkins server");
+      wingsException.addParam("jenkinsResponse", e.getMessage());
+      throw wingsException;
     }
   }
 
