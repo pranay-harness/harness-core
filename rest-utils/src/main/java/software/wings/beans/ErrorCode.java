@@ -300,7 +300,12 @@ public enum ErrorCode {
   /**
    * Workflow already triggered
    */
-  WORKFLOW_ALREADY_TRIGGERED("WORKFLOW_ALREADY_TRIGGERED");
+  WORKFLOW_ALREADY_TRIGGERED("WORKFLOW_ALREADY_TRIGGERED"),
+
+  /**
+   * Jenkins response error
+   */
+  JENKINS_ERROR("JENKINS_ERROR");
 
   /**
    * The constant ARGS_NAME.
