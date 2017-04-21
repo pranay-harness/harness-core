@@ -20,6 +20,8 @@ import javax.annotation.Nullable;
  * Created by rishi on 2/8/17.
  */
 public class EcsServiceDeploy extends ContainerServiceDeploy {
+  @Attributes(title = "Number of instances") protected int instanceCount;
+
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Service Cluster")
