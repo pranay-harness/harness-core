@@ -13,7 +13,6 @@ import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.service.intfc.StatisticsService;
 
-import java.util.Map;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
