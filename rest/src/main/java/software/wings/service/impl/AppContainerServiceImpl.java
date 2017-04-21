@@ -1,10 +1,8 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
@@ -21,7 +19,6 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.stencils.DataProvider;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 import software.wings.utils.Misc;
@@ -31,7 +28,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -41,7 +37,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
-public class AppContainerServiceImpl implements AppContainerService, DataProvider {
+public class AppContainerServiceImpl implements AppContainerService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -113,16 +109,6 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
 
   private boolean newPlatformSoftwareBinaryUploaded(AppContainer storedAppContainer, AppContainer appContainer) {
     return !(appContainer.getChecksum() != null && appContainer.getChecksum().equals(storedAppContainer.getChecksum()));
-  }
-
-  @Override
-  public Map<String, String> getData(String appId, String... params) {
-    final String globalAppId = GLOBAL_APP_ID; // FIXME
-    return (Map<String, String>) list(
-        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, globalAppId).build()).build())
-        .getResponse()
-        .stream()
-        .collect(toMap(AppContainer::getUuid, AppContainer::getName));
   }
 
   private void ensureAppContainerNotInUse(String appContainerId) {
