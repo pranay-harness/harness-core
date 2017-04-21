@@ -25,11 +25,20 @@ public interface StatisticsService {
   /**
    * Gets application key stats.
    *
-   * @param appIds    the app id
+   * @param appIds    the list of app ids
    * @param numOfDays the num of days
    * @return the application key stats
    */
   Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays);
+
+  /**
+   * Gets application key stats for a single app.
+   *
+   * @param appId     the app id
+   * @param numOfDays the num of days
+   * @return the application key stats
+   */
+  AppKeyStatistics getSingleApplicationKeyStats(String appId, int numOfDays);
 
   /**
    * Gets user stats.
