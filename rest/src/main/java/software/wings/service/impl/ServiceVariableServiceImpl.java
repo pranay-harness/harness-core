@@ -63,10 +63,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId) {
     ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
-    if (serviceVariable == null) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "Service Setting not found");
-    }
-
+    Validator.notNullCheck("ServiceVariable", serviceVariable);
     return serviceVariable;
   }
 

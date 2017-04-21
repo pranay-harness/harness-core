@@ -171,7 +171,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void update(ConfigFile inputConfigFile, InputStream uploadedInputStream) {
     ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
-    Validator.notNullCheck("Configuration file", savedConfigFile);
+    Validator.notNullCheck("Configuration File", savedConfigFile);
 
     if (savedConfigFile.getEntityType().equals(SERVICE)
         && !savedConfigFile.getRelativeFilePath().equals(inputConfigFile.getRelativeFilePath())) {

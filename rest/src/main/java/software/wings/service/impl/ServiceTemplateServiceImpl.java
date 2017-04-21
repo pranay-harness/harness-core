@@ -134,7 +134,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(String appId, String serviceTemplateId) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
-    Validator.notNullCheck("ServiceTemplate", serviceTemplate);
+    Validator.notNullCheck("Service Template", serviceTemplate);
     setReferences(serviceTemplate);
     return serviceTemplate;
   }
