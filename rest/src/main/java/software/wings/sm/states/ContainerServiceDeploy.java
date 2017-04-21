@@ -15,7 +15,6 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 
 import com.google.inject.Inject;
 
-import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -73,7 +72,7 @@ import javax.annotation.Nullable;
 public abstract class ContainerServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
-  @Attributes(title = "Number of instances") protected int instanceCount;
+  protected int instanceCount;
 
   @Inject @Transient protected transient SettingsService settingsService;
 

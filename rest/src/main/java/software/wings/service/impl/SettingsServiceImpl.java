@@ -84,8 +84,11 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute update(SettingAttribute envVar) {
-    wingsPersistence.updateFields(SettingAttribute.class, envVar.getUuid(),
-        ImmutableMap.of("name", envVar.getName(), "value", envVar.getValue()));
+    ImmutableMap.Builder<String, Object> fields = ImmutableMap.<String, Object>builder().put("name", envVar.getName());
+    if (envVar.getValue() != null) {
+      fields.put("value", envVar.getValue());
+    }
+    wingsPersistence.updateFields(SettingAttribute.class, envVar.getUuid(), fields.build());
     return wingsPersistence.get(SettingAttribute.class, envVar.getUuid());
   }
 

@@ -75,7 +75,7 @@ public class CloudWatchState extends State {
   @Attributes(title = "Percentile (pNN.NN)") private String percentile;
   @Attributes(title = "Dimensions") private List<Dimension> dimensions = new ArrayList<>();
   @Attributes(title = "Time duration (in minutes, default 10 minutes)") private java.lang.String timeDuration;
-  @Attributes(title = "assertion") private String assertion;
+  @Attributes(title = "Assertion") private String assertion;
 
   @Transient private static final Logger logger = LoggerFactory.getLogger(CloudWatchState.class);
   private static final int DEFAULT_TIME_DURATION = 10 * 60; // seconds

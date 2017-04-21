@@ -116,9 +116,7 @@ public class UserServiceImpl implements UserService {
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
-    if (verifyEmail(user.getEmail())) {
-      throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
-    }
+    verifyRegisteredOrAllowed(user.getEmail());
     Account account = setupAccount(user.getAccountName(), user.getCompanyName());
     User savedUser = registerNewUser(user, account);
     executorService.execute(() -> sendVerificationEmail(savedUser));
@@ -157,7 +155,7 @@ public class UserServiceImpl implements UserService {
     } else {
       Map<String, Object> map = new HashMap();
       map.put("name", user.getName());
-      map.put("password", hashpw(user.getPassword(), BCrypt.gensalt()));
+      map.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
       return existingUser;
     }
@@ -199,9 +197,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean verifyEmail(String emailAddress) {
+  public void verifyRegisteredOrAllowed(String emailAddress) {
     User existingUser = getUserByEmail(emailAddress);
-    return existingUser != null && existingUser.isEmailVerified();
+    if (existingUser != null && existingUser.isEmailVerified()) {
+      throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
+    }
+
+    if (!domainAllowedToRegister(emailAddress)) {
+      throw new WingsException(ErrorCode.USER_DOMAIN_NOT_ALLOWED);
+    }
   }
 
   @Override

@@ -123,8 +123,9 @@ public class SettingResource {
       appId = GLOBAL_APP_ID;
     }
     SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream);
-    if (isNullOrEmpty(name)) {
-      name = getNameFromFileName(fileDetail.getFileName());
+    if (value == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Missing or empty Google Cloud Platform credentials file.",
+          new NullPointerException());
     }
     return new RestResponse<>(
         attributeService.save(aSettingAttribute()
@@ -190,30 +191,26 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+    SettingAttribute.Builder settingAttribute = aSettingAttribute().withUuid(attrId).withName(name);
     SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream);
-    if (isNullOrEmpty(name)) {
-      name = getNameFromFileName(fileDetail.getFileName());
+    if (value != null) {
+      settingAttribute.withValue(value);
     }
-
-    return new RestResponse<>(
-        attributeService.update(aSettingAttribute().withUuid(attrId).withName(name).withValue(value).build()));
+    return new RestResponse<>(attributeService.update(settingAttribute.build()));
   }
 
   private SettingValue getValidatedCredentialsSettingValue(String type, InputStream uploadedInputStream)
       throws IOException {
     if (GCP.name().equals(type)) {
       String credentials = IOUtils.toString(uploadedInputStream);
+      if (isNullOrEmpty(credentials) || "undefined".equals(credentials)) {
+        return null;
+      }
       gcpHelperService.getGkeContainerService(credentials);
       return aGcpConfig().withServiceAccountKeyFileContent(credentials).build();
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT);
     }
-  }
-
-  private String getNameFromFileName(String fileName) {
-    return fileName.substring(0,
-        fileName.contains("-") ? fileName.lastIndexOf("-")
-                               : fileName.contains(".") ? fileName.lastIndexOf(".") : fileName.length());
   }
 
   /**
