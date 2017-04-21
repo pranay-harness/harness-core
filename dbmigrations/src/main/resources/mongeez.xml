@@ -19,5 +19,5 @@
     <file path="standard-role-permissions.js" />
     <file path="license-migration.js" />
     <file path="workflow-version-refactor.js" />
-    <file path="service-variable-name-.js" />
+    <file path="service-variable-index-migration.js" />
 </changeFiles>
