@@ -19,6 +19,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
@@ -289,7 +290,15 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> verifyEmail(@QueryParam("email") String email) throws URISyntaxException {
-    return new RestResponse<>(userService.verifyEmail(email));
+    try {
+      userService.verifyRegisteredOrAllowed(email);
+    } catch (WingsException e) {
+      return RestResponse.Builder.aRestResponse()
+          .withResource(false)
+          .withResponseMessages(e.getResponseMessageList())
+          .build();
+    }
+    return new RestResponse<>(true);
   }
 
   /**
