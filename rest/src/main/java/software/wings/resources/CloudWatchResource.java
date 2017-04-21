@@ -6,6 +6,8 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.CloudWatchService;
 
 import java.util.List;
@@ -20,6 +22,7 @@ import javax.ws.rs.QueryParam;
 @Api("cloudwatch")
 @Path("/cloudwatch")
 @ExceptionMetered
+@AuthRule(ResourceType.APPLICATION)
 public class CloudWatchResource {
   @Inject private CloudWatchService cloudWatchService;
 
