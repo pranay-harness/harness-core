@@ -105,6 +105,7 @@ public class ServiceVariableResource {
   public RestResponse update(@QueryParam("appId") String appId,
       @PathParam("serviceVariableId") String serviceVariableId, ServiceVariable serviceVariable) {
     serviceVariable.setUuid(serviceVariableId);
+    serviceVariable.setAppId(appId);
     return new RestResponse<>(serviceVariablesService.update(serviceVariable));
   }
 

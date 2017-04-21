@@ -61,10 +61,15 @@ public class CacheModule extends AbstractModule {
   private HazelcastInstance hazelcastInstance;
   private CacheManager cacheManager;
 
-  public CacheModule() {
+  public CacheModule(String hazelcastManCenterUrl) {
     CachingProvider provider = Caching.getCachingProvider();
     this.cacheManager = provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader());
     this.hazelcastInstance = on(cacheManager).get("hazelcastInstance");
+    // hazelcastInstance.getConfig().getManagementCenterConfig().setEnabled(true).setUrl(hazelcastManCenterUrl).setUpdateInterval(3);
+
+    /* hazelcastInstance.
+     if(isNotBlank(hazelcastManCenterUrl)) {
+     }*/
   }
 
   @Override

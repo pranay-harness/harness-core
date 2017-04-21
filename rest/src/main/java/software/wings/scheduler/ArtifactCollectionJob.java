@@ -15,7 +15,6 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactService;
@@ -48,7 +47,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    Validator.notNullCheck("artifactStream", artifactStream);
+    Validator.notNullCheck("Artifact Stream", artifactStream);
 
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())) {
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
