@@ -114,7 +114,7 @@ public class UserServiceImpl implements UserService {
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
-    verifyEmail(user.getEmail());
+    verifyRegisteredOrAllowed(user.getEmail());
     Account account = setupAccount(user.getAccountName(), user.getCompanyName());
     User savedUser = registerNewUser(user, account);
     executorService.execute(() -> sendVerificationEmail(savedUser));
@@ -196,7 +196,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void verifyEmail(String emailAddress) {
+  public void verifyRegisteredOrAllowed(String emailAddress) {
     User existingUser = getUserByEmail(emailAddress);
     if (existingUser != null && existingUser.isEmailVerified()) {
       throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);

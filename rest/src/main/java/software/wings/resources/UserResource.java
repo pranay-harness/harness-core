@@ -13,7 +13,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -30,7 +29,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -293,7 +291,7 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<Boolean> verifyEmail(@QueryParam("email") String email) throws URISyntaxException {
     try {
-      userService.verifyEmail(email);
+      userService.verifyRegisteredOrAllowed(email);
     } catch (WingsException e) {
       return RestResponse.Builder.aRestResponse()
           .withResource(false)
