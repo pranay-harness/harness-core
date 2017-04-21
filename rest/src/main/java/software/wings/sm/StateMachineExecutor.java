@@ -11,6 +11,9 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -803,30 +806,32 @@ public class StateMachineExecutor {
       }
       case ABORT_ALL: {
         boolean updated = markAbortingState(workflowExecutionInterrupt);
-        PageRequest<StateExecutionInstance> pageRequest =
-            aPageRequest()
-                .withLimit(PageRequest.UNLIMITED)
-                .addFilter("appId", Operator.EQ, workflowExecutionInterrupt.getAppId())
-                .addFilter("executionUuid", Operator.EQ, workflowExecutionInterrupt.getExecutionUuid())
-                .addFilter("status", Operator.IN, ExecutionStatus.ABORTING)
-                .addFilter("stateType", Operator.NOT_IN, StateType.REPEAT.name(), StateType.FORK.name())
-                .build();
+        if (updated) {
+          PageRequest<StateExecutionInstance> pageRequest =
+              aPageRequest()
+                  .withLimit(PageRequest.UNLIMITED)
+                  .addFilter("appId", Operator.EQ, workflowExecutionInterrupt.getAppId())
+                  .addFilter("executionUuid", Operator.EQ, workflowExecutionInterrupt.getExecutionUuid())
+                  .addFilter("status", Operator.IN, ExecutionStatus.ABORTING)
+                  .build();
 
-        PageResponse<StateExecutionInstance> stateExecutionInstances =
-            wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-        if (stateExecutionInstances == null || stateExecutionInstances.isEmpty()) {
-          logger.warn(
-              "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
-              workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
-        } else {
-          for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-            StateMachine sm = wingsPersistence.get(
-                StateMachine.class, workflowExecutionInterrupt.getAppId(), stateExecutionInstance.getStateMachineId());
-            ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-            injector.injectMembers(context);
-            abortMarkedInstance(context, stateExecutionInstance);
+          PageResponse<StateExecutionInstance> stateExecutionInstances =
+              wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+          if (stateExecutionInstances == null || stateExecutionInstances.isEmpty()) {
+            logger.warn(
+                "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
+                workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
+          } else {
+            for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+              StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
+                  stateExecutionInstance.getStateMachineId());
+              ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+              injector.injectMembers(context);
+              abortMarkedInstance(context, stateExecutionInstance);
+            }
           }
         }
+
         break;
       }
     }
@@ -872,30 +877,93 @@ public class StateMachineExecutor {
   }
 
   private boolean markAbortingState(ExecutionInterrupt workflowExecutionInterrupt) {
+    // Get all that are eligible for aborting
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", Operator.EQ, workflowExecutionInterrupt.getAppId())
+            .addFilter("executionUuid", Operator.EQ, workflowExecutionInterrupt.getExecutionUuid())
+            .addFilter("status", Operator.IN, ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
+                ExecutionStatus.PAUSED, ExecutionStatus.PAUSING, ExecutionStatus.PAUSED_ON_ERROR)
+            .addFieldsIncluded("uuid", "stateType")
+            .build();
+
+    PageResponse<StateExecutionInstance> pageResponse =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+    if (pageResponse == null || pageResponse.isEmpty()) {
+      logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
+          workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
+      return false;
+    }
+    List<String> leafInstanceIds = getAllLeafInstanceIds(workflowExecutionInterrupt, pageResponse);
+
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
     ops.set("status", ExecutionStatus.ABORTING);
 
-    Query<StateExecutionInstance> query =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .field("appId")
-            .equal(workflowExecutionInterrupt.getAppId())
-            .field("executionUuid")
-            .equal(workflowExecutionInterrupt.getExecutionUuid())
-            .field("status")
-            .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
-                ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR))
-            .field("stateType")
-            .notIn(Lists.newArrayList(StateType.REPEAT.name(), StateType.FORK.name(), StateType.PHASE.name(),
-                StateType.PHASE_STEP.name(), StateType.SUB_WORKFLOW.name()));
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .field("appId")
+                                              .equal(workflowExecutionInterrupt.getAppId())
+                                              .field("executionUuid")
+                                              .equal(workflowExecutionInterrupt.getExecutionUuid())
+                                              .field("parentInstanceId")
+                                              .in(leafInstanceIds);
+    // Set the status to ABORTING
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() == 0) {
       logger.warn("No stateExecutionInstance could be marked as ABORTING - appId: {}, executionUuid: {}",
           workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid());
       return false;
-    } else {
-      return true;
     }
+    return true;
+  }
+
+  private List<String> getAllLeafInstanceIds(
+      ExecutionInterrupt workflowExecutionInterrupt, PageResponse<StateExecutionInstance> pageResponse) {
+    // Get Parent Ids
+    List<String> parentInstanceIds =
+        pageResponse.stream()
+            .filter(stateExecutionInstance
+                -> stateExecutionInstance.getStateType().equals(StateType.REPEAT.name())
+                    || stateExecutionInstance.getStateType().equals(StateType.FORK.name())
+                    || stateExecutionInstance.getStateType().equals(StateType.PHASE_STEP.name())
+                    || stateExecutionInstance.getStateType().equals(StateType.SUB_WORKFLOW.name()))
+            .map(StateExecutionInstance::getUuid)
+            .collect(Collectors.toList());
+
+    // Get Leaf node Ids
+    List<String> leafInstanceIds =
+        pageResponse.stream()
+            .filter(stateExecutionInstance
+                -> !(stateExecutionInstance.getStateType().equals(StateType.REPEAT.name())
+                    || stateExecutionInstance.getStateType().equals(StateType.FORK.name())
+                    || stateExecutionInstance.getStateType().equals(StateType.PHASE_STEP.name())
+                    || stateExecutionInstance.getStateType().equals(StateType.SUB_WORKFLOW.name())))
+            .map(StateExecutionInstance::getUuid)
+            .collect(Collectors.toList());
+
+    // Query children
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", Operator.EQ, workflowExecutionInterrupt.getAppId())
+            .addFilter("executionUuid", Operator.EQ, workflowExecutionInterrupt.getExecutionUuid())
+            .addFilter("parentInstanceId", Operator.IN, parentInstanceIds)
+            .build();
+
+    PageResponse<StateExecutionInstance> childInstances =
+        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+
+    // get distinct parent Ids
+    List<String> parentIdsHavingChildren =
+        childInstances.stream().map(StateExecutionInstance::getUuid).collect(Collectors.toList());
+
+    // parent with no children
+    parentInstanceIds.removeAll(parentIdsHavingChildren);
+
+    // Mark aborting
+    leafInstanceIds.addAll(parentInstanceIds);
+    return leafInstanceIds;
   }
 
   private static class SmExecutionDispatcher implements Runnable {
