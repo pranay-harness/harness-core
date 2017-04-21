@@ -156,7 +156,7 @@ public class UserServiceImpl implements UserService {
     } else {
       Map<String, Object> map = new HashMap();
       map.put("name", user.getName());
-      map.put("password", hashpw(user.getPassword(), BCrypt.gensalt()));
+      map.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
       return existingUser;
     }
