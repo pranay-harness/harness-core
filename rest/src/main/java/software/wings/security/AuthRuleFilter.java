@@ -149,6 +149,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
             ImmutableList.copyOf(getAppIds(accountId)));
       }
     } else {
+      // TODO:
       AccountRole userAccountRole = userService.getUserAccountRole(user.getUuid(), accountId);
       ImmutableList<String> appIds = copyOf(userAccountRole.getApplicationRoles()
                                                 .stream()

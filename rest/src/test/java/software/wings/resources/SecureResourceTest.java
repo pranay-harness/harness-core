@@ -355,7 +355,7 @@ public class SecureResourceTest {
    */
   @Test
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
-    user.setRoles(asList(appAllResourceReadActionRole));
+    user.setRoles(asList(envAllResourceReadActionRole));
 
     RestResponse<User> response =
         resources.client()

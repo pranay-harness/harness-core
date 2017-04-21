@@ -5,6 +5,7 @@ import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.cache.configuration.Factory;
 import javax.cache.configuration.MutableConfiguration;
+import javax.cache.expiry.EternalExpiryPolicy;
 import javax.cache.expiry.ExpiryPolicy;
 
 /**
@@ -22,10 +23,6 @@ public class CacheHelper {
   }
 
   public static <K, V> Cache<K, V> getCache(String cacheName, Class<K> keyType, Class<V> valueType) {
-    MutableConfiguration<K, V> configuration = new MutableConfiguration<>();
-    configuration.setStoreByValue(true);
-    configuration.setTypes(keyType, valueType);
-    return Optional.ofNullable(Caching.getCache(cacheName, keyType, valueType))
-        .orElseGet(() -> Caching.getCachingProvider().getCacheManager().createCache(cacheName, configuration));
+    return getCache(cacheName, keyType, valueType, EternalExpiryPolicy.factoryOf());
   }
 }

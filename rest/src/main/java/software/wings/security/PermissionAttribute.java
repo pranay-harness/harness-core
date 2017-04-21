@@ -3,6 +3,7 @@ package software.wings.security;
 import static software.wings.security.PermissionAttribute.PermissionScope.ACCOUNT;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
+import static software.wings.security.PermissionAttribute.PermissionScope.NONE;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -32,8 +33,11 @@ public class PermissionAttribute {
    */
   public PermissionAttribute(ResourceType permission, PermissionScope scope, String method) {
     resourceType = permission;
-    this.scope = scope;
     this.action = methodActionMap.get(method);
+    this.scope = scope;
+    if (scope == null || scope == NONE) {
+      this.scope = resourceType.getActionPermissionScopeMap().get(action);
+    }
   }
 
   /**
@@ -202,6 +206,8 @@ public class PermissionAttribute {
     LOGGED_IN, /**
                 * Delegate In permission type.
                 */
-    DELEGATE
+    DELEGATE,
+
+    NONE
   }
 }
