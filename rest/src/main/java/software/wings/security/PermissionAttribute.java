@@ -19,6 +19,12 @@ public class PermissionAttribute {
   private Action action;
   private PermissionScope scope;
 
+  /**
+   * Instantiates a new Permission attribute.
+   *
+   * @param resourceType the resource type
+   * @param action       the action
+   */
   public PermissionAttribute(ResourceType resourceType, Action action) {
     this.resourceType = resourceType;
     this.action = action;
@@ -27,9 +33,10 @@ public class PermissionAttribute {
 
   /**
    * Instantiates a new Permission attribute.
-   *  @param permission the permission
+   *
+   * @param permission the permission
    * @param scope      the scope
-   * @param method
+   * @param method     the method
    */
   public PermissionAttribute(ResourceType permission, PermissionScope scope, String method) {
     resourceType = permission;
@@ -140,8 +147,14 @@ public class PermissionAttribute {
     PIPELINE(APP), /**
                     * Setting resource.
                     */
-    SETTING(ACCOUNT),
+    SETTING(ACCOUNT), /**
+                       * App stack resource type.
+                       */
+    APP_STACK(ACCOUNT),
 
+    /**
+     * Delegate resource type.
+     */
     DELEGATE(PermissionScope.DELEGATE);
 
     private ImmutableMap<Action, PermissionScope> actionPermissionScopeMap;
@@ -160,6 +173,11 @@ public class PermissionAttribute {
           Action.UPDATE, updatePermissionScope, Action.DELETE, deletePermissionScope);
     }
 
+    /**
+     * Gets action permission scope map.
+     *
+     * @return the action permission scope map
+     */
     public ImmutableMap<Action, PermissionScope> getActionPermissionScopeMap() {
       return actionPermissionScopeMap;
     }
@@ -208,6 +226,9 @@ public class PermissionAttribute {
                 */
     DELEGATE,
 
+    /**
+     * None permission scope.
+     */
     NONE
   }
 }

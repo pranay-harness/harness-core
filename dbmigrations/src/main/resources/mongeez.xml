@@ -20,4 +20,5 @@
     <file path="license-migration.js" />
     <file path="workflow-version-refactor.js" />
     <file path="service-variable-index-migration.js" />
+    <file path="appstack-index-migration.js" />
 </changeFiles>

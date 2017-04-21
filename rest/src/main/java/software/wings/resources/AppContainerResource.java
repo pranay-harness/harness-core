@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.inject.Inject;
@@ -14,6 +13,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Base;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -28,7 +28,6 @@ import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -45,7 +44,7 @@ import javax.ws.rs.core.Response;
 @Api("app-containers")
 @Path("/app-containers")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@AuthRule(ResourceType.APP_STACK)
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
   @Inject private MainConfiguration configuration;
@@ -53,7 +52,6 @@ public class AppContainerResource {
   /**
    * List.
    *
-   * @param appId     the app id
    * @param accountId the account id
    * @param request   the request
    * @return the rest response
@@ -61,7 +59,7 @@ public class AppContainerResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<AppContainer>> list(@QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
+  public RestResponse<PageResponse<AppContainer>> list(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<AppContainer> request) {
     return new RestResponse<>(appContainerService.list(request));
   }
@@ -69,7 +67,7 @@ public class AppContainerResource {
   /**
    * Gets the.
    *
-   * @param appId          the app id
+   * @param accountId      the account id
    * @param appContainerId the app container id
    * @return the rest response
    */
@@ -77,16 +75,15 @@ public class AppContainerResource {
   @Path("{appContainerId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<AppContainer> get(@QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId,
-      @PathParam("appContainerId") String appContainerId) {
-    return new RestResponse<>(appContainerService.get(appId, appContainerId));
+  public RestResponse<AppContainer> get(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("appContainerId") String appContainerId) {
+    return new RestResponse<>(appContainerService.get(accountId, appContainerId));
   }
 
   /**
    * Upload platform.
    *
    * @param accountId           the account id
-   * @param appId               the app id
    * @param urlString           the url string
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
@@ -98,12 +95,11 @@ public class AppContainerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<AppContainer> uploadPlatform(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("appId") @DefaultValue(GLOBAL_APP_ID) String appId, @FormDataParam("url") String urlString,
-      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
-    appContainer.setAppId(appId);
-    appContainer.setFileName(fileDetail.getFileName());
+    appContainer.setAppId(Base.GLOBAL_APP_ID);
     appContainer.setAccountId(accountId);
+    appContainer.setFileName(fileDetail.getFileName());
 
     uploadedInputStream = new BufferedInputStream(
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
@@ -114,7 +110,6 @@ public class AppContainerResource {
    * Update platform.
    *
    * @param accountId           the account id
-   * @param appId               the app id
    * @param appContainerId      the app container id
    * @param urlString           the url string
    * @param uploadedInputStream the uploaded input stream
@@ -128,23 +123,21 @@ public class AppContainerResource {
   @Timed
   @ExceptionMetered
   public RestResponse<AppContainer> updatePlatform(@QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId,
-      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
+      @PathParam("appContainerId") String appContainerId, @FormDataParam("url") String urlString,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
-    appContainer.setAppId(appId);
+    appContainer.setAppId(Base.GLOBAL_APP_ID);
     appContainer.setUuid(appContainerId);
     appContainer.setFileName(fileDetail.getFileName());
     appContainer.setAccountId(accountId);
     uploadedInputStream = new BufferedInputStream(
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
-
     return new RestResponse<>(appContainerService.update(appContainer, uploadedInputStream, PLATFORMS));
   }
 
   /**
    * Delete platform.
    *
-   * @param appId          the app id
    * @param appContainerId the app container id
    * @return the rest response
    */
@@ -153,8 +146,8 @@ public class AppContainerResource {
   @Timed
   @ExceptionMetered
   public RestResponse deletePlatform(
-      @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
-    appContainerService.delete(appId, appContainerId);
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("appContainerId") String appContainerId) {
+    appContainerService.delete(accountId, appContainerId);
     return new RestResponse();
   }
 
