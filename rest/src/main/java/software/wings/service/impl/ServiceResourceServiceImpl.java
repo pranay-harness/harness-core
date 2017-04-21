@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -299,7 +300,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Validator.notNullCheck("service", service);
 
     if (!serviceCommand.getCommand().getGraph().isLinear()) {
-      throw new IllegalArgumentException("Graph is not a pipeline");
+      final WingsException wingsException =
+          new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
+      wingsException.addParam("message", "Graph is not a linear pipeline");
+      throw wingsException;
     }
 
     serviceCommand.setDefaultVersion(1);
@@ -357,7 +361,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     if (serviceCommand.getCommand() != null) {
       if (!serviceCommand.getCommand().getGraph().isLinear()) {
-        throw new IllegalArgumentException("Graph is not a pipeline");
+        final WingsException wingsException =
+            new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
+        wingsException.addParam("message", "Graph is not a linear pipeline");
+        throw wingsException;
       }
 
       EntityVersion lastEntityVersion =
