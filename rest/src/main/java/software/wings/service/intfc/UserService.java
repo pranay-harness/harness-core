@@ -84,7 +84,7 @@ public interface UserService {
    */
   public User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 
-  boolean verifyEmail(String emailAddress);
+  void verifyEmail(String emailAddress);
 
   boolean resendVerificationEmail(String email);
 

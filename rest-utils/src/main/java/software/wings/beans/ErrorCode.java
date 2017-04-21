@@ -47,6 +47,11 @@ public enum ErrorCode {
   USER_DOES_NOT_EXIST("USER_DOES_NOT_EXIST", UNAUTHORIZED),
 
   /**
+   * User domain not allowed.
+   */
+  USER_DOMAIN_NOT_ALLOWED("USER_DOMAIN_NOT_ALLOWED", UNAUTHORIZED),
+
+  /**
    * Role does not exist error codes.
    */
   ROLE_DOES_NOT_EXIST("ROLE_DOES_NOT_EXIST", UNAUTHORIZED),
