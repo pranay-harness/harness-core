@@ -65,6 +65,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,6 +127,12 @@ public class StatisticsServiceImpl implements StatisticsService {
     });
     appIds.forEach(appId -> appKeyStatisticsMap.computeIfAbsent(appId, v -> new AppKeyStatistics()));
     return appKeyStatisticsMap;
+  }
+
+  @Override
+  public AppKeyStatistics getSingleApplicationKeyStats(String appId, int numOfDays) {
+    Map<String, AppKeyStatistics> appKeyStatisticsMap = getApplicationKeyStats(Arrays.asList(appId), numOfDays);
+    return appKeyStatisticsMap.get(appId);
   }
 
   public AppKeyStatistics getAppKeyStatistics(List<Activity> applicationActivities) {

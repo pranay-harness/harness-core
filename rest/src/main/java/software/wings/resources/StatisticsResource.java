@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.beans.stats.AppKeyStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.NotificationCount;
 import software.wings.beans.stats.UserStatistics;
@@ -73,5 +74,14 @@ public class StatisticsResource {
   public RestResponse<NotificationCount> notificationCount(@QueryParam("accountId") String accountId,
       @DefaultValue("60") @QueryParam("minutesFromNow") Integer minutesFromNow, @QueryParam("appId") String appId) {
     return new RestResponse<>(statisticsService.getNotificationCount(accountId, appId, minutesFromNow));
+  }
+
+  @GET
+  @Path("app-keystats")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<AppKeyStatistics> singleApplicationKeyStats(
+      @QueryParam("appId") String appId, @DefaultValue("30") @QueryParam("numOfDays") Integer numOfDays) {
+    return new RestResponse<>(statisticsService.getSingleApplicationKeyStats(appId, numOfDays));
   }
 }

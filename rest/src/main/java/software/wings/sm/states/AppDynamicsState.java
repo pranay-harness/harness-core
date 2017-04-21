@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -38,7 +40,9 @@ public class AppDynamicsState extends HttpState {
   @Attributes(required = true, title = "Metric Path",
       description = "Overall Application Performance|Average Response Time (ms)")
   private String metricPath;
-  @Attributes(title = "Time duration (in minutes)", description = "Default 10 minutes") private String timeDuration;
+  @DefaultValue("10")
+  @Attributes(title = "Time duration (in minutes)", description = "Default 10 minutes")
+  private String timeDuration;
 
   /**
    * Create a new Http State with given name.
@@ -235,6 +239,9 @@ public class AppDynamicsState extends HttpState {
     String evaluatedMetricPath = context.renderExpression(metricPath);
     String evaluatedAppName = context.renderExpression(applicationName);
     String evaluatedTimeDuration = context.renderExpression(timeDuration);
+    if (StringUtils.isBlank(evaluatedTimeDuration)) {
+      evaluatedTimeDuration = "10";
+    }
 
     return String.format(
         "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=%s",
