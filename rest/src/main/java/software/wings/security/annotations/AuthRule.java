@@ -29,5 +29,5 @@ public @interface AuthRule {
    *
    * @return the permission scope
    */
-  PermissionScope scope() default PermissionAttribute.PermissionScope.APP;
+  PermissionScope scope() default PermissionAttribute.PermissionScope.NONE;
 }
