@@ -236,7 +236,7 @@ public enum ErrorCode {
   COMMAND_DOES_NOT_EXIST("COMMAND_DOES_NOT_EXIST"),
 
   /**
-   * Duplicate artifactsource names error codes.
+   * Duplicate artifact source names error codes.
    */
   DUPLICATE_ARTIFACTSTREAM_NAMES("DUPLICATE_ARTIFACTSTREAM_NAMES"),
 
@@ -294,7 +294,12 @@ public enum ErrorCode {
   NOT_LICENSED("NOT_LICENSED"), /**
                                  * Request timeout error code.
                                  */
-  REQUEST_TIMEOUT("REQUEST_TIMEOUT", GATEWAY_TIMEOUT);
+  REQUEST_TIMEOUT("REQUEST_TIMEOUT", GATEWAY_TIMEOUT),
+
+  /**
+   * Workflow already triggered
+   */
+  WORKFLOW_ALREADY_TRIGGERED("WORKFLOW_ALREADY_TRIGGERED");
 
   /**
    * The constant ARGS_NAME.
