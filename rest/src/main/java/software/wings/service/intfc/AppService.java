@@ -6,6 +6,8 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.List;
+
 /**
  * Application Service.
  *
@@ -20,6 +22,12 @@ public interface AppService {
    */
   Application save(Application app);
 
+  /**
+   * List page response.
+   *
+   * @param req the req
+   * @return the page response
+   */
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
@@ -78,4 +86,12 @@ public interface AppService {
    * @param appId the app id
    */
   void delete(@NotEmpty String appId);
+
+  /**
+   * Gets app ids by account id.
+   *
+   * @param accountId the account id
+   * @return the app ids by account id
+   */
+  List<String> getAppIdsByAccountId(String accountId);
 }

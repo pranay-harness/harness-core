@@ -1,7 +1,6 @@
 package software.wings.security;
 
 import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -16,17 +15,14 @@ import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AccountRole;
-import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionScope;
@@ -73,11 +69,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   /**
    * Instantiates a new Auth rule filter.
    *
-   * @param auditService       the audit service
-   * @param auditHelper        the audit helper
-   * @param authService        the auth service
-   * @param appService the appService
-   * @param userService the userService
+   * @param auditService the audit service
+   * @param auditHelper  the audit helper
+   * @param authService  the auth service
+   * @param appService   the appService
+   * @param userService  the userService
    */
   @Inject
   public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
@@ -146,7 +142,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
       if (appId == null && isPresent(requiredPermissionAttributes, PermissionScope.APP)) {
         userRequestInfoBuilder.withAppIdFilterRequired(true).withAllowedAppIds(
-            ImmutableList.copyOf(getAppIds(accountId)));
+            ImmutableList.copyOf(appService.getAppIdsByAccountId(accountId)));
       }
     } else {
       // TODO:
@@ -226,15 +222,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(DelegateAuth.class) != null
         || resourceClass.getAnnotation(DelegateAuth.class) != null;
-  }
-
-  private List<String> getAppIds(String accountId) {
-    List<Application> response =
-        appService
-            .list(
-                Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFieldsIncluded("uuid").build())
-            .getResponse();
-    return response.stream().map(Application::getUuid).collect(toImmutableList());
   }
 
   private List<String> getAppIds(List<Role> roles) {

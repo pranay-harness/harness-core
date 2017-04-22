@@ -51,6 +51,7 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -161,6 +162,7 @@ public class AppServiceImpl implements AppService {
   public PageResponse<Application> list(PageRequest<Application> req) {
     return list(req, false, 0, 0);
   }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
@@ -275,6 +277,17 @@ public class AppServiceImpl implements AppService {
               .build());
       deleteCronForStateMachineExecutionCleanup(appId);
     }
+  }
+
+  @Override
+  public List<String> getAppIdsByAccountId(String accountId) {
+    List<String> appIdList = new ArrayList<>();
+    wingsPersistence.createQuery(Application.class)
+        .field("accountId")
+        .equal(accountId)
+        .asKeyList()
+        .forEach(applicationKey -> appIdList.add(applicationKey.getId().toString()));
+    return appIdList;
   }
 
   void deleteCronForStateMachineExecutionCleanup(String appId) {
