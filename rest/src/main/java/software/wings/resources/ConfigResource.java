@@ -24,6 +24,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.InputStream;
@@ -97,8 +98,11 @@ public class ConfigResource {
     } catch (Exception e) {
       // Ignore
     }
-    String fileId = configService.save(configFile,
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
+    String fileId = Validator.duplicateCheck(
+        ()
+            -> configService.save(configFile,
+                new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())),
+        "name", configFile.getRelativeFilePath());
     return new RestResponse<>(fileId);
   }
 

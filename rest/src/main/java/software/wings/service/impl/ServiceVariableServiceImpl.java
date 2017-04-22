@@ -57,7 +57,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
 
     serviceVariable.setEnvId(envId);
-    return wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable);
+    return Validator.duplicateCheck(
+        () -> wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable), "name", serviceVariable.getName());
   }
 
   @Override
