@@ -31,7 +31,6 @@ import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
-import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.licensing.DatabaseLicenseProviderImpl;
@@ -182,9 +181,8 @@ public class WingsModule extends AbstractModule {
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
-    bind(new TypeLiteral<EmailNotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
+    bind(EmailNotificationService.class).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);
-    bind(new TypeLiteral<EmailNotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
     bind(ActivityService.class).to(ActivityServiceImpl.class);
     bind(LogService.class).to(LogServiceImpl.class);
     bind(SetupService.class).to(SetupServiceImpl.class);

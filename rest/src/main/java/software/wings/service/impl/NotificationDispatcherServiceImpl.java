@@ -8,6 +8,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
@@ -28,7 +29,6 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -47,17 +47,16 @@ import javax.inject.Inject;
  */
 @Singleton
 public class NotificationDispatcherServiceImpl implements NotificationDispatcherService {
-  @Inject private NotificationSetupService notificationSetupService;
-  @Inject private EmailNotificationService<EmailData> emailNotificationService;
-  @Inject private SlackNotificationService slackNotificationService;
-  @Inject private SettingsService settingsService;
-  @Inject private NotificationMessageResolver notificationMessageResolver;
-  @Inject private WingsPersistence wingsPersistence;
-
   private static final ImmutableMap<ExecutionScope, List<NotificationMessageType>> BATCH_END_TEMPLATES =
       ImmutableMap.of(WORKFLOW, asList(WORKFLOW_FAILED_NOTIFICATION, WORKFLOW_SUCCESSFUL_NOTIFICATION), WORKFLOW_PHASE,
           asList(WORKFLOW_PHASE_FAILED_NOTIFICATION, WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION));
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private NotificationSetupService notificationSetupService;
+  @Inject private EmailNotificationService emailNotificationService;
+  @Inject private SlackNotificationService slackNotificationService;
+  @Inject private SettingsService settingsService;
+  @Inject private NotificationMessageResolver notificationMessageResolver;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public void dispatchNotification(Notification notification, List<NotificationRule> notificationRules) {
@@ -131,8 +130,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       return;
     }
 
-    List<SettingAttribute> settingAttributes =
-        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SLACK.name());
+    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
+        notifications.get(0).getAccountId(), SettingVariableTypes.SLACK.name());
     if (settingAttributes == null || settingAttributes.size() == 0) {
       logger.error("No slack configuration found ");
       return;
@@ -183,6 +182,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     String body = String.join("\n\n", emailBodyList);
     String subject = emailSubjectList.get(emailSubjectList.size() - 1);
 
-    emailNotificationService.sendAsync(toAddress, null, subject, body);
+    emailNotificationService.sendAsync(
+        anEmailData().withTo(toAddress).withRetries(2).withSubject(subject).withBody(body).withSystem(true).build());
   }
 }

@@ -15,6 +15,7 @@ import java.util.Objects;
  */
 @Entity(value = "emailQueue", noClassnameStored = true)
 public class EmailData extends Queuable {
+  private String accountId;
   private List<String> to = Lists.newArrayList();
   private List<String> cc = Lists.newArrayList();
   private String subject;
@@ -22,6 +23,25 @@ public class EmailData extends Queuable {
   private String templateName;
   private Object templateModel;
   private boolean hasHtml = true;
+  private boolean system = false;
+
+  /**
+   * Getter for property 'accountId'.
+   *
+   * @return Value for property 'accountId'.
+   */
+  public String getAccountId() {
+    return accountId;
+  }
+
+  /**
+   * Setter for property 'accountId'.
+   *
+   * @param accountId Value to set for property 'accountId'.
+   */
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
 
   /**
    * Gets to.
@@ -149,9 +169,27 @@ public class EmailData extends Queuable {
     this.hasHtml = hasHtml;
   }
 
+  /**
+   * Getter for property 'system'.
+   *
+   * @return Value for property 'system'.
+   */
+  public boolean isSystem() {
+    return system;
+  }
+
+  /**
+   * Setter for property 'system'.
+   *
+   * @param system Value to set for property 'system'.
+   */
+  public void setSystem(boolean system) {
+    this.system = system;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(to, cc, subject, body, templateName, templateModel, hasHtml);
+    return Objects.hash(accountId, to, cc, subject, body, templateName, templateModel, hasHtml, system);
   }
 
   @Override
@@ -163,15 +201,17 @@ public class EmailData extends Queuable {
       return false;
     }
     final EmailData other = (EmailData) obj;
-    return Objects.equals(this.to, other.to) && Objects.equals(this.cc, other.cc)
-        && Objects.equals(this.subject, other.subject) && Objects.equals(this.body, other.body)
-        && Objects.equals(this.templateName, other.templateName)
-        && Objects.equals(this.templateModel, other.templateModel) && Objects.equals(this.hasHtml, other.hasHtml);
+    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.to, other.to)
+        && Objects.equals(this.cc, other.cc) && Objects.equals(this.subject, other.subject)
+        && Objects.equals(this.body, other.body) && Objects.equals(this.templateName, other.templateName)
+        && Objects.equals(this.templateModel, other.templateModel) && Objects.equals(this.hasHtml, other.hasHtml)
+        && Objects.equals(this.system, other.system);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("accountId", accountId)
         .add("to", to)
         .add("cc", cc)
         .add("subject", subject)
@@ -179,6 +219,7 @@ public class EmailData extends Queuable {
         .add("templateName", templateName)
         .add("templateModel", templateModel)
         .add("hasHtml", hasHtml)
+        .add("system", system)
         .toString();
   }
 
@@ -186,6 +227,7 @@ public class EmailData extends Queuable {
    * The type Builder.
    */
   public static final class Builder {
+    private String accountId;
     private List<String> to = Lists.newArrayList();
     private List<String> cc = Lists.newArrayList();
     private String subject;
@@ -193,6 +235,7 @@ public class EmailData extends Queuable {
     private String templateName;
     private Object templateModel;
     private boolean hasHtml = true;
+    private boolean system = false;
     private String id;
     private boolean running = false;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
@@ -203,176 +246,93 @@ public class EmailData extends Queuable {
 
     private Builder() {}
 
-    /**
-     * An email data builder.
-     *
-     * @return the builder
-     */
     public static Builder anEmailData() {
       return new Builder();
     }
 
-    /**
-     * With to builder.
-     *
-     * @param to the to
-     * @return the builder
-     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
     public Builder withTo(List<String> to) {
       this.to = to;
       return this;
     }
 
-    /**
-     * With cc builder.
-     *
-     * @param cc the cc
-     * @return the builder
-     */
     public Builder withCc(List<String> cc) {
       this.cc = cc;
       return this;
     }
 
-    /**
-     * With subject builder.
-     *
-     * @param subject the subject
-     * @return the builder
-     */
     public Builder withSubject(String subject) {
       this.subject = subject;
       return this;
     }
 
-    /**
-     * With body builder.
-     *
-     * @param body the body
-     * @return the builder
-     */
     public Builder withBody(String body) {
       this.body = body;
       return this;
     }
 
-    /**
-     * With template name builder.
-     *
-     * @param templateName the template name
-     * @return the builder
-     */
     public Builder withTemplateName(String templateName) {
       this.templateName = templateName;
       return this;
     }
 
-    /**
-     * With template model builder.
-     *
-     * @param templateModel the template model
-     * @return the builder
-     */
     public Builder withTemplateModel(Object templateModel) {
       this.templateModel = templateModel;
       return this;
     }
 
-    /**
-     * With has html builder.
-     *
-     * @param hasHtml the has html
-     * @return the builder
-     */
     public Builder withHasHtml(boolean hasHtml) {
       this.hasHtml = hasHtml;
       return this;
     }
 
-    /**
-     * With id builder.
-     *
-     * @param id the id
-     * @return the builder
-     */
+    public Builder withSystem(boolean system) {
+      this.system = system;
+      return this;
+    }
+
     public Builder withId(String id) {
       this.id = id;
       return this;
     }
 
-    /**
-     * With running builder.
-     *
-     * @param running the running
-     * @return the builder
-     */
     public Builder withRunning(boolean running) {
       this.running = running;
       return this;
     }
 
-    /**
-     * With reset timestamp builder.
-     *
-     * @param resetTimestamp the reset timestamp
-     * @return the builder
-     */
     public Builder withResetTimestamp(Date resetTimestamp) {
       this.resetTimestamp = resetTimestamp;
       return this;
     }
 
-    /**
-     * With earliest get builder.
-     *
-     * @param earliestGet the earliest get
-     * @return the builder
-     */
     public Builder withEarliestGet(Date earliestGet) {
       this.earliestGet = earliestGet;
       return this;
     }
 
-    /**
-     * With priority builder.
-     *
-     * @param priority the priority
-     * @return the builder
-     */
     public Builder withPriority(double priority) {
       this.priority = priority;
       return this;
     }
 
-    /**
-     * With created builder.
-     *
-     * @param created the created
-     * @return the builder
-     */
     public Builder withCreated(Date created) {
       this.created = created;
       return this;
     }
 
-    /**
-     * With retries builder.
-     *
-     * @param retries the retries
-     * @return the builder
-     */
     public Builder withRetries(int retries) {
       this.retries = retries;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anEmailData()
+          .withAccountId(accountId)
           .withTo(to)
           .withCc(cc)
           .withSubject(subject)
@@ -380,6 +340,7 @@ public class EmailData extends Queuable {
           .withTemplateName(templateName)
           .withTemplateModel(templateModel)
           .withHasHtml(hasHtml)
+          .withSystem(system)
           .withId(id)
           .withRunning(running)
           .withResetTimestamp(resetTimestamp)
@@ -389,13 +350,9 @@ public class EmailData extends Queuable {
           .withRetries(retries);
     }
 
-    /**
-     * Build email data.
-     *
-     * @return the email data
-     */
     public EmailData build() {
       EmailData emailData = new EmailData();
+      emailData.setAccountId(accountId);
       emailData.setTo(to);
       emailData.setCc(cc);
       emailData.setSubject(subject);
@@ -403,6 +360,7 @@ public class EmailData extends Queuable {
       emailData.setTemplateName(templateName);
       emailData.setTemplateModel(templateModel);
       emailData.setHasHtml(hasHtml);
+      emailData.setSystem(system);
       emailData.setId(id);
       emailData.setRunning(running);
       emailData.setResetTimestamp(resetTimestamp);

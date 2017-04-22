@@ -100,7 +100,7 @@ public class UserServiceImpl implements UserService {
    */
   @Inject ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private EmailNotificationService<EmailData> emailNotificationService;
+  @Inject private EmailNotificationService emailNotificationService;
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
   @Inject private AccountService accountService;
@@ -134,6 +134,7 @@ public class UserServiceImpl implements UserService {
                                 .withTemplateName("add_account")
                                 .withTemplateModel(ImmutableMap.of(
                                     "name", user.getName(), "url", loginUrl, "company", account.getCompanyName()))
+                                .withSystem(true)
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
@@ -182,6 +183,7 @@ public class UserServiceImpl implements UserService {
                                 .withRetries(2)
                                 .withTemplateName("signup")
                                 .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", verificationUrl))
+                                .withSystem(true)
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
@@ -199,6 +201,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public void verifyRegisteredOrAllowed(String emailAddress) {
     User existingUser = getUserByEmail(emailAddress);
+
     if (existingUser != null && existingUser.isEmailVerified()) {
       throw new WingsException(ErrorCode.USER_ALREADY_REGISTERED);
     }
@@ -297,6 +300,7 @@ public class UserServiceImpl implements UserService {
               .withRetries(2)
               .withTemplateName("invite")
               .withTemplateModel(ImmutableMap.of("url", inviteUrl, "company", account.getCompanyName()))
+              .withSystem(true)
               .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
@@ -315,6 +319,7 @@ public class UserServiceImpl implements UserService {
                                 .withTemplateName("add_role")
                                 .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", loginUrl, "company",
                                     account.getCompanyName(), "roles", roles))
+                                .withSystem(true)
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
@@ -452,6 +457,7 @@ public class UserServiceImpl implements UserService {
                                 .withRetries(2)
                                 .withTemplateName("reset_password")
                                 .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", resetPasswordUrl))
+                                .withSystem(true)
                                 .build();
       emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException | URISyntaxException e) {

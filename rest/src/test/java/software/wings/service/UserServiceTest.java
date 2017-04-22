@@ -21,6 +21,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
@@ -112,7 +113,13 @@ public class UserServiceTest extends WingsBaseTest {
    * The Update operations.
    */
   @Mock UpdateOperations<User> updateOperations;
-  @Mock private EmailNotificationService<EmailData> emailDataNotificationService;
+  @Mock Query<User> query;
+  @Mock FieldEnd end;
+  @Mock Query<EmailVerificationToken> verificationQuery;
+  @Mock FieldEnd verificationQueryEnd;
+  @Mock Query<UserInvite> userInviteQuery;
+  @Mock FieldEnd userInviteQueryEnd;
+  @Mock private EmailNotificationService emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AccountService accountService;
@@ -120,18 +127,10 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private GenericDbCache dbCache;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
-
   @Inject @InjectMocks private UserService userService;
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
-  @Mock Query<User> query;
-  @Mock FieldEnd end;
-  @Mock Query<EmailVerificationToken> verificationQuery;
-  @Mock FieldEnd verificationQueryEnd;
-  @Mock Query<UserInvite> userInviteQuery;
-  @Mock FieldEnd userInviteQueryEnd;
-
   @Captor private ArgumentCaptor<UserInvite> userInviteCaptor;
 
   /**
@@ -336,7 +335,8 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendEmail() throws EmailException, TemplateException, IOException {
-    emailDataNotificationService.send(asList("anubhaw@gmail.com"), asList(), "wings-test", "hi");
+    emailDataNotificationService.send(
+        anEmailData().withTo(asList("anubhaw@gmail.com")).withSubject("wings-test").withBody("hi").build());
   }
 
   /**

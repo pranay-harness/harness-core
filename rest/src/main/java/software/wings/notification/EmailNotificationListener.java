@@ -12,7 +12,7 @@ import software.wings.service.intfc.EmailNotificationService;
  * @see EmailData
  */
 public class EmailNotificationListener extends AbstractQueueListener<EmailData> {
-  @Inject private EmailNotificationService<EmailData> emailNotificationService;
+  @Inject private EmailNotificationService emailNotificationService;
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)

@@ -20,6 +20,7 @@ import software.wings.beans.TaskType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
@@ -155,7 +156,10 @@ public class SplunkState extends HttpState {
   @Override
   protected String getFinalHeader(ExecutionContext context) {
     SettingAttribute splunkSettingAttribute =
-        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK.name()).get(0);
+        settingsService
+            .getGlobalSettingAttributesByType(
+                ((ExecutionContextImpl) context).getApp().getAccountId(), SettingVariableTypes.SPLUNK.name())
+            .get(0);
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
     return "Authorization: Basic "
         + Base64.encodeBase64URLSafeString(
@@ -172,7 +176,10 @@ public class SplunkState extends HttpState {
   @Override
   protected String getFinalUrl(ExecutionContext context) {
     SettingAttribute splunkSettingAttribute =
-        settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SPLUNK.name()).get(0);
+        settingsService
+            .getGlobalSettingAttributesByType(
+                ((ExecutionContextImpl) context).getApp().getAccountId(), SettingVariableTypes.SPLUNK.name())
+            .get(0);
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
     return "https://" + splunkConfig.getHost() + ":" + splunkConfig.getPort() + "/services/search/jobs";
   }

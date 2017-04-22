@@ -21,6 +21,7 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import software.wings.dl.MongoConfig;
+import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("hazelcastManCenterConfigUrl") private String hazelcastManCenterConfigUrl;
+  @JsonProperty("smtp") private SmtpConfig smtpConfig;
 
   /**
    * Instantiates a new Main configuration.
@@ -274,6 +276,14 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setHazelcastManCenterConfigUrl(String hazelcastManCenterConfigUrl) {
     this.hazelcastManCenterConfigUrl = hazelcastManCenterConfigUrl;
+  }
+
+  public SmtpConfig getSmtpConfig() {
+    return smtpConfig;
+  }
+
+  public void setSmtpConfig(SmtpConfig smtpConfig) {
+    this.smtpConfig = smtpConfig;
   }
 
   /**

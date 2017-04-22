@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
@@ -17,13 +18,13 @@ import org.junit.rules.Verifier;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 /**
  * Created by peeyushaggarwal on 5/25/16.
@@ -34,12 +35,14 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
                                                          .withTo(newArrayList("cc"))
                                                          .withTemplateName("templateName")
                                                          .withTemplateModel("templateModel")
+                                                         .withAccountId(ACCOUNT_ID)
                                                          .build();
   private static final EmailData emailBodyData = anEmailData()
                                                      .withTo(newArrayList("to"))
                                                      .withTo(newArrayList("cc"))
                                                      .withBody("body")
                                                      .withSubject("subject")
+                                                     .withAccountId(ACCOUNT_ID)
                                                      .build();
 
   private static final SmtpConfig smtpConfig = aSmtpConfig().build();
@@ -59,14 +62,14 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(queue, mailer, settingsService);
     }
   };
-  @InjectMocks @Inject private EmailNotificationService<EmailData> emailDataNotificationService;
+  @InjectMocks @Inject private EmailNotificationService emailDataNotificationService;
 
   /**
    * Setup mocks.
    */
   @Before
   public void setupMocks() {
-    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name()))
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name()))
         .thenReturn(newArrayList(aSettingAttribute().withValue(smtpConfig).build()));
   }
 
@@ -77,10 +80,9 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendEmailWithTemplate() throws Exception {
-    emailDataNotificationService.send(emailTemplateData.getTo(), emailTemplateData.getCc(),
-        emailTemplateData.getTemplateName(), emailTemplateData.getTemplateModel());
+    emailDataNotificationService.send(emailTemplateData);
     verify(mailer).send(smtpConfig, emailTemplateData);
-    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name());
+    verify(settingsService).getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name());
   }
 
   /**
@@ -90,22 +92,9 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendEmailWithBody() throws Exception {
-    emailDataNotificationService.send(
-        emailBodyData.getTo(), emailBodyData.getCc(), emailBodyData.getSubject(), emailBodyData.getBody());
-    verify(mailer).send(smtpConfig, emailBodyData);
-    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name());
-  }
-
-  /**
-   * Should send email with email data.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void shouldSendEmailWithEmailData() throws Exception {
     emailDataNotificationService.send(emailBodyData);
     verify(mailer).send(smtpConfig, emailBodyData);
-    verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP.name());
+    verify(settingsService).getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SMTP.name());
   }
 
   /**
@@ -115,8 +104,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendAsyncEmailWithTemplate() throws Exception {
-    emailDataNotificationService.sendAsync(emailTemplateData.getTo(), emailTemplateData.getCc(),
-        emailTemplateData.getTemplateName(), emailTemplateData.getTemplateModel());
+    emailDataNotificationService.sendAsync(emailTemplateData);
     verify(queue).send(emailTemplateData);
   }
 
@@ -127,8 +115,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
    */
   @Test
   public void sendAsyncWithBody() throws Exception {
-    emailDataNotificationService.sendAsync(
-        emailBodyData.getTo(), emailBodyData.getCc(), emailBodyData.getSubject(), emailBodyData.getBody());
+    emailDataNotificationService.sendAsync(emailBodyData);
     verify(queue).send(emailBodyData);
   }
 }

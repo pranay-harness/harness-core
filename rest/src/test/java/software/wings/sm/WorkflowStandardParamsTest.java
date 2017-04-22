@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.MembersInjector;
@@ -53,7 +54,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name()))
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
         .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
     on(appService).set("settingsService", settingsService);
   }

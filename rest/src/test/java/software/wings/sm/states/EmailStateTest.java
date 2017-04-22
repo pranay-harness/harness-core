@@ -1,9 +1,13 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -18,11 +22,13 @@ import software.wings.WingsBaseTest;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.common.UUIDGenerator;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.io.IOException;
 import javax.inject.Inject;
@@ -37,13 +43,16 @@ public class EmailStateTest extends WingsBaseTest {
   private static final EmailStateExecutionData.Builder expected =
       anEmailStateExecutionData().withToAddress("to1,to2").withCcAddress("cc1,cc2").withSubject("subject").withBody(
           "body");
-
+  private final EmailData emailData = anEmailData()
+                                          .withAccountId(ACCOUNT_ID)
+                                          .withTo(Lists.newArrayList("to1", "to2"))
+                                          .withCc(Lists.newArrayList("cc1", "cc2"))
+                                          .withSubject("subject")
+                                          .withBody("body")
+                                          .build();
   @Inject private Injector injector;
-
-  @Mock private EmailNotificationService<EmailState> emailNotificationService;
-
+  @Mock private EmailNotificationService emailNotificationService;
   @InjectMocks private EmailState emailState = new EmailState(stateName);
-
   private ExecutionContextImpl context;
 
   /**
@@ -56,6 +65,9 @@ public class EmailStateTest extends WingsBaseTest {
     stateExecutionInstance.setStateName(stateName);
 
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    on(workflowStandardParams).set("app", anApplication().withAccountId(ACCOUNT_ID).build());
+    context.pushContextElement(workflowStandardParams);
 
     HostElement host = new HostElement();
     host.setHostName("app123.application.com");
@@ -86,8 +98,7 @@ public class EmailStateTest extends WingsBaseTest {
         .isEqualTo(expected.but().build());
     assertThat(executionResponse.getErrorMessage()).isNull();
 
-    verify(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
+    verify(emailNotificationService).send(emailData);
   }
 
   /**
@@ -116,8 +127,15 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNull();
 
     verify(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "Deployed app123.application.com",
-            "Deployed to host app123.application.com");
+        .send(
+
+            anEmailData()
+                .withTo(Lists.newArrayList("to1", "to2"))
+                .withAccountId(ACCOUNT_ID)
+                .withCc(Lists.newArrayList("cc1", "cc2"))
+                .withSubject("Deployed app123.application.com")
+                .withBody("Deployed to host app123.application.com")
+                .build());
   }
 
   /**
@@ -129,9 +147,7 @@ public class EmailStateTest extends WingsBaseTest {
    */
   @Test
   public void shouldCaptureErrorMessageWhenFailedToSendEmail() throws EmailException, TemplateException, IOException {
-    doThrow(new EmailException("Test exception"))
-        .when(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
+    doThrow(new EmailException("Test exception")).when(emailNotificationService).send(emailData);
 
     emailState.setBody("body");
     emailState.setSubject("subject");
@@ -145,8 +161,7 @@ public class EmailStateTest extends WingsBaseTest {
         .isEqualTo(expected.but().build());
     assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("Test exception");
 
-    verify(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
+    verify(emailNotificationService).send(emailData);
   }
 
   /**
@@ -158,9 +173,7 @@ public class EmailStateTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnExecutionResultAsErrorWhenNotIgnored() throws EmailException, TemplateException, IOException {
-    doThrow(new EmailException("Test exception"))
-        .when(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
+    doThrow(new EmailException("Test exception")).when(emailNotificationService).send(emailData);
 
     emailState.setBody("body");
     emailState.setSubject("subject");
@@ -175,7 +188,6 @@ public class EmailStateTest extends WingsBaseTest {
         .isEqualTo(expected.but().build());
     assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("Test exception");
 
-    verify(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
+    verify(emailNotificationService).send(emailData);
   }
 }

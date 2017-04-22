@@ -4,7 +4,9 @@
 
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
+import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -14,15 +16,13 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.EmailStateExecutionData;
-import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-
-import java.util.ArrayList;
 
 /**
  * The Class EmailState.
@@ -41,7 +41,7 @@ public class EmailState extends State {
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Ignore delivery failure?") private Boolean ignoreDeliveryFailure = true;
 
-  @Transient @Inject private EmailNotificationService<EmailData> emailNotificationService;
+  @Transient @Inject private EmailNotificationService emailNotificationService;
 
   /**
    * Instantiates a new email state.
@@ -70,9 +70,13 @@ public class EmailState extends State {
       emailStateExecutionData.setSubject(evaluatedSubject);
       emailStateExecutionData.setBody(evaluatedBody);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
-      emailNotificationService.send(toAddress == null ? new ArrayList<>() : COMMA_SPLITTER.splitToList(toAddress),
-          ccAddress == null ? new ArrayList<>() : COMMA_SPLITTER.splitToList(ccAddress), evaluatedSubject,
-          evaluatedBody);
+      emailNotificationService.send(anEmailData()
+                                        .withTo(toAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(toAddress))
+                                        .withCc(ccAddress == null ? emptyList() : COMMA_SPLITTER.splitToList(ccAddress))
+                                        .withSubject(evaluatedSubject)
+                                        .withBody(evaluatedBody)
+                                        .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                        .build());
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
       executionResponse.setErrorMessage(e.getMessage());

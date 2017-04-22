@@ -1,7 +1,11 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -20,6 +24,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.io.IOException;
 import javax.inject.Inject;
@@ -38,7 +43,7 @@ public class PauseStateTest extends WingsBaseTest {
 
   @Inject private Injector injector;
 
-  @Mock private EmailNotificationService<EmailState> emailNotificationService;
+  @Mock private EmailNotificationService emailNotificationService;
 
   @InjectMocks private PauseState pauseState = new PauseState(stateName);
 
@@ -54,6 +59,9 @@ public class PauseStateTest extends WingsBaseTest {
     stateExecutionInstance.setStateName(stateName);
 
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    on(workflowStandardParams).set("app", anApplication().withAccountId(ACCOUNT_ID).build());
+    context.pushContextElement(workflowStandardParams);
 
     pauseState.setToAddress("to1,to2");
     pauseState.setCcAddress("cc1,cc2");
@@ -81,6 +89,12 @@ public class PauseStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNull();
 
     verify(emailNotificationService)
-        .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
+        .send(anEmailData()
+                  .withTo(Lists.newArrayList("to1", "to2"))
+                  .withAccountId(ACCOUNT_ID)
+                  .withCc(Lists.newArrayList("cc1", "cc2"))
+                  .withSubject("subject")
+                  .withBody("body")
+                  .build());
   }
 }

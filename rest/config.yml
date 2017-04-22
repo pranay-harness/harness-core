@@ -31,6 +31,15 @@ xxxxxxxx
 
 hazelcastManCenterConfigUrl: http://localhost:8080/mancenter
 
+smtp:
+  type: SMTP
+  host: smtp.gmail.com
+  port: 465
+  fromAddress: wings_test@wings.software
+  useSSL: true
+  username: wings_test@wings.software
+  password: "@wes0me@pp"
+
 logging:
   level: INFO
   appenders:

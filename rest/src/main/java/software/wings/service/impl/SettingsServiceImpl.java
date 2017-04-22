@@ -215,12 +215,13 @@ public class SettingsServiceImpl implements SettingsService {
         .asList();
   }
 
-  /* (non-Javadoc)
-   * @see
-   * software.wings.service.intfc.SettingsService#getGlobalSettingAttributesByType(software.wings.settings.SettingValue.SettingVariableTypes)
-   */
   @Override
-  public List<SettingAttribute> getGlobalSettingAttributesByType(String type) {
-    return getSettingAttributesByType(GLOBAL_APP_ID, type);
+  public List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .field("accountId")
+        .equal(accountId)
+        .field("value.type")
+        .equal(type)
+        .asList();
   }
 }

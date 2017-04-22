@@ -17,7 +17,7 @@ import software.wings.service.intfc.EmailNotificationService;
  */
 public class EmailNotificationListenerTest extends WingsBaseTest {
   private static final EmailData testEmailData = anEmailData().build();
-  @Mock private EmailNotificationService<EmailData> emailNotificationService;
+  @Mock private EmailNotificationService emailNotificationService;
 
   @InjectMocks @Inject private EmailNotificationListener emailNotificationListener;
 

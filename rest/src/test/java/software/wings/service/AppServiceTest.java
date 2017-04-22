@@ -19,6 +19,7 @@ import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotifi
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Setup.Builder.aSetup;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
@@ -122,7 +123,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(savedApp);
     when(notificationService.list(any(PageRequest.class))).thenReturn(new PageResponse<Notification>());
-    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS.name()))
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
         .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
 
     appService.save(app);

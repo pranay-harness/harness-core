@@ -16,6 +16,7 @@ import static software.wings.beans.SlackConfig.Builder.aSlackConfig;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
+import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -49,7 +50,6 @@ import software.wings.beans.SlackConfig;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -70,7 +70,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private NotificationDispatcherService notificationDispatcherService;
 
   @Mock private NotificationSetupService notificationSetupService;
-  @Mock private EmailNotificationService<EmailData> emailNotificationService;
+  @Mock private EmailNotificationService emailNotificationService;
   @Mock private SlackNotificationService slackNotificationService;
   @Mock private SettingsService settingsService;
   @Mock private NotificationMessageResolver notificationMessageResolver;
@@ -121,7 +121,12 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
 
     notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
     verify(emailNotificationService)
-        .sendAsync(toAddresses, null, ENTITY_CREATE_NOTIFICATION.name(), ENTITY_CREATE_NOTIFICATION.name());
+        .sendAsync(anEmailData()
+                       .withTo(toAddresses)
+                       .withSubject(ENTITY_CREATE_NOTIFICATION.name())
+                       .withBody(ENTITY_CREATE_NOTIFICATION.name())
+                       .withSystem(true)
+                       .build());
   }
 
   @Test
@@ -227,7 +232,12 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     verify(wingsPersistence).upsert(any(Query.class), any(UpdateOperations.class));
     verify(wingsPersistence).delete(any(NotificationBatch.class));
     verify(emailNotificationService)
-        .sendAsync(toAddresses, null, WORKFLOW_FAILED_NOTIFICATION.name(), WORKFLOW_FAILED_NOTIFICATION.name());
+        .sendAsync(anEmailData()
+                       .withTo(toAddresses)
+                       .withSubject(WORKFLOW_FAILED_NOTIFICATION.name())
+                       .withBody(WORKFLOW_FAILED_NOTIFICATION.name())
+                       .withSystem(true)
+                       .build());
   }
 
   @Test
@@ -255,7 +265,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
                                                .build();
 
     SlackConfig slackConfig = aSlackConfig().withOutgoingWebhookUrl(WingsTestConstants.PORTAL_URL).build();
-    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SLACK.name()))
+    when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SLACK.name()))
         .thenReturn(asList(SettingAttribute.Builder.aSettingAttribute().withValue(slackConfig).build()));
 
     notificationDispatcherService.dispatchNotification(notification, Arrays.asList(notificationRule));

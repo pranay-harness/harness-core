@@ -4,8 +4,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-import javax.validation.Valid;
 import java.util.List;
+import javax.validation.Valid;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -128,5 +128,5 @@ public interface SettingsService {
    * @param type the type
    * @return the global setting attributes by type
    */
-  List<SettingAttribute> getGlobalSettingAttributesByType(String type);
+  List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
 }
