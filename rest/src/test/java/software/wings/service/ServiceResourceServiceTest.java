@@ -17,14 +17,15 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -53,6 +54,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
 import software.wings.beans.History;
 import software.wings.beans.Notification;
@@ -77,6 +79,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.Stencil;
 
 import java.util.ArrayList;
@@ -118,6 +121,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private SetupService setupService;
   @Mock private EntityVersionService entityVersionService;
   @Mock private CommandService commandService;
+  @Mock private WorkflowService workflowService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -214,22 +218,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(service.getSetup()).isNotNull();
   }
 
-  @Test
-  public void shouldThrowExceptionForNonExistentServiceGet() {
-    assertThatThrownBy(() -> srs.get(APP_ID, "NON_EXISTENT_SERVICE_ID"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_ARGUMENT.name());
-    verify(wingsPersistence).get(Service.class, APP_ID, "NON_EXISTENT_SERVICE_ID");
-  }
-
-  @Test
-  public void shouldThrowExceptionForNonExistentServiceDelete() {
-    assertThatThrownBy(() -> srs.delete(APP_ID, "NON_EXISTENT_SERVICE_ID"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_ARGUMENT.name());
-    verify(wingsPersistence).get(Service.class, APP_ID, "NON_EXISTENT_SERVICE_ID");
-  }
-
   /**
    * Should update service.
    */
@@ -256,13 +244,35 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteService() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList()).build());
     srs.delete(APP_ID, SERVICE_ID);
-    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceTemplateService, configService);
+    InOrder inOrder =
+        inOrder(wingsPersistence, workflowService, notificationService, serviceTemplateService, configService);
     inOrder.verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
+    inOrder.verify(workflowService).listWorkflows(any(PageResponse.class));
     inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
     inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldThrowExceptionOnDeleteServiceStillReferencedInWorkflow() {
+    when(wingsPersistence.delete(any(), any())).thenReturn(true);
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(
+            aPageResponse()
+                .withResponse(asList(aWorkflow().withServices(asList(aService().withUuid(SERVICE_ID).build())).build()))
+                .build());
+
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+
+    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
+    verify(workflowService).listWorkflows(any(PageResponse.class));
+    verify(wingsPersistence, never()).delete(Service.class, SERVICE_ID);
   }
 
   /**

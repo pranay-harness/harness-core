@@ -97,6 +97,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -323,8 +324,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<Service> services = new ArrayList<>();
-    workflow.getOrchestrationWorkflow().getServiceIds().forEach(
-        serviceId -> { services.add(serviceResourceService.get(workflow.getAppId(), serviceId, false)); });
+    workflow.getOrchestrationWorkflow()
+        .getServiceIds()
+        .stream()
+        .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
+        .filter(Objects::nonNull)
+        .forEach(services::add);
     workflow.setServices(services);
   }
 
@@ -960,6 +965,65 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForECS(String appId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+
+    WorkflowPhase rollbackWorkflowPhase =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withInfraMappingName(workflowPhase.getInfraMappingName())
+            .withPhaseNameForRollback(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withInfraMappingId(workflowPhase.getInfraMappingId())
+            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                              .addStep(aNode()
+                                           .withId(getUuid())
+                                           .withType(ECS_SERVICE_DEPLOY.name())
+                                           .withName(Constants.UPGRADE_CONTAINERS)
+                                           .addProperty("rollback", true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .build())
+            .build();
+
+    return rollbackWorkflowPhase;
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(String appId, WorkflowPhase workflowPhase) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.KUBERNETES);
+
+    WorkflowPhase rollbackWorkflowPhase =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withInfraMappingName(workflowPhase.getInfraMappingName())
+            .withPhaseNameForRollback(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withInfraMappingId(workflowPhase.getInfraMappingId())
+            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                              .addStep(aNode()
+                                           .withId(getUuid())
+                                           .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
+                                           .withName(Constants.UPGRADE_CONTAINERS)
+                                           .addProperty("rollback", true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .build())
+            .build();
+
+    return rollbackWorkflowPhase;
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForContainerService(
