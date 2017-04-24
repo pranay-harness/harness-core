@@ -25,7 +25,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Service Cluster")
-  private String commandName = "Resize Service Cluster";
+  private String commandName;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
 

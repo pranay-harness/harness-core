@@ -27,7 +27,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")
-  private String commandName = "Resize Replication Controller";
+  private String commandName;
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
