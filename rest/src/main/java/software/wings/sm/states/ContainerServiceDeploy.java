@@ -72,8 +72,6 @@ import javax.annotation.Nullable;
 public abstract class ContainerServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
-  protected int instanceCount;
-
   @Inject @Transient protected transient SettingsService settingsService;
 
   @Inject @Transient protected transient DelegateService delegateService;
@@ -158,7 +156,7 @@ public abstract class ContainerServiceDeploy extends State {
             ErrorCode.INVALID_REQUEST, "message", "Service setup not done, serviceName: " + serviceName);
       }
       executionDataBuilder.withNewServicePreviousInstanceCount(previousDesiredCount.get());
-      desiredCount = previousDesiredCount.get() + instanceCount;
+      desiredCount = previousDesiredCount.get() + fetchDesiredCount();
     }
 
     logger.info("Desired count for service {} is {}", serviceName, desiredCount);
@@ -235,7 +233,7 @@ public abstract class ContainerServiceDeploy extends State {
         return buildEndStateExecution(commandStateExecutionData, ExecutionStatus.SUCCESS);
       }
       commandStateExecutionData.setOldServicePreviousInstanceCount(previousDesiredCount.get());
-      desiredCount = Math.max(previousDesiredCount.get() - instanceCount, 0);
+      desiredCount = Math.max(previousDesiredCount.get() - fetchDesiredCount(), 0);
     }
 
     logger.info("Desired count for service {} is {}", oldServiceName, desiredCount);
@@ -272,7 +270,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (!isRollback() && instanceCount == 0) {
+    if (!isRollback() && fetchDesiredCount() == 0) {
       invalidFields.put("instanceCount", "instanceCount needs to be greater than 0");
     }
     if (getCommandName() == null) {
@@ -360,13 +358,7 @@ public abstract class ContainerServiceDeploy extends State {
     return commandExecutionContext;
   }
 
-  public int getInstanceCount() {
-    return instanceCount;
-  }
-
-  public void setInstanceCount(int instanceCount) {
-    this.instanceCount = instanceCount;
-  }
+  public abstract int fetchDesiredCount();
 
   public abstract String getCommandName();
 

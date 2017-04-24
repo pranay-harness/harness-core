@@ -22,12 +22,12 @@ import javax.annotation.Nullable;
  * Created by brett on 3/1/17
  */
 public class KubernetesReplicationControllerDeploy extends ContainerServiceDeploy {
-  @Attributes(title = "Number of instances") protected int instanceCount;
+  @Attributes(title = "Number of instances") private int instanceCount;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")
-  private String commandName;
+  private String commandName = "Resize Replication Controller";
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
@@ -52,6 +52,11 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
   }
 
   @Override
+  public int fetchDesiredCount() {
+    return getInstanceCount();
+  }
+
+  @Override
   public String getCommandName() {
     return commandName;
   }
@@ -60,12 +65,19 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
     this.commandName = commandName;
   }
 
+  public int getInstanceCount() {
+    return instanceCount;
+  }
+
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
+
   public static final class KubernetesReplicationControllerDeployBuilder {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
     private String stateType;
-    private boolean rollback;
     private String commandName;
     private int instanceCount;
 
@@ -98,11 +110,6 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       return this;
     }
 
-    public KubernetesReplicationControllerDeployBuilder withRollback(boolean rollback) {
-      this.rollback = rollback;
-      return this;
-    }
-
     public KubernetesReplicationControllerDeployBuilder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
@@ -119,7 +126,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       kubernetesReplicationControllerDeploy.setId(id);
       kubernetesReplicationControllerDeploy.setRequiredContextElementType(requiredContextElementType);
       kubernetesReplicationControllerDeploy.setStateType(stateType);
-      kubernetesReplicationControllerDeploy.setRollback(rollback);
+      kubernetesReplicationControllerDeploy.setRollback(false);
       kubernetesReplicationControllerDeploy.setCommandName(commandName);
       kubernetesReplicationControllerDeploy.setInstanceCount(instanceCount);
       return kubernetesReplicationControllerDeploy;

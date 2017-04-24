@@ -20,7 +20,9 @@ import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.values;
 
 import com.google.inject.Singleton;
@@ -951,10 +953,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == DeploymentType.ECS) {
-      return generateRollbackWorkflowPhaseForContainerService(workflowPhase, ECS_SERVICE_DEPLOY.name());
+      return generateRollbackWorkflowPhaseForContainerService(workflowPhase, ECS_SERVICE_ROLLBACK.name());
     } else if (deploymentType == DeploymentType.KUBERNETES) {
       return generateRollbackWorkflowPhaseForContainerService(
-          workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name());
+          workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
