@@ -12,13 +12,13 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by mike@ on 4/24/17.
  */
-public class HardcodedEncryptionTest {
+public class SimpleEncryptionTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
-    HardcodedEncryption encryption = new HardcodedEncryption();
+    SimpleEncryption encryption = new SimpleEncryption();
     byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8));
     String encryptedString = new String(encryptedBytes, StandardCharsets.UTF_8);
     assertThat(testInput).isNotEqualTo(encryptedString);
@@ -31,7 +31,7 @@ public class HardcodedEncryptionTest {
   public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnop".toCharArray();
     String testInput = "abc";
-    HardcodedEncryption encryption = new HardcodedEncryption();
+    SimpleEncryption encryption = new SimpleEncryption();
     byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8), KEY);
     String encryptedString = new String(encryptedBytes, StandardCharsets.UTF_8);
     assertThat(testInput).isNotEqualTo(encryptedString);
@@ -46,7 +46,7 @@ public class HardcodedEncryptionTest {
     thrown.expectMessage("16 characters");
     char[] KEY = "abc".toCharArray();
     String testInput = "abc";
-    HardcodedEncryption encryption = new HardcodedEncryption();
+    SimpleEncryption encryption = new SimpleEncryption();
     byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8), KEY);
   }
 }

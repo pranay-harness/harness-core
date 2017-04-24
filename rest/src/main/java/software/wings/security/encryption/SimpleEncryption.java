@@ -22,14 +22,14 @@ import javax.crypto.spec.SecretKeySpec;
  * Very simple hardcoded encryption package for encrypting user passwords in persistence.
  * Created by mike@ on 4/24/17.
  */
-public class HardcodedEncryption implements EncryptionInterface {
+public class SimpleEncryption implements EncryptionInterface {
   // IV and KEY both need to be 16 characters long.
   private final byte[] IV = "EncryptionIV0*d&".getBytes(StandardCharsets.UTF_8);
   private final char[] KEY = "EncryptionKey2a@".toCharArray();
   private final byte[] SALT = "megasalt".getBytes(StandardCharsets.UTF_8);
   private SecretKeyFactory FACTORY;
 
-  public HardcodedEncryption() {
+  public SimpleEncryption() {
     try {
       FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
     } catch (NoSuchAlgorithmException nsae) {
