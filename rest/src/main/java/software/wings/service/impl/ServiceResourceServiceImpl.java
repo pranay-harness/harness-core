@@ -8,7 +8,6 @@ import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -31,8 +30,10 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
@@ -55,6 +56,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -91,6 +93,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private EntityVersionService entityVersionService;
   @Inject private CommandService commandService;
   @Inject private ArtifactStreamService artifactStreamService;
+  @Inject private WorkflowService workflowService;
 
   /**
    * {@inheritDoc}
@@ -186,22 +189,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service get(String appId, String serviceId, boolean includeDetails) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    if (service == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
+    if (service != null && includeDetails) {
+      service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
+      service.setServiceVariables(
+          serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
+      service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
+      service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
+      service.getServiceCommands().forEach(serviceCommand
+          -> serviceCommand.setCommand(
+              commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     }
-
-    if (!includeDetails) {
-      return service;
-    }
-
-    service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
-    service.setServiceVariables(
-        serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
-    service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
-    service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
-    service.getServiceCommands().forEach(serviceCommand
-        -> serviceCommand.setCommand(
-            commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     return service;
   }
 
@@ -223,24 +220,44 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public void delete(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
+      return;
     }
 
-    boolean deleted = wingsPersistence.delete(Service.class, serviceId);
-    if (deleted) {
-      executorService.submit(() -> {
-        notificationService.sendNotificationAsync(
-            anInformationNotification()
-                .withAppId(service.getAppId())
-                .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-                .withNotificationTemplateVariables(
-                    ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
-                .build());
-        serviceTemplateService.deleteByService(appId, serviceId);
-        artifactStreamService.deleteByService(appId, serviceId);
-        configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
-        serviceVariableService.deleteByEntityId(appId, serviceId);
-      });
+    // Ensure service is safe to delete
+
+    List<Workflow> workflows =
+        workflowService.listWorkflows(Builder.aPageRequest().addFilter("appId", Operator.EQ, appId).build())
+            .getResponse();
+
+    List<Workflow> serviceWorkflows =
+        workflows.stream()
+            .filter(wfl -> wfl.getServices().stream().anyMatch(s -> serviceId.equals(s.getUuid())))
+            .collect(Collectors.toList());
+
+    if (serviceWorkflows != null && serviceWorkflows.size() > 0) {
+      String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
+      String message = String.format(
+          "Service:[%s] couldn't be deleted. Remove Service reference from following workflows [" + workflowNames + "]",
+          service.getName());
+      throw new WingsException(INVALID_REQUEST, "message", message);
+    } else {
+      // safe to delete
+      boolean deleted = wingsPersistence.delete(Service.class, serviceId);
+      if (deleted) {
+        executorService.submit(() -> {
+          notificationService.sendNotificationAsync(
+              anInformationNotification()
+                  .withAppId(service.getAppId())
+                  .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
+                  .withNotificationTemplateVariables(
+                      ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName()))
+                  .build());
+          serviceTemplateService.deleteByService(appId, serviceId);
+          artifactStreamService.deleteByService(appId, serviceId);
+          configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
+          serviceVariableService.deleteByEntityId(appId, serviceId);
+        });
+      }
     }
   }
 

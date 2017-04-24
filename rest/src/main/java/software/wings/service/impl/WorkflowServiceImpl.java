@@ -95,6 +95,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -321,8 +322,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<Service> services = new ArrayList<>();
-    workflow.getOrchestrationWorkflow().getServiceIds().forEach(
-        serviceId -> { services.add(serviceResourceService.get(workflow.getAppId(), serviceId, false)); });
+    workflow.getOrchestrationWorkflow()
+        .getServiceIds()
+        .stream()
+        .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
+        .filter(Objects::nonNull)
+        .forEach(services::add);
     workflow.setServices(services);
   }
 
