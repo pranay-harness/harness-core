@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
 import static software.wings.api.ContainerUpgradeRequestElement.ContainerUpgradeRequestElementBuilder.aContainerUpgradeRequestElement;
@@ -176,7 +175,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               .withNewServiceInstanceCount(commandStepExecutionSummary.getOldServicePreviousInstanceCount())
               .withContainerServiceElement(contextElement)
               .build();
-      return asList(containerUpgradeRequestElement);
+      return singletonList(containerUpgradeRequestElement);
     }
     return null;
   }
