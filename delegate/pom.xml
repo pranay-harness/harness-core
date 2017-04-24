@@ -188,6 +188,24 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>software.wings.delegate.app.DelegateApplication</mainClass>
+                    <arguments>
+                        <argument>./config-delegate.yml</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
