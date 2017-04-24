@@ -12,10 +12,7 @@ import javax.crypto.NoSuchPaddingException;
  * Created by mike@ on 4/24/17.
  */
 public interface EncryptionInterface {
-  public byte[] encrypt(byte[] content, char[] passphrase)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException,
-             InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException;
-  public byte[] decrypt(byte[] encrypted, char[] passphrase)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException,
-             InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException;
+  public byte[] encrypt(byte[] content, char[] passphrase);
+
+  public byte[] decrypt(byte[] encrypted, char[] passphrase);
 }

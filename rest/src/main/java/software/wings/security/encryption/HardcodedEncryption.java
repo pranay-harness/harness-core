@@ -1,5 +1,7 @@
 package software.wings.security.encryption;
 
+import software.wings.exception.WingsException;
+
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -25,45 +27,58 @@ public class HardcodedEncryption implements EncryptionInterface {
   private final byte[] IV = "EncryptionIV0*d&".getBytes(StandardCharsets.UTF_8);
   private final char[] KEY = "EncryptionKey2a@".toCharArray();
   private final byte[] SALT = "megasalt".getBytes(StandardCharsets.UTF_8);
-  private final SecretKeyFactory FACTORY;
+  private SecretKeyFactory FACTORY;
 
-  public HardcodedEncryption() throws NoSuchAlgorithmException {
-    FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
+  public HardcodedEncryption() {
+    try {
+      FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
+    } catch (NoSuchAlgorithmException nsae) {
+    }
   }
 
   private SecretKey generateKey(char[] key) throws InvalidKeySpecException {
-    KeySpec spec = new PBEKeySpec(key, SALT, 65536, 128);
-    SecretKey tmp = FACTORY.generateSecret(spec);
-    return new SecretKeySpec(tmp.getEncoded(), "AES");
+    try {
+      KeySpec spec = new PBEKeySpec(key, SALT, 65536, 128);
+      SecretKey tmp = FACTORY.generateSecret(spec);
+      return new SecretKeySpec(tmp.getEncoded(), "AES");
+    } catch (InvalidKeySpecException ikse) {
+    }
+    return null;
   }
 
-  public byte[] encrypt(byte[] content, char[] passphrase)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException,
-             InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-    Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-    SecretKey secretKey = this.generateKey(passphrase);
-    c.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(IV));
-    return c.doFinal(content);
+  public byte[] encrypt(byte[] content, char[] passphrase) {
+    try {
+      Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+      SecretKey secretKey = this.generateKey(passphrase);
+      c.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(IV));
+      return c.doFinal(content);
+    } catch (InvalidKeyException e) {
+      throw new WingsException("Key must be 16 characters.");
+    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
+        | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+    }
+    return null;
   }
 
-  public byte[] encrypt(byte[] content) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-                                               InvalidAlgorithmParameterException, InvalidKeySpecException,
-                                               IllegalBlockSizeException, BadPaddingException {
+  public byte[] encrypt(byte[] content) {
     return encrypt(content, KEY);
   }
 
-  public byte[] decrypt(byte[] encrypted, char[] passphrase)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException,
-             InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-    Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-    SecretKey secretKey = this.generateKey(passphrase);
-    c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
-    return c.doFinal(encrypted);
+  public byte[] decrypt(byte[] encrypted, char[] passphrase) {
+    try {
+      Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+      SecretKey secretKey = this.generateKey(passphrase);
+      c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
+      return c.doFinal(encrypted);
+    } catch (InvalidKeyException e) {
+      throw new WingsException("Key must be 16 characters.");
+    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
+        | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+    }
+    return null;
   }
 
-  public byte[] decrypt(byte[] encrypted) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-                                                 InvalidAlgorithmParameterException, InvalidKeySpecException,
-                                                 IllegalBlockSizeException, BadPaddingException {
+  public byte[] decrypt(byte[] encrypted) {
     return decrypt(encrypted, KEY);
   }
 }

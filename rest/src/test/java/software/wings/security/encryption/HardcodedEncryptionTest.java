@@ -5,15 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import software.wings.exception.WingsException;
 
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 /**
  * Created by mike@ on 4/24/17.
@@ -22,9 +16,7 @@ public class HardcodedEncryptionTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void shouldEncryptAndDecrypt()
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException,
-             InvalidKeySpecException, IllegalBlockSizeException, BadPaddingException {
+  public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
     HardcodedEncryption encryption = new HardcodedEncryption();
     byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8));
@@ -36,9 +28,7 @@ public class HardcodedEncryptionTest {
   }
 
   @Test
-  public void shouldEncryptAndDecryptWithCustomKey()
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException,
-             InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+  public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnop".toCharArray();
     String testInput = "abc";
     HardcodedEncryption encryption = new HardcodedEncryption();
@@ -51,10 +41,9 @@ public class HardcodedEncryptionTest {
   }
 
   @Test
-  public void shouldFailWithIncorrectKeyLength()
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException,
-             InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-    thrown.expect(InvalidKeyException.class);
+  public void shouldFailWithIncorrectKeyLength() {
+    thrown.expect(WingsException.class);
+    thrown.expectMessage("16 characters");
     char[] KEY = "abc".toCharArray();
     String testInput = "abc";
     HardcodedEncryption encryption = new HardcodedEncryption();
