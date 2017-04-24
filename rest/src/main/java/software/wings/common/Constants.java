@@ -174,7 +174,10 @@ public interface Constants {
    * The constant UPGRADE_CONTAINERS.
    */
   String UPGRADE_CONTAINERS = "Upgrade Containers";
-
+  /**
+   * The constant ROLLBACK_CONTAINERS.
+   */
+  String ROLLBACK_CONTAINERS = "Rollback Containers";
   /**
    * The constant SUB_WORKFLOW_ID.
    */
