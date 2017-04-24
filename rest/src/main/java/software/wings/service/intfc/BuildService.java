@@ -68,4 +68,18 @@ public interface BuildService<T> {
    * @return the groupId paths
    */
   List<String> getGroupIds(String repoType, T config);
+
+  /**
+   * Validates Artifact Server
+   * @param config
+   * @throws software.wings.exception.WingsException if not valid
+   */
+  void validateArtifactServer(T config);
+
+  /**
+   * Validates Artifact Stream
+   * @param artifactStreamAttributes
+   * @throws software.wings.exception.WingsException if not valid
+   */
+  void validateArtifactSource(T config, ArtifactStreamAttributes artifactStreamAttributes);
 }

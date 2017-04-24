@@ -4,6 +4,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.google.inject.Singleton;
 
+import java.util.HashMap;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
@@ -12,6 +13,8 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.ErrorCode;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
@@ -50,11 +53,21 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         String token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
       }
+      checkValidImage(imageName, response);
       return processBuildResponse(response.body());
     } catch (IOException e) {
       e.printStackTrace();
     }
     return null;
+  }
+
+  private void checkValidImage(String imageName, Response<DockerImageTagResponse> response) {
+    if (response.code() == 404) { // Page not found
+      Map<String, Object> params = new HashMap<>();
+      params.put("name", imageName);
+      params.put("reason", " Reason: Image name does not exist.");
+      throw new WingsException(params, ErrorCode.INVALID_ARTIFACT_SOURCE);
+    }
   }
 
   private List<BuildDetails> processBuildResponse(DockerImageTagResponse dockerImageTagResponse) {
@@ -67,6 +80,27 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @Override
   public BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName) {
     return null;
+  }
+
+  @Override
+  public void verifyImageName(DockerConfig dockerConfig, String imageName) {
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
+    try {
+      DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig);
+      Response<DockerImageTagResponse> response =
+          registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
+      if (response.code() == 401) { // unauthorized
+        String token = getToken(dockerConfig, response.headers(), registryRestClient);
+        response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
+      }
+      if (response.code() == 404) { // Page not found
+        throw new WingsException(
+            ErrorCode.INVALID_ARGUMENT, "args", "Image name [" + imageName + "] does not exist in Docker registry.");
+      }
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {

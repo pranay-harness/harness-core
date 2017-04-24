@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
@@ -62,4 +63,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     return nexusService.getLatestVersion(config, artifactStreamAttributes.getJobName(),
         artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
   }
+
+  @Override
+  public void validateArtifactServer(NexusConfig config) {}
+  @Override
+  public void validateArtifactSource(NexusConfig config, ArtifactStreamAttributes artifactStreamAttributes) {}
 }

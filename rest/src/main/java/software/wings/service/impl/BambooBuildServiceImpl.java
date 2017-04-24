@@ -60,4 +60,10 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   public List<String> getGroupIds(String jobName, BambooConfig bambooConfig) {
     throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Bamboo Artifact Stream");
   }
+
+  @Override
+  public void validateArtifactServer(BambooConfig config) {}
+
+  @Override
+  public void validateArtifactSource(BambooConfig config, ArtifactStreamAttributes artifactStreamAttributes) {}
 }
