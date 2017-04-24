@@ -25,6 +25,7 @@ import software.wings.service.intfc.RoleService;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Random;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
@@ -104,14 +105,15 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public String suggestAccountName(String accountName) {
     String suggestedAccountName = accountName;
-    int i = 1;
+    Random rand = new Random();
+    int i = rand.nextInt(1000);
     do {
       Account res = wingsPersistence.get(
           Account.class, Builder.aPageRequest().addFilter("accountName", Operator.EQ, suggestedAccountName).build());
       if (res == null) {
         return suggestedAccountName;
       }
-      suggestedAccountName += ++i;
+      suggestedAccountName = accountName + rand.nextInt(1000);
     } while (true);
   }
 
