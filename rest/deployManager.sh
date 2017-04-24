@@ -1,3 +1,12 @@
+if [ $# -ne 3 ]
+then
+  echo "This script is used to run application on our servers by copying war files from staging folder and running java command."
+  echo "Usage: $0 <Wings UI Host> <New Relic App Name> <Dropwizard metrics prefix>"
+  echo "Wings UI Host: ci.wings.software, demo.wings.software"
+  echo "New Relic App Name: 'CI Server', 'Demo Server'"
+  echo "Dropwizard metrics prefix: ci, demo"
+fi
+
 pkill -f "capsule.jar config.yml"
 /home/ubuntu/waitForJavaShutdown.sh "capsule.jar config.yml"
 
