@@ -849,7 +849,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseStepsForECS(
       String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.ECS);
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     if (serviceSetupRequired) {
       workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_SETUP, Constants.SETUP_CONTAINER)
@@ -876,7 +876,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseStepsForKubernetes(
       String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.KUBERNETES);
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     if (serviceSetupRequired) {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
@@ -922,7 +922,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.SSH);
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.PROVISION_NODE, Constants.PROVISION_NODE_NAME)
                                    .addStep(aNode()
@@ -967,65 +967,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhaseForECS(String appId, WorkflowPhase workflowPhase) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-
-    WorkflowPhase rollbackWorkflowPhase =
-        aWorkflowPhase()
-            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-            .withRollback(true)
-            .withServiceId(workflowPhase.getServiceId())
-            .withComputeProviderId(workflowPhase.getComputeProviderId())
-            .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withPhaseNameForRollback(workflowPhase.getName())
-            .withDeploymentType(workflowPhase.getDeploymentType())
-            .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                              .addStep(aNode()
-                                           .withId(getUuid())
-                                           .withType(ECS_SERVICE_DEPLOY.name())
-                                           .withName(Constants.UPGRADE_CONTAINERS)
-                                           .addProperty("rollback", true)
-                                           .build())
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .build();
-
-    return rollbackWorkflowPhase;
-  }
-
-  private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(String appId, WorkflowPhase workflowPhase) {
-    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.KUBERNETES);
-
-    WorkflowPhase rollbackWorkflowPhase =
-        aWorkflowPhase()
-            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-            .withRollback(true)
-            .withServiceId(workflowPhase.getServiceId())
-            .withComputeProviderId(workflowPhase.getComputeProviderId())
-            .withInfraMappingName(workflowPhase.getInfraMappingName())
-            .withPhaseNameForRollback(workflowPhase.getName())
-            .withDeploymentType(workflowPhase.getDeploymentType())
-            .withInfraMappingId(workflowPhase.getInfraMappingId())
-            .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                              .addStep(aNode()
-                                           .withId(getUuid())
-                                           .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
-                                           .withName(Constants.UPGRADE_CONTAINERS)
-                                           .addProperty("rollback", true)
-                                           .build())
-                              .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                              .withStatusForRollback(ExecutionStatus.SUCCESS)
-                              .withRollback(true)
-                              .build())
-            .build();
-
-    return rollbackWorkflowPhase;
-  }
-
   private WorkflowPhase generateRollbackWorkflowPhaseForContainerService(
       WorkflowPhase workflowPhase, String containerServiceType) {
     return aWorkflowPhase()
@@ -1053,7 +994,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase generateRollbackWorkflowPhaseForSSH(String appId, WorkflowPhase workflowPhase) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
-    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service, DeploymentType.SSH);
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     WorkflowPhase rollbackWorkflowPhase =
         aWorkflowPhase()
@@ -1115,7 +1056,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return rollbackWorkflowPhase;
   }
 
-  private Map<CommandType, List<Command>> getCommandTypeListMap(Service service, DeploymentType deploymentType) {
+  private Map<CommandType, List<Command>> getCommandTypeListMap(Service service) {
     Map<CommandType, List<Command>> commandMap = new HashMap<>();
     if (service.getServiceCommands() == null) {
       return commandMap;
@@ -1124,12 +1065,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (sc.getCommand() == null || sc.getCommand().getCommandType() == null) {
         continue;
       }
-      List<Command> list = commandMap.get(sc.getCommand().getCommandType());
-      if (list == null) {
-        list = new ArrayList<>();
-        commandMap.put(sc.getCommand().getCommandType(), list);
-      }
-      list.add(sc.getCommand());
+      commandMap.computeIfAbsent(sc.getCommand().getCommandType(), k -> new ArrayList<>()).add(sc.getCommand());
     }
     return commandMap;
   }
