@@ -128,8 +128,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public void validateArtifactServer(JenkinsConfig config) {}
+  public boolean validateArtifactServer(JenkinsConfig config) {
+    return true;
+  }
 
   @Override
-  public void validateArtifactSource(JenkinsConfig config, ArtifactStreamAttributes artifactStreamAttributes) {}
+  public boolean validateArtifactSource(JenkinsConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+    return true;
+  }
 }

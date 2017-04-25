@@ -74,12 +74,12 @@ public interface BuildService<T> {
    * @param config
    * @throws software.wings.exception.WingsException if not valid
    */
-  void validateArtifactServer(T config);
+  boolean validateArtifactServer(T config);
 
   /**
    * Validates Artifact Stream
    * @param artifactStreamAttributes
    * @throws software.wings.exception.WingsException if not valid
    */
-  void validateArtifactSource(T config, ArtifactStreamAttributes artifactStreamAttributes);
+  boolean validateArtifactSource(T config, ArtifactStreamAttributes artifactStreamAttributes);
 }

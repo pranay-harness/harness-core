@@ -24,8 +24,8 @@ public interface DockerBuildService extends BuildService<DockerConfig> {
   List<BuildDetails> getBuilds(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, DockerConfig dockerConfig);
 
-  @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_SERVER) void validateArtifactServer(DockerConfig config);
+  @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(DockerConfig config);
 
   @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_STREAM)
-  void validateArtifactSource(DockerConfig config, ArtifactStreamAttributes artifactStreamAttributes);
+  boolean validateArtifactSource(DockerConfig config, ArtifactStreamAttributes artifactStreamAttributes);
 }

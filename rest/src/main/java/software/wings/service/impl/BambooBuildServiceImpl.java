@@ -62,8 +62,12 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
-  public void validateArtifactServer(BambooConfig config) {}
+  public boolean validateArtifactServer(BambooConfig config) {
+    return true;
+  }
 
   @Override
-  public void validateArtifactSource(BambooConfig config, ArtifactStreamAttributes artifactStreamAttributes) {}
+  public boolean validateArtifactSource(BambooConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+    return true;
+  }
 }

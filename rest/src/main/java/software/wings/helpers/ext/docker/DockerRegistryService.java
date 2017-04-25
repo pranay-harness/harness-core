@@ -33,5 +33,5 @@ public interface DockerRegistryService {
    * @param dockerConfig
    * @param imageName
    */
-  void verifyImageName(DockerConfig dockerConfig, String imageName);
+  boolean verifyImageName(DockerConfig dockerConfig, String imageName);
 }
