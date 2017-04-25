@@ -5,10 +5,11 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -80,10 +81,26 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String repoType, @NotEmpty String settingId) {
+  public Set<String> getGroupIds(String appId, String repoType, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     return Sets.newHashSet(getBuildService(settingAttribute, appId).getGroupIds(repoType, settingAttribute.getValue()));
+  }
+
+  @Override
+  public void validateArtifactServer(String appId, String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    notNullCheck("Setting", settingAttribute);
+    getBuildService(settingAttribute, appId).validateArtifactServer(settingAttribute.getValue());
+  }
+
+  @Override
+  public void validateArtifactSource(
+      String appId, String settingId, ArtifactStreamAttributes artifactStreamAttributes) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    notNullCheck("Setting", settingAttribute);
+    getBuildService(settingAttribute, appId)
+        .validateArtifactSource(settingAttribute.getValue(), artifactStreamAttributes);
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId) {

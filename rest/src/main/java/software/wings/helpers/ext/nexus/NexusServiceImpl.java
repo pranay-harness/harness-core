@@ -140,8 +140,7 @@ public class NexusServiceImpl implements NexusService {
               try {
                 return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
               } catch (IOException ex) {
-                throw new WingsException(
-                    ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
+                throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path");
               }
             }
           }

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -24,6 +25,7 @@ import com.amazonaws.services.ecs.model.TransportProtocol;
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ClusterElement;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.EcsServiceExecutionData;
@@ -54,7 +56,6 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.EcsConvention;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -109,6 +110,10 @@ public class EcsServiceSetup extends State {
     }
 
     String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
+    if (Constants.RUNTIME.equals(clusterName)) {
+      String regionCluster = getClusterElement(context).getName();
+      clusterName = regionCluster.split("/")[1];
+    }
 
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -120,7 +125,7 @@ public class EcsServiceSetup extends State {
       ecsContainerTask = new EcsContainerTask();
       EcsContainerTask.ContainerDefinition containerDefinition = new EcsContainerTask.ContainerDefinition();
       containerDefinition.setMemory(256);
-      containerDefinition.setPortMappings(Collections.emptyList());
+      containerDefinition.setPortMappings(emptyList());
       ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
@@ -152,8 +157,6 @@ public class EcsServiceSetup extends State {
             .withDeploymentConfiguration(
                 new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
-    List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(computeProviderSetting, clusterName);
 
     EcsServiceExecutionData.Builder ecsServiceExecutionDataBuilder = anEcsServiceExecutionData()
                                                                          .withEcsClusterName(clusterName)
@@ -164,7 +167,7 @@ public class EcsServiceSetup extends State {
         ecsContainerTask.getContainerDefinitions()
             .stream()
             .flatMap(containerDefinition
-                -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(Collections.emptyList()).stream())
+                -> Optional.ofNullable(containerDefinition.getPortMappings()).orElse(emptyList()).stream())
             .filter(EcsContainerTask.PortMapping::isLoadBalancerPort)
             .findFirst()
             .map(EcsContainerTask.PortMapping::getContainerPort)
@@ -234,11 +237,11 @@ public class EcsServiceSetup extends State {
     ContainerDefinition containerDefinition =
         new ContainerDefinition().withName(strip(containerName)).withImage(strip(imageName));
 
-    if (wingsContainerDefinition.getCpu() != null && wingsContainerDefinition.getMemory().intValue() > 0) {
+    if (wingsContainerDefinition.getCpu() != null && wingsContainerDefinition.getMemory() > 0) {
       containerDefinition.setCpu(wingsContainerDefinition.getCpu());
     }
 
-    if (wingsContainerDefinition.getMemory() != null && wingsContainerDefinition.getMemory().intValue() > 0) {
+    if (wingsContainerDefinition.getMemory() != null && wingsContainerDefinition.getMemory() > 0) {
       containerDefinition.setMemory(wingsContainerDefinition.getMemory());
     }
 
@@ -255,9 +258,9 @@ public class EcsServiceSetup extends State {
     }
 
     List<String> commands = Optional.ofNullable(wingsContainerDefinition.getCommands())
-                                .orElse(Collections.emptyList())
+                                .orElse(emptyList())
                                 .stream()
-                                .filter(s -> isNotBlank(s))
+                                .filter(StringUtils::isNotBlank)
                                 .map(StringUtils::strip)
                                 .collect(toList());
     containerDefinition.setCommand(commands);
@@ -268,7 +271,7 @@ public class EcsServiceSetup extends State {
         LogConfiguration logConfiguration =
             new LogConfiguration().withLogDriver(strip(wingsLogConfiguration.getLogDriver()));
         Optional.ofNullable(wingsLogConfiguration.getOptions())
-            .get()
+            .orElse(emptyList())
             .forEach(
                 logOption -> logConfiguration.addOptionsEntry(strip(logOption.getKey()), strip(logOption.getValue())));
         containerDefinition.setLogConfiguration(logConfiguration);
@@ -308,6 +311,16 @@ public class EcsServiceSetup extends State {
     DockerArtifactStream dockerArtifactStream = (DockerArtifactStream) artifactStream;
 
     return dockerArtifactStream.getImageName();
+  }
+
+  private ClusterElement getClusterElement(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    return context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)
+        .stream()
+        .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
+        .findFirst()
+        .orElse(null);
   }
 
   @Override

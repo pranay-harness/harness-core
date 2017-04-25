@@ -27,4 +27,11 @@ public interface DockerRegistryService {
    * @return the last successful build
    */
   BuildDetails getLastSuccessfulBuild(DockerConfig dockerConfig, String imageName);
+
+  /**
+   * Validates the Image
+   * @param dockerConfig
+   * @param imageName
+   */
+  boolean verifyImageName(DockerConfig dockerConfig, String imageName);
 }

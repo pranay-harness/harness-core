@@ -38,6 +38,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
@@ -200,6 +201,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void verifyRegisteredOrAllowed(String emailAddress) {
+    if (!EmailValidator.getInstance().isValid(emailAddress)) {
+      throw new WingsException(ErrorCode.INVALID_EMAIL);
+    }
+
     User existingUser = getUserByEmail(emailAddress);
 
     if (existingUser != null && existingUser.isEmailVerified()) {

@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;
@@ -61,5 +62,15 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.NEXUS.name());
     return nexusService.getLatestVersion(config, artifactStreamAttributes.getJobName(),
         artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName());
+  }
+
+  @Override
+  public boolean validateArtifactServer(NexusConfig config) {
+    return true;
+  }
+
+  @Override
+  public boolean validateArtifactSource(NexusConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+    return true;
   }
 }

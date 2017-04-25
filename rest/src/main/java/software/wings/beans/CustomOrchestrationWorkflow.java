@@ -54,11 +54,6 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes) {}
 
   @Override
-  public boolean isValid() {
-    return true;
-  }
-
-  @Override
   public boolean validate() {
     return true;
   }
@@ -82,6 +77,7 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
 
   public static final class CustomOrchestrationWorkflowBuilder {
     private Graph graph;
+    private boolean valid;
 
     private CustomOrchestrationWorkflowBuilder() {}
 
@@ -94,9 +90,19 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
       return this;
     }
 
+    public CustomOrchestrationWorkflowBuilder withValid(boolean valid) {
+      this.valid = valid;
+      return this;
+    }
+
+    public CustomOrchestrationWorkflowBuilder but() {
+      return aCustomOrchestrationWorkflow().withGraph(graph).withValid(valid);
+    }
+
     public CustomOrchestrationWorkflow build() {
       CustomOrchestrationWorkflow customOrchestrationWorkflow = new CustomOrchestrationWorkflow();
       customOrchestrationWorkflow.setGraph(graph);
+      customOrchestrationWorkflow.setValid(valid);
       return customOrchestrationWorkflow;
     }
   }

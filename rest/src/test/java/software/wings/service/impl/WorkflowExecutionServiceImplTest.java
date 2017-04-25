@@ -519,13 +519,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .build())
             .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -670,13 +671,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                           .build())
             .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -871,13 +873,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
                       .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(appId)
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(appId)
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -940,13 +943,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
                       .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -1051,13 +1055,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
             .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -1214,13 +1219,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                       .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
                       .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -1322,13 +1328,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
             .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -1453,13 +1460,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
             .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();
@@ -1669,13 +1677,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
             .build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(app.getUuid())
-                            .withName("workflow1")
-                            .withDescription("Sample Workflow")
-                            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withGraph(graph).build())
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .build();
+    Workflow workflow =
+        aWorkflow()
+            .withAppId(app.getUuid())
+            .withName("workflow1")
+            .withDescription("Sample Workflow")
+            .withOrchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .build();
     workflow = workflowService.createWorkflow(workflow);
     assertThat(workflow).isNotNull();
     assertThat(workflow.getUuid()).isNotNull();

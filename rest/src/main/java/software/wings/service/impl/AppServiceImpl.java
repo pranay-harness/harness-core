@@ -261,12 +261,12 @@ public class AppServiceImpl implements AppService {
                     ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
                 .build());
 
-        serviceResourceService.deleteByApp(appId);
         environmentService.deleteByApp(appId);
         artifactStreamService.deleteByApplication(appId);
         artifactService.deleteByApplication(appId);
         workflowService.deleteWorkflowByApplication(appId);
         workflowService.deleteStateMachinesByApplication(appId);
+        serviceResourceService.deleteByApp(appId);
       });
       notificationService.sendNotificationAsync(
           anInformationNotification()

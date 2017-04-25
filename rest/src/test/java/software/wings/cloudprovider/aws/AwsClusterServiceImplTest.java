@@ -1,16 +1,5 @@
 package software.wings.cloudprovider.aws;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import software.wings.WingsBaseTest;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ExecutionLogCallback;
-
-import java.util.Arrays;
-
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -24,6 +13,18 @@ import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_DEFINITION;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import software.wings.WingsBaseTest;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.ExecutionLogCallback;
+
+import java.util.Arrays;
 
 /**
  * Created by anubhaw on 1/3/17.
@@ -53,7 +54,6 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
             "availabilityZones", Arrays.asList("AZ1", "AZ2"), "vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
     verify(ecsContainerService).provisionNodes(cloudProviderSetting, 5, LAUNCHER_TEMPLATE_NAME, params);
-    verify(ecsContainerService).deployService(cloudProviderSetting, SERVICE_DEFINITION);
   }
 
   @Test

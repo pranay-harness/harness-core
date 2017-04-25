@@ -1,7 +1,6 @@
 package software.wings.cloudprovider.gke;
 
 import static org.awaitility.Awaitility.with;
-import static software.wings.cloudprovider.aws.AwsClusterServiceImpl.DASH_STRING;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,6 +35,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class KubernetesContainerServiceImpl implements KubernetesContainerService {
   private static final String RUNNING = "Running";
+  private static final String DASH_STRING = "----------";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();

@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ecs.model.Service;
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -12,7 +13,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  * Created by rishi on 2/8/17.
  */
 public class EcsServiceDeploy extends ContainerServiceDeploy {
-  @Attributes(title = "Number of instances") protected int instanceCount;
+  @Attributes(title = "Number of instances") private int instanceCount;
 
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
@@ -37,15 +37,20 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   protected Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
     if (StringUtils.isNotEmpty(serviceName)) {
-      List<com.amazonaws.services.ecs.model.Service> services =
-          awsClusterService.getServices(settingAttribute, clusterName);
-      Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-          services.stream().filter(svc -> svc.getServiceName().equals(serviceName)).findFirst();
-      if (ecsService.isPresent()) {
-        return Optional.of(ecsService.get().getDesiredCount());
+      Optional<Service> service = awsClusterService.getServices(settingAttribute, clusterName)
+                                      .stream()
+                                      .filter(svc -> svc.getServiceName().equals(serviceName))
+                                      .findFirst();
+      if (service.isPresent()) {
+        return Optional.of(service.get().getDesiredCount());
       }
     }
     return Optional.empty();
+  }
+
+  @Override
+  public int fetchDesiredCount() {
+    return getInstanceCount();
   }
 
   @Override
@@ -57,12 +62,19 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     this.commandName = commandName;
   }
 
+  public int getInstanceCount() {
+    return instanceCount;
+  }
+
+  public void setInstanceCount(int instanceCount) {
+    this.instanceCount = instanceCount;
+  }
+
   public static final class EcsServiceDeployBuilder {
     private String id;
     private String name;
     private ContextElementType requiredContextElementType;
     private String stateType;
-    private boolean rollback;
     private String commandName;
     private int instanceCount;
 
@@ -94,11 +106,6 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
       return this;
     }
 
-    public EcsServiceDeployBuilder withRollback(boolean rollback) {
-      this.rollback = rollback;
-      return this;
-    }
-
     public EcsServiceDeployBuilder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
@@ -114,7 +121,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
       ecsServiceDeploy.setId(id);
       ecsServiceDeploy.setRequiredContextElementType(requiredContextElementType);
       ecsServiceDeploy.setStateType(stateType);
-      ecsServiceDeploy.setRollback(rollback);
+      ecsServiceDeploy.setRollback(false);
       ecsServiceDeploy.setCommandName(commandName);
       ecsServiceDeploy.setInstanceCount(instanceCount);
       return ecsServiceDeploy;

@@ -414,12 +414,11 @@ public class KubernetesReplicationControllerSetup extends State {
 
   private ClusterElement getClusterElement(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    List<ClusterElement> clusterElements = context.getContextElementList(ContextElementType.CLUSTER);
 
-    return clusterElements.stream()
+    return context.<ClusterElement>getContextElementList(ContextElementType.CLUSTER)
+        .stream()
         .filter(clusterElement -> phaseElement.getInfraMappingId().equals(clusterElement.getInfraMappingId()))
         .findFirst()
-        .map(element -> element)
         .orElse(null);
   }
 

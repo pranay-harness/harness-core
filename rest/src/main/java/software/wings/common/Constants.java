@@ -162,21 +162,22 @@ public interface Constants {
    * The constant SETUP_CONTAINER.
    */
   String SETUP_CONTAINER = "Setup Container";
+  /**
+   * The constant SETUP_CLUSTER.
+   */
   String SETUP_CLUSTER = "Setup Cluster";
-
   /**
    * The constant ECS_SERVICE_SETUP.
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
   /**
-   * The constant ECS_SERVICE_DEPLOY.
-   */
-  String ECS_SERVICE_DEPLOY = "Upgrade Containers";
-  /**
    * The constant UPGRADE_CONTAINERS.
    */
   String UPGRADE_CONTAINERS = "Upgrade Containers";
-
+  /**
+   * The constant ROLLBACK_CONTAINERS.
+   */
+  String ROLLBACK_CONTAINERS = "Rollback Containers";
   /**
    * The constant SUB_WORKFLOW_ID.
    */

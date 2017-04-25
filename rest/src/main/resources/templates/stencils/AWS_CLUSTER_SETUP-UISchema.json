@@ -1,0 +1,3 @@
+{
+  "ui:order": ["region", "nodeCount", "availabilityZones", "vpcZoneIdentifiers", "autoScalingGroupName", "launcherConfig", "machineType"]
+}

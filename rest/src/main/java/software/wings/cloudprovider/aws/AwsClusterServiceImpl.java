@@ -26,7 +26,7 @@ import java.util.Map;
 public class AwsClusterServiceImpl implements AwsClusterService {
   @Inject private EcsContainerService ecsContainerService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  public static final String DASH_STRING = "----------";
+  private static final String DASH_STRING = "----------";
 
   @Override
   public void createCluster(SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration) {
@@ -43,10 +43,6 @@ public class AwsClusterServiceImpl implements AwsClusterService {
         awsClusterConfiguration.getLauncherConfiguration(), params);
 
     logger.info("Successfully created cluster and provisioned desired number of nodes");
-
-    ecsContainerService.deployService(cloudProviderSetting, awsClusterConfiguration.getServiceDefinition());
-    logger.info("Service created successfully");
-    logger.info("Successfully deployed service");
   }
 
   @Override

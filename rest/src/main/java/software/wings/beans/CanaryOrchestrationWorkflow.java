@@ -284,17 +284,40 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return graphBuilder.build();
   }
 
+  @Override
   public boolean validate() {
     setValid(true);
     setValidationMessage(null);
     if (workflowPhases != null) {
+      String invalid = "";
       List<String> invalidChildren = workflowPhases.stream()
                                          .filter(workflowPhase -> !workflowPhase.validate())
                                          .map(WorkflowPhase::getName)
                                          .collect(Collectors.toList());
       if (invalidChildren != null && !invalidChildren.isEmpty()) {
         setValid(false);
-        setValidationMessage(String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalidChildren.toString()));
+        invalid += invalidChildren.toString();
+      }
+      if (rollbackWorkflowPhaseIdMap != null) {
+        List<String> invalidRollbacks = new ArrayList<>();
+        for (WorkflowPhase workflowPhase : workflowPhases) {
+          WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid());
+          if (rollbackPhase != null) {
+            if (!rollbackPhase.validate()) {
+              invalidRollbacks.add(rollbackPhase.getName());
+            }
+          }
+        }
+        if (!invalidRollbacks.isEmpty()) {
+          setValid(false);
+          if (!invalid.isEmpty()) {
+            invalid += ", ";
+          }
+          invalid += invalidRollbacks.toString();
+        }
+      }
+      if (!invalid.isEmpty()) {
+        setValidationMessage(String.format(Constants.WORKFLOW_VALIDATION_MESSAGE, invalid));
       }
     }
     return isValid();
