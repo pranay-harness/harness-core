@@ -92,6 +92,7 @@ public class AwsClusterSetup extends State {
     AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
     clusterConfiguration.setName(clusterName);
     clusterConfiguration.setSize(nodeCount);
+    // TODO:: Don't hardcode these, create fields instead.
     clusterConfiguration.setAvailabilityZones(Arrays.asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e"));
     clusterConfiguration.setVpcZoneIdentifiers("subnet-9725a6bd,subnet-42ddaf34,subnet-64d99b59,subnet-fbe268a3");
     clusterConfiguration.setAutoScalingGroupName("wins_demo_launchconfigAsg_v1");

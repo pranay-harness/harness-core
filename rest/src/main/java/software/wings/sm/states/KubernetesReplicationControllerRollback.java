@@ -9,6 +9,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Optional;
@@ -20,6 +21,7 @@ import javax.annotation.Nullable;
 public class KubernetesReplicationControllerRollback extends ContainerServiceDeploy {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
+  @DefaultValue("Resize Service Cluster")
   private String commandName = "Resize Replication Controller";
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
