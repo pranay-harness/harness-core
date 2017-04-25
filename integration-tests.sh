@@ -42,6 +42,5 @@ echo 'sleep for delegate to start'
 sleep 30
 
 #run all integration tests
-mvn failsafe:integration-test
-
+mvn failsafe:integration-test failsafe:verify
 
