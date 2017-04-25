@@ -27,6 +27,11 @@ public enum ErrorCode {
   INVALID_ARGUMENT("INVALID_ARGUMENT"),
 
   /**
+   * Invalid email sent for registration.
+   */
+  INVALID_EMAIL("INVALID_EMAIL"),
+
+  /**
    * Domain not allowed to register error codes.
    */
   DOMAIN_NOT_ALLOWED_TO_REGISTER("DOMAIN_NOT_ALLOWED_TO_REGISTER"),

@@ -15,6 +15,16 @@ import javax.ws.rs.core.GenericType;
  */
 public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
+  public void testInvalidEmail() throws IOException {
+    WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz.com");
+    RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
+    Assert.assertEquals(1, restResponse.getResponseMessages().size());
+    final ResponseMessage responseMessage = restResponse.getResponseMessages().get(0);
+    Assert.assertEquals(ErrorCode.INVALID_EMAIL, responseMessage.getCode());
+    Assert.assertFalse(restResponse.getResource());
+  }
+
+  @Test
   public void testDomainNotAllowed() throws IOException {
     WebTarget target = client.target(API_BASE + "/users/verify-email?email=xyz@gmail.com");
     RestResponse<Boolean> restResponse = getRequestBuilder(target).get(new GenericType<RestResponse<Boolean>>() {});
