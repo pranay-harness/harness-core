@@ -9,7 +9,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Map;
 
 /**
- * Created by rishi on 2/15/17.
+ * Created by brett on 3/13/17
  */
 public class KubernetesReplicationControllerExecutionData extends StateExecutionData implements NotifyResponseData {
   private String gkeClusterName;
@@ -88,7 +88,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "gkeClusterName",
-        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("GKE Cluster Name").build());
+        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("GCP Cluster Name").build());
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
         anExecutionDataValue()
             .withValue(kubernetesReplicationControllerName)
@@ -116,7 +116,7 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "gkeClusterName",
-        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("GKE Cluster Name").build());
+        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("GCP Cluster Name").build());
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
         anExecutionDataValue()
             .withValue(kubernetesReplicationControllerName)

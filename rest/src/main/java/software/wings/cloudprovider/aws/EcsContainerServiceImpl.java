@@ -892,7 +892,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningState(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRuning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
+    while (!allDesiredTaskRunning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
@@ -903,7 +903,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningStateButDontThrowException(AmazonECSClient amazonECSClient, String clusterName,
       String serviceName, ExecutionLogCallback executionLogCallback) {
     int retryCount = RETRY_COUNTER;
-    while (!allDesiredTaskRuning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
+    while (!allDesiredTaskRunning(amazonECSClient, clusterName, serviceName, executionLogCallback)) {
       if (retryCount-- <= 0) {
         break;
       }
@@ -911,7 +911,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  private boolean allDesiredTaskRuning(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
+  private boolean allDesiredTaskRunning(AmazonECSClient amazonECSClient, String clusterName, String serviceName,
       ExecutionLogCallback executionLogCallback) {
     Service service =
         amazonECSClient

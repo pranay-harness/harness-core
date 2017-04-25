@@ -26,6 +26,7 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactState;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
+import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
@@ -198,6 +199,9 @@ public enum StateType implements StateTypeDescriptor {
   KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       ORCHESTRATION_STENCILS),
+
+  AWS_CLUSTER_SETUP(
+      AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
       ORCHESTRATION_STENCILS);

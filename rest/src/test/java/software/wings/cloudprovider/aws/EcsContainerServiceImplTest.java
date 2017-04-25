@@ -1,5 +1,18 @@
 package software.wings.cloudprovider.aws;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
+import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
+import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
+import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
@@ -32,23 +45,10 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.AwsHelperService;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static software.wings.beans.AwsConfig.Builder.anAwsConfig;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
-import static software.wings.utils.WingsTestConstants.AUTO_SCALING_GROUP_NAME;
-import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
-import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
-import static software.wings.utils.WingsTestConstants.SECRET_KEY;
-import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 1/3/17.

@@ -1,11 +1,10 @@
 package software.wings.sm.states;
 
+import static software.wings.api.AwsClusterExecutionData.AwsClusterExecutionDataBuilder.anAwsClusterExecutionData;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
-import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
+import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -17,11 +16,12 @@ import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
-import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.cloudprovider.aws.AwsClusterConfiguration;
+import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -33,20 +33,22 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.KubernetesConvention;
+import software.wings.utils.EcsConvention;
+
+import java.util.Arrays;
 
 /**
  * Created by brett on 4/14/17
  */
-public class GcpClusterSetup extends State {
-  private static final Logger logger = LoggerFactory.getLogger(GcpClusterSetup.class);
-  @Attributes(title = "Zone") private String zone;
+public class AwsClusterSetup extends State {
+  private static final Logger logger = LoggerFactory.getLogger(AwsClusterSetup.class);
+  @Attributes(title = "Region") private String region;
 
   @Attributes(title = "Node Count") private int nodeCount;
 
   @Attributes(title = "Machine Type") private String machineType;
 
-  @Inject @Transient private transient GkeClusterService gkeClusterService;
+  @Inject @Transient private transient AwsClusterService awsClusterService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
@@ -54,8 +56,8 @@ public class GcpClusterSetup extends State {
   /**
    * Instantiates a new state.
    */
-  public GcpClusterSetup(String name) {
-    super(name, GCP_CLUSTER_SETUP.name());
+  public AwsClusterSetup(String name) {
+    super(name, AWS_CLUSTER_SETUP.name());
   }
 
   @Override
@@ -69,15 +71,15 @@ public class GcpClusterSetup extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infrastructureMapping == null || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
+    if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
 
-    if (StringUtils.isEmpty(zone)) {
-      zone = "us-west1-a";
+    if (StringUtils.isEmpty(region)) {
+      region = "us-west1-a";
     }
     if (nodeCount <= 0) {
       nodeCount = 2;
@@ -85,20 +87,22 @@ public class GcpClusterSetup extends State {
     if (StringUtils.isEmpty(machineType)) {
       machineType = "n1-standard-2";
     }
-    String clusterName = "wings-" + KubernetesConvention.getKubernetesServiceName(app.getName(), serviceName, env);
-    String zoneCluster = zone + "/" + clusterName;
-    gkeClusterService.createCluster(computeProviderSetting, zoneCluster,
-        ImmutableMap.<String, String>builder()
-            .put("nodeCount", Integer.toString(nodeCount))
-            .put("machineType", machineType)
-            .put("masterUser", "admin")
-            .put("masterPwd", "admin")
-            .build());
+    String clusterName = "wings-" + EcsConvention.getTaskFamily(app.getName(), serviceName, env);
+    String regionCluster = region + "/" + clusterName;
+    AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
+    clusterConfiguration.setName(clusterName);
+    clusterConfiguration.setSize(nodeCount);
+    clusterConfiguration.setAvailabilityZones(Arrays.asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e"));
+    clusterConfiguration.setVpcZoneIdentifiers("subnet-9725a6bd,subnet-42ddaf34,subnet-64d99b59,subnet-fbe268a3");
+    clusterConfiguration.setAutoScalingGroupName("wins_demo_launchconfigAsg_v1");
+    clusterConfiguration.setLauncherConfiguration("wins_demo_launchconfig_v1");
+
+    awsClusterService.createCluster(computeProviderSetting, clusterConfiguration);
 
     ClusterElement clusterElement = aClusterElement()
                                         .withUuid(serviceId)
-                                        .withName(zoneCluster)
-                                        .withDeploymentType(DeploymentType.KUBERNETES)
+                                        .withName(regionCluster)
+                                        .withDeploymentType(DeploymentType.ECS)
                                         .withInfraMappingId(phaseElement.getInfraMappingId())
                                         .build();
 
@@ -106,9 +110,9 @@ public class GcpClusterSetup extends State {
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .addContextElement(clusterElement)
         .addNotifyElement(clusterElement)
-        .withStateExecutionData(aGcpClusterExecutionData()
+        .withStateExecutionData(anAwsClusterExecutionData()
                                     .withClusterName(clusterName)
-                                    .withZone(zone)
+                                    .withRegion(region)
                                     .withNodeCount(nodeCount)
                                     .withMachineType(machineType)
                                     .build())
@@ -118,12 +122,12 @@ public class GcpClusterSetup extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  public String getZone() {
-    return zone;
+  public String getRegion() {
+    return region;
   }
 
-  public void setZone(String zone) {
-    this.zone = zone;
+  public void setRegion(String region) {
+    this.region = region;
   }
 
   public int getNodeCount() {
@@ -142,48 +146,49 @@ public class GcpClusterSetup extends State {
     this.machineType = machineType;
   }
 
-  public static final class GcpClusterSetupBuilder {
+  public static final class AwsClusterSetupBuilder {
     private String name;
-    private String zone;
+    private String region;
     private int nodeCount;
     private String machineType;
 
-    private GcpClusterSetupBuilder() {}
+    private AwsClusterSetupBuilder() {}
 
-    public static GcpClusterSetupBuilder aGcpClusterSetup() {
-      return new GcpClusterSetupBuilder();
+    public static AwsClusterSetupBuilder anAwsClusterSetup() {
+      return new AwsClusterSetupBuilder();
     }
 
-    public GcpClusterSetupBuilder withName(String name) {
+    public AwsClusterSetupBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
-    public GcpClusterSetupBuilder withZone(String zone) {
-      this.zone = zone;
+    public AwsClusterSetupBuilder withRegion(String region) {
+      this.region = region;
       return this;
     }
 
-    public GcpClusterSetupBuilder withNodeCount(int nodeCount) {
+    public AwsClusterSetupBuilder withNodeCount(int nodeCount) {
       this.nodeCount = nodeCount;
       return this;
     }
 
-    public GcpClusterSetupBuilder withMachineType(String machineType) {
+    public AwsClusterSetupBuilder withMachineType(String machineType) {
       this.machineType = machineType;
       return this;
     }
 
-    public GcpClusterSetupBuilder but() {
-      return aGcpClusterSetup().withName(name).withZone(zone).withNodeCount(nodeCount).withMachineType(machineType);
+    public AwsClusterSetupBuilder but() {
+      return anAwsClusterSetup().withName(name).withRegion(region).withNodeCount(nodeCount).withMachineType(
+          machineType);
     }
 
-    public GcpClusterSetup build() {
-      GcpClusterSetup gcpClusterSetup = new GcpClusterSetup(name);
-      gcpClusterSetup.setZone(zone);
-      gcpClusterSetup.setNodeCount(nodeCount);
-      gcpClusterSetup.setMachineType(machineType);
-      return gcpClusterSetup;
+    public AwsClusterSetup build() {
+      AwsClusterSetup awsClusterSetup = new AwsClusterSetup(name);
+      awsClusterSetup.setRegion(region);
+      awsClusterSetup.setNodeCount(nodeCount);
+      awsClusterSetup.setMachineType(machineType);
+      return awsClusterSetup;
     }
   }
 }

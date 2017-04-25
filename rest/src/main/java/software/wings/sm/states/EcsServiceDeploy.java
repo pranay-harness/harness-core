@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ecs.model.Service;
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -12,7 +13,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -37,12 +37,12 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   protected Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
     if (StringUtils.isNotEmpty(serviceName)) {
-      List<com.amazonaws.services.ecs.model.Service> services =
-          awsClusterService.getServices(settingAttribute, clusterName);
-      Optional<com.amazonaws.services.ecs.model.Service> ecsService =
-          services.stream().filter(svc -> svc.getServiceName().equals(serviceName)).findFirst();
-      if (ecsService.isPresent()) {
-        return Optional.of(ecsService.get().getDesiredCount());
+      Optional<Service> service = awsClusterService.getServices(settingAttribute, clusterName)
+                                      .stream()
+                                      .filter(svc -> svc.getServiceName().equals(serviceName))
+                                      .findFirst();
+      if (service.isPresent()) {
+        return Optional.of(service.get().getDesiredCount());
       }
     }
     return Optional.empty();
