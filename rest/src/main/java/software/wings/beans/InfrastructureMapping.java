@@ -35,7 +35,9 @@ public abstract class InfrastructureMapping extends Base {
   @NotEmpty private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @Attributes(title = "Connection Type") private String hostConnectionAttrs;
-  @SchemaIgnore private String displayName;
+  @SchemaIgnore private String computeProviderName;
+
+  @Inject private SettingsService settingsService;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -122,6 +124,15 @@ public abstract class InfrastructureMapping extends Base {
   }
 
   @SchemaIgnore
+  public String getComputeProviderName() {
+    return computeProviderName;
+  }
+
+  public void setComputeProviderName(String computeProviderName) {
+    this.computeProviderName = computeProviderName;
+  }
+
+  @SchemaIgnore
   public String getServiceId() {
     return serviceId;
   }
@@ -166,14 +177,7 @@ public abstract class InfrastructureMapping extends Base {
     return super.getUuid();
   }
 
-  @SchemaIgnore
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
+  @SchemaIgnore public abstract String getDisplayName();
 
   /**
    * Gets host connection attrs.

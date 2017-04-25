@@ -53,7 +53,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
@@ -110,26 +109,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     Validator.notNullCheck("Service Template", serviceTemplate);
 
     infraMapping.setServiceId(serviceTemplate.getServiceId());
-
-    String computeProviderType =
-        SettingVariableTypes.PHYSICAL_DATA_CENTER.name().equals(infraMapping.getComputeProviderType())
-        ? "Data Center"
-        : infraMapping.getComputeProviderType();
-    String details =
-        String.format("Cloud provider: %s, Deployment type: %s", computeProviderType, infraMapping.getDeploymentType());
-
-    String clusterName = null;
-    if (infraMapping instanceof GcpKubernetesInfrastructureMapping) {
-      clusterName = ((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName();
-    } else if (infraMapping instanceof EcsInfrastructureMapping) {
-      clusterName = ((EcsInfrastructureMapping) infraMapping).getClusterName();
-    }
-
-    if (clusterName != null) {
-      details += String.format(", Cluster name: %s", clusterName);
-    }
-
-    infraMapping.setDisplayName(String.format("%s (%s)", computeProviderSetting.getName(), details));
+    infraMapping.setComputeProviderName(computeProviderSetting.getName());
 
     InfrastructureMapping savedInfraMapping = wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping);
 
