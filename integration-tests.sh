@@ -1,3 +1,5 @@
+#!/bin/bash
+sudo service mongod restart
 mvn clean install -DskipTests=true
 mvn test-compile
 
