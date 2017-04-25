@@ -316,13 +316,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return;
     }
 
-    List<Service> services = new ArrayList<>();
-    workflow.getOrchestrationWorkflow()
-        .getServiceIds()
-        .stream()
-        .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
-        .filter(Objects::nonNull)
-        .forEach(services::add);
+    List<Service> services = workflow.getOrchestrationWorkflow()
+                                 .getServiceIds()
+                                 .stream()
+                                 .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
+                                 .filter(Objects::nonNull)
+                                 .collect(Collectors.toList());
     workflow.setServices(services);
   }
 
