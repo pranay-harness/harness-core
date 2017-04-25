@@ -49,12 +49,15 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import javax.inject.Inject;
@@ -78,10 +81,7 @@ public class AppServiceTest extends WingsBaseTest {
    * The Update operations.
    */
   @Mock UpdateOperations<Application> updateOperations;
-  /**
-   * The App service.
-   */
-  @Inject @InjectMocks AppService appService;
+
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -91,7 +91,11 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private NotificationService notificationService;
   @Mock private SetupService setupService;
   @Mock private JobScheduler jobScheduler;
+  @Mock private ArtifactService artifactService;
+  @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private WorkflowService workflowService;
 
+  @Inject @InjectMocks AppService appService;
   /**
    * Sets up.
    *
@@ -252,11 +256,13 @@ public class AppServiceTest extends WingsBaseTest {
         .thenReturn(anApplication().withUuid(APP_ID).withName("APP_NAME").build());
     appService.delete(APP_ID);
     InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService,
-        appContainerService, jobScheduler);
+        appContainerService, jobScheduler, artifactService, artifactStreamService, workflowService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
-    inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
     inOrder.verify(environmentService).deleteByApp(APP_ID);
+    inOrder.verify(workflowService).deleteWorkflowByApplication(APP_ID);
+    inOrder.verify(workflowService).deleteStateMachinesByApplication(APP_ID);
+    inOrder.verify(serviceResourceService).deleteByApp(APP_ID);
     inOrder.verify(jobScheduler).deleteJob(anyString(), eq(APP_ID));
   }
 }

@@ -284,6 +284,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return graphBuilder.build();
   }
 
+  @Override
   public boolean validate() {
     setValid(true);
     setValidationMessage(null);
