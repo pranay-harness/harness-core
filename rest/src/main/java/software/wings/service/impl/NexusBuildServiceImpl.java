@@ -65,7 +65,12 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public void validateArtifactServer(NexusConfig config) {}
+  public boolean validateArtifactServer(NexusConfig config) {
+    return true;
+  }
+
   @Override
-  public void validateArtifactSource(NexusConfig config, ArtifactStreamAttributes artifactStreamAttributes) {}
+  public boolean validateArtifactSource(NexusConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+    return true;
+  }
 }

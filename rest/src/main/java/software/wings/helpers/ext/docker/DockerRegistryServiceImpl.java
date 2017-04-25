@@ -9,6 +9,7 @@ import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
+import org.simpleframework.xml.Transient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -83,7 +84,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   @Override
-  public void verifyImageName(DockerConfig dockerConfig, String imageName) {
+  public boolean verifyImageName(DockerConfig dockerConfig, String imageName) {
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
     try {
       DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig);
@@ -101,6 +102,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    return true;
   }
 
   private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {

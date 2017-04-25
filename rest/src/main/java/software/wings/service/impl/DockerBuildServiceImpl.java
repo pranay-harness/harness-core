@@ -62,10 +62,12 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public void validateArtifactServer(DockerConfig config) {}
+  public boolean validateArtifactServer(DockerConfig config) {
+    return false;
+  }
 
   @Override
-  public void validateArtifactSource(DockerConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
-    dockerRegistryService.verifyImageName(config, artifactStreamAttributes.getImageName());
+  public boolean validateArtifactSource(DockerConfig config, ArtifactStreamAttributes artifactStreamAttributes) {
+    return dockerRegistryService.verifyImageName(config, artifactStreamAttributes.getImageName());
   }
 }
