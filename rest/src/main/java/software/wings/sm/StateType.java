@@ -31,6 +31,7 @@ import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EcsServiceDeploy;
+import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.EmailState;
@@ -40,6 +41,7 @@ import software.wings.sm.states.GcpClusterSetup;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
+import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
@@ -183,11 +185,17 @@ public enum StateType implements StateTypeDescriptor {
   ECS_SERVICE_DEPLOY(
       EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
 
+  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
+      ORCHESTRATION_STENCILS),
+
   KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       ORCHESTRATION_STENCILS),
 
   KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      ORCHESTRATION_STENCILS),
+  KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       ORCHESTRATION_STENCILS),
 

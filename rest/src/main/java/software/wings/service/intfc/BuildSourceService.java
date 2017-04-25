@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;
@@ -66,4 +67,22 @@ public interface BuildSourceService {
    * @return the groupId paths
    */
   Set<String> getGroupIds(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId);
+
+  /**
+   * Valiate Artifact Stream
+   * @param appId
+   * @param settingId
+   * @throws software.wings.exception.WingsException if Artifact Stream not valid
+   */
+  void validateArtifactServer(@NotEmpty String appId, @NotEmpty String settingId);
+
+  /**
+   * Valiate Artifact Stream
+   * @param appId
+   * @param settingId
+   * @param artifactStreamAttributes
+   * @throws software.wings.exception.WingsException if Artifact Stream not valid
+   */
+  void validateArtifactSource(
+      @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes);
 }

@@ -52,6 +52,7 @@ import software.wings.scheduler.ArtifactStreamActionJob;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -95,6 +96,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private EnvironmentService environmentService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private BuildSourceService buildSourceService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -113,6 +115,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
+    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+      buildSourceService.validateArtifactSource(
+          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
+    }
     String id = wingsPersistence.save(artifactStream);
     if (artifactStream.isAutoDownload()) {
       addCronForAutoArtifactCollection(artifactStream);
@@ -144,6 +150,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         wingsPersistence.get(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
+    }
+    if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
+      buildSourceService.validateArtifactSource(
+          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
     }
     artifactStream = create(artifactStream);
     if (!artifactStream.isAutoDownload()) {

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.SortOrder;
@@ -27,7 +28,7 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class ApprovalState extends State {
-  private String groupName;
+  @Attributes(required = true, title = "Group Name") private String groupName;
 
   @Transient @Inject private PipelineService pipelineService;
 

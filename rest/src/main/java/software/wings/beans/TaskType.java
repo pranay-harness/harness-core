@@ -36,6 +36,8 @@ public enum TaskType {
   BAMBOO_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
   BAMBOO_GET_PLANS(ServiceImplDelegateTask.class),
   DOCKER_GET_BUILDS(ServiceImplDelegateTask.class),
+  DOCKER_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
+  DOCKER_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class),
   NEXUS_GET_JOBS(ServiceImplDelegateTask.class),
   NEXUS_GET_PLANS(ServiceImplDelegateTask.class),
   NEXUS_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),

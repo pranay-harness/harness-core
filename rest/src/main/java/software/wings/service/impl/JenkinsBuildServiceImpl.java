@@ -36,7 +36,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
    * The constant APP_ID.
    */
   public static final String APP_ID = "appId";
-  /**
+
+  /**II
    * The constant ARTIFACT_STREAM_NAME.
    */
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -125,4 +126,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     throw new WingsException(
         ErrorCode.INVALID_REQUEST, "message", "Operation not supported by Jenkins Artifact Stream");
   }
+
+  @Override
+  public void validateArtifactServer(JenkinsConfig config) {}
+
+  @Override
+  public void validateArtifactSource(JenkinsConfig config, ArtifactStreamAttributes artifactStreamAttributes) {}
 }

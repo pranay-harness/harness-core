@@ -310,7 +310,12 @@ public enum ErrorCode {
   /**
    * Jenkins response error
    */
-  JENKINS_ERROR("JENKINS_ERROR");
+  JENKINS_ERROR("JENKINS_ERROR"),
+
+  /**
+   * Invalid Artifact Source
+   */
+  INVALID_ARTIFACT_SOURCE("INVALID_ARTIFACT_SOURCE");
 
   /**
    * The constant ARGS_NAME.
