@@ -9,7 +9,23 @@ echo $! > manager.pid
 cd ../
 echo 'sleep for server to start'
 #wait for server to start
-sleep 30
+output=$(curl -sS https://localhost:9090/api/version)
+status=$?
+count=1
+while [[ $status == 7 && $count -lt 20 ]]
+do
+sleep 5
+output=$(curl -sS https://localhost:9090/api/version)
+status=$?
+count=`expr $count + 1`
+done
+
+if [ $count -eq 20 ]
+then
+  echo 'server failed to start'
+  exit 1
+fi
+
 
 #run data gen to load test data
 cd rest

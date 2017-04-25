@@ -1,5 +1,5 @@
 #kill delegate
-kill -9 `cat `
+kill -9 `cat delegate.pid`
 
 #kill manager
 kill -9 `cat rest/manager.pid`
