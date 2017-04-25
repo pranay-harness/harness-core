@@ -116,8 +116,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
     if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
-      buildSourceService.validateArtifactSource(
-          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
+      // buildSourceService.validateArtifactSource(artifactStream.getAppId(), artifactStream.getSettingId(),
+      // artifactStream.getArtifactStreamAttributes());
     }
     String id = wingsPersistence.save(artifactStream);
     if (artifactStream.isAutoDownload()) {
@@ -152,8 +152,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
     if (ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType())) {
-      buildSourceService.validateArtifactSource(
-          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
+      // TODO : Call takes longer time
+      // buildSourceService.validateArtifactSource(artifactStream.getAppId(), artifactStream.getSettingId(),
+      // artifactStream.getArtifactStreamAttributes());
     }
     artifactStream = create(artifactStream);
     if (!artifactStream.isAutoDownload()) {
