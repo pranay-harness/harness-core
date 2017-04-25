@@ -48,3 +48,8 @@ sleep 30
 #run all integration tests
 mvn failsafe:integration-test failsafe:verify
 
+#take dump of mongodb
+mongodump
+
+#tar.gz dump files
+tar -czvf dump.tar.gz dump/
