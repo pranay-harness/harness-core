@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 public class KubernetesReplicationControllerRollback extends ContainerServiceDeploy {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Resize Service Cluster")
+  @DefaultValue("Resize Replication Controller")
   private String commandName = "Resize Replication Controller";
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
