@@ -29,6 +29,11 @@ public enum ErrorCode {
   /**
    * Domain not allowed to register error codes.
    */
+  INVALID_EMAIL("INVALID_EMAIL"),
+
+  /**
+   * Domain not allowed to register error codes.
+   */
   DOMAIN_NOT_ALLOWED_TO_REGISTER("DOMAIN_NOT_ALLOWED_TO_REGISTER"),
 
   /**
