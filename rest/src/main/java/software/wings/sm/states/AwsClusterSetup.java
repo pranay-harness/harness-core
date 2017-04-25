@@ -46,6 +46,14 @@ public class AwsClusterSetup extends State {
 
   @Attributes(title = "Node Count") private int nodeCount;
 
+  @Attributes(title = "Availability Zones") private String availabilityZones;
+
+  @Attributes(title = "VPC Zone Identifiers") private String vpcZoneIdentifiers;
+
+  @Attributes(title = "Auto Scaling Group Name") private String autoScalingGroupName;
+
+  @Attributes(title = "Launcher Configuration") private String launcherConfig;
+
   @Attributes(title = "Machine Type") private String machineType;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
@@ -77,26 +85,33 @@ public class AwsClusterSetup extends State {
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
+    AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
 
+    if (StringUtils.isNotEmpty(availabilityZones)) {
+      clusterConfiguration.setAvailabilityZones(Arrays.asList(availabilityZones.split(",")));
+    }
+    if (StringUtils.isNotEmpty(vpcZoneIdentifiers)) {
+      clusterConfiguration.setVpcZoneIdentifiers(vpcZoneIdentifiers);
+    }
+    if (StringUtils.isNotEmpty(autoScalingGroupName)) {
+      clusterConfiguration.setAutoScalingGroupName(autoScalingGroupName);
+    }
+    if (StringUtils.isNotEmpty(launcherConfig)) {
+      clusterConfiguration.setLauncherConfiguration(launcherConfig);
+    }
+    if (StringUtils.isNotEmpty(machineType)) {
+      // TODO:: specify machine type for the cluster
+    }
     if (StringUtils.isEmpty(region)) {
-      region = "us-west1-a";
+      region = "us-west-1";
     }
     if (nodeCount <= 0) {
       nodeCount = 2;
     }
-    if (StringUtils.isEmpty(machineType)) {
-      machineType = "n1-standard-2";
-    }
     String clusterName = "wings-" + EcsConvention.getTaskFamily(app.getName(), serviceName, env);
     String regionCluster = region + "/" + clusterName;
-    AwsClusterConfiguration clusterConfiguration = new AwsClusterConfiguration();
     clusterConfiguration.setName(clusterName);
     clusterConfiguration.setSize(nodeCount);
-    // TODO:: Don't hardcode these, create fields instead.
-    clusterConfiguration.setAvailabilityZones(Arrays.asList("us-east-1a", "us-east-1c", "us-east-1d", "us-east-1e"));
-    clusterConfiguration.setVpcZoneIdentifiers("subnet-9725a6bd,subnet-42ddaf34,subnet-64d99b59,subnet-fbe268a3");
-    clusterConfiguration.setAutoScalingGroupName("wins_demo_launchconfigAsg_v1");
-    clusterConfiguration.setLauncherConfiguration("wins_demo_launchconfig_v1");
 
     awsClusterService.createCluster(computeProviderSetting, clusterConfiguration);
 
@@ -139,6 +154,38 @@ public class AwsClusterSetup extends State {
     this.nodeCount = nodeCount;
   }
 
+  public String getAvailabilityZones() {
+    return availabilityZones;
+  }
+
+  public void setAvailabilityZones(String availabilityZones) {
+    this.availabilityZones = availabilityZones;
+  }
+
+  public String getVpcZoneIdentifiers() {
+    return vpcZoneIdentifiers;
+  }
+
+  public void setVpcZoneIdentifiers(String vpcZoneIdentifiers) {
+    this.vpcZoneIdentifiers = vpcZoneIdentifiers;
+  }
+
+  public String getAutoScalingGroupName() {
+    return autoScalingGroupName;
+  }
+
+  public void setAutoScalingGroupName(String autoScalingGroupName) {
+    this.autoScalingGroupName = autoScalingGroupName;
+  }
+
+  public String getLauncherConfig() {
+    return launcherConfig;
+  }
+
+  public void setLauncherConfig(String launcherConfig) {
+    this.launcherConfig = launcherConfig;
+  }
+
   public String getMachineType() {
     return machineType;
   }
@@ -151,6 +198,10 @@ public class AwsClusterSetup extends State {
     private String name;
     private String region;
     private int nodeCount;
+    private String availabilityZones;
+    private String vpcZoneIdentifiers;
+    private String autoScalingGroupName;
+    private String launcherConfig;
     private String machineType;
 
     private AwsClusterSetupBuilder() {}
@@ -174,20 +225,39 @@ public class AwsClusterSetup extends State {
       return this;
     }
 
-    public AwsClusterSetupBuilder withMachineType(String machineType) {
-      this.machineType = machineType;
+    public AwsClusterSetupBuilder withAvailabilityZones(String availabilityZones) {
+      this.availabilityZones = availabilityZones;
       return this;
     }
 
-    public AwsClusterSetupBuilder but() {
-      return anAwsClusterSetup().withName(name).withRegion(region).withNodeCount(nodeCount).withMachineType(
-          machineType);
+    public AwsClusterSetupBuilder withVpcZoneIdentifiers(String vpcZoneIdentifiers) {
+      this.vpcZoneIdentifiers = vpcZoneIdentifiers;
+      return this;
+    }
+
+    public AwsClusterSetupBuilder withAutoScalingGroupName(String autoScalingGroupName) {
+      this.autoScalingGroupName = autoScalingGroupName;
+      return this;
+    }
+
+    public AwsClusterSetupBuilder withLauncherConfig(String launcherConfig) {
+      this.launcherConfig = launcherConfig;
+      return this;
+    }
+
+    public AwsClusterSetupBuilder withMachineType(String machineType) {
+      this.machineType = machineType;
+      return this;
     }
 
     public AwsClusterSetup build() {
       AwsClusterSetup awsClusterSetup = new AwsClusterSetup(name);
       awsClusterSetup.setRegion(region);
       awsClusterSetup.setNodeCount(nodeCount);
+      awsClusterSetup.setAvailabilityZones(availabilityZones);
+      awsClusterSetup.setVpcZoneIdentifiers(vpcZoneIdentifiers);
+      awsClusterSetup.setAutoScalingGroupName(autoScalingGroupName);
+      awsClusterSetup.setLauncherConfig(launcherConfig);
       awsClusterSetup.setMachineType(machineType);
       return awsClusterSetup;
     }
