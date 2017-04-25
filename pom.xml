@@ -947,6 +947,7 @@
                                 <excludes>
                                     <exclude>**/*IntegrationTest.java</exclude>
                                     <exclude>**/IntegrationTest*.java</exclude>
+                                    <exclude>**/DataGenUtil.java</exclude>
                                 </excludes>
                                 <forkCount>4</forkCount>
                                 <reuseForks>true</reuseForks>
@@ -977,6 +978,9 @@
                             <include>**/IntegrationTest*.java</include>
                             <include>**/*IntegrationTest.java</include>
                         </includes>
+                        <excludes>
+                            <exclude>**/DataGenUtil.java</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
                 <plugin>
