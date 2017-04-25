@@ -21,12 +21,6 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
