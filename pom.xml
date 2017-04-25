@@ -929,7 +929,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>2.20</version>
                     <configuration>
                         <skip>true</skip>
                         <forkCount>4</forkCount>
@@ -947,6 +947,7 @@
                                 <excludes>
                                     <exclude>**/*IntegrationTest.java</exclude>
                                     <exclude>**/IntegrationTest*.java</exclude>
+                                    <exclude>**/DataGenUtil.java</exclude>
                                 </excludes>
                                 <forkCount>4</forkCount>
                                 <reuseForks>true</reuseForks>
@@ -957,7 +958,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.18.1</version>
+                    <version>2.20</version>
                     <executions>
                         <execution>
                             <id>integration-test</id>
@@ -977,6 +978,9 @@
                             <include>**/IntegrationTest*.java</include>
                             <include>**/*IntegrationTest.java</include>
                         </includes>
+                        <excludes>
+                            <exclude>**/DataGenUtil.java</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
                 <plugin>
