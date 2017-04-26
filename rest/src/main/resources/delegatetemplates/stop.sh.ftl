@@ -17,13 +17,13 @@ then
       sleep 1
       i=$((i+1))
     else
-      echo "Delegate stopped."
+      echo "Wings Bot stopped"
       exit 0
     fi
   done
   echo "Unable to stop delegate in 30 seconds."
   exit 1
 else
-  echo "Delegate not running."
+  echo "Wings Bot not running"
   exit 1
 fi
