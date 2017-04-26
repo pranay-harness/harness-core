@@ -170,6 +170,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws Exception {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     when(appService.get(APP_ID))
@@ -224,6 +225,8 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
     verify(activityService).save(any(Activity.class));
@@ -301,6 +304,7 @@ public class CommandStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
 
@@ -321,6 +325,8 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
 
@@ -387,6 +393,7 @@ public class CommandStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = commandState.execute(context);
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "NON_EXISTENT_COMMAND");
 
