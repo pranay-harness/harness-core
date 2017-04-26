@@ -164,18 +164,20 @@ public abstract class ContainerServiceDeploy extends State {
     CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(
         app, env.getUuid(), clusterName, serviceName, desiredCount, activity.getUuid(), settingAttribute);
 
-    delegateService.queueTask(aDelegateTask()
-                                  .withAccountId(app.getAccountId())
-                                  .withAppId(app.getAppId())
-                                  .withTaskType(TaskType.COMMAND)
-                                  .withWaitId(activity.getUuid())
-                                  .withParameters(new Object[] {command, commandExecutionContext})
-                                  .build());
+    String delegateTaskId =
+        delegateService.queueTask(aDelegateTask()
+                                      .withAccountId(app.getAccountId())
+                                      .withAppId(app.getAppId())
+                                      .withTaskType(TaskType.COMMAND)
+                                      .withWaitId(activity.getUuid())
+                                      .withParameters(new Object[] {command, commandExecutionContext})
+                                      .build());
 
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(singletonList(activity.getUuid()))
         .withStateExecutionData(executionDataBuilder.build())
+        .withDelegateTaskId(delegateTaskId)
         .build();
   }
 
@@ -249,18 +251,20 @@ public abstract class ContainerServiceDeploy extends State {
     CommandExecutionContext commandExecutionContext = buildCommandExecutionContext(app, env.getUuid(), clusterName,
         oldServiceName, desiredCount, commandStateExecutionData.getActivityId(), settingAttribute);
 
-    delegateService.queueTask(aDelegateTask()
-                                  .withAccountId(app.getAccountId())
-                                  .withAppId(app.getAppId())
-                                  .withTaskType(TaskType.COMMAND)
-                                  .withWaitId(commandStateExecutionData.getActivityId())
-                                  .withParameters(new Object[] {command, commandExecutionContext})
-                                  .build());
+    String delegateTaskId =
+        delegateService.queueTask(aDelegateTask()
+                                      .withAccountId(app.getAccountId())
+                                      .withAppId(app.getAppId())
+                                      .withTaskType(TaskType.COMMAND)
+                                      .withWaitId(commandStateExecutionData.getActivityId())
+                                      .withParameters(new Object[] {command, commandExecutionContext})
+                                      .build());
 
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(singletonList(commandStateExecutionData.getActivityId()))
         .withStateExecutionData(commandStateExecutionData)
+        .withDelegateTaskId(delegateTaskId)
         .build();
   }
 

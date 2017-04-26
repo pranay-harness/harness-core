@@ -210,7 +210,7 @@ public class JenkinsState extends State {
       });
     }
 
-    delegateService.queueTask(
+    String delegateTaskId = delegateService.queueTask(
         aDelegateTask()
             .withTaskType(getTaskType())
             .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
@@ -226,6 +226,7 @@ public class JenkinsState extends State {
         .withAsync(true)
         .withStateExecutionData(jenkinsExecutionData)
         .withCorrelationIds(Collections.singletonList(activityId))
+        .withDelegateTaskId(delegateTaskId)
         .build();
   }
 

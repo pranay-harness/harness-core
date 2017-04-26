@@ -9,6 +9,7 @@ import static org.apache.commons.lang.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -39,6 +40,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
@@ -207,9 +209,10 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void queueTask(DelegateTask task) {
+  public String queueTask(DelegateTask task) {
     wingsPersistence.save(task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+    return task.getUuid();
   }
 
   @Override
@@ -369,5 +372,35 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     return qualifies;
+  }
+
+  @Override
+  public boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent) {
+    return wingsPersistence.get(DelegateTask.class,
+               aPageRequest()
+                   .addFilter(ID_KEY, EQ, taskAbortEvent.getDelegateTaskId())
+                   .addFilter("delegateId", EQ, delegateId)
+                   .build())
+        != null;
+  }
+
+  @Override
+  public void abortTask(String accountId, String delegateTaskId) {
+    DelegateTask updatedTask =
+        wingsPersistence.getDatastore().findAndModify(wingsPersistence.createQuery(DelegateTask.class)
+                                                          .field(ID_KEY)
+                                                          .equal(delegateTaskId)
+                                                          .field("accountId")
+                                                          .equal(accountId)
+                                                          .field("status")
+                                                          .equal(DelegateTask.Status.QUEUED),
+            wingsPersistence.createUpdateOperations(DelegateTask.class)
+                .set("status", DelegateTask.Status.ABORTED)
+                .unset("delegateId"));
+
+    if (updatedTask == null) {
+      broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
+          .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
+    }
   }
 }

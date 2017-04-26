@@ -188,6 +188,7 @@ public class CommandState extends State {
 
     updateWorflowExecutionStatsInProgress(context);
 
+    String delegateTaskId = null;
     try {
       if (instanceElement == null) {
         throw new StateExecutionException("No InstanceElement present in context");
@@ -315,14 +316,13 @@ public class CommandState extends State {
       CommandExecutionContext commandExecutionContext =
           commandExecutionContextBuilder.withActivityId(activityId).build();
 
-      delegateService.queueTask(aDelegateTask()
-                                    .withAccountId(application.getAccountId())
-                                    .withAppId(appId)
-                                    .withTaskType(TaskType.COMMAND)
-                                    .withWaitId(activityId)
-                                    .withParameters(new Object[] {command, commandExecutionContext})
-                                    .build());
-
+      delegateTaskId = delegateService.queueTask(aDelegateTask()
+                                                     .withAccountId(application.getAccountId())
+                                                     .withAppId(appId)
+                                                     .withTaskType(TaskType.COMMAND)
+                                                     .withWaitId(activityId)
+                                                     .withParameters(new Object[] {command, commandExecutionContext})
+                                                     .build());
     } catch (Exception e) {
       logger.error("Exception in command execution: ", e);
       handleCommandException(context, activityId, appId);
@@ -338,6 +338,7 @@ public class CommandState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withStateExecutionData(executionDataBuilder.build())
+        .withDelegateTaskId(delegateTaskId)
         .build();
   }
 

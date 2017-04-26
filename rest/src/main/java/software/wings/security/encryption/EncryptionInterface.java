@@ -1,18 +1,18 @@
 package software.wings.security.encryption;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 /**
  * Created by mike@ on 4/24/17.
  */
 public interface EncryptionInterface {
-  public byte[] encrypt(byte[] content, char[] passphrase);
+  public EncryptionType getEncryptionType();
+  public SecretKey getSecretKey();
 
-  public byte[] decrypt(byte[] encrypted, char[] passphrase);
+  public byte[] getSalt();
+  public void setSalt(byte[] salt);
+
+  public byte[] encrypt(byte[] content);
+
+  public byte[] decrypt(byte[] encrypted);
 }

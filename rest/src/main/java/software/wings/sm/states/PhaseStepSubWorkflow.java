@@ -47,6 +47,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.SpawningExecutionResponse;
@@ -245,8 +246,14 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
+      ExecutionStatus executionStatus =
+          ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
+      if (executionStatus != ExecutionStatus.SUCCESS) {
+        executionResponse.setExecutionStatus(executionStatus);
+      }
       return executionResponse;
     }
+
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     handleElementNotifyResponseData(phaseElement, response, executionResponse);
     PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) context.getStateExecutionData();

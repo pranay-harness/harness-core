@@ -33,12 +33,14 @@ public enum StencilCategory {
   BUILD(0), /**
              * Scripts stencil category.
              */
-  SCRIPTS, /**
-            * Verifications stencil category.
-            */
-
+  SCRIPTS,
+  /**
+   * Containers stencil category.
+   */
   CONTAINERS,
-
+  /**
+   * Verifications stencil category.
+   */
   VERIFICATIONS(2), /**
                      * Copy stencil category.
                      */

@@ -20,6 +20,7 @@ public class ExecutionResponse {
   private StateExecutionData stateExecutionData;
   private List<ContextElement> notifyElements;
   private List<ContextElement> contextElements;
+  private String delegateTaskId;
 
   /**
    * Is async boolean.
@@ -128,6 +129,24 @@ public class ExecutionResponse {
   }
 
   /**
+   * Getter for property 'delegateTaskId'.
+   *
+   * @return Value for property 'delegateTaskId'.
+   */
+  public String getDelegateTaskId() {
+    return delegateTaskId;
+  }
+
+  /**
+   * Setter for property 'delegateTaskId'.
+   *
+   * @param delegateTaskId Value to set for property 'delegateTaskId'.
+   */
+  public void setDelegateTaskId(String delegateTaskId) {
+    this.delegateTaskId = delegateTaskId;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -136,26 +155,16 @@ public class ExecutionResponse {
     private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     private String errorMessage;
     private StateExecutionData stateExecutionData;
-    private List<ContextElement> contextElements;
     private List<ContextElement> notifyElements;
+    private List<ContextElement> contextElements;
+    private String delegateTaskId;
 
     private Builder() {}
 
-    /**
-     * An execution response builder.
-     *
-     * @return the builder
-     */
     public static Builder anExecutionResponse() {
       return new Builder();
     }
 
-    /**
-     * With async builder.
-     *
-     * @param async the async
-     * @return the builder
-     */
     public Builder withAsync(boolean async) {
       this.async = async;
       return this;
@@ -172,56 +181,36 @@ public class ExecutionResponse {
       return this;
     }
 
-    /**
-     * With correlation ids builder.
-     *
-     * @param correlationIds the correlation ids
-     * @return the builder
-     */
     public Builder withCorrelationIds(List<String> correlationIds) {
       this.correlationIds = correlationIds;
       return this;
     }
 
-    /**
-     * With execution status builder.
-     *
-     * @param executionStatus the execution status
-     * @return the builder
-     */
     public Builder withExecutionStatus(ExecutionStatus executionStatus) {
       this.executionStatus = executionStatus;
       return this;
     }
 
-    /**
-     * With error message builder.
-     *
-     * @param errorMessage the error message
-     * @return the builder
-     */
     public Builder withErrorMessage(String errorMessage) {
       this.errorMessage = errorMessage;
       return this;
     }
 
-    /**
-     * With state execution data builder.
-     *
-     * @param stateExecutionData the state execution data
-     * @return the builder
-     */
     public Builder withStateExecutionData(StateExecutionData stateExecutionData) {
       this.stateExecutionData = stateExecutionData;
       return this;
     }
 
-    /**
-     * Add param.
-     *
-     * @param contextElement the contextElement
-     * @return the builder
-     */
+    public Builder withNotifyElements(List<ContextElement> notifyElements) {
+      this.notifyElements = notifyElements;
+      return this;
+    }
+
+    public Builder withContextElements(List<ContextElement> contextElements) {
+      this.contextElements = contextElements;
+      return this;
+    }
+
     public Builder addContextElement(ContextElement contextElement) {
       if (this.contextElements == null) {
         this.contextElements = new ArrayList<>();
@@ -230,12 +219,6 @@ public class ExecutionResponse {
       return this;
     }
 
-    /**
-     * Add param.
-     *
-     * @param notifyElement the contextElement to notify
-     * @return the builder
-     */
     public Builder addNotifyElement(ContextElement notifyElement) {
       if (this.notifyElements == null) {
         this.notifyElements = new ArrayList<>();
@@ -244,25 +227,23 @@ public class ExecutionResponse {
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withDelegateTaskId(String delegateTaskId) {
+      this.delegateTaskId = delegateTaskId;
+      return this;
+    }
+
     public Builder but() {
       return anExecutionResponse()
           .withAsync(async)
           .withCorrelationIds(correlationIds)
           .withExecutionStatus(executionStatus)
           .withErrorMessage(errorMessage)
-          .withStateExecutionData(stateExecutionData);
+          .withStateExecutionData(stateExecutionData)
+          .withNotifyElements(notifyElements)
+          .withContextElements(contextElements)
+          .withDelegateTaskId(delegateTaskId);
     }
 
-    /**
-     * Build execution response.
-     *
-     * @return the execution response
-     */
     public ExecutionResponse build() {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setAsync(async);
@@ -270,8 +251,9 @@ public class ExecutionResponse {
       executionResponse.setExecutionStatus(executionStatus);
       executionResponse.setErrorMessage(errorMessage);
       executionResponse.setStateExecutionData(stateExecutionData);
-      executionResponse.setContextElements(contextElements);
       executionResponse.setNotifyElements(notifyElements);
+      executionResponse.setContextElements(contextElements);
+      executionResponse.setDelegateTaskId(delegateTaskId);
       return executionResponse;
     }
   }

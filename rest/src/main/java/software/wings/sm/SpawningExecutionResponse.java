@@ -8,6 +8,7 @@ import java.util.List;
  */
 public class SpawningExecutionResponse extends ExecutionResponse {
   private List<StateExecutionInstance> stateExecutionInstanceList = new ArrayList<>();
+  private String delegateTaskId;
 
   /**
    * Gets state execution instance list.

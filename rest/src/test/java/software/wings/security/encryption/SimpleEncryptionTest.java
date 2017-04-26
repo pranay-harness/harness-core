@@ -19,11 +19,11 @@ public class SimpleEncryptionTest {
   public void shouldEncryptAndDecrypt() {
     String testInput = "abc";
     SimpleEncryption encryption = new SimpleEncryption();
-    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8));
-    String encryptedString = new String(encryptedBytes, StandardCharsets.UTF_8);
+    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.ISO_8859_1));
+    String encryptedString = new String(encryptedBytes, StandardCharsets.ISO_8859_1);
     assertThat(testInput).isNotEqualTo(encryptedString);
     byte[] decryptedBytes = encryption.decrypt(encryptedBytes);
-    String decryptedString = new String(decryptedBytes, StandardCharsets.UTF_8);
+    String decryptedString = new String(decryptedBytes, StandardCharsets.ISO_8859_1);
     assertThat(testInput).isEqualTo(decryptedString);
   }
 
@@ -31,12 +31,12 @@ public class SimpleEncryptionTest {
   public void shouldEncryptAndDecryptWithCustomKey() {
     char[] KEY = "abcdefghijklmnop".toCharArray();
     String testInput = "abc";
-    SimpleEncryption encryption = new SimpleEncryption();
-    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8), KEY);
-    String encryptedString = new String(encryptedBytes, StandardCharsets.UTF_8);
+    SimpleEncryption encryption = new SimpleEncryption(KEY);
+    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.ISO_8859_1));
+    String encryptedString = new String(encryptedBytes, StandardCharsets.ISO_8859_1);
     assertThat(testInput).isNotEqualTo(encryptedString);
-    byte[] decryptedBytes = encryption.decrypt(encryptedBytes, KEY);
-    String decryptedString = new String(decryptedBytes, StandardCharsets.UTF_8);
+    byte[] decryptedBytes = encryption.decrypt(encryptedBytes);
+    String decryptedString = new String(decryptedBytes, StandardCharsets.ISO_8859_1);
     assertThat(testInput).isEqualTo(decryptedString);
   }
 
@@ -46,7 +46,7 @@ public class SimpleEncryptionTest {
     thrown.expectMessage("16 characters");
     char[] KEY = "abc".toCharArray();
     String testInput = "abc";
-    SimpleEncryption encryption = new SimpleEncryption();
-    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.UTF_8), KEY);
+    SimpleEncryption encryption = new SimpleEncryption(KEY);
+    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.ISO_8859_1));
   }
 }
