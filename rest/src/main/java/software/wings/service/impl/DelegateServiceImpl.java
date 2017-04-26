@@ -222,7 +222,7 @@ public class DelegateServiceImpl implements DelegateService {
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     T responseData = topic.poll(30000, TimeUnit.MILLISECONDS);
     if (responseData == null) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT);
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Bot");
     }
     return responseData;
   }

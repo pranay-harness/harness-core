@@ -4,12 +4,11 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 
 import com.google.inject.Singleton;
 
-import java.util.HashMap;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
-import org.simpleframework.xml.Transient;
+import okhttp3.OkHttpClient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -20,6 +19,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -30,10 +30,14 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class DockerRegistryServiceImpl implements DockerRegistryService {
+  private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
   private DockerRegistryRestClient getDockerRegistryRestClient(DockerConfig dockerConfig) {
+    OkHttpClient okHttpClient =
+        new OkHttpClient().newBuilder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS).build();
     Retrofit retrofit = new Retrofit.Builder()
+                            .client(okHttpClient)
                             .baseUrl(dockerConfig.getDockerRegistryUrl())
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
@@ -94,13 +98,13 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         String token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
       }
-      if (response.code() == 404) { // Page not found
+      if (response.code() != 200) {
+        // image not found or user doesn't have permission to list image tags
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "args", "Image name [" + imageName + "] does not exist in Docker registry.");
       }
-
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Registry server");
     }
     return true;
   }
