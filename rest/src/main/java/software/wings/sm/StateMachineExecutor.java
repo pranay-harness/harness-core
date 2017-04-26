@@ -1,5 +1,8 @@
 package software.wings.sm;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
@@ -11,9 +14,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -35,6 +35,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.NotifyJob;
+import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
@@ -50,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -66,8 +68,10 @@ public class StateMachineExecutor {
   @Inject private Injector injector;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private JobScheduler jobScheduler;
+  @Inject private DelegateService delegateService;
 
   @Inject @Named("waitStateResumer") private ScheduledExecutorService scheduledExecutorService;
+
   /**
    * Execute.
    *
@@ -278,12 +282,11 @@ public class StateMachineExecutor {
   }
 
   private void startStateExecution(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
-    State currentState = null;
     ExecutionResponse executionResponse = null;
     Exception ex = null;
     try {
       StateMachine stateMachine = context.getStateMachine();
-      currentState =
+      State currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
       invokeAdvisors(context, currentState);
@@ -342,7 +345,8 @@ public class StateMachineExecutor {
       }
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          ExecutionStatus.RUNNING, null, executionResponse.getContextElements(), executionResponse.getNotifyElements());
+          ExecutionStatus.RUNNING, null, executionResponse.getContextElements(), executionResponse.getNotifyElements(),
+          executionResponse.getDelegateTaskId());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
@@ -502,9 +506,12 @@ public class StateMachineExecutor {
       State currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
+      if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
+        delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+      }
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.ABORTED, null,
-          Lists.newArrayList(ExecutionStatus.ABORTING), null, null);
+          Lists.newArrayList(ExecutionStatus.ABORTING), null, null, null);
       invokeAdvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, ExecutionStatus.ABORTED, null);
@@ -632,13 +639,20 @@ public class StateMachineExecutor {
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
       List<ContextElement> notifyElements) {
     return updateStateExecutionData(
-        stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements, notifyElements);
+        stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements, notifyElements, null);
+  }
+
+  private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
+      StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg, List<ContextElement> elements,
+      List<ContextElement> notifyElements, String delegateTaskId) {
+    return updateStateExecutionData(
+        stateExecutionInstance, stateExecutionData, status, errorMsg, null, elements, notifyElements, delegateTaskId);
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg,
       List<ExecutionStatus> runningStatusLists, List<ContextElement> contextElements,
-      List<ContextElement> notifyElements) {
+      List<ContextElement> notifyElements, String delegateTaskId) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
       stateExecutionMap = new HashMap<>();
@@ -667,12 +681,12 @@ public class StateMachineExecutor {
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
 
-    if (contextElements != null && !contextElements.isEmpty()) {
+    if (isNotEmpty(contextElements)) {
       contextElements.forEach(contextElement -> stateExecutionInstance.getContextElements().push(contextElement));
       ops.set("contextElements", stateExecutionInstance.getContextElements());
     }
 
-    if (notifyElements != null && !notifyElements.isEmpty()) {
+    if (isNotEmpty(notifyElements)) {
       if (stateExecutionInstance.getNotifyElements() == null) {
         stateExecutionInstance.setNotifyElements(new ArrayList<>());
       }
@@ -690,9 +704,13 @@ public class StateMachineExecutor {
       stateExecutionData.setErrorMsg(errorMsg);
     }
 
-    if (runningStatusLists == null || runningStatusLists.isEmpty()) {
+    if (isEmpty(runningStatusLists)) {
       runningStatusLists = Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING,
           ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR, ExecutionStatus.ABORTING);
+    }
+
+    if (isNotBlank(delegateTaskId)) {
+      ops.set("delegateTaskId", delegateTaskId);
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -704,6 +722,7 @@ public class StateMachineExecutor {
                                               .in(runningStatusLists);
 
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
+
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     boolean updated = true;
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {

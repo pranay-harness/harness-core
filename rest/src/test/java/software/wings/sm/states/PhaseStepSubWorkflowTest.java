@@ -9,6 +9,7 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
+import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -34,6 +35,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
@@ -179,10 +181,11 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
   @Test
   public void shouldHandleAsyncPreDeploy() {
-    ExecutionContextImpl context = new ExecutionContextImpl(null);
+    ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().withUuid(getUuid()).build());
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    notifyResponse.put("", anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
     ExecutionResponse response = phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     assertThat(response).isNotNull();
   }

@@ -143,6 +143,7 @@ public class HttpTask extends AbstractDelegateRunnableTask<HttpStateExecutionDat
           .withErrorMsg(getMessage(e))
           .withStatus(ExecutionStatus.ERROR);
     }
+
     return executionDataBuilder.build();
   }
 

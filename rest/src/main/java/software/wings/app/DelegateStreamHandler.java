@@ -34,7 +34,7 @@ import java.util.List;
  */
 @AtmosphereHandlerService(path = "/stream/delegate/{accountId}",
     interceptors = {AtmosphereResourceLifecycleInterceptor.class}, broadcasterCache = UUIDBroadcasterCache.class,
-    broadcastFilters = {DelegateTaskFilter.class})
+    broadcastFilters = {DelegateEventFilter.class})
 public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   private static final Logger logger = LoggerFactory.getLogger(DelegateStreamHandler.class);

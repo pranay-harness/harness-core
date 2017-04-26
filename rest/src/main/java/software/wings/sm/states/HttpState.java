@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -12,6 +13,9 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.jexl3.JexlException;
+import org.apache.commons.jexl3.JexlException.Parsing;
+import org.apache.commons.jexl3.JexlException.Property;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -54,6 +58,9 @@ public class HttpState extends State {
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
 
   private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
+
+  private static final String ASSERTION_ERROR_MSG =
+      "Assertion should return true/false (Expression syntax is based on java language).";
 
   @Attributes(required = true, title = "URL") private String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
@@ -249,14 +256,15 @@ public class HttpState extends State {
     String finalEvaluatedBody = evaluatedBody;
     String finalEvaluatedHeader = evaluatedHeader;
 
-    delegateService.queueTask(aDelegateTask()
-                                  .withTaskType(getTaskType())
-                                  .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                  .withWaitId(activityId)
-                                  .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                  .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl, evaluatedBody,
-                                      evaluatedHeader, socketTimeoutMillis})
-                                  .build());
+    String delegateTaksId =
+        delegateService.queueTask(aDelegateTask()
+                                      .withTaskType(getTaskType())
+                                      .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                      .withWaitId(activityId)
+                                      .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                      .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl,
+                                          evaluatedBody, evaluatedHeader, socketTimeoutMillis})
+                                      .build());
 
     HttpStateExecutionData.Builder executionDataBuilder =
         aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(getFinalMethod(context));
@@ -265,6 +273,7 @@ public class HttpState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withStateExecutionData(executionDataBuilder.build())
+        .withDelegateTaskId(delegateTaksId)
         .build();
   }
 
@@ -294,15 +303,30 @@ public class HttpState extends State {
     String errorMessage = executionData.getErrorMsg();
     executionData.setAssertionStatement(assertion);
 
-    boolean status = true;
+    boolean status = false;
     if (StringUtils.isNotBlank(assertion)) {
       try {
         status = (boolean) context.evaluateExpression(assertion, executionData);
         logger.info("assertion status: {}", status);
-      } catch (Exception e) {
-        errorMessage = getMessage(e);
-        executionData.setErrorMsg(errorMessage);
+
+      } catch (ClassCastException e) {
+        logger.error("Invalid assertion {} ", e.getMessage());
+        executionData.setErrorMsg(ASSERTION_ERROR_MSG);
+      } catch (JexlException e) {
         logger.error("Error in httpStateAssertion", e);
+        status = false;
+        if (e instanceof Parsing) {
+          Parsing p = (Parsing) e;
+          executionData.setErrorMsg("Parsing error '" + p.getDetail() + "' in assertion.");
+        } else if (e instanceof Property) {
+          Property pr = (Property) e;
+          executionData.setErrorMsg("Unresolvable property '" + pr.getProperty() + "' in assertion.");
+        } else {
+          executionData.setErrorMsg(getMessage(e));
+        }
+      } catch (Exception e) {
+        logger.error("Error in httpStateAssertion", e);
+        executionData.setErrorMsg(getMessage(e));
         status = false;
       }
     }

@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -27,6 +29,7 @@ public class StateExecutionInstance extends Base {
   private ContextElement contextElement;
   private boolean contextTransition;
   private boolean rollback;
+  private String delegateTaskId;
 
   @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
@@ -468,15 +471,55 @@ public class StateExecutionInstance extends Base {
     this.notifyElements = notifyElements;
   }
 
+  /**
+   * Getter for property 'delegateTaskId'.
+   *
+   * @return Value for property 'delegateTaskId'.
+   */
+  public String getDelegateTaskId() {
+    return delegateTaskId;
+  }
+
+  /**
+   * Setter for property 'delegateTaskId'.
+   *
+   * @param delegateTaskId Value to set for property 'delegateTaskId'.
+   */
+  public void setDelegateTaskId(String delegateTaskId) {
+    this.delegateTaskId = delegateTaskId;
+  }
+
   @Override
   public String toString() {
-    return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName
-        + ", stateType=" + stateType + ", contextElement=" + contextElement + ", contextTransition=" + contextTransition
-        + ", contextElements=" + contextElements + ", stateExecutionMap=" + stateExecutionMap + ", callback=" + callback
-        + ", executionUuid=" + executionUuid + ", parentInstanceId=" + parentInstanceId + ", prevInstanceId="
-        + prevInstanceId + ", nextInstanceId=" + nextInstanceId + ", cloneInstanceId=" + cloneInstanceId
-        + ", notifyId=" + notifyId + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs
-        + ", stateExecutionDataHistory=" + stateExecutionDataHistory + "]";
+    return MoreObjects.toStringHelper(this)
+        .add("stateMachineId", stateMachineId)
+        .add("childStateMachineId", childStateMachineId)
+        .add("stateName", stateName)
+        .add("stateType", stateType)
+        .add("contextElement", contextElement)
+        .add("contextTransition", contextTransition)
+        .add("rollback", rollback)
+        .add("delegateTaskId", delegateTaskId)
+        .add("contextElements", contextElements)
+        .add("stateExecutionMap", stateExecutionMap)
+        .add("stateExecutionDataHistory", stateExecutionDataHistory)
+        .add("executionEventAdvisors", executionEventAdvisors)
+        .add("notifyElements", notifyElements)
+        .add("callback", callback)
+        .add("executionName", executionName)
+        .add("executionType", executionType)
+        .add("executionUuid", executionUuid)
+        .add("parentInstanceId", parentInstanceId)
+        .add("prevInstanceId", prevInstanceId)
+        .add("nextInstanceId", nextInstanceId)
+        .add("cloneInstanceId", cloneInstanceId)
+        .add("notifyId", notifyId)
+        .add("status", status)
+        .add("startTs", startTs)
+        .add("endTs", endTs)
+        .add("expiryTs", expiryTs)
+        .add("stateExecutionData", getStateExecutionData())
+        .toString();
   }
 
   /**

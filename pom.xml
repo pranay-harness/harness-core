@@ -37,8 +37,8 @@
         <deployUsername>${user.name}</deployUsername>
         <portalHost>localhost:8000</portalHost>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <atmosphere-version>2.4.5</atmosphere-version>
-        <extensions-version>2.4.2</extensions-version>
+        <atmosphere-version>2.4.9</atmosphere-version>
+        <extensions-version>2.4.3</extensions-version>
         <alpnboot.version>8.1.11.v20170118</alpnboot.version>
         <newrelic.version>3.32.0</newrelic.version>
         <aws.sdk.version>1.11.70</aws.sdk.version>
