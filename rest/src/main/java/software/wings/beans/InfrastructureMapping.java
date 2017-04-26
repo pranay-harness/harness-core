@@ -39,8 +39,6 @@ public abstract class InfrastructureMapping extends Base {
   @SchemaIgnore private String computeProviderName;
   @Transient private String displayName;
 
-  @Inject private SettingsService settingsService;
-
   /**
    * Instantiates a new Infrastructure mapping.
    *

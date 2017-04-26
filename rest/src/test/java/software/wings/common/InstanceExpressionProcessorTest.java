@@ -44,9 +44,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -65,11 +65,8 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class InstanceExpressionProcessorTest extends WingsBaseTest {
-  private ServiceTemplate SERVICE_TEMPLATE = aServiceTemplate()
-                                                 .withUuid(TEMPLATE_ID)
-                                                 .withName("template")
-                                                 .withService(aService().withUuid("uuid1").withName("svc1").build())
-                                                 .build();
+  private ServiceTemplate SERVICE_TEMPLATE =
+      aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(SERVICE_ID).build();
   /**
    * The Injector.
    */
@@ -79,10 +76,6 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Inject @InjectMocks AppService appService;
   /**
-   * The Environment service.
-   */
-  @Inject EnvironmentService environmentService;
-  /**
    * The Service instance service.
    */
   @Inject ServiceInstanceService serviceInstanceService;
@@ -90,6 +83,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * The Service instance service mock.
    */
   @Mock ServiceInstanceService serviceInstanceServiceMock;
+
   /**
    * The Service template service mock.
    */
@@ -98,7 +92,14 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * The Service template service mock.
    */
   @Mock ServiceTemplateService serviceTemplateServiceMock;
+  /**
+   * The Service resource service mock.
+   */
+  @Mock ServiceResourceService serviceResourceServiceMock;
 
+  /**
+   * The Settings service.
+   */
   @Mock SettingsService settingsService;
 
   @Mock private JobScheduler jobScheduler;
@@ -109,6 +110,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Mock HostService hostService;
   @Inject private WingsPersistence wingsPersistence;
 
+  /**
+   * Sets .
+   */
   @Before
   public void setup() {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
@@ -155,9 +159,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
                .thenReturn(aHost().withHostName(instance.getHostName()).build()));
-    SERVICE_TEMPLATE.setService(aService().withAppId(app.getAppId()).withUuid(SERVICE_ID).build());
+    SERVICE_TEMPLATE.setServiceId(SERVICE_ID);
     when(serviceTemplateServiceMock.get(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(SERVICE_TEMPLATE);
+    when(serviceResourceServiceMock.get(anyString(), anyString()))
+        .thenReturn(aService().withUuid("uuid1").withName("svc1").build());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
@@ -166,6 +172,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
     processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setServiceResourceService(serviceResourceServiceMock);
     on(processor).set("hostService", hostService);
 
     List<InstanceElement> elements = processor.list();
@@ -379,13 +386,14 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
-
     processor.setServiceInstanceService(serviceInstanceServiceMock);
+    processor.setServiceResourceService(serviceResourceServiceMock);
     on(processor).set("hostService", hostService);
 
-    serviceTemplate.setService(service);
     when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false))
         .thenReturn(serviceTemplate);
+    when(serviceResourceServiceMock.get(anyString(), anyString()))
+        .thenReturn(aService().withUuid("uuid1").withName("svc1").build());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))

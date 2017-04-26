@@ -17,6 +17,8 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
@@ -38,6 +40,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -78,6 +81,11 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
    */
   @Mock private ServiceTemplateService serviceTemplateService;
 
+  /**
+   * The Service resource service mock.
+   */
+  @Mock ServiceResourceService serviceResourceServiceMock;
+
   @Mock private HostService hostService;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -103,7 +111,6 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     Service service = aService().withUuid("uuid1").withName("svc1").build();
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(service.getUuid()).build();
-    serviceTemplate.setService(service);
 
     ServiceInstance instance1 = aServiceInstance()
                                     .withUuid(UUIDGenerator.getUuid())
@@ -150,10 +157,13 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     InstancePartitionExpressionProcessor processor = new InstancePartitionExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
     processor.setServiceTemplateService(serviceTemplateService);
+    processor.setServiceResourceService(serviceResourceServiceMock);
     on(processor).set("hostService", hostService);
 
     when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean()))
         .thenReturn(serviceTemplate);
+    when(serviceResourceServiceMock.get(anyString(), anyString()))
+        .thenReturn(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))

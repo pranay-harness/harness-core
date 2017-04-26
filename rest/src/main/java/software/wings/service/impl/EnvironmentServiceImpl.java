@@ -12,6 +12,8 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import com.google.common.collect.ImmutableMap;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
@@ -53,6 +55,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private NotificationService notificationService;
   @Inject private HostService hostService;
   @Inject private ActivityService activityService;
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * {@inheritDoc}
@@ -105,7 +109,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
     pageRequest.addFilter("envId", environment.getUuid(), EQ);
-    environment.setServiceTemplates(serviceTemplateService.list(pageRequest, true).getResponse());
+    environment.setServiceTemplates(serviceTemplateService.list(pageRequest, false).getResponse());
   }
 
   /**

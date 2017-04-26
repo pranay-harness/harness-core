@@ -25,8 +25,6 @@ public class ServiceTemplate extends Base {
   @NotEmpty private String name;
   private String description;
   @NotEmpty private String serviceId;
-
-  @Transient private Service service;
   @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
@@ -84,24 +82,6 @@ public class ServiceTemplate extends Base {
    */
   public void setEnvId(String envId) {
     this.envId = envId;
-  }
-
-  /**
-   * Gets service.
-   *
-   * @return the service
-   */
-  public Service getService() {
-    return service;
-  }
-
-  /**
-   * Sets service.
-   *
-   * @param service the service
-   */
-  public void setService(Service service) {
-    this.service = service;
   }
 
   /**
@@ -179,7 +159,7 @@ public class ServiceTemplate extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, name, description, serviceId, service, configFilesOverrides, serviceVariablesOverrides,
+        + Objects.hash(envId, name, description, serviceId, configFilesOverrides, serviceVariablesOverrides,
               defaultServiceTemplate);
   }
 
@@ -197,7 +177,6 @@ public class ServiceTemplate extends Base {
     final ServiceTemplate other = (ServiceTemplate) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
         && Objects.equals(this.description, other.description) && Objects.equals(this.serviceId, other.serviceId)
-        && Objects.equals(this.service, other.service)
         && Objects.equals(this.configFilesOverrides, other.configFilesOverrides)
         && Objects.equals(this.serviceVariablesOverrides, other.serviceVariablesOverrides)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
@@ -210,7 +189,6 @@ public class ServiceTemplate extends Base {
         .add("name", name)
         .add("description", description)
         .add("serviceId", serviceId)
-        .add("service", service)
         .add("configFilesOverrides", configFilesOverrides)
         .add("serviceVariablesOverrides", serviceVariablesOverrides)
         .add("defaultServiceTemplate", defaultServiceTemplate)
@@ -233,7 +211,6 @@ public class ServiceTemplate extends Base {
     private String name;
     private String description;
     private String serviceId;
-    private Service service;
     private List<ConfigFile> configFilesOverrides = new ArrayList<>();
     private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
     private boolean defaultServiceTemplate = false;
@@ -296,17 +273,6 @@ public class ServiceTemplate extends Base {
      */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With service builder.
-     *
-     * @param service the service
-     * @return the builder
-     */
-    public Builder withService(Service service) {
-      this.service = service;
       return this;
     }
 
@@ -420,7 +386,6 @@ public class ServiceTemplate extends Base {
           .withName(name)
           .withDescription(description)
           .withServiceId(serviceId)
-          .withService(service)
           .withConfigFilesOverrides(configFilesOverrides)
           .withServiceVariablesOverrides(serviceVariablesOverrides)
           .withDefaultServiceTemplate(defaultServiceTemplate)
@@ -443,7 +408,6 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setName(name);
       serviceTemplate.setDescription(description);
       serviceTemplate.setServiceId(serviceId);
-      serviceTemplate.setService(service);
       serviceTemplate.setConfigFilesOverrides(configFilesOverrides);
       serviceTemplate.setServiceVariablesOverrides(serviceVariablesOverrides);
       serviceTemplate.setDefaultServiceTemplate(defaultServiceTemplate);

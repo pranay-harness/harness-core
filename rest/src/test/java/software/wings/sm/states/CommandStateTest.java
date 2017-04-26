@@ -170,6 +170,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws Exception {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     when(appService.get(APP_ID))
@@ -202,7 +203,6 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
     when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
-    serviceTemplate.setService(SERVICE);
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     commandState.setExecutorService(executorService);
@@ -225,13 +225,13 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
     verify(activityService).save(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
-
-    SERVICE_TEMPLATE.setService(SERVICE);
 
     verify(delegateService)
         .queueTask(aDelegateTask()
@@ -249,7 +249,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withActivityId(ACTIVITY_ID)
                                .withEnvId(ENV_ID)
                                .withHost(HOST)
-                               .withServiceTemplate(SERVICE_TEMPLATE)
+                               .withServiceTemplateId(TEMPLATE_ID)
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
@@ -304,6 +304,7 @@ public class CommandStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
 
@@ -324,10 +325,10 @@ public class CommandStateTest extends WingsBaseTest {
         context, ImmutableMap.of(ACTIVITY_ID, aCommandExecutionResult().withStatus(SUCCESS).build()));
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
+
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
-
-    SERVICE_TEMPLATE.setService(SERVICE);
 
     verify(delegateService)
         .queueTask(aDelegateTask()
@@ -346,7 +347,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withEnvId(ENV_ID)
                                .withArtifactFiles(artifact.getArtifactFiles())
                                .withHost(HOST)
-                               .withServiceTemplate(SERVICE_TEMPLATE)
+                               .withServiceTemplateId(TEMPLATE_ID)
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
@@ -392,6 +393,7 @@ public class CommandStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = commandState.execute(context);
 
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID);
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "NON_EXISTENT_COMMAND");
 

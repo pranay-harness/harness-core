@@ -15,7 +15,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -55,12 +54,10 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
 
   @Override
   public CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
-    ServiceTemplate serviceTemplate = context.getServiceTemplate();
-
     List<ConfigFile> configFiles = null;
     try {
-      configFiles = delegateConfigService.getConfigFiles(serviceTemplate.getAppId(), serviceTemplate.getEnvId(),
-          serviceTemplate.getUuid(), context.getHost().getUuid(), context.getAccountId());
+      configFiles = delegateConfigService.getConfigFiles(context.getAppId(), context.getEnvId(),
+          context.getServiceTemplateId(), context.getHost().getUuid(), context.getAccountId());
     } catch (IOException e) {
       delegateLogService.save(context.getAccountId(),
           aLog()

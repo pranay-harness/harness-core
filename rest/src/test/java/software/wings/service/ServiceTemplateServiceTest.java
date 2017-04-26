@@ -113,8 +113,6 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     PageResponse<ServiceTemplate> templatePageResponse = templateService.list(pageRequest, true);
 
     ServiceTemplate expectedServiceTemplate = builder.but().withServiceId(SERVICE_ID).build();
-    expectedServiceTemplate.setService(
-        aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
 
     assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
     assertThat(pageResponse.getResponse().get(0)).isEqualTo(expectedServiceTemplate);
