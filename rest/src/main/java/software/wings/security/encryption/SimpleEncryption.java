@@ -1,21 +1,8 @@
 package software.wings.security.encryption;
 
-import com.google.common.base.Charsets;
-import com.google.common.hash.Hashing;
-
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.KeyLengthException;
-import com.nimbusds.jose.crypto.DirectEncrypter;
-import com.nimbusds.jwt.EncryptedJWT;
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.exception.WingsException;
 
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -23,9 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
