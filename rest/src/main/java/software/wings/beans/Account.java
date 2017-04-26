@@ -2,6 +2,9 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.EncryptionInterface;
+import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.validation.Create;
 
 import javax.validation.constraints.NotNull;
@@ -15,11 +18,13 @@ public class Account extends Base {
 
   @Indexed(unique = true) @NotNull private String accountName;
 
-  @NotNull(groups = Create.class) private String accountKey;
+  @NotNull(groups = Create.class) @Encrypted private String accountKey;
 
   private String licenseId;
 
   private long licenseExpiryTime;
+
+  private EncryptionInterface encryption;
 
   /**
    * Getter for property 'companyName'.
@@ -101,6 +106,14 @@ public class Account extends Base {
     this.licenseExpiryTime = licenseExpiryTime;
   }
 
+  public EncryptionInterface getEncryption() {
+    return encryption;
+  }
+
+  public void setEncryption(EncryptionInterface encryption) {
+    this.encryption = encryption;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -135,6 +148,7 @@ public class Account extends Base {
     private String accountKey;
     private String uuid;
     private String appId = GLOBAL_APP_ID;
+    private EncryptionInterface encryption = new SimpleEncryption();
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -171,6 +185,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withEncryption(EncryptionInterface encryption) {
+      this.encryption = encryption;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -197,6 +216,7 @@ public class Account extends Base {
           .withAccountKey(accountKey)
           .withUuid(uuid)
           .withAppId(appId)
+          .withEncryption(encryption)
           .withCreatedBy(createdBy)
           .withAccountName(accountName)
           .withCreatedAt(createdAt)
@@ -211,6 +231,7 @@ public class Account extends Base {
       account.setAccountKey(accountKey);
       account.setUuid(uuid);
       account.setAppId(appId);
+      account.setEncryption(encryption);
       account.setCreatedBy(createdBy);
       account.setCreatedAt(createdAt);
       account.setLastUpdatedBy(lastUpdatedBy);
