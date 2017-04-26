@@ -1,5 +1,6 @@
 package software.wings.security.encryption;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.exception.WingsException;
 
 import java.nio.charset.StandardCharsets;
@@ -8,6 +9,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.Arrays;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -24,61 +26,98 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class SimpleEncryption implements EncryptionInterface {
   // IV and KEY both need to be 16 characters long.
-  private final byte[] IV = "EncryptionIV0*d&".getBytes(StandardCharsets.UTF_8);
-  private final char[] KEY = "EncryptionKey2a@".toCharArray();
-  private final byte[] SALT = "megasalt".getBytes(StandardCharsets.UTF_8);
-  private SecretKeyFactory FACTORY;
+  @Transient private static final byte[] IV = "EncryptionIV0*d&".getBytes(StandardCharsets.ISO_8859_1);
+  @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@".toCharArray();
+  @Transient private SecretKeyFactory FACTORY;
+
+  private static final EncryptionType encryptionType = EncryptionType.SIMPLE;
+  @Transient private char[] key;
+  private byte[] salt;
+  @Transient private SecretKey secretKey;
 
   public SimpleEncryption() {
+    this(DEFAULT_KEY, EncryptionUtils.generateSalt());
+  }
+
+  public SimpleEncryption(char[] key) {
+    this(key, EncryptionUtils.generateSalt());
+  }
+
+  public SimpleEncryption(String keySource) {
+    this(keySource.toCharArray(), EncryptionUtils.generateSalt());
+    //    this(Charsets.ISO_8859_1.decode(ByteBuffer.wrap(Hashing.sha256().hashString(keySource,
+    //    Charsets.ISO_8859_1).asBytes())).array(), EncryptionUtils.generateSalt());
+  }
+
+  public SimpleEncryption(String keySource, byte[] salt) {
+    this(keySource.toCharArray(), salt);
+    //    this(Charsets.ISO_8859_1.decode(ByteBuffer.wrap(Hashing.sha256().hashString(keySource,
+    //    Charsets.ISO_8859_1).asBytes())).array(), salt);
+  }
+
+  public SimpleEncryption(char[] key, byte[] salt) {
+    if (key.length == 32) {
+      key = Arrays.copyOf(key, 16);
+    }
+    if (key.length != 16) {
+      throw new WingsException("Key must be 16 characters. Key is " + key.length);
+    }
+    this.key = key;
+    this.salt = salt;
     try {
       FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
-    } catch (NoSuchAlgorithmException nsae) {
-    }
-  }
-
-  private SecretKey generateKey(char[] key) throws InvalidKeySpecException {
-    try {
-      KeySpec spec = new PBEKeySpec(key, SALT, 65536, 128);
+      KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
       SecretKey tmp = FACTORY.generateSecret(spec);
-      return new SecretKeySpec(tmp.getEncoded(), "AES");
-    } catch (InvalidKeySpecException ikse) {
+      secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+      System.out.println(e.getMessage());
+      System.out.println(key.toString());
     }
-    return null;
   }
 
-  public byte[] encrypt(byte[] content, char[] passphrase) {
+  public EncryptionType getEncryptionType() {
+    return this.encryptionType;
+  }
+
+  public SecretKey getSecretKey() {
+    return this.secretKey;
+  }
+
+  public byte[] getSalt() {
+    return this.salt;
+  }
+
+  public void setSalt(byte[] salt) {
+    this.salt = salt;
+  }
+
+  public void setSalt() {
+    this.salt = EncryptionUtils.generateSalt();
+  }
+
+  public byte[] encrypt(byte[] content) {
     try {
-      Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-      SecretKey secretKey = this.generateKey(passphrase);
+      Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
       c.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(content);
     } catch (InvalidKeyException e) {
       throw new WingsException("Key must be 16 characters.");
-    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
-        | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
-    }
-    return null;
-  }
-
-  public byte[] encrypt(byte[] content) {
-    return encrypt(content, KEY);
-  }
-
-  public byte[] decrypt(byte[] encrypted, char[] passphrase) {
-    try {
-      Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-      SecretKey secretKey = this.generateKey(passphrase);
-      c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
-      return c.doFinal(encrypted);
-    } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be 16 characters.");
-    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
-        | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
+        | IllegalBlockSizeException | BadPaddingException e) {
     }
     return null;
   }
 
   public byte[] decrypt(byte[] encrypted) {
-    return decrypt(encrypted, KEY);
+    try {
+      Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+      c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
+      return c.doFinal(encrypted);
+    } catch (InvalidKeyException e) {
+      throw new WingsException("Key must be 16 characters.");
+    } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
+        | IllegalBlockSizeException | BadPaddingException e) {
+    }
+    return null;
   }
 }
