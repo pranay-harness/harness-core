@@ -122,10 +122,10 @@ public class SettingResource {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
-    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream);
+    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream, fileDetail.getFileName());
     if (value == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Missing or empty Google Cloud Platform credentials file.",
-          new NullPointerException());
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "args", "Missing or empty service account credentials file.");
     }
     return new RestResponse<>(
         attributeService.save(aSettingAttribute()
@@ -192,15 +192,15 @@ public class SettingResource {
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     SettingAttribute.Builder settingAttribute = aSettingAttribute().withUuid(attrId).withName(name);
-    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream);
+    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream, fileDetail.getFileName());
     if (value != null) {
       settingAttribute.withValue(value);
     }
     return new RestResponse<>(attributeService.update(settingAttribute.build()));
   }
 
-  private SettingValue getValidatedCredentialsSettingValue(String type, InputStream uploadedInputStream)
-      throws IOException {
+  private SettingValue getValidatedCredentialsSettingValue(
+      String type, InputStream uploadedInputStream, String filename) throws IOException {
     if (GCP.name().equals(type)) {
       String credentials = IOUtils.toString(uploadedInputStream);
       if (isNullOrEmpty(credentials) || "undefined".equals(credentials)) {
@@ -209,7 +209,8 @@ public class SettingResource {
       gcpHelperService.getGkeContainerService(credentials);
       return aGcpConfig().withServiceAccountKeyFileContent(credentials).build();
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
+      throw new WingsException(
+          ErrorCode.INVALID_ARGUMENT, "args", filename + " is not a valid service account credentials file");
     }
   }
 
