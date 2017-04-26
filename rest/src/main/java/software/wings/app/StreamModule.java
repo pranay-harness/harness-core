@@ -32,8 +32,7 @@ public class StreamModule extends AbstractModule {
     atmosphereServlet.framework()
         .addInitParameter(ApplicationConfig.WEBSOCKET_CONTENT_TYPE, "application/json")
         .addInitParameter(ApplicationConfig.WEBSOCKET_SUPPORT, "true")
-        .addInitParameter(ApplicationConfig.SCAN_CLASSPATH, "false");
-    ;
+        .addInitParameter(ApplicationConfig.ANNOTATION_PACKAGE, "software.wings.app");
 
     atmosphereServlet.framework().setDefaultBroadcasterClassName(HazelcastBroadcaster.class.getName());
 
