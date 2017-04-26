@@ -23,6 +23,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 
 /**
  * The Class EmailState.
@@ -79,7 +80,7 @@ public class EmailState extends State {
                                         .build());
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
-      executionResponse.setErrorMessage(e.getMessage());
+      executionResponse.setErrorMessage(e.getCause() == null ? e.getMessage() : e.getCause().getMessage());
       executionResponse.setExecutionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
       logger.error("Exception while sending email", e);
     }
@@ -175,6 +176,10 @@ public class EmailState extends State {
    * @return the boolean
    */
   public Boolean isIgnoreDeliveryFailure() {
+    return ignoreDeliveryFailure;
+  }
+
+  public Boolean getIgnoreDeliveryFailure() {
     return ignoreDeliveryFailure;
   }
 

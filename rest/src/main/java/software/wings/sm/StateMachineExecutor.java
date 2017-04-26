@@ -278,12 +278,11 @@ public class StateMachineExecutor {
   }
 
   private void startStateExecution(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance) {
-    State currentState = null;
     ExecutionResponse executionResponse = null;
     Exception ex = null;
     try {
       StateMachine stateMachine = context.getStateMachine();
-      currentState =
+      State currentState =
           stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
       invokeAdvisors(context, currentState);
