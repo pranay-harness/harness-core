@@ -176,14 +176,14 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldApplyServiceConfigFilesIT() throws IOException {
-    attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
+    attacheConfigFileToEntity(template.getServiceId(), EntityType.SERVICE);
 
     List<ConfigFile> hostConfigs = templateService.computedConfigFiles(
         template.getAppId(), template.getEnvId(), template.getUuid(), hosts.get(0).getUuid());
 
     assertThat(hostConfigs)
-        .isEqualTo(configService.getConfigFilesForEntity(
-            template.getAppId(), DEFAULT_TEMPLATE_ID, template.getService().getUuid()));
+        .isEqualTo(
+            configService.getConfigFilesForEntity(template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId()));
   }
 
   private void attacheConfigFileToEntity(String entityId, EntityType entityType) throws IOException {

@@ -54,7 +54,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         break;
       case APPLICATION_STACK:
         fileBucket = FileBucket.PLATFORMS;
-        AppContainer appContainer = context.getServiceTemplate().getService().getAppContainer();
+        AppContainer appContainer = context.getAppContainer();
         fileIds.add(Pair.of(appContainer.getFileUuid(), null));
         break;
       default:

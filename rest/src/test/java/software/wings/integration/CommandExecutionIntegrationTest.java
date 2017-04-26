@@ -70,7 +70,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                        .build();
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
-      aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(SERVICE).build();
+      aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withServiceId(SERVICE_ID).build();
   /**
    * The constant SERVICE_INSTANCE.
    */

@@ -67,17 +67,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
-    pageResponse.getResponse().forEach(this ::setReferences);
-
+    // Set Service and InfraMapping anyway
+    pageResponse.getResponse().forEach(serviceTemplate -> {
+      PageRequest<InfrastructureMapping> infraPageRequest = new PageRequest<>();
+      List<SearchFilter> filters = pageRequest.getFilters();
+      filters.add(aSearchFilter().withField("serviceTemplateId", Operator.EQ, serviceTemplate.getUuid()).build());
+      infraPageRequest.setFilters(filters);
+      serviceTemplate.setInfrastructureMappings(infrastructureMappingService.list(infraPageRequest));
+    });
     if (withDetails) {
       pageResponse.getResponse().forEach(template -> {
         template.setConfigFilesOverrides(getOverrideFiles(template));
         template.setServiceVariablesOverrides(getOverrideServiceVariables(template));
-        PageRequest<InfrastructureMapping> infraPageRequest = new PageRequest<>();
-        List<SearchFilter> filters = pageRequest.getFilters();
-        filters.add(aSearchFilter().withField("serviceTemplateId", Operator.EQ, template.getUuid()).build());
-        infraPageRequest.setFilters(filters);
-        template.setInfrastructureMappings(infrastructureMappingService.list(infraPageRequest));
       });
     }
     return pageResponse;
@@ -115,27 +116,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return serviceTemplate;
   }
 
-  /**
-   * Sets references.
-   *
-   * @param serviceTemplate the service template
-   */
-  public void setReferences(ServiceTemplate serviceTemplate) {
-    if (serviceTemplate.getAppId() == null) {
-      return;
-    }
-
-    if (serviceTemplate.getServiceId() != null) {
-      serviceTemplate.setService(
-          serviceResourceService.get(serviceTemplate.getAppId(), serviceTemplate.getServiceId()));
-    }
-  }
-
   @Override
   public ServiceTemplate get(String appId, String serviceTemplateId) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
     Validator.notNullCheck("Service Template", serviceTemplate);
-    setReferences(serviceTemplate);
     return serviceTemplate;
   }
 

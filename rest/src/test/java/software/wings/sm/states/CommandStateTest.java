@@ -202,7 +202,6 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
     when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
-    serviceTemplate.setService(SERVICE);
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     commandState.setExecutorService(executorService);
@@ -231,8 +230,6 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
-    SERVICE_TEMPLATE.setService(SERVICE);
-
     verify(delegateService)
         .queueTask(aDelegateTask()
                        .withAppId(APP_ID)
@@ -249,7 +246,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withActivityId(ACTIVITY_ID)
                                .withEnvId(ENV_ID)
                                .withHost(HOST)
-                               .withServiceTemplate(SERVICE_TEMPLATE)
+                               .withServiceTemplateId(TEMPLATE_ID)
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})
@@ -327,8 +324,6 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
 
-    SERVICE_TEMPLATE.setService(SERVICE);
-
     verify(delegateService)
         .queueTask(aDelegateTask()
                        .withAppId(APP_ID)
@@ -346,7 +341,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withEnvId(ENV_ID)
                                .withArtifactFiles(artifact.getArtifactFiles())
                                .withHost(HOST)
-                               .withServiceTemplate(SERVICE_TEMPLATE)
+                               .withServiceTemplateId(TEMPLATE_ID)
                                .withServiceVariables(Collections.emptyMap())
                                .withAccountId(ACCOUNT_ID)
                                .build()})

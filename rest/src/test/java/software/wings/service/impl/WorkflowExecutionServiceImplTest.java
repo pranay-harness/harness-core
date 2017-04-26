@@ -199,7 +199,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -336,7 +335,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -448,7 +446,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withAppId(app.getUuid())
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate1.setService(service1);
     ServiceTemplate serviceTemplate2 = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -458,7 +455,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withAppId(app.getUuid())
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate1.setService(service2);
 
     ServiceInstance.Builder builder1 =
         aServiceInstance().withServiceTemplate(serviceTemplate1).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -615,7 +611,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -1420,7 +1415,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -1638,7 +1632,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate.setService(service);
 
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
@@ -1846,7 +1839,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .withName("TEMPLATE_NAME")
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
-    serviceTemplate.setService(service);
 
     SettingAttribute computeProvider = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build());

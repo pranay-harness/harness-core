@@ -70,8 +70,12 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   private Host host =
       aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttrPwd.getUuid()).build();
   private Service service = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
-  private ServiceTemplate serviceTemplate =
-      aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withEnvId(ENV_ID).withService(service).build();
+  private ServiceTemplate serviceTemplate = aServiceTemplate()
+                                                .withUuid(TEMPLATE_ID)
+                                                .withName(TEMPLATE_NAME)
+                                                .withEnvId(ENV_ID)
+                                                .withServiceId(SERVICE_ID)
+                                                .build();
   private ServiceInstance serviceInstance =
       aServiceInstance()
           .withAppId(APP_ID)
@@ -89,7 +93,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                                 .withActivityId(ACTIVITY_ID)
                                                 .withRuntimePath(RUNTIME_PATH)
                                                 .withExecutionCredential(credential)
-                                                .withServiceTemplate(serviceTemplate)
+                                                .withServiceTemplateId(TEMPLATE_ID)
                                                 .withHost(host)
                                                 .build();
 

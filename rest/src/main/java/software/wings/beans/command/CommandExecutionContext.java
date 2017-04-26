@@ -5,8 +5,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
+import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -22,16 +22,17 @@ import java.util.Objects;
  */
 public class CommandExecutionContext {
   private String accountId;
-  private List<ArtifactFile> artifactFiles;
   private String envId;
   private Host host;
-  private ServiceTemplate serviceTemplate;
   private String appId;
   private String activityId;
   private String runtimePath;
   private String stagingPath;
   private String backupPath;
+  private String serviceTemplateId;
   private ExecutionCredential executionCredential;
+  private AppContainer appContainer;
+  private List<ArtifactFile> artifactFiles;
   private Map<String, String> serviceVariables = Maps.newHashMap();
   private Map<String, String> envVariables = Maps.newHashMap();
   private SettingAttribute hostConnectionAttributes;
@@ -56,18 +57,19 @@ public class CommandExecutionContext {
    */
   public CommandExecutionContext(CommandExecutionContext other) {
     this.accountId = other.accountId;
-    this.artifactFiles = other.artifactFiles;
     this.envId = other.envId;
     this.appId = other.appId;
     this.activityId = other.activityId;
     this.runtimePath = other.runtimePath;
     this.stagingPath = other.stagingPath;
     this.backupPath = other.backupPath;
+    this.serviceTemplateId = other.serviceTemplateId;
+    this.appContainer = other.appContainer;
     this.executionCredential = other.executionCredential;
+    this.artifactFiles = other.artifactFiles;
     this.envVariables = other.envVariables;
     this.serviceVariables = other.serviceVariables;
     this.host = other.host;
-    this.serviceTemplate = other.serviceTemplate;
     this.hostConnectionAttributes = other.hostConnectionAttributes;
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
@@ -254,24 +256,6 @@ public class CommandExecutionContext {
   }
 
   /**
-   * Getter for property 'serviceTemplate'.
-   *
-   * @return Value for property 'serviceTemplate'.
-   */
-  public ServiceTemplate getServiceTemplate() {
-    return serviceTemplate;
-  }
-
-  /**
-   * Setter for property 'serviceTemplate'.
-   *
-   * @param serviceTemplate Value to set for property 'serviceTemplate'.
-   */
-  public void setServiceTemplate(ServiceTemplate serviceTemplate) {
-    this.serviceTemplate = serviceTemplate;
-  }
-
-  /**
    * Getter for property 'hostConnectionAttributes'.
    *
    * @return Value for property 'hostConnectionAttributes'.
@@ -372,11 +356,30 @@ public class CommandExecutionContext {
     this.artifactStreamAttributes = artifactStreamAttributes;
   }
 
+  /**
+   * Gets service template id.
+   *
+   * @return the service template id
+   */
+  public String getServiceTemplateId() {
+    return serviceTemplateId;
+  }
+
+  /**
+   * Sets service template id.
+   *
+   * @param serviceTemplateId the service template id
+   */
+  public void setServiceTemplateId(String serviceTemplateId) {
+    this.serviceTemplateId = serviceTemplateId;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(accountId, artifactFiles, envId, host, serviceTemplate, appId, activityId, runtimePath,
-        stagingPath, backupPath, executionCredential, serviceVariables, envVariables, hostConnectionAttributes,
-        bastionConnectionAttributes, artifactStreamAttributes);
+    return Objects.hash(accountId, envId, host, appId, activityId, runtimePath, stagingPath, backupPath,
+        serviceTemplateId, executionCredential, artifactFiles, serviceVariables, envVariables, hostConnectionAttributes,
+        bastionConnectionAttributes, artifactStreamAttributes, cloudProviderSetting, clusterName, serviceName,
+        desiredCount, desiredPercentage, commandExecutionData);
   }
 
   @Override
@@ -388,38 +391,50 @@ public class CommandExecutionContext {
       return false;
     }
     final CommandExecutionContext other = (CommandExecutionContext) obj;
-    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.artifactFiles, other.artifactFiles)
-        && Objects.equals(this.envId, other.envId) && Objects.equals(this.host, other.host)
-        && Objects.equals(this.serviceTemplate, other.serviceTemplate) && Objects.equals(this.appId, other.appId)
+    return Objects.equals(this.accountId, other.accountId) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.host, other.host) && Objects.equals(this.appId, other.appId)
         && Objects.equals(this.activityId, other.activityId) && Objects.equals(this.runtimePath, other.runtimePath)
         && Objects.equals(this.stagingPath, other.stagingPath) && Objects.equals(this.backupPath, other.backupPath)
+        && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
         && Objects.equals(this.executionCredential, other.executionCredential)
+        && Objects.equals(this.artifactFiles, other.artifactFiles)
         && Objects.equals(this.serviceVariables, other.serviceVariables)
         && Objects.equals(this.envVariables, other.envVariables)
         && Objects.equals(this.hostConnectionAttributes, other.hostConnectionAttributes)
         && Objects.equals(this.bastionConnectionAttributes, other.bastionConnectionAttributes)
-        && Objects.equals(this.artifactStreamAttributes, other.artifactStreamAttributes);
+        && Objects.equals(this.artifactStreamAttributes, other.artifactStreamAttributes)
+        && Objects.equals(this.cloudProviderSetting, other.cloudProviderSetting)
+        && Objects.equals(this.clusterName, other.clusterName) && Objects.equals(this.serviceName, other.serviceName)
+        && Objects.equals(this.desiredCount, other.desiredCount)
+        && Objects.equals(this.desiredPercentage, other.desiredPercentage)
+        && Objects.equals(this.commandExecutionData, other.commandExecutionData);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("accountId", accountId)
-        .add("artifactFiles", artifactFiles)
         .add("envId", envId)
         .add("host", host)
-        .add("serviceTemplate", serviceTemplate)
         .add("appId", appId)
         .add("activityId", activityId)
         .add("runtimePath", runtimePath)
         .add("stagingPath", stagingPath)
         .add("backupPath", backupPath)
+        .add("serviceTemplateId", serviceTemplateId)
         .add("executionCredential", executionCredential)
+        .add("artifactFiles", artifactFiles)
         .add("serviceVariables", serviceVariables)
         .add("envVariables", envVariables)
         .add("hostConnectionAttributes", hostConnectionAttributes)
         .add("bastionConnectionAttributes", bastionConnectionAttributes)
         .add("artifactStreamAttributes", artifactStreamAttributes)
+        .add("cloudProviderSetting", cloudProviderSetting)
+        .add("clusterName", clusterName)
+        .add("serviceName", serviceName)
+        .add("desiredCount", desiredCount)
+        .add("desiredPercentage", desiredPercentage)
+        .add("commandExecutionData", commandExecutionData)
         .toString();
   }
 
@@ -532,20 +547,39 @@ public class CommandExecutionContext {
   }
 
   /**
+   * Gets app container.
+   *
+   * @return the app container
+   */
+  public AppContainer getAppContainer() {
+    return appContainer;
+  }
+
+  /**
+   * Sets app container.
+   *
+   * @param appContainer the app container
+   */
+  public void setAppContainer(AppContainer appContainer) {
+    this.appContainer = appContainer;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String accountId;
-    private List<ArtifactFile> artifactFiles;
     private String envId;
     private Host host;
-    private ServiceTemplate serviceTemplate;
     private String appId;
     private String activityId;
     private String runtimePath;
     private String stagingPath;
     private String backupPath;
+    private String serviceTemplateId;
     private ExecutionCredential executionCredential;
+    private AppContainer appContainer;
+    private List<ArtifactFile> artifactFiles;
     private Map<String, String> serviceVariables = Maps.newHashMap();
     private Map<String, String> envVariables = Maps.newHashMap();
     private SettingAttribute hostConnectionAttributes;
@@ -581,17 +615,6 @@ public class CommandExecutionContext {
     }
 
     /**
-     * With artifact files builder.
-     *
-     * @param artifactFiles the artifact files
-     * @return the builder
-     */
-    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
-      this.artifactFiles = artifactFiles;
-      return this;
-    }
-
-    /**
      * With env id builder.
      *
      * @param envId the env id
@@ -610,17 +633,6 @@ public class CommandExecutionContext {
      */
     public Builder withHost(Host host) {
       this.host = host;
-      return this;
-    }
-
-    /**
-     * With service template builder.
-     *
-     * @param serviceTemplate the service template
-     * @return the builder
-     */
-    public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
-      this.serviceTemplate = serviceTemplate;
       return this;
     }
 
@@ -680,6 +692,17 @@ public class CommandExecutionContext {
     }
 
     /**
+     * With service template id builder.
+     *
+     * @param serviceTemplateId the service template id
+     * @return the builder
+     */
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    /**
      * With execution credential builder.
      *
      * @param executionCredential the execution credential
@@ -687,6 +710,28 @@ public class CommandExecutionContext {
      */
     public Builder withExecutionCredential(ExecutionCredential executionCredential) {
       this.executionCredential = executionCredential;
+      return this;
+    }
+
+    /**
+     * With app container builder.
+     *
+     * @param appContainer the app container
+     * @return the builder
+     */
+    public Builder withAppContainer(AppContainer appContainer) {
+      this.appContainer = appContainer;
+      return this;
+    }
+
+    /**
+     * With artifact files builder.
+     *
+     * @param artifactFiles the artifact files
+     * @return the builder
+     */
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      this.artifactFiles = artifactFiles;
       return this;
     }
 
@@ -819,16 +864,17 @@ public class CommandExecutionContext {
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
-          .withArtifactFiles(artifactFiles)
           .withEnvId(envId)
           .withHost(host)
-          .withServiceTemplate(serviceTemplate)
           .withAppId(appId)
           .withActivityId(activityId)
           .withRuntimePath(runtimePath)
           .withStagingPath(stagingPath)
           .withBackupPath(backupPath)
+          .withServiceTemplateId(serviceTemplateId)
           .withExecutionCredential(executionCredential)
+          .withAppContainer(appContainer)
+          .withArtifactFiles(artifactFiles)
           .withServiceVariables(serviceVariables)
           .withEnvVariables(envVariables)
           .withHostConnectionAttributes(hostConnectionAttributes)
@@ -850,16 +896,17 @@ public class CommandExecutionContext {
     public CommandExecutionContext build() {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
       commandExecutionContext.setAccountId(accountId);
-      commandExecutionContext.setArtifactFiles(artifactFiles);
       commandExecutionContext.setEnvId(envId);
       commandExecutionContext.setHost(host);
-      commandExecutionContext.setServiceTemplate(serviceTemplate);
       commandExecutionContext.setAppId(appId);
       commandExecutionContext.setActivityId(activityId);
       commandExecutionContext.setRuntimePath(runtimePath);
       commandExecutionContext.setStagingPath(stagingPath);
       commandExecutionContext.setBackupPath(backupPath);
+      commandExecutionContext.setServiceTemplateId(serviceTemplateId);
       commandExecutionContext.setExecutionCredential(executionCredential);
+      commandExecutionContext.setAppContainer(appContainer);
+      commandExecutionContext.setArtifactFiles(artifactFiles);
       commandExecutionContext.setServiceVariables(serviceVariables);
       commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
       commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);

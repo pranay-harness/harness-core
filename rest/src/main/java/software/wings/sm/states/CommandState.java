@@ -199,15 +199,15 @@ public class CommandState extends State {
         throw new StateExecutionException("Unable to find service instance");
       }
 
-      ServiceTemplate serviceTemplate =
-          serviceTemplateService.get(appId, instanceElement.getServiceTemplateElement().getUuid());
-      Service service = serviceTemplate.getService();
+      String serviceTemplateId = instanceElement.getServiceTemplateElement().getUuid();
+      ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, serviceTemplateId);
+      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
       Host host =
           hostService.getHostByEnv(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getHostId());
 
       executionDataBuilder.withServiceId(service.getUuid())
           .withServiceName(service.getName())
-          .withTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .withTemplateId(serviceTemplateId)
           .withTemplateName(instanceElement.getServiceTemplateElement().getName())
           .withHostId(host.getUuid())
           .withHostName(host.getHostName())
@@ -239,7 +239,7 @@ public class CommandState extends State {
               .withEnvironmentId(environment.getUuid())
               .withEnvironmentName(environment.getName())
               .withEnvironmentType(environment.getEnvironmentType())
-              .withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+              .withServiceTemplateId(serviceTemplateId)
               .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
               .withServiceId(service.getUuid())
               .withServiceName(service.getName())
@@ -275,7 +275,8 @@ public class CommandState extends State {
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
               .withServiceVariables(context.getServiceVariables())
               .withHost(host)
-              .withServiceTemplate(serviceTemplate)
+              .withServiceTemplateId(serviceTemplateId)
+              .withAppContainer(service.getAppContainer())
               .withAccountId(application.getAccountId());
 
       if (isNotEmpty(host.getHostConnAttr())) {
@@ -286,7 +287,7 @@ public class CommandState extends State {
       }
 
       if (command.isArtifactNeeded()) {
-        Artifact artifact = findArtifact(context, workflowStandardParams, serviceTemplate.getServiceId());
+        Artifact artifact = findArtifact(context, workflowStandardParams, service.getUuid());
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }
@@ -356,6 +357,7 @@ public class CommandState extends State {
 
     return workflowStandardParams.getArtifactForService(serviceId);
   }
+
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {
     if (activityId != null) {
       activityService.updateStatus(activityId, appId, ExecutionStatus.FAILED);

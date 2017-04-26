@@ -96,16 +96,16 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    *
    * @param instance        the instance
    * @param host            the host
-   * @param serviceTemplate the service template
-   * @return the instance element
+   * @param service
+   *@param serviceTemplate the service template  @return the instance element
    */
   static InstanceElement convertToInstanceElement(
-      ServiceInstance instance, Host host, ServiceTemplate serviceTemplate) {
+      ServiceInstance instance, Host host, Service service, ServiceTemplate serviceTemplate) {
     InstanceElement element = new InstanceElement();
     MapperUtils.mapObject(instance, element);
     element.setHostElement(HostExpressionProcessor.convertToHostElement(host));
     element.setServiceTemplateElement(
-        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(serviceTemplate));
+        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(serviceTemplate, service));
     element.setDisplayName(host.getHostName() + ":" + serviceTemplate.getName());
     return element;
   }
@@ -258,10 +258,12 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
     List<InstanceElement> elements = new ArrayList<>();
     for (ServiceInstance instance : instances) {
+      // TODO:: optimize this block.
       ServiceTemplate serviceTemplate =
           serviceTemplateService.get(instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false);
+      Service service = serviceResourceService.get(instance.getAppId(), serviceTemplate.getServiceId());
       Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
-      elements.add(convertToInstanceElement(instance, host, serviceTemplate));
+      elements.add(convertToInstanceElement(instance, host, service, serviceTemplate));
     }
 
     if (ArrayUtils.isNotEmpty(instanceIds)) {
