@@ -13,6 +13,7 @@ import software.wings.stencils.EnumData;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import javax.inject.Inject;
 
 /**
@@ -89,6 +90,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
   public String getHostConnectionAttrs() {
     return super.getHostConnectionAttrs();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getDisplayName() {
+    return String.format("%s(%s/%s)",
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        this.getComputeProviderType(), this.getDeploymentType());
   }
 
   public String getRegion() {
@@ -174,7 +183,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderType;
     private String deploymentType;
     private String hostConnectionAttrs;
-    private String displayName;
+    private String computeProviderName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -293,13 +302,13 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With display name builder.
+     * With compute provider name name builder.
      *
-     * @param displayName the display name
+     * @param computeProviderName the display name
      * @return the builder
      */
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
       return this;
     }
 
@@ -385,7 +394,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
-          .withDisplayName(displayName)
+          .withComputeProviderName(computeProviderName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -410,7 +419,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setComputeProviderType(computeProviderType);
       awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      awsInfrastructureMapping.setDisplayName(displayName);
+      awsInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsInfrastructureMapping.setUuid(uuid);
       awsInfrastructureMapping.setAppId(appId);
       awsInfrastructureMapping.setCreatedBy(createdBy);

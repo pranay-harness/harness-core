@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 
+import java.util.Optional;
+
 /**
  * Created by anubhaw on 1/10/17.
  */
@@ -43,6 +45,14 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
     return super.getHostConnectionAttrs();
   }
 
+  @SchemaIgnore
+  @Override
+  public String getDisplayName() {
+    return String.format("%s(%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
+        this.getDeploymentType(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
+  }
+
   /**
    * The type Builder.
    */
@@ -55,7 +65,7 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderType;
     private String deploymentType;
     private String hostConnectionAttrs;
-    private String displayName;
+    private String computeProviderName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -163,13 +173,13 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With display name builder.
+     * With compute provider name name builder.
      *
-     * @param displayName the display name
+     * @param computeProviderName the display name
      * @return the builder
      */
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
       return this;
     }
 
@@ -254,7 +264,7 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
-          .withDisplayName(displayName)
+          .withComputeProviderName(computeProviderName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -278,7 +288,7 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
       awsKubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
       awsKubernetesInfrastructureMapping.setDeploymentType(deploymentType);
       awsKubernetesInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      awsKubernetesInfrastructureMapping.setDisplayName(displayName);
+      awsKubernetesInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsKubernetesInfrastructureMapping.setUuid(uuid);
       awsKubernetesInfrastructureMapping.setAppId(appId);
       awsKubernetesInfrastructureMapping.setCreatedBy(createdBy);

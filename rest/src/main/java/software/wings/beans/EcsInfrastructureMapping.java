@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -61,6 +62,14 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
     return super.getHostConnectionAttrs();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getDisplayName() {
+    return String.format("%s(%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
+        this.getDeploymentType(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }
 
   /**
@@ -237,7 +246,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderType;
     private String deploymentType;
     private String hostConnectionAttrs;
-    private String displayName;
+    private String computeProviderName;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -345,13 +354,13 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With display name builder.
+     * With compute provider name name builder.
      *
-     * @param displayName the display name
+     * @param computeProviderName the display name
      * @return the builder
      */
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
+    public Builder withComputeProviderName(String computeProviderName) {
+      this.computeProviderName = computeProviderName;
       return this;
     }
 
@@ -436,7 +445,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
           .withHostConnectionAttrs(hostConnectionAttrs)
-          .withDisplayName(displayName)
+          .withComputeProviderName(computeProviderName)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -460,7 +469,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
       ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
       ecsInfrastructureMapping.setDeploymentType(deploymentType);
       ecsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
-      ecsInfrastructureMapping.setDisplayName(displayName);
+      ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
       ecsInfrastructureMapping.setUuid(uuid);
       ecsInfrastructureMapping.setAppId(appId);
       ecsInfrastructureMapping.setCreatedBy(createdBy);
