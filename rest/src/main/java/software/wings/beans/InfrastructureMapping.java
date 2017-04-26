@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
@@ -36,6 +37,7 @@ public abstract class InfrastructureMapping extends Base {
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @Attributes(title = "Connection Type") private String hostConnectionAttrs;
   @SchemaIgnore private String computeProviderName;
+  @Transient private String displayName;
 
   @Inject private SettingsService settingsService;
 
@@ -178,6 +180,10 @@ public abstract class InfrastructureMapping extends Base {
   }
 
   @SchemaIgnore public abstract String getDisplayName();
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
 
   /**
    * Gets host connection attrs.
