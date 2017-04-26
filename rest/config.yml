@@ -50,7 +50,7 @@ logging:
       threshold: TRACE
       host: syslog-a.logdna.com
       port: 6514
-      key: b623cc9c1ee668fffc89730c5adedc8f
+      key: 9a3e6eac4dcdbdc41a93ca99100537df
       programName: manager-saas
 
 mongo:

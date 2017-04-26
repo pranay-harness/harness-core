@@ -1,3 +1,5 @@
+#!/bin/bash
+sudo service mongod restart
 mvn clean install -DskipTests=true
 mvn test-compile
 
@@ -34,14 +36,20 @@ cd ../
 
 #run delegate
 export MAVEN_OPTS="-Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dversion=999.0.0"
-cd delegate & nohup mvn exec:java > delegate.out 2>&1 &
+cd delegate
+nohup mvn exec:java > delegate.out 2>&1 &
 echo $! > delegate.pid
+cd ../
 
 #wait for delegate to start
 echo 'sleep for delegate to start'
 sleep 30
 
 #run all integration tests
-mvn failsafe:integration-test
+mvn failsafe:integration-test failsafe:verify
 
+#take dump of mongodb
+mongodump
 
+#tar.gz dump files
+tar -czvf dump.tar.gz dump/
