@@ -5,9 +5,11 @@ import com.google.common.base.MoreObjects;
 import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
+import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
 import java.util.Objects;
@@ -26,6 +28,7 @@ public class DelegateTask extends Base {
   @AlsoLoad("topicName") private String queueName;
   private Status status = Status.QUEUED;
   private String delegateId;
+  @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
   /**
    * Getter for property 'taskType'.
@@ -209,6 +212,14 @@ public class DelegateTask extends Base {
         .toString();
   }
 
+  public DelegateRunnableTask getDelegateRunnableTask() {
+    return delegateRunnableTask;
+  }
+
+  public void setDelegateRunnableTask(DelegateRunnableTask delegateRunnableTask) {
+    this.delegateRunnableTask = delegateRunnableTask;
+  }
+
   public static class Context {
     private String accountId;
     private String appId;
@@ -298,7 +309,7 @@ public class DelegateTask extends Base {
     }
   }
 
-  public enum Status { QUEUED, STARTED, FINISHED, ERROR }
+  public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
 
   public static final class Builder {
     private TaskType taskType;

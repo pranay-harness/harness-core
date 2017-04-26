@@ -33,6 +33,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
@@ -48,8 +49,10 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.InetAddress;
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -74,7 +77,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
-  @Inject private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
 
   private Socket socket;
   private RequestBuilder request;
@@ -141,7 +145,11 @@ public class DelegateServiceImpl implements DelegateService {
                   if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
                     try {
                       DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-                      dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                      if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
+                        abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
+                      } else {
+                        dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                      }
                     } catch (Exception e) {
                       System.out.println(message);
                       logger.error("Exception while decoding task: ", e);
@@ -278,6 +286,12 @@ public class DelegateServiceImpl implements DelegateService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
+  private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
+    System.out.println("Aborting task " + delegateTaskEvent);
+    Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
+        .ifPresent(future -> future.cancel(true));
+  }
+
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
     Response<DelegateTask> acquireResponse = null;
@@ -330,7 +344,7 @@ public class DelegateServiceImpl implements DelegateService {
                   }
                 });
         injector.injectMembers(delegateRunnableTask);
-        executorService.submit(delegateRunnableTask);
+        currentlyExecutingFutures.putIfAbsent(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
       } else {
         logger.info("DelegateTask excecuting on some other delegate - uuid: {}, accountId: {}",
             delegateTaskEvent.getDelegateTaskId(), delegateTaskEvent.getAccountId());

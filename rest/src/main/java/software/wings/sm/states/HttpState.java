@@ -253,14 +253,18 @@ public class HttpState extends State {
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
 
-    delegateService.queueTask(aDelegateTask()
-                                  .withTaskType(getTaskType())
-                                  .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                  .withWaitId(activityId)
-                                  .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                  .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl, evaluatedBody,
-                                      evaluatedHeader, socketTimeoutMillis})
-                                  .build());
+    String finalEvaluatedBody = evaluatedBody;
+    String finalEvaluatedHeader = evaluatedHeader;
+
+    String delegateTaksId =
+        delegateService.queueTask(aDelegateTask()
+                                      .withTaskType(getTaskType())
+                                      .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                      .withWaitId(activityId)
+                                      .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                      .withParameters(new Object[] {getFinalMethod(context), evaluatedUrl,
+                                          evaluatedBody, evaluatedHeader, socketTimeoutMillis})
+                                      .build());
 
     HttpStateExecutionData.Builder executionDataBuilder =
         aHttpStateExecutionData().withHttpUrl(evaluatedUrl).withHttpMethod(getFinalMethod(context));
@@ -269,6 +273,7 @@ public class HttpState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
         .withStateExecutionData(executionDataBuilder.build())
+        .withDelegateTaskId(delegateTaksId)
         .build();
   }
 

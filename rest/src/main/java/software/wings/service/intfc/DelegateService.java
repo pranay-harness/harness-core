@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import freemarker.template.TemplateException;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -30,7 +31,7 @@ public interface DelegateService {
 
   Delegate register(Delegate delegate);
 
-  void queueTask(DelegateTask task);
+  String queueTask(DelegateTask task);
 
   <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
@@ -45,4 +46,8 @@ public interface DelegateService {
   File download(String managerHost, String accountId) throws IOException, TemplateException;
 
   boolean filter(String delegateId, DelegateTask task);
+
+  boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent);
+
+  void abortTask(String accountId, String delegateTaskId);
 }

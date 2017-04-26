@@ -87,6 +87,30 @@ public class JsonUtilsTest {
   }
 
   @Test
+  public void shouldReturnCorrectObjectInCaseOfInheritenceWithoutInterface() {
+    TypeA typeA = new TypeA();
+    typeA.setX("A");
+    String jsona = JsonUtils.asJson(typeA);
+
+    JsonFluentAssert.assertThatJson(jsona).isEqualTo("{\"eventType\":\"A\", \"x\": \"A\"}");
+
+    TypeB typeB = new TypeB();
+    typeB.setX("B");
+    String jsonb = JsonUtils.asJson(typeB);
+
+    JsonFluentAssert.assertThatJson(jsonb).isEqualTo("{\"eventType\":\"B\", \"x\": \"B\"}");
+
+    assertThat(JsonUtils.asObject("{\"eventType\":\"A\", \"x\": \"A\"}", TypeA.class))
+        .isInstanceOf(TypeA.class)
+        .extracting(TypeA::getX)
+        .containsExactly("A");
+    assertThat(JsonUtils.asObject("{\"eventType\":\"B\", \"x\": \"B\"}", TypeA.class))
+        .isInstanceOf(TypeB.class)
+        .extracting(TypeA::getX)
+        .containsExactly("B");
+  }
+
+  @Test
   public void shouldUseClassNameWhenUsingMapperForCloning() {
     BaseA baseA = new BaseA();
     String jsona = JsonUtils.asJson(new Object[] {baseA}, JsonUtils.mapperForCloning);
@@ -290,4 +314,31 @@ public class JsonUtilsTest {
       this.name = name;
     }
   }
+
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType", include = As.PROPERTY)
+  @JsonTypeName("A")
+  public static class TypeA {
+    private String x;
+
+    /**
+     * Getter for property 'x'.
+     *
+     * @return Value for property 'x'.
+     */
+    public String getX() {
+      return x;
+    }
+
+    /**
+     * Setter for property 'x'.
+     *
+     * @param x Value to set for property 'x'.
+     */
+    public void setX(String x) {
+      this.x = x;
+    }
+  }
+
+  @JsonTypeName("B")
+  public static class TypeB extends TypeA {}
 }

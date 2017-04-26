@@ -2,9 +2,15 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  * Created by peeyushaggarwal on 1/26/17.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "eventType", include = As.PROPERTY)
+@JsonTypeName("DelegateTaskEvent")
 public class DelegateTaskEvent {
   private String delegateTaskId;
   private boolean sync;
