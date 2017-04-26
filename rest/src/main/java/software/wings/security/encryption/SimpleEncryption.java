@@ -97,7 +97,7 @@ public class SimpleEncryption implements EncryptionInterface {
 
   public byte[] encrypt(byte[] content) {
     try {
-      Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+      Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
       c.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(content);
     } catch (InvalidKeyException e) {
@@ -110,7 +110,7 @@ public class SimpleEncryption implements EncryptionInterface {
 
   public byte[] decrypt(byte[] encrypted) {
     try {
-      Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+      Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
       c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(encrypted);
     } catch (InvalidKeyException e) {
