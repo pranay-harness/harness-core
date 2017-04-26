@@ -243,10 +243,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ExecutionResponse executionResponse = new ExecutionResponse();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
-      return executionResponse;
+      return super.handleAsyncResponse(context, response);
     }
+
+    ExecutionResponse executionResponse = new ExecutionResponse();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     handleElementNotifyResponseData(phaseElement, response, executionResponse);
     PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) context.getStateExecutionData();
