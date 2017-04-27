@@ -148,7 +148,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                               .map(instance
                                   -> anAwsHost()
                                          .withAppId(Base.GLOBAL_APP_ID)
-                                         .withHostName(instance.getPublicDnsName())
+                                         .withHostName(instance.getPrivateDnsName())
                                          .withInstance(instance)
                                          .build())
                               .collect(toList());
