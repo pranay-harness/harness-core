@@ -13,24 +13,30 @@ then
 
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
+    echo "Downloading Wings Bot..."
     mkdir -p backup.$CURRENT_VERSION
     cp delegate.jar backup.$CURRENT_VERSION
-    curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
+    curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
     exit 1
   fi
 else
-  curl -sk $REMOTE_DELEGATE_URL -o delegate.jar
+  echo "Downloading Wings Bot..."
+  curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 fi
 
 if [ ! -d  $JRE_DIR ]
 then
+  echo "Downloading packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl -skLO -H "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
-  tar xzvf $JVM_TAR_FILENAME
+  curl -#kLO -H "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
+  echo "Extracting packages..."
+  tar xzf $JVM_TAR_FILENAME
   rm -rf jre
   ln -s $JRE_DIR jre
 fi
 
 export HOSTNAME
+echo "Wings Bot upgrading..."
 $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml upgrade
+echo "Wings Bot upgraded"
