@@ -6,6 +6,7 @@ import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.app.MainConfiguration;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
@@ -32,6 +33,10 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
 
+  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
+  @Attributes(title = "Connection Type", required = true)
+  @NotEmpty
+  private String hostConnectionAttrs;
   @Attributes(title = "Load Balancer") private String loadBalancerId;
 
   /**
@@ -85,11 +90,9 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.loadBalancerId = loadBalancerId;
   }
 
-  @Attributes(title = "Connection Type")
   @Override
-  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
   public String getHostConnectionAttrs() {
-    return super.getHostConnectionAttrs();
+    return hostConnectionAttrs;
   }
 
   @SchemaIgnore
@@ -106,6 +109,10 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   public void setRegion(String region) {
     this.region = region;
+  }
+
+  public void setHostConnectionAttrs(String hostConnectionAttrs) {
+    this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
   /**

@@ -61,7 +61,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
   @Override
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
-    return super.getHostConnectionAttrs();
+    return null;
   }
 
   @SchemaIgnore
@@ -245,7 +245,6 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     private String serviceId;
     private String computeProviderType;
     private String deploymentType;
-    private String hostConnectionAttrs;
     private String computeProviderName;
     private String uuid;
     private String appId;
@@ -343,17 +342,6 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With host connection attrs builder.
-     *
-     * @param hostConnectionAttrs the host connection attrs
-     * @return the builder
-     */
-    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
-      this.hostConnectionAttrs = hostConnectionAttrs;
-      return this;
-    }
-
-    /**
      * With compute provider name name builder.
      *
      * @param computeProviderName the display name
@@ -444,7 +432,6 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
           .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
-          .withHostConnectionAttrs(hostConnectionAttrs)
           .withComputeProviderName(computeProviderName)
           .withUuid(uuid)
           .withAppId(appId)
@@ -468,7 +455,6 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
       ecsInfrastructureMapping.setServiceId(serviceId);
       ecsInfrastructureMapping.setComputeProviderType(computeProviderType);
       ecsInfrastructureMapping.setDeploymentType(deploymentType);
-      ecsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       ecsInfrastructureMapping.setComputeProviderName(computeProviderName);
       ecsInfrastructureMapping.setUuid(uuid);
       ecsInfrastructureMapping.setAppId(appId);
