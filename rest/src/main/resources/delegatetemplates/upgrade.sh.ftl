@@ -37,5 +37,5 @@ then
 fi
 
 export HOSTNAME
-echo "Bot upgrading to version ${REMOTE_DELEGATE_VERSION}"
+echo "Bot upgrading to version $REMOTE_DELEGATE_VERSION"
 $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml upgrade
