@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ public class ServiceTemplate extends Base {
   @NotEmpty private String serviceId;
   @Transient private List<ConfigFile> serviceConfigFiles = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
+  @Transient private ArtifactType serviceArtifactType;
   @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
@@ -249,6 +251,24 @@ public class ServiceTemplate extends Base {
    */
   public void setInfrastructureMappings(List<InfrastructureMapping> infrastructureMappings) {
     this.infrastructureMappings = infrastructureMappings;
+  }
+
+  /**
+   * Gets service artifact type.
+   *
+   * @return the service artifact type
+   */
+  public ArtifactType getServiceArtifactType() {
+    return serviceArtifactType;
+  }
+
+  /**
+   * Sets service artifact type.
+   *
+   * @param serviceArtifactType the service artifact type
+   */
+  public void setServiceArtifactType(ArtifactType serviceArtifactType) {
+    this.serviceArtifactType = serviceArtifactType;
   }
 
   /**

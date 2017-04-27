@@ -32,6 +32,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
@@ -68,11 +69,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
-    addServiceTemplateDetails(pageResponse.getResponse(), withDetails);
+    List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
+    setArtifactTypeAndInfraMappings(serviceTemplates);
+
+    if (withDetails) {
+      serviceTemplates.forEach(serviceTemplate -> {
+        populateServiceAndOverrideConfigFiles(serviceTemplate);
+        populateServiceAndOverrideServiceVariables(serviceTemplate);
+      });
+    }
+
     return pageResponse;
   }
 
-  private void addServiceTemplateDetails(List<ServiceTemplate> serviceTemplates, boolean withDetails) {
+  private void setArtifactTypeAndInfraMappings(List<ServiceTemplate> serviceTemplates) {
     if (serviceTemplates == null || serviceTemplates.size() == 0) {
       return;
     }
@@ -81,6 +91,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     ImmutableMap<String, ServiceTemplate> serviceTemplateMap =
         Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
+
+    List<Service> services = serviceResourceService.findServicesByApp(appId);
+    ImmutableMap<String, Service> serviceMap = Maps.uniqueIndex(services, Service::getUuid);
+    serviceTemplateMap.forEach((serviceTemplateId, serviceTemplate) -> {
+      Service tempService = serviceMap.get(serviceTemplateId);
+      serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
+    });
+
     PageRequest<InfrastructureMapping> infraPageRequest =
         PageRequest.Builder.aPageRequest()
             .addFilter("appId", EQ, appId)
@@ -94,13 +112,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     infraMappingListByTemplateId.forEach(
         (templateId, infrastructureMappingList)
             -> serviceTemplateMap.get(templateId).setInfrastructureMappings(infrastructureMappingList));
-
-    if (withDetails) {
-      serviceTemplates.forEach(serviceTemplate -> {
-        populateServiceAndOverrideConfigFiles(serviceTemplate);
-        populateServiceAndOverrideServiceVariables(serviceTemplate);
-      });
-    }
   }
 
   /* (non-Javadoc)
@@ -127,7 +138,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
-    addServiceTemplateDetails(Arrays.asList(serviceTemplate), withDetails);
+    setArtifactTypeAndInfraMappings(Arrays.asList(serviceTemplate));
+    if (withDetails) {
+      populateServiceAndOverrideConfigFiles(serviceTemplate);
+      populateServiceAndOverrideServiceVariables(serviceTemplate);
+    }
     return serviceTemplate;
   }
 

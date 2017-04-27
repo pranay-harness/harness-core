@@ -97,7 +97,7 @@ public class ServiceExpressionProcessorTest {
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
 
-    when(serviceResourceService.list(any(PageRequest.class), eq(false))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -148,7 +148,7 @@ public class ServiceExpressionProcessorTest {
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
 
-    when(serviceResourceService.list(any(PageRequest.class), eq(false))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -203,7 +203,7 @@ public class ServiceExpressionProcessorTest {
 
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
-    when(serviceResourceService.list(any(PageRequest.class), eq(false))).thenReturn(res);
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
