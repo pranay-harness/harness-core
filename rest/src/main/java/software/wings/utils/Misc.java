@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import com.google.api.client.util.Throwables;
+
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.common.Constants;
 
@@ -33,6 +35,14 @@ public class Misc {
       Thread.sleep(delay);
     } catch (InterruptedException exception) {
       // Ignore
+    }
+  }
+
+  public static void sleepWithRuntimeException(int delay) {
+    try {
+      Thread.sleep(delay);
+    } catch (InterruptedException exception) {
+      Throwables.propagate(exception);
     }
   }
 

@@ -11,7 +11,7 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.utils.Misc.quietSleep;
+import static software.wings.utils.Misc.sleepWithRuntimeException;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
 import com.google.common.base.Strings;
@@ -179,7 +179,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           saveExecutionLog("Command finished with status " + commandExecutionStatus);
           return commandExecutionStatus;
         }
-        quietSleep(1000);
+        sleepWithRuntimeException(1000);
       }
     } catch (JSchException | IOException ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);

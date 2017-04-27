@@ -65,7 +65,7 @@ public class ApprovalState extends State {
                                                    .withApprovedOn(System.currentTimeMillis())
                                                    .build();
 
-    Misc.quietSleep(2000);
+    Misc.sleepWithRuntimeException(2000);
     pipelineService.refreshPipelineExecutionAsync(
         ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
     return anExecutionResponse()
