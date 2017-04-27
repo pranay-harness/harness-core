@@ -32,6 +32,11 @@ fi
 #run data gen to load test data
 cd rest
 mvn test -Dtest=software.wings.integration.DataGenUtil
+datagen_status=$?
+if [[ $datagen_status -ne 0 ]] ; then
+  echo 'Datagen failed';
+  exit $datagen_status
+fi
 cd ../
 
 #run delegate
