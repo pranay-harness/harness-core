@@ -25,6 +25,8 @@ public class ServiceTemplate extends Base {
   @NotEmpty private String name;
   private String description;
   @NotEmpty private String serviceId;
+  @Transient private List<ConfigFile> serviceConfigFiles = new ArrayList<>();
+  @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
   @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
@@ -156,6 +158,42 @@ public class ServiceTemplate extends Base {
     this.serviceVariablesOverrides = serviceVariablesOverrides;
   }
 
+  /**
+   * Gets service config files.
+   *
+   * @return the service config files
+   */
+  public List<ConfigFile> getServiceConfigFiles() {
+    return serviceConfigFiles;
+  }
+
+  /**
+   * Sets service config files.
+   *
+   * @param serviceConfigFiles the service config files
+   */
+  public void setServiceConfigFiles(List<ConfigFile> serviceConfigFiles) {
+    this.serviceConfigFiles = serviceConfigFiles;
+  }
+
+  /**
+   * Gets service variables.
+   *
+   * @return the service variables
+   */
+  public List<ServiceVariable> getServiceVariables() {
+    return serviceVariables;
+  }
+
+  /**
+   * Sets service variables.
+   *
+   * @param serviceVariables the service variables
+   */
+  public void setServiceVariables(List<ServiceVariable> serviceVariables) {
+    this.serviceVariables = serviceVariables;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -195,10 +233,20 @@ public class ServiceTemplate extends Base {
         .toString();
   }
 
+  /**
+   * Gets infrastructure mappings.
+   *
+   * @return the infrastructure mappings
+   */
   public List<InfrastructureMapping> getInfrastructureMappings() {
     return infrastructureMappings;
   }
 
+  /**
+   * Sets infrastructure mappings.
+   *
+   * @param infrastructureMappings the infrastructure mappings
+   */
   public void setInfrastructureMappings(List<InfrastructureMapping> infrastructureMappings) {
     this.infrastructureMappings = infrastructureMappings;
   }
@@ -211,11 +259,14 @@ public class ServiceTemplate extends Base {
     private String name;
     private String description;
     private String serviceId;
+    private List<ConfigFile> serviceConfigFiles = new ArrayList<>();
+    private List<ServiceVariable> serviceVariables = new ArrayList<>();
     private List<ConfigFile> configFilesOverrides = new ArrayList<>();
     private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
-    private boolean defaultServiceTemplate = false;
     private String uuid;
+    private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
     private String appId;
+    private boolean defaultServiceTemplate = false;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -277,9 +328,31 @@ public class ServiceTemplate extends Base {
     }
 
     /**
-     * With config files builder.
+     * With service config files builder.
      *
-     * @param configFilesOverrides the config files
+     * @param serviceConfigFiles the service config files
+     * @return the builder
+     */
+    public Builder withServiceConfigFiles(List<ConfigFile> serviceConfigFiles) {
+      this.serviceConfigFiles = serviceConfigFiles;
+      return this;
+    }
+
+    /**
+     * With service variables builder.
+     *
+     * @param serviceVariables the service variables
+     * @return the builder
+     */
+    public Builder withServiceVariables(List<ServiceVariable> serviceVariables) {
+      this.serviceVariables = serviceVariables;
+      return this;
+    }
+
+    /**
+     * With config files overrides builder.
+     *
+     * @param configFilesOverrides the config files overrides
      * @return the builder
      */
     public Builder withConfigFilesOverrides(List<ConfigFile> configFilesOverrides) {
@@ -288,24 +361,13 @@ public class ServiceTemplate extends Base {
     }
 
     /**
-     * With service variables builder.
+     * With service variables overrides builder.
      *
-     * @param serviceVariablesOverrides the service variables
+     * @param serviceVariablesOverrides the service variables overrides
      * @return the builder
      */
     public Builder withServiceVariablesOverrides(List<ServiceVariable> serviceVariablesOverrides) {
       this.serviceVariablesOverrides = serviceVariablesOverrides;
-      return this;
-    }
-
-    /**
-     * With default service template builder.
-     *
-     * @param defaultServiceTemplate the default service template
-     * @return the builder
-     */
-    public Builder withDefaultServiceTemplate(boolean defaultServiceTemplate) {
-      this.defaultServiceTemplate = defaultServiceTemplate;
       return this;
     }
 
@@ -321,6 +383,17 @@ public class ServiceTemplate extends Base {
     }
 
     /**
+     * With infrastructure mappings builder.
+     *
+     * @param infrastructureMappings the infrastructure mappings
+     * @return the builder
+     */
+    public Builder withInfrastructureMappings(List<InfrastructureMapping> infrastructureMappings) {
+      this.infrastructureMappings = infrastructureMappings;
+      return this;
+    }
+
+    /**
      * With app id builder.
      *
      * @param appId the app id
@@ -328,6 +401,17 @@ public class ServiceTemplate extends Base {
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With default service template builder.
+     *
+     * @param defaultServiceTemplate the default service template
+     * @return the builder
+     */
+    public Builder withDefaultServiceTemplate(boolean defaultServiceTemplate) {
+      this.defaultServiceTemplate = defaultServiceTemplate;
       return this;
     }
 
@@ -386,11 +470,14 @@ public class ServiceTemplate extends Base {
           .withName(name)
           .withDescription(description)
           .withServiceId(serviceId)
+          .withServiceConfigFiles(serviceConfigFiles)
+          .withServiceVariables(serviceVariables)
           .withConfigFilesOverrides(configFilesOverrides)
           .withServiceVariablesOverrides(serviceVariablesOverrides)
-          .withDefaultServiceTemplate(defaultServiceTemplate)
           .withUuid(uuid)
+          .withInfrastructureMappings(infrastructureMappings)
           .withAppId(appId)
+          .withDefaultServiceTemplate(defaultServiceTemplate)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -408,11 +495,14 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setName(name);
       serviceTemplate.setDescription(description);
       serviceTemplate.setServiceId(serviceId);
+      serviceTemplate.setServiceConfigFiles(serviceConfigFiles);
+      serviceTemplate.setServiceVariables(serviceVariables);
       serviceTemplate.setConfigFilesOverrides(configFilesOverrides);
       serviceTemplate.setServiceVariablesOverrides(serviceVariablesOverrides);
-      serviceTemplate.setDefaultServiceTemplate(defaultServiceTemplate);
       serviceTemplate.setUuid(uuid);
+      serviceTemplate.setInfrastructureMappings(infrastructureMappings);
       serviceTemplate.setAppId(appId);
+      serviceTemplate.setDefaultServiceTemplate(defaultServiceTemplate);
       serviceTemplate.setCreatedBy(createdBy);
       serviceTemplate.setCreatedAt(createdAt);
       serviceTemplate.setLastUpdatedBy(lastUpdatedBy);

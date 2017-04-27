@@ -97,8 +97,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     if (withDetails) {
       serviceTemplates.forEach(serviceTemplate -> {
-        serviceTemplate.setConfigFilesOverrides(getOverrideFiles(serviceTemplate));
-        serviceTemplate.setServiceVariablesOverrides(getOverrideServiceVariables(serviceTemplate));
+        populateServiceAndOverrideConfigFiles(serviceTemplate);
+        populateServiceAndOverrideServiceVariables(serviceTemplate);
       });
     }
   }
@@ -179,9 +179,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         != null;
   }
 
-  private List<ConfigFile> getOverrideFiles(ServiceTemplate template) {
+  private void populateServiceAndOverrideConfigFiles(ServiceTemplate template) {
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
+    template.setServiceConfigFiles(serviceConfigFiles);
+
     List<ConfigFile> overrideConfigFiles =
         configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template);
 
@@ -193,12 +195,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getParentConfigFileId()));
       }
     });
-    return overrideConfigFiles;
+    template.setConfigFilesOverrides(overrideConfigFiles);
   }
 
-  private List<ServiceVariable> getOverrideServiceVariables(ServiceTemplate template) {
+  private void populateServiceAndOverrideServiceVariables(ServiceTemplate template) {
     List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
         template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
+    template.setServiceVariables(serviceVariables);
+
     List<ServiceVariable> overrideServiceVariables =
         serviceVariableService.getServiceVariablesByTemplate(template.getAppId(), template.getEnvId(), template);
 
@@ -212,7 +216,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
             serviceVariablesMap.get(serviceVariable.getParentServiceVariableId()));
       }
     });
-    return overrideServiceVariables;
+    template.setServiceVariablesOverrides(overrideServiceVariables);
   }
 
   /* (non-Javadoc)
