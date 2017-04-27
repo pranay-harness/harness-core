@@ -86,7 +86,7 @@ then
 
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
-    echo "Downloading Wings Bot..."
+    echo "Downloading Bot..."
     mkdir -p backup.$CURRENT_VERSION
     cp delegate.jar backup.$CURRENT_VERSION
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
@@ -94,7 +94,7 @@ then
     exit 1
   fi
 else
-  echo "Downloading Wings Bot..."
+  echo "Downloading Bot..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 fi
 
@@ -110,6 +110,5 @@ then
 fi
 
 export HOSTNAME
-echo "Wings Bot upgrading..."
+echo "Bot upgrading to version ${REMOTE_DELEGATE_VERSION}"
 $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml upgrade
-echo "Wings Bot upgraded"
