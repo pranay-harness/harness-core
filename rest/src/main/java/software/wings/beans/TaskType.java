@@ -4,7 +4,6 @@ import static org.joor.Reflect.on;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
 import software.wings.delegatetasks.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
@@ -37,6 +36,8 @@ public enum TaskType {
   BAMBOO_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
   BAMBOO_GET_PLANS(ServiceImplDelegateTask.class),
   DOCKER_GET_BUILDS(ServiceImplDelegateTask.class),
+  DOCKER_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
+  DOCKER_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class),
   NEXUS_GET_JOBS(ServiceImplDelegateTask.class),
   NEXUS_GET_PLANS(ServiceImplDelegateTask.class),
   NEXUS_GET_ARTIFACT_PATHS(ServiceImplDelegateTask.class),
@@ -44,10 +45,7 @@ public enum TaskType {
   NEXUS_GET_ARTIFACT_NAMES(ServiceImplDelegateTask.class),
   NEXUS_GET_BUILDS(ServiceImplDelegateTask.class),
   NEXUS_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
-  NEXUS_COLLECTION(NexusCollectionTask.class),
-  APPDYNAMICS_APP_TASK(ServiceImplDelegateTask.class),
-  DOCKER_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
-  DOCKER_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class);
+  NEXUS_COLLECTION(NexusCollectionTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
