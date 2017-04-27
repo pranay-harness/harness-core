@@ -309,14 +309,16 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File download(String managerHost, String accountId) throws IOException, TemplateException {
-    File delegateFile = File.createTempFile("delegate", ".zip");
+    File delegateFile = File.createTempFile("wings-bot", ".zip");
     File run = File.createTempFile("run", ".sh");
     File stop = File.createTempFile("stop", ".sh");
+    File readme = File.createTempFile("README", ".txt");
 
     ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
     out.putArchiveEntry(new ZipArchiveEntry("wings-bot/"));
     out.closeArchiveEntry();
     Account account = accountService.get(accountId);
+
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
       cfg.getTemplate("run.sh.ftl")
           .process(ImmutableMap.of("delegateMetadataUrl", mainConfiguration.getDelegateMetadataUrl(), "accountId",
@@ -325,12 +327,10 @@ public class DelegateServiceImpl implements DelegateService {
     }
     run = new File(run.getAbsolutePath());
     ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, "wings-bot/run.sh");
-
     runZipArchiveEntry.setUnixMode(0755 << 16L);
     AsiExtraField permissions = new AsiExtraField();
     permissions.setMode(0755);
     runZipArchiveEntry.addExtraField(permissions);
-
     out.putArchiveEntry(runZipArchiveEntry);
     try (FileInputStream fis = new FileInputStream(run)) {
       IOUtils.copy(fis, out);
@@ -340,14 +340,25 @@ public class DelegateServiceImpl implements DelegateService {
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
       cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
     }
-    run = new File(run.getAbsolutePath());
-    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(run, "wings-bot/stop.sh");
+    stop = new File(stop.getAbsolutePath());
+    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, "wings-bot/stop.sh");
     stopZipArchiveEntry.setUnixMode(0755 << 16L);
     permissions = new AsiExtraField();
     permissions.setMode(0755);
     stopZipArchiveEntry.addExtraField(permissions);
     out.putArchiveEntry(stopZipArchiveEntry);
     try (FileInputStream fis = new FileInputStream(stop)) {
+      IOUtils.copy(fis, out);
+    }
+    out.closeArchiveEntry();
+
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+      cfg.getTemplate("readme.txt.ftl").process(null, fileWriter);
+    }
+    readme = new File(readme.getAbsolutePath());
+    ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, "wings-bot/README.txt");
+    out.putArchiveEntry(readmeZipArchiveEntry);
+    try (FileInputStream fis = new FileInputStream(readme)) {
       IOUtils.copy(fis, out);
     }
     out.closeArchiveEntry();
