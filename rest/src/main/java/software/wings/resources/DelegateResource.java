@@ -148,7 +148,7 @@ public class DelegateResource {
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
-        .header("Content-Disposition", "attachment; filename=delegate.zip")
+        .header("Content-Disposition", "attachment; filename=wings-bot.zip")
         .build();
   }
 

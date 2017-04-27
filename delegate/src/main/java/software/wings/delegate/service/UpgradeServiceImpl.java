@@ -72,12 +72,12 @@ public class UpgradeServiceImpl implements UpgradeService {
 
       boolean processStarted = timeLimiter.callWithTimeout(
           ()
-              -> streamContainsString(new InputStreamReader(pipedInputStream), "Delegate started."),
+              -> streamContainsString(new InputStreamReader(pipedInputStream), "botstarted"),
           10, TimeUnit.MINUTES, false);
       if (processStarted) {
         try {
           signalService.pause();
-          new PrintWriter(process.getProcess().getOutputStream(), true).println("StartTasks");
+          new PrintWriter(process.getProcess().getOutputStream(), true).println("goahead");
 
           // Cleanup capsule cache.
           cleanup(

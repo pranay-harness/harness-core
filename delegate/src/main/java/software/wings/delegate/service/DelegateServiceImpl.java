@@ -97,10 +97,10 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
 
       if (upgrade) {
-        System.out.println("Delegate started.");
+        System.out.println("botstarted");
         LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
         String line = "";
-        while (it.hasNext() && !StringUtils.startsWith(line, "StartTasks")) {
+        while (it.hasNext() && !StringUtils.startsWith(line, "goahead")) {
           line = it.nextLine();
         }
       }
@@ -204,7 +204,11 @@ public class DelegateServiceImpl implements DelegateService {
 
       startUpgradeCheck(accountId, delegateId, getVersion());
 
-      logger.info("Delegate started.");
+      if (upgrade) {
+        logger.info("Bot upgraded.");
+      } else {
+        logger.info("Bot started.");
+      }
 
       synchronized (waiter) {
         waiter.wait();

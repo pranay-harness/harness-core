@@ -314,7 +314,7 @@ public class DelegateServiceImpl implements DelegateService {
     File stop = File.createTempFile("stop", ".sh");
 
     ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
-    out.putArchiveEntry(new ZipArchiveEntry("wings-delegate/"));
+    out.putArchiveEntry(new ZipArchiveEntry("wings-bot/"));
     out.closeArchiveEntry();
     Account account = accountService.get(accountId);
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(run))) {
@@ -324,7 +324,7 @@ public class DelegateServiceImpl implements DelegateService {
               fileWriter);
     }
     run = new File(run.getAbsolutePath());
-    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, "wings-delegate/run.sh");
+    ZipArchiveEntry runZipArchiveEntry = new ZipArchiveEntry(run, "wings-bot/run.sh");
 
     runZipArchiveEntry.setUnixMode(0755 << 16L);
     AsiExtraField permissions = new AsiExtraField();
@@ -341,7 +341,7 @@ public class DelegateServiceImpl implements DelegateService {
       cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
     }
     run = new File(run.getAbsolutePath());
-    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(run, "wings-delegate/stop.sh");
+    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(run, "wings-bot/stop.sh");
     stopZipArchiveEntry.setUnixMode(0755 << 16L);
     permissions = new AsiExtraField();
     permissions.setMode(0755);

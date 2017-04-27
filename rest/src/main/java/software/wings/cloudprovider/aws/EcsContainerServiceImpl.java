@@ -842,7 +842,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances ready to registered with cluster");
       }
-      Misc.quietSleep(SLEEP_INTERVAL);
+      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
     }
   }
 
@@ -896,7 +896,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         throw new WingsException(INIT_TIMEOUT, "message", "Some tasks are still not in running state");
       }
-      Misc.quietSleep(SLEEP_INTERVAL);
+      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
     }
   }
 
@@ -907,7 +907,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       if (retryCount-- <= 0) {
         break;
       }
-      Misc.quietSleep(SLEEP_INTERVAL);
+      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
     }
   }
 

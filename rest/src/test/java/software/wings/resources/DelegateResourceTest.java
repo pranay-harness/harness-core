@@ -167,7 +167,7 @@ public class DelegateResourceTest {
     verify(DELEGATE_SERVICE).download(anyString(), anyString());
     verify(DOWNLOAD_TOKEN_SERVICE).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
-    assertThat(restResponse.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=delegate.zip");
+    assertThat(restResponse.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=wings-bot.zip");
     assertThat(IOUtils.readLines((InputStream) restResponse.getEntity()).get(0)).isEqualTo("Test");
   }
 

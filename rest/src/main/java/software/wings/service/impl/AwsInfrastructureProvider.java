@@ -241,7 +241,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           }
           throw new WingsException(INIT_TIMEOUT, "message", "Couldn't connect to provisioned host");
         }
-        Misc.quietSleep(SLEEP_INTERVAL);
+        Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
         logger.info("Couldn't connect to host {}. {} retry attempts left ", hostname, retryCount);
       }
       logger.info("Successfully connected to host {} in {} retry attempts", hostname, RETRY_COUNTER - retryCount);
@@ -286,7 +286,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         throw new WingsException(INIT_TIMEOUT, "message", "Not all instances in running state");
       }
       logger.info("Waiting for all instances to be in running state");
-      Misc.quietSleep(SLEEP_INTERVAL);
+      Misc.sleepWithRuntimeException(SLEEP_INTERVAL);
     }
   }
 

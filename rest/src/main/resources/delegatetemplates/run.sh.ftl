@@ -17,13 +17,13 @@ REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_METADATA | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Wings Bot..."
+  echo "Downloading Bot..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
-    echo "Downloading Wings Bot..."
+    echo "Downloading Bot..."
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
@@ -40,10 +40,9 @@ fi
 
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
-  echo "Wings Bot already running"
+  echo "Bot already running"
 else
-  echo "Wings Bot starting..."
   export HOSTNAME
   nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
-  echo "Wings Bot started"
+  echo "Bot started"
 fi
