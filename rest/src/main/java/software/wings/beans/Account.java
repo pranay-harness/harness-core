@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.security.annotations.Encrypted;
@@ -24,7 +25,7 @@ public class Account extends Base {
 
   private long licenseExpiryTime;
 
-  private EncryptionInterface encryption;
+  @JsonIgnore private EncryptionInterface encryption;
 
   /**
    * Getter for property 'companyName'.
