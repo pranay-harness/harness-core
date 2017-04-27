@@ -439,7 +439,7 @@ public class KubernetesReplicationControllerSetup extends State {
     try {
       this.serviceType = ServiceType.valueOf(serviceType);
     } catch (IllegalArgumentException e) {
-      this.serviceType = ServiceType.ClusterIP;
+      this.serviceType = ServiceType.None;
     }
   }
 
