@@ -27,12 +27,4 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
         .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
   }
-
-  @Override
-  public List<AppdynamicsMetric> getAllMetrics(final SettingAttribute settingAttribute, final int applicationId)
-      throws IOException {
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
-        .getAllMetrics((AppDynamicsConfig) settingAttribute.getValue(), applicationId);
-  }
 }

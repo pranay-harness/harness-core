@@ -5,7 +5,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.appdynamics.AppdynamicsApplicationResponse;
-import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,8 +15,4 @@ import java.util.List;
 public interface AppdynamicsDeletegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_APP_TASK)
   List<AppdynamicsApplicationResponse> getAllApplications(final AppDynamicsConfig appDynamicsConfig) throws IOException;
-
-  @DelegateTaskType(TaskType.APPDYNAMICS_APP_TASK)
-  List<AppdynamicsMetric> getAllMetrics(final AppDynamicsConfig appDynamicsConfig, final int applicationId)
-      throws IOException;
 }

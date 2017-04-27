@@ -45,9 +45,7 @@ public enum TaskType {
   NEXUS_GET_BUILDS(ServiceImplDelegateTask.class),
   NEXUS_LAST_SUCCESSFUL_BUILD(ServiceImplDelegateTask.class),
   NEXUS_COLLECTION(NexusCollectionTask.class),
-  APPDYNAMICS_APP_TASK(ServiceImplDelegateTask.class),
-  DOCKER_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
-  DOCKER_VALIDATE_ARTIFACT_STREAM(ServiceImplDelegateTask.class);
+  APPDYNAMICS_APP_TASK(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
