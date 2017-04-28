@@ -50,6 +50,7 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,7 +94,8 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application save(Application app) {
-    Application application = wingsPersistence.saveAndGet(Application.class, app);
+    Application application =
+        Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
     settingsService.createDefaultSettings(application.getUuid(), application.getAccountId());
     environmentService.createDefaultEnvironments(application.getUuid());

@@ -52,6 +52,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -1852,6 +1853,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .withComputeProviderSettingId(computeProvider.getUuid())
                                               .withComputeProviderType(computeProvider.getValue().getType())
                                               .withDeploymentType(SSH.name())
+                                              .withHostConnectionAttrs(AccessType.KEY.name())
                                               .build());
 
     triggerWorkflow(app.getAppId(), env, service, computeProvider, infrastructureMapping);

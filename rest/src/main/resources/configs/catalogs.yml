@@ -181,3 +181,9 @@ LOG_DRIVER:
       value: splunk
     - name: syslog
       value: syslog
+
+ACCOUNT_CATEGORY:
+   - name: Cloud Provider
+     value: CloudProvider
+   - name: Connector
+     value: Connector

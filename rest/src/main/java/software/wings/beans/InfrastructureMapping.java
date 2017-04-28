@@ -35,7 +35,6 @@ public abstract class InfrastructureMapping extends Base {
   @NotEmpty private String computeProviderType;
   @NotEmpty private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
-  @Attributes(title = "Connection Type") private String hostConnectionAttrs;
   @SchemaIgnore private String computeProviderName;
   @Transient private String displayName;
 
@@ -184,24 +183,6 @@ public abstract class InfrastructureMapping extends Base {
   }
 
   /**
-   * Gets host connection attrs.
-   *
-   * @return the host connection attrs
-   */
-  public String getHostConnectionAttrs() {
-    return hostConnectionAttrs;
-  }
-
-  /**
-   * Sets host connection attrs.
-   *
-   * @param hostConnectionAttrs the host connection attrs
-   */
-  public void setHostConnectionAttrs(String hostConnectionAttrs) {
-    this.hostConnectionAttrs = hostConnectionAttrs;
-  }
-
-  /**
    * Gets deployment type.
    *
    * @return the deployment type
@@ -228,6 +209,8 @@ public abstract class InfrastructureMapping extends Base {
     return infraMappingType;
   }
 
+  public abstract String getHostConnectionAttrs();
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -237,7 +220,6 @@ public abstract class InfrastructureMapping extends Base {
         .add("computeProviderType", computeProviderType)
         .add("infraMappingType", infraMappingType)
         .add("deploymentType", deploymentType)
-        .add("hostConnectionAttrs", hostConnectionAttrs)
         .toString();
   }
 
@@ -245,7 +227,7 @@ public abstract class InfrastructureMapping extends Base {
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(computeProviderSettingId, envId, serviceTemplateId, computeProviderType, infraMappingType,
-              deploymentType, hostConnectionAttrs);
+              deploymentType);
   }
 
   @Override
@@ -264,8 +246,7 @@ public abstract class InfrastructureMapping extends Base {
         && Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
         && Objects.equals(this.computeProviderType, other.computeProviderType)
         && Objects.equals(this.infraMappingType, other.infraMappingType)
-        && Objects.equals(this.deploymentType, other.deploymentType)
-        && Objects.equals(this.hostConnectionAttrs, other.hostConnectionAttrs);
+        && Objects.equals(this.deploymentType, other.deploymentType);
   }
 
   @Singleton
