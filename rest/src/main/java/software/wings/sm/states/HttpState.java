@@ -303,7 +303,7 @@ public class HttpState extends State {
     String errorMessage = executionData.getErrorMsg();
     executionData.setAssertionStatement(assertion);
 
-    boolean status = false;
+    boolean status = true;
     if (StringUtils.isNotBlank(assertion)) {
       try {
         status = (boolean) context.evaluateExpression(assertion, executionData);
