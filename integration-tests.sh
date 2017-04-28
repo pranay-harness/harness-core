@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #run all integration tests
 mvn failsafe:integration-test failsafe:verify
 test_status=$?
@@ -9,6 +11,6 @@ mongodump
 tar -czvf dump.tar.gz dump/
 
 if [[ $test_status -ne 0 ]] ; then
-  echo 'Datagen failed';
+  echo 'integration tests failed';
   exit $test_status
 fi
