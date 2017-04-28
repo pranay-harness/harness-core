@@ -182,8 +182,16 @@ LOG_DRIVER:
     - name: syslog
       value: syslog
 
-ACCOUNT_CATEGORY:
-   - name: Cloud Provider
-     value: CloudProvider
-   - name: Connector
-     value: Connector
+PLUGIN_CATEGORY:
+    - name: Artifact Server
+      value: Artifact
+    - name: Cloud Provider
+      value: CloudProvider
+    - name: Verification Provider
+      value: Verification
+    - name: Collaboration Provider
+      value: Collaboration
+    - name: Load Balancer
+      value: LoadBalancer
+    - name: Connection Attributes
+      value: ConnectionAttributes
