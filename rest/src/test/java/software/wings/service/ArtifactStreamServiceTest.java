@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.ArtifactStreamAction.Builder.anArtifactStreamAction;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -36,6 +37,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAction;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -43,6 +45,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.BuildService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -64,6 +68,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private Query<ArtifactStream> query;
   @Mock private FieldEnd end;
+  @Mock private BuildSourceService buildSourceService;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
 
@@ -79,6 +84,13 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                             .withServiceId(SERVICE_ID)
                                                             .withArtifactPaths(Arrays.asList("*WAR"))
                                                             .build();
+  private DockerArtifactStream dockerArtifactStream = aDockerArtifactStream()
+                                                          .withAppId(APP_ID)
+                                                          .withUuid(ARTIFACT_STREAM_ID)
+                                                          .withSourceName("SOURCE_NAME_DOCKER")
+                                                          .withSettingId(SETTING_ID)
+                                                          .withImageName("wingsplugins/todolist")
+                                                          .build();
 
   @Before
   public void setUp() throws Exception {
@@ -123,6 +135,30 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldDockerArtifactStreamCreate() {
+    when(wingsPersistence.save(any(ArtifactStream.class))).thenReturn(ARTIFACT_STREAM_ID);
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(buildSourceService.validateArtifactSource(dockerArtifactStream.getAppId(), dockerArtifactStream.getSettingId(),
+             dockerArtifactStream.getArtifactStreamAttributes()))
+        .thenReturn(true);
+    ArtifactStream artifactStream = artifactStreamService.create(dockerArtifactStream);
+    assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
+    verify(wingsPersistence).save(any(ArtifactStream.class));
+    verify(wingsPersistence).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
+  }
+  @Test
+  public void shouldDockerArtifactStreamUpdate() {
+    when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(wingsPersistence.save(any(ArtifactStream.class))).thenReturn(ARTIFACT_STREAM_ID);
+    when(buildSourceService.validateArtifactSource(dockerArtifactStream.getAppId(), dockerArtifactStream.getSettingId(),
+             dockerArtifactStream.getArtifactStreamAttributes()))
+        .thenReturn(true);
+    ArtifactStream artifactStream = artifactStreamService.update(jenkinsArtifactStream);
+    assertThat(artifactStream.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
+    verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
+    verify(wingsPersistence).save(any(ArtifactStream.class));
+  }
+  @Test
   public void shouldUpdate() {
     when(wingsPersistence.get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(wingsPersistence.save(any(ArtifactStream.class))).thenReturn(ARTIFACT_STREAM_ID);
@@ -131,7 +167,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(wingsPersistence, times(2)).get(ArtifactStream.class, APP_ID, ARTIFACT_STREAM_ID);
     verify(wingsPersistence).save(any(ArtifactStream.class));
   }
-
   @Test
   public void shouldDelete() {
     jenkinsArtifactStream.setStreamActions(

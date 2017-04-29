@@ -36,6 +36,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import freemarker.template.TemplateException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -114,6 +115,22 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public User register(User user) {
+    if (!StringUtils.isBlank(user.getEmail())) {
+      user.setEmail(user.getEmail().trim());
+    }
+
+    if (!StringUtils.isBlank(user.getAccountName())) {
+      user.setAccountName(user.getAccountName().trim());
+    }
+
+    if (!StringUtils.isBlank(user.getName())) {
+      user.setName(user.getName().trim());
+    }
+
+    if (!StringUtils.isBlank(user.getCompanyName())) {
+      user.setCompanyName(user.getCompanyName().trim());
+    }
+
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
     }
@@ -200,7 +217,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void verifyRegisteredOrAllowed(String emailAddress) {
+  public void verifyRegisteredOrAllowed(String email) {
+    if (StringUtils.isBlank(email)) {
+      throw new WingsException(ErrorCode.INVALID_EMAIL);
+    }
+
+    final String emailAddress = email.trim();
     if (!EmailValidator.getInstance().isValid(emailAddress)) {
       throw new WingsException(ErrorCode.INVALID_EMAIL);
     }
@@ -257,7 +279,7 @@ public class UserServiceImpl implements UserService {
         .stream()
         .map(email -> {
           UserInvite userInviteClone = KryoUtils.clone(userInvite);
-          userInviteClone.setEmail(email);
+          userInviteClone.setEmail(email.trim());
           return inviteUser(userInviteClone);
         })
         .collect(Collectors.toList());
@@ -362,7 +384,7 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(USER_INVITATION_DOES_NOT_EXIST);
     } else {
       Map<String, Object> map = new HashMap();
-      map.put("name", userInvite.getName());
+      map.put("name", userInvite.getName().trim());
       map.put("passwordHash", hashpw(userInvite.getPassword(), BCrypt.gensalt()));
       map.put("emailVerified", true);
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);

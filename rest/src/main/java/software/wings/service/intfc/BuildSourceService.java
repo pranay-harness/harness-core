@@ -72,17 +72,9 @@ public interface BuildSourceService {
    * Valiate Artifact Stream
    * @param appId
    * @param settingId
-   * @throws software.wings.exception.WingsException if Artifact Stream not valid
-   */
-  void validateArtifactServer(@NotEmpty String appId, @NotEmpty String settingId);
-
-  /**
-   * Valiate Artifact Stream
-   * @param appId
-   * @param settingId
    * @param artifactStreamAttributes
    * @throws software.wings.exception.WingsException if Artifact Stream not valid
    */
-  void validateArtifactSource(
+  boolean validateArtifactSource(
       @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes);
 }

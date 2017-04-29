@@ -88,18 +88,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
-  public void validateArtifactServer(String appId, String settingId) {
-    SettingAttribute settingAttribute = settingsService.get(settingId);
-    notNullCheck("Setting", settingAttribute);
-    getBuildService(settingAttribute, appId).validateArtifactServer(settingAttribute.getValue());
-  }
-
-  @Override
-  public void validateArtifactSource(
+  public boolean validateArtifactSource(
       String appId, String settingId, ArtifactStreamAttributes artifactStreamAttributes) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
-    getBuildService(settingAttribute, appId)
+    return getBuildService(settingAttribute, appId)
         .validateArtifactSource(settingAttribute.getValue(), artifactStreamAttributes);
   }
 
