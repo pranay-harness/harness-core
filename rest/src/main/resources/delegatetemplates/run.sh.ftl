@@ -2,10 +2,10 @@
 
 if [ ! -d jre ]
 then
-  echo "Downloading packages..."
+  echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   curl -#kLO -H "Cookie: oraclelicense=accept-securebackup-cookie" $JVM_URL
-  echo "Extracting packages..."
+  echo "Extracting JRE packages..."
   tar xzf $JVM_TAR_FILENAME
   ln -s $JRE_DIR jre
 fi
