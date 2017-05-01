@@ -39,6 +39,13 @@ public abstract class SettingValue implements ExtensionPoint {
   }
 
   /**
+   * Do validate boolean.
+   *
+   * @return the boolean
+   */
+  public abstract boolean doValidate();
+
+  /**
    * The Enum SettingVariableTypes.
    */
   public enum SettingVariableTypes {
@@ -80,10 +87,9 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * App dynamics setting variable types.
      */
-    APP_DYNAMICS,
-    /**
-     * Slack setting variable types.
-     */
+    APP_DYNAMICS, /**
+                   * Slack setting variable types.
+                   */
     SLACK,
 
     /**

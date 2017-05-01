@@ -77,6 +77,11 @@ public class NexusConfig extends SettingValue {
         .toString();
   }
 
+  @Override
+  public boolean doValidate() {
+    return false;
+  }
+
   /**
    * The type Builder.
    */

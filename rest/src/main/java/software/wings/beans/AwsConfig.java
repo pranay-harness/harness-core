@@ -56,6 +56,11 @@ public class AwsConfig extends SettingValue {
     this.secretKey = secretKey;
   }
 
+  @Override
+  public boolean doValidate() {
+    return true;
+  }
+
   /**
    * The type Builder.
    */

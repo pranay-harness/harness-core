@@ -36,6 +36,11 @@ public class SlackConfig extends SettingValue {
     this.outgoingWebhookUrl = outgoingWebhookUrl;
   }
 
+  @Override
+  public boolean doValidate() {
+    return false;
+  }
+
   /**
    * The type Builder.
    */

@@ -12,6 +12,8 @@ import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.AmazonEC2Exception;
+import com.amazonaws.services.ec2.model.DescribeAccountAttributesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
@@ -22,6 +24,8 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
+import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,6 +37,14 @@ import java.net.Socket;
 @Singleton
 public class AwsHelperService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  public void validateCredential(String accessKey, String secretKey) {
+    try {
+      getAmazonEc2Client(accessKey, secretKey).describeAccountAttributes(new DescribeAccountAttributesRequest());
+    } catch (AmazonEC2Exception amazonEC2Exception) {
+      throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
+    }
+  }
 
   /**
    * Gets aws cloud watch client.

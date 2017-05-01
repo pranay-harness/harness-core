@@ -57,6 +57,11 @@ public class StringValue extends SettingValue {
     return Objects.equals(this.value, other.value);
   }
 
+  @Override
+  public boolean doValidate() {
+    return false;
+  }
+
   /**
    * The type Builder.
    */

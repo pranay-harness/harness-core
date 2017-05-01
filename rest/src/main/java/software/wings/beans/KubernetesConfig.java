@@ -78,6 +78,11 @@ public class KubernetesConfig extends SettingValue {
     this.password = password;
   }
 
+  @Override
+  public boolean doValidate() {
+    return true;
+  }
+
   /**
    * The type Builder.
    */

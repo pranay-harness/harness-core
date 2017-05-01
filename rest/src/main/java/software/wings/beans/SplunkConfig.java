@@ -97,6 +97,11 @@ public class SplunkConfig extends SettingValue {
     this.password = password;
   }
 
+  @Override
+  public boolean doValidate() {
+    return false;
+  }
+
   /**
    * The type Builder.
    */
