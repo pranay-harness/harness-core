@@ -5,6 +5,7 @@ then
   echo "Wings UI Host: ci.wings.software, demo.wings.software"
   echo "New Relic App Name: 'CI Server', 'Demo Server'"
   echo "Dropwizard metrics prefix: ci, demo"
+  exit 1
 fi
 
 pkill -f "capsule.jar config.yml"
