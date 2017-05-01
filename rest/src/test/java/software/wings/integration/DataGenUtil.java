@@ -413,7 +413,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private String getName(List<String> names) {
-    int nameIdx = randomInt(0, names.size());
+    int nameIdx = 0;
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
