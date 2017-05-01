@@ -54,7 +54,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +82,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
-  private List<String> appNames = Collections.singletonList("TestApplication");
+  private List<String> appNames = new ArrayList<>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
@@ -293,7 +292,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private List<Service> addServices(String appId, List<AppContainer> appContainers) throws IOException {
-    serviceNames = Collections.singletonList("TestService");
+    serviceNames = new ArrayList<>(seedNames);
     WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
     List<Service> services = new ArrayList<>();
 
@@ -414,7 +413,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private String getName(List<String> names) {
-    int nameIdx = randomInt(0, names.size());
+    int nameIdx = 0;
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
