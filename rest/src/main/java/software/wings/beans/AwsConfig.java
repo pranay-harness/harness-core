@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 
 /**
@@ -9,8 +10,8 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("AWS")
 public class AwsConfig extends SettingValue {
-  @Attributes(title = "Access Key") private String accessKey;
-  @Attributes(title = "Secret Key") private String secretKey;
+  @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
+  @Attributes(title = "Secret Key", required = true) @NotEmpty private String secretKey;
 
   /**
    * Instantiates a new Aws config.

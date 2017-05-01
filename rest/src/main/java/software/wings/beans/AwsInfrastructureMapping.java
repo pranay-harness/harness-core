@@ -22,10 +22,7 @@ import javax.inject.Inject;
  */
 @JsonTypeName("AWS_SSH")
 public class AwsInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Restrictions")
-  //@EnumData(enumDataProvider = AwsInfrastructureRestrictionProvider.class)
-  @SchemaIgnore
-  private String restrictionType;
+  @Attributes(title = "Restrictions") @SchemaIgnore private String restrictionType;
   @Attributes(title = "Expression") @SchemaIgnore private String restrictionExpression;
 
   @Attributes(title = "Region")

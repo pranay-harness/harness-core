@@ -21,7 +21,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Connection Type", required = true)
   @NotEmpty
   private String hostConnectionAttrs;
-  @Attributes(title = "Host Names") private List<String> hostNames;
+  @Attributes(title = "Host Names", required = true) private List<String> hostNames;
 
   /**
    * Instantiates a new Infrastructure mapping.

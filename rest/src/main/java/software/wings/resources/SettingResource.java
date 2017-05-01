@@ -20,7 +20,6 @@ import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -59,7 +58,6 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService attributeService;
-  @Inject private MainConfiguration configuration;
   @Inject private GcpHelperService gcpHelperService;
 
   /**
