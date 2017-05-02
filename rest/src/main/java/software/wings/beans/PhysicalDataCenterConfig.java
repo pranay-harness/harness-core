@@ -15,11 +15,6 @@ public class PhysicalDataCenterConfig extends SettingValue {
     super(SettingVariableTypes.PHYSICAL_DATA_CENTER.name());
   }
 
-  @Override
-  public boolean doValidate() {
-    return false;
-  }
-
   /**
    * The type Builder.
    */

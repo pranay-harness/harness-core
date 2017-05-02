@@ -26,11 +26,6 @@ public class GcpConfig extends SettingValue {
     this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
   }
 
-  @Override
-  public boolean doValidate() {
-    return true;
-  }
-
   /**
    * Builder for GcpConfig.
    */

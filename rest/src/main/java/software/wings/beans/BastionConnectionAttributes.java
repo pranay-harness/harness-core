@@ -74,11 +74,6 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
 
-  @Override
-  public boolean doValidate() {
-    return false;
-  }
-
   /**
    * The type Builder.
    */

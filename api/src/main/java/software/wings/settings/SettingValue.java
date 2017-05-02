@@ -39,13 +39,6 @@ public abstract class SettingValue implements ExtensionPoint {
   }
 
   /**
-   * Do validate boolean.
-   *
-   * @return the boolean
-   */
-  public abstract boolean doValidate();
-
-  /**
    * The Enum SettingVariableTypes.
    */
   public enum SettingVariableTypes {

@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 
 import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -96,7 +95,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
         .validateArtifactSource(settingAttribute.getValue(), artifactStreamAttributes);
   }
 
-  private BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
+  @Override
+  public BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), context);
   }

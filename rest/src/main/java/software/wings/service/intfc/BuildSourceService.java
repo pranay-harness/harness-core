@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -15,6 +16,7 @@ public interface BuildSourceService {
   /**
    * Gets jobs.
    *
+   * @param appId     the app id
    * @param settingId the jenkins setting id
    * @return the jobs
    */
@@ -23,6 +25,7 @@ public interface BuildSourceService {
   /**
    * Gets plans.
    *
+   * @param appId     the app id
    * @param settingId the setting id
    * @return the plans
    */
@@ -31,9 +34,10 @@ public interface BuildSourceService {
   /**
    * Gets artifact paths.
    *
+   * @param appId     the app id
    * @param jobName   the job name
    * @param settingId the setting id
-   * @param groupId the group id
+   * @param groupId   the group id
    * @return the artifact paths
    */
   Set<String> getArtifactPaths(
@@ -62,6 +66,7 @@ public interface BuildSourceService {
   /**
    * Gets group Id paths.
    *
+   * @param appId     the app id
    * @param jobName   the job name
    * @param settingId the setting id
    * @return the groupId paths
@@ -70,11 +75,22 @@ public interface BuildSourceService {
 
   /**
    * Valiate Artifact Stream
-   * @param appId
-   * @param settingId
-   * @param artifactStreamAttributes
+   *
+   * @param appId                    the app id
+   * @param settingId                the setting id
+   * @param artifactStreamAttributes the artifact stream attributes
+   * @return the boolean
    * @throws software.wings.exception.WingsException if Artifact Stream not valid
    */
   boolean validateArtifactSource(
       @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes);
+
+  /**
+   * Gets build service.
+   *
+   * @param settingAttribute the setting attribute
+   * @param appId            the app id
+   * @return the build service
+   */
+  BuildService getBuildService(SettingAttribute settingAttribute, String appId);
 }

@@ -48,9 +48,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
-    if (settingAttribute.getValue().doValidate()) {
-      settingValidationService.validate(settingAttribute.getValue());
-    }
+    settingValidationService.validate(settingAttribute);
 
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
@@ -89,17 +87,16 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
    */
   @Override
-  public SettingAttribute update(SettingAttribute envVar) {
-    if (envVar.getValue().doValidate()) {
-      settingValidationService.validate(envVar.getValue());
-    }
+  public SettingAttribute update(SettingAttribute settingAttribute) {
+    settingValidationService.validate(settingAttribute);
 
-    ImmutableMap.Builder<String, Object> fields = ImmutableMap.<String, Object>builder().put("name", envVar.getName());
-    if (envVar.getValue() != null) {
-      fields.put("value", envVar.getValue());
+    ImmutableMap.Builder<String, Object> fields =
+        ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
+    if (settingAttribute.getValue() != null) {
+      fields.put("value", settingAttribute.getValue());
     }
-    wingsPersistence.updateFields(SettingAttribute.class, envVar.getUuid(), fields.build());
-    return wingsPersistence.get(SettingAttribute.class, envVar.getUuid());
+    wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
+    return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
   }
 
   /* (non-Javadoc)
