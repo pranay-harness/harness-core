@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
@@ -20,7 +19,6 @@ import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -41,6 +39,7 @@ import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -59,7 +58,6 @@ import javax.ws.rs.QueryParam;
 @AuthRule(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService attributeService;
-  @Inject private MainConfiguration configuration;
   @Inject private GcpHelperService gcpHelperService;
 
   /**
@@ -73,12 +71,10 @@ public class SettingResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<SettingAttribute>> list(@QueryParam("appId") String appId,
-      @QueryParam("accountId") String accountId, @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
+  public RestResponse<PageResponse<SettingAttribute>> list(
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
-    if (isNullOrEmpty(appId)) {
-      appId = GLOBAL_APP_ID;
-    }
     if (!isEmpty(settingVariableTypes)) {
       pageRequest.addFilter(aSearchFilter().withField("value.type", IN, settingVariableTypes.toArray()).build());
     }
@@ -96,10 +92,8 @@ public class SettingResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable) {
-    if (isNullOrEmpty(appId)) {
-      appId = GLOBAL_APP_ID;
-    }
+  public RestResponse<SettingAttribute> save(
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, SettingAttribute variable) {
     variable.setAppId(appId);
     variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
     return new RestResponse<>(attributeService.save(variable));
@@ -115,17 +109,17 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> saveUpload(@QueryParam("appId") String appId,
+  public RestResponse<SettingAttribute> saveUpload(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    if (isNullOrEmpty(appId)) {
-      appId = GLOBAL_APP_ID;
+    if (uploadedInputStream == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing file.");
     }
-    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream, fileDetail.getFileName());
-    if (value == null) {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "Missing or empty service account credentials file.");
+
+    SettingValue value = null;
+    if (GCP.name().equals(type)) {
+      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
     }
     return new RestResponse<>(
         attributeService.save(aSettingAttribute()
@@ -148,10 +142,8 @@ public class SettingResource {
   @Path("{attrId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> get(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    if (isNullOrEmpty(appId)) {
-      appId = GLOBAL_APP_ID;
-    }
+  public RestResponse<SettingAttribute> get(
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     return new RestResponse<>(attributeService.get(appId, attrId));
   }
 
@@ -167,11 +159,8 @@ public class SettingResource {
   @Path("{attrId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> update(
-      @QueryParam("appId") String appId, @PathParam("attrId") String attrId, SettingAttribute variable) {
-    if (isNullOrEmpty(appId)) {
-      appId = GLOBAL_APP_ID;
-    }
+  public RestResponse<SettingAttribute> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+      @PathParam("attrId") String attrId, SettingAttribute variable) {
     variable.setUuid(attrId);
     variable.setAppId(appId);
     return new RestResponse<>(attributeService.update(variable));
@@ -191,27 +180,16 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    SettingAttribute.Builder settingAttribute = aSettingAttribute().withUuid(attrId).withName(name);
-    SettingValue value = getValidatedCredentialsSettingValue(type, uploadedInputStream, fileDetail.getFileName());
-    if (value != null) {
-      settingAttribute.withValue(value);
+    if (uploadedInputStream == null) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing file.");
     }
-    return new RestResponse<>(attributeService.update(settingAttribute.build()));
-  }
 
-  private SettingValue getValidatedCredentialsSettingValue(
-      String type, InputStream uploadedInputStream, String filename) throws IOException {
+    SettingValue value = null;
     if (GCP.name().equals(type)) {
-      String credentials = IOUtils.toString(uploadedInputStream);
-      if (isNullOrEmpty(credentials) || "undefined".equals(credentials)) {
-        return null;
-      }
-      gcpHelperService.getGkeContainerService(credentials);
-      return aGcpConfig().withServiceAccountKeyFileContent(credentials).build();
-    } else {
-      throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", filename + " is not a valid service account credentials file");
+      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
     }
+    return new RestResponse<>(
+        attributeService.update(aSettingAttribute().withUuid(attrId).withName(name).withValue(value).build()));
   }
 
   /**
@@ -225,10 +203,8 @@ public class SettingResource {
   @Path("{attrId}")
   @Timed
   @ExceptionMetered
-  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    if (isNullOrEmpty(appId)) {
-      appId = GLOBAL_APP_ID;
-    }
+  public RestResponse delete(
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     attributeService.delete(appId, attrId);
     return new RestResponse();
   }

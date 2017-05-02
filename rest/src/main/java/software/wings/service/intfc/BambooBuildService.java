@@ -26,4 +26,7 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
       String appId, ArtifactStreamAttributes artifactStreamAttributes, BambooConfig config);
 
   @DelegateTaskType(TaskType.BAMBOO_GET_PLANS) Map<String, String> getPlans(BambooConfig config);
+
+  @DelegateTaskType(TaskType.BAMBOO_VALIDATE_ARTIFACT_SERVER)
+  boolean validateArtifactServer(BambooConfig jenkinsConfig);
 }

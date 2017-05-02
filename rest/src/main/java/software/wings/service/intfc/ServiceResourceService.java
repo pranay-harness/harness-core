@@ -24,9 +24,10 @@ public interface ServiceResourceService {
    *
    * @param pageRequest the page request
    * @param withBuildSource
+   * @param withServiceCommands
    * @return the page response
    */
-  PageResponse<Service> list(PageRequest<Service> pageRequest, boolean withBuildSource);
+  PageResponse<Service> list(PageRequest<Service> pageRequest, boolean withBuildSource, boolean withServiceCommands);
 
   /**
    * Save.

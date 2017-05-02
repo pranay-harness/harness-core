@@ -20,9 +20,13 @@ import java.util.Arrays;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Jenkins URL") @URL private String jenkinsUrl;
-  @Attributes(title = "Username") @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @NotEmpty @Encrypted public char[] password;
+  @Attributes(title = "Jenkins URL", required = true) @URL @NotEmpty private String jenkinsUrl;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  @Encrypted
+  public char[] password;
   @Attributes(title = "Account ID") @NotEmpty private String accountId;
   /**
    * Instantiates a new jenkins config.

@@ -1,12 +1,13 @@
 package software.wings.service.intfc;
 
-import java.util.List;
-import java.util.Map;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by srinivas on 3/31/17.
@@ -27,4 +28,6 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
   @DelegateTaskType(TaskType.NEXUS_LAST_SUCCESSFUL_BUILD)
   BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config);
+
+  @DelegateTaskType(TaskType.NEXUS_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(NexusConfig config);
 }

@@ -58,11 +58,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
 
       Build jenkinsBuild;
       while ((jenkinsBuild = jenkins.getBuild(queueItem)) == null) {
-        Misc.quietSleep(1000);
+        Misc.sleepWithRuntimeException(1000);
       }
       BuildWithDetails jenkinsBuildWithDetails;
       while ((jenkinsBuildWithDetails = jenkinsBuild.details()).isBuilding()) {
-        Misc.quietSleep((int) (Math.max(
+        Misc.sleepWithRuntimeException((int) (Math.max(
             5000, jenkinsBuildWithDetails.getDuration() - jenkinsBuildWithDetails.getEstimatedDuration())));
       }
       jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());

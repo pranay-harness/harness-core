@@ -2,22 +2,10 @@ package software.wings.helpers.ext.bamboo;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import okhttp3.Credentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -32,6 +20,20 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 11/29/16.
@@ -114,11 +116,13 @@ public class BambooServiceImpl implements BambooService {
         String planName = jsonNode.get("shortName").asText();
         planNameMap.put(planKey, planName);
       });
-    } catch (Exception ex) {
+    } catch (IOException ex) {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("Job keys fetch failed with exception ", ex);
+      throw new WingsException(
+          ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching project plans from bamboo server", ex);
     }
     return planNameMap;
   }
@@ -141,11 +145,12 @@ public class BambooServiceImpl implements BambooService {
                                    .build());
         });
       }
-    } catch (Exception ex) {
+    } catch (IOException ex) {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
       logger.error("BambooService job keys fetch failed with exception ", ex);
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, "message", "Error in fetching builds from bamboo server", ex);
     }
     return buildDetailsList;
   }
@@ -195,6 +200,11 @@ public class BambooServiceImpl implements BambooService {
     } catch (IOException ex) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact path " + ex.getStackTrace());
     }
+  }
+
+  @Override
+  public boolean isRunning(BambooConfig bambooConfig) {
+    return getPlanKeys(bambooConfig) != null; // TODO:: use status API
   }
 
   /**

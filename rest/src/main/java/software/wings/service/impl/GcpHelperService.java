@@ -7,6 +7,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.ContainerScopes;
 import com.google.inject.Singleton;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,13 @@ import java.util.Collections;
  */
 @Singleton
 public class GcpHelperService {
+  /**
+   * The constant ZONE_DELIMITER.
+   */
   public static final String ZONE_DELIMITER = "/";
+  /**
+   * The constant ALL_ZONES.
+   */
   public static final String ALL_ZONES = "-";
 
   private static final int SLEEP_INTERVAL_SECS = 5;
@@ -31,8 +38,19 @@ public class GcpHelperService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
+   * Validate credential.
+   *
+   * @param credentials the credentials
+   */
+  public void validateCredential(String credentials) {
+    getGkeContainerService(credentials);
+  }
+
+  /**
    * Gets a GCP container service.
    *
+   * @param credentials the credentials
+   * @return the gke container service
    */
   public Container getGkeContainerService(String credentials) {
     try {
@@ -45,17 +63,29 @@ public class GcpHelperService {
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Wings").build();
     } catch (GeneralSecurityException e) {
       logger.error("Security exception getting Google container service.", e);
-      throw new WingsException(ErrorCode.INVALID_CREDENTIAL, "Invalid Google Cloud Platform credentials.", e);
+      throw new WingsException(
+          ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       logger.error("Error getting Google container service.", e);
-      throw new WingsException(ErrorCode.INVALID_CREDENTIAL, "Invalid Google Cloud Platform credentials.", e);
+      throw new WingsException(
+          ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid Google Cloud Platform credentials.");
     }
   }
 
+  /**
+   * Gets sleep interval secs.
+   *
+   * @return the sleep interval secs
+   */
   public int getSleepIntervalSecs() {
     return SLEEP_INTERVAL_SECS;
   }
 
+  /**
+   * Gets timeout mins.
+   *
+   * @return the timeout mins
+   */
   public int getTimeoutMins() {
     return TIMEOUT_MINS;
   }

@@ -80,10 +80,9 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * App dynamics setting variable types.
      */
-    APP_DYNAMICS,
-    /**
-     * Slack setting variable types.
-     */
+    APP_DYNAMICS, /**
+                   * Slack setting variable types.
+                   */
     SLACK,
 
     /**

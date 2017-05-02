@@ -15,6 +15,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
@@ -58,7 +59,9 @@ public class BambooServiceTest extends WingsBaseTest {
                                              .withStatus(200)
                                              .withFault(Fault.MALFORMED_RESPONSE_CHUNK)
                                              .withHeader("Content-Type", "application/json")));
-    assertThat(bambooService.getPlanKeys(bambooConfig)).hasSize(0);
+    assertThatThrownBy(() -> bambooService.getPlanKeys(bambooConfig))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.UNKNOWN_ERROR.name());
   }
 
   @Test
@@ -88,8 +91,9 @@ public class BambooServiceTest extends WingsBaseTest {
         urlEqualTo(
             "/rest/api/latest/result/BAMBOO_PLAN_KEY.json?authType=basic&buildState=Successful&expand=results.result&max-result=50"))
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
-    List<BuildDetails> bamboo_plan_key = bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50);
-    Assertions.assertThat(bamboo_plan_key).hasSize(0);
+    assertThatThrownBy(() -> bambooService.getBuilds(bambooConfig, "BAMBOO_PLAN_KEY", 50))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCode.UNKNOWN_ERROR.name());
   }
 
   @Test

@@ -113,7 +113,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   private void ensureAppContainerNotInUse(String appContainerId) {
     List<Service> services =
         serviceResourceService
-            .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false)
+            .list(aPageRequest().addFilter("appContainer", Operator.EQ, appContainerId).build(), false, true)
             .getResponse();
     if (services.size() > 0) {
       throw new WingsException(INVALID_REQUEST, "message",

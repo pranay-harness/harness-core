@@ -181,3 +181,17 @@ LOG_DRIVER:
       value: splunk
     - name: syslog
       value: syslog
+
+PLUGIN_CATEGORY:
+    - name: Artifact Server
+      value: Artifact
+    - name: Cloud Provider
+      value: CloudProvider
+    - name: Verification Provider
+      value: Verification
+    - name: Collaboration Provider
+      value: Collaboration
+    - name: Load Balancer
+      value: LoadBalancer
+    - name: Connection Attributes
+      value: ConnectionAttributes

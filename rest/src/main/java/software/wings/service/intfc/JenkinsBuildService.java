@@ -26,4 +26,7 @@ public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
       String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig config);
 
   @DelegateTaskType(TaskType.JENKINS_GET_PLANS) Map<String, String> getPlans(JenkinsConfig config);
+
+  @DelegateTaskType(TaskType.JENKINS_VALIDATE_ARTIFACT_SERVER)
+  boolean validateArtifactServer(JenkinsConfig jenkinsConfig);
 }

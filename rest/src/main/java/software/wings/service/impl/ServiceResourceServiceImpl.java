@@ -99,13 +99,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Service> list(PageRequest<Service> request, boolean withBuildSource) {
+  public PageResponse<Service> list(
+      PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands) {
     PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
-    pageResponse.getResponse().forEach(service -> {
-      service.getServiceCommands().forEach(serviceCommand
-          -> serviceCommand.setCommand(commandService.getCommand(
-              serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
-    });
+
+    if (withServiceCommands) {
+      pageResponse.getResponse().forEach(service -> {
+        service.getServiceCommands().forEach(serviceCommand
+            -> serviceCommand.setCommand(commandService.getCommand(
+                serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+      });
+    }
 
     SearchFilter appIdSearchFilter = request.getFilters()
                                          .stream()

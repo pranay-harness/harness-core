@@ -30,6 +30,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import java.util.Objects;
+import javax.validation.Valid;
 
 /**
  * Created by anubhaw on 5/16/16.
@@ -43,7 +44,7 @@ public class SettingAttribute extends Base {
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;
   private String name;
-  private SettingValue value;
+  @Valid private SettingValue value;
   private Category category = Category.SETTING;
   private List<String> appIds;
 

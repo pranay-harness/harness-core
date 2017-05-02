@@ -1,5 +1,7 @@
 package software.wings.delegate.service;
 
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
@@ -26,6 +28,7 @@ import org.atmosphere.wasync.Request.TRANSPORT;
 import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
+import org.awaitility.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
@@ -97,10 +100,10 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
 
       if (upgrade) {
-        System.out.println("Delegate started.");
+        System.out.println("botstarted");
         LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
         String line = "";
-        while (it.hasNext() && !StringUtils.startsWith(line, "StartTasks")) {
+        while (it.hasNext() && !StringUtils.startsWith(line, "goahead")) {
           line = it.nextLine();
         }
       }
@@ -204,7 +207,11 @@ public class DelegateServiceImpl implements DelegateService {
 
       startUpgradeCheck(accountId, delegateId, getVersion());
 
-      logger.info("Delegate started.");
+      if (upgrade) {
+        logger.info("Bot upgraded.");
+      } else {
+        logger.info("Bot started.");
+      }
 
       synchronized (waiter) {
         waiter.wait();
@@ -239,13 +246,20 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
     logger.info("Registering delegate....");
-    RestResponse<Delegate> delegateResponse = execute(managerClient.registerDelegate(
-        accountId, builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
+    return await().with().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> {
+      try {
+        RestResponse<Delegate> delegateResponse = execute(managerClient.registerDelegate(
+            accountId, builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
 
-    builder.withUuid(delegateResponse.getResource().getUuid()).withStatus(delegateResponse.getResource().getStatus());
-    logger.info("Delegate registered with id " + delegateResponse.getResource().getUuid());
-
-    return delegateResponse.getResource().getUuid();
+        builder.withUuid(delegateResponse.getResource().getUuid())
+            .withStatus(delegateResponse.getResource().getStatus());
+        logger.info("Delegate registered with id " + delegateResponse.getResource().getUuid());
+        return delegateResponse.getResource().getUuid();
+      } catch (Exception e) {
+        logger.error("Exception while registering delegate: ", e);
+        return null;
+      }
+    }, notNullValue());
   }
 
   private void startUpgradeCheck(String accountId, String delegateId, String version) {

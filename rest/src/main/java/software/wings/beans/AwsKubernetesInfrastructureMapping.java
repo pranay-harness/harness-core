@@ -42,7 +42,7 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
   @Override
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
-    return super.getHostConnectionAttrs();
+    return null;
   }
 
   @SchemaIgnore
@@ -64,7 +64,6 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
     private String serviceId;
     private String computeProviderType;
     private String deploymentType;
-    private String hostConnectionAttrs;
     private String computeProviderName;
     private String uuid;
     private String appId;
@@ -162,17 +161,6 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * With host connection attrs builder.
-     *
-     * @param hostConnectionAttrs the host connection attrs
-     * @return the builder
-     */
-    public Builder withHostConnectionAttrs(String hostConnectionAttrs) {
-      this.hostConnectionAttrs = hostConnectionAttrs;
-      return this;
-    }
-
-    /**
      * With compute provider name name builder.
      *
      * @param computeProviderName the display name
@@ -263,7 +251,6 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
           .withServiceId(serviceId)
           .withComputeProviderType(computeProviderType)
           .withDeploymentType(deploymentType)
-          .withHostConnectionAttrs(hostConnectionAttrs)
           .withComputeProviderName(computeProviderName)
           .withUuid(uuid)
           .withAppId(appId)
@@ -287,7 +274,6 @@ public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
       awsKubernetesInfrastructureMapping.setServiceId(serviceId);
       awsKubernetesInfrastructureMapping.setComputeProviderType(computeProviderType);
       awsKubernetesInfrastructureMapping.setDeploymentType(deploymentType);
-      awsKubernetesInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       awsKubernetesInfrastructureMapping.setComputeProviderName(computeProviderName);
       awsKubernetesInfrastructureMapping.setUuid(uuid);
       awsKubernetesInfrastructureMapping.setAppId(appId);

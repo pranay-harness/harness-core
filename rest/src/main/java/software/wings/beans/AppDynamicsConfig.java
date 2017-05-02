@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -18,10 +19,13 @@ import java.util.Objects;
 @Extension
 @JsonTypeName("APP_DYNAMICS")
 public class AppDynamicsConfig extends SettingValue {
-  @Attributes(title = "User Name") private String username;
-  @Attributes(title = "Account Name") private String accountname;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") private String password;
-  @Attributes(title = "Controller URL") private String controllerUrl;
+  @Attributes(title = "User Name", required = true) @NotEmpty private String username;
+  @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  private String password;
+  @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
 
   /**
    * Instantiates a new App dynamics config.

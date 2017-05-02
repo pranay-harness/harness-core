@@ -19,6 +19,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
+import org.apache.commons.lang.StringUtils;
 import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -66,7 +67,9 @@ import javax.ws.rs.core.GenericType;
  */
 public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static Client client;
-  protected static final String API_BASE = "https://localhost:9090/api";
+  protected static final String API_BASE = StringUtils.isBlank(System.getenv().get("BASE_HTTP"))
+      ? "https://localhost:9090/api"
+      : "http://localhost:9090/api";
   protected static final String adminUserName = "admin@wings.software";
   protected static final String adminPassword = "admin";
   protected static String accountId = "INVALID_ID";

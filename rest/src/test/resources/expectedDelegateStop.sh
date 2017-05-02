@@ -90,13 +90,13 @@ then
       sleep 1
       i=$((i+1))
     else
-      echo "Delegate stopped."
+      echo "Bot stopped"
       exit 0
     fi
   done
-  echo "Unable to stop delegate in 30 seconds."
+  echo "Unable to stop bot in 30 seconds."
   exit 1
 else
-  echo "Delegate not running."
+  echo "Bot not running"
   exit 1
 fi

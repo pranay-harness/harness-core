@@ -4,7 +4,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.collect.ImmutableMap;
@@ -18,8 +19,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -33,13 +32,16 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -67,21 +69,49 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
-    // Set Service and InfraMapping anyway
-    pageResponse.getResponse().forEach(serviceTemplate -> {
-      PageRequest<InfrastructureMapping> infraPageRequest = new PageRequest<>();
-      List<SearchFilter> filters = pageRequest.getFilters();
-      filters.add(aSearchFilter().withField("serviceTemplateId", Operator.EQ, serviceTemplate.getUuid()).build());
-      infraPageRequest.setFilters(filters);
-      serviceTemplate.setInfrastructureMappings(infrastructureMappingService.list(infraPageRequest));
-    });
+    List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
+    setArtifactTypeAndInfraMappings(serviceTemplates);
+
     if (withDetails) {
-      pageResponse.getResponse().forEach(template -> {
-        template.setConfigFilesOverrides(getOverrideFiles(template));
-        template.setServiceVariablesOverrides(getOverrideServiceVariables(template));
+      serviceTemplates.forEach(serviceTemplate -> {
+        populateServiceAndOverrideConfigFiles(serviceTemplate);
+        populateServiceAndOverrideServiceVariables(serviceTemplate);
       });
     }
+
     return pageResponse;
+  }
+
+  private void setArtifactTypeAndInfraMappings(List<ServiceTemplate> serviceTemplates) {
+    if (serviceTemplates == null || serviceTemplates.size() == 0) {
+      return;
+    }
+    String appId = serviceTemplates.get(0).getAppId();
+    String envId = serviceTemplates.get(0).getEnvId();
+
+    ImmutableMap<String, ServiceTemplate> serviceTemplateMap =
+        Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
+
+    List<Service> services = serviceResourceService.findServicesByApp(appId);
+    ImmutableMap<String, Service> serviceMap = Maps.uniqueIndex(services, Service::getUuid);
+    serviceTemplateMap.forEach((serviceTemplateId, serviceTemplate) -> {
+      Service tempService = serviceMap.get(serviceTemplateId);
+      serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
+    });
+
+    PageRequest<InfrastructureMapping> infraPageRequest =
+        PageRequest.Builder.aPageRequest()
+            .addFilter("appId", EQ, appId)
+            .addFilter("envId", EQ, envId)
+            .addFilter("serviceTemplateId", IN, serviceTemplateMap.keySet().toArray())
+            .build();
+    List<InfrastructureMapping> infrastructureMappings =
+        infrastructureMappingService.list(infraPageRequest).getResponse();
+    Map<String, List<InfrastructureMapping>> infraMappingListByTemplateId =
+        infrastructureMappings.stream().collect(Collectors.groupingBy(InfrastructureMapping::getServiceTemplateId));
+    infraMappingListByTemplateId.forEach(
+        (templateId, infrastructureMappingList)
+            -> serviceTemplateMap.get(templateId).setInfrastructureMappings(infrastructureMappingList));
   }
 
   /* (non-Javadoc)
@@ -108,10 +138,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
-
+    setArtifactTypeAndInfraMappings(Arrays.asList(serviceTemplate));
     if (withDetails) {
-      serviceTemplate.setConfigFilesOverrides(getOverrideFiles(serviceTemplate));
-      serviceTemplate.setServiceVariablesOverrides(getOverrideServiceVariables(serviceTemplate));
+      populateServiceAndOverrideConfigFiles(serviceTemplate);
+      populateServiceAndOverrideServiceVariables(serviceTemplate);
     }
     return serviceTemplate;
   }
@@ -164,9 +194,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         != null;
   }
 
-  private List<ConfigFile> getOverrideFiles(ServiceTemplate template) {
+  private void populateServiceAndOverrideConfigFiles(ServiceTemplate template) {
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
+    template.setServiceConfigFiles(serviceConfigFiles);
+
     List<ConfigFile> overrideConfigFiles =
         configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template);
 
@@ -178,12 +210,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getParentConfigFileId()));
       }
     });
-    return overrideConfigFiles;
+    template.setConfigFilesOverrides(overrideConfigFiles);
   }
 
-  private List<ServiceVariable> getOverrideServiceVariables(ServiceTemplate template) {
+  private void populateServiceAndOverrideServiceVariables(ServiceTemplate template) {
     List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
         template.getAppId(), DEFAULT_TEMPLATE_ID, template.getServiceId());
+    template.setServiceVariables(serviceVariables);
+
     List<ServiceVariable> overrideServiceVariables =
         serviceVariableService.getServiceVariablesByTemplate(template.getAppId(), template.getEnvId(), template);
 
@@ -197,7 +231,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
             serviceVariablesMap.get(serviceVariable.getParentServiceVariableId()));
       }
     });
-    return overrideServiceVariables;
+    template.setServiceVariablesOverrides(overrideServiceVariables);
   }
 
   /* (non-Javadoc)

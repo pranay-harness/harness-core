@@ -33,6 +33,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private SettingValidationService settingValidationService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -46,9 +47,12 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#save(software.wings.beans.SettingAttribute)
    */
   @Override
-  public SettingAttribute save(SettingAttribute envVar) {
-    return Validator.duplicateCheck(
-        () -> wingsPersistence.saveAndGet(SettingAttribute.class, envVar), "name", envVar.getName());
+  public SettingAttribute save(SettingAttribute settingAttribute) {
+    settingValidationService.validate(settingAttribute);
+
+    return Validator.duplicateCheck(()
+                                        -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
+        "name", settingAttribute.getName());
   }
 
   /* (non-Javadoc)
@@ -83,13 +87,16 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
    */
   @Override
-  public SettingAttribute update(SettingAttribute envVar) {
-    ImmutableMap.Builder<String, Object> fields = ImmutableMap.<String, Object>builder().put("name", envVar.getName());
-    if (envVar.getValue() != null) {
-      fields.put("value", envVar.getValue());
+  public SettingAttribute update(SettingAttribute settingAttribute) {
+    settingValidationService.validate(settingAttribute);
+
+    ImmutableMap.Builder<String, Object> fields =
+        ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
+    if (settingAttribute.getValue() != null) {
+      fields.put("value", settingAttribute.getValue());
     }
-    wingsPersistence.updateFields(SettingAttribute.class, envVar.getUuid(), fields.build());
-    return wingsPersistence.get(SettingAttribute.class, envVar.getUuid());
+    wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
+    return wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
   }
 
   /* (non-Javadoc)

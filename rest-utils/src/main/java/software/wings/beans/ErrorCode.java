@@ -89,7 +89,7 @@ public enum ErrorCode {
   /**
    * Invalid credential error codes.
    */
-  INVALID_CREDENTIAL("INVALID_CREDENTIAL", UNAUTHORIZED, "Invalid credentials"),
+  INVALID_CREDENTIAL("INVALID_CREDENTIAL", UNAUTHORIZED),
 
   /**
    * Invalid key error codes.
@@ -320,7 +320,17 @@ public enum ErrorCode {
   /**
    * Invalid Artifact Source
    */
-  INVALID_ARTIFACT_SOURCE("INVALID_ARTIFACT_SOURCE");
+  INVALID_ARTIFACT_SOURCE("INVALID_ARTIFACT_SOURCE"),
+
+  /**
+   * Invalid artifact server error code.
+   */
+  INVALID_ARTIFACT_SERVER("INVALID_ARTIFACT_SERVER", BAD_REQUEST),
+
+  /**
+   * Invalid cloud provider error code.
+   */
+  INVALID_CLOUD_PROVIDER("INVALID_CLOUD_PROVIDER", BAD_REQUEST);
 
   /**
    * The constant ARGS_NAME.
@@ -377,10 +387,22 @@ public enum ErrorCode {
     return description != null ? description : upperUnderscoreToSpaceSepratedCamelCase(code);
   }
 
+  /**
+   * Upper underscore to space seprated camel case string.
+   *
+   * @param original the original
+   * @return the string
+   */
   public static String upperUnderscoreToSpaceSepratedCamelCase(String original) {
     return Splitter.on("_").splitToList(original).stream().map(ErrorCode::capitalize).collect(Collectors.joining(" "));
   }
 
+  /**
+   * Capitalize string.
+   *
+   * @param line the line
+   * @return the string
+   */
   public static String capitalize(final String line) {
     return line.length() > 1 ? line.charAt(0) + line.substring(1).toLowerCase() : line;
   }

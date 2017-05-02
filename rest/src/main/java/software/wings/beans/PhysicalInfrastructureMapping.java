@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.stencils.EnumData;
 
 import java.util.List;
@@ -16,7 +17,11 @@ import java.util.Optional;
  */
 @JsonTypeName("PHYSICAL_DATA_CENTER_SSH")
 public class PhysicalInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Host Names") private List<String> hostNames;
+  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
+  @Attributes(title = "Connection Type", required = true)
+  @NotEmpty
+  private String hostConnectionAttrs;
+  @Attributes(title = "Host Names", required = true) private List<String> hostNames;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -44,10 +49,8 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   }
 
   @Override
-  @Attributes(title = "Connection Type")
-  @EnumData(enumDataProvider = HostConnectionAttributesDataProvider.class)
   public String getHostConnectionAttrs() {
-    return super.getHostConnectionAttrs();
+    return hostConnectionAttrs;
   }
 
   @SchemaIgnore
@@ -75,6 +78,10 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("hostNames", hostNames).toString();
+  }
+
+  public void setHostConnectionAttrs(String hostConnectionAttrs) {
+    this.hostConnectionAttrs = hostConnectionAttrs;
   }
 
   /**
