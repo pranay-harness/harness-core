@@ -21,7 +21,7 @@ cp $HOME/staging/config.yml $HOME
 sed -i 's/port: 9090/port: 3456/' config.yml
 sed -i 's/keyStorePath: keystore.jks/keyStorePath: \/home\/ubuntu\/keystore.jks/' config.yml
 sed -i 's/keyStorePassword: password/keyStorePassword: W!ngs@123/' config.yml
-sed -i 's/certAlias: selfsigned/certAlias: java/' config.yml
+sed -i 's/certAlias: localhost/certAlias: java/' config.yml
 sed -i "s/url: https:\/\/localhost:8000/url: https:\/\/${1}/" config.yml
 sed -i "s/delegateMetadataUrl: http:\/\/wingsdelegates.s3-website-us-east-1.amazonaws.com\/delegateci.txt/delegateMetadataUrl: http:\/\/wingsdelegates.s3-website-us-east-1.amazonaws.com\/delegate${3}.txt/" config.yml
 sed -i 's/9a3e6eac4dcdbdc41a93ca99100537df/4ac03b05674fc5c488e3b9b235078d5d/' config.yml
