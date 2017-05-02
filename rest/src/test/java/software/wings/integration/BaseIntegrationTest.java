@@ -81,6 +81,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {
+    System.out.println("XXXXXXX ENV: " + System.getenv());
     ClientConfig config = new ClientConfig(new JacksonJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
     config.register(MultiPartWriter.class);
     SSLContext sslcontext = SSLContext.getInstance("TLS");
