@@ -17,9 +17,12 @@ import java.util.Objects;
  */
 @JsonTypeName("BAMBOO")
 public class BambooConfig extends SettingValue {
-  @Attributes(title = "Bamboo URL") @URL private String bambooUrl;
-  @Attributes(title = "Username") @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @NotEmpty private String password;
+  @Attributes(title = "Bamboo URL", required = true) @URL @NotEmpty private String bambooUrl;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  private String password;
 
   /**
    * Instantiates a new BambooService config.

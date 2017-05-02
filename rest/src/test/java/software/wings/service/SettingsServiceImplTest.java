@@ -15,6 +15,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CON
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import org.junit.Before;
@@ -26,6 +27,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -149,7 +151,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withName("USER_PASSWORD")
             .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).withConnectionType(SSH).build())
             .build());
-
     List<SettingAttribute> connectionAttributes =
         settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
     assertThat(connectionAttributes)
@@ -163,12 +164,17 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListBastionHostConnectionAttributes() {
-    SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
-                                                                 .withAppId("APP_ID")
-                                                                 .withAccountId("ACCOUNT_ID")
-                                                                 .withName("USER_PASSWORD")
-                                                                 .withValue(new BastionConnectionAttributes())
-                                                                 .build());
+    SettingAttribute settingAttribute =
+        settingsService.save(aSettingAttribute()
+                                 .withAppId("APP_ID")
+                                 .withAccountId("ACCOUNT_ID")
+                                 .withName("USER_PASSWORD")
+                                 .withValue(BastionConnectionAttributes.Builder.aBastionConnectionAttributes()
+                                                .withAccessType(AccessType.USER_PASSWORD)
+                                                .withConnectionType(SSH)
+                                                .withHostName(HOST_NAME)
+                                                .build())
+                                 .build());
 
     List<SettingAttribute> connectionAttributes = settingsService.getSettingAttributesByType(
         "APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name());

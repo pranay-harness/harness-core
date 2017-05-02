@@ -12,9 +12,12 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("DOCKER")
 public class DockerConfig extends SettingValue {
-  @Attributes(title = "Docker Registry URL") private String dockerRegistryUrl;
-  @Attributes(title = "Username") @NotEmpty private String username;
-  @Attributes(title = "Password") @NotEmpty @JsonView(JsonViews.Internal.class) private String password;
+  @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  @JsonView(JsonViews.Internal.class)
+  private String password;
 
   /**
    * Instantiates a new Docker registry config.

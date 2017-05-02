@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 
 /**
@@ -9,7 +10,7 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("SLACK")
 public class SlackConfig extends SettingValue {
-  @Attributes(title = "Slack Webhook URL") private String outgoingWebhookUrl;
+  @Attributes(title = "Slack Webhook URL", required = true) @NotEmpty private String outgoingWebhookUrl;
 
   /**
    * Instantiates a new setting value.

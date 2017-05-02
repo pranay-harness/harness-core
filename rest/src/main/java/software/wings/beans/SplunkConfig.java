@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 
@@ -11,10 +12,13 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("SPLUNK")
 public class SplunkConfig extends SettingValue {
-  @Attributes(title = "Host") private String host;
-  @Attributes(title = "Port") private int port;
-  @Attributes(title = "Username") private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") private String password;
+  @Attributes(title = "Host", required = true) @NotEmpty private String host;
+  @Attributes(title = "Port", required = true) @NotEmpty private int port;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  private String password;
 
   /**
    * Instantiates a new Splunk config.

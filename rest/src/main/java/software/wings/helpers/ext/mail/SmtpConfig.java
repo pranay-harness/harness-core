@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
@@ -17,8 +18,8 @@ import software.wings.stencils.DefaultValue;
  */
 @JsonTypeName("SMTP")
 public class SmtpConfig extends SettingValue {
-  @Attributes(title = "Host") private String host;
-  @Attributes(title = "Port") private int port;
+  @Attributes(title = "Host", required = true) @NotEmpty private String host;
+  @Attributes(title = "Port", required = true) @NotEmpty private int port;
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @Attributes(title = "Username") private String username;

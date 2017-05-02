@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 
 /**
@@ -11,9 +12,9 @@ import software.wings.settings.SettingValue;
  */
 @JsonTypeName("KUBERNETES")
 public class KubernetesConfig extends SettingValue {
-  @Attributes(title = "Cluster master URL") private String masterUrl;
-  @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password") private String password;
+  @Attributes(title = "Cluster master URL", required = true) @NotEmpty private String masterUrl;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @Attributes(title = "Password", required = true) @NotEmpty private String password;
 
   /**
    * Instantiates a new setting value.

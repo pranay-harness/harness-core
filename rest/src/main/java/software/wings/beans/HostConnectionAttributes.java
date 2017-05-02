@@ -4,17 +4,19 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CON
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 5/16/16.
  */
 @JsonTypeName("HOST_CONNECTION_ATTRIBUTES")
 public class HostConnectionAttributes extends SettingValue {
-  @Attributes(title = "Connection Type") private ConnectionType connectionType;
-  @Attributes(title = "Access Type") private AccessType accessType;
+  @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
+  @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
   @Attributes(title = "username") private String userName;
   @Attributes(title = "Key") private String key;

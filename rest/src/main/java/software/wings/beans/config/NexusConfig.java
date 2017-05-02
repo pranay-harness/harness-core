@@ -1,23 +1,28 @@
 package software.wings.beans.config;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
-import com.google.common.base.MoreObjects;
-import java.util.Objects;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+
+import java.util.Objects;
 
 /**
  * Created by srinivas on 3/30/17.
  */
 @JsonTypeName("NEXUS")
 public class NexusConfig extends SettingValue {
-  @Attributes(title = "Nexus URL") @URL private String nexusUrl;
-  @Attributes(title = "Username") @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @NotEmpty private String password;
+  @Attributes(title = "Nexus URL", required = true) @URL @NotEmpty private String nexusUrl;
+  @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @JsonView(JsonViews.Internal.class)
+  @Attributes(title = "Password", required = true)
+  @NotEmpty
+  private String password;
 
   /**
    * Instantiates a new Nexus config.

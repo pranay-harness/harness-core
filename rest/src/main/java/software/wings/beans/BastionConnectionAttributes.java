@@ -5,6 +5,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
  */
 @JsonTypeName("BASTION_HOST_CONNECTION_ATTRIBUTES")
 public class BastionConnectionAttributes extends HostConnectionAttributes {
-  private String hostName;
+  @NotEmpty private String hostName;
 
   /**
    * Instantiates a new bastion connection attributes.
