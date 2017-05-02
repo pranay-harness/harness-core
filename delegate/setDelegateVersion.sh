@@ -1,4 +1,4 @@
-if [ $# -ne 3 ]
+if [ $# -ne 4 ]
 then
   echo "This script is used to set version on delegates."
   echo "Usage: $0 <version> <buildname> <environment> <logdnakey>"
