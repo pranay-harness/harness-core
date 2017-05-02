@@ -33,6 +33,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private SettingValidationService settingValidationService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -46,9 +47,14 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#save(software.wings.beans.SettingAttribute)
    */
   @Override
-  public SettingAttribute save(SettingAttribute envVar) {
-    return Validator.duplicateCheck(
-        () -> wingsPersistence.saveAndGet(SettingAttribute.class, envVar), "name", envVar.getName());
+  public SettingAttribute save(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue().doValidate()) {
+      settingValidationService.validate(settingAttribute.getValue());
+    }
+
+    return Validator.duplicateCheck(()
+                                        -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
+        "name", settingAttribute.getName());
   }
 
   /* (non-Javadoc)
@@ -84,6 +90,10 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute update(SettingAttribute envVar) {
+    if (envVar.getValue().doValidate()) {
+      settingValidationService.validate(envVar.getValue());
+    }
+
     ImmutableMap.Builder<String, Object> fields = ImmutableMap.<String, Object>builder().put("name", envVar.getName());
     if (envVar.getValue() != null) {
       fields.put("value", envVar.getValue());

@@ -117,6 +117,11 @@ public class JenkinsConfig extends SettingValue {
         .toString();
   }
 
+  @Override
+  public boolean doValidate() {
+    return false;
+  }
+
   /**
    * The Class Builder.
    */

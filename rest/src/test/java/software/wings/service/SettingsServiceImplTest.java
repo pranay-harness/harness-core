@@ -27,6 +27,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.StringValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
@@ -70,7 +71,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveSettingAttribute() {
-    settingsService.save(aSettingAttribute().withAccountId("ACCOUNT_ID").build());
+    settingsService.save(
+        aSettingAttribute().withAccountId("ACCOUNT_ID").withValue(StringValue.Builder.aStringValue().build()).build());
     verify(wingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
   }
 

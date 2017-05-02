@@ -132,6 +132,11 @@ public class HostConnectionAttributes extends SettingValue {
         && Objects.equals(this.userName, other.userName);
   }
 
+  @Override
+  public boolean doValidate() {
+    return false;
+  }
+
   /**
    * The Enum AccessType.
    */
