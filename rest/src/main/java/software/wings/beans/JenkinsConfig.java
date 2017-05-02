@@ -9,17 +9,21 @@ import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
+
+import java.util.Arrays;
 
 /**
  * Created by peeyushaggarwal on 5/26/16.
  */
 @JsonTypeName("JENKINS")
-public class JenkinsConfig extends SettingValue {
+public class JenkinsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Jenkins URL") @URL private String jenkinsUrl;
   @Attributes(title = "Username") @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @NotEmpty private String password;
-
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @NotEmpty @Encrypted public char[] password;
+  @Attributes(title = "Account ID") @NotEmpty private String accountId;
   /**
    * Instantiates a new jenkins config.
    */
@@ -69,7 +73,7 @@ public class JenkinsConfig extends SettingValue {
    * @return the password
    */
   //@JsonIgnore
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
@@ -79,8 +83,17 @@ public class JenkinsConfig extends SettingValue {
    * @param password the password
    */
   //@JsonProperty
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
+  }
+
+  @Override
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /* (non-Javadoc)
@@ -94,7 +107,7 @@ public class JenkinsConfig extends SettingValue {
       return false;
     JenkinsConfig that = (JenkinsConfig) o;
     return Objects.equal(jenkinsUrl, that.jenkinsUrl) && Objects.equal(username, that.username)
-        && Objects.equal(password, that.password);
+        && Arrays.equals(password, that.password) && Objects.equal(accountId, that.accountId);
   }
 
   /* (non-Javadoc)
@@ -102,7 +115,7 @@ public class JenkinsConfig extends SettingValue {
    */
   @Override
   public int hashCode() {
-    return Objects.hashCode(jenkinsUrl, username, password);
+    return Objects.hashCode(jenkinsUrl, username, password, accountId);
   }
 
   /* (non-Javadoc)
@@ -114,6 +127,7 @@ public class JenkinsConfig extends SettingValue {
         .add("jenkinsUrl", jenkinsUrl)
         .add("username", username)
         .add("password", password)
+        .add("accountId", accountId)
         .toString();
   }
 
@@ -123,7 +137,8 @@ public class JenkinsConfig extends SettingValue {
   public static final class Builder {
     private String jenkinsUrl;
     private String username;
-    private String password;
+    private char[] password;
+    private String accountId;
 
     private Builder() {}
 
@@ -164,8 +179,19 @@ public class JenkinsConfig extends SettingValue {
      * @param password the password
      * @return the builder
      */
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
+      return this;
+    }
+
+    /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -175,7 +201,11 @@ public class JenkinsConfig extends SettingValue {
      * @return the builder
      */
     public Builder but() {
-      return aJenkinsConfig().withJenkinsUrl(jenkinsUrl).withUsername(username).withPassword(password);
+      return aJenkinsConfig()
+          .withJenkinsUrl(jenkinsUrl)
+          .withUsername(username)
+          .withPassword(password)
+          .withAccountId(accountId);
     }
 
     /**
@@ -188,6 +218,7 @@ public class JenkinsConfig extends SettingValue {
       jenkinsConfig.setJenkinsUrl(jenkinsUrl);
       jenkinsConfig.setUsername(username);
       jenkinsConfig.setPassword(password);
+      jenkinsConfig.setAccountId(accountId);
       return jenkinsConfig;
     }
   }

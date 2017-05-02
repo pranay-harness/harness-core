@@ -3,6 +3,7 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -45,8 +47,12 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/13/16.
  */
 public class JenkinsBuildServiceTest extends WingsBaseTest {
-  private static final JenkinsConfig jenkinsConfig =
-      aJenkinsConfig().withJenkinsUrl("http://jenkins").withUsername("username").withPassword("password").build();
+  private static final JenkinsConfig jenkinsConfig = aJenkinsConfig()
+                                                         .withJenkinsUrl("http://jenkins")
+                                                         .withUsername("username")
+                                                         .withPassword("password".toCharArray())
+                                                         .withAccountId(ACCOUNT_ID)
+                                                         .build();
 
   @Mock private JenkinsFactory jenkinsFactory;
 
@@ -69,7 +75,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() throws IOException {
-    when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);
+    when(jenkinsFactory.create(anyString(), anyString(), any(char[].class))).thenReturn(jenkins);
     when(jenkins.getBuildsForJob(eq("job1"), anyInt()))
         .thenReturn(Lists.newArrayList(aBuildDetails().withNumber("67").withRevision("1bfdd117").build(),
             aBuildDetails().withNumber("65").withRevision("1bfdd117").build(),

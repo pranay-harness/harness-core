@@ -22,12 +22,18 @@ import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.UUIDGenerator;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
+import software.wings.security.encryption.SimpleEncryption;
+import software.wings.settings.SettingValue;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -99,12 +105,20 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
-    return datastoreMap.get(readPref).get(cls, id);
+    T data = datastoreMap.get(readPref).get(cls, id);
+    if (SettingAttribute.class.isInstance(data)) {
+      this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    }
+    return data;
   }
 
   @Override
   public <T extends Base> T executeGetOneQuery(Query<T> query) {
-    return query.get();
+    T data = query.get();
+    if (SettingAttribute.class.isInstance(data)) {
+      this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    }
+    return data;
   }
 
   /**
@@ -125,7 +139,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (isEmpty(res)) {
       return null;
     }
-    return res.get(0);
+    T data = res.get(0);
+    if (SettingAttribute.class.isInstance(data)) {
+      this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    }
+    return data;
   }
 
   @Override
@@ -139,7 +157,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> String save(T object) {
+    if (SettingAttribute.class.isInstance(object)) {
+      this.encryptIfNecessary(((SettingAttribute) object).getValue());
+    }
     Key<T> key = primaryDatastore.save(object);
+    if (SettingAttribute.class.isInstance(object)) {
+      this.decryptIfNecessary(((SettingAttribute) object).getValue());
+    }
     return (String) key.getId();
   }
 
@@ -148,7 +172,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> List<String> save(List<T> ts) {
+    for (T t : ts) {
+      if (SettingAttribute.class.isInstance(t)) {
+        this.encryptIfNecessary(((SettingAttribute) t).getValue());
+      }
+    }
     Iterable<Key<T>> keys = primaryDatastore.save(ts);
+    for (T t : ts) {
+      if (SettingAttribute.class.isInstance(t)) {
+        this.decryptIfNecessary(((SettingAttribute) t).getValue());
+      }
+    }
     List<String> ids = new ArrayList<>();
     keys.forEach(tKey -> ids.add((String) tKey.getId()));
     return ids;
@@ -160,7 +194,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    return createQuery(cls).field("appId").equal(object.getAppId()).field(ID_KEY).equal(id).get();
+    T data = createQuery(cls).field("appId").equal(object.getAppId()).field(ID_KEY).equal(id).get();
+    if (SettingAttribute.class.isInstance(data)) {
+      this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    }
+    return data;
   }
 
   /**
@@ -170,6 +208,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
+    // TODO: add encryption handling; right now no encrypted classes use update
+    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     updateOperations.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       updateOperations.set("lastUpdatedBy",
@@ -184,6 +224,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T> T upsert(Query<T> query, UpdateOperations<T> updateOperations) {
+    // TODO: add encryption handling; right now no encrypted classes use upsert
+    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     updateOperations.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       updateOperations.set("lastUpdatedBy",
@@ -209,6 +251,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
+    // TODO: add encryption handling; right now no encrypted classes use update
+    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
     ops.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       ops.set("lastUpdatedBy",
@@ -226,6 +270,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
+    if (cls == SettingAttribute.class && fieldName.equalsIgnoreCase("value") && Encryptable.class.isInstance(value)) {
+      this.encrypt((Encryptable) value);
+    }
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put(fieldName, value);
     updateFields(cls, entityId, keyValuePairs);
@@ -239,6 +286,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
+      if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
+          && Encryptable.class.isInstance(entry.getValue())) {
+        this.encrypt((Encryptable) entry.getValue());
+      }
       operations.set(entry.getKey(), entry.getValue());
     }
     update(query, operations);
@@ -302,7 +353,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
     }
-    return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
+    PageResponse<T> output = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
+    for (T data : output.getResponse()) {
+      if (SettingAttribute.class.isInstance(data)) {
+        this.decryptIfNecessary(((SettingAttribute) data).getValue());
+      }
+    }
+    return output;
   }
 
   /**
@@ -399,5 +456,72 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       // TODO:
     }
     return true;
+  }
+
+  /**
+   * Encrypt an Encryptable object. Currently assumes SimpleEncryption.
+   * @param object the object to be encrypted
+   */
+  private void encrypt(Encryptable object) {
+    try {
+      for (Field f : object.getClass().getDeclaredFields()) {
+        Encrypted a = f.getAnnotation(Encrypted.class);
+        if (a != null && a.value()) {
+          String accountId = object.getAccountId();
+          SimpleEncryption encryption = new SimpleEncryption(accountId.substring(0, 16));
+          char[] outputChars = encryption.encryptChars((char[]) f.get(object));
+          f.set(object, outputChars);
+        }
+      }
+    } catch (SecurityException e) {
+      System.out.println("security exception: " + e.getMessage());
+    } catch (IllegalAccessException e) {
+      System.out.println("illegal access exception: " + e.getMessage());
+    }
+  }
+
+  private void decrypt(Encryptable object) {
+    try {
+      for (Field f : object.getClass().getDeclaredFields()) {
+        Encrypted a = f.getAnnotation(Encrypted.class);
+        if (a != null && a.value()) {
+          char[] input = (char[]) f.get(object);
+          String accountId = object.getAccountId();
+          SimpleEncryption encryption = new SimpleEncryption(accountId.substring(0, 16));
+          char[] outputChars = encryption.decryptChars(input);
+          if (outputChars[0] == '"' && outputChars[outputChars.length - 1] == '"') {
+            char[] copy = new char[outputChars.length - 2];
+            System.arraycopy(outputChars, 1, copy, 0, outputChars.length - 2);
+            outputChars = copy;
+          }
+          f.set(object, outputChars);
+        }
+      }
+    } catch (SecurityException e) {
+      System.out.println("security exception: " + e.getMessage());
+    } catch (IllegalAccessException e) {
+      System.out.println("illegal access exception: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Only to be used in testing.
+   */
+  @Override
+  public <T extends Base> T getWithoutDecryptingTestOnly(Class<T> cls, String id) {
+    T data = datastoreMap.get(ReadPref.NORMAL).get(cls, id);
+    return data;
+  }
+
+  private void decryptIfNecessary(SettingValue sv) {
+    if (Encryptable.class.isInstance(sv)) {
+      decrypt((Encryptable) sv);
+    }
+  }
+
+  private void encryptIfNecessary(SettingValue sv) {
+    if (Encryptable.class.isInstance(sv)) {
+      encrypt((Encryptable) sv);
+    }
   }
 }

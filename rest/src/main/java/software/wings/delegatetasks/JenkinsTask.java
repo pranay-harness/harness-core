@@ -42,11 +42,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask<JenkinsExecutionRe
 
   @Override
   public JenkinsExecutionResponse run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
+    return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
         (Map<String, String>) parameters[4], (Map<String, String>) parameters[5]);
   }
 
-  public JenkinsExecutionResponse run(String jenkinsUrl, String username, String password, String finalJobName,
+  public JenkinsExecutionResponse run(String jenkinsUrl, String username, char[] password, String finalJobName,
       Map<String, String> evaluatedParameters, Map<String, String> evaluatedFilePathsForAssertion) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;

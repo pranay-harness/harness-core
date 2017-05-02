@@ -7,7 +7,7 @@ import java.security.SecureRandom;
  * Created by mike@ on 4/25/17.
  */
 public class EncryptionUtils {
-  private static final int DEFAULT_SALT_SIZE = 32;
+  public static final int DEFAULT_SALT_SIZE = 32;
 
   /**
    * Generate a salt to use for encryption.

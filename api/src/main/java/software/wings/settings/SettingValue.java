@@ -112,8 +112,13 @@ public abstract class SettingValue implements ExtensionPoint {
     KUBERNETES,
 
     /**
-     * Kubernetes setting variable types.
+     * Nexus setting variable types.
      */
     NEXUS,
+
+    /**
+     * Encryption setting variable types.
+     */
+    ENCRYPTION,
   }
 }
