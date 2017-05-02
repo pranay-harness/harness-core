@@ -11,5 +11,5 @@ echo "System-Properties: version=1.0.${1}" >> app.mf
 echo "Application-Version: version=1.0.${1}" >> app.mf
 jar ufm delegate-0.0.1-SNAPSHOT-capsule.jar app.mf
 rm -rf app.mf
-cat "1.0.${1} jobs/${2}/${1}/delegate.jar" >> delegate${3}.txt
+echo "1.0.${1} jobs/${2}/${1}/delegate.jar" >> delegate${3}.txt
 mv delegate-0.0.1-SNAPSHOT-capsule.jar delegate.jar
