@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -62,8 +63,13 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(BambooConfig config) {
-    return true;
+  public boolean validateArtifactServer(BambooConfig bambooConfig) {
+    if (!connectableHttpUrl(bambooConfig.getBambooUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Bamboo Server at : " + bambooConfig.getBambooUrl());
+    }
+    // check for credentials
+    return bambooService.isRunning(bambooConfig);
   }
 
   @Override

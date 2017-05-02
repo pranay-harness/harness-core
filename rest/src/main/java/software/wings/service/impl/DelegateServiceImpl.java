@@ -73,6 +73,7 @@ import javax.inject.Inject;
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 30000;
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -223,9 +224,9 @@ public class DelegateServiceImpl implements DelegateService {
     IQueue<T> topic = hazelcastInstance.getQueue(queueName);
     CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(queueName, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-    T responseData = topic.poll(30000, TimeUnit.MILLISECONDS);
+    T responseData = topic.poll(SYNC_CALL_TIMEOUT_INTERVAL, TimeUnit.MILLISECONDS);
     if (responseData == null) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Bot");
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Harness Bot");
     }
     return responseData;
   }

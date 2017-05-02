@@ -1,23 +1,21 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.DockerBuildService;
 
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import software.wings.settings.SettingValue;
 
 /**
  * Created by anubhaw on 1/6/17.
@@ -63,7 +61,11 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public boolean validateArtifactServer(DockerConfig config) {
-    return false;
+    if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
+          "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
+    }
+    return true;
   }
 
   @Override

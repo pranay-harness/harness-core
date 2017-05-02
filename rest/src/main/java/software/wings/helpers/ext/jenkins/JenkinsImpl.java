@@ -218,6 +218,11 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
+  @Override
+  public boolean isRunning() {
+    return jenkinsServer.isRunning();
+  }
+
   private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)
       throws IOException, URISyntaxException {
     if (build == null) {

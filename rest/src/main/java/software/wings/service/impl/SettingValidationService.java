@@ -32,11 +32,8 @@ public class SettingValidationService {
       awsHelperService.validateCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
-        || settingValue instanceof NexusConfig) {
-      // TODO:: fix it to show appropriate error message instead of what BuildServer throws
-      buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).getJobs(settingValue);
-    } else if (settingValue instanceof DockerConfig) {
-      // figure out a way to validate Docker registry without image
+        || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig) {
+      buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
     }
     return true;
   }

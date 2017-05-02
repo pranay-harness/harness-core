@@ -15,7 +15,7 @@ public interface BambooService {
    * Gets job keys.
    *
    * @param bambooConfig the bamboo config
-   * @param planKey
+   * @param planKey      the plan key
    * @return the job keys
    */
   List<String> getJobKeys(BambooConfig bambooConfig, String planKey);
@@ -67,4 +67,12 @@ public interface BambooService {
    */
   org.apache.commons.lang3.tuple.Pair<String, InputStream> downloadArtifact(
       BambooConfig bambooConfig, String planKey, String buildNumber, String artifactPathRegex);
+
+  /**
+   * Is running boolean.
+   *
+   * @param bambooConfig the bamboo config
+   * @return the boolean
+   */
+  boolean isRunning(BambooConfig bambooConfig);
 }

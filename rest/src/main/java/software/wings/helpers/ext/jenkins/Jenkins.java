@@ -131,4 +131,6 @@ public interface Jenkins {
    * @throws IOException the io exception
    */
   Build getBuild(QueueReference queueItem) throws IOException;
+
+  boolean isRunning();
 }

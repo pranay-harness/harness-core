@@ -323,6 +323,11 @@ public enum ErrorCode {
   INVALID_ARTIFACT_SOURCE("INVALID_ARTIFACT_SOURCE"),
 
   /**
+   * Invalid artifact server error code.
+   */
+  INVALID_ARTIFACT_SERVER("INVALID_ARTIFACT_SERVER", BAD_REQUEST),
+
+  /**
    * Invalid cloud provider error code.
    */
   INVALID_CLOUD_PROVIDER("INVALID_CLOUD_PROVIDER", BAD_REQUEST);

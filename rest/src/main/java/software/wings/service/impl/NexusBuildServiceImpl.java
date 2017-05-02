@@ -1,22 +1,24 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
+
+import org.apache.commons.lang.StringUtils;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.config.NexusConfig;
+import software.wings.exception.WingsException;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.service.intfc.NexusBuildService;
+
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import org.apache.commons.lang.StringUtils;
-import software.wings.beans.BambooConfig;
-import software.wings.beans.DockerConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.config.NexusConfig;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.helpers.ext.nexus.NexusService;
-import software.wings.service.intfc.NexusBuildService;
 
 /**
  * Created by srinivas on 3/31/17.
@@ -66,7 +68,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
 
   @Override
   public boolean validateArtifactServer(NexusConfig config) {
-    return true;
+    if (!connectableHttpUrl(config.getNexusUrl())) {
+      throw new WingsException(
+          ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Could not reach Nexus Server at : " + config.getNexusUrl());
+    }
+    return nexusService.getRepositories(config) != null;
   }
 
   @Override
