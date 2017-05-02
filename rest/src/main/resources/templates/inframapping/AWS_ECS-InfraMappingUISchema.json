@@ -2,5 +2,5 @@
   "computeProviderType": { "ui:widget": "hidden" },
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
-  "ui:order": [ "*" , "computeProviderType", "clusterName"]
+  "ui:order": [ "computeProviderSettingId", "deploymentType", "clusterName","infraMappingType","computeProviderType"]
 }
