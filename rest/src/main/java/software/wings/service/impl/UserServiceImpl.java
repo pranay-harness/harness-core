@@ -55,6 +55,7 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.KryoUtils;
@@ -140,7 +142,6 @@ public class UserServiceImpl implements UserService {
     executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
   }
-
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
       String loginUrl = buildAbsoluteUrl(String.format("/login?company=%s&account=%s&email=%s",
