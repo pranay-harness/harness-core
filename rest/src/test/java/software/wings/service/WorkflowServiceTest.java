@@ -33,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import org.hamcrest.core.AnyOf;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -46,6 +47,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ExecutionScope;
@@ -69,8 +72,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -114,6 +120,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private AppService appService;
+  @Mock private AccountService accountService;
+  @Mock private NotificationSetupService notificationSetupService;
+  @Mock private Application application;
+  @Mock private Account account;
+
   private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
     @Override
     public List<Stencil> answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -140,6 +152,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     when(query.field(anyString())).thenReturn(fieldEnd);
     when(fieldEnd.equal(anyObject())).thenReturn(query);
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(accountService.get(anyString())).thenReturn(account);
   }
 
   /**

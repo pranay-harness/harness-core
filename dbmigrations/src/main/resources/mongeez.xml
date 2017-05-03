@@ -21,4 +21,5 @@
     <file path="workflow-version-refactor.js" />
     <file path="service-variable-index-migration.js" />
     <file path="appstack-index-migration.js" />
+    <file path="notification-group-index-migration.js" />
 </changeFiles>

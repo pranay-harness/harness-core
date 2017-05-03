@@ -12,6 +12,8 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -27,6 +29,7 @@ import static software.wings.sm.StateType.values;
 
 import com.google.inject.Singleton;
 
+import java.util.concurrent.locks.Condition;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -35,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.DeploymentType;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Account;
+import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EcsInfrastructureMapping;
@@ -42,16 +47,21 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FailureType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.RepairActionCode;
+import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -70,9 +80,12 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -139,6 +152,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private SettingsService settingsService;
+  @Inject private NotificationSetupService notificationSetupService;
+  @Inject private AppService appService;
+  @Inject private AccountService accountService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -345,6 +361,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       orchestrationWorkflow.onSave();
       updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
+      createDefaultNotificationRule(workflow);
+      createDefaultFailureStrategy(workflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
@@ -1105,5 +1123,46 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ? DC_NODE_SELECT
         : AWS_NODE_SELECT;
     return stateType;
+  }
+  private void createDefaultNotificationRule(Workflow workflow) {
+    Application app = appService.get(workflow.getAppId());
+    Account account = accountService.get(app.getAccountId());
+    // TODO: We should be able to get Logged On User Admin role dynamically
+    String name = RoleType.ACCOUNT_ADMIN.getDisplayName();
+    List<NotificationGroup> notificationGroups =
+        notificationSetupService.listNotificationGroups(app.getAccountId(), name);
+    if (notificationGroups == null || notificationGroups.isEmpty()) {
+      logger.warn("Default notification group not created for account {}. Ignoring adding notification group",
+          account.getAccountName());
+      return;
+    }
+    List<ExecutionStatus> conditions = new ArrayList<>();
+    conditions.add(ExecutionStatus.FAILED);
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withConditions(conditions)
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withNotificationGroups(notificationGroups)
+                                            .build();
+    List<NotificationRule> notificationRules = new ArrayList<>();
+    notificationRules.add(notificationRule);
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    Validator.notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    orchestrationWorkflow.setNotificationRules(notificationRules);
+  }
+
+  private void createDefaultFailureStrategy(Workflow workflow) {
+    List<FailureStrategy> failureStrategies = new ArrayList<>();
+    failureStrategies.add(aFailureStrategy()
+                              .addFailureTypes(FailureType.APPLICATION_ERROR)
+                              .withExecutionScope(ExecutionScope.WORKFLOW)
+                              .withRepairActionCode(RepairActionCode.ROLLBACK_WORKFLOW)
+                              .build());
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+      Validator.notNullCheck("orchestrationWorkflow", canaryOrchestrationWorkflow);
+      canaryOrchestrationWorkflow.setFailureStrategies(failureStrategies);
+    }
   }
 }
