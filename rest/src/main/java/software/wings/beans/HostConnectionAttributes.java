@@ -4,7 +4,6 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CON
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.settings.SettingValue;
 
 import java.util.Objects;
@@ -18,7 +17,7 @@ public class HostConnectionAttributes extends SettingValue {
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
-  @Attributes(title = "username") private String userName;
+  @Attributes(title = "User Name") private String userName;
   @Attributes(title = "Key") private String key;
 
   /**
