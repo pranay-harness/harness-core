@@ -54,9 +54,7 @@ logging:
       programName: manager-saas
 
 mongo:
-  host: localhost
-  port: 27017
-  db: wings
+  uri: mongodb://localhost:27017/wings
 
 metrics:
   reporters:

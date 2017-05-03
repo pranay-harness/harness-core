@@ -1,6 +1,5 @@
 package software.wings.app;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -11,10 +10,8 @@ import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
-import com.mongodb.ReadPreference;
-import com.mongodb.ServerAddress;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
@@ -27,7 +24,6 @@ import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -49,27 +45,20 @@ public class DatabaseModule extends AbstractModule {
    */
   public DatabaseModule(MainConfiguration configuration) {
     MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
-    List<String> hosts = Splitter.on(",").splitToList(mongoConfig.getHost());
-    List<ServerAddress> serverAddresses = new ArrayList<>();
-
-    for (String host : hosts) {
-      serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
-    }
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
-    MongoClient mongoClient = new MongoClient(serverAddresses);
-    this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
+    MongoClient mongoClient = new MongoClient(uri);
+    this.primaryDatastore = morphia.createDatastore(mongoClient, uri.getDatabase());
     DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks");
+        new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     distributedLockSvc =
         new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
 
-    if (hosts.size() > 1) {
-      mongoClient = new MongoClient(
-          serverAddresses, MongoClientOptions.builder().readPreference(ReadPreference.secondaryPreferred()).build());
-      this.secondaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
+    if (uri.getHosts().size() > 1) {
+      this.secondaryDatastore = morphia.createDatastore(mongoClient, uri.getDatabase());
     } else {
       this.secondaryDatastore = primaryDatastore;
     }
