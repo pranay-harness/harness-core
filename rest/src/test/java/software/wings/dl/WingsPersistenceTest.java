@@ -17,12 +17,16 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.UUIDGenerator;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -489,6 +493,35 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
         .hasFieldOrPropertyWithValue("testEntityB", entityB);
     log().debug("Done with TestEntity get");
+  }
+
+  /**
+   * A couple of JenkinsConfig-specific tests to check on encrypted behavior.
+   */
+  @Test
+  public void shouldStoreAndRetrieveEncryptedPassword() {
+    String rand = String.valueOf(Math.random());
+    JenkinsConfig jenkinsConfig = JenkinsConfig.Builder.aJenkinsConfig()
+                                      .withJenkinsUrl("https://j.w.s")
+                                      .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                      .withUsername("test" + rand)
+                                      .withPassword("foo".toCharArray())
+                                      .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                            .withCategory(Category.CONNECTOR)
+                                            .withName("Jenkins Config" + rand)
+                                            .withValue(jenkinsConfig)
+                                            .build();
+    wingsPersistence.save(settingAttribute);
+    SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
+    assertThat(result).isNotNull().isEqualToComparingFieldByFieldRecursively(settingAttribute);
+    SettingAttribute undecryptedResult =
+        wingsPersistence.getWithoutDecryptingTestOnly(SettingAttribute.class, settingAttribute.getUuid());
+    assertThat(undecryptedResult).isNotNull();
+    assertThat(Arrays.equals(((JenkinsConfig) settingAttribute.getValue()).getPassword(),
+                   ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
+        .isFalse();
   }
 
   /**

@@ -17,11 +17,11 @@ public interface JenkinsFactory {
   /**
    * Creates the.
    *
-   * @param url      the url
-   * @param username the username
-   * @param password the password
+   * @param url       the url
+   * @param username  the username
+   * @param password  the password
    * @return the jenkins
    */
   Jenkins create(
-      @Assisted("url") String url, @Assisted("username") String username, @Assisted("password") String password);
+      @Assisted("url") String url, @Assisted("username") String username, @Assisted("password") char[] password);
 }
