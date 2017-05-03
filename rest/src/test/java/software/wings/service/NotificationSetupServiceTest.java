@@ -106,6 +106,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
     NotificationGroup notificationGroup =
         aNotificationGroup()
             .withName("prod_ops")
+            .withEditable(true)
             .withAppId(Base.GLOBAL_APP_ID)
             .withAccountId(accountId)
             .addAddressesByChannelType(NotificationChannelType.EMAIL, Lists.newArrayList("a@b.com", "b@c.com"))

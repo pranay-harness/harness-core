@@ -330,7 +330,14 @@ public enum ErrorCode {
   /**
    * Invalid cloud provider error code.
    */
-  INVALID_CLOUD_PROVIDER("INVALID_CLOUD_PROVIDER", BAD_REQUEST);
+  INVALID_CLOUD_PROVIDER("INVALID_CLOUD_PROVIDER", BAD_REQUEST),
+
+  /**
+   * Update not allowed
+   */
+  UPDATE_NOT_ALLOWED("UPDATE_NOT_ALLOWED"),
+
+  DELETE_NOT_ALLOWED("DELETE_NOT_ALLOWED");
 
   /**
    * The constant ARGS_NAME.

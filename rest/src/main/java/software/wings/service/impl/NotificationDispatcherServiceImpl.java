@@ -1,39 +1,52 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
+import static software.wings.beans.Role.Builder.aRole;
+import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 
+import java.util.Arrays;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationBatch;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.Role;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SlackConfig;
+import software.wings.beans.User;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
+import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.ArrayList;
@@ -57,6 +70,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserService userService;
 
   @Override
   public void dispatchNotification(Notification notification, List<NotificationRule> notificationRules) {
@@ -113,6 +127,21 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
             .collect(Collectors.toList());
 
     for (NotificationGroup notificationGroup : notificationGroups) {
+      if (notificationGroup.getRoleId() != null) {
+        // Then collect all the email ids and send for the verified email addresses
+        Role role = aRole().withAppId(notificationGroup.getAppId()).withUuid(notificationGroup.getRoleId()).build();
+        PageRequest<User> request = aPageRequest()
+                                        .withLimit(PageRequest.UNLIMITED)
+                                        .addFilter("appId", EQ, notificationGroup.getAppId())
+                                        .addFilter("roles", IN, role)
+                                        .addFieldsIncluded("email", "emailVerified")
+                                        .build();
+        PageResponse<User> users = userService.list(request);
+        List<String> toAddresses =
+            users.stream().filter(user -> user.isEmailVerified()).map(User::getEmail).collect(Collectors.toList());
+
+        dispatchEmail(notifications, toAddresses);
+      }
       for (Entry<NotificationChannelType, List<String>> entry :
           notificationGroup.getAddressesByChannelType().entrySet()) {
         if (entry.getKey() == NotificationChannelType.EMAIL) {

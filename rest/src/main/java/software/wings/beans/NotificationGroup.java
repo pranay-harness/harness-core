@@ -17,13 +17,15 @@ import javax.validation.constraints.Size;
  * Created by rishi on 10/30/16.
  */
 @Entity(value = "notificationGroups", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("appId")
+@Indexes(@Index(fields = { @Field("accountId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class NotificationGroup extends Base {
   @NotEmpty private String accountId;
   @NotNull private String name;
+  private String roleId;
+  private boolean editable = true;
 
-  @NotNull @Size(min = 1) private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
+  @NotNull private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
 
   /**
    * Gets name.
@@ -80,11 +82,45 @@ public class NotificationGroup extends Base {
   }
 
   /**
+   *  Gets Role Id
+   *
+   * @return roleId the role id
+   */
+  public String getRoleId() {
+    return roleId;
+  }
+
+  /**
+   * Sets Role Id
+   * @param roleId
+   */
+  public void setRoleId(String roleId) {
+    this.roleId = roleId;
+  }
+
+  /**
+   * Editable or not
+   * @return
+   */
+  public boolean isEditable() {
+    return editable;
+  }
+
+  /**
+   *
+   * @param editable
+   */
+  public void setEditable(boolean editable) {
+    this.editable = editable;
+  }
+
+  /**
    * The type Notification group builder.
    */
   public static final class NotificationGroupBuilder {
     private String accountId;
     private String name;
+    private String roleId;
     private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
     private String uuid;
     private String appId;
@@ -92,6 +128,7 @@ public class NotificationGroup extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private boolean editable;
 
     private NotificationGroupBuilder() {}
 
@@ -125,6 +162,17 @@ public class NotificationGroup extends Base {
      */
     public NotificationGroupBuilder withAccountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    /**
+     * With role id notification group builder.
+     *
+     * @param roleId the account id
+     * @return the notification group builder
+     */
+    public NotificationGroupBuilder withRoleId(String roleId) {
+      this.roleId = roleId;
       return this;
     }
 
@@ -217,6 +265,10 @@ public class NotificationGroup extends Base {
       return this;
     }
 
+    public NotificationGroupBuilder withEditable(boolean editable) {
+      this.editable = editable;
+      return this;
+    }
     /**
      * But notification group builder.
      *
@@ -227,6 +279,8 @@ public class NotificationGroup extends Base {
           .withAccountId(accountId)
           .withName(name)
           .withAddressesByChannelType(addressesByChannelType)
+          .withRoleId(roleId)
+          .withEditable(editable)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -243,6 +297,7 @@ public class NotificationGroup extends Base {
     public NotificationGroup build() {
       NotificationGroup notificationGroup = new NotificationGroup();
       notificationGroup.setAccountId(accountId);
+      notificationGroup.setRoleId(roleId);
       notificationGroup.setName(name);
       notificationGroup.setAddressesByChannelType(addressesByChannelType);
       notificationGroup.setUuid(uuid);
@@ -251,6 +306,7 @@ public class NotificationGroup extends Base {
       notificationGroup.setCreatedAt(createdAt);
       notificationGroup.setLastUpdatedBy(lastUpdatedBy);
       notificationGroup.setLastUpdatedAt(lastUpdatedAt);
+      notificationGroup.setEditable(editable);
       return notificationGroup;
     }
   }
