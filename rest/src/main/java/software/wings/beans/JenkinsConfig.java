@@ -26,7 +26,7 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Password", required = true)
   @NotEmpty
   @Encrypted
-  public char[] password;
+  private char[] password;
   @Attributes(title = "Account ID") @NotEmpty private String accountId;
   /**
    * Instantiates a new jenkins config.
@@ -49,6 +49,7 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
    *
    * @param jenkinsUrl the jenkins url
    */
+
   public void setJenkinsUrl(String jenkinsUrl) {
     this.jenkinsUrl = jenkinsUrl;
   }
@@ -100,18 +101,22 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
     this.accountId = accountId;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
+
     JenkinsConfig that = (JenkinsConfig) o;
-    return Objects.equal(jenkinsUrl, that.jenkinsUrl) && Objects.equal(username, that.username)
-        && Arrays.equals(password, that.password) && Objects.equal(accountId, that.accountId);
+
+    if (!jenkinsUrl.equals(that.jenkinsUrl))
+      return false;
+    if (!username.equals(that.username))
+      return false;
+    if (!Arrays.equals(password, that.password))
+      return false;
+    return accountId.equals(that.accountId);
   }
 
   /* (non-Javadoc)

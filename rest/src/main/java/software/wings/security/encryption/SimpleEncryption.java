@@ -33,8 +33,9 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class SimpleEncryption implements EncryptionInterface {
   @JsonIgnore private static final Charset CHARSET = Charsets.ISO_8859_1;
+  @JsonIgnore private static final int AES_128_KEY_LENGTH = 16;
 
-  // IV and KEY both need to be 16 characters long.
+  // IV and KEY both need to be AES_128_KEY_LENGTH characters long.
   @JsonIgnore @Transient private static final byte[] IV = "EncryptionIV0*d&".getBytes(CHARSET);
   @JsonIgnore @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@".toCharArray();
   @JsonIgnore @Transient private SecretKeyFactory FACTORY;
@@ -62,11 +63,11 @@ public class SimpleEncryption implements EncryptionInterface {
   }
 
   public SimpleEncryption(char[] key, byte[] salt) {
-    if (key.length > 16) {
-      key = Arrays.copyOf(key, 16);
+    if (key.length > AES_128_KEY_LENGTH) {
+      key = Arrays.copyOf(key, AES_128_KEY_LENGTH);
     }
-    if (key.length != 16) {
-      throw new WingsException("Key must be 16 characters. Key is " + key.length);
+    if (key.length != AES_128_KEY_LENGTH) {
+      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " characters. Key is " + key.length);
     }
     this.key = key;
     this.salt = salt;
@@ -100,7 +101,7 @@ public class SimpleEncryption implements EncryptionInterface {
       System.arraycopy(encrypted, 0, combined, salt.length, encrypted.length);
       return combined;
     } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be 16 characters.");
+      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " ASCII characters.", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
         | IllegalBlockSizeException | BadPaddingException e) {
       throw new WingsException("Encryption failed: ", e);
@@ -123,7 +124,7 @@ public class SimpleEncryption implements EncryptionInterface {
       c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(inputBytes);
     } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be 16 characters.");
+      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " ASCII characters.", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
         | IllegalBlockSizeException | BadPaddingException e) {
       throw new WingsException("Decryption failed: ", e);

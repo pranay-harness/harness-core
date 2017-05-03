@@ -26,6 +26,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.UUIDGenerator;
+import software.wings.exception.WingsException;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Encrypted;
@@ -467,16 +468,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       for (Field f : object.getClass().getDeclaredFields()) {
         Encrypted a = f.getAnnotation(Encrypted.class);
         if (a != null && a.value()) {
+          f.setAccessible(true);
           String accountId = object.getAccountId();
-          SimpleEncryption encryption = new SimpleEncryption(accountId.substring(0, 16));
+          SimpleEncryption encryption = new SimpleEncryption(accountId);
           char[] outputChars = encryption.encryptChars((char[]) f.get(object));
           f.set(object, outputChars);
         }
       }
     } catch (SecurityException e) {
-      System.out.println("security exception: " + e.getMessage());
+      throw new WingsException("Security exception in encrypt", e);
     } catch (IllegalAccessException e) {
-      System.out.println("illegal access exception: " + e.getMessage());
+      throw new WingsException("Illegal access exception in encrypt", e);
     }
   }
 
@@ -485,10 +487,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       for (Field f : object.getClass().getDeclaredFields()) {
         Encrypted a = f.getAnnotation(Encrypted.class);
         if (a != null && a.value()) {
+          f.setAccessible(true);
           char[] input = (char[]) f.get(object);
           String accountId = object.getAccountId();
-          SimpleEncryption encryption = new SimpleEncryption(accountId.substring(0, 16));
+          SimpleEncryption encryption = new SimpleEncryption(accountId);
           char[] outputChars = encryption.decryptChars(input);
+          // This is a quirk of Mongo where if we insert a char[] and then retrieve it, it's wrapped
+          // in quotes, so ['f'] becomes ['"', 'f', '"']. The logic is going to be moved out of the
+          // Mongo layer, so I'm not going to take the time to modify the Mongo config to make this
+          // stop happening.
           if (outputChars[0] == '"' && outputChars[outputChars.length - 1] == '"') {
             char[] copy = new char[outputChars.length - 2];
             System.arraycopy(outputChars, 1, copy, 0, outputChars.length - 2);
@@ -498,9 +505,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         }
       }
     } catch (SecurityException e) {
-      System.out.println("security exception: " + e.getMessage());
+      throw new WingsException("Security exception in encrypt", e);
     } catch (IllegalAccessException e) {
-      System.out.println("illegal access exception: " + e.getMessage());
+      throw new WingsException("Illegal access exception in encrypt", e);
     }
   }
 
