@@ -60,8 +60,8 @@ public class JenkinsImpl implements Jenkins {
    */
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "username") String username,
-      @Assisted(value = "password") String password) throws URISyntaxException {
-    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl), username, password);
+      @Assisted(value = "password") char[] password) throws URISyntaxException {
+    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl), username, new String(password));
   }
 
   /* (non-Javadoc)

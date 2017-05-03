@@ -13,6 +13,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.sm.states.JenkinsState.JenkinsExecutionResponse.Builder.aJenkinsExecutionResponse;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -68,7 +69,8 @@ public class JenkinsStateTest {
         .thenReturn(aJenkinsConfig()
                         .withJenkinsUrl("http://jenkins")
                         .withUsername("username")
-                        .withPassword("password")
+                        .withPassword("password".toCharArray())
+                        .withAccountId(ACCOUNT_ID)
                         .build());
     when(executionContext.renderExpression(anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));

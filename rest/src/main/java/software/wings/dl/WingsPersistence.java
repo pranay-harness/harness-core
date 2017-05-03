@@ -283,4 +283,14 @@ public interface WingsPersistence {
    * Close.
    */
   void close();
+
+  /**
+   * Only to be used in testing encryption.
+   *
+   * @param <T> the generic type
+   * @param cls the cls
+   * @param id  the id
+   * @return the t
+   */
+  <T extends Base> T getWithoutDecryptingTestOnly(Class<T> cls, String id);
 }
