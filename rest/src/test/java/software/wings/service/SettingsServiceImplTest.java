@@ -73,8 +73,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveSettingAttribute() {
-    settingsService.save(
-        aSettingAttribute().withAccountId("ACCOUNT_ID").withValue(StringValue.Builder.aStringValue().build()).build());
+    settingsService.save(aSettingAttribute()
+                             .withName("NAME")
+                             .withAccountId("ACCOUNT_ID")
+                             .withValue(StringValue.Builder.aStringValue().build())
+                             .build());
     verify(wingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
   }
 
