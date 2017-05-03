@@ -5,7 +5,6 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Base;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.SearchFilter.Operator;
@@ -13,7 +12,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 
@@ -60,16 +58,6 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
-  public List<NotificationGroup> listNotificationGroups(String accountId, String roleId, String name) {
-    return listNotificationGroups(aPageRequest()
-                                      .addFilter("accountId", Operator.EQ, accountId)
-                                      .addFilter("roleId", Operator.EQ, roleId)
-                                      .addFilter("name", Operator.EQ, name)
-                                      .build())
-        .getResponse();
-  }
-
-  @Override
   public PageResponse<NotificationGroup> listNotificationGroups(PageRequest<NotificationGroup> pageRequest) {
     return wingsPersistence.query(NotificationGroup.class, pageRequest);
   }
@@ -86,28 +74,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup) {
-    NotificationGroup existingGroup =
-        wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroup.getUuid());
-    if (!existingGroup.isEditable()) {
-      throw new WingsException(ErrorCode.UPDATE_NOT_ALLOWED);
-    }
     return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
   }
 
   @Override
   public boolean deleteNotificationGroups(String accountId, String notificationGroupId) {
-    NotificationGroup notificationGroup =
-        wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
-    if (!notificationGroup.isEditable()) {
-      throw new WingsException(ErrorCode.DELETE_NOT_ALLOWED);
-    }
     return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
-  }
-
-  @Override
-  public List<NotificationGroup> listNotificationGroups(String accountId, String name) {
-    return listNotificationGroups(
-        aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("name", Operator.EQ, name).build())
-        .getResponse();
   }
 }
