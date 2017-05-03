@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.Role.Builder.aRole;
-import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
@@ -15,17 +14,13 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
-import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.User;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.licensing.LicenseManager;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 
 import java.security.NoSuchAlgorithmException;
@@ -49,20 +44,13 @@ public class AccountServiceImpl implements AccountService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
   @Inject private LicenseManager licenseManager;
-  @Inject private NotificationSetupService notificationSetupService;
 
   @Override
   public Account save(@Valid Account account) {
     account.setAccountKey(generateAccountKey());
     // licenseManager.setLicense(account);
     wingsPersistence.save(account);
-    List<Role> roles = createDefaultRoles(account);
-    roles.forEach(role -> {
-      // Create default notification only for Account Admin
-      if (role.getRoleType().equals(RoleType.ACCOUNT_ADMIN)) {
-        createDefaultNotificationGroup(account, role);
-      }
-    });
+    createDefaultRoles(account);
     return account;
   }
 
@@ -73,7 +61,6 @@ public class AccountServiceImpl implements AccountService {
                                                    .withName(ACCOUNT_ADMIN.getDisplayName())
                                                    .withRoleType(ACCOUNT_ADMIN)
                                                    .build()),
-
         roleService.save(aRole()
                              .withAppId(Base.GLOBAL_APP_ID)
                              .withAccountId(account.getUuid())
@@ -150,27 +137,6 @@ public class AccountServiceImpl implements AccountService {
         wingsPersistence.createQuery(Account.class).field("companyName").equal(companyName));
   }
 
-  private void createDefaultNotificationGroup(Account account, Role role) {
-    String name = role.getRoleType().getDisplayName();
-    // check if the notification group name exists
-    List<NotificationGroup> existingGroups =
-        notificationSetupService.listNotificationGroups(account.getUuid(), role.getUuid(), name);
-    if (existingGroups == null || existingGroups.isEmpty()) {
-      logger.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
-          account.getAccountName());
-      NotificationGroup notificationGroup = aNotificationGroup()
-                                                .withAppId(account.getAppId())
-                                                .withAccountId(account.getUuid())
-                                                .withRoleId(role.getUuid())
-                                                .withName(name)
-                                                .withEditable(false)
-                                                .build();
-      notificationSetupService.createNotificationGroup(notificationGroup);
-    } else {
-      logger.info("Default notification group already exists for role {} and account {}",
-          ACCOUNT_ADMIN.getDisplayName(), account.getAccountName());
-    }
-  }
   private String generateAccountKey() {
     KeyGenerator keyGen = null;
     try {

@@ -18,27 +18,10 @@ public interface NotificationSetupService {
   /**
    * List notification groups list.
    *
-   * @param accountId the account Id
+   * @param appId the app id
    * @return the list
    */
-  List<NotificationGroup> listNotificationGroups(String accountId);
-
-  /**
-   * List notification groups
-   * @param accountId
-   * @param roleId
-   * @param name
-   * @return the list
-   */
-  List<NotificationGroup> listNotificationGroups(String accountId, String roleId, String name);
-
-  /**
-   * Finds the notificaiton group
-   * @param accountId
-   * @param name
-   * @return
-   */
-  List<NotificationGroup> listNotificationGroups(String accountId, String name);
+  List<NotificationGroup> listNotificationGroups(String appId);
 
   /**
    * List notification groups page response.
