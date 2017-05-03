@@ -43,7 +43,7 @@ import javax.validation.Valid;
 public class SettingAttribute extends Base {
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;
-  private String name;
+  @NotEmpty private String name;
   @Valid private SettingValue value;
   private Category category = Category.SETTING;
   private List<String> appIds;
