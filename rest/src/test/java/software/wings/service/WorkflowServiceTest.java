@@ -358,8 +358,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, null, null);
     logger.debug(JsonUtils.asJson(stencils));
-    assertThat(stencils).isNotNull().hasSize(3).containsKeys(
-        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE);
+    assertThat(stencils).isNotNull().hasSize(7).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS,
+        StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE, StateTypeScope.DEPLOYMENT, StateTypeScope.COMMON,
+        StateTypeScope.VERIFICATION, StateTypeScope.TRAFFIC_ROUTING);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
         .contains("REPEAT", "FORK");
@@ -676,6 +677,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .containsKeys(phaseStep.getUuid());
   }
+
   @Test
   public void shouldCreateWorkflowPhase() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());

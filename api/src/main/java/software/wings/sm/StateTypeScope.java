@@ -22,5 +22,17 @@ public enum StateTypeScope {
   COMMAND_STENCILS, /**
                      * None stencils state type scope.
                      */
+  COMMON, /**
+           * Deployment state type scope.
+           */
+  DEPLOYMENT, /**
+               * Verification state type scope.
+               */
+  VERIFICATION, /**
+                 * Traffic routing state type scope.
+                 */
+  TRAFFIC_ROUTING, /**
+                    * None state type scope.
+                    */
   NONE;
 }

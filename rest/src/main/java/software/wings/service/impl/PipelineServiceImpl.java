@@ -8,7 +8,6 @@ import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStage
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateType.APPROVAL;
-import static software.wings.sm.StateType.ARTIFACT;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -142,8 +141,6 @@ public class PipelineServiceImpl implements PipelineService {
         }
 
         stageExecutionDataList.add(stageExecution);
-      } else if (ARTIFACT.name().equals(stateExecutionInstance.getStateType())) {
-        // do nothing
       } else {
         throw new WingsException(
             ErrorCode.UNKNOWN_ERROR, "message", "Unknown stateType " + stateExecutionInstance.getStateType());

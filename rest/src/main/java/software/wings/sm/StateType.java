@@ -4,9 +4,13 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
+import static software.wings.sm.StateTypeScope.COMMON;
+import static software.wings.sm.StateTypeScope.DEPLOYMENT;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.sm.StateTypeScope.TRAFFIC_ROUTING;
+import static software.wings.sm.StateTypeScope.VERIFICATION;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
@@ -24,7 +28,6 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
-import software.wings.sm.states.ArtifactState;
 import software.wings.sm.states.AwsAutoScaleProvisionState;
 import software.wings.sm.states.AwsClusterSetup;
 import software.wings.sm.states.AwsNodeSelectState;
@@ -72,57 +75,52 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Subworkflow state type.
    */
-  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
+  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, ORCHESTRATION_STENCILS),
+  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, StencilCategory.CONTROLS, 2, ORCHESTRATION_STENCILS),
+  FORK(ForkState.class, StencilCategory.CONTROLS, 2, ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, ORCHESTRATION_STENCILS),
+  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", ORCHESTRATION_STENCILS),
+  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, VERIFICATIONS, 1, ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, VERIFICATIONS, 1, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
 
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, ORCHESTRATION_STENCILS),
+  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 3, ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 3, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
 
   /**
    * Email state type.
    */
-  EMAIL(EmailState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
-
-  /**
-   * Atifact state type.
-   */
-  ARTIFACT(ArtifactState.class, StencilCategory.BUILD, PIPELINE_STENCILS),
+  EMAIL(EmailState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Env state state type.
@@ -134,41 +132,41 @@ public enum StateType implements StateTypeDescriptor {
    */
   COMMAND(CommandState.class, StencilCategory.COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      ORCHESTRATION_STENCILS),
+      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS),
+  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS, COMMON),
 
   /**
    * The Load balancer.
    */
   ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, StencilCategory.COMMANDS, "Elastic Load Balancer",
-      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS, COMMON, TRAFFIC_ROUTING),
 
   /**
    * Jenkins state type.
    */
-  JENKINS(JenkinsState.class, VERIFICATIONS, ORCHESTRATION_STENCILS),
+  JENKINS(JenkinsState.class, VERIFICATIONS, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
 
   /**
    * AWS Node Select state.
    */
-  AWS_NODE_SELECT(
-      AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
+  AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH),
+      ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Provision state.
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
-      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Phase state type.
    */
   DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      ORCHESTRATION_STENCILS),
+      ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Phase state type.
@@ -180,31 +178,31 @@ public enum StateType implements StateTypeDescriptor {
    */
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
 
-  ECS_SERVICE_SETUP(
-      EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
+      ORCHESTRATION_STENCILS, COMMON),
 
-  ECS_SERVICE_DEPLOY(
-      EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
+      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      ORCHESTRATION_STENCILS),
+      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS),
+      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
   KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS),
+      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
   KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS),
+      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
 
-  AWS_CLUSTER_SETUP(
-      AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS), ORCHESTRATION_STENCILS),
+  AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
+      ORCHESTRATION_STENCILS, COMMON),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS);
+      ORCHESTRATION_STENCILS, COMMON);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
