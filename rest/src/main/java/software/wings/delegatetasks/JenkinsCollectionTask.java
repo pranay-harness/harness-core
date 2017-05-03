@@ -37,11 +37,11 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask<ListNoti
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
+    return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
         (List<String>) parameters[4], (Map<String, String>) parameters[5]);
   }
 
-  public ListNotifyResponseData run(String jenkinsUrl, String username, String password, String jobName,
+  public ListNotifyResponseData run(String jenkinsUrl, String username, char[] password, String jobName,
       List<String> artifactPaths, Map<String, String> arguments) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();

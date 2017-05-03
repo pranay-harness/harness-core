@@ -28,7 +28,7 @@ public class JenkinsTest {
    */
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
   private Jenkins jenkins =
-      new JenkinsImpl("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2");
+      new JenkinsImpl("http://localhost:8089", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray());
 
   public JenkinsTest() throws URISyntaxException {}
 

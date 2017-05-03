@@ -7,6 +7,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
@@ -68,11 +69,14 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
                                                      .withAutoApproveForProduction(false)
                                                      .build();
 
-  private final SettingAttribute SETTING_ATTRIBUTE =
-      aSettingAttribute()
-          .withValue(
-              aJenkinsConfig().withJenkinsUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
-          .build();
+  private final SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
+                                                         .withValue(aJenkinsConfig()
+                                                                        .withJenkinsUrl(JENKINS_URL)
+                                                                        .withUsername(USER_NAME)
+                                                                        .withPassword(PASSWORD.toCharArray())
+                                                                        .withAccountId(ACCOUNT_ID)
+                                                                        .build())
+                                                         .build();
 
   /**
    * The constant ARTIFACT_FILE.

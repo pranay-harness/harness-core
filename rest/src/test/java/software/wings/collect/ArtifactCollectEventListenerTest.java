@@ -84,11 +84,14 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendJenkinsTask() throws Exception {
-    SettingAttribute SETTING_ATTRIBUTE =
-        aSettingAttribute()
-            .withValue(
-                aJenkinsConfig().withJenkinsUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
-            .build();
+    SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
+                                             .withValue(aJenkinsConfig()
+                                                            .withJenkinsUrl(JENKINS_URL)
+                                                            .withUsername(USER_NAME)
+                                                            .withPassword(PASSWORD.toCharArray())
+                                                            .withAccountId(ACCOUNT_ID)
+                                                            .build())
+                                             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 
     ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactStream()

@@ -144,9 +144,10 @@ public class DataGenUtil extends BaseIntegrationTest {
                           .withCategory(Category.CONNECTOR)
                           .withAccountId(accountId)
                           .withValue(aJenkinsConfig()
+                                         .withAccountId(accountId)
                                          .withJenkinsUrl("https://jenkins.wings.software")
                                          .withUsername("wingsbuild")
-                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
+                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c3".toCharArray())
                                          .build())
                           .build(),
             APPLICATION_JSON),

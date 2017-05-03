@@ -37,7 +37,7 @@ public class JenkinsTaskTest {
 
   private String jenkinsUrl = "http://jenkins";
   private String userName = "user1";
-  private String password = "pass1";
+  private char[] password = "pass1".toCharArray();
   private String jobName = "job1";
   private Map<String, String> parameters = new HashMap<>();
   private Map<String, String> assertions = new HashMap<>();
@@ -48,7 +48,7 @@ public class JenkinsTaskTest {
 
   @Before
   public void setUp() throws Exception {
-    when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);
+    when(jenkinsFactory.create(anyString(), anyString(), any(char[].class))).thenReturn(jenkins);
     when(jenkins.getBuild(any(QueueReference.class))).thenReturn(build);
     when(build.details()).thenReturn(buildWithDetails);
     when(buildWithDetails.isBuilding()).thenReturn(false);

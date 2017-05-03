@@ -1,9 +1,16 @@
 package software.wings.security.encryption;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.exception.WingsException;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -25,15 +32,18 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by mike@ on 4/24/17.
  */
 public class SimpleEncryption implements EncryptionInterface {
-  // IV and KEY both need to be 16 characters long.
-  @Transient private static final byte[] IV = "EncryptionIV0*d&".getBytes(StandardCharsets.ISO_8859_1);
-  @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@".toCharArray();
-  @Transient private SecretKeyFactory FACTORY;
+  @JsonIgnore private static final Charset CHARSET = Charsets.ISO_8859_1;
+  @JsonIgnore private static final int AES_128_KEY_LENGTH = 16;
+
+  // IV and KEY both need to be AES_128_KEY_LENGTH characters long.
+  @JsonIgnore @Transient private static final byte[] IV = "EncryptionIV0*d&".getBytes(CHARSET);
+  @JsonIgnore @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@".toCharArray();
+  @JsonIgnore @Transient private SecretKeyFactory FACTORY;
 
   private static final EncryptionType encryptionType = EncryptionType.SIMPLE;
-  @Transient private char[] key;
+  @JsonIgnore @Transient private char[] key;
   private byte[] salt;
-  @Transient private SecretKey secretKey;
+  @JsonIgnore @Transient private SecretKey secretKey;
 
   public SimpleEncryption() {
     this(DEFAULT_KEY, EncryptionUtils.generateSalt());
@@ -44,41 +54,31 @@ public class SimpleEncryption implements EncryptionInterface {
   }
 
   public SimpleEncryption(String keySource) {
-    this(keySource.toCharArray(), EncryptionUtils.generateSalt());
-    //    this(Charsets.ISO_8859_1.decode(ByteBuffer.wrap(Hashing.sha256().hashString(keySource,
-    //    Charsets.ISO_8859_1).asBytes())).array(), EncryptionUtils.generateSalt());
+    this(BaseEncoding.base64().encode(Hashing.sha256().hashString(keySource, CHARSET).asBytes()).toCharArray(),
+        EncryptionUtils.generateSalt());
   }
 
   public SimpleEncryption(String keySource, byte[] salt) {
-    this(keySource.toCharArray(), salt);
-    //    this(Charsets.ISO_8859_1.decode(ByteBuffer.wrap(Hashing.sha256().hashString(keySource,
-    //    Charsets.ISO_8859_1).asBytes())).array(), salt);
+    this(BaseEncoding.base64().encode(Hashing.sha256().hashString(keySource, CHARSET).asBytes()).toCharArray(), salt);
   }
 
   public SimpleEncryption(char[] key, byte[] salt) {
-    if (key.length == 32) {
-      key = Arrays.copyOf(key, 16);
+    if (key.length > AES_128_KEY_LENGTH) {
+      key = Arrays.copyOf(key, AES_128_KEY_LENGTH);
     }
-    if (key.length != 16) {
-      throw new WingsException("Key must be 16 characters. Key is " + key.length);
+    if (key.length != AES_128_KEY_LENGTH) {
+      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " characters. Key is " + key.length);
     }
     this.key = key;
     this.salt = salt;
-    try {
-      FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
-      KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
-      SecretKey tmp = FACTORY.generateSecret(spec);
-      secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
-    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-      System.out.println(e.getMessage());
-      System.out.println(key.toString());
-    }
+    this.secretKey = generateSecretKey(key, salt);
   }
 
   public EncryptionType getEncryptionType() {
     return this.encryptionType;
   }
 
+  @JsonIgnore
   public SecretKey getSecretKey() {
     return this.secretKey;
   }
@@ -91,33 +91,59 @@ public class SimpleEncryption implements EncryptionInterface {
     this.salt = salt;
   }
 
-  public void setSalt() {
-    this.salt = EncryptionUtils.generateSalt();
-  }
-
   public byte[] encrypt(byte[] content) {
     try {
       Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
       c.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(IV));
-      return c.doFinal(content);
+      byte[] encrypted = c.doFinal(content);
+      byte[] combined = new byte[salt.length + encrypted.length];
+      System.arraycopy(salt, 0, combined, 0, salt.length);
+      System.arraycopy(encrypted, 0, combined, salt.length, encrypted.length);
+      return combined;
     } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be 16 characters.");
+      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " ASCII characters.", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
         | IllegalBlockSizeException | BadPaddingException e) {
+      throw new WingsException("Encryption failed: ", e);
     }
-    return null;
+  }
+
+  public char[] encryptChars(char[] content) {
+    byte[] encrypted = this.encrypt(CHARSET.encode(CharBuffer.wrap(content)).array());
+    return CHARSET.decode(ByteBuffer.wrap(encrypted)).array();
   }
 
   public byte[] decrypt(byte[] encrypted) {
     try {
+      byte[] newSalt = new byte[EncryptionUtils.DEFAULT_SALT_SIZE];
+      byte[] inputBytes = new byte[encrypted.length - EncryptionUtils.DEFAULT_SALT_SIZE];
+      System.arraycopy(encrypted, 0, newSalt, 0, newSalt.length);
+      System.arraycopy(encrypted, newSalt.length, inputBytes, 0, inputBytes.length);
+      this.secretKey = generateSecretKey(key, newSalt);
       Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
       c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
-      return c.doFinal(encrypted);
+      return c.doFinal(inputBytes);
     } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be 16 characters.");
+      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " ASCII characters.", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
         | IllegalBlockSizeException | BadPaddingException e) {
+      throw new WingsException("Decryption failed: ", e);
     }
-    return null;
+  }
+
+  public char[] decryptChars(char[] encrypted) {
+    byte[] decrypted = this.decrypt(CHARSET.encode(CharBuffer.wrap(encrypted)).array());
+    return CHARSET.decode(ByteBuffer.wrap(decrypted)).array();
+  }
+
+  private SecretKey generateSecretKey(char[] key, byte[] salt) {
+    try {
+      FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
+      KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
+      SecretKey tmp = FACTORY.generateSecret(spec);
+      return new SecretKeySpec(tmp.getEncoded(), "AES");
+    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+      throw new WingsException("Encryption secret key generation failed: ", e);
+    }
   }
 }
