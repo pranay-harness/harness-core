@@ -165,6 +165,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                               APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
 
+    // TODO:: uncomment. setup a stable bamboo server
     getRequestWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
                           .withName("Wings BambooService")

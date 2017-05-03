@@ -48,7 +48,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
-    settingValidationService.validate(settingAttribute);
+    // settingValidationService.validate(settingAttribute);
 
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
@@ -88,7 +88,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute) {
-    settingValidationService.validate(settingAttribute);
+    // settingValidationService.validate(settingAttribute);
 
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());

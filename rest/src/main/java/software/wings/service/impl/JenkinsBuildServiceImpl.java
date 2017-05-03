@@ -136,7 +136,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
           "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
 
-    Jenkins jenkins = jenkinsFactory.createWithoutCredentials(jenkinsConfig.getJenkinsUrl());
+    Jenkins jenkins =
+        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     boolean running = jenkins.isRunning();
     if (!running) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid jenkins credentials");

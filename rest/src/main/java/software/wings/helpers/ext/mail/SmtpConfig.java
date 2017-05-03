@@ -19,7 +19,7 @@ import software.wings.stencils.DefaultValue;
 @JsonTypeName("SMTP")
 public class SmtpConfig extends SettingValue {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
-  @Attributes(title = "Port", required = true) @NotEmpty private int port;
+  @Attributes(title = "Port", required = true) private int port;
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @Attributes(title = "Username") private String username;

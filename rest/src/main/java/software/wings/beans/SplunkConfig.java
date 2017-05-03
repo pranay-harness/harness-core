@@ -13,7 +13,7 @@ import software.wings.settings.SettingValue;
 @JsonTypeName("SPLUNK")
 public class SplunkConfig extends SettingValue {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
-  @Attributes(title = "Port", required = true) @NotEmpty private int port;
+  @Attributes(title = "Port", required = true) private int port;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
