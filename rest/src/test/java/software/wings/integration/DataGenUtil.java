@@ -147,7 +147,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                          .withAccountId(accountId)
                                          .withJenkinsUrl("https://jenkins.wings.software")
                                          .withUsername("wingsbuild")
-                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c3".toCharArray())
+                                         .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                                          .build())
                           .build(),
             APPLICATION_JSON),
@@ -175,7 +175,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                           .withValue(BambooConfig.Builder.aBambooConfig()
                                          .withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/")
                                          .withUsername("wingsbuild")
-                                         .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f")
+                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
                                          .build())
                           .build(),
             APPLICATION_JSON),
