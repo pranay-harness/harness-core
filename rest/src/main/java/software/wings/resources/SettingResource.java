@@ -28,6 +28,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.encryption.Encryptable;
 import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
@@ -95,6 +96,11 @@ public class SettingResource {
   public RestResponse<SettingAttribute> save(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, SettingAttribute variable) {
     variable.setAppId(appId);
+    if (variable.getValue() != null) {
+      if (variable.getValue() instanceof Encryptable) {
+        ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
+      }
+    }
     variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
     return new RestResponse<>(attributeService.save(variable));
   }
@@ -120,6 +126,11 @@ public class SettingResource {
     SettingValue value = null;
     if (GCP.name().equals(type)) {
       value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
+    }
+    if (null != value) {
+      if (value instanceof Encryptable) {
+        ((Encryptable) value).setAccountId(accountId);
+      }
     }
     return new RestResponse<>(
         attributeService.save(aSettingAttribute()
@@ -163,6 +174,11 @@ public class SettingResource {
       @PathParam("attrId") String attrId, SettingAttribute variable) {
     variable.setUuid(attrId);
     variable.setAppId(appId);
+    if (variable.getValue() != null) {
+      if (variable.getValue() instanceof Encryptable) {
+        ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
+      }
+    }
     return new RestResponse<>(attributeService.update(variable));
   }
 
@@ -187,6 +203,11 @@ public class SettingResource {
     SettingValue value = null;
     if (GCP.name().equals(type)) {
       value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
+    }
+    if (null != value) {
+      if (value instanceof Encryptable) {
+        ((Encryptable) value).setAccountId(accountId);
+      }
     }
     return new RestResponse<>(
         attributeService.update(aSettingAttribute().withUuid(attrId).withName(name).withValue(value).build()));
