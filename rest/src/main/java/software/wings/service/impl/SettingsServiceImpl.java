@@ -18,6 +18,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.encryption.Encryptable;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Validator;
 
@@ -49,7 +50,11 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
     // settingValidationService.validate(settingAttribute);
-
+    if (settingAttribute.getValue() != null) {
+      if (settingAttribute.getValue() instanceof Encryptable) {
+        ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+      }
+    }
     return Validator.duplicateCheck(()
                                         -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
         "name", settingAttribute.getName());
@@ -93,6 +98,9 @@ public class SettingsServiceImpl implements SettingsService {
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
     if (settingAttribute.getValue() != null) {
+      if (settingAttribute.getValue() instanceof Encryptable) {
+        ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+      }
       fields.put("value", settingAttribute.getValue());
     }
     wingsPersistence.updateFields(SettingAttribute.class, settingAttribute.getUuid(), fields.build());
