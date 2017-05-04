@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import java.util.ArrayList;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import org.mongodb.morphia.annotations.Reference;
 
 /**
  * Created by rishi on 10/30/16.
@@ -24,8 +22,8 @@ import org.mongodb.morphia.annotations.Reference;
 public class NotificationGroup extends Base {
   @NotEmpty private String accountId;
   @NotNull private String name;
+  private String roleId;
   private boolean editable = true;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
 
   @NotNull private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
 
@@ -84,6 +82,23 @@ public class NotificationGroup extends Base {
   }
 
   /**
+   *  Gets Role Id
+   *
+   * @return roleId the role id
+   */
+  public String getRoleId() {
+    return roleId;
+  }
+
+  /**
+   * Sets Role Id
+   * @param roleId
+   */
+  public void setRoleId(String roleId) {
+    this.roleId = roleId;
+  }
+
+  /**
    * Editable or not
    * @return
    */
@@ -100,42 +115,12 @@ public class NotificationGroup extends Base {
   }
 
   /**
-   * Gets roles.
-   *
-   * @return the roles
-   */
-  public List<Role> getRoles() {
-    return roles;
-  }
-
-  /**
-   * Sets roles.
-   *
-   * @param roles the roles
-   */
-  public void setRoles(List<Role> roles) {
-    this.roles = roles;
-  }
-
-  /**
-   * Adds role to User object.
-   *
-   * @param role role to assign to User.
-   */
-  public void addRole(Role role) {
-    if (roles == null) {
-      roles = new ArrayList<>();
-    }
-    roles.add(role);
-  }
-
-  /**
    * The type Notification group builder.
    */
   public static final class NotificationGroupBuilder {
     private String accountId;
     private String name;
-    private List<Role> roles = new ArrayList<>();
+    private String roleId;
     private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
     private String uuid;
     private String appId;
@@ -181,22 +166,13 @@ public class NotificationGroup extends Base {
     }
 
     /**
-     * With
-     * @param roles
+     * With role id notification group builder.
+     *
+     * @param roleId the account id
      * @return the notification group builder
      */
-    public NotificationGroupBuilder withRoles(List<Role> roles) {
-      this.roles = roles;
-      return this;
-    }
-
-    /**
-     * With Role
-     * @param role Role
-     * @return the notification group builder
-     */
-    public NotificationGroupBuilder withRole(Role role) {
-      this.roles.add(role);
+    public NotificationGroupBuilder withRoleId(String roleId) {
+      this.roleId = roleId;
       return this;
     }
 
@@ -303,7 +279,7 @@ public class NotificationGroup extends Base {
           .withAccountId(accountId)
           .withName(name)
           .withAddressesByChannelType(addressesByChannelType)
-          .withRoles(roles)
+          .withRoleId(roleId)
           .withEditable(editable)
           .withUuid(uuid)
           .withAppId(appId)
@@ -321,7 +297,7 @@ public class NotificationGroup extends Base {
     public NotificationGroup build() {
       NotificationGroup notificationGroup = new NotificationGroup();
       notificationGroup.setAccountId(accountId);
-      notificationGroup.setRoles(roles);
+      notificationGroup.setRoleId(roleId);
       notificationGroup.setName(name);
       notificationGroup.setAddressesByChannelType(addressesByChannelType);
       notificationGroup.setUuid(uuid);

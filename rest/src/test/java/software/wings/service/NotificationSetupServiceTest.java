@@ -85,24 +85,6 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldListNotificationGroupsByAccountIdName() {
-    String accountId = UUIDGenerator.getUuid();
-    createAndAssertNotificationGroup(accountId);
-    createAndAssertNotificationGroup(accountId);
-    createAndAssertNotificationGroup(accountId);
-
-    createAndAssertNotificationGroup(UUIDGenerator.getUuid());
-
-    List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId, "prod_ops");
-    assertThat(notificationGroups)
-        .isNotNull()
-        .hasSize(3)
-        .doesNotContainNull()
-        .extracting("accountId")
-        .containsExactly(accountId, accountId, accountId);
-  }
-
-  @Test
   public void shouldDeleteNotificationGroup() {
     String accountId = UUIDGenerator.getUuid();
     NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
