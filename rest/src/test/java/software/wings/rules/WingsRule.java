@@ -18,6 +18,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
@@ -145,11 +146,13 @@ public class WingsRule implements MethodRule {
                    .findFirst()
                    .isPresent()) {
       try {
-        port = Integer.parseInt(System.getProperty("mongoPort", "27017"));
+        MongoClientURI clientUri =
+            new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/wings"));
+        mongoClient = new MongoClient(clientUri);
       } catch (NumberFormatException ex) {
         port = 27017;
+        mongoClient = new MongoClient("localhost", port);
       }
-      mongoClient = new MongoClient("localhost", port);
     } else {
       mongoServer = new MongoServer(new MemoryBackend());
       mongoServer.bind("localhost", port);
