@@ -175,7 +175,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                           .withValue(BambooConfig.Builder.aBambooConfig()
                                          .withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/")
                                          .withUsername("wingsbuild")
-                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
+                                         .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f")
                                          .build())
                           .build(),
             APPLICATION_JSON),
