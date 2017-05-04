@@ -6,6 +6,7 @@ import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 import software.wings.jersey.JsonViews;
@@ -27,7 +28,7 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   @NotEmpty
   @Encrypted
   private char[] password;
-  @Attributes(title = "Account ID") @NotEmpty private String accountId;
+  @SchemaIgnore @NotEmpty private String accountId;
   /**
    * Instantiates a new jenkins config.
    */
@@ -93,6 +94,7 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   }
 
   @Override
+  @SchemaIgnore
   public String getAccountId() {
     return accountId;
   }
