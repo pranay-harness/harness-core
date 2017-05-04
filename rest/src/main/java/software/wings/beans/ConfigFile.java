@@ -34,7 +34,8 @@ import javax.ws.rs.DefaultValue;
       , @Field("templateId"), @Field("relativeFilePath"), @Field("configOverrideType"), @Field("instances"),
           @Field("configOverrideExpression")
     },
-    options = @IndexOptions(unique = true)))
+    options = @IndexOptions(
+        unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
 public class ConfigFile extends BaseFile {
   /**
    * The constant DEFAULT_TEMPLATE_ID.

@@ -160,7 +160,7 @@ protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
           BasicDBObject keys = new BasicDBObject();
           Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
           primaryDatastore.getCollection(mc.getClazz())
-              .createIndex(keys, null, index.unique() || index.options().unique());
+              .createIndex(keys, index.options().name(), index.unique() || index.options().unique());
         });
       }
 
