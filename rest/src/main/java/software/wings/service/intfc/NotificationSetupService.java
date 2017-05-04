@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.NotificationGroup;
+import software.wings.beans.Role;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -26,11 +27,11 @@ public interface NotificationSetupService {
   /**
    * List notification groups
    * @param accountId
-   * @param roleId
+   * @param role the role id
    * @param name
    * @return the list
    */
-  List<NotificationGroup> listNotificationGroups(String accountId, String roleId, String name);
+  List<NotificationGroup> listNotificationGroups(String accountId, Role role, String name);
 
   /**
    * Finds the notificaiton group

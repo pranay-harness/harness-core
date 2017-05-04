@@ -154,14 +154,14 @@ public class AccountServiceImpl implements AccountService {
     String name = role.getRoleType().getDisplayName();
     // check if the notification group name exists
     List<NotificationGroup> existingGroups =
-        notificationSetupService.listNotificationGroups(account.getUuid(), role.getUuid(), name);
+        notificationSetupService.listNotificationGroups(account.getUuid(), role, name);
     if (existingGroups == null || existingGroups.isEmpty()) {
       logger.info("Creating default {} notification group {} for account {}", ACCOUNT_ADMIN.getDisplayName(), name,
           account.getAccountName());
       NotificationGroup notificationGroup = aNotificationGroup()
                                                 .withAppId(account.getAppId())
                                                 .withAccountId(account.getUuid())
-                                                .withRoleId(role.getUuid())
+                                                .withRole(role)
                                                 .withName(name)
                                                 .withEditable(false)
                                                 .build();

@@ -8,6 +8,7 @@ import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
+import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
@@ -60,10 +61,10 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
-  public List<NotificationGroup> listNotificationGroups(String accountId, String roleId, String name) {
+  public List<NotificationGroup> listNotificationGroups(String accountId, Role role, String name) {
     return listNotificationGroups(aPageRequest()
                                       .addFilter("accountId", Operator.EQ, accountId)
-                                      .addFilter("roleId", Operator.EQ, roleId)
+                                      .addFilter("roles", Operator.IN, role)
                                       .addFilter("name", Operator.EQ, name)
                                       .build())
         .getResponse();

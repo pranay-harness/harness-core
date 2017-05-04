@@ -127,20 +127,21 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
             .collect(Collectors.toList());
 
     for (NotificationGroup notificationGroup : notificationGroups) {
-      if (notificationGroup.getRoleId() != null) {
+      if (notificationGroup.getRoles() != null) {
         // Then collect all the email ids and send for the verified email addresses
-        Role role = aRole().withAppId(notificationGroup.getAppId()).withUuid(notificationGroup.getRoleId()).build();
-        PageRequest<User> request = aPageRequest()
-                                        .withLimit(PageRequest.UNLIMITED)
-                                        .addFilter("appId", EQ, notificationGroup.getAppId())
-                                        .addFilter("roles", IN, role)
-                                        .addFieldsIncluded("email", "emailVerified")
-                                        .build();
-        PageResponse<User> users = userService.list(request);
-        List<String> toAddresses =
-            users.stream().filter(user -> user.isEmailVerified()).map(User::getEmail).collect(Collectors.toList());
-
-        dispatchEmail(notifications, toAddresses);
+        notificationGroup.getRoles().forEach(role -> {
+          PageRequest<User> request = aPageRequest()
+                                          .withLimit(PageRequest.UNLIMITED)
+                                          .addFilter("appId", EQ, notificationGroup.getAppId())
+                                          .addFilter("roles", IN, role)
+                                          .addFieldsIncluded("email", "emailVerified")
+                                          .build();
+          PageResponse<User> users = userService.list(request);
+          List<String> toAddresses =
+              users.stream().filter(user -> user.isEmailVerified()).map(User::getEmail).collect(Collectors.toList());
+          logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
+          dispatchEmail(notifications, toAddresses);
+        });
       }
       for (Entry<NotificationChannelType, List<String>> entry :
           notificationGroup.getAddressesByChannelType().entrySet()) {
