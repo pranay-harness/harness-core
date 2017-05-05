@@ -33,7 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.beans.AppContainer;
-import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AppDynamicsConfig.Builder;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -131,35 +131,31 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private void createGlobalSettings() {
-    WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
-    getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(aSettingAttribute()
-                          .withName("Wings Jenkins")
-                          .withCategory(Category.CONNECTOR)
-                          .withAccountId(accountId)
-                          .withValue(aJenkinsConfig()
-                                         .withAccountId(accountId)
-                                         .withJenkinsUrl("https://jenkins.wings.software")
-                                         .withUsername("wingsbuild")
-                                         .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
-                                         .build())
-                          .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
+    SettingAttribute jenkinsSettingAttribute =
+        aSettingAttribute()
+            .withName("Wings Jenkins")
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(accountId)
+            .withValue(aJenkinsConfig()
+                           .withAccountId(accountId)
+                           .withJenkinsUrl("https://jenkins.wings.software")
+                           .withUsername("wingsbuild")
+                           .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, jenkinsSettingAttribute);
 
-    getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(aSettingAttribute()
-                          .withName("Wings Nexus")
-                          .withCategory(Category.CONNECTOR)
-                          .withAccountId(accountId)
-                          .withValue(aNexusConfig()
-                                         .withNexusUrl("https://nexus.wings.software")
-                                         .withUsername("admin")
-                                         .withPassword("wings123!")
-                                         .build())
-                          .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
+    SettingAttribute nexusSettingAttribute = aSettingAttribute()
+                                                 .withName("Wings Nexus")
+                                                 .withCategory(Category.CONNECTOR)
+                                                 .withAccountId(accountId)
+                                                 .withValue(aNexusConfig()
+                                                                .withNexusUrl("https://nexus.wings.software")
+                                                                .withUsername("admin")
+                                                                .withPassword("wings123!")
+                                                                .build())
+                                                 .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, nexusSettingAttribute);
 
     // TODO:: uncomment. setup a stable bamboo server
     //    getRequestBuilderWithAuthHeader(target).post(Entity.entity(
@@ -170,51 +166,47 @@ public class DataGenUtil extends BaseIntegrationTest {
     //        new GenericType<RestResponse<SettingAttribute>>() {
     //        });
 
-    getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(aSettingAttribute()
-                          .withCategory(Category.CONNECTOR)
-                          .withName("SMTP")
-                          .withAccountId(accountId)
-                          .withValue(aSmtpConfig()
-                                         .withFromAddress("wings_test@wings.software")
-                                         .withUsername("wings_test@wings.software")
-                                         .withHost("smtp.gmail.com")
-                                         .withPassword("@wes0me@pp")
-                                         .withPort(465)
-                                         .withUseSSL(true)
-                                         .build())
-                          .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
-    getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(aSettingAttribute()
-                          .withCategory(Category.CONNECTOR)
-                          .withName("Splunk")
-                          .withAccountId(accountId)
-                          .withValue(aSplunkConfig()
-                                         .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
-                                         .withPort(8089)
-                                         .withPassword("W!ngs@Splunk")
-                                         .withUsername("admin")
-                                         .build())
-                          .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
+    SettingAttribute smtpSettingAttribute = aSettingAttribute()
+                                                .withCategory(Category.CONNECTOR)
+                                                .withName("SMTP")
+                                                .withAccountId(accountId)
+                                                .withValue(aSmtpConfig()
+                                                               .withFromAddress("wings_test@wings.software")
+                                                               .withUsername("wings_test@wings.software")
+                                                               .withHost("smtp.gmail.com")
+                                                               .withPassword("@wes0me@pp")
+                                                               .withPort(465)
+                                                               .withUseSSL(true)
+                                                               .build())
+                                                .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, smtpSettingAttribute);
 
-    getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(aSettingAttribute()
-                          .withCategory(Category.CONNECTOR)
-                          .withName("AppDynamics")
-                          .withAccountId(accountId)
-                          .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                                         .withControllerUrl("https://na774.saas.appdynamics.com/controller")
-                                         .withUsername("testuser")
-                                         .withAccountname("na774")
-                                         .withPassword("testuser123")
-                                         .build())
-                          .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
+    SettingAttribute splunkSettingAttribute = aSettingAttribute()
+                                                  .withCategory(Category.CONNECTOR)
+                                                  .withName("Splunk")
+                                                  .withAccountId(accountId)
+                                                  .withValue(aSplunkConfig()
+                                                                 .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
+                                                                 .withPort(8089)
+                                                                 .withPassword("W!ngs@Splunk")
+                                                                 .withUsername("admin")
+                                                                 .build())
+                                                  .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, splunkSettingAttribute);
+
+    SettingAttribute appdSettingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName("AppDynamics")
+            .withAccountId(accountId)
+            .withValue(Builder.anAppDynamicsConfig()
+                           .withControllerUrl("https://na774.saas.appdynamics.com/controller")
+                           .withUsername("testuser")
+                           .withAccountname("na774")
+                           .withPassword("testuser123")
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);
 
     /*
     getRequestBuilderWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
