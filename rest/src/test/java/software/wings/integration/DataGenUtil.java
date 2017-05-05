@@ -35,7 +35,6 @@ import org.junit.rules.TemporaryFolder;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
-import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -58,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -132,13 +130,9 @@ public class DataGenUtil extends BaseIntegrationTest {
     }
   }
 
-  private Builder getRequestWithAuthHeader(WebTarget target) {
-    return target.request().header("Authorization", "Bearer " + userToken);
-  }
-
   private void createGlobalSettings() {
     WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
-    getRequestWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
                           .withName("Wings Jenkins")
                           .withCategory(Category.CONNECTOR)
@@ -153,50 +147,46 @@ public class DataGenUtil extends BaseIntegrationTest {
             APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
 
-    getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
-                                                            .withName("Wings Nexus")
-                                                            .withCategory(Category.CONNECTOR)
-                                                            .withAccountId(accountId)
-                                                            .withValue(aNexusConfig()
-                                                                           .withNexusUrl("https://nexus.wings.software")
-                                                                           .withUsername("admin")
-                                                                           .withPassword("wings123!")
-                                                                           .build())
-                                                            .build(),
-                                              APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
-
-    // TODO:: uncomment. setup a stable bamboo server
-    getRequestWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
-                          .withName("Wings BambooService")
+                          .withName("Wings Nexus")
                           .withCategory(Category.CONNECTOR)
                           .withAccountId(accountId)
-                          .withValue(BambooConfig.Builder.aBambooConfig()
-                                         .withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/")
-                                         .withUsername("wingsbuild")
-                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
+                          .withValue(aNexusConfig()
+                                         .withNexusUrl("https://nexus.wings.software")
+                                         .withUsername("admin")
+                                         .withPassword("wings123!")
                                          .build())
                           .build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
 
-    getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
-                                                            .withCategory(Category.CONNECTOR)
-                                                            .withName("SMTP")
-                                                            .withAccountId(accountId)
-                                                            .withValue(aSmtpConfig()
-                                                                           .withFromAddress("wings_test@wings.software")
-                                                                           .withUsername("wings_test@wings.software")
-                                                                           .withHost("smtp.gmail.com")
-                                                                           .withPassword("@wes0me@pp")
-                                                                           .withPort(465)
-                                                                           .withUseSSL(true)
-                                                                           .build())
-                                                            .build(),
-                                              APPLICATION_JSON),
+    // TODO:: uncomment. setup a stable bamboo server
+    //    getRequestBuilderWithAuthHeader(target).post(Entity.entity(
+    //        aSettingAttribute().withName("Wings
+    //        BambooService").withCategory(Category.CONNECTOR).withAccountId(accountId).withValue(
+    //            BambooConfig.Builder.aBambooConfig().withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/").withUsername("wingsbuild")
+    //                .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2").build()).build(), APPLICATION_JSON),
+    //        new GenericType<RestResponse<SettingAttribute>>() {
+    //        });
+
+    getRequestBuilderWithAuthHeader(target).post(
+        Entity.entity(aSettingAttribute()
+                          .withCategory(Category.CONNECTOR)
+                          .withName("SMTP")
+                          .withAccountId(accountId)
+                          .withValue(aSmtpConfig()
+                                         .withFromAddress("wings_test@wings.software")
+                                         .withUsername("wings_test@wings.software")
+                                         .withHost("smtp.gmail.com")
+                                         .withPassword("@wes0me@pp")
+                                         .withPort(465)
+                                         .withUseSSL(true)
+                                         .build())
+                          .build(),
+            APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
-    getRequestWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
                           .withCategory(Category.CONNECTOR)
                           .withName("Splunk")
@@ -211,7 +201,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
 
-    getRequestWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
                           .withCategory(Category.CONNECTOR)
                           .withName("AppDynamics")
@@ -227,7 +217,7 @@ public class DataGenUtil extends BaseIntegrationTest {
         new GenericType<RestResponse<SettingAttribute>>() {});
 
     /*
-    getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
+    getRequestBuilderWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
         .withValue(anAwsInfrastructureProviderConfig().withSecretKey("AKIAI6IK4KYQQQEEWEVA").withSecretKey("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").build())
         .build(), APPLICATION_JSON), new GenericType<RestResponse<SettingAttribute>>() {
     });
@@ -236,7 +226,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   private void createAppSettings(String accountId) {
     WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
-    getRequestWithAuthHeader(target).post(
+    getRequestBuilderWithAuthHeader(target).post(
         Entity.entity(
             aSettingAttribute()
                 .withAccountId(accountId)
@@ -283,7 +273,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
-      RestResponse<Application> response = getRequestWithAuthHeader(target).post(
+      RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
           Entity.entity(
               anApplication().withName(name).withDescription(name).withAccountId(accountId).build(), APPLICATION_JSON),
           new GenericType<RestResponse<Application>>() {});
@@ -307,7 +297,7 @@ public class DataGenUtil extends BaseIntegrationTest {
       serviceMap.put("artifactType", WAR.name());
       //      serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size()))); //TODO:: create
       //      service with tomcat/jboss family container type
-      RestResponse<Service> response = getRequestWithAuthHeader(target).post(
+      RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
           Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() { // FIXME
           });
       assertThat(response.getResource()).isInstanceOf(Service.class);
@@ -340,7 +330,8 @@ public class DataGenUtil extends BaseIntegrationTest {
     FormDataMultiPart multiPart =
         new FormDataMultiPart().field("name", file.getName()).field("relativeFilePath", "configs/" + file.getName());
     multiPart.bodyPart(filePart);
-    Response response = getRequestWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
+    Response response =
+        getRequestBuilderWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
     return response.getStatus() == 200;
   }
 
@@ -356,7 +347,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   private List<AppContainer> getAppContainers(String appId) {
     RestResponse<PageResponse<AppContainer>> response =
-        getRequestWithAuthHeader(
+        getRequestBuilderWithAuthHeader(
             client.target(API_BASE + "/app-containers/?appId=" + appId + "&accountId=" + accountId))
             .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
     return response.getResource().getResponse();
@@ -377,7 +368,8 @@ public class DataGenUtil extends BaseIntegrationTest {
                                         .field("sourceType", "FILE_UPLOAD")
                                         .field("standard", "false");
       multiPart.bodyPart(filePart);
-      Response response = getRequestWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
+      Response response =
+          getRequestBuilderWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
       return response.getStatus() == 200;
     } catch (IOException e) {
       log().info("Error occured in uploading app container" + e.getMessage());
@@ -391,7 +383,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     WebTarget target = client.target(API_BASE + "/environments?appId=" + appId);
 
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {
-      RestResponse<Environment> response = getRequestWithAuthHeader(target).post(
+      RestResponse<Environment> response = getRequestBuilderWithAuthHeader(target).post(
           Entity.entity(
               anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
               APPLICATION_JSON),

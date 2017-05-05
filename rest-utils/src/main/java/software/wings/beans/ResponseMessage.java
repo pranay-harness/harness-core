@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The Class ResponseMessage.
@@ -80,6 +81,24 @@ public class ResponseMessage implements Serializable {
         .add("errorType", errorType)
         .add("message", message)
         .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(code, errorType, message);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ResponseMessage other = (ResponseMessage) obj;
+    return Objects.equals(this.code, other.code) && Objects.equals(this.errorType, other.errorType)
+        && Objects.equals(this.message, other.message);
   }
 
   /**

@@ -49,7 +49,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
-    // settingValidationService.validate(settingAttribute);
+    settingValidationService.validate(settingAttribute);
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof Encryptable) {
         ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
@@ -93,7 +93,7 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute) {
-    // settingValidationService.validate(settingAttribute);
+    settingValidationService.validate(settingAttribute);
 
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
