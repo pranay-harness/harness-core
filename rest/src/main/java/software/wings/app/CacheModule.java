@@ -91,7 +91,7 @@ public class CacheModule extends AbstractModule {
       }
     }
 
-    hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+    hazelcastInstance = Hazelcast.getOrCreateHazelcastInstance(config);
 
     Properties properties = new Properties();
     properties.setProperty(HazelcastCachingProvider.HAZELCAST_INSTANCE_NAME, "wings-hazelcast");
