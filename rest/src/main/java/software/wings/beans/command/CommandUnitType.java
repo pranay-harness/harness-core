@@ -14,6 +14,7 @@ import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 6/2/16.
@@ -128,7 +129,6 @@ public enum CommandUnitType implements CommandUnitDescriptor {
     } catch (Exception e) {
       uiSchema = new HashMap<String, String>();
     }
-    jsonSchema = JsonUtils.jsonSchema(commandUnitClass);
   }
 
   @Override
@@ -148,7 +148,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
 
   @Override
   public JsonNode getJsonSchema() {
-    return jsonSchema.deepCopy();
+    return Optional.ofNullable(jsonSchema).orElse(jsonSchema = JsonUtils.jsonSchema(commandUnitClass)).deepCopy();
   }
 
   /**
