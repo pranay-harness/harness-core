@@ -72,11 +72,11 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
       : "http://localhost:9090/api";
   protected static final String adminUserName = "admin@wings.software";
   protected static final String adminPassword = "admin";
+
   protected static String accountId = "INVALID_ID";
+  protected static String userToken = "INVALID_TOKEN";
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-  protected static String userToken = "INVALID_TOKEN";
   @Inject protected WingsPersistence wingsPersistence;
 
   @BeforeClass
@@ -119,7 +119,9 @@ protected String loginUser(final String userName, final String password) {
                  .header("Authorization", basicAuthValue)
                  .get(new GenericType<RestResponse<User>>() {});
   if (response.getResource() != null) {
-    userToken = response.getResource().getToken();
+    User loggedInUser = response.getResource();
+    userToken = loggedInUser.getToken();
+    accountId = loggedInUser.getAccounts().get(0).getUuid();
   }
   return userToken;
 }
@@ -142,6 +144,10 @@ protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundExcepti
   morphia.getMapper().getOptions().setMapSubPackages(true);
   morphia.mapPackage("software.wings");
   ensureIndex(morphia, wingsPersistence.getDatastore());
+}
+
+protected void deleteAllDocuments(List<Class> classes) {
+  classes.forEach(cls -> wingsPersistence.getDatastore().delete(wingsPersistence.createQuery(cls)));
 }
 
 protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
