@@ -37,9 +37,9 @@ import javax.inject.Singleton;
 @JsonTypeInfo(use = Id.NAME, property = "infraMappingType")
 @Entity(value = "infrastructureMapping")
 public abstract class InfrastructureMapping extends Base {
-  @NotEmpty private String computeProviderSettingId;
-  @NotEmpty private String envId;
-  @NotEmpty private String serviceTemplateId;
+  @SchemaIgnore @NotEmpty private String computeProviderSettingId;
+  @SchemaIgnore @NotEmpty private String envId;
+  @SchemaIgnore @NotEmpty private String serviceTemplateId;
 
   @NotEmpty(groups = {Update.class}) @SchemaIgnore private String serviceId;
 
@@ -47,7 +47,7 @@ public abstract class InfrastructureMapping extends Base {
   @NotEmpty private String infraMappingType;
   @Attributes(title = "Deployment type", required = true) @NotEmpty private String deploymentType;
   @SchemaIgnore private String computeProviderName;
-  @Transient private String displayName;
+  @SchemaIgnore @Transient private String displayName;
 
   /**
    * Instantiates a new Infrastructure mapping.
