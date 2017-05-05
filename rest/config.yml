@@ -29,7 +29,20 @@ xxxxxxxx
         key: 9a3e6eac4dcdbdc41a93ca99100537df
         programName: manager-saas-accesslogs
 
-hazelcastManCenterConfigUrl: http://localhost:8080/mancenter
+hazelcast:
+  awsConfig:
+    enabled: false
+    accessKey: ACCESS_KEY
+    secretKey: SECRET_KEY
+    region: us-east-1
+    securityGroupName: wingsmachine
+    tagKey: type
+    tagValue: sznodes
+  tcpIpConfig:
+    enabled: false
+    members:
+      - 127.0.0.1
+    requiredMember: 127.0.0.1
 
 smtp:
   type: SMTP

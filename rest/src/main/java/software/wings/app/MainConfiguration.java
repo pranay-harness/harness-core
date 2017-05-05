@@ -50,7 +50,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsEcsAMIByRegion") private Map<String, String> awsEcsAMIByRegion;
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
-  @JsonProperty("hazelcastManCenterConfigUrl") private String hazelcastManCenterConfigUrl;
+  @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
 
   /**
@@ -270,12 +270,22 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     this.awsRegionIdToName = awsRegionIdToName;
   }
 
-  public String getHazelcastManCenterConfigUrl() {
-    return hazelcastManCenterConfigUrl;
+  /**
+   * Getter for property 'hazelcast'.
+   *
+   * @return Value for property 'hazelcast'.
+   */
+  public HazelcastConfiguration getHazelcast() {
+    return hazelcast;
   }
 
-  public void setHazelcastManCenterConfigUrl(String hazelcastManCenterConfigUrl) {
-    this.hazelcastManCenterConfigUrl = hazelcastManCenterConfigUrl;
+  /**
+   * Setter for property 'hazelcast'.
+   *
+   * @param hazelcast Value to set for property 'hazelcast'.
+   */
+  public void setHazelcast(HazelcastConfiguration hazelcast) {
+    this.hazelcast = hazelcast;
   }
 
   public SmtpConfig getSmtpConfig() {

@@ -2,6 +2,21 @@ package software.wings.app;
 
 /**
  * Created by peeyushaggarwal on 1/11/17.
+ * <p>
+ * Copyright 2011-2013 Terracotta, Inc.
+ * Copyright 2011-2013 Oracle America Incorporated
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 /**
  *  Copyright 2011-2013 Terracotta, Inc.
@@ -20,12 +35,14 @@ package software.wings.app;
  *  limitations under the License.
  */
 
-import static org.joor.Reflect.on;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 
+import com.hazelcast.cache.HazelcastCachingProvider;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.XmlConfigBuilder;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import org.aopalliance.intercept.MethodInvocation;
 import org.jsr107.ri.annotations.CacheContextSource;
@@ -37,6 +54,7 @@ import org.jsr107.ri.annotations.guice.CacheRemoveAllInterceptor;
 import org.jsr107.ri.annotations.guice.CacheRemoveEntryInterceptor;
 import org.jsr107.ri.annotations.guice.CacheResultInterceptor;
 
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.cache.CacheManager;
@@ -61,15 +79,29 @@ public class CacheModule extends AbstractModule {
   private HazelcastInstance hazelcastInstance;
   private CacheManager cacheManager;
 
-  public CacheModule(String hazelcastManCenterUrl) {
-    CachingProvider provider = Caching.getCachingProvider();
-    this.cacheManager = provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader());
-    this.hazelcastInstance = on(cacheManager).get("hazelcastInstance");
-    // hazelcastInstance.getConfig().getManagementCenterConfig().setEnabled(true).setUrl(hazelcastManCenterUrl).setUpdateInterval(3);
+  public CacheModule(MainConfiguration mainConfiguration) {
+    Config config = new XmlConfigBuilder().build();
+    config.setInstanceName("wings-hazelcast");
+    if (mainConfiguration.getHazelcast() != null) {
+      if (mainConfiguration.getHazelcast().getAwsConfig() != null) {
+        config.getNetworkConfig().getJoin().setAwsConfig(mainConfiguration.getHazelcast().getAwsConfig());
+      }
+      if (mainConfiguration.getHazelcast().getTcpIpConfig() != null) {
+        config.getNetworkConfig().getJoin().setTcpIpConfig(mainConfiguration.getHazelcast().getTcpIpConfig());
+      }
+    }
 
-    /* hazelcastInstance.
-     if(isNotBlank(hazelcastManCenterUrl)) {
-     }*/
+    hazelcastInstance = Hazelcast.newHazelcastInstance(config);
+
+    Properties properties = new Properties();
+    properties.setProperty(HazelcastCachingProvider.HAZELCAST_INSTANCE_NAME, "wings-hazelcast");
+    CachingProvider provider = Caching.getCachingProvider();
+    this.cacheManager =
+        provider.getCacheManager(provider.getDefaultURI(), provider.getDefaultClassLoader(), properties);
+  }
+
+  public static <T, R> Supplier<R> bind(Function<T, R> fn, T val) {
+    return () -> fn.apply(val);
   }
 
   @Override
@@ -101,9 +133,5 @@ public class CacheModule extends AbstractModule {
 
   public HazelcastInstance getHazelcastInstance() {
     return hazelcastInstance;
-  }
-
-  public static <T, R> Supplier<R> bind(Function<T, R> fn, T val) {
-    return () -> fn.apply(val);
   }
 }

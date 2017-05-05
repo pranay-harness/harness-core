@@ -137,7 +137,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    CacheModule cacheModule = new CacheModule(configuration.getHazelcastManCenterConfigUrl());
+    CacheModule cacheModule = new CacheModule(configuration);
     StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
     Injector injector = Guice.createInjector(MetricsInstrumentationModule.builder()
                                                  .withMetricRegistry(metricRegistry)
