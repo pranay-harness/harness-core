@@ -39,7 +39,7 @@ public abstract class ArtifactStream extends Base {
 
   @UIOrder(2) @NotEmpty @Attributes(title = "Source Server") private String settingId;
 
-  @UIOrder(3) @SchemaIgnore private String serviceId;
+  @UIOrder(3) private String serviceId;
 
   @SchemaIgnore private boolean autoDownload = false;
 
