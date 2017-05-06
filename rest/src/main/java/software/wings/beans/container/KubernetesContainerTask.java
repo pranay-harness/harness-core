@@ -43,8 +43,8 @@ public class KubernetesContainerTask extends ContainerTask {
   public static class ContainerDefinition {
     @SchemaIgnore private String name;
     @Attributes(title = "Commands") private List<String> commands;
-    @Attributes(title = "CPU") private Integer cpu;
-    @Attributes(title = "MEMORY") private Integer memory;
+    @Attributes(title = "CPU", required = true) private Integer cpu;
+    @Attributes(title = "MEMORY", required = true) private Integer memory;
 
     @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
     @Attributes(title = "ENVIRONMENT VARIABLES") List<EnvironmentVariable> environmentVariables;
