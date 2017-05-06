@@ -19,8 +19,8 @@ import software.wings.beans.EmbeddedUser;
                            , @Field("deploymentType") }, options = @IndexOptions(unique = true)))
 @Entity("containerTasks")
 public abstract class ContainerTask extends Base {
-  @NotEmpty private String deploymentType;
-  @NotEmpty private String serviceId;
+  @SchemaIgnore @NotEmpty private String deploymentType;
+  @SchemaIgnore @NotEmpty private String serviceId;
 
   public ContainerTask(String deploymentType) {
     this.deploymentType = deploymentType;

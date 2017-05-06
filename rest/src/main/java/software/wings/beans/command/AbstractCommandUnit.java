@@ -11,7 +11,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 public abstract class AbstractCommandUnit implements CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
-  private CommandExecutionStatus commandExecutionStatus;
+  @SchemaIgnore private CommandExecutionStatus commandExecutionStatus;
   @SchemaIgnore private boolean artifactNeeded = false;
   @SchemaIgnore private String deploymentType;
 
