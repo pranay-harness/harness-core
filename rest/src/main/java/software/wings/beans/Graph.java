@@ -15,6 +15,7 @@ import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -35,9 +36,9 @@ import java.util.Optional;
  */
 public class Graph {
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
-  private List<Node> nodes = new ArrayList<>();
+  @Embedded private List<Node> nodes = new ArrayList<>();
   private List<Link> links = new ArrayList<>();
-  private Map<String, Graph> subworkflows = new HashMap<>();
+  @Embedded private Map<String, Graph> subworkflows = new HashMap<>();
 
   @Transient private Optional<Node> originState = null;
 
@@ -353,7 +354,7 @@ public class Graph {
     private List<ElementExecutionSummary> elementStatusSummary;
     private List<InstanceStatusSummary> instanceStatusSummary;
 
-    private Map<String, Object> properties = new HashMap<>();
+    @Embedded private Map<String, Object> properties = new HashMap<>();
 
     private Node next;
     private Group group;

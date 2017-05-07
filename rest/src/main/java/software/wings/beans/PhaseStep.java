@@ -11,6 +11,7 @@ import static software.wings.sm.StateType.FORK;
 import static software.wings.sm.StateType.REPEAT;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
@@ -35,7 +36,7 @@ public class PhaseStep {
   @JsonIgnore private List<String> stepsIds = new ArrayList<>();
   @Transient private List<Node> steps = new ArrayList<>();
   private boolean stepsInParallel;
-  private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   private boolean rollback;
   private String phaseStepNameForRollback;
@@ -168,6 +169,9 @@ public class PhaseStep {
   }
 
   public Node generatePhaseStepNode() {
+    // TODO: removing failure strategy as part of Node due to mongo driver limitation - we can try with later version
+    // CodecConfigurationException: Can't find a codec for class software.wings.beans.FailureStrategy
+
     return aNode()
         .withId(uuid)
         .withName(getName())
@@ -175,7 +179,6 @@ public class PhaseStep {
         .withRollback(rollback)
         .addProperty("phaseStepType", phaseStepType)
         .addProperty("stepsInParallel", stepsInParallel)
-        .addProperty("failureStrategies", failureStrategies)
         .addProperty(Constants.SUB_WORKFLOW_ID, uuid)
         .addProperty("phaseStepNameForRollback", phaseStepNameForRollback)
         .addProperty("statusForRollback", statusForRollback)

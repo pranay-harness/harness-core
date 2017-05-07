@@ -4,6 +4,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 
+import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.beans.Graph.Node;
@@ -40,7 +41,7 @@ public class WorkflowPhase implements UuidAware {
   private boolean valid;
   private String validationMessage;
 
-  private List<PhaseStep> phaseSteps = new ArrayList<>();
+  @Embedded private List<PhaseStep> phaseSteps = new ArrayList<>();
 
   public String getUuid() {
     return uuid;

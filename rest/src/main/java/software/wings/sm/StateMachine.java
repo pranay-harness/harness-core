@@ -10,6 +10,7 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
@@ -60,15 +61,15 @@ public class StateMachine extends Base {
 
   @Indexed private String name;
 
-  private OrchestrationWorkflow orchestrationWorkflow;
+  @Embedded private OrchestrationWorkflow orchestrationWorkflow;
 
   private boolean valid;
 
-  private List<State> states = Lists.newArrayList();
+  @Embedded private List<State> states = Lists.newArrayList();
 
-  private List<Transition> transitions = Lists.newArrayList();
+  @Embedded private List<Transition> transitions = Lists.newArrayList();
 
-  private Map<String, StateMachine> childStateMachines = new HashMap<>();
+  @Embedded private Map<String, StateMachine> childStateMachines = new HashMap<>();
 
   private String initialStateName;
 

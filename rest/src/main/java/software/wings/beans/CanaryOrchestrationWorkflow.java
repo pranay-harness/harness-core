@@ -34,21 +34,23 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   private static final Logger logger = LoggerFactory.getLogger(CanaryOrchestrationWorkflow.class);
 
+  @Embedded
   private PhaseStep preDeploymentSteps = new PhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
-  @JsonIgnore private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
+  @Embedded @JsonIgnore private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
 
-  private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
+  @Embedded private Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = new HashMap<>();
 
   @Transient private List<WorkflowPhase> workflowPhases = new ArrayList<>();
 
+  @Embedded
   private PhaseStep postDeploymentSteps = new PhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
 
   @Embedded private List<NotificationRule> notificationRules = new ArrayList<>();
 
-  private List<FailureStrategy> failureStrategies = new ArrayList<>();
+  @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
   private List<Variable> systemVariables = new ArrayList<>();
 
