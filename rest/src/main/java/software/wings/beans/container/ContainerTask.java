@@ -20,7 +20,7 @@ import software.wings.beans.EmbeddedUser;
 @Entity("containerTasks")
 public abstract class ContainerTask extends Base {
   @NotEmpty private String deploymentType;
-  @NotEmpty private String serviceId;
+  @SchemaIgnore @NotEmpty private String serviceId;
 
   public ContainerTask(String deploymentType) {
     this.deploymentType = deploymentType;
