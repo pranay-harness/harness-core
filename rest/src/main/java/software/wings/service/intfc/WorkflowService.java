@@ -7,7 +7,6 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -148,47 +147,6 @@ public interface WorkflowService {
    * @param appId the app id
    */
   void deleteStateMachinesByApplication(String appId);
-
-  /**
-   * List workflow failure strategies list.
-   *
-   * @param appId the app id
-   * @return the list
-   */
-  List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId);
-
-  /**
-   * List workflow failure strategies page response.
-   *
-   * @param pageRequest the page request
-   * @return the page response
-   */
-  PageResponse<WorkflowFailureStrategy> listWorkflowFailureStrategies(PageRequest<WorkflowFailureStrategy> pageRequest);
-
-  /**
-   * Creates the.
-   *
-   * @param workflowFailureStrategy the workflow failure strategy
-   * @return the workflow failure strategy
-   */
-  WorkflowFailureStrategy createWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy);
-
-  /**
-   * Update workflow failure strategy.
-   *
-   * @param workflowFailureStrategy the workflow failure strategy
-   * @return the workflow failure strategy
-   */
-  WorkflowFailureStrategy updateWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy);
-
-  /**
-   * Delete workflow failure strategy boolean.
-   *
-   * @param appId                     the app id
-   * @param workflowFailureStrategyId the workflow failure strategy id
-   * @return the boolean
-   */
-  boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId);
 
   /**
    * Stencil map map.

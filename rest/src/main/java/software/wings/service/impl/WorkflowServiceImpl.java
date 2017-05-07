@@ -8,12 +8,12 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
-import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -29,7 +29,6 @@ import static software.wings.sm.StateType.values;
 
 import com.google.inject.Singleton;
 
-import java.util.concurrent.locks.Condition;
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -69,7 +68,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
@@ -116,7 +114,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -536,32 +533,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     PageRequest<Workflow> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", appId, EQ);
     return listWorkflows(pageRequest).stream().collect(toMap(Workflow::getUuid, o -> (o.getName())));
-  }
-
-  public List<WorkflowFailureStrategy> listWorkflowFailureStrategies(String appId) {
-    return listWorkflowFailureStrategies(aPageRequest().addFilter("appId", Operator.EQ, appId).build()).getResponse();
-  }
-
-  @Override
-  public PageResponse<WorkflowFailureStrategy> listWorkflowFailureStrategies(
-      PageRequest<WorkflowFailureStrategy> pageRequest) {
-    return wingsPersistence.query(WorkflowFailureStrategy.class, pageRequest);
-  }
-
-  @Override
-  public WorkflowFailureStrategy createWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy) {
-    return wingsPersistence.saveAndGet(WorkflowFailureStrategy.class, workflowFailureStrategy);
-  }
-
-  @Override
-  public WorkflowFailureStrategy updateWorkflowFailureStrategy(@Valid WorkflowFailureStrategy workflowFailureStrategy) {
-    // TODO:
-    return workflowFailureStrategy;
-  }
-
-  @Override
-  public boolean deleteWorkflowFailureStrategy(String appId, String workflowFailureStrategyId) {
-    return wingsPersistence.delete(WorkflowFailureStrategy.class, appId, workflowFailureStrategyId);
   }
 
   @Override

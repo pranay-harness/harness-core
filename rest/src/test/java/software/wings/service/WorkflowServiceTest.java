@@ -22,8 +22,6 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.WorkflowExecutionFilter.WorkflowExecutionFilterBuilder.aWorkflowExecutionFilter;
-import static software.wings.beans.WorkflowFailureStrategy.WorkflowFailureStrategyBuilder.aWorkflowFailureStrategy;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -33,7 +31,6 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
-import org.hamcrest.core.AnyOf;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -51,24 +48,19 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
-import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.RepairActionCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowFailureStrategy;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
@@ -420,69 +412,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
         .contains("REPEAT", "FORK");
-  }
-
-  @Test
-  public void shouldCreateWorkflowFailure() {
-    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(APP_ID);
-  }
-
-  @Test
-  public void shouldListWorkflowFailureStrategies() {
-    String APP_ID = UUIDGenerator.getUuid();
-    createAndAssertWorkflowFailureStrategy(APP_ID);
-    createAndAssertWorkflowFailureStrategy(APP_ID);
-    createAndAssertWorkflowFailureStrategy(APP_ID);
-    createAndAssertWorkflowFailureStrategy(UUIDGenerator.getUuid());
-
-    PageRequest<WorkflowFailureStrategy> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, APP_ID).build();
-    PageResponse<WorkflowFailureStrategy> pageResponse = workflowService.listWorkflowFailureStrategies(pageRequest);
-    assertThat(pageResponse)
-        .isNotNull()
-        .hasSize(3)
-        .doesNotContainNull()
-        .extracting("appId")
-        .containsExactly(APP_ID, APP_ID, APP_ID);
-  }
-
-  @Test
-  public void shouldListWorkflowFailureStrategiesByAppId() {
-    String APP_ID = UUIDGenerator.getUuid();
-    createAndAssertWorkflowFailureStrategy(APP_ID);
-    createAndAssertWorkflowFailureStrategy(APP_ID);
-    createAndAssertWorkflowFailureStrategy(APP_ID);
-    createAndAssertWorkflowFailureStrategy(UUIDGenerator.getUuid());
-
-    List<WorkflowFailureStrategy> res = workflowService.listWorkflowFailureStrategies(APP_ID);
-    assertThat(res).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(
-        APP_ID, APP_ID, APP_ID);
-  }
-
-  @Test
-  public void shouldDeleteWorkflowFailureStrategy() {
-    String APP_ID = UUIDGenerator.getUuid();
-    WorkflowFailureStrategy workflowFailureStrategy = createAndAssertWorkflowFailureStrategy(APP_ID);
-    boolean deleted = workflowService.deleteWorkflowFailureStrategy(APP_ID, workflowFailureStrategy.getUuid());
-    assertThat(deleted).isTrue();
-  }
-
-  private WorkflowFailureStrategy createAndAssertWorkflowFailureStrategy(String APP_ID) {
-    WorkflowFailureStrategy workflowFailureStrategy =
-        aWorkflowFailureStrategy()
-            .withAppId(APP_ID)
-            .withName("Non-Prod Failure Strategy")
-            .addFailureStrategy(aFailureStrategy()
-                                    .addFailureTypes(FailureType.CONNECTIVITY)
-                                    .addFailureTypes(FailureType.AUTHENTICATION)
-                                    .withExecutionScope(ExecutionScope.WORKFLOW)
-                                    .withRepairActionCode(RepairActionCode.ROLLBACK_WORKFLOW)
-                                    .build())
-            .withWorkflowExecutionFilter(aWorkflowExecutionFilter().addWorkflowId("workflow1").addEnvId("env1").build())
-            .build();
-
-    WorkflowFailureStrategy created = workflowService.createWorkflowFailureStrategy(workflowFailureStrategy);
-    assertThat(created).isNotNull().hasFieldOrProperty("uuid").isEqualToComparingFieldByField(workflowFailureStrategy);
-    return created;
   }
 
   @Test
