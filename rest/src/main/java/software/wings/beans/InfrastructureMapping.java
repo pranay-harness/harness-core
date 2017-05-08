@@ -8,6 +8,8 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.Attributes;
@@ -220,7 +222,7 @@ public abstract class InfrastructureMapping extends Base {
     return infraMappingType;
   }
 
-  public abstract String getHostConnectionAttrs();
+  @JsonInclude(Include.NON_EMPTY) public abstract String getHostConnectionAttrs();
 
   @Override
   public String toString() {
