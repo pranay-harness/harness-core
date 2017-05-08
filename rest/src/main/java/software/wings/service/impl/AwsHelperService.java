@@ -12,6 +12,7 @@ import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeAccountAttributesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -40,7 +41,8 @@ public class AwsHelperService {
 
   public void validateCredential(String accessKey, String secretKey) {
     try {
-      getAmazonEc2Client(accessKey, secretKey).describeAccountAttributes(new DescribeAccountAttributesRequest());
+      getAmazonEc2Client(Regions.US_EAST_1, accessKey, secretKey)
+          .describeAccountAttributes(new DescribeAccountAttributesRequest());
     } catch (AmazonEC2Exception amazonEC2Exception) {
       throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER, "message", "Invalid AWS credentials.");
     }
@@ -75,8 +77,11 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon ec 2 client
    */
-  public AmazonEC2Client getAmazonEc2Client(String accessKey, String secretKey) {
-    return new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
+  public AmazonEC2Client getAmazonEc2Client(Regions region, String accessKey, String secretKey) {
+    return (AmazonEC2Client) AmazonEC2ClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+        .build();
   }
 
   public AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, String secretKey) {

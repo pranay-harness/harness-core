@@ -6,6 +6,7 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
@@ -941,10 +942,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   public List<ContainerInfo> provisionTasks(SettingAttribute connectorConfig, String clusterName, String serviceName,
       Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
+
     AmazonECSClient amazonECSClient =
         awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEc2Client(Regions.US_EAST_1, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     UpdateServiceRequest updateServiceRequest =
         new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);

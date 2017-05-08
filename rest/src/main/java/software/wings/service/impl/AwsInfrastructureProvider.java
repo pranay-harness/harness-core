@@ -134,11 +134,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonEC2Client amazonEC2Client = awsHelperService.getAmazonEc2Client(
+        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
         new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
 

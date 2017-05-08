@@ -556,7 +556,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider.listHosts(computeProviderSetting, new PageRequest<>())
+      return infrastructureProvider
+          .listHosts(((AwsInfrastructureMapping) infrastructureMapping).getRegion(), computeProviderSetting,
+              new PageRequest<>())
           .getResponse()
           .stream()
           .map(Host::getHostName)

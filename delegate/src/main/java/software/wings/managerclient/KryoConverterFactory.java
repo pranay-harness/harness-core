@@ -24,22 +24,15 @@ public class KryoConverterFactory extends Factory {
   public Converter<?, RequestBody> requestBodyConverter(
       Type type, Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
     if (stream(methodAnnotations)
-            .filter(annotation -> annotation.annotationType().isAssignableFrom(KryoRequest.class))
-            .findFirst()
-            .isPresent()) {
-      return value -> {
-        return RequestBody.create(MEDIA_TYPE, KryoUtils.asBytes(value));
-      };
+            .anyMatch(annotation -> annotation.annotationType().isAssignableFrom(KryoRequest.class))) {
+      return value -> RequestBody.create(MEDIA_TYPE, KryoUtils.asBytes(value));
     }
     return null;
   }
 
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations, Retrofit retrofit) {
-    if (stream(annotations)
-            .filter(annotation -> annotation.annotationType().isAssignableFrom(KryoResponse.class))
-            .findFirst()
-            .isPresent()) {
+    if (stream(annotations).anyMatch(annotation -> annotation.annotationType().isAssignableFrom(KryoResponse.class))) {
       return value -> {
         try {
           return KryoUtils.asObject(value.bytes());
