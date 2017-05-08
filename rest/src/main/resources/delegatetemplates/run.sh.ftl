@@ -20,7 +20,7 @@ then
   echo "Downloading Bot..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
-  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
     echo "Downloading Bot..."
@@ -43,6 +43,6 @@ then
   echo "Bot already running"
 else
   export HOSTNAME
-  nohup $JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
+  nohup $JRE_BINARY -Ddelegatesourcedir="$DIR" -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
   echo "Bot started"
 fi

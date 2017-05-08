@@ -9,7 +9,7 @@ CURRENT_VERSION=0
 
 if [ -e delegate.jar ]
 then
-  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
 
   if [ $(vercomp $REMOTE_DELEGATE_VERSION $CURRENT_VERSION) -eq 1 ]
   then
@@ -38,4 +38,4 @@ fi
 
 export HOSTNAME
 echo "Bot upgrading to version $REMOTE_DELEGATE_VERSION"
-$JRE_BINARY -Ddelegatesourcedir=$DIR -jar delegate.jar config-delegate.yml upgrade
+$JRE_BINARY -Ddelegatesourcedir="$DIR" -jar delegate.jar config-delegate.yml upgrade
