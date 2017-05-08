@@ -524,6 +524,37 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .isFalse();
   }
 
+  @Test
+  public void shouldUpdateEncryptedPassword() {
+    String rand = String.valueOf(Math.random());
+    JenkinsConfig jenkinsConfig = JenkinsConfig.Builder.aJenkinsConfig()
+                                      .withJenkinsUrl("https://jenkins.wings.software")
+                                      .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                      .withUsername("wingsbuild")
+                                      .withPassword("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                                      .build();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                            .withCategory(Category.CONNECTOR)
+                                            .withName("Jenkins Config" + rand)
+                                            .withValue(jenkinsConfig)
+                                            .build();
+    String settingId = wingsPersistence.save(settingAttribute);
+    char[] newPassword = "newpass".toCharArray();
+    jenkinsConfig.setPassword(newPassword);
+    settingAttribute.setValue(jenkinsConfig);
+    wingsPersistence.updateField(SettingAttribute.class, settingId, "value", jenkinsConfig);
+    SettingAttribute result = wingsPersistence.get(SettingAttribute.class, settingId);
+    char[] password = ((JenkinsConfig) result.getValue()).getPassword();
+    assertThat(Arrays.equals(password, newPassword));
+    SettingAttribute undecryptedResult =
+        wingsPersistence.getWithoutDecryptingTestOnly(SettingAttribute.class, settingAttribute.getUuid());
+    assertThat(undecryptedResult).isNotNull();
+    assertThat(Arrays.equals(((JenkinsConfig) result.getValue()).getPassword(),
+                   ((JenkinsConfig) undecryptedResult.getValue()).getPassword()))
+        .isFalse();
+  }
+
   /**
    * The Class TestEntity.
    */

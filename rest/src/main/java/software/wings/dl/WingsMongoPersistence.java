@@ -109,6 +109,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     T data = datastoreMap.get(readPref).get(cls, id);
     if (SettingAttribute.class.isInstance(data)) {
       this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    } else if (data instanceof Encryptable) {
+      this.decryptIfNecessary(data);
     }
     return data;
   }
@@ -118,6 +120,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     T data = query.get();
     if (SettingAttribute.class.isInstance(data)) {
       this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    } else if (data instanceof Encryptable) {
+      this.decryptIfNecessary(data);
     }
     return data;
   }
@@ -143,6 +147,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     T data = res.get(0);
     if (SettingAttribute.class.isInstance(data)) {
       this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    } else if (data instanceof Encryptable) {
+      this.decryptIfNecessary(data);
     }
     return data;
   }
@@ -160,10 +166,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> String save(T object) {
     if (SettingAttribute.class.isInstance(object)) {
       this.encryptIfNecessary(((SettingAttribute) object).getValue());
+    } else if (object instanceof Encryptable) {
+      this.encryptIfNecessary(object);
     }
     Key<T> key = primaryDatastore.save(object);
     if (SettingAttribute.class.isInstance(object)) {
       this.decryptIfNecessary(((SettingAttribute) object).getValue());
+    } else if (object instanceof Encryptable) {
+      this.decryptIfNecessary(object);
     }
     return (String) key.getId();
   }
@@ -176,12 +186,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     for (T t : ts) {
       if (SettingAttribute.class.isInstance(t)) {
         this.encryptIfNecessary(((SettingAttribute) t).getValue());
+      } else if (t instanceof Encryptable) {
+        this.encryptIfNecessary(t);
       }
     }
     Iterable<Key<T>> keys = primaryDatastore.save(ts);
     for (T t : ts) {
       if (SettingAttribute.class.isInstance(t)) {
         this.decryptIfNecessary(((SettingAttribute) t).getValue());
+      } else if (t instanceof Encryptable) {
+        this.decryptIfNecessary(t);
       }
     }
     List<String> ids = new ArrayList<>();
@@ -198,6 +212,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     T data = createQuery(cls).field("appId").equal(object.getAppId()).field(ID_KEY).equal(id).get();
     if (SettingAttribute.class.isInstance(data)) {
       this.decryptIfNecessary(((SettingAttribute) data).getValue());
+    } else if (data instanceof Encryptable) {
+      this.decryptIfNecessary(data);
     }
     return data;
   }
@@ -271,9 +287,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
-    if (cls == SettingAttribute.class && fieldName.equalsIgnoreCase("value") && Encryptable.class.isInstance(value)) {
-      this.encrypt((Encryptable) value);
-    }
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put(fieldName, value);
     updateFields(cls, entityId, keyValuePairs);
@@ -286,14 +299,30 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
     Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
+    boolean encryptAfterUpdate = false;
+    boolean encryptable = Encryptable.class.isAssignableFrom(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
           && Encryptable.class.isInstance(entry.getValue())) {
-        this.encrypt((Encryptable) entry.getValue());
+        Encryptable e = (Encryptable) entry.getValue();
+        this.encrypt(e);
+        keyValuePairs.put(entry.getKey(), e);
+      } else if (encryptable) {
+        try {
+          Field f = entry.getValue().getClass().getDeclaredField(entry.getKey());
+          Encrypted a = f.getAnnotation(Encrypted.class);
+          if (null != a) {
+            encryptAfterUpdate = true;
+          }
+        } catch (NoSuchFieldException e) {
+          throw new WingsException("Field " + entry.getKey() + " not found for update on class " + cls.getName(), e);
+        }
       }
       operations.set(entry.getKey(), entry.getValue());
     }
     update(query, operations);
+    if (encryptAfterUpdate) {
+    }
   }
 
   /**
@@ -470,8 +499,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         if (a != null && a.value()) {
           f.setAccessible(true);
           String accountId = object.getAccountId();
-          SimpleEncryption encryption = new SimpleEncryption(accountId);
-          char[] outputChars = encryption.encryptChars((char[]) f.get(object));
+          char[] outputChars = this.encryptChars((char[]) f.get(object), accountId);
           f.set(object, outputChars);
         }
       }
@@ -480,6 +508,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     } catch (IllegalAccessException e) {
       throw new WingsException("Illegal access exception in encrypt", e);
     }
+  }
+
+  private char[] encryptChars(char[] content, String accountId) {
+    SimpleEncryption encryption = new SimpleEncryption(accountId);
+    return encryption.encryptChars(content);
   }
 
   private void decrypt(Encryptable object) {
@@ -520,15 +553,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return data;
   }
 
-  private void decryptIfNecessary(SettingValue sv) {
-    if (Encryptable.class.isInstance(sv)) {
-      decrypt((Encryptable) sv);
+  private void decryptIfNecessary(Object o) {
+    if (Encryptable.class.isInstance(o)) {
+      decrypt((Encryptable) o);
     }
   }
 
-  private void encryptIfNecessary(SettingValue sv) {
-    if (Encryptable.class.isInstance(sv)) {
-      encrypt((Encryptable) sv);
+  private void encryptIfNecessary(Object o) {
+    if (Encryptable.class.isInstance(o)) {
+      encrypt((Encryptable) o);
     }
   }
 }
