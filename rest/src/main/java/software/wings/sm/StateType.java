@@ -37,7 +37,6 @@ import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
-import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
@@ -47,6 +46,7 @@ import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesReplicationControllerDeploy;
 import software.wings.sm.states.KubernetesReplicationControllerRollback;
 import software.wings.sm.states.KubernetesReplicationControllerSetup;
+import software.wings.sm.states.LoadBalancerState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
@@ -142,7 +142,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * The Load balancer.
    */
-  ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, StencilCategory.COMMANDS, "Elastic Load Balancer",
+  ELASTIC_LOAD_BALANCER(LoadBalancerState.class, StencilCategory.COMMANDS, "Elastic Load Balancer",
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS, COMMON, TRAFFIC_ROUTING),
 
   /**
