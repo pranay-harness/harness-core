@@ -22,4 +22,5 @@
     <file path="service-variable-index-migration.js" />
     <file path="appstack-index-migration.js" />
     <file path="notification-group-index-migration.js" />
+    <file path="default-notification-group-migration.js" />
 </changeFiles>

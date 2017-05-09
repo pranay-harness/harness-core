@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
+import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 import java.util.List;
 
@@ -13,6 +15,8 @@ import java.util.List;
  */
 @JsonTypeName("ECS")
 public class EcsContainerTask extends ContainerTask {
+  @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
+
   private List<ContainerDefinition> containerDefinitions;
 
   public EcsContainerTask() {
@@ -25,6 +29,14 @@ public class EcsContainerTask extends ContainerTask {
 
   public void setContainerDefinitions(List<ContainerDefinition> containerDefinitions) {
     this.containerDefinitions = containerDefinitions;
+  }
+
+  public String getArtifactName() {
+    return artifactName;
+  }
+
+  public void setArtifactName(String artifactName) {
+    this.artifactName = artifactName;
   }
 
   @SchemaIgnore

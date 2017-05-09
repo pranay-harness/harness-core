@@ -9,6 +9,7 @@ import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFrom
 import com.amazonaws.services.elasticloadbalancing.model.Instance;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -25,6 +26,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 
 import javax.inject.Inject;
 
@@ -39,6 +41,10 @@ public class ElasticLoadBalancerState extends State {
   @Transient @Inject private transient AwsHelperService awsHelperService;
 
   @Attributes(title = "Operation") private Operation operation;
+
+  @DefaultValue("Instance") @Attributes(title = "Entity") private Entity entity;
+
+  @Attributes(title = "Custom Entity") @SchemaIgnore private String custom;
 
   public ElasticLoadBalancerState(String name) {
     super(name, StateType.ELASTIC_LOAD_BALANCER.name());
@@ -116,5 +122,46 @@ public class ElasticLoadBalancerState extends State {
     this.operation = operation;
   }
 
+  public String getCustom() {
+    return custom;
+  }
+
+  public void setCustom(String custom) {
+    this.custom = custom;
+  }
+
+  /**
+   * Getter for property 'entity'.
+   *
+   * @return Value for property 'entity'.
+   */
+  public Entity getEntity() {
+    return entity;
+  }
+
+  /**
+   * Setter for property 'entity'.
+   *
+   * @param entity Value to set for property 'entity'.
+   */
+  public void setEntity(Entity entity) {
+    this.entity = entity;
+  }
+
   public enum Operation { Enable, Disable }
+
+  private enum Entity {
+    Instance("${instance}"),
+    Custom("");
+
+    private String expression;
+
+    Entity(String expression) {
+      this.expression = expression;
+    }
+
+    public String getExpression() {
+      return expression;
+    }
+  }
 }

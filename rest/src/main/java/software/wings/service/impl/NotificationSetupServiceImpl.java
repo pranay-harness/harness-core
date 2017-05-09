@@ -17,6 +17,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.utils.Validator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +83,9 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
-    return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup);
+    return Validator.duplicateCheck(()
+                                        -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
+        "name", notificationGroup.getName());
   }
 
   @Override

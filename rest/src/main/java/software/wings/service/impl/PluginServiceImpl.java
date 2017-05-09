@@ -1,25 +1,17 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
-import static software.wings.beans.PluginCategory.Artifact;
-import static software.wings.beans.PluginCategory.CloudProvider;
-import static software.wings.beans.PluginCategory.Collaboration;
-import static software.wings.beans.PluginCategory.ConnectionAttributes;
-import static software.wings.beans.PluginCategory.Verification;
-
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
-
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ApplicationLoadBalancerConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
@@ -36,6 +28,16 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.PluginCategory.Artifact;
+import static software.wings.beans.PluginCategory.CloudProvider;
+import static software.wings.beans.PluginCategory.Collaboration;
+import static software.wings.beans.PluginCategory.ConnectionAttributes;
+import static software.wings.beans.PluginCategory.LoadBalancer;
+import static software.wings.beans.PluginCategory.Verification;
 
 /**
  * Created by peeyushaggarwal on 10/20/16.
@@ -154,6 +156,24 @@ public class PluginServiceImpl implements PluginService {
             .withType("HOST_CONNECTION_ATTRIBUTES")
             .withPluginCategories(asList(ConnectionAttributes))
             .withUiSchema(readUiSchema("HOST_CONNECTION_ATTRIBUTES"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ElasticLoadBalancerConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Elastic Classic Load Balancer")
+            .withType("ELB")
+            .withPluginCategories(asList(LoadBalancer))
+            .withUiSchema(readUiSchema("ELB"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(ApplicationLoadBalancerConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Elastic Application Load Balancer")
+            .withType("ALB")
+            .withPluginCategories(asList(LoadBalancer))
+            .withUiSchema(readUiSchema("ALB"))
             .build());
   }
 
