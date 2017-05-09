@@ -89,7 +89,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE");
     CreateStackResult result = amazonCloudFormationClient.createStack(
         new CreateStackRequest()
-            .withStackName("EC2ContainerService-test2")
+            .withStackName("EC2ContainerService-demo")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
                 + "Description: >\n"
                 + "  AWS CloudFormation template to create a new VPC\n"
@@ -390,7 +390,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 new Parameter().withParameterKey("EbsVolumeSize").withParameterValue("22"),
                 new Parameter().withParameterKey("EbsVolumeType").withParameterValue("gp2"),
                 new Parameter().withParameterKey("EcsAmiId").withParameterValue("ami-d69c74c0"),
-                new Parameter().withParameterKey("EcsClusterName").withParameterValue("test2"),
+                new Parameter().withParameterKey("EcsClusterName").withParameterValue("demo"),
                 new Parameter().withParameterKey("EcsInstanceType").withParameterValue("t2.micro"),
                 new Parameter().withParameterKey("IamRoleInstanceProfile").withParameterValue("ecsInstanceRole"),
                 new Parameter().withParameterKey("KeyName").withParameterValue("testkeypair"),
@@ -1043,6 +1043,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     ListServicesRequest listServicesRequest = new ListServicesRequest().withCluster(clusterName);
     do {
       listServicesResult = amazonECSClient.listServices(listServicesRequest);
+      if (listServicesResult.getServiceArns() == null || listServicesResult.getServiceArns().size() == 0) {
+        break;
+      }
       services.addAll(amazonECSClient
                           .describeServices(new DescribeServicesRequest()
                                                 .withCluster(clusterName)
