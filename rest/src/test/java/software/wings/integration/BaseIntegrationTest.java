@@ -42,6 +42,7 @@ import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.io.IOException;
@@ -78,6 +79,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject protected WingsPersistence wingsPersistence;
+  @Inject private AccountService accountService;
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {
@@ -195,11 +197,18 @@ protected void createLicenseAndDefaultUser() {
   addAdminUser();
   Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
   String oldAccountId = account.getUuid();
-  account.setAccountKey("2f6b0988b6fb3370073c3d0505baee59");
+  String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
+  account.setAccountKey(accountKey);
+
   account.setUuid("kmpySmUISimoRrJL6NL73w");
   accountId = "kmpySmUISimoRrJL6NL73w";
   wingsPersistence.delete(Account.class, oldAccountId);
-  wingsPersistence.save(account);
+  accountService.save(account);
+  // wingsPersistence.save(account);
+  // Update account key to make delegate works
+  UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
+  accountUpdateOperations.set("accountKey", accountKey);
+  wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
 
   UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
   userUpdateOperations.set("accounts", Lists.newArrayList(account));
