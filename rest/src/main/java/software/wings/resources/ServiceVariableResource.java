@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -87,7 +88,11 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse<ServiceVariable> get(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
-    return new RestResponse<>(serviceVariablesService.get(appId, serviceVariableId));
+    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId);
+    if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+      serviceVariable.setValue("<encrypted>".toCharArray());
+    }
+    return new RestResponse<>(serviceVariable);
   }
 
   /**

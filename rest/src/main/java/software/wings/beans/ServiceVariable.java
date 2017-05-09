@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -11,8 +12,11 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.utils.validation.Create;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -28,7 +32,7 @@ import javax.validation.constraints.NotNull;
           @Field("name")
     },
     options = @IndexOptions(unique = true)))
-public class ServiceVariable extends Base {
+public class ServiceVariable extends Base implements Encryptable {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
    */
@@ -51,8 +55,11 @@ public class ServiceVariable extends Base {
   private List<String> instances;
   private String expression;
 
+  @SchemaIgnore private String accountId;
+
   private String name;
-  private String value;
+
+  @Encrypted private char[] value;
 
   private Type type;
 
@@ -136,7 +143,7 @@ public class ServiceVariable extends Base {
    *
    * @return Value for property 'value'.
    */
-  public String getValue() {
+  public char[] getValue() {
     return value;
   }
 
@@ -145,7 +152,7 @@ public class ServiceVariable extends Base {
    *
    * @param value Value to set for property 'value'.
    */
-  public void setValue(String value) {
+  public void setValue(char[] value) {
     this.value = value;
   }
 
@@ -199,6 +206,18 @@ public class ServiceVariable extends Base {
 
   public void setOverriddenServiceVariable(ServiceVariable overriddenServiceVariable) {
     this.overriddenServiceVariable = overriddenServiceVariable;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return entityId;
+  }
+
+  @Override
+  @SchemaIgnore
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**
@@ -280,7 +299,7 @@ public class ServiceVariable extends Base {
         && Objects.equals(this.overriddenServiceVariable, other.overriddenServiceVariable)
         && Objects.equals(this.overrideType, other.overrideType) && Objects.equals(this.instances, other.instances)
         && Objects.equals(this.expression, other.expression) && Objects.equals(this.name, other.name)
-        && Objects.equals(this.value, other.value) && Objects.equals(this.type, other.type);
+        && Arrays.equals(this.value, other.value) && Objects.equals(this.type, other.type);
   }
 
   @Override
@@ -298,6 +317,7 @@ public class ServiceVariable extends Base {
         .add("name", name)
         .add("value", value)
         .add("type", type)
+        .add("accountId", accountId)
         .toString();
   }
 
@@ -311,7 +331,10 @@ public class ServiceVariable extends Base {
     TEXT, /**
            * Lb type.
            */
-    LB(true);
+    LB(true), /**
+               * Encrypted text type.
+               */
+    ENCRYPTED_TEXT;
 
     private boolean settingAttribute;
 
@@ -361,8 +384,9 @@ public class ServiceVariable extends Base {
     private List<String> instances;
     private String expression;
     private String name;
-    private String value;
+    private char[] value;
     private Type type;
+    private String accountId;
 
     private Builder() {}
 
@@ -450,13 +474,18 @@ public class ServiceVariable extends Base {
       return this;
     }
 
-    public Builder withValue(String value) {
+    public Builder withValue(char[] value) {
       this.value = value;
       return this;
     }
 
     public Builder withType(Type type) {
       this.type = type;
+      return this;
+    }
+
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -479,7 +508,8 @@ public class ServiceVariable extends Base {
           .withExpression(expression)
           .withName(name)
           .withValue(value)
-          .withType(type);
+          .withType(type)
+          .withAccountId(accountId);
     }
 
     public ServiceVariable build() {
@@ -502,6 +532,7 @@ public class ServiceVariable extends Base {
       serviceVariable.setName(name);
       serviceVariable.setValue(value);
       serviceVariable.setType(type);
+      serviceVariable.setAccountId(accountId);
       return serviceVariable;
     }
   }

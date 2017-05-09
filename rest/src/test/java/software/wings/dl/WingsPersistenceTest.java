@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.base.MoreObjects;
 
@@ -17,9 +19,12 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder;
@@ -496,7 +501,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   /**
-   * A couple of JenkinsConfig-specific tests to check on encrypted behavior.
+   * A couple of tests to check on encrypted behavior.
    */
   @Test
   public void shouldStoreAndRetrieveEncryptedPassword() {
@@ -555,6 +560,51 @@ public class WingsPersistenceTest extends WingsBaseTest {
         .isFalse();
   }
 
+  @Test
+  public void shouldStoreAndRetrieveEncryptedConfigValue() {
+    String rand = String.valueOf(Math.random());
+    char[] password = "bar".toCharArray();
+    ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
+                                          .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                          .withTemplateId(TEMPLATE_ID)
+                                          .withEnvId(ENV_ID)
+                                          .withEntityType(EntityType.SERVICE)
+                                          .withEntityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .withName("foo" + rand)
+                                          .withValue(password)
+                                          .withType(Type.ENCRYPTED_TEXT)
+                                          .build();
+    String serviceVariableId = wingsPersistence.save(serviceVariable);
+    ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(Arrays.equals(password, result.getValue()));
+    ServiceVariable undecryptedResult =
+        wingsPersistence.getWithoutDecryptingTestOnly(ServiceVariable.class, serviceVariableId);
+    assertThat(undecryptedResult).isNotNull();
+    assertThat(Arrays.equals(password, undecryptedResult.getValue())).isFalse();
+  }
+
+  @Test
+  public void shouldStoreAndRetrieveUnencryptedConfigValue() {
+    String rand = String.valueOf(Math.random());
+    char[] password = "bar".toCharArray();
+    ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
+                                          .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                          .withTemplateId(TEMPLATE_ID)
+                                          .withEnvId(ENV_ID)
+                                          .withEntityType(EntityType.SERVICE)
+                                          .withEntityId("0Or07BsmSBiF0sOZY80HRg")
+                                          .withName("foo" + rand)
+                                          .withValue(password)
+                                          .withType(Type.TEXT)
+                                          .build();
+    String serviceVariableId = wingsPersistence.save(serviceVariable);
+    ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
+    assertThat(Arrays.equals(password, result.getValue()));
+    ServiceVariable undecryptedResult =
+        wingsPersistence.getWithoutDecryptingTestOnly(ServiceVariable.class, serviceVariableId);
+    assertThat(undecryptedResult).isNotNull();
+    assertThat(Arrays.equals(password, undecryptedResult.getValue()));
+  }
   /**
    * The Class TestEntity.
    */

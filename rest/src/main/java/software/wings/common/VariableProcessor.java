@@ -52,7 +52,7 @@ public class VariableProcessor {
           serviceTemplateService.computeServiceVariables(standardParam.getAppId(), standardParam.getEnvId(),
               instance.getServiceTemplateElement().getUuid(), instance.getHostElement().getUuid());
       serviceSettingMap.forEach(
-          serviceVariable -> variables.put(serviceVariable.getName(), serviceVariable.getValue()));
+          serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
     }
 
     return variables;

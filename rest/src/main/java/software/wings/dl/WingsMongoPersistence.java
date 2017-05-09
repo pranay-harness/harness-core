@@ -387,6 +387,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     for (T data : output.getResponse()) {
       if (SettingAttribute.class.isInstance(data)) {
         this.decryptIfNecessary(((SettingAttribute) data).getValue());
+      } else if (data instanceof Encryptable) {
+        this.decryptIfNecessary(data);
       }
     }
     return output;
