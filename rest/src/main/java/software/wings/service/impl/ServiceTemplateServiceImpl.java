@@ -95,7 +95,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<Service> services = serviceResourceService.findServicesByApp(appId);
     ImmutableMap<String, Service> serviceMap = Maps.uniqueIndex(services, Service::getUuid);
     serviceTemplateMap.forEach((serviceTemplateId, serviceTemplate) -> {
-      Service tempService = serviceMap.get(serviceTemplateId);
+      Service tempService = serviceMap.get(serviceTemplate.getServiceId());
       serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
     });
 
