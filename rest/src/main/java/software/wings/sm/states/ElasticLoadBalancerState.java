@@ -33,7 +33,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 10/3/16.
  */
-public class LoadBalancerState extends State {
+public class ElasticLoadBalancerState extends State {
   @Transient @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
   @Transient @Inject private transient SettingsService settingsService;
@@ -46,7 +46,7 @@ public class LoadBalancerState extends State {
 
   @Attributes(title = "Custom Entity") @SchemaIgnore private String custom;
 
-  public LoadBalancerState(String name) {
+  public ElasticLoadBalancerState(String name) {
     super(name, StateType.ELASTIC_LOAD_BALANCER.name());
   }
 

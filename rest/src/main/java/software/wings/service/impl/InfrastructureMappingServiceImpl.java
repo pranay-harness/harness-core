@@ -53,6 +53,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
@@ -384,6 +385,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listLoadBalancers(computeProviderSetting);
+    } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
+      return settingsService
+          .getGlobalSettingAttributesByType(computeProviderSetting.getAccountId(), SettingVariableTypes.ELB.name())
+          .stream()
+          .map(SettingAttribute::getName)
+          .collect(Collectors.toList());
     }
     return Collections.emptyList();
   }

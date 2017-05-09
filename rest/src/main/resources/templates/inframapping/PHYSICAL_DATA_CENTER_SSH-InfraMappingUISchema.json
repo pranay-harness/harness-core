@@ -3,5 +3,5 @@
   "infraMappingType": { "ui:widget": "hidden" },
   "deploymentType": { "ui:widget": "hidden" },
   "hostNames": { "ui:widget": "hostNamesWidget" },
-  "ui:order": ["computeProviderSettingId", "deploymentType", "hostNames", "hostConnectionAttrs","infraMappingType","computeProviderType"]
+  "ui:order": ["computeProviderSettingId", "deploymentType", "hostNames", "hostConnectionAttrs","infraMappingType","computeProviderType", "loadBalancerId"]
 }
