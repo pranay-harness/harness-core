@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
@@ -196,21 +197,20 @@ public class SettingResource {
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
-    if (uploadedInputStream == null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Missing file.");
-    }
-
+    String credentials = IOUtils.toString(uploadedInputStream);
     SettingValue value = null;
-    if (GCP.name().equals(type)) {
-      value = aGcpConfig().withServiceAccountKeyFileContent(IOUtils.toString(uploadedInputStream)).build();
+    if (GCP.name().equals(type) && !isNullOrEmpty(credentials)) {
+      value = aGcpConfig().withServiceAccountKeyFileContent(credentials).build();
     }
-    if (null != value) {
+    SettingAttribute.Builder settingAttribute =
+        aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId);
+    if (value != null) {
       if (value instanceof Encryptable) {
         ((Encryptable) value).setAccountId(accountId);
       }
+      settingAttribute.withValue(value);
     }
-    return new RestResponse<>(
-        attributeService.update(aSettingAttribute().withUuid(attrId).withName(name).withValue(value).build()));
+    return new RestResponse<>(attributeService.update(settingAttribute.build()));
   }
 
   /**
