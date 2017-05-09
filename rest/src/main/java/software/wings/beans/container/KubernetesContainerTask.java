@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.DeploymentType;
+import software.wings.beans.artifact.ArtifactEnumDataProvider;
+import software.wings.stencils.EnumData;
 
 import java.util.List;
 
@@ -14,6 +16,7 @@ import java.util.List;
 public class KubernetesContainerTask extends ContainerTask {
   @Attributes(title = "LABELS") List<Label> labels;
   private List<ContainerDefinition> containerDefinitions;
+  @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
 
   public KubernetesContainerTask() {
     super(DeploymentType.KUBERNETES.name());
@@ -33,6 +36,14 @@ public class KubernetesContainerTask extends ContainerTask {
 
   public void setLabels(List<Label> labels) {
     this.labels = labels;
+  }
+
+  public String getArtifactName() {
+    return artifactName;
+  }
+
+  public void setArtifactName(String artifactName) {
+    this.artifactName = artifactName;
   }
 
   @SchemaIgnore
