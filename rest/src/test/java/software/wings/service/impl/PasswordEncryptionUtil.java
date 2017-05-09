@@ -75,7 +75,9 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
         System.out.println("No password for this Encryptable, can't encrypt it: " + setting.getValue().toString());
       }
       if (variableNeedsFixing) {
-        wingsPersistence.save(setting);
+        ServiceVariable unencryptedSetting =
+            wingsPersistence.getWithoutDecryptingTestOnly(ServiceVariable.class, setting.getUuid());
+        wingsPersistence.save(unencryptedSetting);
       }
     });
   }
