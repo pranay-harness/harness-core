@@ -109,7 +109,9 @@ public class EcsServiceSetup extends State {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid infrastructure type");
     }
 
-    String clusterName = ((EcsInfrastructureMapping) infrastructureMapping).getClusterName();
+    EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+    String region = ecsInfrastructureMapping.getRegion();
+    String clusterName = ecsInfrastructureMapping.getClusterName();
     if (Constants.RUNTIME.equals(clusterName)) {
       String regionCluster = getClusterElement(context).getName();
       clusterName = regionCluster.split("/")[1];
@@ -142,12 +144,13 @@ public class EcsServiceSetup extends State {
             .withContainerDefinitions(containerDefinitions)
             .withFamily(EcsConvention.getTaskFamily(app.getName(), service.getName(), env.getName()));
 
-    TaskDefinition taskDefinition = awsClusterService.createTask(computeProviderSetting, registerTaskDefinitionRequest);
+    TaskDefinition taskDefinition =
+        awsClusterService.createTask(region, computeProviderSetting, registerTaskDefinitionRequest);
 
     String ecsServiceName = EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision());
 
     String lastEcsServiceName = lastECSService(
-        computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
+        region, computeProviderSetting, clusterName, EcsConvention.getServiceNamePrefix(taskDefinition.getFamily()));
 
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -184,7 +187,7 @@ public class EcsServiceSetup extends State {
           .withTargetGroupArn(targetGroupArn);
     }
 
-    awsClusterService.createService(computeProviderSetting, createServiceRequest);
+    awsClusterService.createService(region, computeProviderSetting, createServiceRequest);
 
     ContainerServiceElement containerServiceElement = aContainerServiceElement()
                                                           .withUuid(serviceId)
@@ -203,9 +206,10 @@ public class EcsServiceSetup extends State {
         .build();
   }
 
-  private String lastECSService(SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
+  private String lastECSService(
+      String region, SettingAttribute computeProviderSetting, String clusterName, String serviceNamePrefix) {
     List<com.amazonaws.services.ecs.model.Service> services =
-        awsClusterService.getServices(computeProviderSetting, clusterName);
+        awsClusterService.getServices(region, computeProviderSetting, clusterName);
     if (services == null) {
       return null;
     }

@@ -31,7 +31,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
   @Inject private HostService hostService;
 
   @Override
-  public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     return aPageResponse().withResponse(null).build();
   }
 

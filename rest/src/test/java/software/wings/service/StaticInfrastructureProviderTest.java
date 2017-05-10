@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 
+import com.amazonaws.regions.Regions;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -45,7 +46,8 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
     when(hostService.list(any(PageRequest.class))).thenReturn(aPageResponse().withResponse(asList(host)).build());
     SettingAttribute computeProviderSettingAttribute =
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build();
-    PageResponse<Host> hosts = infrastructureProvider.listHosts(computeProviderSettingAttribute, new PageRequest<>());
+    PageResponse<Host> hosts = infrastructureProvider.listHosts(
+        Regions.US_EAST_1.getName(), computeProviderSettingAttribute, new PageRequest<>());
     assertThat(hosts).hasSize(1).containsExactly(host);
     verify(hostService).list(any(PageRequest.class));
   }

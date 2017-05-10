@@ -17,7 +17,7 @@ public interface InfrastructureProvider {
    * @param req                    the req
    * @return the all host
    */
-  PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req);
+  PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req);
 
   /**
    * Save host host.

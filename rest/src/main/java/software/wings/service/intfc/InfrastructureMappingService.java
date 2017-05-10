@@ -170,7 +170,7 @@ public interface InfrastructureMappingService {
    * @param computeProviderId the compute provider id
    * @return the list
    */
-  List<String> listClusters(String appId, String deploymentType, String computeProviderId);
+  List<String> listClusters(String appId, String deploymentType, String computeProviderId, String region);
 
   List<String> listImages(String appId, String deploymentType, String computeProviderId, String region);
 
@@ -182,7 +182,7 @@ public interface InfrastructureMappingService {
 
   Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId);
 
-  List<String> listNetworks(String appId, String deploymentType, String computeProviderId);
+  List<String> listNetworks(String appId, String deploymentType, String computeProviderId, String region);
 
   List<String> listLoadBalancers(String appId, String deploymentType, String computeProviderId);
 

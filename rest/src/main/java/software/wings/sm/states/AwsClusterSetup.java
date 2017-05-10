@@ -16,6 +16,7 @@ import software.wings.api.ClusterElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
+import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
@@ -33,6 +34,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 
 import java.util.Arrays;
@@ -42,7 +45,10 @@ import java.util.Arrays;
  */
 public class AwsClusterSetup extends State {
   private static final Logger logger = LoggerFactory.getLogger(AwsClusterSetup.class);
-  @Attributes(title = "Region") private String region;
+  @Attributes(title = "Region")
+  @DefaultValue("us-east-1")
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  private String region;
 
   @Attributes(title = "Node Count") private int nodeCount;
 
@@ -113,7 +119,7 @@ public class AwsClusterSetup extends State {
     clusterConfiguration.setName(clusterName);
     clusterConfiguration.setSize(nodeCount);
 
-    awsClusterService.createCluster(computeProviderSetting, clusterConfiguration);
+    awsClusterService.createCluster(region, computeProviderSetting, clusterConfiguration);
 
     ClusterElement clusterElement = aClusterElement()
                                         .withUuid(serviceId)

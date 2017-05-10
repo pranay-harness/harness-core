@@ -41,6 +41,7 @@ public class CommandExecutionContext {
   private SettingAttribute cloudProviderSetting;
   private String clusterName;
   private String serviceName;
+  private String region;
   private Integer desiredCount;
   private Integer desiredPercentage;
   private CommandExecutionData commandExecutionData;
@@ -378,7 +379,7 @@ public class CommandExecutionContext {
   public int hashCode() {
     return Objects.hash(accountId, envId, host, appId, activityId, runtimePath, stagingPath, backupPath,
         serviceTemplateId, executionCredential, artifactFiles, serviceVariables, envVariables, hostConnectionAttributes,
-        bastionConnectionAttributes, artifactStreamAttributes, cloudProviderSetting, clusterName, serviceName,
+        bastionConnectionAttributes, artifactStreamAttributes, cloudProviderSetting, clusterName, serviceName, region,
         desiredCount, desiredPercentage, commandExecutionData);
   }
 
@@ -405,7 +406,7 @@ public class CommandExecutionContext {
         && Objects.equals(this.artifactStreamAttributes, other.artifactStreamAttributes)
         && Objects.equals(this.cloudProviderSetting, other.cloudProviderSetting)
         && Objects.equals(this.clusterName, other.clusterName) && Objects.equals(this.serviceName, other.serviceName)
-        && Objects.equals(this.desiredCount, other.desiredCount)
+        && Objects.equals(this.region, other.region) && Objects.equals(this.desiredCount, other.desiredCount)
         && Objects.equals(this.desiredPercentage, other.desiredPercentage)
         && Objects.equals(this.commandExecutionData, other.commandExecutionData);
   }
@@ -432,6 +433,7 @@ public class CommandExecutionContext {
         .add("cloudProviderSetting", cloudProviderSetting)
         .add("clusterName", clusterName)
         .add("serviceName", serviceName)
+        .add("region", region)
         .add("desiredCount", desiredCount)
         .add("desiredPercentage", desiredPercentage)
         .add("commandExecutionData", commandExecutionData)
@@ -490,6 +492,14 @@ public class CommandExecutionContext {
    */
   public void setServiceName(String serviceName) {
     this.serviceName = serviceName;
+  }
+
+  public String getRegion() {
+    return region;
+  }
+
+  public void setRegion(String region) {
+    this.region = region;
   }
 
   /**
@@ -588,6 +598,7 @@ public class CommandExecutionContext {
     private SettingAttribute cloudProviderSetting;
     private String clusterName;
     private String serviceName;
+    private String region;
     private Integer desiredCount;
     private Integer desiredPercentage;
     private CommandExecutionData commandExecutionData;
@@ -824,6 +835,17 @@ public class CommandExecutionContext {
     }
 
     /**
+     * With region builder.
+     *
+     * @param region the region
+     * @return the builder
+     */
+    public Builder withRegion(String region) {
+      this.region = region;
+      return this;
+    }
+
+    /**
      * With desired count builder.
      *
      * @param desiredCount the desired count
@@ -883,6 +905,7 @@ public class CommandExecutionContext {
           .withCloudProviderSetting(cloudProviderSetting)
           .withClusterName(clusterName)
           .withServiceName(serviceName)
+          .withRegion(region)
           .withDesiredCount(desiredCount)
           .withDesiredPercentage(desiredPercentage)
           .withCommandExecutionData(commandExecutionData);
@@ -914,6 +937,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
       commandExecutionContext.setClusterName(clusterName);
       commandExecutionContext.setServiceName(serviceName);
+      commandExecutionContext.setRegion(region);
       commandExecutionContext.setDesiredCount(desiredCount);
       commandExecutionContext.setDesiredPercentage(desiredPercentage);
       commandExecutionContext.setCommandExecutionData(commandExecutionData);

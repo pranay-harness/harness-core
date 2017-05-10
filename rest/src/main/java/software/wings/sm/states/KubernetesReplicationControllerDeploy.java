@@ -39,7 +39,7 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
+      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
     if (StringUtils.isNotEmpty(serviceName)) {
       KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
       ReplicationController replicationController =

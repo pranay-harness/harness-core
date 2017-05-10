@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -134,8 +135,10 @@ public class InfrastructureMappingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<String>> getClusterNames(@QueryParam("appId") String appId,
-      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listClusters(appId, deploymentType, computeProviderId));
+      @QueryParam("deploymentType") String deploymentType, @QueryParam("region") String region,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureMappingService.listClusters(appId, deploymentType, computeProviderId, region));
   }
 
   @POST
@@ -193,7 +196,9 @@ public class InfrastructureMappingResource {
   @ExceptionMetered
   public RestResponse<List<String>> getNetworks(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listNetworks(appId, deploymentType, computeProviderId));
+    // TODO(brett): Pass region as query param
+    return new RestResponse<>(infrastructureMappingService.listNetworks(
+        appId, deploymentType, computeProviderId, Regions.US_EAST_1.getName()));
   }
 
   @GET

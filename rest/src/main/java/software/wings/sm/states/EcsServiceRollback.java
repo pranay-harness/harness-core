@@ -31,7 +31,7 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
+      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
     return Optional.empty();
   }
 
