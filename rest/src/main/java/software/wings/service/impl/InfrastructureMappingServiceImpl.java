@@ -377,22 +377,21 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listLoadBalancers(String appId, String deploymentType, String computeProviderId) {
+  public Map<String, String> listLoadBalancers(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     Validator.notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listLoadBalancers(computeProviderSetting);
+      return infrastructureProvider.listLoadBalancers(computeProviderSetting).stream().collect(toMap(s -> s, s -> s));
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
       return settingsService
           .getGlobalSettingAttributesByType(computeProviderSetting.getAccountId(), SettingVariableTypes.ELB.name())
           .stream()
-          .map(SettingAttribute::getName)
-          .collect(Collectors.toList());
+          .collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
     }
-    return Collections.emptyList();
+    return Collections.emptyMap();
   }
 
   @Override
