@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
@@ -11,8 +11,9 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
@@ -22,18 +23,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -50,6 +53,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   private Query<SettingAttribute> spyQuery;
 
+  private PageResponse<SettingAttribute> pageResponse =
+      aPageResponse().withResponse(asList(aSettingAttribute().withAppId(SETTING_ID).build())).build();
+
   /**
    * Sets mocks.
    */
@@ -57,6 +63,15 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void setupMocks() {
     spyQuery = spy(datastore.createQuery(SettingAttribute.class));
     when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(wingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
+    when(wingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
+        .thenAnswer(new Answer<SettingAttribute>() {
+
+          @Override
+          public SettingAttribute answer(InvocationOnMock invocationOnMock) throws Throwable {
+            return (SettingAttribute) invocationOnMock.getArguments()[1];
+          }
+        });
   }
 
   /**
@@ -156,10 +171,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .build());
     List<SettingAttribute> connectionAttributes =
         settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
-    assertThat(connectionAttributes)
-        .isNotNull()
-        .extracting(SettingAttribute::getValue)
-        .hasOnlyElementsOfType(HostConnectionAttributes.class);
+    verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 
   /**
@@ -181,9 +193,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     List<SettingAttribute> connectionAttributes = settingsService.getSettingAttributesByType(
         "APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name());
-    assertThat(connectionAttributes)
-        .isNotNull()
-        .extracting(SettingAttribute::getValue)
-        .hasOnlyElementsOfType(BastionConnectionAttributes.class);
+    verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 }
