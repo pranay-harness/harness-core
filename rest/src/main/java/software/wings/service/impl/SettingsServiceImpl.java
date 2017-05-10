@@ -11,9 +11,11 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -220,23 +222,20 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .field("appId")
-        .in(asList(appId, GLOBAL_APP_ID))
-        .field("envId")
-        .in(asList(envId, GLOBAL_ENV_ID))
-        .field("value.type")
-        .equal(type)
-        .asList();
+    PageRequest<SettingAttribute> pageRequest = aPageRequest()
+                                                    .addFilter("appId", Operator.EQ, GLOBAL_APP_ID)
+                                                    .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
+                                                    .addFilter("value.type", Operator.EQ, type)
+                                                    .build();
+    return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
   }
 
   @Override
   public List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .field("accountId")
-        .equal(accountId)
-        .field("value.type")
-        .equal(type)
-        .asList();
+    PageRequest<SettingAttribute> pageRequest = aPageRequest()
+                                                    .addFilter("accountId", Operator.EQ, accountId)
+                                                    .addFilter("value.type", Operator.EQ, type)
+                                                    .build();
+    return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
   }
 }
