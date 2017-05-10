@@ -209,7 +209,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/load-balancers")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> getLoadBalancers(@QueryParam("appId") String appId,
+  public RestResponse<Map<String, String>> getLoadBalancers(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listLoadBalancers(appId, deploymentType, computeProviderId));
   }
