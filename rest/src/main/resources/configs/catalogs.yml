@@ -159,10 +159,11 @@ OVERRIDE_TYPE:
 SERVICE_VARIABLE_TYPE:
     - name: Text
       value: TEXT
-    - name: Load Balancer
-      value: LB
     - name: Encrypted Text
       value: ENCRYPTED_TEXT
+    - name: Load Balancer
+      value: LB
+
 
 LOG_DRIVER:
     - name: <none>
