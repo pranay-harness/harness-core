@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.stencils.EnumData;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Host Names", required = true) private List<String> hostNames;
 
   @Attributes(title = "Load Balancer") private String loadBalancerId;
+  @Transient @SchemaIgnore private String loadBalancerName;
 
   /**
    * Instantiates a new Infrastructure mapping.
@@ -107,6 +109,14 @@ public class PhysicalInfrastructureMapping extends InfrastructureMapping {
    */
   public void setLoadBalancerId(String loadBalancerId) {
     this.loadBalancerId = loadBalancerId;
+  }
+
+  public String getLoadBalancerName() {
+    return loadBalancerName;
+  }
+
+  public void setLoadBalancerName(String loadBalancerName) {
+    this.loadBalancerName = loadBalancerName;
   }
 
   /**
