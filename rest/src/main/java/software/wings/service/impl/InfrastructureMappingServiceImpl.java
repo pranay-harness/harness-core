@@ -195,6 +195,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       updateOperations.set("region", ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
       updateOperations.set("loadBalancerId", ((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      updateOperations.set(
+          "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
     }
 
     wingsPersistence.update(savedInfraMapping, updateOperations);

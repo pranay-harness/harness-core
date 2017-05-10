@@ -136,13 +136,15 @@ public class AwsHelperService {
   /**
    * Gets instance id.
    *
+   *
+   * @param region
    * @param accessKey the access key
    * @param secretKey the secret key
    * @param hostName  the host name
    * @return the instance id
    */
-  public String getInstanceId(String accessKey, String secretKey, String hostName) {
-    AmazonEC2Client amazonEC2Client = new AmazonEC2Client(new BasicAWSCredentials(accessKey, secretKey));
+  public String getInstanceId(Regions region, String accessKey, String secretKey, String hostName) {
+    AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region.getName(), accessKey, secretKey);
 
     String instanceId;
     DescribeInstancesResult describeInstancesResult =
