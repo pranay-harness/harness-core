@@ -6,6 +6,7 @@ import static software.wings.cloudprovider.aws.AwsClusterConfiguration.Builder.a
 
 import com.google.inject.Inject;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
@@ -86,14 +87,14 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("TASK_TEMPLATE", "tomcat:7");
 
     AwsClusterConfiguration awsClusterConfiguration = getAwsClusterConfiguration(params);
-    awsClusterService.createCluster(awsConnectorSetting, awsClusterConfiguration);
+    awsClusterService.createCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, awsClusterConfiguration);
     // awsClusterService.destroyCluster(awsConnectorSetting, (String) params.get("CLUSTER_NAME"), (String)
     // params.get("SERVICE_NAME" + "_" + "SERVICE_VERSION"));
   }
 
   @Test
   public void shouldResizeCluster() {
-    awsClusterService.resizeCluster(awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
+    awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, "demo_v1", "Account_v1", 3, null);
   }
 
   @Test
@@ -117,7 +118,8 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("clusterName", clusterConfiguration.getName());
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
-    ecsContainerService.provisionNodes(awsConnectorSetting, 5, "wins_demo_launchconfig_v1", params);
+    ecsContainerService.provisionNodes(
+        Regions.US_EAST_1.getName(), awsConnectorSetting, 5, "wins_demo_launchconfig_v1", params);
   }
 
   @Test
@@ -125,8 +127,8 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
     AwsConfig awsConfig = (AwsConfig) awsConnectorSetting.getValue();
     AmazonAutoScalingClient amazonAutoScalingClient =
         awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    AmazonEC2Client amazonEc2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonEC2Client amazonEc2Client = awsHelperService.getAmazonEc2Client(
+        Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     List<LaunchConfiguration> launchConfigurations =
         amazonAutoScalingClient

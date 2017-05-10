@@ -34,7 +34,7 @@ public class KubernetesReplicationControllerRollback extends ContainerServiceDep
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
+      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
     return Optional.empty();
   }
 

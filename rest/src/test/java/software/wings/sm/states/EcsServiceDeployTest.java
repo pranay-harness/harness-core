@@ -41,6 +41,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 
+import com.amazonaws.regions.Regions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -163,6 +164,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(ecsServiceDeploy).set("serviceTemplateService", serviceTemplateService);
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
+                                                      .withRegion(Regions.US_EAST_1.getName())
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
@@ -186,7 +188,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ecsService.setServiceName(ECS_SERVICE_NAME);
     ecsService.setCreatedAt(new Date());
     ecsService.setDesiredCount(0);
-    when(awsClusterService.getServices(computeProvider, CLUSTER_NAME)).thenReturn(Lists.newArrayList(ecsService));
+    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+        .thenReturn(Lists.newArrayList(ecsService));
 
     ExecutionResponse response = ecsServiceDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -232,7 +235,8 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ecsService.setServiceName(ECS_SERVICE_OLD_NAME);
     ecsService.setCreatedAt(new Date());
     ecsService.setDesiredCount(1);
-    when(awsClusterService.getServices(computeProvider, CLUSTER_NAME)).thenReturn(Lists.newArrayList(ecsService));
+    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+        .thenReturn(Lists.newArrayList(ecsService));
 
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());

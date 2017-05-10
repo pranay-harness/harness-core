@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import org.junit.Before;
 import org.junit.Test;
@@ -328,6 +329,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withComputeProviderType(AWS.name())
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
+                                                            .withRegion(Regions.US_EAST_1.getName())
                                                             .build();
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
@@ -340,7 +342,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     List<Host> newHosts = asList(aHost().withHostName(HOST_NAME).build());
 
-    when(awsInfrastructureProvider.listHosts(computeProviderSetting, new PageRequest<>()))
+    when(awsInfrastructureProvider.listHosts(Regions.US_EAST_1.getName(), computeProviderSetting, new PageRequest<>()))
         .thenReturn(aPageResponse().withResponse(newHosts).build());
     List<Host> existingHosts = asList(aHost().withHostName("OLD_HOST_NAME").build());
 
@@ -361,7 +363,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
-    verify(awsInfrastructureProvider).listHosts(computeProviderSetting, new PageRequest<>());
+    verify(awsInfrastructureProvider)
+        .listHosts(Regions.US_EAST_1.getName(), computeProviderSetting, new PageRequest<>());
     verify(hostService).list(any(PageRequest.class));
     verify(awsInfrastructureProvider).saveHost(newHosts.get(0));
     verify(awsInfrastructureProvider).deleteHost(APP_ID, INFRA_MAPPING_ID, "OLD_HOST_NAME");
@@ -406,6 +409,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withComputeProviderType(AWS.name())
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
+                                                            .withRegion(Regions.US_EAST_1.getName())
                                                             .build();
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
@@ -416,7 +420,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
-    when(awsInfrastructureProvider.listHosts(computeProviderSetting, new PageRequest<>()))
+    when(awsInfrastructureProvider.listHosts(Regions.US_EAST_1.getName(), computeProviderSetting, new PageRequest<>()))
         .thenReturn(aPageResponse().withResponse(asList(aHost().withHostName(HOST_NAME).build())).build());
 
     List<String> hostNames =
@@ -425,7 +429,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThat(hostNames).hasSize(1).containsExactly(HOST_NAME);
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
-    verify(awsInfrastructureProvider).listHosts(computeProviderSetting, new PageRequest<>());
+    verify(awsInfrastructureProvider)
+        .listHosts(Regions.US_EAST_1.getName(), computeProviderSetting, new PageRequest<>());
   }
 
   @Test
@@ -474,6 +479,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
+                                                            .withRegion(Regions.US_EAST_1.getName())
                                                             .build();
 
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
@@ -484,7 +490,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     Host provisionedHost = aHost().withHostName(HOST_NAME).build();
-    when(awsInfrastructureProvider.provisionHosts(computeProviderSetting, "LAUNCH_CONFIG", 1))
+    when(awsInfrastructureProvider.provisionHosts(
+             Regions.US_EAST_1.getName(), computeProviderSetting, "LAUNCH_CONFIG", 1))
         .thenReturn(asList(provisionedHost));
 
     when(awsInfrastructureProvider.saveHost(provisionedHost)).thenReturn(provisionedHost);
@@ -502,7 +509,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThat(serviceInstances).hasSize(1);
     assertThat(serviceInstances).containsExactly(aServiceInstance().withUuid(SERVICE_INSTANCE_ID).build());
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
-    verify(awsInfrastructureProvider).provisionHosts(computeProviderSetting, "LAUNCH_CONFIG", 1);
+    verify(awsInfrastructureProvider)
+        .provisionHosts(Regions.US_EAST_1.getName(), computeProviderSetting, "LAUNCH_CONFIG", 1);
     verify(awsInfrastructureProvider).saveHost(provisionedHost);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService)
@@ -520,6 +528,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withComputeProviderType(AWS.name())
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
+                                                            .withRegion(Regions.US_EAST_1.getName())
                                                             .build();
     when(query.get()).thenReturn(awsInfrastructureMapping);
 
@@ -538,7 +547,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
     verify(awsInfrastructureProvider)
-        .deProvisionHosts(APP_ID, INFRA_MAPPING_ID, computeProviderSetting, asList(HOST_NAME));
+        .deProvisionHosts(
+            APP_ID, INFRA_MAPPING_ID, computeProviderSetting, Regions.US_EAST_1.getName(), asList(HOST_NAME));
     verify(awsInfrastructureProvider).deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
     verify(serviceTemplateService).get(APP_ID, TEMPLATE_ID);
     verify(serviceInstanceService)

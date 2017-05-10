@@ -29,7 +29,8 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   private static final String DASH_STRING = "----------";
 
   @Override
-  public void createCluster(SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration) {
+  public void createCluster(
+      String region, SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration) {
     AwsClusterConfiguration awsClusterConfiguration = (AwsClusterConfiguration) clusterConfiguration;
 
     // Provision cloud infra nodes
@@ -39,44 +40,46 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     params.put("clusterName", clusterConfiguration.getName());
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
-    ecsContainerService.provisionNodes(cloudProviderSetting, awsClusterConfiguration.getSize(),
+    ecsContainerService.provisionNodes(region, cloudProviderSetting, awsClusterConfiguration.getSize(),
         awsClusterConfiguration.getLauncherConfiguration(), params);
 
     logger.info("Successfully created cluster and provisioned desired number of nodes");
   }
 
   @Override
-  public List<ContainerInfo> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName,
+  public List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
       String serviceName, Integer desiredSize, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog(
         String.format("Resize service [%s] in cluster [%s] to %s instances", serviceName, clusterName, desiredSize),
         LogLevel.INFO);
     List<ContainerInfo> containerInfos = ecsContainerService.provisionTasks(
-        cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
+        region, cloudProviderSetting, clusterName, serviceName, desiredSize, executionLogCallback);
     executionLogCallback.saveExecutionLog(
         String.format("Successfully completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
     return containerInfos;
   }
 
   @Override
-  public void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
-    ecsContainerService.deleteService(cloudProviderSetting, clusterName, serviceName);
+  public void destroyCluster(
+      String region, SettingAttribute cloudProviderSetting, String clusterName, String serviceName) {
+    ecsContainerService.deleteService(region, cloudProviderSetting, clusterName, serviceName);
     logger.info("Successfully deleted service {}", serviceName);
   }
 
   @Override
-  public List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName) {
-    return ecsContainerService.getServices(cloudProviderSetting, clusterName);
+  public List<Service> getServices(String region, SettingAttribute cloudProviderSetting, String clusterName) {
+    return ecsContainerService.getServices(region, cloudProviderSetting, clusterName);
   }
 
   @Override
-  public void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
-    ecsContainerService.createService(cloudProviderSetting, clusterConfiguration);
+  public void createService(
+      String region, SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration) {
+    ecsContainerService.createService(region, cloudProviderSetting, clusterConfiguration);
   }
 
   @Override
   public TaskDefinition createTask(
-      SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
-    return ecsContainerService.createTask(settingAttribute, registerTaskDefinitionRequest);
+      String region, SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
+    return ecsContainerService.createTask(region, settingAttribute, registerTaskDefinitionRequest);
   }
 }
