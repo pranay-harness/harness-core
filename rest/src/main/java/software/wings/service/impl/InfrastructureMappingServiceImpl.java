@@ -185,7 +185,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
-      updateOperations.set("clusterName", ((EcsInfrastructureMapping) infrastructureMapping).getClusterName());
+      EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
+      updateOperations.set("clusterName", ecsInfrastructureMapping.getClusterName());
+      updateOperations.set("region", ecsInfrastructureMapping.getRegion());
     } else if (infrastructureMapping instanceof AwsKubernetesInfrastructureMapping) {
       updateOperations.set(
           "clusterName", ((AwsKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
