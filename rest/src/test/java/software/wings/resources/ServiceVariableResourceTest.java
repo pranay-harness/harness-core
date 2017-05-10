@@ -55,7 +55,7 @@ public class ServiceVariableResourceTest {
                                                               .withEntityId(TEMPLATE_ID)
                                                               .withTemplateId(TEMPLATE_ID)
                                                               .withType(Type.TEXT)
-                                                              .withValue("8080")
+                                                              .withValue("8080".toCharArray())
                                                               .build();
 
   /**

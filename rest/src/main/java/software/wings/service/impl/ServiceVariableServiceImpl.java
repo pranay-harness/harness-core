@@ -19,6 +19,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -42,7 +43,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
-    return wingsPersistence.query(ServiceVariable.class, request);
+    PageResponse<ServiceVariable> response = wingsPersistence.query(ServiceVariable.class, request);
+    response.getResponse().forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
+    return response;
   }
 
   @Override
@@ -65,6 +68,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId) {
     ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
     Validator.notNullCheck("ServiceVariable", serviceVariable);
+    maskEncryptedFields(serviceVariable);
     return serviceVariable;
   }
 
@@ -110,25 +114,30 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public List<ServiceVariable> getServiceVariablesForEntity(String appId, String templateId, String entityId) {
-    return list(aPageRequest()
-                    .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-                    .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
-                    .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
-                    .build())
-        .getResponse();
+    List<ServiceVariable> variables =
+        list(aPageRequest()
+                 .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+                 .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
+                 .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
+                 .build())
+            .getResponse();
+    variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
+    return variables;
   }
 
   @Override
   public List<ServiceVariable> getServiceVariablesByTemplate(
       String appId, String envId, ServiceTemplate serviceTemplate) {
-    return wingsPersistence.createQuery(ServiceVariable.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("templateId")
-        .equal(serviceTemplate.getUuid())
-        .asList();
+    List<ServiceVariable> variables = wingsPersistence.createQuery(ServiceVariable.class)
+                                          .field("appId")
+                                          .equal(appId)
+                                          .field("envId")
+                                          .equal(envId)
+                                          .field("templateId")
+                                          .equal(serviceTemplate.getUuid())
+                                          .asList();
+    variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
+    return variables;
   }
 
   @Override
@@ -158,5 +167,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
                                 .equal(appId)
                                 .field("entityId")
                                 .equal(entityId));
+  }
+
+  private void maskEncryptedFields(ServiceVariable serviceVariable) {
+    if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+      serviceVariable.setValue("******".toCharArray());
+    }
   }
 }

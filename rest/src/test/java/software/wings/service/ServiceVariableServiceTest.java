@@ -9,6 +9,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -56,8 +57,20 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                                               .withTemplateId(TEMPLATE_ID)
                                                               .withName(SERVICE_VARIABLE_NAME)
                                                               .withType(TEXT)
-                                                              .withValue("8080")
+                                                              .withValue("8080".toCharArray())
                                                               .build();
+
+  private static final ServiceVariable ENCRYPTED_SERVICE_VARIABLE = aServiceVariable()
+                                                                        .withAppId(APP_ID)
+                                                                        .withEnvId(ENV_ID)
+                                                                        .withUuid(SERVICE_VARIABLE_ID + "2")
+                                                                        .withEntityType(EntityType.SERVICE_TEMPLATE)
+                                                                        .withEntityId(TEMPLATE_ID)
+                                                                        .withTemplateId(TEMPLATE_ID)
+                                                                        .withName(SERVICE_VARIABLE_NAME + "2")
+                                                                        .withType(ENCRYPTED_TEXT)
+                                                                        .withValue("9090".toCharArray())
+                                                                        .build();
   /**
    * The Query.
    */
@@ -135,7 +148,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                                            .withEntityId(TEMPLATE_ID)
                                                            .withTemplateId(TEMPLATE_ID)
                                                            .withType(TEXT)
-                                                           .withValue("8080")
+                                                           .withValue("8080".toCharArray())
                                                            .build()));
   }
 
@@ -186,7 +199,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                         .build());
     serviceVariableService.update(SERVICE_VARIABLE);
     verify(wingsPersistence)
-        .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("value", "8080", "type", TEXT));
+        .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
+            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT));
   }
 
   /**
@@ -244,5 +258,32 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     serviceVariableService.deleteByEntityId(APP_ID, TEMPLATE_ID, "ENTITY_ID");
     verify(wingsPersistence).delete(query);
+  }
+
+  /**
+   * Should mask encrypted fields.
+   */
+  @Test
+  public void shouldMaskEncryptedFields() {
+    PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(ENCRYPTED_SERVICE_VARIABLE));
+    pageResponse.setTotal(1);
+
+    PageRequest pageRequest = aPageRequest()
+                                  .withLimit("50")
+                                  .withOffset("0")
+                                  .addFilter(aSearchFilter()
+                                                 .withField("appId", EQ, APP_ID)
+                                                 .withField("envId", EQ, ENV_ID)
+                                                 .withField("templateId", EQ, TEMPLATE_ID)
+                                                 .withField("entityId", EQ, "ENTITY_ID")
+                                                 .build())
+                                  .build();
+
+    when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
+    PageResponse<ServiceVariable> serviceVariablePageResponse = serviceVariableService.list(pageRequest);
+    assertThat(serviceVariablePageResponse).isNotNull();
+    assertThat(serviceVariablePageResponse.getResponse().get(0)).isInstanceOf(ServiceVariable.class);
+    assertThat(Arrays.equals(serviceVariablePageResponse.getResponse().get(0).getValue(), "******".toCharArray()));
   }
 }

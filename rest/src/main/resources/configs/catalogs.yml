@@ -161,6 +161,8 @@ SERVICE_VARIABLE_TYPE:
       value: TEXT
     - name: Load Balancer
       value: LB
+    - name: Encrypted Text
+      value: ENCRYPTED_TEXT
 
 LOG_DRIVER:
     - name: <none>

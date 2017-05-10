@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
@@ -49,6 +50,34 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
           ((Encryptable) setting.getValue()).setAccountId(setting.getAccountId());
           wingsPersistence.save(setting);
         }
+      }
+    });
+  }
+
+  @Test
+  @Ignore
+  public void encryptUnencryptedConfigValuesInServiceVariables() {
+    List<ServiceVariable> variables = wingsPersistence.list(ServiceVariable.class);
+    variables.forEach(setting -> {
+      boolean variableNeedsFixing = false;
+      try {
+        Field passwordField = setting.getClass().getDeclaredField("value");
+        passwordField.setAccessible(true);
+        if (null != passwordField) {
+          try {
+            SimpleEncryption encryption = new SimpleEncryption(setting.getAccountId());
+            char[] outputChars = encryption.decryptChars((char[]) passwordField.get(setting.getValue()));
+          } catch (Exception e) {
+            variableNeedsFixing = true;
+          }
+        }
+      } catch (NoSuchFieldException nsfe) {
+        System.out.println("No password for this Encryptable, can't encrypt it: " + setting.getValue().toString());
+      }
+      if (variableNeedsFixing) {
+        ServiceVariable unencryptedSetting =
+            wingsPersistence.getWithoutDecryptingTestOnly(ServiceVariable.class, setting.getUuid());
+        wingsPersistence.save(unencryptedSetting);
       }
     });
   }

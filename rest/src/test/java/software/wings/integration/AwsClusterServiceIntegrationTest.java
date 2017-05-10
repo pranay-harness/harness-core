@@ -23,6 +23,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
+import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Arrays;
@@ -151,5 +152,10 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
     RunInstancesResult runInstancesResult = amazonEc2Client.runInstances(runInstancesRequest);
     runInstancesResult.getReservation().getInstances().forEach(
         instance -> { System.out.println(instance.toString()); });
+  }
+
+  @Test
+  public void shouldCreateClusterFromCFTemplate() throws InterruptedException {
+    ((EcsContainerServiceImpl) ecsContainerService).createCluster();
   }
 }
