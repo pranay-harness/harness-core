@@ -35,9 +35,9 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
 
   @Override
   protected Optional<Integer> getServiceDesiredCount(
-      SettingAttribute settingAttribute, String clusterName, @Nullable String serviceName) {
+      SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName) {
     if (StringUtils.isNotEmpty(serviceName)) {
-      Optional<Service> service = awsClusterService.getServices(settingAttribute, clusterName)
+      Optional<Service> service = awsClusterService.getServices(region, settingAttribute, clusterName)
                                       .stream()
                                       .filter(svc -> svc.getServiceName().equals(serviceName))
                                       .findFirst();

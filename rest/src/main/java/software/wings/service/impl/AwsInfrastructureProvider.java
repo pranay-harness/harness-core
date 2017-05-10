@@ -134,11 +134,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public PageResponse<Host> listHosts(SettingAttribute computeProviderSetting, PageRequest<Host> req) {
+  public PageResponse<Host> listHosts(String region, SettingAttribute computeProviderSetting, PageRequest<Host> req) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
     AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
         new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
 
@@ -185,13 +185,13 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   public List<Host> provisionHosts(
-      SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
+      String region, SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
     AmazonAutoScalingClient amazonAutoScalingClient =
         awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
     AmazonEC2Client amazonEc2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     List<LaunchConfiguration> launchConfigurations =
         amazonAutoScalingClient
@@ -259,11 +259,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .collect(toList());
   }
 
-  public void deProvisionHosts(
-      String appId, String infraMappingId, SettingAttribute computeProviderSetting, List<String> hostNames) {
+  public void deProvisionHosts(String appId, String infraMappingId, SettingAttribute computeProviderSetting,
+      String region, List<String> hostNames) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     AmazonEC2Client amazonEc2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     List<AwsHost> awsHosts = hostService
                                  .list(aPageRequest()
@@ -308,10 +308,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
   }
 
-  public List<String> listClusterNames(SettingAttribute computeProviderSetting) {
+  public List<String> listClusterNames(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     AmazonECSClient amazonEcsClient =
-        awsHelperService.getAmazonEcsClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     ListClustersResult listClustersResult = amazonEcsClient.listClusters(new ListClustersRequest());
     return listClustersResult.getClusterArns().stream().map(awsHelperService::getIdFromArn).collect(toList());
   }
@@ -319,7 +319,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   public List<String> listAMIs(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     List<String> imageIds = Lists.newArrayList(mainConfiguration.getAwsEcsAMIByRegion().get(region));
     imageIds.addAll(Lists
                         .newArrayList(amazonEC2Client
@@ -336,8 +336,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   public List<String> listRegions(SettingAttribute computeProviderSetting) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonEC2Client amazonEC2Client = awsHelperService.getAmazonEc2Client(
+        Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
   }
 
@@ -367,11 +367,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .collect(Collectors.toMap(Role::getArn, Role::getRoleName));
   }
 
-  public List<String> listVPCs(SettingAttribute computeProviderSetting) {
+  public List<String> listVPCs(String region, SettingAttribute computeProviderSetting) {
     List<String> results = Lists.newArrayList();
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     AmazonEC2Client amazonEC2Client =
-        awsHelperService.getAmazonEc2Client(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
     results.addAll(
         amazonEC2Client
             .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter().withName("state").withValues("available"),

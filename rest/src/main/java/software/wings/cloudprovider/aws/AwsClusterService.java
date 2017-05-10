@@ -17,58 +17,33 @@ import java.util.List;
 public interface AwsClusterService {
   /**
    * Create cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterConfiguration the cluster configuration
    */
-  void createCluster(SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration);
+  void createCluster(String region, SettingAttribute cloudProviderSetting, ClusterConfiguration clusterConfiguration);
 
   /**
    * Resize cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterName          the cluster name
-   * @param serviceName          the service name
-   * @param desiredSize          the desired size
-   * @param executionLogCallback the execution log callback
-   * @return the list
    */
-  List<ContainerInfo> resizeCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName,
-      Integer desiredSize, ExecutionLogCallback executionLogCallback);
+  List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting, String clusterName,
+      String serviceName, Integer desiredSize, ExecutionLogCallback executionLogCallback);
 
   /**
    * Destroy cluster.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterName          the cluster name
-   * @param serviceName          the service name
    */
-  void destroyCluster(SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
+  void destroyCluster(String region, SettingAttribute cloudProviderSetting, String clusterName, String serviceName);
 
   /**
    * Gets services.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterName          the cluster name
-   * @return the services
    */
-  List<Service> getServices(SettingAttribute cloudProviderSetting, String clusterName);
+  List<Service> getServices(String region, SettingAttribute cloudProviderSetting, String clusterName);
 
   /**
    * Create service.
-   *
-   * @param cloudProviderSetting the cloud provider setting
-   * @param clusterConfiguration the cluster configuration
    */
-  void createService(SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
+  void createService(String region, SettingAttribute cloudProviderSetting, CreateServiceRequest clusterConfiguration);
 
   /**
    * Create task task definition.
-   *
-   * @param settingAttribute              the setting attribute
-   * @param registerTaskDefinitionRequest the register task definition request
-   * @return the task definition
    */
   TaskDefinition createTask(
-      SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
+      String region, SettingAttribute settingAttribute, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
 }

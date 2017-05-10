@@ -3,6 +3,9 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +17,10 @@ import java.util.Optional;
 public class EcsInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Service cluster name") private String clusterName;
 
-  @SchemaIgnore private String region;
+  @Attributes(title = "Region")
+  @DefaultValue("us-east-1")
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  private String region;
 
   @SchemaIgnore private String vpc;
 
@@ -239,6 +245,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
    */
   public static final class Builder {
     private String clusterName;
+    private String region;
     private String computeProviderSettingId;
     private String envId;
     private String serviceTemplateId;
@@ -272,6 +279,14 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
      */
     public Builder withClusterName(String clusterName) {
       this.clusterName = clusterName;
+      return this;
+    }
+
+    /**
+     * With region builder.
+     */
+    public Builder withRegion(String region) {
+      this.region = region;
       return this;
     }
 
@@ -426,6 +441,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     public Builder but() {
       return anEcsInfrastructureMapping()
           .withClusterName(clusterName)
+          .withRegion(region)
           .withComputeProviderSettingId(computeProviderSettingId)
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
@@ -449,6 +465,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
     public EcsInfrastructureMapping build() {
       EcsInfrastructureMapping ecsInfrastructureMapping = new EcsInfrastructureMapping();
       ecsInfrastructureMapping.setClusterName(clusterName);
+      ecsInfrastructureMapping.setRegion(region);
       ecsInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
       ecsInfrastructureMapping.setEnvId(envId);
       ecsInfrastructureMapping.setServiceTemplateId(serviceTemplateId);

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder.aContainerServiceElement;
@@ -37,6 +38,7 @@ import static software.wings.utils.WingsTestConstants.TASK_REVISION;
 
 import com.google.common.collect.Lists;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
@@ -147,7 +149,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     taskDefinition.setFamily(TASK_FAMILY);
     taskDefinition.setRevision(TASK_REVISION);
 
-    when(awsClusterService.createTask(any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class)))
+    when(awsClusterService.createTask(
+             eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class)))
         .thenReturn(taskDefinition);
   }
 
@@ -167,6 +170,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   public void shouldExecuteWithLastService() {
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
+                                                      .withRegion(Regions.US_EAST_1.getName())
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
@@ -176,10 +180,14 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     ecsService.setServiceName(EcsConvention.getServiceName(taskDefinition.getFamily(), taskDefinition.getRevision()));
     ecsService.setCreatedAt(new Date());
 
-    when(awsClusterService.getServices(computeProvider, CLUSTER_NAME)).thenReturn(Lists.newArrayList(ecsService));
+    when(awsClusterService.getServices(Regions.US_EAST_1.getName(), computeProvider, CLUSTER_NAME))
+        .thenReturn(Lists.newArrayList(ecsService));
     ExecutionResponse response = ecsServiceSetup.execute(context);
     assertThat(response).isNotNull();
-    verify(awsClusterService).createTask(any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class));
-    verify(awsClusterService).createService(any(SettingAttribute.class), any(CreateServiceRequest.class));
+    verify(awsClusterService)
+        .createTask(
+            eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(RegisterTaskDefinitionRequest.class));
+    verify(awsClusterService)
+        .createService(eq(Regions.US_EAST_1.getName()), any(SettingAttribute.class), any(CreateServiceRequest.class));
   }
 }

@@ -40,13 +40,14 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
     String clusterName = context.getClusterName();
     String serviceName = context.getServiceName();
     Integer desiredCount = context.getDesiredCount();
+    String region = context.getRegion();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
       List<ContainerInfo> containerInfos =
-          executeInternal(cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
+          executeInternal(region, cloudProviderSetting, clusterName, serviceName, desiredCount, executionLogCallback);
       context.setCommandExecutionData(aResizeCommandUnitExecutionData().withContainerInfos(containerInfos).build());
       boolean allContainersSuccess = true;
       for (ContainerInfo info : containerInfos) {
@@ -63,6 +64,6 @@ public abstract class ContainerOrchestrationCommandUnit extends AbstractCommandU
 
   protected abstract String getSettingVariableType();
 
-  protected abstract List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting, String clusterName,
-      String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback);
+  protected abstract List<ContainerInfo> executeInternal(String region, SettingAttribute cloudProviderSetting,
+      String clusterName, String serviceName, Integer desiredCount, ExecutionLogCallback executionLogCallback);
 }

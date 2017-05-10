@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -170,7 +172,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     public Map<String, String> getData(String appId, String... params) {
       return Arrays.stream(Regions.values())
           .filter(regions -> regions != Regions.GovCloud)
-          .collect(toMap(Regions::getName, regions -> mainConfiguration.getAwsRegionIdToName().get(regions.getName())));
+          .collect(toMap(Regions::getName,
+              regions
+              -> Optional.ofNullable(mainConfiguration.getAwsRegionIdToName())
+                     .orElse(ImmutableMap.of(regions.getName(), regions.getName()))
+                     .get(regions.getName())));
     }
   }
 
@@ -188,6 +194,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String deploymentType;
     private String hostConnectionAttrs;
     private String computeProviderName;
+    private String region;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -316,6 +323,11 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public Builder withRegion(String region) {
+      this.region = region;
+      return this;
+    }
+
     /**
      * With uuid builder.
      *
@@ -403,6 +415,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
+          .withRegion(region)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt);
     }
@@ -424,6 +437,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setDeploymentType(deploymentType);
       awsInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);
       awsInfrastructureMapping.setComputeProviderName(computeProviderName);
+      awsInfrastructureMapping.setRegion(region);
       awsInfrastructureMapping.setUuid(uuid);
       awsInfrastructureMapping.setAppId(appId);
       awsInfrastructureMapping.setCreatedBy(createdBy);
