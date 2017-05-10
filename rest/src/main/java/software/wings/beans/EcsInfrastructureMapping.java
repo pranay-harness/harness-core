@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static com.amazonaws.util.StringUtils.isNullOrEmpty;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -84,7 +86,7 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
    * @return Value for property 'region'.
    */
   public String getRegion() {
-    return region;
+    return isNullOrEmpty(region) ? "us-east-1" : region;
   }
 
   /**
