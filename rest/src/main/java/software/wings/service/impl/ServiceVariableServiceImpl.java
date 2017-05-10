@@ -171,7 +171,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   private void maskEncryptedFields(ServiceVariable serviceVariable) {
     if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-      serviceVariable.setValue("<encrypted>".toCharArray());
+      serviceVariable.setValue("******".toCharArray());
     }
   }
 }

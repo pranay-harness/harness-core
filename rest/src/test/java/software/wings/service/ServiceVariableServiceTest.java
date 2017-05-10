@@ -284,6 +284,6 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageResponse<ServiceVariable> serviceVariablePageResponse = serviceVariableService.list(pageRequest);
     assertThat(serviceVariablePageResponse).isNotNull();
     assertThat(serviceVariablePageResponse.getResponse().get(0)).isInstanceOf(ServiceVariable.class);
-    assertThat(Arrays.equals(serviceVariablePageResponse.getResponse().get(0).getValue(), "<encrypted>".toCharArray()));
+    assertThat(Arrays.equals(serviceVariablePageResponse.getResponse().get(0).getValue(), "******".toCharArray()));
   }
 }
