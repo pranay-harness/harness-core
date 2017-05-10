@@ -4,19 +4,22 @@ import com.google.common.base.MoreObjects;
 
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.github.reinert.jjschema.Attributes;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.LoadBalancerConfig;
 
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
 @JsonTypeName("ELB")
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
-  private Regions region;
-  private String loadBalancerName;
-  private String accessKey;
-  private String secretKey;
+  @NotNull private Regions region;
+  @NotEmpty private String loadBalancerName;
+  @Attributes(title = "AWS account access key", required = true) @NotEmpty private String accessKey;
+  @Attributes(title = "AWS account secret key") @NotEmpty private String secretKey;
 
   /**
    * Instantiates a new Elastic load balancer config.
