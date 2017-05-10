@@ -302,11 +302,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     boolean encryptAfterUpdate = false;
     boolean encryptable = Encryptable.class.isAssignableFrom(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
+      Object value = entry.getValue();
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
-          && Encryptable.class.isInstance(entry.getValue())) {
-        Encryptable e = (Encryptable) entry.getValue();
+          && Encryptable.class.isInstance(value)) {
+        Encryptable e = (Encryptable) value;
         this.encrypt(e);
-        keyValuePairs.put(entry.getKey(), e);
+        value = e;
       } else if (encryptable) {
         try {
           Field f = entry.getValue().getClass().getDeclaredField(entry.getKey());
@@ -318,7 +319,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
           throw new WingsException("Field " + entry.getKey() + " not found for update on class " + cls.getName(), e);
         }
       }
-      operations.set(entry.getKey(), entry.getValue());
+      operations.set(entry.getKey(), value);
     }
     update(query, operations);
     if (encryptAfterUpdate) {
