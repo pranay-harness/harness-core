@@ -15,4 +15,7 @@ import java.util.List;
 public interface AppdynamicsDeletegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_APP_TASK)
   List<AppdynamicsApplicationResponse> getAllApplications(final AppDynamicsConfig appDynamicsConfig) throws IOException;
+
+  @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
+  void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException;
 }

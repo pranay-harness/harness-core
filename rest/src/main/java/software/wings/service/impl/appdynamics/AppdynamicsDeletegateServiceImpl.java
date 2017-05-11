@@ -1,6 +1,8 @@
 package software.wings.service.impl.appdynamics;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.jexl3.JxltEngine.Exception;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -20,7 +22,7 @@ import java.util.List;
  * Created by rsingh on 4/17/17.
  */
 public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDeletegateServiceImpl.class);
 
   @Override
   public List<AppdynamicsApplicationResponse> getAllApplications(AppDynamicsConfig appDynamicsConfig)
@@ -34,6 +36,28 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
       logger.error("Request not successful. Reason: {}", response);
       throw new WingsException("could not get appdynamics applications");
     }
+  }
+
+  @Override
+  public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
+    Response<List<AppdynamicsApplicationResponse>> response = null;
+    try {
+      final Call<List<AppdynamicsApplicationResponse>> request =
+          getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
+      response = request.execute();
+      if (response.isSuccessful()) {
+        return;
+      }
+    } catch (Throwable t) {
+      throw new RuntimeException("Could not reach Appdynamics server. " + t.getMessage());
+    }
+
+    final int errorCode = response.code();
+    if (errorCode == HttpStatus.SC_UNAUTHORIZED) {
+      throw new RuntimeException("Could not login to Appdynamics server with given credentials");
+    }
+
+    throw new RuntimeException(response.message());
   }
 
   private AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {

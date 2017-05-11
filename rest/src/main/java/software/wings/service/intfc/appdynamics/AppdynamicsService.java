@@ -11,4 +11,6 @@ import java.util.List;
  */
 public interface AppdynamicsService {
   List<AppdynamicsApplicationResponse> getApplications(SettingAttribute settingAttribute) throws IOException;
+
+  void validateConfig(SettingAttribute settingAttribute);
 }

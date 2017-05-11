@@ -9,6 +9,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.appdynamics.AppdynamicsApplicationResponse;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -27,7 +29,7 @@ import javax.ws.rs.QueryParam;
 @Api("appdynamics")
 @Path("/appdynamics")
 @Produces("application/json")
-@PublicApi
+@AuthRule(ResourceType.SETTING)
 public class AppdynamicsResource {
   @Inject private SettingsService settingsService;
 
@@ -38,7 +40,7 @@ public class AppdynamicsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<AppdynamicsApplicationResponse>> getAllApplications(
-      @QueryParam("settingId") final String settingId) throws IOException {
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     notNullCheck("Setting", settingAttribute);
     return new RestResponse<>(appdynamicsService.getApplications(settingAttribute));
