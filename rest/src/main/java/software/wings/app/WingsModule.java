@@ -87,6 +87,7 @@ import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppContainerService;
@@ -133,6 +134,7 @@ import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExpressionProcessorFactory;
@@ -218,6 +220,7 @@ public class WingsModule extends AbstractModule {
     bind(LicenseProvider.class).to(DatabaseLicenseProviderImpl.class);
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
+    bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
