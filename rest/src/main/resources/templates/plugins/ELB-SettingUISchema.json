@@ -1,5 +1,6 @@
 {
   "type": { "ui:widget": "hidden" },
+  "secretKey": { "ui:widget": "password" },
   "ui:order": [ "type",  "accessKey", "secretKey", "region", "loadBalancerName"]
 
 }
