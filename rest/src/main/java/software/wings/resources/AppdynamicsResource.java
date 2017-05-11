@@ -1,20 +1,15 @@
 package software.wings.resources;
 
-import static software.wings.utils.Validator.notNullCheck;
-
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SettingAttribute;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.appdynamics.AppdynamicsApplicationResponse;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,8 +26,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
 public class AppdynamicsResource {
-  @Inject private SettingsService settingsService;
-
   @Inject private AppdynamicsService appdynamicsService;
 
   @GET
@@ -41,8 +34,6 @@ public class AppdynamicsResource {
   @ExceptionMetered
   public RestResponse<List<AppdynamicsApplicationResponse>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
-    final SettingAttribute settingAttribute = settingsService.get(settingId);
-    notNullCheck("Setting", settingAttribute);
-    return new RestResponse<>(appdynamicsService.getApplications(settingAttribute));
+    return new RestResponse<>(appdynamicsService.getApplications(settingId));
   }
 }
