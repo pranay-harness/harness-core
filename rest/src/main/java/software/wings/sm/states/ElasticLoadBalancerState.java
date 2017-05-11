@@ -15,8 +15,13 @@ import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
@@ -56,21 +61,43 @@ public class ElasticLoadBalancerState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
-    AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.get(
-        context.getAppId(), phaseElement.getInfraMappingId());
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(context.getAppId(), phaseElement.getInfraMappingId());
 
-    awsInfrastructureMapping.getComputeProviderSettingId();
+    String loadBalancerName;
+    String region;
 
-    String loadBalancerName = awsInfrastructureMapping.getLoadBalancerId();
+    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      loadBalancerName = ((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId();
+      region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
+      SettingAttribute settingAttribute =
+          settingsService.get(context.getAppId(), infrastructureMapping.getComputeProviderSettingId());
+      AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+      return execute(
+          context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      SettingAttribute elbSetting =
+          settingsService.get(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      ElasticLoadBalancerConfig loadBalancerConfig = (ElasticLoadBalancerConfig) elbSetting.getValue();
+      loadBalancerName = loadBalancerConfig.getLoadBalancerName();
+      region = loadBalancerConfig.getRegion().name();
+      return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
+          loadBalancerConfig.getSecretKey());
+    } else {
+      throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ELB operations not supported");
+    }
+  }
 
-    SettingAttribute settingAttribute =
-        settingsService.get(context.getAppId(), awsInfrastructureMapping.getComputeProviderSettingId());
-    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient = awsHelperService.getClassicElbClient(
-        Regions.fromName(awsInfrastructureMapping.getRegion()), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+  public ExecutionResponse execute(
+      ExecutionContext context, String loadBalancerName, Regions region, String accessKey, String secretKey) {
+    ExecutionStatus status;
+    AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+        awsHelperService.getClassicElbClient(region, accessKey, secretKey);
 
     InstanceElement instance = context.getContextElement(ContextElementType.INSTANCE);
-    String instanceId = instance.getHostElement().getInstanceId();
+    final String instanceId = instance.getHostElement().getInstanceId() != null
+        ? instance.getHostElement().getInstanceId()
+        : awsHelperService.getInstanceId(region, accessKey, secretKey, instance.getHostElement().getHostName());
 
     String errorMessage = "";
 
@@ -81,13 +108,15 @@ public class ElasticLoadBalancerState extends State {
                                                        .withLoadBalancerName(loadBalancerName)
                                                        .withInstances(new Instance(instanceId)))
                 .getInstances()
-                .contains(instanceId)
-          : !amazonElasticLoadBalancingClient
-                 .deregisterInstancesFromLoadBalancer(new DeregisterInstancesFromLoadBalancerRequest()
-                                                          .withLoadBalancerName(loadBalancerName)
-                                                          .withInstances(new Instance(instanceId)))
-                 .getInstances()
-                 .contains(instanceId);
+                .stream()
+                .anyMatch(inst -> inst.getInstanceId().equals(instanceId))
+          : amazonElasticLoadBalancingClient
+                .deregisterInstancesFromLoadBalancer(new DeregisterInstancesFromLoadBalancerRequest()
+                                                         .withLoadBalancerName(loadBalancerName)
+                                                         .withInstances(new Instance(instanceId)))
+                .getInstances()
+                .stream()
+                .noneMatch(inst -> inst.getInstanceId().equals(instanceId));
       status = result ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
       status = ExecutionStatus.ERROR;

@@ -7,16 +7,21 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.LoadBalancerConfig;
+import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
+import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
 @JsonTypeName("ELB")
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
-  @NotNull private Regions region;
+  @Attributes(title = "Region")
+  @DefaultValue("us-east-1")
+  @EnumData(enumDataProvider = AwsRegionDataProvider.class)
+  private Regions region;
   @NotEmpty private String loadBalancerName;
   @Attributes(title = "AWS account access key", required = true) @NotEmpty private String accessKey;
   @Attributes(title = "AWS account secret key") @NotEmpty private String secretKey;

@@ -13,6 +13,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.common.base.Strings;
 
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
@@ -113,8 +114,8 @@ public class CloudWatchState extends State {
       HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
       String hostName = hostElement.getHostName();
       if (!Strings.isNullOrEmpty(hostName)) {
-        String awsInstanceId =
-            awsHelperService.getInstanceId(awsConfig.getAccessKey(), awsConfig.getSecretKey(), hostName);
+        String awsInstanceId = awsHelperService.getInstanceId(
+            Regions.US_EAST_1, awsConfig.getAccessKey(), awsConfig.getSecretKey(), hostName);
         hostElement.setInstanceId(awsInstanceId);
       }
     }

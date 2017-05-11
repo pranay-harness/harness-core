@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.MainConfiguration;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
@@ -37,6 +38,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @NotEmpty
   private String hostConnectionAttrs;
   @Attributes(title = "Load Balancer") private String loadBalancerId;
+  @Transient @SchemaIgnore private String loadBalancerName;
 
   /**
    * Instantiates a new Aws infrastructure mapping.
@@ -112,6 +114,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   public void setHostConnectionAttrs(String hostConnectionAttrs) {
     this.hostConnectionAttrs = hostConnectionAttrs;
+  }
+
+  public String getLoadBalancerName() {
+    return loadBalancerName;
+  }
+
+  public void setLoadBalancerName(String loadBalancerName) {
+    this.loadBalancerName = loadBalancerName;
   }
 
   /**

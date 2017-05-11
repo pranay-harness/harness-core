@@ -97,7 +97,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
-    return wingsPersistence.query(InfrastructureMapping.class, pageRequest);
+    PageResponse<InfrastructureMapping> pageResponse = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
+    pageResponse.getResponse().forEach(this ::setLoadBalancerName);
+    return pageResponse;
+  }
+
+  private void setLoadBalancerName(InfrastructureMapping infrastructureMapping) {
+    if (infrastructureMapping instanceof AwsInfrastructureMapping) {
+      ((AwsInfrastructureMapping) infrastructureMapping)
+          .setLoadBalancerName(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      SettingAttribute settingAttribute =
+          settingsService.get(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      if (settingAttribute != null) {
+        ((PhysicalInfrastructureMapping) infrastructureMapping).setLoadBalancerName(settingAttribute.getName());
+      }
+    }
   }
 
   @Override
@@ -168,7 +183,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public InfrastructureMapping get(String appId, String infraMappingId) {
-    return wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
+    InfrastructureMapping infrastructureMapping =
+        wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
+    setLoadBalancerName(infrastructureMapping);
+    return infrastructureMapping;
   }
 
   @Override
@@ -195,9 +213,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       updateOperations.set(
           "clusterName", ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getClusterName());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
-      AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
-      updateOperations.set("region", awsInfrastructureMapping.getRegion());
-      updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
+      updateOperations.set("region", ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
+      updateOperations.set("loadBalancerId", ((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      updateOperations.set(
+          "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
     }
 
     wingsPersistence.update(savedInfraMapping, updateOperations);
