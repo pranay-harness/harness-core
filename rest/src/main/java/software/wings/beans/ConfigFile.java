@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.encryption.Encryptable;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
@@ -36,7 +37,7 @@ import javax.ws.rs.DefaultValue;
     },
     options = @IndexOptions(
         unique = true, name = "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1")))
-public class ConfigFile extends BaseFile {
+public class ConfigFile extends BaseFile implements Encryptable {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
    */
@@ -76,6 +77,8 @@ public class ConfigFile extends BaseFile {
   @FormDataParam("instances") private List<String> instances;
 
   @Transient private ConfigFile overriddenConfigFile;
+
+  @FormDataParam("isEncrypted") private boolean encrypted = false;
 
   /**
    * Gets entity id.
@@ -416,6 +419,20 @@ public class ConfigFile extends BaseFile {
     this.instances = instances;
   }
 
+  public boolean isEncrypted() {
+    return encrypted;
+  }
+
+  public void setEncrypted(boolean encrypted) {
+    this.encrypted = encrypted;
+  }
+
+  public String getAccountId() {
+    return envId;
+  }
+
+  public void setAccountId(String accountId) {}
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -437,6 +454,7 @@ public class ConfigFile extends BaseFile {
         .add("configOverrideExpression", configOverrideExpression)
         .add("instances", instances)
         .add("overriddenConfigFile", overriddenConfigFile)
+        .add("encrypted", encrypted)
         .toString();
   }
 
@@ -445,7 +463,7 @@ public class ConfigFile extends BaseFile {
     return 31 * super.hashCode()
         + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
               targetToAllEnv, defaultVersion, envIdVersionMap, envIdVersionMapString, setAsDefault, notes, overridePath,
-              configOverrideType, configOverrideExpression, instances, overriddenConfigFile);
+              configOverrideType, configOverrideExpression, instances, overriddenConfigFile, encrypted);
   }
 
   @Override
@@ -474,7 +492,8 @@ public class ConfigFile extends BaseFile {
         && Objects.equals(this.configOverrideType, other.configOverrideType)
         && Objects.equals(this.configOverrideExpression, other.configOverrideExpression)
         && Objects.equals(this.instances, other.instances)
-        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
+        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile)
+        && Objects.equals(this.encrypted, other.encrypted);
   }
 
   /**
@@ -525,6 +544,7 @@ public class ConfigFile extends BaseFile {
     private String configOverrideExpression;
     private List<String> instances;
     private ConfigFile overriddenConfigFile;
+    private boolean encrypted;
 
     private Builder() {}
 
@@ -687,6 +707,11 @@ public class ConfigFile extends BaseFile {
       return this;
     }
 
+    public Builder withEncrypted(boolean encrypted) {
+      this.encrypted = encrypted;
+      return this;
+    }
+
     public Builder but() {
       return aConfigFile()
           .withName(name)
@@ -719,7 +744,8 @@ public class ConfigFile extends BaseFile {
           .withConfigOverrideType(configOverrideType)
           .withConfigOverrideExpression(configOverrideExpression)
           .withInstances(instances)
-          .withOverriddenConfigFile(overriddenConfigFile);
+          .withOverriddenConfigFile(overriddenConfigFile)
+          .withEncrypted(encrypted);
     }
 
     public ConfigFile build() {
@@ -755,6 +781,7 @@ public class ConfigFile extends BaseFile {
       configFile.setConfigOverrideExpression(configOverrideExpression);
       configFile.setInstances(instances);
       configFile.setOverriddenConfigFile(overriddenConfigFile);
+      configFile.setEncrypted(encrypted);
       return configFile;
     }
   }
