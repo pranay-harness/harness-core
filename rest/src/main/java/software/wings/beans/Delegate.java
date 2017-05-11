@@ -367,4 +367,13 @@ public class Delegate extends Base {
       return delegate;
     }
   }
+
+  @Override
+  public String toString() {
+    return "Delegate{"
+        + "accountId='" + accountId + '\'' + ", status=" + status + ", connected=" + connected + ", ip='" + ip + '\''
+        + ", hostName='" + hostName + '\'' + ", lastHeartBeat=" + lastHeartBeat + ", version='" + version + '\''
+        + ", supportedTaskTypes=" + supportedTaskTypes + ", doUpgrade=" + doUpgrade + ", upgradeScript='"
+        + upgradeScript + '\'' + '}';
+  }
 }
