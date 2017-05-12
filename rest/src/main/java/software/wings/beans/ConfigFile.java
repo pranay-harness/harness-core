@@ -78,7 +78,7 @@ public class ConfigFile extends BaseFile implements Encryptable {
 
   @Transient private ConfigFile overriddenConfigFile;
 
-  @FormDataParam("isEncrypted") private boolean encrypted = false;
+  @FormDataParam("encrypted") private boolean encrypted = false;
 
   /**
    * Gets entity id.
