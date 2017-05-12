@@ -51,7 +51,9 @@ public enum TaskType {
   NEXUS_COLLECTION(NexusCollectionTask.class),
   NEXUS_VALIDATE_ARTIFACT_SERVER(ServiceImplDelegateTask.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
-  APPDYNAMICS_APP_TASK(ServiceImplDelegateTask.class);
+  APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK(ServiceImplDelegateTask.class),
+  APPDYNAMICS_GET_APP_TASK(ServiceImplDelegateTask.class),
+  APPDYNAMICS_GET_TIER_TASK(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

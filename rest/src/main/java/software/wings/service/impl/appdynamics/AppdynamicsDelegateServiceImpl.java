@@ -1,7 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +9,10 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
-import software.wings.service.intfc.appdynamics.AppdynamicsDeletegateService;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,28 +21,57 @@ import java.util.List;
 /**
  * Created by rsingh on 4/17/17.
  */
-public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateService {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDeletegateServiceImpl.class);
+public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateService {
+  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
 
   @Override
-  public List<AppdynamicsApplicationResponse> getAllApplications(AppDynamicsConfig appDynamicsConfig)
-      throws IOException {
-    final Call<List<AppdynamicsApplicationResponse>> request =
+  public List<AppdynamicsApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
+    final Call<List<AppdynamicsApplication>> request =
         getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
-    final Response<List<AppdynamicsApplicationResponse>> response = request.execute();
+    final Response<List<AppdynamicsApplication>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException("could not get appdynamics applications");
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics applications");
+    }
+  }
+
+  @Override
+  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId) throws IOException {
+    final Call<List<AppdynamicsTier>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listTiers(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
+    final Response<List<AppdynamicsTier>> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tiers");
+    }
+  }
+
+  @Override
+  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(
+      AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
+    final Call<List<AppdynamicsBusinessTransaction>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listBusinessTransactions(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
+    final Response<List<AppdynamicsBusinessTransaction>> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException(
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics business transactions");
     }
   }
 
   @Override
   public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
-    Response<List<AppdynamicsApplicationResponse>> response = null;
+    Response<List<AppdynamicsApplication>> response = null;
     try {
-      final Call<List<AppdynamicsApplicationResponse>> request =
+      final Call<List<AppdynamicsApplication>> request =
           getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
       response = request.execute();
       if (response.isSuccessful()) {

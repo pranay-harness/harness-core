@@ -3,7 +3,7 @@ package software.wings.service.impl.appdynamics;
 /**
  * Created by rsingh on 4/17/17.
  */
-public class AppdynamicsApplicationResponse {
+public class AppdynamicsApplication {
   private String name;
   private String description;
   private int id;
@@ -30,5 +30,28 @@ public class AppdynamicsApplicationResponse {
 
   public void setId(int id) {
     this.id = id;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    AppdynamicsApplication that = (AppdynamicsApplication) o;
+
+    return id == that.id;
+  }
+
+  @Override
+  public int hashCode() {
+    return id;
+  }
+
+  @Override
+  public String toString() {
+    return "AppdynamicsApplication{"
+        + "name='" + name + '\'' + ", description='" + description + '\'' + ", id=" + id + '}';
   }
 }

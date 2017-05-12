@@ -8,7 +8,7 @@ test_status=$?
 mongodump
 
 #tar.gz dump files
-tar -czvf dump.tar.gz dump/
+tar -czf dump.tar.gz dump/
 
 if [[ $test_status -ne 0 ]] ; then
   echo 'integration tests failed';
