@@ -238,4 +238,14 @@ public class InfrastructureMappingResource {
     return new RestResponse<>(
         infrastructureMappingService.listTargetGroups(appId, deploymentType, computeProviderId, loadbalancerName));
   }
+
+  @GET
+  @Path("elastic-load-balancers")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getElasticLoadBalancers(@QueryParam("accountId") String accountId,
+      @QueryParam("accessKey") String accessKey, @QueryParam("secretKey") String secretKey,
+      @QueryParam("region") String region) {
+    return new RestResponse<>(infrastructureMappingService.listElasticLoadBalancer(accessKey, secretKey, region));
+  }
 }

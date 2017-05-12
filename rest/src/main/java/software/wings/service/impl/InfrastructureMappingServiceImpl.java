@@ -183,10 +183,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public InfrastructureMapping get(String appId, String infraMappingId) {
-    InfrastructureMapping infrastructureMapping =
-        wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
-    setLoadBalancerName(infrastructureMapping);
-    return infrastructureMapping;
+    return wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
   }
 
   @Override
@@ -459,6 +456,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     return Arrays.asList(infrastructureProvider.validateHost(
         validationRequest.getHostNames().get(0), hostConnectionSetting, validationRequest.getExecutionCredential()));
+  }
+
+  @Override
+  public List<String> listElasticLoadBalancer(String accessKey, String secretKey, String region) {
+    AwsInfrastructureProvider infrastructureProvider =
+        (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
+    return infrastructureProvider.listClassicLoadBalancers(accessKey, secretKey, region);
   }
 
   @Override
