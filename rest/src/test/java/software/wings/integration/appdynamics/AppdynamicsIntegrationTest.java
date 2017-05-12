@@ -96,7 +96,6 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       Assert.assertTrue(tier.getId() > 0);
       Assert.assertFalse(StringUtils.isBlank(tier.getName()));
-      Assert.assertFalse(StringUtils.isBlank(tier.getName()));
       Assert.assertFalse(StringUtils.isBlank(tier.getType()));
       Assert.assertFalse(StringUtils.isBlank(tier.getAgentType()));
       Assert.assertTrue(tier.getNumberOfNodes() > 0);

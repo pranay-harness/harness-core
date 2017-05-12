@@ -58,4 +58,28 @@ public class AppdynamicsTier {
   public void setNumberOfNodes(int numberOfNodes) {
     this.numberOfNodes = numberOfNodes;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    AppdynamicsTier that = (AppdynamicsTier) o;
+
+    return id == that.id;
+  }
+
+  @Override
+  public int hashCode() {
+    return (int) (id ^ (id >>> 32));
+  }
+
+  @Override
+  public String toString() {
+    return "AppdynamicsTier{"
+        + "id=" + id + ", name='" + name + '\'' + ", description='" + description + '\'' + ", type='" + type + '\''
+        + ", agentType='" + agentType + '\'' + ", numberOfNodes=" + numberOfNodes + '}';
+  }
 }

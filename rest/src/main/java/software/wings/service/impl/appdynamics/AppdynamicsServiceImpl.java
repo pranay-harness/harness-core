@@ -10,7 +10,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.appdynamics.AppdynamicsDeletegateService;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public List<AppdynamicsApplication> getApplications(final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
         .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
   }
 
@@ -39,7 +39,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public List<AppdynamicsTier> getTiers(String settingId, int appdynamicsAppId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
         .getTiers((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
   }
 
@@ -49,7 +49,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
 
-    return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
         .getBusinessTransactions((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
   }
 
@@ -57,7 +57,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public void validateConfig(final SettingAttribute settingAttribute) {
     try {
       Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
+      delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
           .validateConfig((AppDynamicsConfig) settingAttribute.getValue());
     } catch (Exception e) {
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, "reason", e.getMessage());

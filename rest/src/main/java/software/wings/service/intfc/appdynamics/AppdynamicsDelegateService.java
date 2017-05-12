@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by rsingh on 4/17/17.
  */
-public interface AppdynamicsDeletegateService {
+public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_APP_TASK)
   List<AppdynamicsApplication> getAllApplications(final AppDynamicsConfig appDynamicsConfig) throws IOException;
 

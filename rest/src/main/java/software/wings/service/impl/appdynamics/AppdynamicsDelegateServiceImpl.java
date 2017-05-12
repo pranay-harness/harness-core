@@ -9,9 +9,10 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
-import software.wings.service.intfc.appdynamics.AppdynamicsDeletegateService;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,8 +21,8 @@ import java.util.List;
 /**
  * Created by rsingh on 4/17/17.
  */
-public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateService {
-  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDeletegateServiceImpl.class);
+public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateService {
+  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
 
   @Override
   public List<AppdynamicsApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
@@ -32,7 +33,7 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException("could not get appdynamics applications");
+      throw new WingsException(ErrorCode.APPDYNAMOCS_ERROR, "reason", "could not fetch Appdynamics applications");
     }
   }
 
@@ -46,7 +47,7 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException("could not get appdynamics tiers");
+      throw new WingsException(ErrorCode.APPDYNAMOCS_ERROR, "reason", "could not fetch Appdynamics tiers");
     }
   }
 
@@ -61,7 +62,8 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException("could not get appdynamics applications");
+      throw new WingsException(
+          ErrorCode.APPDYNAMOCS_ERROR, "reason", "could not fetch Appdynamics business transactions");
     }
   }
 

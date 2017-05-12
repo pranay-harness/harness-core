@@ -47,16 +47,14 @@ import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
-import software.wings.service.impl.appdynamics.AppdynamicsDeletegateServiceImpl;
-import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
+import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
-import software.wings.service.intfc.appdynamics.AppdynamicsDeletegateService;
-import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -104,7 +102,7 @@ public class DelegateModule extends AbstractModule {
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(NexusService.class).to(NexusServiceImpl.class);
-    bind(AppdynamicsDeletegateService.class).to(AppdynamicsDeletegateServiceImpl.class);
+    bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
