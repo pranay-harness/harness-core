@@ -200,7 +200,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.update(SERVICE_VARIABLE);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
-            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT));
+            ImmutableMap.of("value", SERVICE_VARIABLE.getValue(), "type", TEXT), SERVICE_VARIABLE.getAccountId());
   }
 
   /**
