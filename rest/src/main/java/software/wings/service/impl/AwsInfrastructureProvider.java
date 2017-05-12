@@ -421,6 +421,19 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .collect(Collectors.toList());
   }
 
+  public List<String> listClassicLoadBalancers(String accessKey, String secretKey, String region) {
+    com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
+        awsHelperService.getClassicElbClient(Regions.valueOf(region), accessKey, secretKey);
+
+    return amazonElasticLoadBalancingClient
+        .describeLoadBalancers(
+            new com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest().withPageSize(400))
+        .getLoadBalancerDescriptions()
+        .stream()
+        .map(LoadBalancerDescription::getLoadBalancerName)
+        .collect(Collectors.toList());
+  }
+
   public Map<String, String> listTargetGroups(SettingAttribute computeProviderSetting, String loadBalancerName) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 

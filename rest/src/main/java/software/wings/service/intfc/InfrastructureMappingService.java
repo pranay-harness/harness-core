@@ -14,6 +14,7 @@ import software.wings.utils.validation.Update;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -168,26 +169,102 @@ public interface InfrastructureMappingService {
    * @param appId             the app id
    * @param deploymentType    the deployment type
    * @param computeProviderId the compute provider id
+   * @param region            the region
    * @return the list
    */
   List<String> listClusters(String appId, String deploymentType, String computeProviderId, String region);
 
+  /**
+   * List images list.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
   List<String> listImages(String appId, String deploymentType, String computeProviderId, String region);
 
+  /**
+   * List regions list.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @return the list
+   */
   List<String> listRegions(String appId, String deploymentType, String computeProviderId);
 
+  /**
+   * List instance types list.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @return the list
+   */
   List<String> listInstanceTypes(String appId, String deploymentType, String computeProviderId);
 
+  /**
+   * List instance roles list.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @return the list
+   */
   List<String> listInstanceRoles(String appId, String deploymentType, String computeProviderId);
 
+  /**
+   * List all roles map.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @return the map
+   */
   Map<String, String> listAllRoles(String appId, String deploymentType, String computeProviderId);
 
+  /**
+   * List networks list.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
   List<String> listNetworks(String appId, String deploymentType, String computeProviderId, String region);
 
+  /**
+   * List load balancers map.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @return the map
+   */
   Map<String, String> listLoadBalancers(String appId, String deploymentType, String computeProviderId);
 
+  /**
+   * List classic load balancers list.
+   *
+   * @param appId             the app id
+   * @param computeProviderId the compute provider id
+   * @param region            the region
+   * @return the list
+   */
   List<String> listClassicLoadBalancers(String appId, String computeProviderId, String region);
 
+  /**
+   * List target groups map.
+   *
+   * @param appId             the app id
+   * @param deploymentType    the deployment type
+   * @param computeProviderId the compute provider id
+   * @param loadBalancerName  the load balancer name
+   * @return the map
+   */
   Map<String, String> listTargetGroups(
       String appId, String deploymentType, String computeProviderId, String loadBalancerName);
 
@@ -198,4 +275,14 @@ public interface InfrastructureMappingService {
    * @return the host name validation response
    */
   List<HostValidationResponse> validateHost(@Valid HostValidationRequest validationRequest);
+
+  /**
+   * List elastic load balancer list.
+   *
+   * @param accessKey the access key
+   * @param secretKey the secret key
+   * @param region    the region
+   * @return the list
+   */
+  List<String> listElasticLoadBalancer(@NotNull String accessKey, @NotNull String secretKey, @NotNull String region);
 }
