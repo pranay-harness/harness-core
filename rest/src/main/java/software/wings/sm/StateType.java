@@ -132,7 +132,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   COMMAND(CommandState.class, StencilCategory.COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+      ORCHESTRATION_STENCILS, DEPLOYMENT),
 
   /**
    * Approval state type.
