@@ -28,11 +28,19 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
-  public List<AppdynamicsApplicationResponse> getApplications(final String settingId) throws IOException {
+  public List<AppdynamicsApplication> getApplications(final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
         .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
+  }
+
+  @Override
+  public List<AppdynamicsTier> getTiers(String settingId, int appdynamicsAppId) throws IOException {
+    final SettingAttribute settingAttribute = settingsService.get(settingId);
+    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
+        .getTiers((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
   }
 
   @Override

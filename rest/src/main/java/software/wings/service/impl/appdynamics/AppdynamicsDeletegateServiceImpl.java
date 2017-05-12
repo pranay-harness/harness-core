@@ -1,7 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,16 +24,29 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDeletegateServiceImpl.class);
 
   @Override
-  public List<AppdynamicsApplicationResponse> getAllApplications(AppDynamicsConfig appDynamicsConfig)
-      throws IOException {
-    final Call<List<AppdynamicsApplicationResponse>> request =
+  public List<AppdynamicsApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
+    final Call<List<AppdynamicsApplication>> request =
         getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
-    final Response<List<AppdynamicsApplicationResponse>> response = request.execute();
+    final Response<List<AppdynamicsApplication>> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
       throw new WingsException("could not get appdynamics applications");
+    }
+  }
+
+  @Override
+  public List<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId) throws IOException {
+    final Call<List<AppdynamicsTier>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listTiers(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
+    final Response<List<AppdynamicsTier>> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException("could not get appdynamics tiers");
     }
   }
 
@@ -55,9 +67,9 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
 
   @Override
   public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
-    Response<List<AppdynamicsApplicationResponse>> response = null;
+    Response<List<AppdynamicsApplication>> response = null;
     try {
-      final Call<List<AppdynamicsApplicationResponse>> request =
+      final Call<List<AppdynamicsApplication>> request =
           getAppdynamicsRestClient(appDynamicsConfig).listAllApplications(getHeaderWithCredentials(appDynamicsConfig));
       response = request.execute();
       if (response.isSuccessful()) {

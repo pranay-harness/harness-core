@@ -3,7 +3,7 @@ package software.wings.service.impl.appdynamics;
 /**
  * Created by rsingh on 4/17/17.
  */
-public class AppdynamicsApplicationResponse {
+public class AppdynamicsApplication {
   private String name;
   private String description;
   private int id;
