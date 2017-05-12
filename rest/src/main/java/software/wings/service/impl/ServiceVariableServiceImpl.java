@@ -83,7 +83,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     wingsPersistence.updateFields(ServiceVariable.class, serviceVariable.getUuid(),
-        ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()));
+        ImmutableMap.of("value", serviceVariable.getValue(), "type", serviceVariable.getType()),
+        serviceVariable.getAccountId());
 
     return get(serviceVariable.getAppId(), serviceVariable.getUuid());
   }

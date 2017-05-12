@@ -297,6 +297,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
+    this.updateFields(cls, entityId, keyValuePairs, null);
+  }
+
+  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, String encryptionKey) {
     Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
     boolean encryptAfterUpdate = false;
@@ -310,9 +314,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         value = e;
       } else if (encryptable) {
         try {
-          Field f = entry.getValue().getClass().getDeclaredField(entry.getKey());
+          Field f = cls.getDeclaredField(entry.getKey());
           Encrypted a = f.getAnnotation(Encrypted.class);
           if (null != a) {
+            value = this.encryptChars((char[]) value, encryptionKey);
             encryptAfterUpdate = true;
           }
         } catch (NoSuchFieldException e) {

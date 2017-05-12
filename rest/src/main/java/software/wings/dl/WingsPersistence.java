@@ -187,6 +187,17 @@ public interface WingsPersistence {
   <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
 
   /**
+   * Update fields.
+   *
+   * @param <T>           the generic type
+   * @param cls           the cls
+   * @param entityId      the entity id
+   * @param encryptionKey the account id
+   * @param keyValuePairs the key value pairs
+   */
+  <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, String encryptionKey);
+
+  /**
    * Delete.
    *
    * @param <T>  the generic type
