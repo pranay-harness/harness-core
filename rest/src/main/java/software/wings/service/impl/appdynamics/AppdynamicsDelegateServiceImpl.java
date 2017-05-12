@@ -33,7 +33,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMOCS_ERROR, "reason", "could not fetch Appdynamics applications");
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics applications");
     }
   }
 
@@ -47,7 +47,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body();
     } else {
       logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMOCS_ERROR, "reason", "could not fetch Appdynamics tiers");
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tiers");
     }
   }
 
@@ -63,7 +63,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     } else {
       logger.error("Request not successful. Reason: {}", response);
       throw new WingsException(
-          ErrorCode.APPDYNAMOCS_ERROR, "reason", "could not fetch Appdynamics business transactions");
+          ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics business transactions");
     }
   }
 
