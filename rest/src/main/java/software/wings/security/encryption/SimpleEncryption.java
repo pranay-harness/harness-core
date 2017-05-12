@@ -6,6 +6,7 @@ import com.google.common.io.BaseEncoding;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 
 import java.nio.ByteBuffer;
@@ -33,11 +34,11 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class SimpleEncryption implements EncryptionInterface {
   @JsonIgnore private static final Charset CHARSET = Charsets.ISO_8859_1;
-  @JsonIgnore private static final int AES_128_KEY_LENGTH = 16;
+  @JsonIgnore private static final int AES_256_KEY_LENGTH = 32;
 
-  // IV and KEY both need to be AES_128_KEY_LENGTH characters long.
+  // IV and KEY both need to be AES_256_KEY_LENGTH characters long.
   @JsonIgnore @Transient private static final byte[] IV = "EncryptionIV0*d&".getBytes(CHARSET);
-  @JsonIgnore @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@".toCharArray();
+  @JsonIgnore @Transient private static final char[] DEFAULT_KEY = "EncryptionKey2a@EncryptionKey2a@".toCharArray();
   @JsonIgnore @Transient private SecretKeyFactory FACTORY;
 
   private static final EncryptionType encryptionType = EncryptionType.SIMPLE;
@@ -63,11 +64,11 @@ public class SimpleEncryption implements EncryptionInterface {
   }
 
   public SimpleEncryption(char[] key, byte[] salt) {
-    if (key.length > AES_128_KEY_LENGTH) {
-      key = Arrays.copyOf(key, AES_128_KEY_LENGTH);
+    if (key.length > AES_256_KEY_LENGTH) {
+      key = Arrays.copyOf(key, AES_256_KEY_LENGTH);
     }
-    if (key.length != AES_128_KEY_LENGTH) {
-      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " characters. Key is " + key.length);
+    if (key.length != AES_256_KEY_LENGTH) {
+      throw new WingsException("Key must be " + AES_256_KEY_LENGTH + " characters. Key is " + key.length);
     }
     this.key = key;
     this.salt = salt;
@@ -101,10 +102,13 @@ public class SimpleEncryption implements EncryptionInterface {
       System.arraycopy(encrypted, 0, combined, salt.length, encrypted.length);
       return combined;
     } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " ASCII characters.", e);
+      // Key must be AES_256_KEY_LENGTH ASCII characters. If the JCE Unlimited Strength jars aren't installed, this
+      // won't work.
+      throw new WingsException(ErrorCode.ENCRYPTION_NOT_CONFIGURED,
+          "Encryption failed. Have you installed the JCE Unlimited Strength jar files?", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
         | IllegalBlockSizeException | BadPaddingException e) {
-      throw new WingsException("Encryption failed: ", e);
+      throw new WingsException(ErrorCode.ENCRYPTION_NOT_CONFIGURED, "Encryption failed: ", e);
     }
   }
 
@@ -124,10 +128,13 @@ public class SimpleEncryption implements EncryptionInterface {
       c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(inputBytes);
     } catch (InvalidKeyException e) {
-      throw new WingsException("Key must be " + AES_128_KEY_LENGTH + " ASCII characters.", e);
+      // Key must be AES_256_KEY_LENGTH ASCII characters. If the JCE Unlimited Strength jars aren't installed, this
+      // won't work.
+      throw new WingsException(ErrorCode.ENCRYPTION_NOT_CONFIGURED,
+          "Decryption failed. Have you installed the JCE Unlimited Strength jar files?", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
         | IllegalBlockSizeException | BadPaddingException e) {
-      throw new WingsException("Decryption failed: ", e);
+      throw new WingsException(ErrorCode.ENCRYPTION_NOT_CONFIGURED, "Decryption failed: ", e);
     }
   }
 
@@ -138,8 +145,8 @@ public class SimpleEncryption implements EncryptionInterface {
 
   private SecretKey generateSecretKey(char[] key, byte[] salt) {
     try {
-      FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
-      KeySpec spec = new PBEKeySpec(key, salt, 65536, 128);
+      FACTORY = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_256");
+      KeySpec spec = new PBEKeySpec(key, salt, 65536, 256);
       SecretKey tmp = FACTORY.generateSecret(spec);
       return new SecretKeySpec(tmp.getEncoded(), "AES");
     } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {

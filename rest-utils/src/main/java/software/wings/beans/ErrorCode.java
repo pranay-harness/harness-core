@@ -341,7 +341,12 @@ public enum ErrorCode {
 
   APPDYNAMICS_CONFIGURATION_ERROR("APPDYNAMICS_CONFIGURATION_ERROR"),
 
-  APPDYNAMICS_ERROR("APPDYNAMICS_ERROR");
+  APPDYNAMICS_ERROR("APPDYNAMICS_ERROR"),
+
+  /**
+   * Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
+   */
+  ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED");
 
   /**
    * The constant ARGS_NAME.
