@@ -193,6 +193,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate register(Delegate delegate) {
+    logger.info("registering delegate: " + delegate);
     Delegate existingDelegate = wingsPersistence.get(Delegate.class,
         aPageRequest()
             .addFilter("ip", EQ, delegate.getIp())

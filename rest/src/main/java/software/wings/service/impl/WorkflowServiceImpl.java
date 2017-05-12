@@ -23,6 +23,7 @@ import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
+import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.values;
@@ -59,6 +60,7 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter;
@@ -94,6 +96,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.states.ElasticLoadBalancerState.Operation;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
@@ -907,7 +910,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseStepsForSSH(String appId, String envId, WorkflowPhase workflowPhase) {
     // For DC only - for other types it has to be customized
 
-    StateType stateType = determineStateType(appId, workflowPhase.getInfraMappingId());
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+    StateType stateType =
+        infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+        ? DC_NODE_SELECT
+        : AWS_NODE_SELECT;
 
     if (!Arrays.asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Unsupported state type: " + stateType);
@@ -925,9 +933,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .build())
                                    .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE, Constants.DISABLE_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.DISABLE))
-                                   .build());
+    List<Node> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE);
+    List<Node> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE);
+
+    if (attachElbSteps(infrastructureMapping)) {
+      disableServiceSteps.add(aNode()
+                                  .withType(ELASTIC_LOAD_BALANCER.name())
+                                  .withName("Elastic Load Balancer")
+                                  .addProperty("operation", Operation.Disable)
+                                  .build());
+      enableServiceSteps.add(aNode()
+                                 .withType(ELASTIC_LOAD_BALANCER.name())
+                                 .withName("Elastic Load Balancer")
+                                 .addProperty("operation", Operation.Enable)
+                                 .build());
+    }
+
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PhaseStepType.DISABLE_SERVICE, Constants.DISABLE_SERVICE).addAllSteps(disableServiceSteps).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.INSTALL))
@@ -937,14 +960,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
 
-    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE, Constants.ENABLE_SERVICE)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.ENABLE))
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PhaseStepType.ENABLE_SERVICE, Constants.ENABLE_SERVICE).addAllSteps(enableServiceSteps).build());
 
     // Not needed for non-DC
     // workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.DEPROVISION_NODE).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.WRAP_UP, Constants.WRAP_UP).build());
+  }
+
+  private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
+    return (infrastructureMapping instanceof PhysicalInfrastructureMapping
+               && ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId() != null)
+        || (infrastructureMapping instanceof PhysicalInfrastructureMapping
+               && ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId() != null);
   }
 
   private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {
@@ -988,6 +1017,31 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+    StateType stateType =
+        infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
+        ? DC_NODE_SELECT
+        : AWS_NODE_SELECT;
+
+    List<Node> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE, true);
+    List<Node> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE, true);
+
+    if (attachElbSteps(infrastructureMapping)) {
+      disableServiceSteps.add(aNode()
+                                  .withType(ELASTIC_LOAD_BALANCER.name())
+                                  .withName("Elastic Load Balancer")
+                                  .addProperty("operation", Operation.Disable)
+                                  .withRollback(true)
+                                  .build());
+      enableServiceSteps.add(aNode()
+                                 .withType(ELASTIC_LOAD_BALANCER.name())
+                                 .withName("Elastic Load Balancer")
+                                 .addProperty("operation", Operation.Enable)
+                                 .withRollback(true)
+                                 .build());
+    }
+
     WorkflowPhase rollbackWorkflowPhase =
         aWorkflowPhase()
             .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
@@ -999,7 +1053,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .withDeploymentType(workflowPhase.getDeploymentType())
             .withInfraMappingId(workflowPhase.getInfraMappingId())
             .addPhaseStep(aPhaseStep(PhaseStepType.DISABLE_SERVICE, Constants.DISABLE_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.DISABLE, true))
+                              .addAllSteps(disableServiceSteps)
                               .withPhaseStepNameForRollback(Constants.ENABLE_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
@@ -1017,7 +1071,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .build())
             .addPhaseStep(aPhaseStep(PhaseStepType.ENABLE_SERVICE, Constants.ENABLE_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.ENABLE, true))
+                              .addAllSteps(enableServiceSteps)
                               .withRollback(true)
                               .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
@@ -1087,14 +1141,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return nodes;
   }
 
-  private StateType determineStateType(String appId, String infraMappingId) {
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-    StateType stateType =
-        infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
-        ? DC_NODE_SELECT
-        : AWS_NODE_SELECT;
-    return stateType;
-  }
   private void createDefaultNotificationRule(Workflow workflow) {
     Application app = appService.get(workflow.getAppId());
     Account account = accountService.get(app.getAccountId());

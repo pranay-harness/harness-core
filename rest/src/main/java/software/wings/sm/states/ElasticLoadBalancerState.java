@@ -47,7 +47,7 @@ public class ElasticLoadBalancerState extends State {
 
   @Attributes(title = "Operation") private Operation operation;
 
-  @DefaultValue("Instance") @Attributes(title = "Entity") private Entity entity;
+  @DefaultValue("Instance") @Attributes(title = "Entity") @SchemaIgnore private Entity entity = Entity.Instance;
 
   @Attributes(title = "Custom Entity") @SchemaIgnore private String custom;
 

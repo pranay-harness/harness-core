@@ -43,7 +43,8 @@ function guid_to_base64(g, le) {
 db.accounts.find().forEach(function(account) {
   const accountId = account._id
   const role = db.roles.find({"accountId" : accountId, "roleType"  : "ACCOUNT_ADMIN"})
-  db.notificationGroups.insert({"_id" : guid_to_base64(guid(), false), "accountId" : accountId,
+  if (role) {
+    db.notificationGroups.insert({"_id" : guid_to_base64(guid(), false), "accountId" : accountId,
                           "name" : role[0].name,
                           "editable" : false,
                              "roles" : [
@@ -51,7 +52,7 @@ db.accounts.find().forEach(function(account) {
                              ],
                              "appId" : account.appId
                          });
-
+    }
 
 });
 

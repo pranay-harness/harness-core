@@ -43,6 +43,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.io.IOException;
@@ -80,6 +81,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
+  @Inject protected SettingsService settingsService;
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {

@@ -18,13 +18,16 @@ import java.util.Objects;
  */
 @JsonTypeName("ELB")
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
-  @Attributes(title = "Region")
+  @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private Regions region;
-  @NotEmpty private String loadBalancerName;
+
+  @NotEmpty @Attributes(title = "Elastic Load Balancer Name", required = true) private String loadBalancerName;
+
   @Attributes(title = "AWS account access key", required = true) @NotEmpty private String accessKey;
-  @Attributes(title = "AWS account secret key") @NotEmpty private String secretKey;
+
+  @Attributes(title = "AWS account secret key", required = true) @NotEmpty private String secretKey;
 
   /**
    * Instantiates a new Elastic load balancer config.
