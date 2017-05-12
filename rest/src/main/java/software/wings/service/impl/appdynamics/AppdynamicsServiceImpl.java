@@ -36,6 +36,16 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
+  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(String settingId, long appdynamicsAppId)
+      throws IOException {
+    final SettingAttribute settingAttribute = settingsService.get(settingId);
+    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+
+    return delegateProxyFactory.get(AppdynamicsDeletegateService.class, context)
+        .getBusinessTransactions((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
+  }
+
+  @Override
   public void validateConfig(final SettingAttribute settingAttribute) {
     try {
       Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();

@@ -9,6 +9,7 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.appdynamics.AppdynamicsApplicationResponse;
+import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
@@ -35,5 +36,15 @@ public class AppdynamicsResource {
   public RestResponse<List<AppdynamicsApplicationResponse>> getAllApplications(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
     return new RestResponse<>(appdynamicsService.getApplications(settingId));
+  }
+
+  @GET
+  @Path("/business-transactions")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AppdynamicsBusinessTransaction>> getAllBusinessTransactions(
+      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId,
+      @QueryParam("appdynamicsAppId") int appdynamicsAppId) throws IOException {
+    return new RestResponse<>(appdynamicsService.getBusinessTransactions(settingId, appdynamicsAppId));
   }
 }

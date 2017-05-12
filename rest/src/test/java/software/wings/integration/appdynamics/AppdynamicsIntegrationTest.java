@@ -12,6 +12,7 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.rules.Integration;
 import software.wings.service.impl.appdynamics.AppdynamicsApplicationResponse;
+import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 
 import java.util.Arrays;
 import java.util.List;
@@ -55,5 +56,34 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         new GenericType<RestResponse<List<AppdynamicsApplicationResponse>>>() {});
     Assert.assertEquals(0, restResponse.getResponseMessages().size());
     Assert.assertEquals(2, restResponse.getResource().size());
+  }
+
+  @Test
+  public void testGetAllBusinessTransactions() throws Exception {
+    final List<SettingAttribute> appdynamicsSettings =
+        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+    Assert.assertEquals(1, appdynamicsSettings.size());
+
+    // get all applications
+    WebTarget target = client.target(API_BASE
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+    RestResponse<List<AppdynamicsApplicationResponse>> restResponse = getRequestBuilderWithAuthHeader(target).get(
+        new GenericType<RestResponse<List<AppdynamicsApplicationResponse>>>() {});
+
+    long appId = 0;
+
+    for (AppdynamicsApplicationResponse application : restResponse.getResource()) {
+      if (application.getName().equalsIgnoreCase("MyApp")) {
+        appId = application.getId();
+        break;
+      }
+    }
+
+    Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
+    WebTarget btTarget = client.target(API_BASE + "/appdynamics/business-transactions?settingId="
+        + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+    RestResponse<List<AppdynamicsBusinessTransaction>> btRestResponse = getRequestBuilderWithAuthHeader(btTarget).get(
+        new GenericType<RestResponse<List<AppdynamicsBusinessTransaction>>>() {});
+    System.out.println(btRestResponse.getResource());
   }
 }

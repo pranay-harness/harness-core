@@ -39,6 +39,21 @@ public class AppdynamicsDeletegateServiceImpl implements AppdynamicsDeletegateSe
   }
 
   @Override
+  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(
+      AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
+    final Call<List<AppdynamicsBusinessTransaction>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listBusinessTransactions(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId);
+    final Response<List<AppdynamicsBusinessTransaction>> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException("could not get appdynamics applications");
+    }
+  }
+
+  @Override
   public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
     Response<List<AppdynamicsApplicationResponse>> response = null;
     try {
