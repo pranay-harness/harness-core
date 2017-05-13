@@ -125,11 +125,14 @@ public class SimpleEncryption implements EncryptionInterface {
       System.arraycopy(encrypted, newSalt.length, inputBytes, 0, inputBytes.length);
       this.secretKey = generateSecretKey(key, newSalt);
       Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+      int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
+      System.out.println("maxKeyLength AES: " + maxKeyLength);
       c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(inputBytes);
     } catch (InvalidKeyException e) {
       // Key must be AES_256_KEY_LENGTH ASCII characters. If the JCE Unlimited Strength jars aren't installed, this
       // won't work.
+
       throw new WingsException(ErrorCode.ENCRYPTION_NOT_CONFIGURED,
           "Decryption failed. Have you installed the JCE Unlimited Strength jar files?", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
