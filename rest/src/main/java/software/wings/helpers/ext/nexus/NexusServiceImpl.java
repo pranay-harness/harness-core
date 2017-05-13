@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Singleton;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import okhttp3.Credentials;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -58,7 +60,7 @@ public class NexusServiceImpl implements NexusService {
     } catch (final IOException e) {
       logger.error("Error occurred while retrieving Repositories from Nexus server {} ", nexusConfig.getNexusUrl(), e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
     return repos;
@@ -186,7 +188,7 @@ public class NexusServiceImpl implements NexusService {
           "Error occurred while retrieving Repository Group Ids  from Nexus server {} for repository under path  {} ",
           nexusConfig.getNexusUrl(), repoId, path, e);
       List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(ErrorCode.DEFAULT_ERROR_CODE, e.getMessage()));
+      responseMessages.add(prepareResponseMessage(ErrorCode.INVALID_REQUEST, e.getMessage()));
       throw new WingsException(responseMessages, e.getMessage(), e);
     }
   }
@@ -407,6 +409,8 @@ public class NexusServiceImpl implements NexusService {
       switch (code) {
         case 404:
           return false;
+        case 401:
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid nexus credentials");
       }
       throw new WingsException(errorCode, "message", response.message());
     }

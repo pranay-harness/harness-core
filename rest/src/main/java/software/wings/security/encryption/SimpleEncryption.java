@@ -130,6 +130,7 @@ public class SimpleEncryption implements EncryptionInterface {
     } catch (InvalidKeyException e) {
       // Key must be AES_256_KEY_LENGTH ASCII characters. If the JCE Unlimited Strength jars aren't installed, this
       // won't work.
+
       throw new WingsException(ErrorCode.ENCRYPTION_NOT_CONFIGURED,
           "Decryption failed. Have you installed the JCE Unlimited Strength jar files?", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException
