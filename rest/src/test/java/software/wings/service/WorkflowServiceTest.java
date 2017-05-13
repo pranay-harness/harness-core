@@ -365,8 +365,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, null, null);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(7).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS,
-        StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE, StateTypeScope.DEPLOYMENT, StateTypeScope.COMMON,
-        StateTypeScope.VERIFICATION, StateTypeScope.TRAFFIC_ROUTING);
+        StateTypeScope.PIPELINE_STENCILS, StateTypeScope.NONE, StateTypeScope.COMMON);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
         .extracting(Stencil::getType)
         .contains("REPEAT", "FORK");

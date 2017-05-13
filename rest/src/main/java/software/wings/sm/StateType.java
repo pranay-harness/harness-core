@@ -2,15 +2,21 @@ package software.wings.sm;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
+import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
+import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
+import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.PROVISION_NODE;
+import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.sm.StateTypeScope.COMMON;
-import static software.wings.sm.StateTypeScope.DEPLOYMENT;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
-import static software.wings.sm.StateTypeScope.TRAFFIC_ROUTING;
-import static software.wings.sm.StateTypeScope.VERIFICATION;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
@@ -25,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.PhaseStepType;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -60,10 +67,10 @@ import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents type of state.
@@ -75,135 +82,137 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Subworkflow state type.
    */
-  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS, COMMON),
+  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, StencilCategory.CONTROLS, 2, ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+  FORK(ForkState.class, StencilCategory.CONTROLS, 2, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, VERIFICATIONS, 1, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
+  HTTP(HttpState.class, VERIFICATIONS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
+  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 3, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Email state type.
    */
-  EMAIL(EmailState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, COMMON),
+  EMAIL(EmailState.class, StencilCategory.OTHERS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Env state state type.
    */
-  ENV_STATE(EnvState.class, StencilCategory.ENVIRONMENTS, PIPELINE_STENCILS),
+  ENV_STATE(EnvState.class, StencilCategory.ENVIRONMENTS, asList(), PIPELINE_STENCILS),
 
   /**
    * Command state type.
    */
   COMMAND(CommandState.class, StencilCategory.COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      ORCHESTRATION_STENCILS, DEPLOYMENT),
+      asList(DEPLOY_SERVICE), ORCHESTRATION_STENCILS),
 
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS, COMMON),
+  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, asList(), ORCHESTRATION_STENCILS, PIPELINE_STENCILS, COMMON),
 
   /**
    * The Load balancer.
    */
   ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, StencilCategory.COMMANDS, "Elastic Load Balancer",
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      ORCHESTRATION_STENCILS, COMMON, TRAFFIC_ROUTING),
+      asList(ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Jenkins state type.
    */
-  JENKINS(JenkinsState.class, VERIFICATIONS, ORCHESTRATION_STENCILS, COMMON, VERIFICATION),
+  JENKINS(JenkinsState.class, VERIFICATIONS, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Select state.
    */
   AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH),
-      ORCHESTRATION_STENCILS, COMMON),
+      asList(PROVISION_NODE, SELECT_NODE), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Provision state.
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
-      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), ORCHESTRATION_STENCILS, COMMON),
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(PROVISION_NODE, SELECT_NODE),
+      ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Phase state type.
    */
   DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      ORCHESTRATION_STENCILS, COMMON),
+      asList(SELECT_NODE), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Phase state type.
    */
-  PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
+  PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
   /**
    * Phase state type.
    */
-  PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, NONE),
+  PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS, COMMON),
 
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
 
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
 
   KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS, COMMON),
 
   KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
+
   KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS, COMMON, DEPLOYMENT),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
 
   AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      ORCHESTRATION_STENCILS, COMMON),
+      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS, COMMON),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
-      ORCHESTRATION_STENCILS, COMMON);
+      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS, COMMON);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
@@ -212,6 +221,7 @@ public enum StateType implements StateTypeDescriptor {
   private Object jsonSchema;
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
+  private List<String> phaseStepTypes = new ArrayList<>();
   private StencilCategory stencilCategory;
   private Integer displayOrder = DEFAULT_DISPLAY_ORDER;
   private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
@@ -223,13 +233,16 @@ public enum StateType implements StateTypeDescriptor {
    * @param stateClass the state class
    * @param scopes     the scopes
    */
-  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, scopes);
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, List<PhaseStepType> phaseStepTypes,
+      StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, phaseStepTypes, scopes);
   }
 
   <E> StateType(Class<? extends State> stateClass, StencilCategory stencilCategory,
-      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, supportedInfrastructureMappingTypes, scopes);
+      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, List<PhaseStepType> phaseStepTypes,
+      StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, supportedInfrastructureMappingTypes, phaseStepTypes,
+        scopes);
   }
 
   /**
@@ -240,30 +253,35 @@ public enum StateType implements StateTypeDescriptor {
    * @param scopes       the scopes
    */
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
-      StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, displayOrder, Collections.emptyList(), scopes);
+      List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, displayOrder, Collections.emptyList(), phaseStepTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
-      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, displayOrder, null, supportedInfrastructureMappingTypes, scopes);
+      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, List<PhaseStepType> phaseStepTypes,
+      StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, displayOrder, null, supportedInfrastructureMappingTypes, phaseStepTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, String displayName,
-      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, displayName, supportedInfrastructureMappingTypes, scopes);
+      List<InfrastructureMappingType> supportedInfrastructureMappingTypes, List<PhaseStepType> phaseStepTypes,
+      StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, displayName, supportedInfrastructureMappingTypes,
+        phaseStepTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
-      String displayName, StateTypeScope... scopes) {
-    this(stateClass, stencilCategory, displayOrder, displayName, Collections.emptyList(), scopes);
+      String displayName, List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, displayOrder, displayName, Collections.emptyList(), phaseStepTypes, scopes);
   }
 
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       String displayName, List<InfrastructureMappingType> supportedInfrastructureMappingTypes,
-      StateTypeScope... scopes) {
+      List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
     this.stateClass = stateClass;
-    this.scopes = Arrays.asList(scopes);
+    this.scopes = asList(scopes);
+    this.phaseStepTypes =
+        phaseStepTypes.stream().map(phaseStepType -> phaseStepType.name()).collect(Collectors.toList());
     this.jsonSchema = loadJsonSchema();
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;
@@ -354,5 +372,10 @@ public enum StateType implements StateTypeDescriptor {
         InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
     return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
         || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
+  }
+
+  @Override
+  public List<String> getPhaseStepTypes() {
+    return phaseStepTypes;
   }
 }

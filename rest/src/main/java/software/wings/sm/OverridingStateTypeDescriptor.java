@@ -81,6 +81,11 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
     return stateTypeDescriptor.getScopes();
   }
 
+  @Override
+  public List<String> getPhaseStepTypes() {
+    return stateTypeDescriptor.getPhaseStepTypes();
+  }
+
   /**
    * {@inheritDoc}
    */
