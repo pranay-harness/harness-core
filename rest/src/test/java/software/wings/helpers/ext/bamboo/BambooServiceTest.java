@@ -30,7 +30,7 @@ public class BambooServiceTest extends WingsBaseTest {
   private BambooService bambooService = new BambooServiceImpl();
 
   private BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                          .withBamboosUrl("http://localhost:9095/rest/api/latest/")
+                                          .withBamboosUrl("http://localhost:9095/")
                                           .withUsername("admin")
                                           .withPassword("admin")
                                           .build();

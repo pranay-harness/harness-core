@@ -25,6 +25,29 @@ import static software.wings.integration.SeedData.seedNames;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.inject.Inject;
+
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import software.wings.beans.AppContainer;
+import software.wings.beans.AppDynamicsConfig.Builder;
+import software.wings.beans.Application;
+import software.wings.beans.BambooConfig;
+import software.wings.beans.Base;
+import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
+import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
+import software.wings.dl.PageResponse;
+import software.wings.rules.Integration;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -37,26 +60,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import software.wings.beans.AppContainer;
-import software.wings.beans.AppDynamicsConfig.Builder;
-import software.wings.beans.Application;
-import software.wings.beans.Base;
-import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
-import software.wings.beans.RestResponse;
-import software.wings.beans.Service;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingAttribute.Category;
-import software.wings.dl.PageResponse;
-import software.wings.rules.Integration;
-import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 
 /**
  * Created by anubhaw on 5/6/16.
@@ -153,14 +156,18 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                  .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, nexusSettingAttribute);
 
-    // TODO:: uncomment. setup a stable bamboo server
-    //    getRequestBuilderWithAuthHeader(target).post(Entity.entity(
-    //        aSettingAttribute().withName("Wings
-    //        BambooService").withCategory(Category.CONNECTOR).withAccountId(accountId).withValue(
-    //            BambooConfig.Builder.aBambooConfig().withBamboosUrl("http://ec2-54-91-249-58.compute-1.amazonaws.com:8085/").withUsername("wingsbuild")
-    //                .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2").build()).build(), APPLICATION_JSON),
-    //        new GenericType<RestResponse<SettingAttribute>>() {
-    //        });
+    SettingAttribute bambooSettingAttribute =
+        aSettingAttribute()
+            .withName("Wings BambooService")
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(accountId)
+            .withValue(BambooConfig.Builder.aBambooConfig()
+                           .withBamboosUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/")
+                           .withUsername("wingsbuild")
+                           .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
 
     SettingAttribute smtpSettingAttribute = aSettingAttribute()
                                                 .withCategory(Category.CONNECTOR)
