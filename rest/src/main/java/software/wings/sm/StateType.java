@@ -84,27 +84,27 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Subworkflow state type.
    */
-  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, asList(), ORCHESTRATION_STENCILS, COMMON),
+  SUB_WORKFLOW(SubWorkflowState.class, StencilCategory.CONTROLS, 0, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 1, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, StencilCategory.CONTROLS, 2, asList(), ORCHESTRATION_STENCILS, COMMON),
+  FORK(ForkState.class, StencilCategory.CONTROLS, 2, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, asList(), ORCHESTRATION_STENCILS, COMMON),
+  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS, COMMON),
+  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Http state type.
@@ -114,17 +114,17 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(), ORCHESTRATION_STENCILS, COMMON),
+  APP_DYNAMICS(AppDynamicsState.class, VERIFICATIONS, 2, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS, COMMON),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS, COMMON),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
@@ -153,31 +153,31 @@ public enum StateType implements StateTypeDescriptor {
    */
   ELASTIC_LOAD_BALANCER(ElasticLoadBalancerState.class, StencilCategory.COMMANDS, "Elastic Load Balancer",
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      asList(ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS, COMMON),
+      asList(ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS),
 
   /**
    * Jenkins state type.
    */
-  JENKINS(JenkinsState.class, VERIFICATIONS, asList(), ORCHESTRATION_STENCILS, COMMON),
+  JENKINS(JenkinsState.class, VERIFICATIONS, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.
    */
   AWS_NODE_SELECT(AwsNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_SSH),
-      asList(PROVISION_NODE, SELECT_NODE), ORCHESTRATION_STENCILS, COMMON),
+      asList(PROVISION_NODE, SELECT_NODE), ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Provision state.
    */
   AWS_AUTOSCALE_PROVISION(AwsAutoScaleProvisionState.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(PROVISION_NODE, SELECT_NODE),
-      ORCHESTRATION_STENCILS, COMMON),
+      ORCHESTRATION_STENCILS),
 
   /**
    * Phase state type.
    */
   DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      asList(SELECT_NODE), ORCHESTRATION_STENCILS, COMMON),
+      asList(SELECT_NODE), ORCHESTRATION_STENCILS),
 
   /**
    * Phase state type.
@@ -190,31 +190,31 @@ public enum StateType implements StateTypeDescriptor {
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS, COMMON),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS, COMMON),
+      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS, COMMON);
+      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
