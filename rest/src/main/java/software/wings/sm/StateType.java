@@ -13,6 +13,8 @@ import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
+import static software.wings.beans.PhaseStepType.START_SERVICE;
+import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
@@ -139,7 +141,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   COMMAND(CommandState.class, StencilCategory.COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
-      asList(DEPLOY_SERVICE), ORCHESTRATION_STENCILS),
+      asList(START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE), ORCHESTRATION_STENCILS),
 
   /**
    * Approval state type.

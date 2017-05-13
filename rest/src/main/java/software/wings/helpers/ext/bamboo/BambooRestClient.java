@@ -18,7 +18,7 @@ public interface BambooRestClient {
    * @param planKey       the plan key
    * @return the call
    */
-  @GET("plan/{planKey}.json?authType=basic&expand=stages.stage.plans.plan")
+  @GET("rest/api/latest/plan/{planKey}.json?authType=basic&expand=stages.stage.plans.plan")
   Call<JsonNode> listPlanWithJobDetails(@Header("Authorization") String authorization, @Path("planKey") String planKey);
 
   /**
@@ -27,7 +27,8 @@ public interface BambooRestClient {
    * @param authorization the authorization
    * @return the call
    */
-  @GET("plan.json?authType=basic") Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization);
+  @GET("rest/api/latest/plan.json?authType=basic")
+  Call<JsonNode> listProjectPlans(@Header("Authorization") String authorization);
 
   /**
    * Last successful build call.
@@ -36,9 +37,10 @@ public interface BambooRestClient {
    * @param planKey       the plan key
    * @return the call
    */
-  @GET("result/{planKey}/latest.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
-  Call<JsonNode> lastSuccessfulBuildForJob(
-      @Header("Authorization") String authorization, @Path("planKey") String planKey);
+  @GET(
+      "rest/api/latest/result/{planKey}/latest.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
+  Call<JsonNode>
+  lastSuccessfulBuildForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey);
 
   /**
    * List builds for job call.
@@ -48,7 +50,7 @@ public interface BambooRestClient {
    * @param maxResult     the max result
    * @return the call
    */
-  @GET("result/{planKey}.json?authType=basic&buildState=Successful&expand=results.result")
+  @GET("rest/api/latest/result/{planKey}.json?authType=basic&buildState=Successful&expand=results.result")
   Call<JsonNode> listBuildsForJob(@Header("Authorization") String authorization, @Path("planKey") String planKey,
       @Query("max-result") int maxResult);
 
@@ -60,7 +62,9 @@ public interface BambooRestClient {
    * @param buildNo       the build no
    * @return the build artifacts
    */
-  @GET("result/{planKey}-{buildNo}.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
-  Call<JsonNode> getBuildArtifacts(
+  @GET(
+      "rest/api/latest/result/{planKey}-{buildNo}.json?authType=basic&expand=stages.stage.results.result.artifacts.artifact")
+  Call<JsonNode>
+  getBuildArtifacts(
       @Header("Authorization") String authorization, @Path("planKey") String planKey, @Path("buildNo") String buildNo);
 }

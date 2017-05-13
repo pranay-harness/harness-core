@@ -58,7 +58,7 @@ public class BambooServiceImpl implements BambooService {
             .listPlanWithJobDetails(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()), planKey);
     Response<JsonNode> response = null;
     try {
-      response = request.execute();
+      response = getHttpRequestExecutionResponse(request);
       return extractJobKeyFromNestedProjectResponseJson(response);
     } catch (Exception ex) {
       logger.error("Job keys fetch failed with exception ", ex);
@@ -75,7 +75,7 @@ public class BambooServiceImpl implements BambooService {
         getBambooClient(bambooConfig).lastSuccessfulBuildForJob(getBasicAuthCredentials(bambooConfig), planKey);
     Response<JsonNode> response = null;
     try {
-      response = request.execute();
+      response = getHttpRequestExecutionResponse(request);
       JsonNode jsonNode = response.body();
       return aBuildDetails()
           .withNumber(jsonNode.get("buildNumber").asText())
@@ -109,7 +109,7 @@ public class BambooServiceImpl implements BambooService {
     Response<JsonNode> response = null;
 
     try {
-      response = request.execute();
+      response = getHttpRequestExecutionResponse(request);
       JsonNode planJsonNode = response.body().at("/plans/plan");
       planJsonNode.elements().forEachRemaining(jsonNode -> {
         String planKey = jsonNode.get("key").asText();
@@ -127,6 +127,16 @@ public class BambooServiceImpl implements BambooService {
     return planNameMap;
   }
 
+  private Response<JsonNode> getHttpRequestExecutionResponse(Call<JsonNode> request) throws IOException {
+    Response<JsonNode> response = request.execute();
+
+    if (response.code() != 200) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Bamboo credentials");
+    }
+
+    return response;
+  }
+
   @Override
   public List<BuildDetails> getBuilds(BambooConfig bambooConfig, String planKey, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetailsList = new ArrayList<>();
@@ -135,7 +145,7 @@ public class BambooServiceImpl implements BambooService {
                                  .listBuildsForJob(getBasicAuthCredentials(bambooConfig), planKey, maxNumberOfBuilds);
     Response<JsonNode> response = null;
     try {
-      response = request.execute();
+      response = getHttpRequestExecutionResponse(request);
       JsonNode resultNode = response.body().at("/results/result");
       if (resultNode != null) {
         resultNode.elements().forEachRemaining(jsonNode -> {
@@ -222,7 +232,7 @@ public class BambooServiceImpl implements BambooService {
     Response<JsonNode> response = null;
     try {
       // stages.stage.results.result.artifacts.artifact
-      response = request.execute();
+      response = getHttpRequestExecutionResponse(request);
       JsonNode stageNodes = response.body().at("/stages/stage");
       if (stageNodes != null) {
         stageNodes.elements().forEachRemaining(stageNode -> {
