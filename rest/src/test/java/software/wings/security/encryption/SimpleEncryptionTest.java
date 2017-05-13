@@ -56,7 +56,7 @@ public class SimpleEncryptionTest {
   public void shouldHaveJCEEnabled() {
     try {
       int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
-      assertThat(maxKeyLength > 128);
+      assertThat(maxKeyLength == 127);
     } catch (NoSuchAlgorithmException nsae) {
     }
   }
