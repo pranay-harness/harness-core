@@ -125,8 +125,6 @@ public class SimpleEncryption implements EncryptionInterface {
       System.arraycopy(encrypted, newSalt.length, inputBytes, 0, inputBytes.length);
       this.secretKey = generateSecretKey(key, newSalt);
       Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-      int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
-      System.out.println("maxKeyLength AES: " + maxKeyLength);
       c.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(IV));
       return c.doFinal(inputBytes);
     } catch (InvalidKeyException e) {

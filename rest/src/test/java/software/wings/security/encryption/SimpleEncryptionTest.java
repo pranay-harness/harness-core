@@ -8,6 +8,8 @@ import org.junit.rules.ExpectedException;
 import software.wings.exception.WingsException;
 
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.Cipher;
 
 /**
  * Created by mike@ on 4/24/17.
@@ -48,5 +50,14 @@ public class SimpleEncryptionTest {
     String testInput = "abc";
     SimpleEncryption encryption = new SimpleEncryption(KEY);
     byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.ISO_8859_1));
+  }
+
+  @Test
+  public void shouldHaveJCEEnabled() {
+    try {
+      int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
+      assertThat(maxKeyLength > 128);
+    } catch (NoSuchAlgorithmException nsae) {
+    }
   }
 }
