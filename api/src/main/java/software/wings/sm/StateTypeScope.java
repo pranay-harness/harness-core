@@ -25,14 +25,5 @@ public enum StateTypeScope {
   COMMON, /**
            * Deployment state type scope.
            */
-  DEPLOYMENT, /**
-               * Verification state type scope.
-               */
-  VERIFICATION, /**
-                 * Traffic routing state type scope.
-                 */
-  TRAFFIC_ROUTING, /**
-                    * None state type scope.
-                    */
   NONE;
 }

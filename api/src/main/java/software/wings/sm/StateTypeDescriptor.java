@@ -17,4 +17,11 @@ public interface StateTypeDescriptor extends ExtensionPoint, Stencil<State> {
    * @return the scopes
    */
   List<StateTypeScope> getScopes();
+
+  /**
+   * Gets phase step types.
+   *
+   * @return the phase step types
+   */
+  List<String> getPhaseStepTypes();
 }
