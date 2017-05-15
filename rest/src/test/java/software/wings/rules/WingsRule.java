@@ -55,6 +55,7 @@ import software.wings.app.WingsModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
+import software.wings.integration.BaseIntegrationTest;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
@@ -101,7 +102,8 @@ public class WingsRule implements MethodRule {
       public void evaluate() throws Throwable {
         List<Annotation> annotations = Lists.newArrayList(Arrays.asList(frameworkMethod.getAnnotations()));
         annotations.addAll(Arrays.asList(target.getClass().getAnnotations()));
-        WingsRule.this.before(annotations, target.getClass().getSimpleName() + "." + frameworkMethod.getName());
+        WingsRule.this.before(annotations, target instanceof BaseIntegrationTest,
+            target.getClass().getSimpleName() + "." + frameworkMethod.getName());
         injector.injectMembers(target);
         try {
           statement.evaluate();
@@ -124,15 +126,17 @@ public class WingsRule implements MethodRule {
   /**
    * Before.
    *
-   * @param annotations the annotations
-   * @param testName    the test name
+   * @param annotations                   the annotations
+   * @param doesExtendBaseIntegrationTest the does extend base integration test
+   * @param testName                      the test name  @throws Throwable the throwable
    * @throws Throwable the throwable
    */
-  protected void before(List<Annotation> annotations, String testName) throws Throwable {
+  protected void before(List<Annotation> annotations, boolean doesExtendBaseIntegrationTest, String testName)
+      throws Throwable {
     initializeLogging();
 
     MongoClient mongoClient;
-    if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
+    if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
       int port = Network.getFreeServerPort();
       IMongodConfig mongodConfig = new MongodConfigBuilder()
                                        .version(Main.V3_2)
@@ -141,10 +145,7 @@ public class WingsRule implements MethodRule {
       mongodExecutable = starter.prepare(mongodConfig);
       mongodExecutable.start();
       mongoClient = new MongoClient("localhost", port);
-    } else if (annotations.stream()
-                   .filter(annotation -> Integration.class.isInstance(annotation))
-                   .findFirst()
-                   .isPresent()) {
+    } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
         MongoClientURI clientUri =
             new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/wings"));
@@ -242,6 +243,8 @@ public class WingsRule implements MethodRule {
 
   /**
    * After.
+   *
+   * @param annotations the annotations
    */
   protected void after(List<Annotation> annotations) {
     // Clear caches.

@@ -11,7 +11,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.rules.Integration;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -24,7 +23,6 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 5/11/17.
  */
-@Integration
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
@@ -56,8 +54,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+
     Assert.assertEquals(0, restResponse.getResponseMessages().size());
-    Assert.assertEquals(2, restResponse.getResource().size());
+    Assert.assertTrue(restResponse.getResource().size() > 2);
 
     for (AppdynamicsApplication app : restResponse.getResource()) {
       Assert.assertTrue(app.getId() > 0);

@@ -39,12 +39,12 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.dl.PageResponse;
-import software.wings.rules.Integration;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -64,7 +64,6 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/6/16.
  */
-@Integration
 public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
@@ -127,6 +126,26 @@ public class DataGenUtil extends BaseIntegrationTest {
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
       createAppSettings(application.getAccountId());
     }
+
+    verifyAccountAndApplicationSetup(apps);
+  }
+
+  private void verifyAccountAndApplicationSetup(List<Application> apps) {
+    Application application = apps.get(0);
+    Map<String, Object> stencilsRestResponse = getRequestBuilderWithAuthHeader(
+        client.target(String.format("%s/infrastructure-mappings/stencils?appId=%s", API_BASE, application.getUuid())))
+                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {})
+                                                   .getResource(); // TODO: find a way use Stencil object directly
+
+    List<String> names =
+        (List<String>) ((Map) ((Map) (((Map) ((Map) stencilsRestResponse.get(
+                                                  InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name()))
+                                           .get("jsonSchema"))
+                                          .get("properties")))
+                            .get("hostConnectionAttrs"))
+            .get("enumNames");
+    assertThat(names).hasSize(4).containsExactly(
+        "Wings Key", "User/Password", "User/Password :: sudo - <app-account>", "User/Password :: su - <app-account>");
   }
 
   private void createGlobalSettings() {
@@ -162,7 +181,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
             .withValue(BambooConfig.Builder.aBambooConfig()
-                           .withBamboosUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/")
+                           .withBamboosUrl("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/")
                            .withUsername("wingsbuild")
                            .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
                            .build())
