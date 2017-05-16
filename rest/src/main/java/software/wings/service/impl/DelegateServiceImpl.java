@@ -219,6 +219,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+    logger.info("Issued task " + task.toString());
     String queueName = UUIDGenerator.getUuid();
     task.setQueueName(queueName);
     task.setUuid(queueName);
