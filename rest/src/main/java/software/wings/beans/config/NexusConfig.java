@@ -5,24 +5,30 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * Created by srinivas on 3/30/17.
  */
 @JsonTypeName("NEXUS")
-public class NexusConfig extends SettingValue {
+public class NexusConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Nexus URL", required = true) @URL @NotEmpty private String nexusUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
+  @Encrypted
   @NotEmpty
-  private String password;
+  private char[] password;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new Nexus config.
@@ -47,12 +53,22 @@ public class NexusConfig extends SettingValue {
     this.username = username;
   }
 
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   @Override
@@ -64,7 +80,7 @@ public class NexusConfig extends SettingValue {
       return false;
     }
     NexusConfig other = (NexusConfig) o;
-    return Objects.equals(this.nexusUrl, other.nexusUrl) && Objects.equals(this.password, other.password)
+    return Objects.equals(this.nexusUrl, other.nexusUrl) && Arrays.equals(this.password, other.password)
         && Objects.equals(this.username, other.username);
   }
 
@@ -86,9 +102,10 @@ public class NexusConfig extends SettingValue {
    * The type Builder.
    */
   public static final class Builder {
-    private String password;
+    private char[] password;
     private String username;
     private String nexusUrl;
+    private String accountId;
 
     private Builder() {}
 
@@ -107,7 +124,7 @@ public class NexusConfig extends SettingValue {
      * @param password the password
      * @return the builder
      */
-    public NexusConfig.Builder withPassword(String password) {
+    public NexusConfig.Builder withPassword(char[] password) {
       this.password = password;
       return this;
     }
@@ -135,12 +152,24 @@ public class NexusConfig extends SettingValue {
     }
 
     /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public NexusConfig.Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public NexusConfig.Builder but() {
-      return aNexusConfig().withPassword(password).withUsername(username).withNexusUrl(nexusUrl);
+      return aNexusConfig().withPassword(password).withUsername(username).withNexusUrl(nexusUrl).withAccountId(
+          accountId);
     }
 
     /**
@@ -149,11 +178,12 @@ public class NexusConfig extends SettingValue {
      * @return the nexus config
      */
     public NexusConfig build() {
-      NexusConfig NexusConfig = new NexusConfig();
-      NexusConfig.setPassword(password);
-      NexusConfig.setUsername(username);
-      NexusConfig.setNexusUrl(nexusUrl);
-      return NexusConfig;
+      NexusConfig nexusConfig = new NexusConfig();
+      nexusConfig.setPassword(password);
+      nexusConfig.setUsername(username);
+      nexusConfig.setNexusUrl(nexusUrl);
+      nexusConfig.setAccountId(accountId);
+      return nexusConfig;
     }
   }
 }

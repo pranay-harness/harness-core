@@ -45,7 +45,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
     DockerConfig dockerConfig = Builder.aDockerConfig()
                                     .withDockerRegistryUrl("https://registry.hub.docker.com/v2/")
                                     .withUsername("anubhaw")
-                                    .withPassword("anubhaw@Dhub")
+                                    .withPassword("anubhaw@Dhub".toCharArray())
                                     .build();
     List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, "library/mysql", 5);
     System.out.println(builds);

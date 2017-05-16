@@ -80,7 +80,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
         && context.getArtifactStreamAttributes().getArtifactStreamType().equals(ArtifactStreamType.DOCKER.name())) {
       DockerConfig dockerConfig = (DockerConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
       envVariables.put("DOCKER_USER_ID", dockerConfig.getUsername());
-      envVariables.put("DOCKER_USER_PASSWORD", dockerConfig.getPassword());
+      envVariables.put("DOCKER_USER_PASSWORD", new String(dockerConfig.getPassword()));
       envVariables.put("DOCKER_IMAGE", context.getArtifactStreamAttributes().getImageName());
     }
 

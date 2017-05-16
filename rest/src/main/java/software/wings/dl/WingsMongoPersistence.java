@@ -537,7 +537,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
           // in quotes, so ['f'] becomes ['"', 'f', '"']. The logic is going to be moved out of the
           // Mongo layer, so I'm not going to take the time to modify the Mongo config to make this
           // stop happening.
-          if (outputChars[0] == '"' && outputChars[outputChars.length - 1] == '"') {
+          if (outputChars != null && outputChars.length > 0 && outputChars[0] == '"'
+              && outputChars[outputChars.length - 1] == '"') {
             char[] copy = new char[outputChars.length - 2];
             System.arraycopy(outputChars, 1, copy, 0, outputChars.length - 2);
             outputChars = copy;

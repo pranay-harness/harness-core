@@ -5,19 +5,23 @@ import com.google.common.base.MoreObjects;
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
 @JsonTypeName("ELB")
-public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
+public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Encryptable {
   @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
@@ -27,7 +31,9 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
 
   @Attributes(title = "AWS account access key", required = true) @NotEmpty private String accessKey;
 
-  @Attributes(title = "AWS account secret key", required = true) @NotEmpty private String secretKey;
+  @Attributes(title = "AWS account secret key", required = true) @NotEmpty @Encrypted private char[] secretKey;
+
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new Elastic load balancer config.
@@ -95,7 +101,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
    *
    * @return Value for property 'secretKey'.
    */
-  public String getSecretKey() {
+  public char[] getSecretKey() {
     return secretKey;
   }
 
@@ -104,8 +110,18 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
    *
    * @param secretKey Value to set for property 'secretKey'.
    */
-  public void setSecretKey(String secretKey) {
+  public void setSecretKey(char[] secretKey) {
     this.secretKey = secretKey;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   @Override
@@ -123,7 +139,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
     }
     final ElasticLoadBalancerConfig other = (ElasticLoadBalancerConfig) obj;
     return Objects.equals(this.region, other.region) && Objects.equals(this.loadBalancerName, other.loadBalancerName)
-        && Objects.equals(this.accessKey, other.accessKey) && Objects.equals(this.secretKey, other.secretKey);
+        && Objects.equals(this.accessKey, other.accessKey) && Arrays.equals(this.secretKey, other.secretKey);
   }
 
   @Override
@@ -143,7 +159,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
     private Regions region;
     private String loadBalancerName;
     private String accessKey;
-    private String secretKey;
+    private char[] secretKey;
+    private String accountId;
 
     private Builder() {}
 
@@ -195,8 +212,19 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
      * @param secretKey the secret key
      * @return the builder
      */
-    public Builder withSecretKey(String secretKey) {
+    public Builder withSecretKey(char[] secretKey) {
       this.secretKey = secretKey;
+      return this;
+    }
+
+    /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -210,7 +238,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
           .withRegion(region)
           .withLoadBalancerName(loadBalancerName)
           .withAccessKey(accessKey)
-          .withSecretKey(secretKey);
+          .withSecretKey(secretKey)
+          .withAccountId(accountId);
     }
 
     /**
@@ -224,6 +253,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
       elasticLoadBalancerConfig.setLoadBalancerName(loadBalancerName);
       elasticLoadBalancerConfig.setAccessKey(accessKey);
       elasticLoadBalancerConfig.setSecretKey(secretKey);
+      elasticLoadBalancerConfig.setAccountId(accountId);
       return elasticLoadBalancerConfig;
     }
   }

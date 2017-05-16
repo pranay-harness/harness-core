@@ -135,8 +135,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
           .withRuntimePath("/tmp/runtime")
           .withBackupPath("/tmp/backup")
           .withStagingPath("/tmp/staging")
-          .withExecutionCredential(
-              aSSHExecutionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build())
+          .withExecutionCredential(aSSHExecutionCredential()
+                                       .withSshUser(SSH_USER_NAME)
+                                       .withSshPassword(new String(SSH_USER_PASSWORD))
+                                       .build())
           .withArtifactFiles(
               Lists.newArrayList(anArtifactFile().withName("artifact.war").withFileUuid(FILE_ID).build()))
           .withServiceVariables(ImmutableMap.of("PORT", "8080"))

@@ -75,7 +75,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
                                             .withControllerUrl("https://na774.saas.appdynamics.com/controller")
                                             .withUsername("testuser")
                                             .withAccountname("na774")
-                                            .withPassword("testuser123")
+                                            .withPassword("testuser123".toCharArray())
                                             .build())
                              .build());
 
@@ -144,7 +144,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
             .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
                            .withAccessType(AccessType.KEY)
                            .withConnectionType(ConnectionType.SSH)
-                           .withKey("wingsKey")
+                           .withKey("wingsKey".toCharArray())
                            .build())
             .build());
     SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
@@ -190,7 +190,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
             .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
                            .withAccessType(AccessType.KEY)
                            .withConnectionType(ConnectionType.SSH)
-                           .withKey("wingsKey")
+                           .withKey("wingsKey".toCharArray())
                            .build())
             .build());
     SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,

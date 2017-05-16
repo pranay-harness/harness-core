@@ -47,7 +47,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
 
   @Override
   public List<BuildDetails> getBuilds(DockerConfig dockerConfig, String imageName, int maxNumberOfBuilds) {
-    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
     try {
       DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig);
 
@@ -89,7 +89,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
 
   @Override
   public boolean verifyImageName(DockerConfig dockerConfig, String imageName) {
-    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
     try {
       DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig);
       Response<DockerImageTagResponse> response =
@@ -110,7 +110,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   }
 
   private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {
-    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
     String authHeaderValue = headers.get("Www-Authenticate");
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {
       DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
