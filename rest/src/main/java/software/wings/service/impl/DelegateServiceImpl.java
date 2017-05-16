@@ -76,7 +76,7 @@ import javax.inject.Inject;
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
-  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 30000;
+  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 25000;
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
