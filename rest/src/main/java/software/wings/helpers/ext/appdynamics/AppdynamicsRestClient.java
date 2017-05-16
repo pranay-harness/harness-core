@@ -6,6 +6,7 @@ import retrofit2.http.Header;
 import retrofit2.http.Path;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  */
 public interface AppdynamicsRestClient {
   /**
-   * List all the applications of appdynamics
+   * Lists all the applications of appdynamics
    *
    * @param authorization the authorization
    * @return the call
@@ -23,9 +24,25 @@ public interface AppdynamicsRestClient {
   @GET("rest/applications?output=json")
   Call<List<AppdynamicsApplication>> listAllApplications(@Header("Authorization") String authorization);
 
+  /**
+   * Lists all the tiers of an application in appdynamics
+   * @param authorization
+   * @param appdynamicsAppId
+   * @return
+   */
   @GET("rest/applications/{appdynamicsAppId}/tiers?output=json")
   Call<List<AppdynamicsTier>> listTiers(
       @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
+
+  /**
+   * Lists all the nodes of a tier and application in appdynamics
+   * @param authorization
+   * @param appdynamicsAppId
+   * @return
+   */
+  @GET("rest/applications/{appdynamicsAppId}/tiers/{tierId}/nodes?output=json")
+  Call<List<AppdynamicsNode>> listNodes(@Header("Authorization") String authorization,
+      @Path("appdynamicsAppId") long appdynamicsAppId, @Path("tierId") long tierId);
 
   @GET("rest/applications/{appdynamicsAppId}/business-transactions?output=json")
   Call<List<AppdynamicsBusinessTransaction>> listBusinessTransactions(

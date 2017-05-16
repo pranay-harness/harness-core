@@ -52,6 +52,21 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
+  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId, int tierId)
+      throws IOException {
+    final Call<List<AppdynamicsNode>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listNodes(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierId);
+    final Response<List<AppdynamicsNode>> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics nodes");
+    }
+  }
+
+  @Override
   public List<AppdynamicsBusinessTransaction> getBusinessTransactions(
       AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException {
     final Call<List<AppdynamicsBusinessTransaction>> request =
