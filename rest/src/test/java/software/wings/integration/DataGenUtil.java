@@ -26,7 +26,6 @@ import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.inject.Inject;
 
-import com.sun.xml.internal.ws.api.config.management.policy.ManagementAssertion.Setting;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
