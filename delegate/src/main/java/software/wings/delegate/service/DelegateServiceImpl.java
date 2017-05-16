@@ -29,6 +29,7 @@ import org.atmosphere.wasync.RequestBuilder;
 import org.atmosphere.wasync.Socket;
 import org.atmosphere.wasync.Socket.STATUS;
 import org.awaitility.Duration;
+import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
@@ -42,6 +43,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
+import software.wings.exception.WingsException;
 import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.TokenGenerator;
@@ -100,7 +102,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()));
 
       if (upgrade) {
-        System.out.println("botstarted");
+        logger.info("Received Bot upgrade request");
         LineIterator it = IOUtils.lineIterator(System.in, "utf-8");
         String line = "";
         while (it.hasNext() && !StringUtils.startsWith(line, "goahead")) {
@@ -246,20 +248,34 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String registerDelegate(String accountId, Builder builder) throws IOException {
     logger.info("Registering delegate....");
-    return await().with().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> {
-      try {
-        RestResponse<Delegate> delegateResponse = execute(managerClient.registerDelegate(
-            accountId, builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
-
+    try {
+      return await().with().pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS).until(() -> {
+        RestResponse<Delegate> delegateResponse;
+        try {
+          delegateResponse = execute(managerClient.registerDelegate(accountId,
+              builder.but().withLastHeartBeat(System.currentTimeMillis()).withStatus(Status.ENABLED).build()));
+        } catch (Exception e) {
+          String msg = "Unknown error occurred while registering Bot [" + accountId + "] with manager";
+          logger.error(msg, e);
+          throw new WingsException(msg, e);
+        }
+        if (delegateResponse == null) {
+          String msg = "Error occurred while registering Bot [" + accountId
+              + "] with manager. Please see the manager log for more information.";
+          logger.error(msg);
+          throw new WingsException(msg);
+        }
         builder.withUuid(delegateResponse.getResource().getUuid())
             .withStatus(delegateResponse.getResource().getStatus());
-        logger.info("Delegate registered with id " + delegateResponse.getResource().getUuid());
+        logger.info("Delegate registered with id {} and status {} ", delegateResponse.getResource().getUuid(),
+            delegateResponse.getResource().getStatus());
         return delegateResponse.getResource().getUuid();
-      } catch (Exception e) {
-        logger.error("Exception while registering delegate: ", e);
-        return null;
-      }
-    }, notNullValue());
+      }, notNullValue());
+    } catch (ConditionTimeoutException e) {
+      String msg = "Timeout occurred while registering Bot [" + accountId + "] with manager";
+      logger.error(msg, e);
+      throw new WingsException(msg, e);
+    }
   }
 
   private void startUpgradeCheck(String accountId, String delegateId, String version) {

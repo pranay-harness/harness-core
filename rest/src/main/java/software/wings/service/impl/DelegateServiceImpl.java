@@ -44,6 +44,7 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -62,6 +63,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Caching;
@@ -139,6 +142,20 @@ public class DelegateServiceImpl implements DelegateService {
     return updatedDelegate;
   }
 
+  /**
+   * Update delegate task types with manager supported task types
+   * @param delegate
+   */
+  private void updateDelegateTaskTypes(Delegate delegate) {
+    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
+    setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
+    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
+                                .field("accountId")
+                                .equal(delegate.getAccountId())
+                                .field(ID_KEY)
+                                .equal(delegate.getUuid()),
+        updateOperations);
+  }
   @Override
   public Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
@@ -193,14 +210,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate register(Delegate delegate) {
-    logger.info("registering delegate: " + delegate);
+    logger.info("Registering delegate: " + delegate);
     Delegate existingDelegate = wingsPersistence.get(Delegate.class,
         aPageRequest()
             .addFilter("ip", EQ, delegate.getIp())
             .addFilter("hostName", EQ, delegate.getHostName())
             .addFilter("accountId", EQ, delegate.getAccountId())
+            .addFieldsExcluded("supportedTaskTypes")
             .build());
-
     if (existingDelegate == null) {
       return add(delegate);
     } else {
