@@ -44,6 +44,14 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
+  public List<AppdynamicsNode> getNodes(String settingId, int appdynamicsAppId, int tierId) throws IOException {
+    final SettingAttribute settingAttribute = settingsService.get(settingId);
+    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+        .getNodes((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId);
+  }
+
+  @Override
   public List<AppdynamicsBusinessTransaction> getBusinessTransactions(String settingId, long appdynamicsAppId)
       throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
