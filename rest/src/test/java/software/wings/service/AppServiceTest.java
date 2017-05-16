@@ -132,7 +132,7 @@ public class AppServiceTest extends WingsBaseTest {
 
     appService.save(app);
     verify(wingsPersistence).saveAndGet(Application.class, app);
-    verify(settingsService).createDefaultSettings(APP_ID, "ACCOUNT_ID");
+    verify(settingsService).createDefaultApplicationSettings(APP_ID, "ACCOUNT_ID");
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
     ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);
