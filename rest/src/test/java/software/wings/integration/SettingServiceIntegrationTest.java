@@ -15,7 +15,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
-import software.wings.rules.Integration;
 
 import java.util.Arrays;
 import javax.ws.rs.client.Entity;
@@ -26,14 +25,13 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/3/17.
  */
-@Integration
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   private static final String JENKINS_PASSWORD = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
   private static final String JENKINS_URL = "https://jenkins.wings.software";
   private static final String JENKINS_USERNAME = "wingsbuild";
-  public static final String NEXUS_URL = "https://nexus.wings.software";
-  public static final String NEXUS_USERNAME = "admin";
-  public static final String NEXUS_PASSWORD = "wings123!";
+  private static final String NEXUS_URL = "https://nexus.wings.software";
+  private static final String NEXUS_USERNAME = "admin";
+  private static final String NEXUS_PASSWORD = "wings123!";
 
   @Before
   public void setUp() throws Exception {
