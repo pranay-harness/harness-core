@@ -27,6 +27,7 @@ import software.wings.beans.Base;
 import software.wings.beans.Notification;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.stats.AppKeyStatistics;
@@ -290,6 +291,15 @@ public class AppServiceImpl implements AppService {
         .asKeyList()
         .forEach(applicationKey -> appIdList.add(applicationKey.getId().toString()));
     return appIdList;
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.createQuery(SettingAttribute.class)
+        .field("accountId")
+        .equal(accountId)
+        .asKeyList()
+        .forEach(key -> delete(key.getId().toString()));
   }
 
   void deleteCronForStateMachineExecutionCleanup(String appId) {

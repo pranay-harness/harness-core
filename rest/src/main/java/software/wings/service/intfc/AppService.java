@@ -94,4 +94,11 @@ public interface AppService {
    * @return the app ids by account id
    */
   List<String> getAppIdsByAccountId(String accountId);
+
+  /**
+   * Delete by acount id.
+   *
+   * @param accountId the account id
+   */
+  void deleteByAccountId(String accountId);
 }
