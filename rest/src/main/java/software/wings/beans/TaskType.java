@@ -53,7 +53,8 @@ public enum TaskType {
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_APP_TASK(ServiceImplDelegateTask.class),
-  APPDYNAMICS_GET_TIER_TASK(ServiceImplDelegateTask.class);
+  APPDYNAMICS_GET_TIER_TASK(ServiceImplDelegateTask.class),
+  APPDYNAMICS_GET_NODES_TASK(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
