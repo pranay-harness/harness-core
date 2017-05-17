@@ -42,7 +42,7 @@ public class User extends Base implements Principal {
 
   private long lastLogin;
 
-  @Transient private String password;
+  @Transient private char[] password;
   @Transient private String token;
 
   private boolean emailVerified = false;
@@ -242,7 +242,7 @@ public class User extends Base implements Principal {
    *
    * @return the password
    */
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
@@ -251,7 +251,7 @@ public class User extends Base implements Principal {
    *
    * @param password the password
    */
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
   }
 
@@ -414,7 +414,7 @@ public class User extends Base implements Principal {
     private List<Role> roles = new ArrayList<>();
     private List<Account> accounts = new ArrayList<>();
     private long lastLogin;
-    private String password;
+    private char[] password;
     private String token;
     private boolean emailVerified = false;
     private long statsFetchedOn;
@@ -471,7 +471,7 @@ public class User extends Base implements Principal {
       return this;
     }
 
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
       return this;
     }

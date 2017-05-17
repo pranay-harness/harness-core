@@ -114,10 +114,10 @@ public class SshHelperUtil {
                           .withHost(hostName)
                           .withCommandUnitName(commandName)
                           .withUserName(sshExecutionCredential.getSshUser())
-                          .withPassword(sshExecutionCredential.getSshPassword().toCharArray())
+                          .withPassword(sshExecutionCredential.getSshPassword())
                           .withSudoAppName(sshExecutionCredential.getAppAccount())
-                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword().toCharArray())
-                          .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase().toCharArray());
+                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword())
+                          .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase());
 
     if (executorType.equals(KEY_AUTH)) {
       SettingAttribute settingAttribute = context.getHostConnectionAttributes();

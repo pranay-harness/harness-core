@@ -33,7 +33,7 @@ public interface UserService {
    * @param hash     the hash
    * @return true, if successful
    */
-  boolean matchPassword(@NotEmpty String password, @NotEmpty String hash);
+  boolean matchPassword(@NotEmpty char[] password, @NotEmpty String hash);
 
   /**
    * Adds the role.
@@ -164,5 +164,5 @@ public interface UserService {
    * @param password           the password
    * @return the boolean
    */
-  boolean updatePassword(String resetPasswordToken, String password);
+  boolean updatePassword(String resetPasswordToken, char[] password);
 }

@@ -14,10 +14,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("SSH")
 public class SSHExecutionCredential extends ExecutionCredential {
   private String sshUser;
-  private String sshPassword;
+  private char[] sshPassword;
   private String appAccount;
-  private String appAccountPassword;
-  private String keyPassphrase;
+  private char[] appAccountPassword;
+  private char[] keyPassphrase;
 
   /**
    * Instantiates a new Ssh execution credential.
@@ -49,7 +49,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
    *
    * @return the ssh password
    */
-  public String getSshPassword() {
+  public char[] getSshPassword() {
     return sshPassword;
   }
 
@@ -58,7 +58,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
    *
    * @param sshPassword the ssh password
    */
-  public void setSshPassword(String sshPassword) {
+  public void setSshPassword(char[] sshPassword) {
     this.sshPassword = sshPassword;
   }
 
@@ -85,7 +85,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
    *
    * @return the app account password
    */
-  public String getAppAccountPassword() {
+  public char[] getAppAccountPassword() {
     return appAccountPassword;
   }
 
@@ -94,7 +94,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
    *
    * @param appAccountPassword the app account password
    */
-  public void setAppAccountPassword(String appAccountPassword) {
+  public void setAppAccountPassword(char[] appAccountPassword) {
     this.appAccountPassword = appAccountPassword;
   }
 
@@ -103,7 +103,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
    *
    * @return the key passphrase
    */
-  public String getKeyPassphrase() {
+  public char[] getKeyPassphrase() {
     return keyPassphrase;
   }
 
@@ -112,7 +112,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
    *
    * @param keyPassphrase the key passphrase
    */
-  public void setKeyPassphrase(String keyPassphrase) {
+  public void setKeyPassphrase(char[] keyPassphrase) {
     this.keyPassphrase = keyPassphrase;
   }
 
@@ -121,10 +121,10 @@ public class SSHExecutionCredential extends ExecutionCredential {
    */
   public static final class Builder {
     private String sshUser;
-    private String sshPassword;
+    private char[] sshPassword;
     private String appAccount;
-    private String appAccountPassword;
-    private String keyPassphrase;
+    private char[] appAccountPassword;
+    private char[] keyPassphrase;
     private ExecutionType executionType;
 
     private Builder() {}
@@ -155,7 +155,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
      * @param sshPassword the ssh password
      * @return the builder
      */
-    public Builder withSshPassword(String sshPassword) {
+    public Builder withSshPassword(char[] sshPassword) {
       this.sshPassword = sshPassword;
       return this;
     }
@@ -177,7 +177,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
      * @param appAccountPassword the app account password
      * @return the builder
      */
-    public Builder withAppAccountPassword(String appAccountPassword) {
+    public Builder withAppAccountPassword(char[] appAccountPassword) {
       this.appAccountPassword = appAccountPassword;
       return this;
     }
@@ -188,7 +188,7 @@ public class SSHExecutionCredential extends ExecutionCredential {
      * @param keyPassphrase the key passphrase
      * @return the builder
      */
-    public Builder withKeyPassphrase(String keyPassphrase) {
+    public Builder withKeyPassphrase(char[] keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
     }

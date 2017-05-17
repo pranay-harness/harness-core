@@ -88,7 +88,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                              .withValue(aJenkinsConfig()
                                                             .withJenkinsUrl(JENKINS_URL)
                                                             .withUsername(USER_NAME)
-                                                            .withPassword(PASSWORD.toCharArray())
+                                                            .withPassword(PASSWORD)
                                                             .withAccountId(ACCOUNT_ID)
                                                             .build())
                                              .build();
@@ -126,13 +126,11 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
    */
   @Test
   public void shouldSendBambooTask() throws Exception {
-    SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
-                                             .withValue(aBambooConfig()
-                                                            .withBambooUrl(JENKINS_URL)
-                                                            .withUsername(USER_NAME)
-                                                            .withPassword(PASSWORD.toCharArray())
-                                                            .build())
-                                             .build();
+    SettingAttribute SETTING_ATTRIBUTE =
+        aSettingAttribute()
+            .withValue(
+                aBambooConfig().withBambooUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
+            .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 
     ArtifactStream ARTIFACT_SOURCE = aBambooArtifactStream()

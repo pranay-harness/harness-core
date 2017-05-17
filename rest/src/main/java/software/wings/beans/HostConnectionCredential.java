@@ -5,9 +5,9 @@ package software.wings.beans;
  */
 public class HostConnectionCredential {
   private String sshUser;
-  private String sshPassword;
+  private char[] sshPassword;
   private String appUser;
-  private String appUserPassword;
+  private char[] appUserPassword;
 
   /**
    * Gets ssh user.
@@ -32,7 +32,7 @@ public class HostConnectionCredential {
    *
    * @return the ssh password
    */
-  public String getSshPassword() {
+  public char[] getSshPassword() {
     return sshPassword;
   }
 
@@ -41,7 +41,7 @@ public class HostConnectionCredential {
    *
    * @param sshPassword the ssh password
    */
-  public void setSshPassword(String sshPassword) {
+  public void setSshPassword(char[] sshPassword) {
     this.sshPassword = sshPassword;
   }
 
@@ -68,7 +68,7 @@ public class HostConnectionCredential {
    *
    * @return the app user password
    */
-  public String getAppUserPassword() {
+  public char[] getAppUserPassword() {
     return appUserPassword;
   }
 
@@ -77,7 +77,7 @@ public class HostConnectionCredential {
    *
    * @param appUserPassword the app user password
    */
-  public void setAppUserPassword(String appUserPassword) {
+  public void setAppUserPassword(char[] appUserPassword) {
     this.appUserPassword = appUserPassword;
   }
 
@@ -86,9 +86,9 @@ public class HostConnectionCredential {
    */
   public static final class HostConnectionCredentialBuilder {
     private String sshUser;
-    private String sshPassword;
+    private char[] sshPassword;
     private String appUser;
-    private String appUserPassword;
+    private char[] appUserPassword;
 
     private HostConnectionCredentialBuilder() {}
 
@@ -118,7 +118,7 @@ public class HostConnectionCredential {
      * @param sshPassword the ssh password
      * @return the host connection credential builder
      */
-    public HostConnectionCredentialBuilder withSshPassword(String sshPassword) {
+    public HostConnectionCredentialBuilder withSshPassword(char[] sshPassword) {
       this.sshPassword = sshPassword;
       return this;
     }
@@ -140,7 +140,7 @@ public class HostConnectionCredential {
      * @param appUserPassword the app user password
      * @return the host connection credential builder
      */
-    public HostConnectionCredentialBuilder withAppUserPassword(String appUserPassword) {
+    public HostConnectionCredentialBuilder withAppUserPassword(char[] appUserPassword) {
       this.appUserPassword = appUserPassword;
       return this;
     }

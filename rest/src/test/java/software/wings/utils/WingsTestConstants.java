@@ -229,12 +229,12 @@ public class WingsTestConstants {
   /**
    * The constant PASSWORD.
    */
-  public static final String PASSWORD = "PASSWORD";
+  public static final char[] PASSWORD = "PASSWORD".toCharArray();
 
   /**
    * The constant USER_PASSWORD.
    */
-  public static final String USER_PASSWORD = "USER_PASSWORD";
+  public static final char[] USER_PASSWORD = "USER_PASSWORD".toCharArray();
   /**
    * The constant COMMAND_NAME.
    */

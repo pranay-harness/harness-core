@@ -59,7 +59,7 @@ import javax.inject.Inject;
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final String HOST_NAME = "192.168.1.53";
   private static final String USER = "ssh_user";
-  private static final String PASSWORD = "Wings@123";
+  private static final char[] PASSWORD = "Wings@123".toCharArray();
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
   private static final Host HOST = aHost()

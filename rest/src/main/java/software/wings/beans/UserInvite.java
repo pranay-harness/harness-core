@@ -27,7 +27,7 @@ public class UserInvite extends Base {
 
   @Transient private String name;
 
-  @Transient private String password;
+  @Transient private char[] password;
 
   /**
    * Gets account id.
@@ -117,11 +117,11 @@ public class UserInvite extends Base {
     this.name = name;
   }
 
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
   }
 

@@ -54,7 +54,7 @@ public class SshSessionFactory {
     //    JSch.setLogger(new jschLogger());
 
     Session session = null;
-    if (config.getKey().length > 0) {
+    if (config.getKey() != null && config.getKey().length > 0) {
       if (null == config.getKeyPassphrase()) {
         jsch.addIdentity(
             config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.ISO_8859_1), null, null);
