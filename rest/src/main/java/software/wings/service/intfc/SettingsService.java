@@ -146,4 +146,11 @@ public interface SettingsService {
    * @return the global setting attributes by type
    */
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
+
+  /**
+   * Delete by account id.
+   *
+   * @param accountId the account id
+   */
+  void deleteByAccountId(String accountId);
 }

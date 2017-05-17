@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
@@ -265,11 +266,13 @@ public abstract class InfrastructureMapping extends Base {
   @Singleton
   public static class HostConnectionAttributesDataProvider implements DataProvider {
     @Inject private SettingsService settingsService;
+    @Inject private AppService appService;
 
     @Override
     public Map<String, String> getData(String appId, String... params) {
-      List<SettingAttribute> settingAttributes =
-          settingsService.getSettingAttributesByType(appId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
+      String accountId = appService.get(appId).getAccountId();
+      List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
+          accountId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
 
       Map<AccessType, List<SettingAttribute>> settingAttributeByType = settingAttributes.stream().collect(
           groupingBy(sa -> ((HostConnectionAttributes) sa.getValue()).getAccessType()));

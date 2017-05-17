@@ -24,6 +24,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.licensing.LicenseManager;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
@@ -31,6 +32,7 @@ import software.wings.service.intfc.SettingsService;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
@@ -51,6 +53,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private LicenseManager licenseManager;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private SettingsService settingsService;
+  @Inject private ExecutorService executorService;
+  @Inject private AppService appService;
 
   @Override
   public Account save(@Valid Account account) {
@@ -107,7 +111,13 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public void delete(String accountId) {
-    wingsPersistence.delete(Account.class, accountId);
+    boolean deleted = wingsPersistence.delete(Account.class, accountId);
+    if (deleted) {
+      executorService.submit(() -> {
+        settingsService.deleteByAccountId(accountId);
+        appService.deleteByAccountId(accountId);
+      });
+    }
   }
 
   //  @Override

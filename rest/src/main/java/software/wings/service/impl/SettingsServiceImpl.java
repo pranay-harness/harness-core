@@ -243,4 +243,9 @@ public class SettingsServiceImpl implements SettingsService {
                                                     .build();
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
   }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("accountId").equal(accountId));
+  }
 }
