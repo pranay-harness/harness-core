@@ -142,20 +142,6 @@ public class DelegateServiceImpl implements DelegateService {
     return updatedDelegate;
   }
 
-  /**
-   * Update delegate task types with manager supported task types
-   * @param delegate
-   */
-  private void updateDelegateTaskTypes(Delegate delegate) {
-    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
-    setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
-    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .field("accountId")
-                                .equal(delegate.getAccountId())
-                                .field(ID_KEY)
-                                .equal(delegate.getUuid()),
-        updateOperations);
-  }
   @Override
   public Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
@@ -211,6 +197,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public Delegate register(Delegate delegate) {
     logger.info("Registering delegate: " + delegate);
+    // Please do not remove Fields Excluded
     Delegate existingDelegate = wingsPersistence.get(Delegate.class,
         aPageRequest()
             .addFilter("ip", EQ, delegate.getIp())
