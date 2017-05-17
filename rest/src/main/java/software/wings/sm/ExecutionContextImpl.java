@@ -9,7 +9,6 @@ import com.google.inject.Injector;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.InstanceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
@@ -20,7 +19,6 @@ import software.wings.settings.SettingValue;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -382,15 +380,5 @@ public class ExecutionContextImpl implements ExecutionContext {
         .findFirst()
         .map(settingAttribute -> settingAttribute.getValue())
         .orElse(null);
-  }
-
-  @Override
-  public List<InstanceElement> getAllInstances() {
-    return Collections.EMPTY_LIST;
-  }
-
-  @Override
-  public List<InstanceStatusSummary> getInstanceStatusSummary(String phaseName) {
-    return Collections.EMPTY_LIST;
   }
 }
