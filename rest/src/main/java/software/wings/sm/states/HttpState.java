@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
-import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -38,6 +37,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -64,6 +64,7 @@ public class HttpState extends State {
 
   @Attributes(required = true, title = "URL") private String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
+  @DefaultValue("GET")
   private String method;
   @Attributes(title = "Header") private String header;
   @Attributes(title = "Body") private String body;
