@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import software.wings.api.InstanceElement;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowType;
 import software.wings.settings.SettingValue;
@@ -138,4 +139,17 @@ public interface ExecutionContext {
   Map<String, String> getServiceVariables();
 
   SettingValue getSettingValue(String name, String type);
+
+  /**
+   * Gives the list of all instances that have been deployed using this workflow so far
+   * @return
+   */
+  List<InstanceElement> getAllInstances();
+
+  /**
+   * Gives the list of instances that have been deployed by the phase
+   * @param phaseName
+   * @return
+   */
+  List<InstanceStatusSummary> getInstanceStatusSummary(String phaseName);
 }
