@@ -10,6 +10,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
@@ -47,6 +48,16 @@ public class AppdynamicsResource {
       @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") int appdynamicsAppId)
       throws IOException {
     return new RestResponse<>(appdynamicsService.getTiers(settingId, appdynamicsAppId));
+  }
+
+  @GET
+  @Path("/nodes")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AppdynamicsNode>> getAllNodes(@QueryParam("accountId") String accountId,
+      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") int appdynamicsAppId,
+      @QueryParam("tierId") int tierId) throws IOException {
+    return new RestResponse<>(appdynamicsService.getNodes(settingId, appdynamicsAppId, tierId));
   }
 
   @GET

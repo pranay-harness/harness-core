@@ -9,6 +9,8 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import org.apache.commons.codec.binary.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
@@ -25,6 +27,8 @@ import java.util.logging.Level;
  * Created by peeyushaggarwal on 11/29/16.
  */
 public class DelegateApplication {
+  private final static Logger logger = LoggerFactory.getLogger(DelegateApplication.class);
+
   static {
     System.setProperty("process_id", ManagementFactory.getRuntimeMXBean().getName().split("@")[0]);
 
@@ -45,6 +49,7 @@ public class DelegateApplication {
     if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
       upgrade = true;
     }
+    logger.info("Starting Bot ");
     DelegateApplication delegateApplication = new DelegateApplication();
     delegateApplication.run(
         new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class), upgrade);

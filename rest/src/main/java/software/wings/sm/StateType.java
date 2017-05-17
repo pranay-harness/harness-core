@@ -21,6 +21,7 @@ import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
 import static software.wings.stencils.StencilCategory.CLOUD;
 import static software.wings.stencils.StencilCategory.COMMANDS;
+import static software.wings.stencils.StencilCategory.OTHERS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
 import com.google.common.base.Charsets;
@@ -109,7 +110,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, VERIFICATIONS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+  HTTP(HttpState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * App dynamics state type.

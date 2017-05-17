@@ -11,9 +11,9 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.rules.Integration;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
 import java.util.Arrays;
@@ -24,7 +24,6 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 5/11/17.
  */
-@Integration
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
@@ -56,8 +55,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+
     Assert.assertEquals(0, restResponse.getResponseMessages().size());
-    Assert.assertEquals(2, restResponse.getResource().size());
+    Assert.assertTrue(restResponse.getResource().size() > 0);
 
     for (AppdynamicsApplication app : restResponse.getResource()) {
       Assert.assertTrue(app.getId() > 0);
@@ -99,6 +99,68 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       Assert.assertFalse(StringUtils.isBlank(tier.getType()));
       Assert.assertFalse(StringUtils.isBlank(tier.getAgentType()));
       Assert.assertTrue(tier.getNumberOfNodes() > 0);
+    }
+  }
+
+  @Test
+  public void testGetAllNodes() throws Exception {
+    final List<SettingAttribute> appdynamicsSettings =
+        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+    Assert.assertEquals(1, appdynamicsSettings.size());
+
+    // get all applications
+    WebTarget target = client.target(API_BASE
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+    RestResponse<List<AppdynamicsApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+
+    long appId = 0;
+
+    for (AppdynamicsApplication application : restResponse.getResource()) {
+      if (application.getName().equalsIgnoreCase("MyApp")) {
+        appId = application.getId();
+        break;
+      }
+    }
+
+    Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
+    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
+        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+    RestResponse<List<AppdynamicsTier>> tierRestResponse =
+        getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
+    Assert.assertTrue(tierRestResponse.getResource().size() > 0);
+
+    for (AppdynamicsTier tier : tierRestResponse.getResource()) {
+      Assert.assertTrue(tier.getId() > 0);
+      Assert.assertFalse(StringUtils.isBlank(tier.getName()));
+      Assert.assertFalse(StringUtils.isBlank(tier.getType()));
+      Assert.assertFalse(StringUtils.isBlank(tier.getAgentType()));
+      Assert.assertTrue(tier.getNumberOfNodes() > 0);
+
+      WebTarget nodeTarget =
+          client.target(API_BASE + "/appdynamics/nodes?settingId=" + appdynamicsSettings.get(0).getUuid()
+              + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+
+      RestResponse<List<AppdynamicsNode>> nodeRestResponse =
+          getRequestBuilderWithAuthHeader(nodeTarget).get(new GenericType<RestResponse<List<AppdynamicsNode>>>() {});
+
+      Assert.assertTrue(nodeRestResponse.getResource().size() > 0);
+      for (AppdynamicsNode node : nodeRestResponse.getResource()) {
+        Assert.assertTrue(node.getId() > 0);
+        Assert.assertFalse(StringUtils.isBlank(node.getName()));
+        Assert.assertFalse(StringUtils.isBlank(node.getType()));
+        Assert.assertTrue(node.getTierId() > 0);
+        Assert.assertFalse(StringUtils.isBlank(node.getTierName()));
+        Assert.assertTrue(node.getMachineId() > 0);
+        Assert.assertFalse(StringUtils.isBlank(node.getMachineName()));
+        Assert.assertFalse(StringUtils.isBlank(node.getMachineOSType()));
+        Assert.assertFalse(StringUtils.isBlank(node.getAppAgentVersion()));
+        Assert.assertFalse(StringUtils.isBlank(node.getAgentType()));
+        Assert.assertTrue(node.getIpAddresses().size() > 0);
+
+        Assert.assertTrue(node.getIpAddresses().containsKey("ipAddresses"));
+        Assert.assertTrue(node.getIpAddresses().get("ipAddresses").size() > 0);
+      }
     }
   }
 

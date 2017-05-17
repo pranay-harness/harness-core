@@ -204,7 +204,7 @@ protected void createLicenseAndDefaultUser() {
 
   account.setUuid("kmpySmUISimoRrJL6NL73w");
   accountId = "kmpySmUISimoRrJL6NL73w";
-  wingsPersistence.delete(Account.class, oldAccountId);
+  accountService.delete(oldAccountId);
   accountService.save(account);
   // wingsPersistence.save(account);
   // Update account key to make delegate works

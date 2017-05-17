@@ -149,36 +149,10 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.SettingsService#createDefaultSettings(java.lang.String)
+   * @see software.wings.service.intfc.SettingsService#createDefaultApplicationSettings(java.lang.String)
    */
   @Override
-  public void createDefaultSettings(String appId, String accountId) {
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("User/Password")
-            .withValue(aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD).build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("User/Password :: su - <app-account>")
-            .withValue(
-                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SU_APP_USER).build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("User/Password :: sudo - <app-account>")
-            .withValue(
-                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SUDO_APP_USER).build())
-            .build());
+  public void createDefaultApplicationSettings(String appId, String accountId) {
     wingsPersistence.save(
         aSettingAttribute()
             .withAppId(appId)
@@ -211,6 +185,37 @@ public class SettingsServiceImpl implements SettingsService {
             .build());
   }
 
+  @Override
+  public void createDefaultAccountSettings(String accountId) {
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(GLOBAL_APP_ID)
+            .withAccountId(accountId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("User/Password")
+            .withValue(aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD).build())
+            .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(GLOBAL_APP_ID)
+            .withAccountId(accountId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("User/Password :: su - <app-account>")
+            .withValue(
+                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SU_APP_USER).build())
+            .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(GLOBAL_APP_ID)
+            .withAccountId(accountId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("User/Password :: sudo - <app-account>")
+
+            .withValue(
+                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SUDO_APP_USER).build())
+            .build());
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#getSettingAttributesByType(java.lang.String,
    * software.wings.settings.SettingValue.SettingVariableTypes)
@@ -237,5 +242,10 @@ public class SettingsServiceImpl implements SettingsService {
                                                     .addFilter("value.type", Operator.EQ, type)
                                                     .build();
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
+  }
+
+  @Override
+  public void deleteByAccountId(String accountId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("accountId").equal(accountId));
   }
 }

@@ -101,10 +101,23 @@ public interface SettingsService {
    */
   SettingAttribute getByName(String appId, String envId, String attributeName);
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.SettingsService#createDefaultSettings(java.lang.String)
+  /**
+   * Create default application settings.
+   *
+   * @param appId     the app id
+   * @param accountId the account id
    */
-  void createDefaultSettings(String appId, String accountId);
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.SettingsService#createDefaultApplicationSettings(java.lang.String)
+   */
+  void createDefaultApplicationSettings(String appId, String accountId);
+
+  /**
+   * Create default account settings.
+   *
+   * @param accountId the account id
+   */
+  void createDefaultAccountSettings(String accountId);
 
   /**
    * Gets the setting attributes by type.
@@ -128,8 +141,16 @@ public interface SettingsService {
   /**
    * Gets the global setting attributes by type.
    *
-   * @param type the type
+   * @param accountId the account id
+   * @param type      the type
    * @return the global setting attributes by type
    */
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
+
+  /**
+   * Delete by account id.
+   *
+   * @param accountId the account id
+   */
+  void deleteByAccountId(String accountId);
 }

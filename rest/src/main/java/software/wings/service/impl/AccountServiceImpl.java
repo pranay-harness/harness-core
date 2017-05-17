@@ -1,7 +1,8 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.Role.Builder.aRole;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
@@ -13,24 +14,25 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.User;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.licensing.LicenseManager;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SettingsService;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
@@ -50,46 +52,51 @@ public class AccountServiceImpl implements AccountService {
   @Inject private RoleService roleService;
   @Inject private LicenseManager licenseManager;
   @Inject private NotificationSetupService notificationSetupService;
+  @Inject private SettingsService settingsService;
+  @Inject private ExecutorService executorService;
+  @Inject private AppService appService;
 
   @Override
   public Account save(@Valid Account account) {
     account.setAccountKey(generateAccountKey());
     // licenseManager.setLicense(account);
     wingsPersistence.save(account);
-    List<Role> roles = createDefaultRoles(account);
-    roles.forEach(role -> {
-      // Create default notification only for Account Admin
-      if (role.getRoleType().equals(RoleType.ACCOUNT_ADMIN)) {
-        createDefaultNotificationGroup(account, role);
-      }
-    });
+    createDefaultAccountEntites(account);
     return account;
+  }
+
+  private void createDefaultAccountEntites(Account account) {
+    settingsService.createDefaultAccountSettings(account.getUuid());
+    createDefaultRoles(account)
+        .stream()
+        .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
+        .forEach(role -> createDefaultNotificationGroup(account, role));
   }
 
   List<Role> createDefaultRoles(Account account) {
     return Lists.newArrayList(roleService.save(aRole()
-                                                   .withAppId(Base.GLOBAL_APP_ID)
+                                                   .withAppId(GLOBAL_APP_ID)
                                                    .withAccountId(account.getUuid())
                                                    .withName(ACCOUNT_ADMIN.getDisplayName())
                                                    .withRoleType(ACCOUNT_ADMIN)
                                                    .build()),
 
         roleService.save(aRole()
-                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAppId(GLOBAL_APP_ID)
                              .withAccountId(account.getUuid())
                              .withName(APPLICATION_ADMIN.getDisplayName())
                              .withRoleType(APPLICATION_ADMIN)
                              .withAllApps(true)
                              .build()),
         roleService.save(aRole()
-                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAppId(GLOBAL_APP_ID)
                              .withAccountId(account.getUuid())
                              .withName(PROD_SUPPORT.getDisplayName())
                              .withRoleType(PROD_SUPPORT)
                              .withAllApps(true)
                              .build()),
         roleService.save(aRole()
-                             .withAppId(Base.GLOBAL_APP_ID)
+                             .withAppId(GLOBAL_APP_ID)
                              .withAccountId(account.getUuid())
                              .withName(NON_PROD_SUPPORT.getDisplayName())
                              .withRoleType(NON_PROD_SUPPORT)
@@ -104,7 +111,13 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public void delete(String accountId) {
-    wingsPersistence.delete(Account.class, accountId);
+    boolean deleted = wingsPersistence.delete(Account.class, accountId);
+    if (deleted) {
+      executorService.submit(() -> {
+        settingsService.deleteByAccountId(accountId);
+        appService.deleteByAccountId(accountId);
+      });
+    }
   }
 
   //  @Override
@@ -171,6 +184,7 @@ public class AccountServiceImpl implements AccountService {
           ACCOUNT_ADMIN.getDisplayName(), account.getAccountName());
     }
   }
+
   private String generateAccountKey() {
     KeyGenerator keyGen = null;
     try {
