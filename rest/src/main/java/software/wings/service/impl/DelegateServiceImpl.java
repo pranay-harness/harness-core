@@ -76,7 +76,7 @@ import javax.inject.Inject;
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
-  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 30000;
+  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 25000;
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -142,20 +142,6 @@ public class DelegateServiceImpl implements DelegateService {
     return updatedDelegate;
   }
 
-  /**
-   * Update delegate task types with manager supported task types
-   * @param delegate
-   */
-  private void updateDelegateTaskTypes(Delegate delegate) {
-    UpdateOperations<Delegate> updateOperations = wingsPersistence.createUpdateOperations(Delegate.class);
-    setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
-    wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
-                                .field("accountId")
-                                .equal(delegate.getAccountId())
-                                .field(ID_KEY)
-                                .equal(delegate.getUuid()),
-        updateOperations);
-  }
   @Override
   public Delegate checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
@@ -211,6 +197,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public Delegate register(Delegate delegate) {
     logger.info("Registering delegate: " + delegate);
+    // Please do not remove Fields Excluded
     Delegate existingDelegate = wingsPersistence.get(Delegate.class,
         aPageRequest()
             .addFilter("ip", EQ, delegate.getIp())
