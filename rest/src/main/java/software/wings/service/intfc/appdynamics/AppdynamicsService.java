@@ -3,6 +3,7 @@ package software.wings.service.intfc.appdynamics;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
@@ -25,4 +26,7 @@ public interface AppdynamicsService {
       throws IOException;
 
   void validateConfig(final SettingAttribute settingAttribute);
+
+  List<AppdynamicsMetric> getTierBTMetrics(String settingId, int appdynamicsAppId, int tierId)
+      throws IOException, InterruptedException;
 }

@@ -12,10 +12,13 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -79,6 +82,68 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       logger.error("Request not successful. Reason: {}", response);
       throw new WingsException(
           ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics business transactions");
+    }
+  }
+
+  @Override
+  public List<AppdynamicsMetric> getTierBTMetrics(
+      AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId) throws IOException {
+    final Call<List<AppdynamicsTier>> tierDetail =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierId);
+    final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
+    if (!tierResponse.isSuccessful()) {
+      logger.error("Request not successful. Reason: {}", tierResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier details");
+    }
+
+    final AppdynamicsTier tier = tierResponse.body().get(0);
+    final String tierBTsPath = "Business Transaction Performance|Business Transactions|" + tier.getName();
+    Call<List<AppdynamicsMetric>> tierBTMetricRequest =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listMetrices(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierBTsPath);
+
+    final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
+    if (!tierBTResponse.isSuccessful()) {
+      logger.error("Request not successful. Reason: {}", tierBTResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier BTs");
+    }
+
+    List<AppdynamicsMetric> rv = tierBTResponse.body();
+    for (AppdynamicsMetric appdynamicsTierMetric : rv) {
+      appdynamicsTierMetric.setChildMetrices(
+          getChildMetrics(appDynamicsConfig, appdynamicsAppId, appdynamicsTierMetric, tierBTsPath + "|"));
+    }
+
+    return rv;
+  }
+
+  private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
+      AppdynamicsMetric appdynamicsMetric, String parentMetricPath) throws IOException {
+    if (appdynamicsMetric.getType() != AppdynamicsMetricType.folder) {
+      return Collections.emptyList();
+    }
+
+    final String childMetricPath = parentMetricPath + appdynamicsMetric.getName() + "|";
+    Call<List<AppdynamicsMetric>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listMetrices(getHeaderWithCredentials(appDynamicsConfig), applicationId, childMetricPath);
+    final Response<List<AppdynamicsMetric>> response = request.execute();
+    if (response.isSuccessful()) {
+      final List<AppdynamicsMetric> allMetrices = response.body();
+      for (Iterator<AppdynamicsMetric> iterator = allMetrices.iterator(); iterator.hasNext();) {
+        final AppdynamicsMetric metric = iterator.next();
+        if (metric.getName().contains("Individual Nodes") || metric.getName().contains("External Calls")) {
+          iterator.remove();
+          continue;
+        }
+
+        metric.setChildMetrices(getChildMetrics(appDynamicsConfig, applicationId, metric, childMetricPath));
+      }
+      return allMetrices;
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException("could not get appdynami's metrics");
     }
   }
 

@@ -2,9 +2,11 @@ package software.wings.service.intfc.appdynamics;
 
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
+import software.wings.cloudprovider.aws.TaskMetadata.Task;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
@@ -31,4 +33,8 @@ public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK)
   List<AppdynamicsBusinessTransaction> getBusinessTransactions(
       AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId) throws IOException;
+
+  @DelegateTaskType(TaskType.APPDYNAMICS_GET_METRICES_OF_BT)
+  List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
+      throws IOException;
 }

@@ -44,7 +44,6 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
-import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -63,8 +62,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Caching;
@@ -76,7 +73,6 @@ import javax.inject.Inject;
 @Singleton
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
-  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 25000;
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -222,7 +218,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+  public <T extends NotifyResponseData> T executeTask(DelegateTask task, long timeOut) throws InterruptedException {
     logger.info("Issued task " + task.toString());
     String queueName = UUIDGenerator.getUuid();
     task.setQueueName(queueName);
@@ -230,7 +226,7 @@ public class DelegateServiceImpl implements DelegateService {
     IQueue<T> topic = hazelcastInstance.getQueue(queueName);
     CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(queueName, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-    T responseData = topic.poll(SYNC_CALL_TIMEOUT_INTERVAL, TimeUnit.MILLISECONDS);
+    T responseData = topic.poll(timeOut, TimeUnit.MILLISECONDS);
     if (responseData == null) {
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Harness Bot");
     }
