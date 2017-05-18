@@ -20,6 +20,8 @@ import java.util.Objects;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
+  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 25000;
+
   private TaskType taskType;
   private Object[] parameters;
   private String tag;
@@ -223,6 +225,7 @@ public class DelegateTask extends Base {
   public static class Context {
     private String accountId;
     private String appId;
+    private long timeOut = SYNC_CALL_TIMEOUT_INTERVAL;
 
     /**
      * Getter for property 'accountId'.
@@ -258,6 +261,14 @@ public class DelegateTask extends Base {
      */
     public void setAppId(String appId) {
       this.appId = appId;
+    }
+
+    public long getTimeOut() {
+      return timeOut;
+    }
+
+    public void setTimeOut(long timeOut) {
+      this.timeOut = timeOut;
     }
 
     public static final class Builder {
