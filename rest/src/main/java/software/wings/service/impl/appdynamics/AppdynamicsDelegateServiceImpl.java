@@ -26,6 +26,7 @@ import java.util.List;
  */
 public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDelegateServiceImpl.class);
+  private static final String BT_PERFORMANCE_PATH_PREFIX = "Business Transaction Performance|Business Transactions|";
 
   @Override
   public List<AppdynamicsApplication> getAllApplications(AppDynamicsConfig appDynamicsConfig) throws IOException {
@@ -98,7 +99,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     }
 
     final AppdynamicsTier tier = tierResponse.body().get(0);
-    final String tierBTsPath = "Business Transaction Performance|Business Transactions|" + tier.getName();
+    final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierBTsPath);
@@ -133,6 +134,11 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       final List<AppdynamicsMetric> allMetrices = response.body();
       for (Iterator<AppdynamicsMetric> iterator = allMetrices.iterator(); iterator.hasNext();) {
         final AppdynamicsMetric metric = iterator.next();
+
+        // While getting the metric names we do not need to go to individual metrics names since the metric names in
+        // each node are the same and there can be thousands of nodes in case of recycled nodes for container world
+        // We would not be monitoring external calls metrics because one deployment is not going to effect multiple
+        // tiers
         if (metric.getName().contains("Individual Nodes") || metric.getName().contains("External Calls")) {
           iterator.remove();
           continue;

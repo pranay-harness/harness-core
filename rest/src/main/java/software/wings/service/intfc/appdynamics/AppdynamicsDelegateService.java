@@ -2,7 +2,6 @@ package software.wings.service.intfc.appdynamics;
 
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
-import software.wings.cloudprovider.aws.TaskMetadata.Task;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
