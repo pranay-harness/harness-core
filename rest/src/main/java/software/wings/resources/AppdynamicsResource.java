@@ -11,6 +11,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
@@ -79,5 +80,17 @@ public class AppdynamicsResource {
       @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId)
       throws IOException, InterruptedException {
     return new RestResponse<>(appdynamicsService.getTierBTMetrics(settingId, appdynamicsAppId, tierId));
+  }
+
+  @GET
+  @Path("/get-metric-data")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
+      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
+      @QueryParam("btName") String btName, @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime)
+      throws IOException {
+    return new RestResponse<>(
+        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, startTime, endTime));
   }
 }
