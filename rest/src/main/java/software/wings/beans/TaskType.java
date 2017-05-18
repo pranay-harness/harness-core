@@ -55,7 +55,8 @@ public enum TaskType {
   APPDYNAMICS_GET_APP_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_TIER_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_NODES_TASK(ServiceImplDelegateTask.class),
-  APPDYNAMICS_GET_METRICES_OF_BT(ServiceImplDelegateTask.class);
+  APPDYNAMICS_GET_METRICES_OF_BT(ServiceImplDelegateTask.class),
+  APPDYNAMICS_GET_METRICES_DATA(ServiceImplDelegateTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 
