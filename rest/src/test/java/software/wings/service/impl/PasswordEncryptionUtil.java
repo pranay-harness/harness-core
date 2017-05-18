@@ -59,14 +59,20 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
   public void encryptUnencryptedPasswordsInSettingAttributes() {
     List<SettingAttribute> settings = wingsPersistence.list(SettingAttribute.class);
     settings.forEach(setting -> {
-      System.out.println("setting: " + setting.toString());
+      //      System.out.println("setting: " + setting.toString());
       if (setting.getValue() instanceof Encryptable) {
         boolean passwordNeedsFixing = false;
+        boolean accountIdFound = false;
         char[] outputChars = "x".toCharArray();
-        for (Field passwordField : setting.getValue().getClass().getDeclaredFields()) {
+        for (Field passwordField : setting.getValue().getClass().getFields()) {
+          System.out.println(passwordField.getName());
+          if (passwordField.getName() == "accountId") {
+            accountIdFound = true;
+          }
           Encrypted a = passwordField.getAnnotation(Encrypted.class);
           if (a != null && a.value()) {
-            System.out.println("Encryptable found: " + passwordField.getName() + " on " + setting.toString());
+            //            System.out.println("Encryptable found: " + passwordField.getName() + " on " +
+            //            setting.toString());
             try {
               passwordField.setAccessible(true);
               if (null != passwordField) {
@@ -99,7 +105,7 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
             }
           }
         }
-        if (passwordNeedsFixing) {
+        if (passwordNeedsFixing || !accountIdFound) {
           Encryptable e = (Encryptable) setting.getValue();
           e.setAccountId(setting.getAccountId());
           setting.setValue((SettingValue) e);
