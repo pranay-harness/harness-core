@@ -4,6 +4,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
@@ -25,8 +26,11 @@ public interface AppdynamicsService {
   List<AppdynamicsBusinessTransaction> getBusinessTransactions(@NotNull String settingId, @Valid long appdynamicsAppId)
       throws IOException;
 
-  void validateConfig(final SettingAttribute settingAttribute);
+  void validateConfig(@NotNull SettingAttribute settingAttribute);
 
-  List<AppdynamicsMetric> getTierBTMetrics(String settingId, int appdynamicsAppId, int tierId)
-      throws IOException, InterruptedException;
+  List<AppdynamicsMetric> getTierBTMetrics(@NotNull String settingId, int appdynamicsAppId, int tierId)
+      throws IOException;
+
+  List<AppdynamicsMetricData> getTierBTMetricData(@NotNull String settingId, int appdynamicsAppId, int tierId,
+      @NotNull String btName, long startTime, long endTime) throws IOException;
 }

@@ -8,6 +8,7 @@ import retrofit2.http.Query;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
@@ -90,4 +91,16 @@ public interface AppdynamicsRestClient {
   @GET("rest/applications/{applicationId}/metrics?output=JSON")
   Call<List<AppdynamicsMetric>> listMetrices(@Header("Authorization") String authorization,
       @Path("applicationId") long applicationId, @Query("metric-path") String metricPath);
+
+  /**
+   * Get the metric data points of appdynamics application for a give path
+   *
+   * @param authorization the authorization
+   * @param metricPath    the path to look for metrices
+   * @return the call
+   */
+  @GET("rest/applications/{applicationId}/metric-data?output=JSON&time-range-type=BETWEEN_TIMES&rollup=false")
+  Call<List<AppdynamicsMetricData>> getMetricData(@Header("Authorization") String authorization,
+      @Path("applicationId") long applicationId, @Query("metric-path") String metricPath,
+      @Query("start-time") long startTime, @Query("end-time") long endTime);
 }

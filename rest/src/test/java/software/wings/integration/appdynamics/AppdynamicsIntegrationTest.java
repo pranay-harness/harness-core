@@ -5,6 +5,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig.Builder;
 import software.wings.beans.RestResponse;
@@ -14,11 +15,15 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.utils.JsonUtils;
 
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -253,6 +258,63 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           Assert.assertEquals(
               "failed for " + btMetric.getName() + "|" + leafMetric.getName(), 0, leafMetric.getChildMetrices().size());
         }
+      }
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testGetBTMetricData() throws Exception {
+    final List<SettingAttribute> appdynamicsSettings =
+        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+    Assert.assertEquals(1, appdynamicsSettings.size());
+
+    // get all applications
+    WebTarget target = client.target(API_BASE
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+    RestResponse<List<AppdynamicsApplication>> restResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
+
+    long appId = 0;
+
+    for (AppdynamicsApplication application : restResponse.getResource()) {
+      if (application.getName().equalsIgnoreCase("MyApp")) {
+        appId = application.getId();
+        break;
+      }
+    }
+
+    Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
+    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
+        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+    RestResponse<List<AppdynamicsTier>> tierRestResponse =
+        getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
+    Assert.assertTrue(tierRestResponse.getResource().size() > 0);
+
+    for (AppdynamicsTier tier : tierRestResponse.getResource()) {
+      WebTarget btMetricsTarget =
+          client.target(API_BASE + "/appdynamics/tier-bt-metrics?settingId=" + appdynamicsSettings.get(0).getUuid()
+              + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+      RestResponse<List<AppdynamicsMetric>> tierBTMResponse =
+          getRequestBuilderWithAuthHeader(btMetricsTarget)
+              .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
+
+      List<AppdynamicsMetric> btMetrics = tierBTMResponse.getResource();
+      Assert.assertTrue(btMetrics.size() > 0);
+
+      for (AppdynamicsMetric btMetric : btMetrics) {
+        Assert.assertFalse(StringUtils.isBlank(btMetric.getName()));
+        Assert.assertTrue("failed for " + btMetric.getName(), btMetric.getChildMetrices().size() > 0);
+
+        final String url = API_BASE + "/appdynamics/get-metric-data?settingId=" + appdynamicsSettings.get(0).getUuid()
+            + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId() + "&btName="
+            + btMetric.getName() + "&startTime=" + (System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5))
+            + "&endTime=" + System.currentTimeMillis();
+        WebTarget btMetricsDataTarget = client.target(url.replaceAll(" ", "%20"));
+        RestResponse<List<AppdynamicsMetricData>> tierBTMDataResponse =
+            getRequestBuilderWithAuthHeader(btMetricsDataTarget)
+                .get(new GenericType<RestResponse<List<AppdynamicsMetricData>>>() {});
+        System.out.println(JsonUtils.asJson(tierBTMDataResponse.getResource()));
       }
     }
   }

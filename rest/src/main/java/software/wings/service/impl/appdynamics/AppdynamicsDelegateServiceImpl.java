@@ -89,16 +89,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   @Override
   public List<AppdynamicsMetric> getTierBTMetrics(
       AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId) throws IOException {
-    final Call<List<AppdynamicsTier>> tierDetail =
-        getAppdynamicsRestClient(appDynamicsConfig)
-            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierId);
-    final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
-    if (!tierResponse.isSuccessful()) {
-      logger.error("Request not successful. Reason: {}", tierResponse);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier details");
-    }
-
-    final AppdynamicsTier tier = tierResponse.body().get(0);
+    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId);
     final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
     Call<List<AppdynamicsMetric>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
@@ -117,6 +108,40 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     }
 
     return rv;
+  }
+
+  @Override
+  public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId,
+      int tierId, String btName, long startTime, long endTime) throws IOException {
+    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId);
+    String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|"
+        + "Individual Nodes|*|*";
+    Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .getMetricData(
+                getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, metricPath, startTime, endTime);
+
+    final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
+    if (tierBTMResponse.isSuccessful()) {
+      return tierBTMResponse.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", tierBTMResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics metric data");
+    }
+  }
+
+  private AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
+      throws IOException {
+    final Call<List<AppdynamicsTier>> tierDetail =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .getTierDetails(getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, tierId);
+    final Response<List<AppdynamicsTier>> tierResponse = tierDetail.execute();
+    if (!tierResponse.isSuccessful()) {
+      logger.error("Request not successful. Reason: {}", tierResponse);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, "reason", "could not fetch Appdynamics tier details");
+    }
+
+    return tierResponse.body().get(0);
   }
 
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
