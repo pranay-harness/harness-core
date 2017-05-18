@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
  */
 public class MongoHelper {
   private static final Logger logger = LoggerFactory.getLogger(MongoHelper.class);
+
   /**
    * Query page request.
    *
@@ -114,6 +117,14 @@ public class MongoHelper {
     }
 
     if (req.getOrders() != null) {
+      // Add default sorting if none present
+      if (req.getOrders().size() == 0) {
+        SortOrder sortOrder = new SortOrder();
+        sortOrder.setFieldName("createdAt");
+        sortOrder.setOrderType(OrderType.DESC);
+        req.addOrder(sortOrder);
+      }
+
       query.order(req.getOrders()
                       .stream()
                       .map(so -> (DESC.equals(so.getOrderType())) ? "-" + so.getFieldName() : so.getFieldName())
