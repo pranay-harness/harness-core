@@ -102,7 +102,7 @@ public class WorkflowResource {
   }
 
   /**
-   * Creates the.
+   * Creates a workflow
    *
    * @param appId         the app id
    * @param workflow the workflow
@@ -114,7 +114,7 @@ public class WorkflowResource {
   public RestResponse<Workflow> create(@QueryParam("appId") String appId, Workflow workflow) {
     workflow.setAppId(appId);
     workflow.setWorkflowType(WorkflowType.ORCHESTRATION);
-    return new RestResponse<>(workflowService.createWorkflow(workflow));
+    return new RestResponse<>((workflowService.createWorkflow(workflow)));
   }
 
   /**

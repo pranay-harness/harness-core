@@ -34,6 +34,10 @@ public class Workflow extends Base {
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
+  @Transient private String serviceId;
+
+  @Transient private String infraMappingId;
+
   /**
    * Gets name.
    *
@@ -126,6 +130,22 @@ public class Workflow extends Base {
     this.workflowExecutions = workflowExecutions;
   }
 
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
+  }
+
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
+  }
+
   public static final class WorkflowBuilder {
     private String name;
     private String description;
@@ -142,6 +162,8 @@ public class Workflow extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private String serviceId;
+    private String infraMappingId;
 
     private WorkflowBuilder() {}
 
@@ -224,6 +246,16 @@ public class Workflow extends Base {
       return this;
     }
 
+    public WorkflowBuilder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public WorkflowBuilder withInfraMappingId(String infraMappingId) {
+      this.infraMappingId = infraMappingId;
+      return this;
+    }
+
     public Workflow build() {
       Workflow workflow = new Workflow();
       workflow.setName(name);
@@ -241,6 +273,8 @@ public class Workflow extends Base {
       workflow.setCreatedAt(createdAt);
       workflow.setLastUpdatedBy(lastUpdatedBy);
       workflow.setLastUpdatedAt(lastUpdatedAt);
+      workflow.setServiceId(serviceId);
+      workflow.setInfraMappingId(infraMappingId);
       return workflow;
     }
   }

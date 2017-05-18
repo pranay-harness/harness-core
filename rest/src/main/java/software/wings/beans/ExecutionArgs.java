@@ -20,7 +20,7 @@ public class ExecutionArgs {
   private String serviceId;
   private String commandName;
   private ExecutionStrategy executionStrategy;
-  @Transient private List<Artifact> artifacts;
+  private List<Artifact> artifacts;
   private Map<String, String> artifactIdNames;
   private String orchestrationId;
   @Transient private List<ServiceInstance> serviceInstances;

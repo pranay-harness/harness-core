@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
