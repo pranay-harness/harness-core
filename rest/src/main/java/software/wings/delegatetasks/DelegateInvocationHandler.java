@@ -33,7 +33,8 @@ public class DelegateInvocationHandler implements InvocationHandler {
                                                                                   .withParameters(delegateArguments)
                                                                                   .withAccountId(context.getAccountId())
                                                                                   .withAppId(context.getAppId())
-                                                                                  .build());
+                                                                                  .build(),
+        context.getTimeOut());
     if (returnValueData.getException() != null) {
       throw returnValueData.getException();
     } else {

@@ -33,7 +33,7 @@ public interface DelegateService {
 
   String queueTask(DelegateTask task);
 
-  <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException;
+  <T extends NotifyResponseData> T executeTask(DelegateTask task, long timeOut) throws InterruptedException;
 
   PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId);
 
