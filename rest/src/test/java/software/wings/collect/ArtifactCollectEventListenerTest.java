@@ -88,7 +88,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                              .withValue(aJenkinsConfig()
                                                             .withJenkinsUrl(JENKINS_URL)
                                                             .withUsername(USER_NAME)
-                                                            .withPassword(PASSWORD.toCharArray())
+                                                            .withPassword(PASSWORD)
                                                             .withAccountId(ACCOUNT_ID)
                                                             .build())
                                              .build();
@@ -129,7 +129,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     SettingAttribute SETTING_ATTRIBUTE =
         aSettingAttribute()
             .withValue(
-                aBambooConfig().withBamboosUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
+                aBambooConfig().withBambooUrl(JENKINS_URL).withUsername(USER_NAME).withPassword(PASSWORD).build())
             .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 

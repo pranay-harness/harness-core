@@ -73,7 +73,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
                                                          .withValue(aJenkinsConfig()
                                                                         .withJenkinsUrl(JENKINS_URL)
                                                                         .withUsername(USER_NAME)
-                                                                        .withPassword(PASSWORD.toCharArray())
+                                                                        .withPassword(PASSWORD)
                                                                         .withAccountId(ACCOUNT_ID)
                                                                         .build())
                                                          .build();

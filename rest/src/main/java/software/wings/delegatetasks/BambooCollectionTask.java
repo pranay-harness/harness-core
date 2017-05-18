@@ -38,18 +38,18 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask<ListNotif
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((String) parameters[0], (String) parameters[1], (String) parameters[2], (String) parameters[3],
+    return run((String) parameters[0], (String) parameters[1], (char[]) parameters[2], (String) parameters[3],
         (List<String>) parameters[4], (Map<String, String>) parameters[5]);
   }
 
-  public ListNotifyResponseData run(String bambooUrl, String username, String password, String planKey,
+  public ListNotifyResponseData run(String bambooUrl, String username, char[] password, String planKey,
       List<String> artifactPaths, Map<String, String> arguments) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     try {
       BambooConfig bambooConfig =
-          aBambooConfig().withBamboosUrl(bambooUrl).withUsername(username).withPassword(password).build();
+          aBambooConfig().withBambooUrl(bambooUrl).withUsername(username).withPassword(password).build();
 
       for (String artifactPath : artifactPaths) {
         Pair<String, InputStream> fileInfo =

@@ -166,7 +166,7 @@ public class UserServiceTest extends WingsBaseTest {
                          .withEmailVerified(false)
                          .withCompanyName(COMPANY_NAME)
                          .withAccountName(ACCOUNT_NAME)
-                         .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
+                         .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                          .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
@@ -182,7 +182,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.register(userBuilder.build());
 
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
-    assertThat(BCrypt.checkpw(PASSWORD, userArgumentCaptor.getValue().getPasswordHash())).isTrue();
+    assertThat(BCrypt.checkpw(new String(PASSWORD), userArgumentCaptor.getValue().getPasswordHash())).isTrue();
     assertThat(userArgumentCaptor.getValue().isEmailVerified()).isFalse();
     assertThat(userArgumentCaptor.getValue().getCompanyName()).isEqualTo(COMPANY_NAME);
 
@@ -207,7 +207,7 @@ public class UserServiceTest extends WingsBaseTest {
                          .withEmailVerified(false)
                          .withCompanyName(COMPANY_NAME)
                          .withAccountName(ACCOUNT_NAME)
-                         .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
+                         .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
                          .build();
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
@@ -223,7 +223,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.register(userBuilder.build());
 
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
-    assertThat(BCrypt.checkpw(PASSWORD, userArgumentCaptor.getValue().getPasswordHash())).isTrue();
+    assertThat(BCrypt.checkpw(new String(PASSWORD), userArgumentCaptor.getValue().getPasswordHash())).isTrue();
     assertThat(userArgumentCaptor.getValue().isEmailVerified()).isFalse();
     assertThat(userArgumentCaptor.getValue().getCompanyName()).isEqualTo(COMPANY_NAME);
 
@@ -241,7 +241,7 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldMatchPassword() {
-    String hashpw = hashpw(PASSWORD, BCrypt.gensalt());
+    String hashpw = hashpw(new String(PASSWORD), BCrypt.gensalt());
     assertThat(userService.matchPassword(PASSWORD, hashpw)).isTrue();
   }
 

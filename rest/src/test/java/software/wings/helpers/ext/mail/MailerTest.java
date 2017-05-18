@@ -27,7 +27,7 @@ import javax.mail.MessagingException;
  */
 public class MailerTest extends WingsBaseTest {
   private static final String EMAIL = "test@email.com";
-  private static final String PASSWORD = "password";
+  private static final char[] PASSWORD = "password".toCharArray();
   /**
    * The Green mail.
    */
@@ -39,7 +39,7 @@ public class MailerTest extends WingsBaseTest {
    */
   @Before
   public void setup() {
-    greenMail.setUser(EMAIL, EMAIL, PASSWORD);
+    greenMail.setUser(EMAIL, EMAIL, new String(PASSWORD));
   }
 
   /**

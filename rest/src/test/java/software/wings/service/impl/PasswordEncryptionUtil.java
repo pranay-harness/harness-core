@@ -11,7 +11,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
@@ -91,7 +90,7 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
         if (passwordNeedsFixing) {
           ((Encryptable) setting.getValue()).setAccountId(setting.getAccountId());
           SettingAttribute fixed = wingsPersistence.saveAndGet(SettingAttribute.class, setting);
-          System.out.println(((JenkinsConfig) fixed.getValue()).getPassword());
+          System.out.println(fixed.toString());
         }
       }
     });
@@ -146,6 +145,24 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
     configFiles.forEach(file -> {
       if (file.isEncrypted()) {
       }
+    });
+  }
+
+  @Test
+  @Ignore
+  public void checkAllSettingAttributeEncryptions() {
+    List<SettingAttribute> settingAttributes = wingsPersistence.list(SettingAttribute.class);
+    settingAttributes.forEach(setting -> {
+      SettingAttribute encryptedSetting =
+          wingsPersistence.getWithoutDecryptingTestOnly(SettingAttribute.class, setting.getUuid());
+      System.out.println(encryptedSetting);
+      SettingAttribute unencryptedSetting = wingsPersistence.get(SettingAttribute.class, setting.getUuid());
+      System.out.println(unencryptedSetting);
+
+      //      try {
+      //        Field passwordField = setting.getValue().getClass().getDeclaredField("password");
+      //        System.out.println("sett")
+      //      System.out.println()
     });
   }
 

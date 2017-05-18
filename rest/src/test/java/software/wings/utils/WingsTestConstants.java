@@ -137,15 +137,15 @@ public class WingsTestConstants {
   /**
    * The constant SSH_USER_PASSWORD.
    */
-  public static final String SSH_USER_PASSWORD = "SSH_USER_PASSWORD";
+  public static final char[] SSH_USER_PASSWORD = "SSH_USER_PASSWORD".toCharArray();
   /**
    * The constant SSH_KEY.
    */
-  public static final String SSH_KEY = "SSH_KEY";
+  public static final char[] SSH_KEY = "SSH_KEY".toCharArray();
   /**
    * The constant SSH_KEY_PASS_PHRASE.
    */
-  public static final String SSH_KEY_PASS_PHRASE = "SSH_KEY_PASS_PHRASE";
+  public static final char[] SSH_KEY_PASS_PHRASE = "SSH_KEY_PASS_PHRASE".toCharArray();
   /**
    * The constant ACTIVITY_ID.
    */
@@ -229,12 +229,12 @@ public class WingsTestConstants {
   /**
    * The constant PASSWORD.
    */
-  public static final String PASSWORD = "PASSWORD";
+  public static final char[] PASSWORD = "PASSWORD".toCharArray();
 
   /**
    * The constant USER_PASSWORD.
    */
-  public static final String USER_PASSWORD = "USER_PASSWORD";
+  public static final char[] USER_PASSWORD = "USER_PASSWORD".toCharArray();
   /**
    * The constant COMMAND_NAME.
    */

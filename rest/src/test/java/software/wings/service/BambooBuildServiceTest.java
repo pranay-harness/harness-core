@@ -33,9 +33,9 @@ public class BambooBuildServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private BambooBuildService bambooBuildService;
 
   private static final BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
-                                                       .withBamboosUrl("http://bamboo")
+                                                       .withBambooUrl("http://bamboo")
                                                        .withUsername("username")
-                                                       .withPassword("password")
+                                                       .withPassword("password".toCharArray())
                                                        .build();
   private static final BambooArtifactStream bambooArtifactStream = BambooArtifactStream.Builder.aBambooArtifactStream()
                                                                        .withUuid(ARTIFACT_STREAM_ID)

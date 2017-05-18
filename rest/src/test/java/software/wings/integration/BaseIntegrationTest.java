@@ -73,7 +73,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
       ? "https://localhost:9090/api"
       : "http://localhost:9090/api";
   protected static final String adminUserName = "admin@wings.software";
-  protected static final String adminPassword = "admin";
+  protected static final char[] adminPassword = "admin".toCharArray();
 
   protected static String accountId = "INVALID_ID";
   protected static String userToken = "INVALID_TOKEN";
@@ -131,7 +131,7 @@ protected String loginUser(final String userName, final String password) {
 }
 
 protected void loginAdminUser() {
-  loginUser(adminUserName, adminPassword);
+  loginUser(adminUserName, new String(adminPassword));
 }
 
 protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {

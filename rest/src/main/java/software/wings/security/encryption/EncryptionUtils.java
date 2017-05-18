@@ -1,6 +1,10 @@
 package software.wings.security.encryption;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 /**
  * Utility classes used for encryption-related work.
@@ -23,5 +27,14 @@ public class EncryptionUtils {
 
   public static byte[] generateSalt() {
     return generateSalt(DEFAULT_SALT_SIZE);
+  }
+
+  public static byte[] toBytes(char[] chars, Charset charset) {
+    CharBuffer charBuffer = CharBuffer.wrap(chars);
+    ByteBuffer byteBuffer = charset.encode(charBuffer);
+    byte[] bytes = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.position(), byteBuffer.limit());
+    Arrays.fill(charBuffer.array(), '\u0000');
+    Arrays.fill(byteBuffer.array(), (byte) 0);
+    return bytes;
   }
 }

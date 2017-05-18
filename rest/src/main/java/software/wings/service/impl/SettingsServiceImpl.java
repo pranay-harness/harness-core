@@ -187,33 +187,40 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public void createDefaultAccountSettings(String accountId) {
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(GLOBAL_APP_ID)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("User/Password")
-            .withValue(aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD).build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(GLOBAL_APP_ID)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("User/Password :: su - <app-account>")
-            .withValue(
-                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SU_APP_USER).build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(GLOBAL_APP_ID)
-            .withAccountId(accountId)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName("User/Password :: sudo - <app-account>")
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(GLOBAL_APP_ID)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName("User/Password")
+                              .withValue(aHostConnectionAttributes()
+                                             .withConnectionType(SSH)
+                                             .withAccessType(USER_PASSWORD)
+                                             .withAccountId(accountId)
+                                             .build())
+                              .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(GLOBAL_APP_ID)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName("User/Password :: su - <app-account>")
+                              .withValue(aHostConnectionAttributes()
+                                             .withConnectionType(SSH)
+                                             .withAccessType(USER_PASSWORD_SU_APP_USER)
+                                             .withAccountId(accountId)
+                                             .build())
+                              .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(GLOBAL_APP_ID)
+                              .withAccountId(accountId)
+                              .withEnvId(GLOBAL_ENV_ID)
+                              .withName("User/Password :: sudo - <app-account>")
 
-            .withValue(
-                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(USER_PASSWORD_SUDO_APP_USER).build())
-            .build());
+                              .withValue(aHostConnectionAttributes()
+                                             .withConnectionType(SSH)
+                                             .withAccessType(USER_PASSWORD_SUDO_APP_USER)
+                                             .withAccountId(accountId)
+                                             .build())
+                              .build());
   }
 
   /* (non-Javadoc)

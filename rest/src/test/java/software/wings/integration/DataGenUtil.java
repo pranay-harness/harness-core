@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -168,9 +169,10 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                  .withCategory(Category.CONNECTOR)
                                                  .withAccountId(accountId)
                                                  .withValue(aNexusConfig()
+                                                                .withAccountId(accountId)
                                                                 .withNexusUrl("https://nexus.wings.software")
                                                                 .withUsername("admin")
-                                                                .withPassword("wings123!")
+                                                                .withPassword("wings123!".toCharArray())
                                                                 .build())
                                                  .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, nexusSettingAttribute);
@@ -181,9 +183,10 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withCategory(Category.CONNECTOR)
             .withAccountId(accountId)
             .withValue(BambooConfig.Builder.aBambooConfig()
-                           .withBamboosUrl("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/")
+                           .withAccountId(accountId)
+                           .withBambooUrl("http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/")
                            .withUsername("wingsbuild")
-                           .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
+                           .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
@@ -193,10 +196,11 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                 .withName("SMTP")
                                                 .withAccountId(accountId)
                                                 .withValue(aSmtpConfig()
+                                                               .withAccountId(accountId)
                                                                .withFromAddress("wings_test@wings.software")
                                                                .withUsername("wings_test@wings.software")
                                                                .withHost("smtp.gmail.com")
-                                                               .withPassword("@wes0me@pp")
+                                                               .withPassword("@wes0me@pp".toCharArray())
                                                                .withPort(465)
                                                                .withUseSSL(true)
                                                                .build())
@@ -208,9 +212,10 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                   .withName("Splunk")
                                                   .withAccountId(accountId)
                                                   .withValue(aSplunkConfig()
+                                                                 .withAccountId(accountId)
                                                                  .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
                                                                  .withPort(8089)
-                                                                 .withPassword("W!ngs@Splunk")
+                                                                 .withPassword("W!ngs@Splunk".toCharArray())
                                                                  .withUsername("admin")
                                                                  .build())
                                                   .build();
@@ -222,10 +227,11 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withName("AppDynamics")
             .withAccountId(accountId)
             .withValue(Builder.anAppDynamicsConfig()
+                           .withAccountId(accountId)
                            .withControllerUrl("https://na774.saas.appdynamics.com/controller")
                            .withUsername("testuser")
                            .withAccountname("na774")
-                           .withPassword("testuser123")
+                           .withPassword("testuser123".toCharArray())
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);
@@ -240,44 +246,50 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   private void createAppSettings(String accountId) {
     WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
-    getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(
-            aSettingAttribute()
-                .withAccountId(accountId)
-                .withAppId(GLOBAL_APP_ID)
-                .withEnvId(GLOBAL_ENV_ID)
-                .withName("Wings Key")
-                .withValue(aHostConnectionAttributes()
-                               .withConnectionType(SSH)
-                               .withAccessType(KEY)
-                               .withUserName("ubuntu")
-                               .withKey("-----BEGIN RSA PRIVATE KEY-----\n"
-                                   + "MIIEogIBAAKCAQEArCtMvZebz8vGCUah4C4kThYOAEjrdgaGe8M8w+66jPKEnX1GDXj4mrlIxRxO\n"
-                                   + "ErJTwNirPLhIhw/8mGojcsbc5iY7wK6TThJI0uyzUtPfZ1g8zzcQxh7aMOYso/Nxoz6YtO6HRQhd\n"
-                                   + "rxiFuadVo+RuVUeBvVBiQauZMoESh1vGZ2r1eTuXKrSiStaafSfVzSEfvtJYNWnPguqcuGlrX3yv\n"
-                                   + "sNOlIWzU3YETk0bMG3bejChGAKh35AhZdDO+U4g7zH8NI5KjT9IH7MyKAFxiCPYkNm7Y2Bw8j2eL\n"
-                                   + "DIkqIA1YX0VxXBiCC2Vg78o7TxJ7Df7f3V+Q+Xhtj4rRtYCFw1pqBwIDAQABAoIBAGA//LDpNuQe\n"
-                                   + "SWIaKJkJcqZs0fr6yRe8YiaCaVAoAAaX9eeNh0I05NaqyrHXNxZgt03SUzio1XMcTtxuSc76ube4\n"
-                                   + "nCMF9bfppOi2BzJA3F4MCELXx/raeKRpqX8ms9rNPdW4m8rN+IHQtcGqeMgdBkmKpk9NxwBrjEOd\n"
-                                   + "wNwHRI2/Y/ZCApkQDhRPXfEJXnY65SJJ8Vh1NAm6RuiKXv9+8J1//OHAeRfIXTJI4KiwP2EFHeXF\n"
-                                   + "6K0EBVEb/M2kg81bh7iq2OoDxBVrF1Uozg4KUK2EMoCe5OidcSdD1G8ICTsRQlb9iW5e/c2UeCrb\n"
-                                   + "HGkcmQyvDniyfFmVVymyr0vJTnECgYEA6FsPq4T+M0Cj6yUqsIdijqgpY31iX2BAibrLTOFUYhj3\n"
-                                   + "oPpy2bciREXffMGpqiAY8czy3aEroNDC5c7lcwS1HuMgNls0nKuaPLaSg0rSXX9wRn0mYpasBEZ8\n"
-                                   + "5pxFX44FnqTDa37Y7MqKykoMpEB71s1DtG9Ug1cMRuPftZZQ5qsCgYEAvbBcEiPFyKf5g2QRVA/k\n"
-                                   + "FDQcX9hVm7cvDTo6+Qq6XUwrQ2cm9ZJ+zf+Jak+NSN88GNTzAPCWzd8zbZ2D7q4qAyDcSSy0PR3K\n"
-                                   + "bHpLFZnYYOIkSfYcM3CwDhIFTnb9uvG8mypfMFGZ2qUZY/jbI0/cCctsUaXt03g4cM4Q04peehUC\n"
-                                   + "gYAcsWoM9z5g2+GiHxPXetB75149D/W+62bs2ylR1B2Ug5rIwUS/h/LuVWaUxGGMRaxu560yGz4E\n"
-                                   + "/OKkeFkzS+iF6OxIahjkI/jG+JC9L9csfplByyCbWhnh6UZxP+j9NM+S2KvdMWveSeC7vEs1WVUx\n"
-                                   + "oGV0+a6JDY3Rj0BH70kMQwKBgD1ZaK3FPBalnSFNn/0cFpwiLnshMK7oFCOnDaO2QIgkNmnaVtNd\n"
-                                   + "yf0+BGeJyxwidwFg/ibzqRJ0eeGd7Cmp0pSocBaKitCpbeqfsuENnNnYyfvRyVUpwQcL9QNnoLBx\n"
-                                   + "tppInfi2q5f3hbq7pcRJ89SHIkVV8RFP9JEnVHHWcq/xAoGAJNbaYQMmLOpGRVwt7bdK5FXXV5OX\n"
-                                   + "uzSUPICQJsflhj4KPxJ7sdthiFNLslAOyNYEP+mRy90ANbI1x7XildsB2wqBmqiXaQsyHBXRh37j\n"
-                                   + "dMX4iYY1mW7JjS9Y2jy7xbxIBYDpwnqHLTMPSKFQpwsi7thP+0DRthj62sCjM/YB7Es=\n"
-                                   + "-----END RSA PRIVATE KEY-----")
-                               .build())
-                .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<SettingAttribute>>() {});
+    try {
+      RestResponse<SettingAttribute> response = getRequestBuilderWithAuthHeader(target).post(
+          Entity.entity(
+              aSettingAttribute()
+                  .withAccountId(accountId)
+                  .withAppId(GLOBAL_APP_ID)
+                  .withEnvId(GLOBAL_ENV_ID)
+                  .withName("Wings Key")
+                  .withValue(aHostConnectionAttributes()
+                                 .withConnectionType(SSH)
+                                 .withAccessType(KEY)
+                                 .withAccountId(accountId)
+                                 .withUserName("ubuntu")
+                                 .withKey(("-----BEGIN RSA PRIVATE KEY-----\n"
+                                     + "MIIEogIBAAKCAQEArCtMvZebz8vGCUah4C4kThYOAEjrdgaGe8M8w+66jPKEnX1GDXj4mrlIxRxO\n"
+                                     + "ErJTwNirPLhIhw/8mGojcsbc5iY7wK6TThJI0uyzUtPfZ1g8zzcQxh7aMOYso/Nxoz6YtO6HRQhd\n"
+                                     + "rxiFuadVo+RuVUeBvVBiQauZMoESh1vGZ2r1eTuXKrSiStaafSfVzSEfvtJYNWnPguqcuGlrX3yv\n"
+                                     + "sNOlIWzU3YETk0bMG3bejChGAKh35AhZdDO+U4g7zH8NI5KjT9IH7MyKAFxiCPYkNm7Y2Bw8j2eL\n"
+                                     + "DIkqIA1YX0VxXBiCC2Vg78o7TxJ7Df7f3V+Q+Xhtj4rRtYCFw1pqBwIDAQABAoIBAGA//LDpNuQe\n"
+                                     + "SWIaKJkJcqZs0fr6yRe8YiaCaVAoAAaX9eeNh0I05NaqyrHXNxZgt03SUzio1XMcTtxuSc76ube4\n"
+                                     + "nCMF9bfppOi2BzJA3F4MCELXx/raeKRpqX8ms9rNPdW4m8rN+IHQtcGqeMgdBkmKpk9NxwBrjEOd\n"
+                                     + "wNwHRI2/Y/ZCApkQDhRPXfEJXnY65SJJ8Vh1NAm6RuiKXv9+8J1//OHAeRfIXTJI4KiwP2EFHeXF\n"
+                                     + "6K0EBVEb/M2kg81bh7iq2OoDxBVrF1Uozg4KUK2EMoCe5OidcSdD1G8ICTsRQlb9iW5e/c2UeCrb\n"
+                                     + "HGkcmQyvDniyfFmVVymyr0vJTnECgYEA6FsPq4T+M0Cj6yUqsIdijqgpY31iX2BAibrLTOFUYhj3\n"
+                                     + "oPpy2bciREXffMGpqiAY8czy3aEroNDC5c7lcwS1HuMgNls0nKuaPLaSg0rSXX9wRn0mYpasBEZ8\n"
+                                     + "5pxFX44FnqTDa37Y7MqKykoMpEB71s1DtG9Ug1cMRuPftZZQ5qsCgYEAvbBcEiPFyKf5g2QRVA/k\n"
+                                     + "FDQcX9hVm7cvDTo6+Qq6XUwrQ2cm9ZJ+zf+Jak+NSN88GNTzAPCWzd8zbZ2D7q4qAyDcSSy0PR3K\n"
+                                     + "bHpLFZnYYOIkSfYcM3CwDhIFTnb9uvG8mypfMFGZ2qUZY/jbI0/cCctsUaXt03g4cM4Q04peehUC\n"
+                                     + "gYAcsWoM9z5g2+GiHxPXetB75149D/W+62bs2ylR1B2Ug5rIwUS/h/LuVWaUxGGMRaxu560yGz4E\n"
+                                     + "/OKkeFkzS+iF6OxIahjkI/jG+JC9L9csfplByyCbWhnh6UZxP+j9NM+S2KvdMWveSeC7vEs1WVUx\n"
+                                     + "oGV0+a6JDY3Rj0BH70kMQwKBgD1ZaK3FPBalnSFNn/0cFpwiLnshMK7oFCOnDaO2QIgkNmnaVtNd\n"
+                                     + "yf0+BGeJyxwidwFg/ibzqRJ0eeGd7Cmp0pSocBaKitCpbeqfsuENnNnYyfvRyVUpwQcL9QNnoLBx\n"
+                                     + "tppInfi2q5f3hbq7pcRJ89SHIkVV8RFP9JEnVHHWcq/xAoGAJNbaYQMmLOpGRVwt7bdK5FXXV5OX\n"
+                                     + "uzSUPICQJsflhj4KPxJ7sdthiFNLslAOyNYEP+mRy90ANbI1x7XildsB2wqBmqiXaQsyHBXRh37j\n"
+                                     + "dMX4iYY1mW7JjS9Y2jy7xbxIBYDpwnqHLTMPSKFQpwsi7thP+0DRthj62sCjM/YB7Es=\n"
+                                     + "-----END RSA PRIVATE KEY-----")
+                                              .toCharArray())
+                                 .build())
+                  .build(),
+              APPLICATION_JSON),
+          new GenericType<RestResponse<SettingAttribute>>() {});
+    } catch (BadRequestException bre) {
+      throw bre;
+    }
   }
 
   private List<Application> createApplications() {

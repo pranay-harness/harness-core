@@ -92,7 +92,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testSignupSuccess() throws IOException {
     final String name = "Raghu Singh";
     final String email = "abc@wings.software";
-    final String pwd = "somepwd";
+    final char[] pwd = "somepwd".toCharArray();
     final String accountName = "some account";
     final String companyName = "some company";
     WebTarget target = client.target(API_BASE + "/users");
@@ -129,7 +129,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testSignupSuccessWithSpaces() throws IOException {
     final String name = "  Brad  Pitt    ";
     final String email = "xyz@wings.software";
-    final String pwd = "somepwd";
+    final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";
     WebTarget target = client.target(API_BASE + "/users");
@@ -173,7 +173,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testSignupEmailWithSpace() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "  xyz@wings  ";
-    final String pwd = "somepwd";
+    final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";
     WebTarget target = client.target(API_BASE + "/users");
@@ -213,7 +213,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testSignupBadEmail() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "xyz@wings";
-    final String pwd = "somepwd";
+    final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";
     WebTarget target = client.target(API_BASE + "/users");
@@ -253,7 +253,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testSignupBadEmailDomain() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "xyz@gmail.com";
-    final String pwd = "somepwd";
+    final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";
     WebTarget target = client.target(API_BASE + "/users");
@@ -294,7 +294,7 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   public void testSignupEmailExists() throws IOException {
     final String name = "Brad  Pitt    ";
     final String email = "admin@wings.software";
-    final String pwd = "somepwd";
+    final char[] pwd = "somepwd".toCharArray();
     final String accountName = " star   wars   ";
     final String companyName = "  star   wars    enterprise   ";
     WebTarget target = client.target(API_BASE + "/users");

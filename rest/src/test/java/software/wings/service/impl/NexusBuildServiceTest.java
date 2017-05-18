@@ -41,7 +41,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   private NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
                                         .withNexusUrl(DEFAULT_NEXUS_URL)
                                         .withUsername("admin")
-                                        .withPassword("admin123")
+                                        .withPassword("admin123".toCharArray())
                                         .build();
 
   private static final NexusArtifactStream nexusArtifactStream =

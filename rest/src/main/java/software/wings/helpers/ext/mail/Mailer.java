@@ -42,7 +42,7 @@ public class Mailer {
     Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
     email.setHostName(smtpConfig.getHost());
     email.setSmtpPort(smtpConfig.getPort());
-    email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), smtpConfig.getPassword()));
+    email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
     email.setSSLOnConnect(smtpConfig.isUseSSL());
     if (smtpConfig.isUseSSL()) {
       email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));

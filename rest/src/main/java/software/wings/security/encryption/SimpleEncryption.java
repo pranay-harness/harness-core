@@ -113,6 +113,9 @@ public class SimpleEncryption implements EncryptionInterface {
   }
 
   public char[] encryptChars(char[] content) {
+    if (content == null) {
+      return null;
+    }
     byte[] encrypted = this.encrypt(CHARSET.encode(CharBuffer.wrap(content)).array());
     return CHARSET.decode(ByteBuffer.wrap(encrypted)).array();
   }
@@ -140,6 +143,9 @@ public class SimpleEncryption implements EncryptionInterface {
   }
 
   public char[] decryptChars(char[] encrypted) {
+    if (encrypted == null) {
+      return null;
+    }
     byte[] decrypted = this.decrypt(CHARSET.encode(CharBuffer.wrap(encrypted)).array());
     return CHARSET.decode(ByteBuffer.wrap(decrypted)).array();
   }

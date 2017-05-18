@@ -142,7 +142,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                                             .withControllerUrl("https://na774.saas.appdynamics.com/controller")
                                             .withUsername("testuser")
                                             .withAccountname("na774")
-                                            .withPassword("testuser123")
+                                            .withPassword("testuser123".toCharArray())
                                             .build())
                              .build());
 

@@ -82,7 +82,7 @@ public class ElasticLoadBalancerState extends State {
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
       return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
-          loadBalancerConfig.getSecretKey());
+          new String(loadBalancerConfig.getSecretKey()));
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ELB operations not supported");
     }

@@ -168,7 +168,7 @@ public class UserServiceImpl implements UserService {
       user.setAppId(Base.GLOBAL_APP_ID);
       user.getAccounts().add(account);
       user.setEmailVerified(false);
-      String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
+      String hashed = hashpw(new String(user.getPassword()), BCrypt.gensalt());
       user.setPasswordHash(hashed);
       user.setPasswordChangedAt(System.currentTimeMillis());
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
@@ -176,7 +176,7 @@ public class UserServiceImpl implements UserService {
     } else {
       Map<String, Object> map = new HashMap();
       map.put("name", user.getName());
-      map.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
+      map.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
       return existingUser;
     }
@@ -387,7 +387,7 @@ public class UserServiceImpl implements UserService {
     } else {
       Map<String, Object> map = new HashMap();
       map.put("name", userInvite.getName().trim());
-      map.put("passwordHash", hashpw(userInvite.getPassword(), BCrypt.gensalt()));
+      map.put("passwordHash", hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
       map.put("emailVerified", true);
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
     }
@@ -440,7 +440,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean updatePassword(String resetPasswordToken, String password) {
+  public boolean updatePassword(String resetPasswordToken, char[] password) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     if (jwtPasswordSecret == null) {
       throw new WingsException(INVALID_REQUEST, "message", "incorrect portal setup");
@@ -461,7 +461,7 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
-  private void resetUserPassword(String email, String password, long tokenIssuedAt) {
+  private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {
     User user = getUserByEmail(email);
     if (user == null) {
       throw new WingsException(INVALID_REQUEST, "message", "Email doesn't exist");
@@ -469,7 +469,7 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(EXPIRED_TOKEN);
     }
 
-    String hashed = hashpw(password, BCrypt.gensalt());
+    String hashed = hashpw(new String(password), BCrypt.gensalt());
     wingsPersistence.update(user,
         wingsPersistence.createUpdateOperations(User.class)
             .set("passwordHash", hashed)
@@ -498,8 +498,8 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#matchPassword(java.lang.String, java.lang.String)
    */
   @Override
-  public boolean matchPassword(String password, String hash) {
-    return BCrypt.checkpw(password, hash);
+  public boolean matchPassword(char[] password, String hash) {
+    return BCrypt.checkpw(new String(password), hash);
   }
 
   private User save(User user) {
@@ -519,8 +519,8 @@ public class UserServiceImpl implements UserService {
     //    }
 
     Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("name", user.getName());
-    if (user.getPassword() != null && user.getPassword().length() > 0) {
-      builder.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
+    if (user.getPassword() != null && user.getPassword().length > 0) {
+      builder.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       builder.put("passwordChangedAt", System.currentTimeMillis());
     }
     if (user.getRoles() != null && !user.getRoles().isEmpty()) {

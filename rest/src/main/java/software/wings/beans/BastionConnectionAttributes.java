@@ -82,8 +82,9 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     private ConnectionType connectionType;
     private AccessType accessType;
     private String hostName;
-    private String key;
+    private char[] key;
     private String userName;
+    private String accountId;
 
     private Builder() {}
 
@@ -135,7 +136,7 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
      * @param key the key
      * @return the builder
      */
-    public Builder withKey(String key) {
+    public Builder withKey(char[] key) {
       this.key = key;
       return this;
     }
@@ -152,6 +153,17 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     }
 
     /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -162,7 +174,8 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
           .withAccessType(accessType)
           .withHostName(hostName)
           .withKey(key)
-          .withUserName(userName);
+          .withUserName(userName)
+          .withAccountId(accountId);
     }
 
     /**
@@ -177,6 +190,7 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
       bastionConnectionAttributes.setHostName(hostName);
       bastionConnectionAttributes.setKey(key);
       bastionConnectionAttributes.setUserName(userName);
+      bastionConnectionAttributes.setAccountId(accountId);
       return bastionConnectionAttributes;
     }
   }

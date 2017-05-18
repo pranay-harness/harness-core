@@ -2,10 +2,18 @@ package software.wings.beans;
 
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
+import java.util.Arrays;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -13,12 +21,13 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 5/16/16.
  */
 @JsonTypeName("HOST_CONNECTION_ATTRIBUTES")
-public class HostConnectionAttributes extends SettingValue {
+public class HostConnectionAttributes extends SettingValue implements Encryptable {
   @Attributes(title = "Connection Type", required = true) @NotNull private ConnectionType connectionType;
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
   @Attributes(title = "User Name") private String userName;
-  @Attributes(title = "Key") private String key;
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Key") @Encrypted private char[] key;
+  @SchemaIgnore @NotNull private String accountId;
 
   /**
    * Instantiates a new host connection attributes.
@@ -77,7 +86,7 @@ public class HostConnectionAttributes extends SettingValue {
    *
    * @return the key
    */
-  public String getKey() {
+  public char[] getKey() {
     return key;
   }
 
@@ -86,7 +95,7 @@ public class HostConnectionAttributes extends SettingValue {
    *
    * @param key the key
    */
-  public void setKey(String key) {
+  public void setKey(char[] key) {
     this.key = key;
   }
 
@@ -106,6 +115,16 @@ public class HostConnectionAttributes extends SettingValue {
    */
   public void setUserName(String userName) {
     this.userName = userName;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /* (non-Javadoc)
@@ -129,8 +148,21 @@ public class HostConnectionAttributes extends SettingValue {
     }
     final HostConnectionAttributes other = (HostConnectionAttributes) obj;
     return Objects.equals(this.accessType, other.accessType)
-        && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.key, other.key)
+        && Objects.equals(this.connectionType, other.connectionType) && Arrays.equals(this.key, other.key)
         && Objects.equals(this.userName, other.userName);
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("accessType", accessType)
+        .add("connectionType", connectionType)
+        .add("userName", userName)
+        .add("key", key)
+        .toString();
   }
 
   /**
@@ -174,8 +206,9 @@ public class HostConnectionAttributes extends SettingValue {
   public static final class Builder {
     private ConnectionType connectionType;
     private AccessType accessType;
-    private String key;
+    private char[] key;
     private String userName;
+    private String accountId;
 
     private Builder() {}
 
@@ -216,7 +249,7 @@ public class HostConnectionAttributes extends SettingValue {
      * @param key the key
      * @return the host connection attributes builder
      */
-    public Builder withKey(String key) {
+    public Builder withKey(char[] key) {
       this.key = key;
       return this;
     }
@@ -233,6 +266,16 @@ public class HostConnectionAttributes extends SettingValue {
     }
 
     /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+    /**
      * But.
      *
      * @return the host connection attributes builder
@@ -242,7 +285,8 @@ public class HostConnectionAttributes extends SettingValue {
           .withConnectionType(connectionType)
           .withAccessType(accessType)
           .withKey(key)
-          .withUserName(userName);
+          .withUserName(userName)
+          .withAccountId(accountId);
     }
 
     /**
@@ -256,6 +300,7 @@ public class HostConnectionAttributes extends SettingValue {
       hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setKey(key);
       hostConnectionAttributes.setUserName(userName);
+      hostConnectionAttributes.setAccountId(accountId);
       return hostConnectionAttributes;
     }
   }

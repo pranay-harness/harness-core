@@ -38,7 +38,7 @@ public class NexusServiceTest {
   private NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
                                         .withNexusUrl(DEFAULT_NEXUS_URL)
                                         .withUsername("admin")
-                                        .withPassword("admin123")
+                                        .withPassword("admin123".toCharArray())
                                         .build();
 
   @Test

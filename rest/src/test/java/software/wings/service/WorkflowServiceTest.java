@@ -9,9 +9,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -19,6 +22,7 @@ import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNot
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -28,6 +32,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
+import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -46,14 +52,20 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.RepairActionCode;
+import software.wings.beans.Role;
+import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -73,6 +85,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
@@ -89,9 +102,12 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -457,7 +473,87 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     logger.info(JsonUtils.asJson(workflow2));
   }
+  @Test
+  public void shouldCreateBasicDeploymentWorkflow() {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withInfraMappingId(INFRA_MAPPING_ID)
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
 
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+
+    Role role = aRole()
+                    .withRoleType(RoleType.ACCOUNT_ADMIN)
+                    .withUuid(ROLE_ID)
+                    .withAccountId(application.getAccountId())
+                    .build();
+    List<NotificationGroup> notificationGroups = Arrays.asList(aNotificationGroup()
+                                                                   .withUuid(NOTIFICATION_GROUP_ID)
+                                                                   .withAccountId(application.getAccountId())
+                                                                   .withRole(role)
+                                                                   .build());
+    when(notificationSetupService.listNotificationGroups(
+             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
+        .thenReturn(notificationGroups);
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow orchestrationWorkflow =
+        (BasicOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow)
+        .isNotNull()
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph")
+        .hasFieldOrProperty("notificationRules")
+        .hasFieldOrProperty("failureStrategies");
+    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
+    assertThat(orchestrationWorkflow.getGraph().getNodes())
+        .extracting("id")
+        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
+            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+
+    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
+        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
+            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+
+    assertThat(orchestrationWorkflow.getNotificationRules()).isNotNull();
+    assertThat(orchestrationWorkflow.getNotificationRules().get(0)).isNotNull();
+    assertThat(orchestrationWorkflow.getNotificationRules().get(0).getConditions()).isNotNull();
+    assertThat(orchestrationWorkflow.getNotificationRules().get(0).getExecutionScope())
+        .isEqualTo(ExecutionScope.WORKFLOW);
+
+    assertThat(orchestrationWorkflow.getFailureStrategies()).isNotNull();
+    assertThat(orchestrationWorkflow.getFailureStrategies().get(0)).isNotNull();
+    assertThat(orchestrationWorkflow.getFailureStrategies().get(0).getRepairActionCode())
+        .isEqualTo(RepairActionCode.ROLLBACK_WORKFLOW);
+
+    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
+
+    assertThat(res).isNotNull().hasSize(1);
+    assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
+
+    logger.info(JsonUtils.asJson(workflow2));
+  }
   @Test
   public void shouldValidateWorkflow() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
