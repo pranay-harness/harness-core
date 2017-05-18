@@ -2,16 +2,19 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 /**
  * Created by anubhaw on 12/27/16.
  */
 @JsonTypeName("AWS")
-public class AwsConfig extends SettingValue {
+public class AwsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
-  @Attributes(title = "Secret Key", required = true) @NotEmpty private String secretKey;
+  @Attributes(title = "Secret Key", required = true) @NotEmpty private char[] secretKey;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new Aws config.
@@ -43,7 +46,7 @@ public class AwsConfig extends SettingValue {
    *
    * @return the secret key
    */
-  public String getSecretKey() {
+  public char[] getSecretKey() {
     return secretKey;
   }
 
@@ -52,8 +55,19 @@ public class AwsConfig extends SettingValue {
    *
    * @param secretKey the secret key
    */
-  public void setSecretKey(String secretKey) {
+  public void setSecretKey(char[] secretKey) {
     this.secretKey = secretKey;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  @Override
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**
@@ -61,7 +75,8 @@ public class AwsConfig extends SettingValue {
    */
   public static final class Builder {
     private String accessKey;
-    private String secretKey;
+    private char[] secretKey;
+    private String accountId;
 
     private Builder() {}
 
@@ -91,18 +106,28 @@ public class AwsConfig extends SettingValue {
      * @param secretKey the secret key
      * @return the builder
      */
-    public Builder withSecretKey(String secretKey) {
+    public Builder withSecretKey(char[] secretKey) {
       this.secretKey = secretKey;
       return this;
     }
 
+    /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
     /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return anAwsConfig().withAccessKey(accessKey).withSecretKey(secretKey);
+      return anAwsConfig().withAccessKey(accessKey).withSecretKey(secretKey).withAccountId(accountId);
     }
 
     /**
@@ -114,6 +139,7 @@ public class AwsConfig extends SettingValue {
       AwsConfig awsConfig = new AwsConfig();
       awsConfig.setAccessKey(accessKey);
       awsConfig.setSecretKey(secretKey);
+      awsConfig.setAccountId(accountId);
       return awsConfig;
     }
   }

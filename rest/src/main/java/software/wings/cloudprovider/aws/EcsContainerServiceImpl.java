@@ -86,7 +86,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    */
   public void createCluster() throws InterruptedException {
     AmazonCloudFormationClient amazonCloudFormationClient = awsHelperService.getAmazonCloudFormationClient(
-        "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE");
+        "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray());
     CreateStackResult result = amazonCloudFormationClient.createStack(
         new CreateStackRequest()
             .withStackName("EC2ContainerService-demo")
@@ -432,7 +432,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    */
   public void destroyCluster() throws InterruptedException {
     AmazonCloudFormationClient amazonCloudFormationClient = awsHelperService.getAmazonCloudFormationClient(
-        "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE");
+        "AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray());
     CreateStackResult result = amazonCloudFormationClient.createStack(
         new CreateStackRequest()
             .withStackName("EC2ContainerService-test2")

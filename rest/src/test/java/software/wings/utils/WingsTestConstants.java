@@ -349,7 +349,7 @@ public class WingsTestConstants {
   /**
    * The constant SECRET_KEY.
    */
-  public static final String SECRET_KEY = "SECRET_KEY";
+  public static final char[] SECRET_KEY = "SECRET_KEY".toCharArray();
   /**
    * The constant ASSERTION.
    */

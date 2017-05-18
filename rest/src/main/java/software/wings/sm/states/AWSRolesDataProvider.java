@@ -27,7 +27,7 @@ public class AWSRolesDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
     AmazonIdentityManagementClient amazonIdentityManagementClient = awsHelperService.getAmazonIdentityManagementClient(
-        "AKIAIJ5H5UG5TUB3L2QQ", "Yef4E+CZTR2wRQc3IVfDS4Ls22BAeab9JVlZx2nu");
+        "AKIAIJ5H5UG5TUB3L2QQ", "Yef4E+CZTR2wRQc3IVfDS4Ls22BAeab9JVlZx2nu".toCharArray());
 
     return amazonIdentityManagementClient.listRoles(new ListRolesRequest().withMaxItems(400))
         .getRoles()

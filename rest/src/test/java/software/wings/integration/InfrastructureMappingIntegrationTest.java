@@ -152,7 +152,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
             .withAppId(app.getUuid())
             .withValue(anAwsConfig()
                            .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                           .withSecretKey("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")
+                           .withSecretKey("nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray())
                            .build())
             .build());
 
@@ -198,7 +198,7 @@ public class InfrastructureMappingIntegrationTest extends WingsBaseTest {
             .withAppId(app.getUuid())
             .withValue(anAwsConfig()
                            .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                           .withSecretKey("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")
+                           .withSecretKey("nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray())
                            .build())
             .build());
 

@@ -40,7 +40,7 @@ import java.net.Socket;
 public class AwsHelperService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  public void validateCredential(String accessKey, String secretKey) {
+  public void validateCredential(String accessKey, char[] secretKey) {
     try {
       getAmazonEc2Client(Regions.US_EAST_1.getName(), accessKey, secretKey)
           .describeAccountAttributes(new DescribeAccountAttributesRequest());
@@ -56,8 +56,8 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the aws cloud watch client
    */
-  public AmazonCloudWatchClient getAwsCloudWatchClient(String accessKey, String secretKey) {
-    return new AmazonCloudWatchClient(new BasicAWSCredentials(accessKey, secretKey));
+  public AmazonCloudWatchClient getAwsCloudWatchClient(String accessKey, char[] secretKey) {
+    return new AmazonCloudWatchClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
   /**
@@ -67,10 +67,10 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon ecs client
    */
-  public AmazonECSClient getAmazonEcsClient(String region, String accessKey, String secretKey) {
+  public AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey) {
     return (AmazonECSClient) AmazonECSClientBuilder.standard()
         .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
   }
 
@@ -81,15 +81,15 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon ec 2 client
    */
-  public AmazonEC2Client getAmazonEc2Client(String region, String accessKey, String secretKey) {
+  public AmazonEC2Client getAmazonEc2Client(String region, String accessKey, char[] secretKey) {
     return (AmazonEC2Client) AmazonEC2ClientBuilder.standard()
         .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
         .build();
   }
 
-  public AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, String secretKey) {
-    return new AmazonIdentityManagementClient(new BasicAWSCredentials(accessKey, secretKey));
+  public AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, char[] secretKey) {
+    return new AmazonIdentityManagementClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
   /**
@@ -99,8 +99,8 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon cloud formation client
    */
-  public AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, String secretKey) {
-    return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, secretKey));
+  public AmazonCloudFormationClient getAmazonCloudFormationClient(String accessKey, char[] secretKey) {
+    return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
   /**
@@ -110,21 +110,21 @@ public class AwsHelperService {
    * @param secretKey the secret key
    * @return the amazon auto scaling client
    */
-  public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, String secretKey) {
-    return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, secretKey));
+  public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, char[] secretKey) {
+    return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
-  public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, String secretKey) {
-    return new AmazonElasticLoadBalancingClient(new BasicAWSCredentials(accessKey, secretKey));
+  public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, char[] secretKey) {
+    return new AmazonElasticLoadBalancingClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
   public com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient getClassicElbClient(
-      Regions region, String accessKey, String secretKey) {
-    return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient)
-        com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder.standard()
-            .withRegion(region)
-            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
-            .build();
+      Regions region, String accessKey, char[] secretKey) {
+    return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) com.amazonaws.services
+        .elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
   }
 
   public String getHostnameFromDnsName(String dnsName) {
@@ -143,7 +143,7 @@ public class AwsHelperService {
    * @param hostName  the host name
    * @return the instance id
    */
-  public String getInstanceId(Regions region, String accessKey, String secretKey, String hostName) {
+  public String getInstanceId(Regions region, String accessKey, char[] secretKey, String hostName) {
     AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region.getName(), accessKey, secretKey);
 
     String instanceId;

@@ -44,7 +44,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
       aSettingAttribute()
           .withValue(anAwsConfig()
                          .withAccessKey("AKIAJLEKM45P4PO5QUFQ")
-                         .withSecretKey("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")
+                         .withSecretKey("nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray())
                          .build())
           .build();
 

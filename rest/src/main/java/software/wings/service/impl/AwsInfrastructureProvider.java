@@ -117,12 +117,13 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       e.printStackTrace();
     }
 
-    SettingAttribute settingAttribute = aSettingAttribute()
-                                            .withValue(anAwsConfig()
-                                                           .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
-                                                           .withSecretKey("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")
-                                                           .build())
-                                            .build();
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withValue(anAwsConfig()
+                           .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
+                           .withSecretKey("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".toCharArray())
+                           .build())
+            .build();
     // System.out.println(awsInfrastructureProvider.listAMIs(settingAttribute, "us-east-1"));
 
     // System.out.println(awsInfrastructureProvider.listRegions(settingAttribute));
@@ -421,7 +422,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .collect(Collectors.toList());
   }
 
-  public List<String> listClassicLoadBalancers(String accessKey, String secretKey, String region) {
+  public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
     com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         awsHelperService.getClassicElbClient(Regions.valueOf(region), accessKey, secretKey);
 

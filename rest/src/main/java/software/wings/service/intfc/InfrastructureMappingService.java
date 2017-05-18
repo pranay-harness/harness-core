@@ -284,5 +284,5 @@ public interface InfrastructureMappingService {
    * @param region    the region
    * @return the list
    */
-  List<String> listElasticLoadBalancer(@NotNull String accessKey, @NotNull String secretKey, @NotNull String region);
+  List<String> listElasticLoadBalancer(@NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region);
 }

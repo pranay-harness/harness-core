@@ -35,7 +35,7 @@ public class CloudWatchNamespaceDataProvider implements DataProvider {
       SettingAttribute settingAttribute = settingAttributesByType.get(0);
       AwsConfig awsInfrastructureProviderConfig = (AwsConfig) settingAttribute.getValue();
       BasicAWSCredentials awsCredentials = new BasicAWSCredentials(
-          awsInfrastructureProviderConfig.getAccessKey(), awsInfrastructureProviderConfig.getSecretKey());
+          awsInfrastructureProviderConfig.getAccessKey(), new String(awsInfrastructureProviderConfig.getSecretKey()));
       AmazonCloudWatchClient cloudWatchClient = new AmazonCloudWatchClient(awsCredentials);
       ListMetricsResult listMetricsResult = cloudWatchClient.listMetrics();
       Map<String, String> namespaceMap = listMetricsResult.getMetrics().stream().collect(
