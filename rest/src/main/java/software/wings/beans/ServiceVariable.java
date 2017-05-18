@@ -16,6 +16,7 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.utils.validation.Create;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -62,6 +63,15 @@ public class ServiceVariable extends Base implements Encryptable {
   @Encrypted private char[] value;
 
   private Type type;
+
+  /**
+   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * @return List of field names
+   */
+  @Override
+  public List<String> getEncryptedFieldNames() {
+    return new ArrayList<>(Arrays.asList("value"));
+  }
 
   /**
    * Getter for property 'templateId'.

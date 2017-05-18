@@ -7,6 +7,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by anubhaw on 12/27/16.
  */
@@ -21,6 +25,15 @@ public class AwsConfig extends SettingValue implements Encryptable {
    */
   public AwsConfig() {
     super(SettingVariableTypes.AWS.name());
+  }
+
+  /**
+   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * @return List of field names
+   */
+  @Override
+  public List<String> getEncryptedFieldNames() {
+    return new ArrayList<>(Arrays.asList("secretKey"));
   }
 
   /**
