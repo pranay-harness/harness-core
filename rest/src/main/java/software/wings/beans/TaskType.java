@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
+import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooCollectionTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
@@ -56,7 +57,8 @@ public enum TaskType {
   APPDYNAMICS_GET_TIER_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_NODES_TASK(ServiceImplDelegateTask.class),
   APPDYNAMICS_GET_METRICES_OF_BT(ServiceImplDelegateTask.class),
-  APPDYNAMICS_GET_METRICES_DATA(ServiceImplDelegateTask.class);
+  APPDYNAMICS_GET_METRICES_DATA(ServiceImplDelegateTask.class),
+  APPDYNAMICS_COLLECT_METRIC_DATA(AppdynamicsDataCollectionTask.class);
 
   private Class<? extends DelegateRunnableTask<?>> delegateRunnableTaskClass;
 

@@ -37,11 +37,14 @@ public class AppDynamicsState extends HttpState {
   private String appDynamicsConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationName;
+
+  @Attributes(required = true, title = "Tier Name") private String tierName;
+
   @Attributes(required = true, title = "Metric Path",
       description = "Overall Application Performance|Average Response Time (ms)")
   private String metricPath;
-  @DefaultValue("10")
-  @Attributes(title = "Time duration (in minutes)", description = "Default 10 minutes")
+  @DefaultValue("15")
+  @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
 
   /**
@@ -106,12 +109,6 @@ public class AppDynamicsState extends HttpState {
     return asList(metricPath, getAssertion());
   }
 
-  @Override
-  @Attributes(title = "Wait interval before execution(in seconds)")
-  public Integer getWaitInterval() {
-    return super.getWaitInterval();
-  }
-
   /**
    * Gets application identifier.
    *
@@ -128,6 +125,14 @@ public class AppDynamicsState extends HttpState {
    */
   public void setApplicationName(String applicationName) {
     this.applicationName = applicationName;
+  }
+
+  public String getTierName() {
+    return tierName;
+  }
+
+  public void setTierName(String tierName) {
+    this.tierName = tierName;
   }
 
   /**

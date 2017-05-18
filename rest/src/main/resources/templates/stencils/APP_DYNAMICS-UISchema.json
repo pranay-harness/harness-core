@@ -1,5 +1,5 @@
 {
-  "ui:order": ["appDynamicsConfigId", "applicationName", "metricPath", "timeDuration", "assertion", "waitInterval"],
+  "ui:order": ["appDynamicsConfigId", "applicationName", "tierName", "metricPath", "timeDuration", "assertion"],
   "metricPath": {
     "ui:widget": "textarea"
   },
