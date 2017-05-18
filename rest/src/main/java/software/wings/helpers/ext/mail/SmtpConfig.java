@@ -16,9 +16,7 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
@@ -38,15 +36,6 @@ public class SmtpConfig extends SettingValue implements Encryptable {
    */
   public SmtpConfig() {
     super(SettingVariableTypes.SMTP.name());
-  }
-
-  /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
-   * @return List of field names
-   */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("password"));
   }
 
   /**

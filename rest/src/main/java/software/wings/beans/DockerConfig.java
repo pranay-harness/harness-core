@@ -13,9 +13,7 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by anubhaw on 1/5/17.
@@ -36,15 +34,6 @@ public class DockerConfig extends SettingValue implements Encryptable {
    */
   public DockerConfig() {
     super(SettingVariableTypes.DOCKER.name());
-  }
-
-  /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
-   * @return List of field names
-   */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("password"));
   }
 
   /**
