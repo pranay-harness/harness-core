@@ -15,6 +15,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -35,11 +36,22 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @SchemaIgnore @NotEmpty private String accountId;
 
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("secretKey");
+
   /**
    * Instantiates a new Elastic load balancer config.
    */
   public ElasticLoadBalancerConfig() {
     super(SettingVariableTypes.ELB.name());
+  }
+
+  /**
+   * Gets the list of fields that are encrypted for use in the UI
+   * @return List of field names
+   */
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**

@@ -17,6 +17,7 @@ import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
@@ -30,12 +31,22 @@ public class SmtpConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Username") private String username;
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new smtp config.
    */
   public SmtpConfig() {
     super(SettingVariableTypes.SMTP.name());
+  }
+
+  /**
+   * Gets the list of fields that are encrypted for use in the UI
+   * @return List of field names
+   */
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**

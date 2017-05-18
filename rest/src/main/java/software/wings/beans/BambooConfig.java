@@ -15,6 +15,7 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by anubhaw on 11/22/16.
@@ -29,12 +30,22 @@ public class BambooConfig extends SettingValue implements Encryptable {
   @Encrypted
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new BambooService config.
    */
   public BambooConfig() {
     super(SettingVariableTypes.BAMBOO.name());
+  }
+
+  /**
+   * Gets the list of fields that are encrypted for use in the UI
+   * @return List of field names
+   */
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**
