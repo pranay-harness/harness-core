@@ -24,6 +24,7 @@ import java.util.Objects;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+//@Indexes(@Index(fields = {@Field("appId"), @Field("name")}, options = @IndexOptions(unique = true)))
 public class Service extends Base {
   private String name;
   private String description;

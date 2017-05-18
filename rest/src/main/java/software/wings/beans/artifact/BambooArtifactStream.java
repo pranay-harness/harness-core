@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+import static software.wings.beans.artifact.BambooArtifactStream.Builder.aBambooArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -99,6 +100,21 @@ public class BambooArtifactStream extends ArtifactStream {
   @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
+  }
+
+  @Override
+  public ArtifactStream clone() {
+    return aBambooArtifactStream()
+        .withAppId(getAppId())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withAutoDownload(getAutoDownload())
+        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withJobname(jobname)
+        .withArtifactPaths(artifactPaths)
+        .build();
   }
 
   /**

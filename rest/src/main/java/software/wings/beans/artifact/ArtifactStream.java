@@ -251,13 +251,30 @@ public abstract class ArtifactStream extends Base {
         && Objects.equals(this.streamActions, other.streamActions);
   }
 
+  /**
+   * Gets service id.
+   *
+   * @return the service id
+   */
   public String getServiceId() {
     return serviceId;
   }
 
+  /**
+   * Sets service id.
+   *
+   * @param serviceId the service id
+   */
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
   }
 
+  /**
+   * Gets artifact stream attributes.
+   *
+   * @return the artifact stream attributes
+   */
   @SchemaIgnore public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
+
+  public abstract ArtifactStream clone();
 }

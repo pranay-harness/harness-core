@@ -31,6 +31,7 @@ public class ServiceCommand extends Base {
   private boolean targetToAllEnv;
 
   @Transient private Command command;
+
   @Transient @JsonIgnore private boolean setAsDefault;
 
   @Transient private String notes;

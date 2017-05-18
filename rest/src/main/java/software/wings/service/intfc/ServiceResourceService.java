@@ -22,9 +22,9 @@ public interface ServiceResourceService {
   /**
    * List.
    *
-   * @param pageRequest the page request
-   * @param withBuildSource
-   * @param withServiceCommands
+   * @param pageRequest         the page request
+   * @param withBuildSource     the with build source
+   * @param withServiceCommands the with service commands
    * @return the page response
    */
   PageResponse<Service> list(PageRequest<Service> pageRequest, boolean withBuildSource, boolean withServiceCommands);
@@ -36,6 +36,16 @@ public interface ServiceResourceService {
    * @return the service
    */
   @ValidationGroups(Create.class) Service save(@Valid Service service);
+
+  /**
+   * Clone service.
+   *
+   * @param appId        the app id
+   * @param originalServiceId the old service id
+   * @param clonedService      the service
+   * @return the service
+   */
+  Service clone(String appId, String originalServiceId, Service clonedService);
 
   /**
    * Update.

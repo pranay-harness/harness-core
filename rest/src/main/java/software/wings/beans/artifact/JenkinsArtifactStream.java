@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -105,6 +106,20 @@ public class JenkinsArtifactStream extends ArtifactStream {
    */
   public void setArtifactPaths(List<String> artifactPaths) {
     this.artifactPaths = artifactPaths;
+  }
+
+  public JenkinsArtifactStream clone() {
+    return aJenkinsArtifactStream()
+        .withAppId(getAppId())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withAutoDownload(getAutoDownload())
+        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withJobname(jobname)
+        .withArtifactPaths(artifactPaths)
+        .build();
   }
 
   /**

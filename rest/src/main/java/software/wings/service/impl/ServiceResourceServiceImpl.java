@@ -25,6 +25,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -32,6 +33,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
@@ -62,6 +64,9 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -145,6 +150,65 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
     return savedService;
+  }
+
+  @Override
+  public Service clone(String appId, String originalServiceId, Service service) {
+    Service originalService = get(appId, originalServiceId, true);
+
+    /*
+    1. service ArtifactType: done
+    2. ArtifactSources
+    3. config files
+    4. config vars
+    5. command
+    6. AppContainer: done
+     */
+
+    service.setAppContainer(originalService.getAppContainer());
+    service.setArtifactType(originalService.getArtifactType());
+    service.setUuid(null);
+    Service clonedService = wingsPersistence.saveAndGet(Service.class, service);
+    //    return clonedService;
+
+    List<ArtifactStream> artifactStreams = artifactStreamService
+                                               .list(Builder.aPageRequest()
+                                                         .addFilter("appId", Operator.EQ, originalService.getAppId())
+                                                         .addFilter("serviceId", Operator.EQ, originalService.getUuid())
+                                                         .build())
+                                               .getResponse();
+    artifactStreams.forEach(originalArtifactStream -> {
+      ArtifactStream clonedArtifactStream = originalArtifactStream.clone();
+      clonedArtifactStream.setServiceId(clonedService.getUuid());
+      artifactStreamService.create(clonedArtifactStream);
+    });
+
+    originalService.getConfigFiles().forEach(originalConfigFile -> {
+      File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
+
+      // TODO:: add accountId
+      ConfigFile clonedConfigFile = originalConfigFile.clone();
+      clonedConfigFile.setEntityId(clonedService.getUuid());
+
+      try {
+        configService.save(clonedConfigFile, new FileInputStream(file));
+      } catch (FileNotFoundException e) {
+        logger.error("Error in cloning config file {}", originalConfigFile.toString());
+        // Ignore and continue adding more files
+      }
+    });
+
+    originalService.getServiceVariables().forEach(originalServiceVariable -> {
+      serviceVariableService.getServiceVariablesForEntity(
+          originalServiceVariable.getAppId(), originalServiceVariable.getTemplateId(), clonedService.getUuid());
+
+      // TODO:: add accountId
+      ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
+      clonedServiceVariable.setEntityId(clonedService.getUuid());
+
+      serviceVariableService.save(clonedServiceVariable);
+    });
+    return clonedService;
   }
 
   private Service addDefaultCommands(Service service) {

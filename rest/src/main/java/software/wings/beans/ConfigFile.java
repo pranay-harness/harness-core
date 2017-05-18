@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
 import com.google.common.base.MoreObjects;
@@ -514,6 +515,19 @@ public class ConfigFile extends BaseFile implements Encryptable {
                 * Custom config override type.
                 */
     CUSTOM
+  }
+
+  public ConfigFile clone() {
+    return aConfigFile()
+        .withAppId(this.getAppId())
+        .withEnvId(this.getEnvId())
+        .withEntityType(this.getEntityType())
+        .withEntityId(this.getUuid())
+        .withFileName(this.getFileName())
+        .withRelativeFilePath(this.getRelativeFilePath())
+        .withTargetToAllEnv(this.isTargetToAllEnv())
+        .withEncrypted(this.isEncrypted())
+        .build();
   }
 
   public static final class Builder {
