@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -427,10 +428,13 @@ public class ConfigFile extends BaseFile implements Encryptable {
     this.encrypted = encrypted;
   }
 
+  @Override
+  @SchemaIgnore
   public String getAccountId() {
     return envId;
   }
 
+  @Override
   public void setAccountId(String accountId) {}
 
   @Override

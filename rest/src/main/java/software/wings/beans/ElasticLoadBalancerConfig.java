@@ -120,6 +120,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }

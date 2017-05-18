@@ -117,6 +117,7 @@ public class SplunkConfig extends SettingValue implements Encryptable {
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }

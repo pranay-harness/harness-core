@@ -123,6 +123,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }
