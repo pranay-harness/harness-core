@@ -96,7 +96,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     return KubernetesConfig.Builder.aKubernetesConfig()
         .withMasterUrl("https://" + cluster.getEndpoint() + "/")
         .withUsername(cluster.getMasterAuth().getUsername())
-        .withPassword(cluster.getMasterAuth().getPassword())
+        .withPassword(cluster.getMasterAuth().getPassword().toCharArray())
         .build();
   }
 

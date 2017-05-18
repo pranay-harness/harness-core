@@ -5,12 +5,16 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -18,14 +22,16 @@ import java.util.Objects;
  */
 @Extension
 @JsonTypeName("APP_DYNAMICS")
-public class AppDynamicsConfig extends SettingValue {
+public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
   @NotEmpty
-  private String password;
+  @Encrypted
+  private char[] password;
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new App dynamics config.
@@ -76,7 +82,7 @@ public class AppDynamicsConfig extends SettingValue {
    * @return the password
    */
   //@JsonIgnore
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
@@ -86,7 +92,7 @@ public class AppDynamicsConfig extends SettingValue {
    * @param password the password
    */
   //@JsonProperty
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
   }
 
@@ -109,6 +115,16 @@ public class AppDynamicsConfig extends SettingValue {
   }
 
   @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
+  @Override
   public int hashCode() {
     return Objects.hash(username, accountname, password, controllerUrl);
   }
@@ -123,7 +139,7 @@ public class AppDynamicsConfig extends SettingValue {
     }
     final AppDynamicsConfig other = (AppDynamicsConfig) obj;
     return Objects.equals(this.username, other.username) && Objects.equals(this.accountname, other.accountname)
-        && Objects.equals(this.password, other.password) && Objects.equals(this.controllerUrl, other.controllerUrl);
+        && Arrays.equals(this.password, other.password) && Objects.equals(this.controllerUrl, other.controllerUrl);
   }
 
   @Override
@@ -142,8 +158,9 @@ public class AppDynamicsConfig extends SettingValue {
   public static final class Builder {
     private String username;
     private String accountname;
-    private String password;
+    private char[] password;
     private String controllerUrl;
+    private String accountId;
 
     private Builder() {}
 
@@ -184,7 +201,7 @@ public class AppDynamicsConfig extends SettingValue {
      * @param password the password
      * @return the builder
      */
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
       return this;
     }
@@ -201,6 +218,17 @@ public class AppDynamicsConfig extends SettingValue {
     }
 
     /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -210,7 +238,8 @@ public class AppDynamicsConfig extends SettingValue {
           .withUsername(username)
           .withAccountname(accountname)
           .withPassword(password)
-          .withControllerUrl(controllerUrl);
+          .withControllerUrl(controllerUrl)
+          .withAccountId(accountId);
     }
 
     /**
@@ -224,6 +253,7 @@ public class AppDynamicsConfig extends SettingValue {
       appDynamicsConfig.setAccountname(accountname);
       appDynamicsConfig.setPassword(password);
       appDynamicsConfig.setControllerUrl(controllerUrl);
+      appDynamicsConfig.setAccountId(accountId);
       return appDynamicsConfig;
     }
   }

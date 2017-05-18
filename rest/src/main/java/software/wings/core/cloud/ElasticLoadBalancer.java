@@ -35,8 +35,8 @@ public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConf
     AmazonElasticLoadBalancingClient elbClient =
         (AmazonElasticLoadBalancingClient) AmazonElasticLoadBalancingClientBuilder.standard()
             .withRegion(loadBalancerConfig.getRegion())
-            .withCredentials(new AWSStaticCredentialsProvider(
-                new BasicAWSCredentials(loadBalancerConfig.getAccessKey(), loadBalancerConfig.getSecretKey())))
+            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                loadBalancerConfig.getAccessKey(), new String(loadBalancerConfig.getSecretKey()))))
             .build();
 
     RegisterInstancesWithLoadBalancerResult result =
@@ -59,8 +59,8 @@ public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConf
     AmazonElasticLoadBalancingClient elbClient =
         (AmazonElasticLoadBalancingClient) AmazonElasticLoadBalancingClientBuilder.standard()
             .withRegion(loadBalancerConfig.getRegion())
-            .withCredentials(new AWSStaticCredentialsProvider(
-                new BasicAWSCredentials(loadBalancerConfig.getAccessKey(), loadBalancerConfig.getSecretKey())))
+            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                loadBalancerConfig.getAccessKey(), new String(loadBalancerConfig.getSecretKey()))))
             .build();
 
     DeregisterInstancesFromLoadBalancerResult result = elbClient.deregisterInstancesFromLoadBalancer(
@@ -84,8 +84,8 @@ public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConf
     AmazonEC2Client ec2Client =
         (AmazonEC2Client) AmazonEC2ClientBuilder.standard()
             .withRegion(config.getRegion())
-            .withCredentials(
-                new AWSStaticCredentialsProvider(new BasicAWSCredentials(config.getAccessKey(), config.getSecretKey())))
+            .withCredentials(new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(config.getAccessKey(), new String(config.getSecretKey()))))
             /*.withClientConfiguration(new ClientConfiguration().withDnsResolver(new DnsResolver() {
               @Override
               public InetAddress[] resolve(String host) throws UnknownHostException {

@@ -47,7 +47,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask<ListNotify
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
       NexusConfig nexusConfig =
-          aNexusConfig().withNexusUrl(nexusUrl).withUsername(username).withPassword(password).build();
+          aNexusConfig().withNexusUrl(nexusUrl).withUsername(username).withPassword(password.toCharArray()).build();
       for (String artifactPath : artifactPaths) {
         logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusUrl);
         Pair<String, InputStream> fileInfo =

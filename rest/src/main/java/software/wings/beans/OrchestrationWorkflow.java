@@ -13,7 +13,8 @@ import java.util.Set;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "orchestrationWorkflowType", include = As.PROPERTY)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CanaryOrchestrationWorkflow.class, name = "CANARY")
-  , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM")
+  , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM"),
+      @JsonSubTypes.Type(value = BasicOrchestrationWorkflow.class, name = "BASIC")
 })
 public abstract class OrchestrationWorkflow {
   private OrchestrationWorkflowType orchestrationWorkflowType;

@@ -26,9 +26,9 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   private BambooConfig bambooConfig =
       Builder.aBambooConfig()
-          .withBamboosUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/rest/api/latest/")
+          .withBambooUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/rest/api/latest/")
           .withUsername("wingsbuild")
-          .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
+          .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
           .build();
 
   @Test

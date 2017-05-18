@@ -184,7 +184,8 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse updatePassword(
       @NotEmpty @PathParam("token") String resetPasswordToken, UpdatePasswordRequest updatePasswordRequest) {
-    return new RestResponse(userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword()));
+    return new RestResponse(
+        userService.updatePassword(resetPasswordToken, updatePasswordRequest.getPassword().toCharArray()));
   }
 
   /**

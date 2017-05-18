@@ -55,7 +55,8 @@ public class BambooServiceImpl implements BambooService {
   public List<String> getJobKeys(BambooConfig bambooConfig, String planKey) {
     Call<JsonNode> request =
         getBambooClient(bambooConfig)
-            .listPlanWithJobDetails(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()), planKey);
+            .listPlanWithJobDetails(
+                Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())), planKey);
     Response<JsonNode> response = null;
     try {
       response = getHttpRequestExecutionResponse(request);
@@ -97,14 +98,14 @@ public class BambooServiceImpl implements BambooService {
    * @return the basic auth credentials
    */
   public String getBasicAuthCredentials(BambooConfig bambooConfig) {
-    return Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword());
+    return Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword()));
   }
 
   @Override
   public Map<String, String> getPlanKeys(BambooConfig bambooConfig) {
     Call<JsonNode> request =
         getBambooClient(bambooConfig)
-            .listProjectPlans(Credentials.basic(bambooConfig.getUsername(), bambooConfig.getPassword()));
+            .listProjectPlans(Credentials.basic(bambooConfig.getUsername(), new String(bambooConfig.getPassword())));
     Map<String, String> planNameMap = new HashMap<>();
     Response<JsonNode> response = null;
 

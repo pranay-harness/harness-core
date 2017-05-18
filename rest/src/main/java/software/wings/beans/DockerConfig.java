@@ -1,23 +1,33 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
+
+import java.util.Arrays;
 
 /**
  * Created by anubhaw on 1/5/17.
  */
 @JsonTypeName("DOCKER")
-public class DockerConfig extends SettingValue {
+public class DockerConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
+  @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
   @NotEmpty
-  @JsonView(JsonViews.Internal.class)
-  private String password;
+  @Encrypted
+  private char[] password;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new Docker registry config.
@@ -67,7 +77,7 @@ public class DockerConfig extends SettingValue {
    *
    * @return the password
    */
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
@@ -76,8 +86,57 @@ public class DockerConfig extends SettingValue {
    *
    * @param password the password
    */
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    DockerConfig that = (DockerConfig) o;
+
+    if (!dockerRegistryUrl.equals(that.dockerRegistryUrl))
+      return false;
+    if (!username.equals(that.username))
+      return false;
+    if (!Arrays.equals(password, that.password))
+      return false;
+    return accountId.equals(that.accountId);
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(dockerRegistryUrl, username, password, accountId);
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("dockerRegistryUrl", dockerRegistryUrl)
+        .add("username", username)
+        .add("password", password)
+        .add("accountId", accountId)
+        .toString();
   }
 
   /**
@@ -87,7 +146,8 @@ public class DockerConfig extends SettingValue {
     private String dockerRegistryUrl;
     private String type;
     private String username;
-    private String password;
+    private char[] password;
+    private String accountId;
 
     private Builder() {}
 
@@ -134,13 +194,24 @@ public class DockerConfig extends SettingValue {
     }
 
     /**
-     * With password builder.
+     * With password.
      *
      * @param password the password
      * @return the builder
      */
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
+      return this;
+    }
+
+    /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -154,7 +225,8 @@ public class DockerConfig extends SettingValue {
           .withDockerRegistryUrl(dockerRegistryUrl)
           .withType(type)
           .withUsername(username)
-          .withPassword(password);
+          .withPassword(password)
+          .withAccountId(accountId);
     }
 
     /**
@@ -168,6 +240,7 @@ public class DockerConfig extends SettingValue {
       dockerConfig.setType(type);
       dockerConfig.setUsername(username);
       dockerConfig.setPassword(password);
+      dockerConfig.setAccountId(accountId);
       return dockerConfig;
     }
   }

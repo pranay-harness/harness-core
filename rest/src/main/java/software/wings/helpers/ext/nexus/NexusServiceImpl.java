@@ -50,7 +50,7 @@ public class NexusServiceImpl implements NexusService {
     try {
       final Call<RepositoryListResourceResponse> request =
           getRestClient(nexusConfig)
-              .getAllRepositories(Credentials.basic(nexusConfig.getUsername(), nexusConfig.getPassword()));
+              .getAllRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
       final Response<RepositoryListResourceResponse> response = request.execute();
       if (isSuccessful(response)) {
         final RepositoryListResourceResponse repositoryResponse = response.body();
@@ -71,7 +71,8 @@ public class NexusServiceImpl implements NexusService {
     try {
       final Call<ContentListResourceResponse> request =
           getRestClient(nexusConfig)
-              .getRepositoryContents(Credentials.basic(nexusConfig.getUsername(), nexusConfig.getPassword()), repoId);
+              .getRepositoryContents(
+                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
       return getArtifactPaths(request);
     } catch (final IOException e) {
       logger.error("Error occurred while retrieving repository contents  from Nexus Server {} for repository  {} ",
@@ -91,7 +92,7 @@ public class NexusServiceImpl implements NexusService {
       final Call<ContentListResourceResponse> request =
           getRestClient(nexusConfig)
               .getRepositoryContents(
-                  Credentials.basic(nexusConfig.getUsername(), nexusConfig.getPassword()), repoId, name);
+                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId, name);
       return getArtifactPaths(request);
     } catch (final IOException e) {
       logger.error("Error occurred while retrieving Repository contents  from Nexus server {} for Repository  {} ",
@@ -199,7 +200,8 @@ public class NexusServiceImpl implements NexusService {
     try {
       final Call<IndexBrowserTreeViewResponse> request =
           getRestClient(nexusConfig)
-              .getIndexContent(Credentials.basic(nexusConfig.getUsername(), nexusConfig.getPassword()), repoId);
+              .getIndexContent(
+                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
       final Response<IndexBrowserTreeViewResponse> response = request.execute();
       // Check if response successful or not
       if (isSuccessful(response)) {
@@ -319,7 +321,8 @@ public class NexusServiceImpl implements NexusService {
       NexusConfig nexusConfig, String url) throws IOException {
     final Call<IndexBrowserTreeViewResponse> request =
         getRestClient(nexusConfig)
-            .getIndexContentByUrl(Credentials.basic(nexusConfig.getUsername(), nexusConfig.getPassword()), url);
+            .getIndexContentByUrl(
+                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url);
     return request.execute();
   }
 
@@ -353,9 +356,10 @@ public class NexusServiceImpl implements NexusService {
     queryParams.put("g", groupId);
     queryParams.put("a", artifactName);
     queryParams.put("v", version);
-    Call<Project> request = getRestClient(nexusConfig)
-                                .getPomModel(Credentials.basic(nexusConfig.getUsername(), nexusConfig.getPassword()),
-                                    resolveUrl, queryParams);
+    Call<Project> request =
+        getRestClient(nexusConfig)
+            .getPomModel(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())),
+                resolveUrl, queryParams);
     try {
       final Response<Project> response = request.execute();
       if (isSuccessful(response)) {
@@ -421,7 +425,7 @@ public class NexusServiceImpl implements NexusService {
     NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
                                   .withNexusUrl("http://localhost:8081/nexus/")
                                   .withUsername("admin")
-                                  .withPassword("admin123")
+                                  .withPassword("admin123".toCharArray())
                                   .build();
 
     NexusServiceImpl nexusService = new NexusServiceImpl();

@@ -38,7 +38,7 @@ public class KubernetesHelperService {
                                                      .withMasterUrl(masterUrl)
                                                      .withTrustCerts(true)
                                                      .withUsername(kubernetesConfig.getUsername())
-                                                     .withPassword(kubernetesConfig.getPassword())
+                                                     .withPassword(new String(kubernetesConfig.getPassword()))
                                                      .withNamespace("default")
                                                      .build());
       logger.info("Connected to cluster {}", masterUrl);

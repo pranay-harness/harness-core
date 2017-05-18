@@ -8,22 +8,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
+
+import java.util.Arrays;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */
 @JsonTypeName("SMTP")
-public class SmtpConfig extends SettingValue {
+public class SmtpConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
   @Attributes(title = "Port", required = true) private int port;
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @Attributes(title = "Username") private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") private String password;
+  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new smtp config.
@@ -109,8 +115,8 @@ public class SmtpConfig extends SettingValue {
    *
    * @return the password
    */
-  @JsonIgnore
-  public String getPassword() {
+  //@JsonIgnore
+  public char[] getPassword() {
     return password;
   }
 
@@ -119,9 +125,19 @@ public class SmtpConfig extends SettingValue {
    *
    * @param password the password
    */
-  @JsonProperty
-  public void setPassword(String password) {
+  //@JsonProperty
+  public void setPassword(char[] password) {
     this.password = password;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
   }
 
   /**
@@ -154,7 +170,7 @@ public class SmtpConfig extends SettingValue {
     SmtpConfig config = (SmtpConfig) o;
     return port == config.port && useSSL == config.useSSL && Objects.equal(host, config.host)
         && Objects.equal(fromAddress, config.fromAddress) && Objects.equal(username, config.username)
-        && Objects.equal(password, config.password);
+        && Arrays.equals(password, config.password);
   }
 
   /* (non-Javadoc)
@@ -189,7 +205,8 @@ public class SmtpConfig extends SettingValue {
     private String fromAddress;
     private boolean useSSL;
     private String username;
-    private String password;
+    private char[] password;
+    private String accountId;
 
     private Builder() {}
 
@@ -263,8 +280,19 @@ public class SmtpConfig extends SettingValue {
      * @param password the password
      * @return the builder
      */
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
+      return this;
+    }
+
+    /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -280,7 +308,8 @@ public class SmtpConfig extends SettingValue {
           .withFromAddress(fromAddress)
           .withUseSSL(useSSL)
           .withUsername(username)
-          .withPassword(password);
+          .withPassword(password)
+          .withAccountId(accountId);
     }
 
     /**
@@ -296,6 +325,7 @@ public class SmtpConfig extends SettingValue {
       smtpConfig.setUseSSL(useSSL);
       smtpConfig.setUsername(username);
       smtpConfig.setPassword(password);
+      smtpConfig.setAccountId(accountId);
       return smtpConfig;
     }
   }

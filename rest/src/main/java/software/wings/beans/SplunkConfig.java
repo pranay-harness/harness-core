@@ -1,24 +1,34 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.jersey.JsonViews;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
+
+import java.util.Arrays;
 
 /**
  * The type Splunk config.
  */
 @JsonTypeName("SPLUNK")
-public class SplunkConfig extends SettingValue {
+public class SplunkConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
   @Attributes(title = "Port", required = true) private int port;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
   @NotEmpty
-  private String password;
+  @Encrypted
+  private char[] password;
+  @SchemaIgnore @NotEmpty private String accountId;
 
   /**
    * Instantiates a new Splunk config.
@@ -87,7 +97,7 @@ public class SplunkConfig extends SettingValue {
    * @return the password
    */
   //@JsonIgnore
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
@@ -97,8 +107,57 @@ public class SplunkConfig extends SettingValue {
    * @param password the password
    */
   //@JsonProperty
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public void setAccountId(String accountId) {
+    this.accountId = accountId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    SplunkConfig that = (SplunkConfig) o;
+
+    if (port != that.port)
+      return false;
+    if (!host.equals(that.host))
+      return false;
+    if (!username.equals(that.username))
+      return false;
+    if (!Arrays.equals(password, that.password))
+      return false;
+    return accountId.equals(that.accountId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(port, username, password, accountId);
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("host", host)
+        .add("port", port)
+        .add("username", username)
+        .add("password", password)
+        .add("accountId", accountId)
+        .toString();
   }
 
   /**
@@ -108,7 +167,8 @@ public class SplunkConfig extends SettingValue {
     private String host;
     private int port;
     private String username;
-    private String password;
+    private char[] password;
+    private String accountId;
 
     private Builder() {}
 
@@ -160,8 +220,19 @@ public class SplunkConfig extends SettingValue {
      * @param password the password
      * @return the builder
      */
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
+      return this;
+    }
+
+    /**
+     * With accountId.
+     *
+     * @param accountId the accountId
+     * @return the builder
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
       return this;
     }
 
@@ -171,7 +242,8 @@ public class SplunkConfig extends SettingValue {
      * @return the builder
      */
     public Builder but() {
-      return aSplunkConfig().withHost(host).withPort(port).withUsername(username).withPassword(password);
+      return aSplunkConfig().withHost(host).withPort(port).withUsername(username).withPassword(password).withAccountId(
+          accountId);
     }
 
     /**
@@ -185,6 +257,7 @@ public class SplunkConfig extends SettingValue {
       splunkConfig.setPort(port);
       splunkConfig.setUsername(username);
       splunkConfig.setPassword(password);
+      splunkConfig.setAccountId(accountId);
       return splunkConfig;
     }
   }

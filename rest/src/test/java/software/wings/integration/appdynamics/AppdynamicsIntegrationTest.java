@@ -38,7 +38,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                            .withControllerUrl("https://wings251.saas.appdynamics.com/controller")
                            .withUsername("appd-user")
                            .withAccountname("wings251")
-                           .withPassword("5PdEYf9H")
+                           .withPassword("5PdEYf9H".toCharArray())
+                           .withAccountId(accountId)
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);

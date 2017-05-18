@@ -26,12 +26,12 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/3/17.
  */
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
-  private static final String JENKINS_PASSWORD = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
+  private static final char[] JENKINS_PASSWORD = "06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray();
   private static final String JENKINS_URL = "https://jenkins.wings.software";
   private static final String JENKINS_USERNAME = "wingsbuild";
   private static final String NEXUS_URL = "https://nexus.wings.software";
   private static final String NEXUS_USERNAME = "admin";
-  private static final String NEXUS_PASSWORD = "wings123!";
+  private static final char[] NEXUS_PASSWORD = "wings123!".toCharArray();
 
   @Before
   public void setUp() throws Exception {
@@ -51,7 +51,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                                    .withAccountId(accountId)
                                                    .withJenkinsUrl(JENKINS_URL)
                                                    .withUsername(JENKINS_USERNAME)
-                                                   .withPassword(JENKINS_PASSWORD.toCharArray())
+                                                   .withPassword(JENKINS_PASSWORD)
                                                    .build())
                                     .build(),
                       APPLICATION_JSON),
@@ -74,7 +74,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                                                    .withAccountId(accountId)
                                                                    .withJenkinsUrl("BAD_URL")
                                                                    .withUsername(JENKINS_USERNAME)
-                                                                   .withPassword(JENKINS_PASSWORD.toCharArray())
+                                                                   .withPassword(JENKINS_PASSWORD)
                                                                    .build())
                                                     .build(),
                                 APPLICATION_JSON));

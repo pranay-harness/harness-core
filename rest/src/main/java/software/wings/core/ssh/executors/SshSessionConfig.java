@@ -4,14 +4,17 @@ import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
+import software.wings.security.annotations.Encrypted;
+import software.wings.security.encryption.Encryptable;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 2/8/16.
  */
-public class SshSessionConfig {
+public class SshSessionConfig implements Encryptable {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
   @NotEmpty private ExecutorType executorType;
@@ -24,12 +27,12 @@ public class SshSessionConfig {
   @NotEmpty private String host;
   private Integer port = 22;
   private String userName;
-  private String password;
+  @Encrypted private char[] password;
   private String keyName;
-  private String key;
-  private String keyPassphrase;
+  @Encrypted private char[] key;
+  @Encrypted private char[] keyPassphrase;
   private String sudoAppName;
-  private String sudoAppPassword;
+  @Encrypted private char[] sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
 
   /**
@@ -199,7 +202,7 @@ public class SshSessionConfig {
    *
    * @return the password
    */
-  public String getPassword() {
+  public char[] getPassword() {
     return password;
   }
 
@@ -208,7 +211,7 @@ public class SshSessionConfig {
    *
    * @param password the password
    */
-  public void setPassword(String password) {
+  public void setPassword(char[] password) {
     this.password = password;
   }
 
@@ -217,7 +220,7 @@ public class SshSessionConfig {
    *
    * @return the key
    */
-  public String getKey() {
+  public char[] getKey() {
     return key;
   }
 
@@ -226,7 +229,7 @@ public class SshSessionConfig {
    *
    * @param key the key
    */
-  public void setKey(String key) {
+  public void setKey(char[] key) {
     this.key = key;
   }
 
@@ -235,7 +238,7 @@ public class SshSessionConfig {
    *
    * @return the key passphrase
    */
-  public String getKeyPassphrase() {
+  public char[] getKeyPassphrase() {
     return keyPassphrase;
   }
 
@@ -244,7 +247,7 @@ public class SshSessionConfig {
    *
    * @param keyPassphrase the key passphrase
    */
-  public void setKeyPassphrase(String keyPassphrase) {
+  public void setKeyPassphrase(char[] keyPassphrase) {
     this.keyPassphrase = keyPassphrase;
   }
 
@@ -271,7 +274,7 @@ public class SshSessionConfig {
    *
    * @return the sudo app password
    */
-  public String getSudoAppPassword() {
+  public char[] getSudoAppPassword() {
     return sudoAppPassword;
   }
 
@@ -280,7 +283,7 @@ public class SshSessionConfig {
    *
    * @param sudoAppPassword the sudo app password
    */
-  public void setSudoAppPassword(String sudoAppPassword) {
+  public void setSudoAppPassword(char[] sudoAppPassword) {
     this.sudoAppPassword = sudoAppPassword;
   }
 
@@ -398,10 +401,10 @@ public class SshSessionConfig {
         && Objects.equals(this.sshSessionTimeout, other.sshSessionTimeout)
         && Objects.equals(this.retryInterval, other.retryInterval) && Objects.equals(this.host, other.host)
         && Objects.equals(this.port, other.port) && Objects.equals(this.userName, other.userName)
-        && Objects.equals(this.password, other.password) && Objects.equals(this.keyName, other.keyName)
-        && Objects.equals(this.key, other.key) && Objects.equals(this.keyPassphrase, other.keyPassphrase)
+        && Arrays.equals(this.password, other.password) && Objects.equals(this.keyName, other.keyName)
+        && Arrays.equals(this.key, other.key) && Arrays.equals(this.keyPassphrase, other.keyPassphrase)
         && Objects.equals(this.sudoAppName, other.sudoAppName)
-        && Objects.equals(this.sudoAppPassword, other.sudoAppPassword)
+        && Arrays.equals(this.sudoAppPassword, other.sudoAppPassword)
         && Objects.equals(this.bastionHostConfig, other.bastionHostConfig);
   }
 
@@ -446,12 +449,12 @@ public class SshSessionConfig {
     private String host;
     private Integer port = 22;
     private String userName;
-    private String password;
+    private char[] password;
     private String keyName;
-    private String key;
-    private String keyPassphrase;
+    private char[] key;
+    private char[] keyPassphrase;
     private String sudoAppName;
-    private String sudoAppPassword;
+    private char[] sudoAppPassword;
     private SshSessionConfig bastionHostConfig;
 
     private Builder() {}
@@ -603,7 +606,7 @@ public class SshSessionConfig {
      * @param password the password
      * @return the builder
      */
-    public Builder withPassword(String password) {
+    public Builder withPassword(char[] password) {
       this.password = password;
       return this;
     }
@@ -625,7 +628,7 @@ public class SshSessionConfig {
      * @param key the key
      * @return the builder
      */
-    public Builder withKey(String key) {
+    public Builder withKey(char[] key) {
       this.key = key;
       return this;
     }
@@ -636,7 +639,7 @@ public class SshSessionConfig {
      * @param keyPassphrase the key passphrase
      * @return the builder
      */
-    public Builder withKeyPassphrase(String keyPassphrase) {
+    public Builder withKeyPassphrase(char[] keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
     }
@@ -658,7 +661,7 @@ public class SshSessionConfig {
      * @param sudoAppPassword the sudo app password
      * @return the builder
      */
-    public Builder withSudoAppPassword(String sudoAppPassword) {
+    public Builder withSudoAppPassword(char[] sudoAppPassword) {
       this.sudoAppPassword = sudoAppPassword;
       return this;
     }

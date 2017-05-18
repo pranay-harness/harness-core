@@ -104,7 +104,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                         .withHost(HOST)
                         .withPort(sshRule.getPort())
                         .withUserName(sshRule.getUsername())
-                        .withPassword(sshRule.getPassword())
+                        .withPassword(sshRule.getPassword().toCharArray())
                         .withSshConnectionTimeout(5000)
                         .withAccountId(ACCOUNT_ID)
                         .withCommandUnitName("test");
@@ -145,7 +145,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionForInvalidCredential() {
-    executor.init(configBuilder.but().withPassword("INVALID_PASSWORD").build());
+    executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
     Assertions.assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining(INVALID_CREDENTIAL.getCode());

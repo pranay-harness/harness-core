@@ -114,9 +114,10 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   private String getHeaderWithCredentials(AppDynamicsConfig appDynamicsConfig) {
     return "Basic "
-        + Base64.encodeBase64String(String
-                                        .format("%s@%s:%s", appDynamicsConfig.getUsername(),
-                                            appDynamicsConfig.getAccountname(), appDynamicsConfig.getPassword())
-                                        .getBytes(StandardCharsets.UTF_8));
+        + Base64.encodeBase64String(
+              String
+                  .format("%s@%s:%s", appDynamicsConfig.getUsername(), appDynamicsConfig.getAccountname(),
+                      new String(appDynamicsConfig.getPassword()))
+                  .getBytes(StandardCharsets.UTF_8));
   }
 }

@@ -162,13 +162,16 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListConnectionAttributes() {
-    SettingAttribute settingAttribute = settingsService.save(
-        aSettingAttribute()
-            .withAppId("APP_ID")
-            .withAccountId("ACCOUNT_ID")
-            .withName("USER_PASSWORD")
-            .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).withConnectionType(SSH).build())
-            .build());
+    SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
+                                                                 .withAppId("APP_ID")
+                                                                 .withAccountId("ACCOUNT_ID")
+                                                                 .withName("USER_PASSWORD")
+                                                                 .withValue(aHostConnectionAttributes()
+                                                                                .withAccessType(USER_PASSWORD)
+                                                                                .withConnectionType(SSH)
+                                                                                .withAccountId("ACCOUNT_ID")
+                                                                                .build())
+                                                                 .build());
     List<SettingAttribute> connectionAttributes =
         settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
     verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
@@ -188,6 +191,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                 .withAccessType(AccessType.USER_PASSWORD)
                                                 .withConnectionType(SSH)
                                                 .withHostName(HOST_NAME)
+                                                .withAccountId("ACCOUNT_ID")
                                                 .build())
                                  .build());
 

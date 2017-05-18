@@ -1,15 +1,15 @@
 package software.wings.core.ssh.executors;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+
+import com.google.common.base.Charsets;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.charset.StandardCharsets;
+import software.wings.security.encryption.EncryptionUtils;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -54,20 +54,21 @@ public class SshSessionFactory {
     //    JSch.setLogger(new jschLogger());
 
     Session session = null;
-    if (isNotBlank(config.getKey())) {
+    if (config.getKey() != null && config.getKey().length > 0) {
       if (null == config.getKeyPassphrase()) {
-        jsch.addIdentity(config.getKeyName(), config.getKey().getBytes(StandardCharsets.UTF_8), null, null);
+        jsch.addIdentity(
+            config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.ISO_8859_1), null, null);
       } else {
-        jsch.addIdentity(config.getKeyName(), config.getKey().getBytes(StandardCharsets.UTF_8), null,
-            config.getKeyPassphrase().getBytes(StandardCharsets.UTF_8));
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.ISO_8859_1), null,
+            EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.ISO_8859_1));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
-      session.setPassword(config.getPassword());
+      session.setPassword(new String(config.getPassword()));
     }
     session.setConfig("StrictHostKeyChecking", "no");
-    session.setUserInfo(new SshUserInfo(config.getPassword()));
+    session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
     session.setTimeout(config.getSshSessionTimeout());
     session.setServerAliveInterval(10 * 1000); // Send noop packet every 10 sec
 
