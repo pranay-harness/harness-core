@@ -13,7 +13,6 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +29,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "User Name") private String userName;
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("key");
 
   /**
    * Instantiates a new host connection attributes.
@@ -39,21 +40,20 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   }
 
   /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
-   * @return List of field names
-   */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("key"));
-  }
-
-  /**
    * Instantiates a new host connection attributes.
    *
    * @param type the type
    */
   public HostConnectionAttributes(SettingVariableTypes type) {
     super(type.name());
+  }
+
+  /**
+   * Gets the list of fields that are encrypted for use in the UI
+   * @return List of field names
+   */
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**

@@ -14,7 +14,6 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +33,8 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   private char[] password;
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
   @SchemaIgnore @NotEmpty private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new App dynamics config.
@@ -43,12 +44,11 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   }
 
   /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("password"));
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**
@@ -161,6 +161,7 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
         .add("accountname", accountname)
         .add("password", password)
         .add("controllerUrl", controllerUrl)
+        .add("encryptedFields", encryptedFields)
         .toString();
   }
 

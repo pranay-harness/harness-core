@@ -2,12 +2,12 @@ package software.wings.core.ssh.executors;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -36,14 +36,16 @@ public class SshSessionConfig implements Encryptable {
   private String sudoAppName;
   @Encrypted private char[] sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields =
+      Arrays.asList("key", "password", "keyPassphrase", "sudoAppPassword");
 
   /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("password", "key", "keyPassphrase", "sudoAppPassword"));
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**

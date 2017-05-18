@@ -13,7 +13,6 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +30,8 @@ public class NexusConfig extends SettingValue implements Encryptable {
   @NotEmpty
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new Nexus config.
@@ -40,12 +41,11 @@ public class NexusConfig extends SettingValue implements Encryptable {
   }
 
   /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("password"));
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   public String getNexusUrl() {

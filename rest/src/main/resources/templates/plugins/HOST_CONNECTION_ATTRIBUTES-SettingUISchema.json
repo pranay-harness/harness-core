@@ -1,5 +1,6 @@
 {
   "type": { "ui:widget": "hidden" },
   "key": { "ui:widget": "textarea" },
-  "ui:order": [ "type", "connectionType", "accessType", "userName", "key" ]
+  "encryptedFields": { "ui:widget": "hidden"},
+  "ui:order": [ "type", "connectionType", "accessType", "userName", "key", "encryptedFields" ]
 }

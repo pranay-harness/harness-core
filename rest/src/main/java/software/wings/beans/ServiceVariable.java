@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -16,7 +17,6 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.utils.validation.Create;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -64,13 +64,15 @@ public class ServiceVariable extends Base implements Encryptable {
 
   private Type type;
 
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("value");
+
   /**
-   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @Override
-  public List<String> getEncryptedFieldNames() {
-    return new ArrayList<>(Arrays.asList("value"));
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**
