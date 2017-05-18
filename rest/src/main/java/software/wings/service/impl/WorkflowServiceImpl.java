@@ -365,6 +365,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
+        createDefaultNotificationRule(workflow);
+        createDefaultFailureStrategy(workflow);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
         // Create Single Phase
         Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
@@ -374,11 +376,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                           .withServiceId(workflow.getServiceId())
                                           .build();
         attachWorkflowPhase(workflow, workflowPhase);
+        createDefaultNotificationRule(workflow);
+        createDefaultFailureStrategy(workflow);
       }
       orchestrationWorkflow.onSave();
       updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
-      createDefaultNotificationRule(workflow);
-      createDefaultFailureStrategy(workflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
       stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);

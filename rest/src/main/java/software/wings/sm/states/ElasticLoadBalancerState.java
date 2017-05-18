@@ -82,14 +82,14 @@ public class ElasticLoadBalancerState extends State {
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
       return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
-          new String(loadBalancerConfig.getSecretKey()));
+          loadBalancerConfig.getSecretKey());
     } else {
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "ELB operations not supported");
     }
   }
 
   public ExecutionResponse execute(
-      ExecutionContext context, String loadBalancerName, Regions region, String accessKey, String secretKey) {
+      ExecutionContext context, String loadBalancerName, Regions region, String accessKey, char[] secretKey) {
     ExecutionStatus status;
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         awsHelperService.getClassicElbClient(region, accessKey, secretKey);

@@ -28,7 +28,7 @@ public class LoadBalancerTargetGroupDataProvider implements DataProvider {
   public Map<String, String> getData(String appId, String... params) {
     AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
         awsHelperService.getAmazonElasticLoadBalancingClient(
-            "AKIAIJ5H5UG5TUB3L2QQ", "Yef4E+CZTR2wRQc3IVfDS4Ls22BAeab9JVlZx2nu");
+            "AKIAIJ5H5UG5TUB3L2QQ", "Yef4E+CZTR2wRQc3IVfDS4Ls22BAeab9JVlZx2nu".toCharArray());
 
     return amazonElasticLoadBalancingClient.describeTargetGroups(new DescribeTargetGroupsRequest().withPageSize(400))
         .getTargetGroups()

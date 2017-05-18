@@ -450,9 +450,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           logger.error("Artifact argument and valid artifact retrieved size not matching");
           throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "Invalid artifact");
         }
+
+        // TODO: get rid of artifactIdNames when UI moves to artifact list
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
-
+        artifacts.forEach(artifact -> {
+          artifact.setArtifactFiles(null);
+          artifact.setCreatedBy(null);
+          artifact.setLastUpdatedBy(null);
+        });
+        workflowExecution.getExecutionArgs().setArtifacts(artifacts);
         List<ServiceElement> services = new ArrayList<>();
         artifacts.forEach(artifact -> {
           artifact.getServiceIds().forEach(serviceId -> {

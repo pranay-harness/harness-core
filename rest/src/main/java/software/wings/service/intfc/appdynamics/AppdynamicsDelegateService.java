@@ -6,6 +6,7 @@ import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 
@@ -36,4 +37,8 @@ public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_METRICES_OF_BT)
   List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId)
       throws IOException;
+
+  @DelegateTaskType(TaskType.APPDYNAMICS_GET_METRICES_DATA)
+  List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId, int tierId,
+      String btName, long startTime, long endTime) throws IOException;
 }

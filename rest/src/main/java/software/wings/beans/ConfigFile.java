@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -18,6 +19,8 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.encryption.Encryptable;
 import software.wings.utils.validation.Create;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -79,6 +82,15 @@ public class ConfigFile extends BaseFile implements Encryptable {
   @Transient private ConfigFile overriddenConfigFile;
 
   @FormDataParam("encrypted") private boolean encrypted = false;
+
+  /**
+   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * @return List of field names
+   */
+  @Override
+  public List<String> getEncryptedFieldNames() {
+    return new ArrayList<>();
+  }
 
   /**
    * Gets entity id.
@@ -427,10 +439,13 @@ public class ConfigFile extends BaseFile implements Encryptable {
     this.encrypted = encrypted;
   }
 
+  @Override
+  @SchemaIgnore
   public String getAccountId() {
     return envId;
   }
 
+  @Override
   public void setAccountId(String accountId) {}
 
   @Override

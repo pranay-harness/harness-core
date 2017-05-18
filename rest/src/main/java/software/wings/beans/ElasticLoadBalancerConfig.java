@@ -14,7 +14,9 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -40,6 +42,15 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
    */
   public ElasticLoadBalancerConfig() {
     super(SettingVariableTypes.ELB.name());
+  }
+
+  /**
+   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * @return List of field names
+   */
+  @Override
+  public List<String> getEncryptedFieldNames() {
+    return new ArrayList<>(Arrays.asList("secretKey"));
   }
 
   /**
@@ -120,6 +131,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }

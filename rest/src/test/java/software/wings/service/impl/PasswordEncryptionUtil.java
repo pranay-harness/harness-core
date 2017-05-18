@@ -16,11 +16,13 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Integration;
+import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.security.encryption.EncryptionInterface;
 import software.wings.security.encryption.EncryptionType;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.security.encryption.SimpleEncryption;
+import software.wings.settings.SettingValue;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -57,38 +59,57 @@ public class PasswordEncryptionUtil extends WingsBaseTest {
   public void encryptUnencryptedPasswordsInSettingAttributes() {
     List<SettingAttribute> settings = wingsPersistence.list(SettingAttribute.class);
     settings.forEach(setting -> {
+      //      System.out.println("setting: " + setting.toString());
       if (setting.getValue() instanceof Encryptable) {
         boolean passwordNeedsFixing = false;
+        boolean accountIdFound = false;
         char[] outputChars = "x".toCharArray();
-        try {
-          Field passwordField = setting.getValue().getClass().getDeclaredField("password");
-          passwordField.setAccessible(true);
-          if (null != passwordField) {
+        for (Field passwordField : setting.getValue().getClass().getFields()) {
+          System.out.println(passwordField.getName());
+          if (passwordField.getName() == "accountId") {
+            accountIdFound = true;
+          }
+          Encrypted a = passwordField.getAnnotation(Encrypted.class);
+          if (a != null && a.value()) {
+            //            System.out.println("Encryptable found: " + passwordField.getName() + " on " +
+            //            setting.toString());
             try {
-              SimpleEncryption encryption = new SimpleEncryption(setting.getAccountId());
-              outputChars = encryption.decryptChars((char[]) passwordField.get(setting.getValue()));
-              passwordField.set(setting.getValue(), outputChars);
-            } catch (WingsException we) {
-              if (we.getCause() instanceof BadPaddingException) {
-                // try it with AES 128
+              passwordField.setAccessible(true);
+              if (null != passwordField) {
                 try {
-                  SimpleEncryptionAES128 e128 = new SimpleEncryptionAES128(setting.getAccountId());
-                  outputChars = e128.decryptChars((char[]) passwordField.get(setting.getValue()));
+                  SimpleEncryption encryption = new SimpleEncryption(setting.getAccountId());
+                  outputChars = encryption.decryptChars((char[]) passwordField.get(setting.getValue()));
                   passwordField.set(setting.getValue(), outputChars);
-                  passwordNeedsFixing = true;
+                } catch (WingsException we) {
+                  if (we.getCause() instanceof BadPaddingException) {
+                    // try it with AES 128
+                    try {
+                      SimpleEncryptionAES128 e128 = new SimpleEncryptionAES128(setting.getAccountId());
+                      outputChars = e128.decryptChars((char[]) passwordField.get(setting.getValue()));
+                      passwordField.set(setting.getValue(), outputChars);
+                      passwordNeedsFixing = true;
+                    } catch (Exception e) {
+                      System.out.println("Fixing failed: " + setting.getUuid());
+                    }
+                  }
                 } catch (Exception e) {
-                  System.out.println("Fixing failed: " + setting.getUuid());
+                  passwordNeedsFixing = true;
                 }
+              } else {
+                System.out.println("No password for this Encryptable, can't encrypt it, but will add account ID: "
+                    + setting.toString());
+                passwordNeedsFixing = true;
               }
             } catch (Exception e) {
               passwordNeedsFixing = true;
             }
           }
-        } catch (NoSuchFieldException nsfe) {
-          System.out.println("No password for this Encryptable, can't encrypt it: " + setting.getValue().toString());
         }
-        if (passwordNeedsFixing) {
-          ((Encryptable) setting.getValue()).setAccountId(setting.getAccountId());
+        if (passwordNeedsFixing || !accountIdFound) {
+          Encryptable e = (Encryptable) setting.getValue();
+          e.setAccountId(setting.getAccountId());
+          setting.setValue((SettingValue) e);
+          System.out.println(setting.toString());
           SettingAttribute fixed = wingsPersistence.saveAndGet(SettingAttribute.class, setting);
           System.out.println(fixed.toString());
         }

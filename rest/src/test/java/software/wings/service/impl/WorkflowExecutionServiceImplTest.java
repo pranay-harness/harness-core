@@ -7,10 +7,10 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
-import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
@@ -28,9 +28,12 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
-import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +42,6 @@ import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -79,16 +81,14 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -99,7 +99,6 @@ import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
-import software.wings.sm.StateTypeDescriptor;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -119,14 +118,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
-  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Mock private AppService appService;
-  @Mock private AccountService accountService;
-  @Mock private NotificationSetupService notificationSetupService;
-  @Mock private Application application;
-  @Mock private Account account;
+
+  @Mock private ArtifactService artifactService;
+  @Inject private AccountService accountService;
 
   @Mock private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -136,39 +133,31 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Inject private Injector injector;
 
-  //  @Mock
-  //  JobScheduler jobScheduler;
-
-  //  @Before
-  //  public void setup() {
-  //    when(jobScheduler.scheduleJob(any(JobDetail.class), any(Trigger.class))).thenAnswer(new Answer<Object>() {
-  //      @Override
-  //      public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-  //        JobDetail jobDetail = (JobDetail) invocationOnMock.getArguments()[0];
-  //        Trigger trigger = (Trigger) invocationOnMock.getArguments()[1];
-  //
-  //        long duration = trigger.getNextFireTime().getTime() - System.currentTimeMillis();
-  //        if (duration < 0 ) {
-  //          duration = 0;
-  //        }
-  //        String resumeId = jobDetail.getJobDataMap().getString("correlationId");
-  //        executorService.schedule(new SimpleNotifier(waitNotifyEngine, resumeId,
-  //            anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build()), duration,
-  //            TimeUnit.SECONDS);
-  //        return null;
-  //      }
-  //    });
-  //  }
+  private Account account;
+  private Application app;
+  private Environment env;
+  private Artifact artifact;
+  private PageResponse<Artifact> artifactPageResponse;
 
   /*
    * Should trigger simple workflow.
    *
    * @throws InterruptedException the interrupted exception
    */
+  @Before
+  public void setup() {
+    account = accountService.save(
+        Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withAccountName(ACCOUNT_NAME).build());
+    app = wingsPersistence.saveAndGet(
+        Application.class, anApplication().withName(APP_NAME).withAccountId(account.getUuid()).build());
+    env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    artifact = anArtifact().withAppId(app.getAppId()).withUuid(getUuid()).withDisplayName(ARTIFACT_NAME).build();
+    artifactPageResponse = aPageResponse().withResponse(asList(artifact)).build();
+    when(artifactService.list(any(PageRequest.class), eq(false))).thenReturn(artifactPageResponse);
+  }
+
   @Test
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
@@ -207,7 +196,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -309,8 +298,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldRenderSimpleWorkflow() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
@@ -344,7 +331,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -442,8 +429,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerComplexWorkflow() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
@@ -453,9 +438,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service1 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc2").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate1 = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -547,6 +532,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(workflow.getUuid()).isNotNull();
 
     ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(artifact));
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationWorkflowExecution(
@@ -613,8 +599,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void triggerPipeline() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
@@ -622,7 +606,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -765,8 +749,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerWorkflow() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     triggerWorkflow(appId, env);
@@ -779,8 +761,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetNodeDetails() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
@@ -827,8 +807,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateFailedCount() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     triggerWorkflow(appId, env);
@@ -912,8 +890,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListWorkflow() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
@@ -934,8 +910,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldPauseAndResumeState() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
@@ -1039,17 +1013,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Ignore
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     Service service1 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc2").withAppId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -1113,7 +1084,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     int i = 0;
     do {
       i++;
-      Thread.sleep(1000);
+      Thread.sleep(1500);
       execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
 
@@ -1184,14 +1155,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowInvalidArgumentForInvalidWorkflowId() {
-    Application app = getApplication();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     ExecutionInterrupt executionInterrupt = ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(getUuid())
                                                 .build();
     try {
       executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
@@ -1213,11 +1181,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldAbortState() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Graph graph = aGraph()
                       .addNodes(aNode()
                                     .withId("wait1")
@@ -1316,15 +1279,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldAbortAllStates() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Service service1 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc2").withAppId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -1425,18 +1383,13 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldPauseOnError() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Host applicationHost1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
     Host applicationHost2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -1645,16 +1598,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldRetryOnError() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -1855,13 +1803,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerCanaryWorkflow() throws InterruptedException {
-    Application app = getApplication();
-    Account account = getAccount();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, Builder.anEnvironment().withName(ENV_NAME).withAppId(app.getUuid()).build());
-
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, aService().withUuid(getUuid()).withName("svc1").withAppId(app.getUuid()).build());
 
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
@@ -1888,16 +1831,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                               .build());
 
     triggerWorkflow(app.getAppId(), env, service, computeProvider, infrastructureMapping);
-  }
-
-  private Application getApplication() {
-    return wingsPersistence.saveAndGet(
-        Application.class, anApplication().withName("App1").withAccountId("kmpySmUISimoRrJL6NL73w").build());
-  }
-
-  private Account getAccount() {
-    return wingsPersistence.saveAndGet(Account.class,
-        anAccount().withAccountName("Harness.io").withAppId("App1").withUuid("kmpySmUISimoRrJL6NL73w").build());
   }
 
   /**

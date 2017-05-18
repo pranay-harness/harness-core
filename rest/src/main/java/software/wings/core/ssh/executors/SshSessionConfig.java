@@ -7,7 +7,9 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +36,15 @@ public class SshSessionConfig implements Encryptable {
   private String sudoAppName;
   @Encrypted private char[] sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
+
+  /**
+   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * @return List of field names
+   */
+  @Override
+  public List<String> getEncryptedFieldNames() {
+    return new ArrayList<>(Arrays.asList("password", "key", "keyPassphrase", "sudoAppPassword"));
+  }
 
   /**
    * Gets app id.
@@ -364,6 +375,7 @@ public class SshSessionConfig implements Encryptable {
    *
    * @return Value for property 'accountId'.
    */
+  @Override
   public String getAccountId() {
     return accountId;
   }
@@ -373,6 +385,7 @@ public class SshSessionConfig implements Encryptable {
    *
    * @param accountId Value to set for property 'accountId'.
    */
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }

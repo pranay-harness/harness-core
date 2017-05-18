@@ -14,7 +14,9 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,6 +40,15 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
    */
   public AppDynamicsConfig() {
     super(StateType.APP_DYNAMICS.name());
+  }
+
+  /**
+   * Gets list of field names which are encrypted so the UI can handle them properly.
+   * @return List of field names
+   */
+  @Override
+  public List<String> getEncryptedFieldNames() {
+    return new ArrayList<>(Arrays.asList("password"));
   }
 
   /**
@@ -120,6 +131,7 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
     return accountId;
   }
 
+  @Override
   public void setAccountId(String accountId) {
     this.accountId = accountId;
   }

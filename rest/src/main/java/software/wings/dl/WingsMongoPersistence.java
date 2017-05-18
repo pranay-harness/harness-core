@@ -23,8 +23,6 @@ import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.security.UserRequestInfo;
@@ -32,7 +30,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.security.encryption.SimpleEncryption;
-import software.wings.settings.SettingValue;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -380,12 +377,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
-    if (req.getOrders() == null || req.getOrders().size() == 0) {
-      SortOrder sortOrder = new SortOrder();
-      sortOrder.setFieldName("createdAt");
-      sortOrder.setOrderType(OrderType.DESC);
-      req.addOrder(sortOrder);
-    }
     if (!authFilters(req)) {
       return PageResponse.Builder.aPageResponse().withTotal(0).build();
     }

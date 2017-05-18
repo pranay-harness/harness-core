@@ -1,26 +1,12 @@
 package software.wings.service.impl.appdynamics;
 
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.Context.Builder.aContext;
-import static software.wings.beans.TaskType.APPDYNAMICS_GET_METRICES_OF_BT;
 
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskType;
-import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.beans.artifact.BambooArtifactStream;
-import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.artifact.NexusArtifactStream;
-import software.wings.beans.config.NexusConfig;
-import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DelegateService;
@@ -86,12 +72,23 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public List<AppdynamicsMetric> getTierBTMetrics(String settingId, int appdynamicsAppId, int tierId)
-      throws IOException, InterruptedException {
+      throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     context.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
         .getTierBTMetrics((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId);
+  }
+
+  @Override
+  public List<AppdynamicsMetricData> getTierBTMetricData(String settingId, int appdynamicsAppId, int tierId,
+      String btName, long startTime, long endTime) throws IOException {
+    final SettingAttribute settingAttribute = settingsService.get(settingId);
+    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    context.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+        .getTierBTMetricData(
+            (AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId, btName, startTime, endTime);
   }
 
   @Override
