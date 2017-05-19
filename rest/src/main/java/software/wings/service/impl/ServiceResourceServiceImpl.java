@@ -161,7 +161,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     2. ArtifactSources: done
     3. config files: done
     4. config vars: done
-    5. command
+    5. command: done
     6. AppContainer: done
      */
 
@@ -170,6 +170,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     service.setUuid(null);
     Service clonedService = wingsPersistence.saveAndGet(Service.class, service);
     //    return clonedService;
+
+    originalService.getServiceCommands().forEach(serviceCommand -> {
+      ServiceCommand clonedServiceCommand = serviceCommand.clone();
+      addCommand(clonedService.getAppId(), clonedService.getUuid(), clonedServiceCommand);
+    });
 
     List<ArtifactStream> artifactStreams = artifactStreamService
                                                .list(Builder.aPageRequest()
