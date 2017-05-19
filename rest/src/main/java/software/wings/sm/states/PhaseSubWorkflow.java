@@ -10,6 +10,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -58,17 +59,26 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
 
+    Service service = serviceResourceService.get(app.getAppId(), serviceId, false);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
 
     ExecutionResponse response = super.execute(context);
-    response.setStateExecutionData(
+    PhaseExecutionData phaseExecutionData =
         aPhaseExecutionData()
             .withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
+            .withComputeProviderName(infrastructureMapping.getComputeProviderName())
+            .withComputeProviderType(infrastructureMapping.getComputeProviderType())
             .withInfraMappingId(infraMappingId)
+            .withInfraMappingName(infrastructureMapping.getDisplayName())
             .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()))
             .withServiceId(serviceId)
-            .build());
+            .withServiceName(service.getName())
+            .build();
+    if (infrastructureMapping instanceof ContainerInfrastructureMapping) {
+      phaseExecutionData.setClusterName(((ContainerInfrastructureMapping) infrastructureMapping).getClusterName());
+    }
+    response.setStateExecutionData(phaseExecutionData);
     return response;
   }
 

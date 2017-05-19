@@ -130,6 +130,6 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Encryption setting variable types.
      */
-    ENCRYPTION,
+    ENCRYPTION;
   }
 }
