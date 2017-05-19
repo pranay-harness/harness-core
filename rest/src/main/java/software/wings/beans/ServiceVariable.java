@@ -4,7 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.base.MoreObjects;
 
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -63,17 +62,6 @@ public class ServiceVariable extends Base implements Encryptable {
   @Encrypted private char[] value;
 
   private Type type;
-
-  @Attributes(title = "Encrypted Fields", required = true)
-  private List<String> encryptedFields = Arrays.asList("value");
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
-  }
 
   /**
    * Getter for property 'templateId'.

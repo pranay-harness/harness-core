@@ -1,7 +1,7 @@
 {
   "type": { "ui:widget": "hidden" },
   "secretKey": { "ui:widget": "password" },
-  "encryptedFields": { "ui:widget": "hidden"},
-  "ui:order": [ "type",  "accessKey", "secretKey", "region", "loadBalancerName", "encryptedFields"]
+  "custom:encryptedFields": [ "secretKey" ],
+  "ui:order": [ "type",  "accessKey", "secretKey", "region", "loadBalancerName" ]
 
 }

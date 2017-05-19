@@ -1,15 +1,11 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by anubhaw on 12/27/16.
@@ -19,22 +15,12 @@ public class AwsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
   @Attributes(title = "Secret Key", required = true) @NotEmpty private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true)
-  private List<String> encryptedFields = Arrays.asList("secretKey");
 
   /**
    * Instantiates a new Aws config.
    */
   public AwsConfig() {
     super(SettingVariableTypes.AWS.name());
-  }
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
   }
 
   /**
