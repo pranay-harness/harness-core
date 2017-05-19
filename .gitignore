@@ -11,6 +11,7 @@ target
 dependency-reduced-pom.xml
 .checkstyle
 wingsui
+rest/wingsui
 access.log
 access*gz
 */delegate*.log

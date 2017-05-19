@@ -112,6 +112,21 @@ public class NexusArtifactStream extends ArtifactStream {
         .build();
   }
 
+  @Override
+  public ArtifactStream clone() {
+    return NexusArtifactStream.Builder.aNexusArtifactStream()
+        .withAppId(getAppId())
+        .withSourceName(getSourceName())
+        .withSettingId(getSettingId())
+        .withServiceId(getServiceId())
+        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withStreamActions(getStreamActions())
+        .withJobname(getJobname())
+        .withGroupId(getGroupId())
+        .withArtifactPaths(getArtifactPaths())
+        .build();
+  }
+
   /**
    * The type Builder.
    */

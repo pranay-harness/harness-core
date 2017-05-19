@@ -123,6 +123,16 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.update(service));
   }
 
+  @POST
+  @Path("{serviceId}/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> clone(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
+    service.setAppId(appId);
+    return new RestResponse<>(serviceResourceService.clone(appId, serviceId, service));
+  }
+
   /**
    * Delete.
    *
@@ -183,6 +193,15 @@ public class ServiceResource {
   public RestResponse<Service> updateCommand(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ServiceCommand command) {
     return new RestResponse<>(serviceResourceService.updateCommand(appId, serviceId, command));
+  }
+
+  @POST
+  @Path("{serviceId}/commands/{commandName}/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> cloneCommand(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @PathParam("commandName") String commandName, ServiceCommand command) {
+    return new RestResponse<>(serviceResourceService.cloneCommand(appId, serviceId, commandName, command));
   }
 
   /**
