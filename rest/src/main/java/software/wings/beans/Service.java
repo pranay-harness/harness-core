@@ -24,12 +24,13 @@ import java.util.Objects;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+//@Indexes(@Index(fields = {@Field("appId"), @Field("name")}, options = @IndexOptions(unique = true)))
 public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
 
-  @Reference(idOnly = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
+  @Reference(idOnly = true, ignoreMissing = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
   @Version private long version;
 

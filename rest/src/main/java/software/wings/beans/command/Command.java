@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static software.wings.beans.command.Command.Builder.aCommand;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
@@ -345,6 +347,12 @@ public class Command extends Base implements CommandUnit {
         .toString();
   }
 
+  public Command clone() {
+    Command clonnedCommand = aCommand().withName(getName()).withGraph(getGraph()).build();
+    clonnedCommand.setCommandUnitType(getCommandUnitType());
+    return clonnedCommand;
+  }
+
   /**
    * The type Builder.
    */
@@ -356,7 +364,6 @@ public class Command extends Base implements CommandUnit {
     private CommandExecutionStatus commandExecutionStatus;
     private boolean artifactNeeded;
     private CommandType commandType = CommandType.OTHER;
-    private String deploymentType;
 
     private Builder() {}
 
@@ -457,11 +464,6 @@ public class Command extends Base implements CommandUnit {
       return this;
     }
 
-    public Builder withDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
-      return this;
-    }
-
     /**
      * But builder.
      *
@@ -475,8 +477,7 @@ public class Command extends Base implements CommandUnit {
           .withName(name)
           .withExecutionResult(commandExecutionStatus)
           .withArtifactNeeded(artifactNeeded)
-          .withCommandType(commandType)
-          .withDeploymentType(deploymentType);
+          .withCommandType(commandType);
     }
 
     /**
@@ -493,7 +494,6 @@ public class Command extends Base implements CommandUnit {
       command.setCommandExecutionStatus(commandExecutionStatus);
       command.setArtifactNeeded(artifactNeeded);
       command.setCommandType(commandType);
-      command.setDeploymentType(deploymentType);
       return command;
     }
   }

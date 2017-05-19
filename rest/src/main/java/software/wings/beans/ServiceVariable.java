@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 
 import com.google.common.base.MoreObjects;
 
@@ -365,6 +366,20 @@ public class ServiceVariable extends Base implements Encryptable {
                 * Custom override type.
                 */
     CUSTOM
+  }
+
+  public ServiceVariable clone() {
+    return aServiceVariable()
+        .withAccountId(getAccountId())
+        .withAppId(getAppId())
+        .withEnvId(getEnvId())
+        .withEntityId(getUuid())
+        .withEntityType(getEntityType())
+        .withTemplateId(getTemplateId())
+        .withName(getName())
+        .withValue(getValue())
+        .withType(getType())
+        .build();
   }
 
   public static final class Builder {
