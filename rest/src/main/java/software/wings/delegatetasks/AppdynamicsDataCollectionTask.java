@@ -34,6 +34,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
 
+  @Inject private AppdynamicsMetricStoreService metricStoreService;
+
   public AppdynamicsDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<AppdynamicsDataCollectionTaskResult> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
@@ -90,7 +92,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
     ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(dataCollectionInfoList.size());
     for (AppdynamicsDataCollectionInfo dataCollectionInfo : dataCollectionInfoList) {
       scheduledExecutorService.scheduleAtFixedRate(
-          new AppdynamicsMetricCollector(appdynamicsDelegateService, dataCollectionInfo), 0, 1, TimeUnit.MINUTES);
+          new AppdynamicsMetricCollector(appdynamicsDelegateService, dataCollectionInfo, metricStoreService), 0, 1,
+          TimeUnit.MINUTES);
     }
     return scheduledExecutorService;
   }
@@ -98,11 +101,13 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
   private static class AppdynamicsMetricCollector implements Runnable {
     private final AppdynamicsDelegateService delegateService;
     private final AppdynamicsDataCollectionInfo dataCollectionInfo;
+    private final AppdynamicsMetricStoreService metricStoreService;
 
-    private AppdynamicsMetricCollector(
-        AppdynamicsDelegateService delegateService, AppdynamicsDataCollectionInfo dataCollectionInfo) {
+    private AppdynamicsMetricCollector(AppdynamicsDelegateService delegateService,
+        AppdynamicsDataCollectionInfo dataCollectionInfo, AppdynamicsMetricStoreService metricStoreService) {
       this.delegateService = delegateService;
       this.dataCollectionInfo = dataCollectionInfo;
+      this.metricStoreService = metricStoreService;
     }
 
     @Override
@@ -123,6 +128,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
         }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
         logger.info("Result: " + metricsData);
+        metricStoreService.save(dataCollectionInfo.getAppDynamicsConfig().getAccountId(), metricsData);
       } catch (Exception e) {
         logger.error("error fetcing appdynamis metrics", e);
       }
