@@ -158,9 +158,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     /*
     1. service ArtifactType: done
-    2. ArtifactSources
-    3. config files
-    4. config vars
+    2. ArtifactSources: done
+    3. config files: done
+    4. config vars: done
     5. command
     6. AppContainer: done
      */

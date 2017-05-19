@@ -91,7 +91,7 @@ public class DockerArtifactStream extends ArtifactStream {
         .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withStreamActions(getStreamActions())
-        .withImageName(imageName)
+        .withImageName(getImageName())
         .build();
   }
 

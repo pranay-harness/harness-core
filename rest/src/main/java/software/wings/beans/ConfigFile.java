@@ -519,14 +519,15 @@ public class ConfigFile extends BaseFile implements Encryptable {
 
   public ConfigFile clone() {
     return aConfigFile()
-        .withAppId(this.getAppId())
-        .withEnvId(this.getEnvId())
-        .withEntityType(this.getEntityType())
-        .withEntityId(this.getUuid())
-        .withFileName(this.getFileName())
-        .withRelativeFilePath(this.getRelativeFilePath())
-        .withTargetToAllEnv(this.isTargetToAllEnv())
-        .withEncrypted(this.isEncrypted())
+        .withAppId(getAppId())
+        .withEnvId(getEnvId())
+        .withEntityType(getEntityType())
+        .withEntityId(getUuid())
+        .withTemplateId(getTemplateId())
+        .withFileName(getFileName())
+        .withRelativeFilePath(getRelativeFilePath())
+        .withTargetToAllEnv(isTargetToAllEnv())
+        .withEncrypted(isEncrypted())
         .build();
   }
 

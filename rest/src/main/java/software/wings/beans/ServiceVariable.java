@@ -370,14 +370,15 @@ public class ServiceVariable extends Base implements Encryptable {
 
   public ServiceVariable clone() {
     return aServiceVariable()
-        .withAccountId(this.getAccountId())
-        .withAppId(this.getAppId())
-        .withEnvId(this.getEnvId())
-        .withEntityId(this.getUuid())
-        .withEntityType(this.getEntityType())
-        .withName(this.getName())
-        .withValue(this.getValue())
-        .withType(this.getType())
+        .withAccountId(getAccountId())
+        .withAppId(getAppId())
+        .withEnvId(getEnvId())
+        .withEntityId(getUuid())
+        .withEntityType(getEntityType())
+        .withTemplateId(getTemplateId())
+        .withName(getName())
+        .withValue(getValue())
+        .withType(getType())
         .build();
   }
 

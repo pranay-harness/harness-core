@@ -117,8 +117,8 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withAutoDownload(getAutoDownload())
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withStreamActions(getStreamActions())
-        .withJobname(jobname)
-        .withArtifactPaths(artifactPaths)
+        .withJobname(getJobname())
+        .withArtifactPaths(getArtifactPaths())
         .build();
   }
 

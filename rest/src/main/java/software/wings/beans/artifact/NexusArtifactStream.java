@@ -121,9 +121,9 @@ public class NexusArtifactStream extends ArtifactStream {
         .withServiceId(getServiceId())
         .withAutoApproveForProduction(getAutoApproveForProduction())
         .withStreamActions(getStreamActions())
-        .withJobname(jobname)
-        .withGroupId(groupId)
-        .withArtifactPaths(artifactPaths)
+        .withJobname(getJobname())
+        .withGroupId(getGroupId())
+        .withArtifactPaths(getArtifactPaths())
         .build();
   }
 
