@@ -2,6 +2,7 @@ package software.wings.beans.config;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -44,6 +45,7 @@ public class NexusConfig extends SettingValue implements Encryptable {
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
+  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }

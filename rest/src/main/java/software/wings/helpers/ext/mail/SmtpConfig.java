@@ -45,6 +45,7 @@ public class SmtpConfig extends SettingValue implements Encryptable {
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
+  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }

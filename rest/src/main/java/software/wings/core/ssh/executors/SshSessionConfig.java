@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
@@ -44,6 +45,7 @@ public class SshSessionConfig implements Encryptable {
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
+  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }
