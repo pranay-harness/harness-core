@@ -4,7 +4,6 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CON
 
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -15,7 +14,6 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -30,7 +28,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "User Name") private String userName;
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true) private List<String> encryptedFields = Arrays.asList("key");
 
   /**
    * Instantiates a new host connection attributes.
@@ -46,14 +43,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
    */
   public HostConnectionAttributes(SettingVariableTypes type) {
     super(type.name());
-  }
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
   }
 
   /**

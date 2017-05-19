@@ -12,9 +12,6 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
-import java.util.Arrays;
-import java.util.List;
-
 /**
  * Created by bzane on 2/28/17
  */
@@ -24,22 +21,12 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   @NotEmpty @SchemaIgnore private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true)
-  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new setting value.
    */
   public KubernetesConfig() {
     super(SettingVariableTypes.KUBERNETES.name());
-  }
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
   }
 
   /**
