@@ -88,9 +88,8 @@ public class AppdynamicsResource {
   @ExceptionMetered
   public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
       @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
-      @QueryParam("btName") String btName, @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime)
-      throws IOException {
+      @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durantionInMinutes) throws IOException {
     return new RestResponse<>(
-        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, startTime, endTime));
+        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durantionInMinutes));
   }
 }

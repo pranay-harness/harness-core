@@ -54,6 +54,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.collect.AppdynamicsDataCollectionInfo;
 import software.wings.collect.AppdynamicsMetricDataCallback;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -553,10 +554,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void triggerAppdynamicsDataCollectionIfNecessary(
       final StateMachine stateMachine, WorkflowExecution workflowExecution) {
-    final Map<AppDynamicsConfig, Map<Long, Long>> appTierMap = new HashMap<>();
-    addAppTierToBeCollected(stateMachine, appTierMap, workflowExecution);
+    final List<AppdynamicsDataCollectionInfo> dataCollectionInfos = new ArrayList<>();
+    addAppTierToBeCollected(stateMachine, dataCollectionInfos);
 
-    if (appTierMap.isEmpty()) {
+    if (dataCollectionInfos.isEmpty()) {
       return;
     }
 
@@ -566,14 +567,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                     .withAccountId(appService.get(workflowExecution.getAppId()).getAccountId())
                                     .withAppId(workflowExecution.getAppId())
                                     .withWaitId(waitId)
-                                    .withParameters(new Object[] {appTierMap})
+                                    .withParameters(new Object[] {dataCollectionInfos})
                                     .build();
     waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(workflowExecution.getAppId()), waitId);
     delegateService.queueTask(delegateTask);
   }
 
-  private void addAppTierToBeCollected(StateMachine stateMachine, Map<AppDynamicsConfig, Map<Long, Long>> appTierMap,
-      WorkflowExecution workflowExecution) {
+  private void addAppTierToBeCollected(
+      StateMachine stateMachine, List<AppdynamicsDataCollectionInfo> dataCollectionInfos) {
     if (stateMachine == null) {
       return;
     }
@@ -587,12 +588,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
 
         final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-        if (appTierMap.get(appDynamicsConfig) == null) {
-          appTierMap.put(appDynamicsConfig, new HashMap<>());
-        }
-
-        appTierMap.get(appDynamicsConfig)
-            .put(Long.parseLong(appDynamicsState.getApplicationName()), Long.parseLong(appDynamicsState.getTierName()));
+        dataCollectionInfos.add(
+            new AppdynamicsDataCollectionInfo(appDynamicsConfig, Long.parseLong(appDynamicsState.getApplicationName()),
+                Long.parseLong(appDynamicsState.getTierName()), Integer.parseInt(appDynamicsState.getTimeDuration())));
       }
     }
 
@@ -601,7 +599,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     for (Entry<String, StateMachine> childEntry : stateMachine.getChildStateMachines().entrySet()) {
-      addAppTierToBeCollected(childEntry.getValue(), appTierMap, workflowExecution);
+      addAppTierToBeCollected(childEntry.getValue(), dataCollectionInfos);
     }
   }
 

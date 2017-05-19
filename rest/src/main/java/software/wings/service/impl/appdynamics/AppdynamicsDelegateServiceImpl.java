@@ -111,15 +111,15 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId,
-      int tierId, String btName, long startTime, long endTime) throws IOException {
+  public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
+      long tierId, String btName, int durantionInMinutes) throws IOException {
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId);
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|"
         + "Individual Nodes|*|*";
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .getMetricData(
-                getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, metricPath, startTime, endTime);
+                getHeaderWithCredentials(appDynamicsConfig), appdynamicsAppId, metricPath, durantionInMinutes);
 
     final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
     if (tierBTMResponse.isSuccessful()) {

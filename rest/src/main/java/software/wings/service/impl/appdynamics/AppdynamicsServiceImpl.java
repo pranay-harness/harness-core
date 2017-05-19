@@ -81,14 +81,14 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppdynamicsMetricData> getTierBTMetricData(String settingId, int appdynamicsAppId, int tierId,
-      String btName, long startTime, long endTime) throws IOException {
+  public List<AppdynamicsMetricData> getTierBTMetricData(
+      String settingId, int appdynamicsAppId, int tierId, String btName, int durantionInMinutes) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
     context.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
         .getTierBTMetricData(
-            (AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId, btName, startTime, endTime);
+            (AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId, btName, durantionInMinutes);
   }
 
   @Override

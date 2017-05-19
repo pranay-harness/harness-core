@@ -32,5 +32,5 @@ public interface AppdynamicsService {
       throws IOException;
 
   List<AppdynamicsMetricData> getTierBTMetricData(@NotNull String settingId, int appdynamicsAppId, int tierId,
-      @NotNull String btName, long startTime, long endTime) throws IOException;
+      @NotNull String btName, int durantionInMinutes) throws IOException;
 }
