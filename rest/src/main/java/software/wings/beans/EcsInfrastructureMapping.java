@@ -10,15 +10,12 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeName("AWS_ECS")
-public class EcsInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Service cluster name") private String clusterName;
-
+public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Region")
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
@@ -45,39 +42,6 @@ public class EcsInfrastructureMapping extends InfrastructureMapping {
    */
   public EcsInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_ECS.name());
-  }
-
-  /**
-   * Gets cluster name.
-   *
-   * @return the cluster name
-   */
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  /**
-   * Sets cluster name.
-   *
-   * @param clusterName the cluster name
-   */
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
-  }
-
-  @SchemaIgnore
-  @Override
-  @Attributes(title = "Connection Type")
-  public String getHostConnectionAttrs() {
-    return null;
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getDisplayName() {
-    return String.format("%s(%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
-        this.getDeploymentType(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }
 
   /**

@@ -1,56 +1,17 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-
-import java.util.Optional;
 
 /**
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeName("AWS_KUBERNETES")
-public class AwsKubernetesInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Service cluster name") private String clusterName;
-
+public class AwsKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   /**
    * Instantiates a new Infrastructure mapping.
    */
   public AwsKubernetesInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_KUBERNETES.name());
-  }
-
-  /**
-   * Gets cluster name.
-   *
-   * @return the cluster name
-   */
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  /**
-   * Sets cluster name.
-   *
-   * @param clusterName the cluster name
-   */
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
-  }
-
-  @SchemaIgnore
-  @Override
-  @Attributes(title = "Connection Type")
-  public String getHostConnectionAttrs() {
-    return null;
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getDisplayName() {
-    return String.format("%s(%s/%s::%s)", this.getClusterName(), this.getComputeProviderType(),
-        this.getDeploymentType(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()));
   }
 
   /**

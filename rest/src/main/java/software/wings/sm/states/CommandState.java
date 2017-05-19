@@ -221,6 +221,7 @@ public class CommandState extends State {
         e.printStackTrace();
       }
 
+      executionDataBuilder.withCommandName(actualCommand);
       Command command =
           serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand).getCommand();
 
@@ -228,8 +229,6 @@ public class CommandState extends State {
         throw new StateExecutionException(
             String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
       }
-
-      executionDataBuilder.withCommandName(command.getName());
 
       Application application = appService.get(serviceInstance.getAppId());
 

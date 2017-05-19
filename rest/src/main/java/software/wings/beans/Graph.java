@@ -333,7 +333,6 @@ public class Graph {
     private String id = UUIDGenerator.getUuid();
     private String name;
     private String type;
-    private boolean newBranch;
     private boolean rollback;
     private String status;
     private int x;
@@ -419,14 +418,6 @@ public class Graph {
 
     public void setRollback(boolean rollback) {
       this.rollback = rollback;
-    }
-
-    public boolean isNewBranch() {
-      return newBranch;
-    }
-
-    public void setNewBranch(boolean newBranch) {
-      this.newBranch = newBranch;
     }
 
     /**

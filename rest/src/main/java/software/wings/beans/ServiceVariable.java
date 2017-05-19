@@ -66,7 +66,7 @@ public class ServiceVariable extends Base implements Encryptable {
   private Type type;
 
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("value");
+  private List<String> encryptedFields = Arrays.asList("value");
 
   /**
    * Gets the list of fields that are encrypted for use in the UI

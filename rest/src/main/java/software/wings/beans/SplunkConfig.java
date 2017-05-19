@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -31,7 +32,7 @@ public class SplunkConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("password");
+  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new Splunk config.

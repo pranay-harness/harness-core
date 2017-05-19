@@ -100,6 +100,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                                    .withNexusUrl(NEXUS_URL)
                                                    .withUsername(NEXUS_USERNAME)
                                                    .withPassword(NEXUS_PASSWORD)
+                                                   .withAccountId(accountId)
                                                    .build())
                                     .build(),
                       APPLICATION_JSON),

@@ -2,6 +2,11 @@ package software.wings.beans.config;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -31,7 +36,7 @@ public class NexusConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("password");
+  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new Nexus config.

@@ -2,6 +2,7 @@ package software.wings.api;
 
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.PhaseStepType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.states.ElementStateExecutionData;
@@ -16,10 +17,19 @@ import java.util.Map;
  * Created by rishi on 1/19/17.
  */
 public class PhaseStepExecutionData extends ElementStateExecutionData implements NotifyResponseData {
+  private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
   private PhaseStepExecutionSummary phaseStepExecutionSummary;
+
+  public PhaseStepType getPhaseStepType() {
+    return phaseStepType;
+  }
+
+  public void setPhaseStepType(PhaseStepType phaseStepType) {
+    this.phaseStepType = phaseStepType;
+  }
 
   public boolean isStepsInParallel() {
     return stepsInParallel;
@@ -66,6 +76,7 @@ public class PhaseStepExecutionData extends ElementStateExecutionData implements
     private String errorMsg;
     private Integer waitInterval;
     private PhaseStepExecutionSummary phaseStepExecutionSummary;
+    private PhaseStepType phaseStepType;
 
     private PhaseStepExecutionDataBuilder() {}
 
@@ -75,6 +86,11 @@ public class PhaseStepExecutionData extends ElementStateExecutionData implements
 
     public PhaseStepExecutionDataBuilder withElementStatusSummary(List<ElementExecutionSummary> elementStatusSummary) {
       this.elementStatusSummary = elementStatusSummary;
+      return this;
+    }
+
+    public PhaseStepExecutionDataBuilder withPhaseStepType(PhaseStepType phaseStepType) {
+      this.phaseStepType = phaseStepType;
       return this;
     }
 
@@ -148,6 +164,7 @@ public class PhaseStepExecutionData extends ElementStateExecutionData implements
       phaseStepExecutionData.setErrorMsg(errorMsg);
       phaseStepExecutionData.setWaitInterval(waitInterval);
       phaseStepExecutionData.setPhaseStepExecutionSummary(phaseStepExecutionSummary);
+      phaseStepExecutionData.setPhaseStepType(phaseStepType);
       return phaseStepExecutionData;
     }
   }

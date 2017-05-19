@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import com.amazonaws.regions.Regions;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -37,7 +38,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
   @SchemaIgnore @NotEmpty private String accountId;
 
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("secretKey");
+  private List<String> encryptedFields = Arrays.asList("secretKey");
 
   /**
    * Instantiates a new Elastic load balancer config.

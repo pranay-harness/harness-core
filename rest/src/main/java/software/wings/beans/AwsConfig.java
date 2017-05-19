@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -19,7 +20,7 @@ public class AwsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Secret Key", required = true) @NotEmpty private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("secretKey");
+  private List<String> encryptedFields = Arrays.asList("secretKey");
 
   /**
    * Instantiates a new Aws config.

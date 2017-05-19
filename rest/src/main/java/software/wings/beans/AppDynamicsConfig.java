@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -34,7 +35,7 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
   @SchemaIgnore @NotEmpty private String accountId;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("password");
+  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new App dynamics config.

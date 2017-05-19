@@ -25,7 +25,7 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   @NotEmpty @SchemaIgnore private String accountId;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("password");
+  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new setting value.
