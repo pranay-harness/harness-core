@@ -15,6 +15,7 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 5/26/16.
@@ -29,11 +30,22 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   @Encrypted
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("password");
+
   /**
    * Instantiates a new jenkins config.
    */
   public JenkinsConfig() {
     super(SettingVariableTypes.JENKINS.name());
+  }
+
+  /**
+   * Gets the list of fields that are encrypted for use in the UI
+   * @return List of field names
+   */
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**
@@ -137,7 +149,6 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
     return MoreObjects.toStringHelper(this)
         .add("jenkinsUrl", jenkinsUrl)
         .add("username", username)
-        .add("password", password)
         .add("accountId", accountId)
         .toString();
   }

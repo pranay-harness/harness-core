@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
@@ -114,6 +116,14 @@ public class SSHExecutionCredential extends ExecutionCredential {
    */
   public void setKeyPassphrase(char[] keyPassphrase) {
     this.keyPassphrase = keyPassphrase;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("sshUser", sshUser).add("appAccount", appAccount).toString();
   }
 
   /**

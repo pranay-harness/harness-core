@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -10,6 +12,9 @@ import software.wings.security.annotations.Encrypted;
 import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by bzane on 2/28/17
  */
@@ -19,12 +24,22 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @Attributes(title = "Password", required = true) @NotEmpty @Encrypted private char[] password;
   @NotEmpty @SchemaIgnore private String accountId;
+  @Attributes(title = "Encrypted Fields", required = true)
+  private final static List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new setting value.
    */
   public KubernetesConfig() {
     super(SettingVariableTypes.KUBERNETES.name());
+  }
+
+  /**
+   * Gets the list of fields that are encrypted for use in the UI
+   * @return List of field names
+   */
+  public List<String> getEncryptedFields() {
+    return encryptedFields;
   }
 
   /**
@@ -91,6 +106,18 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
 
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("masterUrl", masterUrl)
+        .add("username", username)
+        .add("accountId", accountId)
+        .toString();
   }
 
   /**
