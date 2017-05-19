@@ -30,7 +30,7 @@ public class Service extends Base {
   private String description;
   private ArtifactType artifactType;
 
-  @Reference(idOnly = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
+  @Reference(idOnly = true, ignoreMissing = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
   @Version private long version;
 
