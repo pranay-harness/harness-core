@@ -148,7 +148,6 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
     return MoreObjects.toStringHelper(this)
         .add("username", username)
         .add("accountname", accountname)
-        .add("password", password)
         .add("controllerUrl", controllerUrl)
         .toString();
   }
