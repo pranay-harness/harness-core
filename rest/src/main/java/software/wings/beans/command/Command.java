@@ -348,182 +348,151 @@ public class Command extends Base implements CommandUnit {
   }
 
   public Command clone() {
-    return aCommand().withName(getName()).withGraph(getGraph()).withCommandUnitType(getCommandUnitType()).build();
+    Command clonnedCommand = aCommand().withName(getName()).withGraph(getGraph()).build();
+    clonnedCommand.setCommandUnitType(getCommandUnitType());
+    return clonnedCommand;
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private String uuid;
-    private String name;
-    private CommandUnitType commandUnitType;
-    private String appId;
-    private EmbeddedUser createdBy;
-    private CommandExecutionStatus commandExecutionStatus;
-    private long createdAt;
-    private boolean artifactNeeded = false;
-    private EmbeddedUser lastUpdatedBy;
-    private String deploymentType;
-    private long lastUpdatedAt;
-    private String originEntityId;
-    private ContainerFamily containerFamily;
-    private ArtifactType artifactType;
     private String referenceId;
     private Graph graph;
-    private Long version;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
+    private String name;
+    private CommandExecutionStatus commandExecutionStatus;
+    private boolean artifactNeeded;
     private CommandType commandType = CommandType.OTHER;
 
     private Builder() {}
 
+    /**
+     * A command builder.
+     *
+     * @return the builder
+     */
     public static Builder aCommand() {
       return new Builder();
     }
 
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder withCommandUnitType(CommandUnitType commandUnitType) {
-      this.commandUnitType = commandUnitType;
-      return this;
-    }
-
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
-      this.commandExecutionStatus = commandExecutionStatus;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withArtifactNeeded(boolean artifactNeeded) {
-      this.artifactNeeded = artifactNeeded;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withOriginEntityId(String originEntityId) {
-      this.originEntityId = originEntityId;
-      return this;
-    }
-
-    public Builder withContainerFamily(ContainerFamily containerFamily) {
-      this.containerFamily = containerFamily;
-      return this;
-    }
-
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
-      return this;
-    }
-
+    /**
+     * With reference id builder.
+     *
+     * @param referenceId the reference id
+     * @return the builder
+     */
     public Builder withReferenceId(String referenceId) {
       this.referenceId = referenceId;
       return this;
     }
 
+    /**
+     * With graph builder.
+     *
+     * @param graph the graph
+     * @return the builder
+     */
     public Builder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
-    public Builder withVersion(Long version) {
-      this.version = version;
-      return this;
-    }
-
-    public Builder withCommandUnits(List<CommandUnit> commandUnits) {
-      this.commandUnits = commandUnits;
-      return this;
-    }
-
-    public Builder withCommandType(CommandType commandType) {
-      this.commandType = commandType;
-      return this;
-    }
-
+    /**
+     * Adds the command units.
+     *
+     * @param commandUnits the command units
+     * @return the builder
+     */
     public Builder addCommandUnits(CommandUnit... commandUnits) {
       this.commandUnits.addAll(Arrays.asList(commandUnits));
       return this;
     }
 
+    /**
+     * With command units builder.
+     *
+     * @param commandUnits the command units
+     * @return the builder
+     */
+    public Builder withCommandUnits(List<CommandUnit> commandUnits) {
+      this.commandUnits = commandUnits;
+      return this;
+    }
+
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /**
+     * With execution result builder.
+     *
+     * @param commandExecutionStatus the execution result
+     * @return the builder
+     */
+    public Builder withExecutionResult(CommandExecutionStatus commandExecutionStatus) {
+      this.commandExecutionStatus = commandExecutionStatus;
+      return this;
+    }
+
+    /**
+     * With artifact needed builder.
+     *
+     * @param artifactNeeded the artifact needed
+     * @return the builder
+     */
+    public Builder withArtifactNeeded(boolean artifactNeeded) {
+      this.artifactNeeded = artifactNeeded;
+      return this;
+    }
+
+    /**
+     * With command type
+     *
+     * @param commandType the command type
+     * @return the builder
+     */
+    public Builder withCommandType(CommandType commandType) {
+      this.commandType = commandType;
+      return this;
+    }
+
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aCommand()
-          .withUuid(uuid)
-          .withName(name)
-          .withCommandUnitType(commandUnitType)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCommandExecutionStatus(commandExecutionStatus)
-          .withCreatedAt(createdAt)
-          .withArtifactNeeded(artifactNeeded)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withDeploymentType(deploymentType)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withOriginEntityId(originEntityId)
-          .withContainerFamily(containerFamily)
-          .withArtifactType(artifactType)
           .withReferenceId(referenceId)
           .withGraph(graph)
-          .withVersion(version)
           .withCommandUnits(commandUnits)
+          .withName(name)
+          .withExecutionResult(commandExecutionStatus)
+          .withArtifactNeeded(artifactNeeded)
           .withCommandType(commandType);
     }
 
+    /**
+     * Build command.
+     *
+     * @return the command
+     */
     public Command build() {
       Command command = new Command();
-      command.setUuid(uuid);
-      command.setName(name);
-      command.setCommandUnitType(commandUnitType);
-      command.setAppId(appId);
-      command.setCreatedBy(createdBy);
-      command.setCommandExecutionStatus(commandExecutionStatus);
-      command.setCreatedAt(createdAt);
-      command.setArtifactNeeded(artifactNeeded);
-      command.setLastUpdatedBy(lastUpdatedBy);
-      command.setDeploymentType(deploymentType);
-      command.setLastUpdatedAt(lastUpdatedAt);
-      command.setOriginEntityId(originEntityId);
-      command.setContainerFamily(containerFamily);
-      command.setArtifactType(artifactType);
       command.setReferenceId(referenceId);
       command.setGraph(graph);
-      command.setVersion(version);
       command.setCommandUnits(commandUnits);
+      command.setName(name);
+      command.setCommandExecutionStatus(commandExecutionStatus);
+      command.setArtifactNeeded(artifactNeeded);
       command.setCommandType(commandType);
       return command;
     }
