@@ -231,7 +231,11 @@ public class ServiceCommand extends Base {
   }
 
   public ServiceCommand clone() {
-    return aServiceCommand().withName(getName()).withCommand(getCommand().clone()).build();
+    return aServiceCommand()
+        .withName(getName())
+        .withTargetToAllEnv(targetToAllEnv)
+        .withCommand(getCommand().clone())
+        .build();
   }
 
   public static final class Builder {

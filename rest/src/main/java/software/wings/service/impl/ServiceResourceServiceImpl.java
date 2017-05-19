@@ -62,6 +62,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.io.File;
@@ -218,9 +219,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service cloneCommand(String appId, String serviceId, String commandName, ServiceCommand command) {
-    ServiceCommand oldServiceCommand = getCommandByName(appId, serviceId, commandName);
+    // don't allow cloning of Docker commands
+    Service service = get(appId, serviceId);
+    if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
+      throw new WingsException(INVALID_REQUEST, "message", "Docker commands can not be cloned");
+    }
+    ServiceCommand oldServiceCommand = service.getServiceCommands()
+                                           .stream()
+                                           .filter(cmd -> equalsIgnoreCase(commandName, cmd.getName()))
+                                           .findFirst()
+                                           .orElse(null);
     ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
-    clonedServiceCommand.setName(command.getName());
+    clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
     return addCommand(appId, serviceId, clonedServiceCommand);
   }
 
