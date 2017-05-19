@@ -195,6 +195,15 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.updateCommand(appId, serviceId, command));
   }
 
+  @POST
+  @Path("{serviceId}/commands/{commandName}/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> cloneCommand(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @PathParam("commandName") String commandName, ServiceCommand command) {
+    return new RestResponse<>(serviceResourceService.cloneCommand(appId, serviceId, commandName, command));
+  }
+
   /**
    * Delete command.
    *

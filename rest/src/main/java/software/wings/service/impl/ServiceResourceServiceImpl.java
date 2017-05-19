@@ -216,6 +216,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return clonedService;
   }
 
+  @Override
+  public Service cloneCommand(String appId, String serviceId, String commandName, ServiceCommand command) {
+    ServiceCommand oldServiceCommand = getCommandByName(appId, serviceId, commandName);
+    ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
+    clonedServiceCommand.setName(command.getName());
+    return addCommand(appId, serviceId, clonedServiceCommand);
+  }
+
   private Service addDefaultCommands(Service service) {
     List<Command> commands = emptyList();
     if (service.getAppContainer() != null && service.getAppContainer().getFamily() != null) {
