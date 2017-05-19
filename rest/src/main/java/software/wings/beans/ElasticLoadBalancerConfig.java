@@ -161,7 +161,6 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
         .add("region", region)
         .add("loadBalancerName", loadBalancerName)
         .add("accessKey", accessKey)
-        .add("secretKey", secretKey)
         .toString();
   }
 

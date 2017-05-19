@@ -438,12 +438,8 @@ public class SshSessionConfig implements Encryptable {
         .add("host", host)
         .add("port", port)
         .add("userName", userName)
-        .add("password", password)
         .add("keyName", keyName)
-        .add("key", key)
-        .add("keyPassphrase", keyPassphrase)
         .add("sudoAppName", sudoAppName)
-        .add("sudoAppPassword", sudoAppPassword)
         .add("bastionHostConfig", bastionHostConfig)
         .toString();
   }

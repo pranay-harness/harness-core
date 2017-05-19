@@ -103,11 +103,7 @@ public class NexusConfig extends SettingValue implements Encryptable {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("nexusUrl", nexusUrl)
-        .add("username", username)
-        .add("password", password)
-        .toString();
+    return MoreObjects.toStringHelper(this).add("nexusUrl", nexusUrl).add("username", username).toString();
   }
 
   /**

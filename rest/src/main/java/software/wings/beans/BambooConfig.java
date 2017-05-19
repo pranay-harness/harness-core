@@ -146,7 +146,6 @@ public class BambooConfig extends SettingValue implements Encryptable {
     return MoreObjects.toStringHelper(this)
         .add("bambooUrl", bambooUrl)
         .add("username", username)
-        .add("password", password)
         .add("accountId", accountId)
         .toString();
   }

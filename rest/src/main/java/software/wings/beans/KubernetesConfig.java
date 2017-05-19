@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -104,6 +106,18 @@ public class KubernetesConfig extends SettingValue implements Encryptable {
 
   public void setAccountId(String accountId) {
     this.accountId = accountId;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("masterUrl", masterUrl)
+        .add("username", username)
+        .add("accountId", accountId)
+        .toString();
   }
 
   /**

@@ -204,7 +204,6 @@ public class SmtpConfig extends SettingValue implements Encryptable {
         .add("fromAddress", fromAddress)
         .add("useSSL", useSSL)
         .add("username", username)
-        .add("password", password)
         .toString();
   }
 

@@ -167,7 +167,6 @@ public class SplunkConfig extends SettingValue implements Encryptable {
         .add("host", host)
         .add("port", port)
         .add("username", username)
-        .add("password", password)
         .add("accountId", accountId)
         .toString();
   }

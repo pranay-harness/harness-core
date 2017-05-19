@@ -173,7 +173,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
         .add("accessType", accessType)
         .add("connectionType", connectionType)
         .add("userName", userName)
-        .add("key", key)
         .toString();
   }
 

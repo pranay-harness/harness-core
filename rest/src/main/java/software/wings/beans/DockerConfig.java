@@ -146,7 +146,6 @@ public class DockerConfig extends SettingValue implements Encryptable {
     return MoreObjects.toStringHelper(this)
         .add("dockerRegistryUrl", dockerRegistryUrl)
         .add("username", username)
-        .add("password", password)
         .add("accountId", accountId)
         .toString();
   }
