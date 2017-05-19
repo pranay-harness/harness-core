@@ -393,7 +393,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting("next")
         .doesNotContainNull()
         .extracting("name")
-        .contains("stop", "stop");
+        .contains("STOP", "STOP");
     assertThat(workflowExecution2.getExecutionNode().getGroup().getElements())
         .extracting("next")
         .doesNotContainNull()

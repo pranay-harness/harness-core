@@ -161,7 +161,7 @@ public class StateExecutionData {
     }
     executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
     putNotNull(
-        executionData, "errorMsg", anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Message").build());
+        executionData, "errorMsg", anExecutionDataValue().withValue(errorMsg).withDisplayName("Message").build());
     return executionData;
   }
 

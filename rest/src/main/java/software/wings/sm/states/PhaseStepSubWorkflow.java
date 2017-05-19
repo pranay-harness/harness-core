@@ -113,6 +113,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                        .withStepsInParallel(stepsInParallel)
                                        .withDefaultFailureStrategy(defaultFailureStrategy)
                                        .withFailureStrategies(failureStrategies)
+                                       .withPhaseStepType(phaseStepType)
                                        .build());
     return response;
   }
