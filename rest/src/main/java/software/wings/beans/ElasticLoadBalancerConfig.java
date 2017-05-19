@@ -38,7 +38,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
   @SchemaIgnore @NotEmpty private String accountId;
 
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("secretKey");
+  private List<String> encryptedFields = Arrays.asList("secretKey");
 
   /**
    * Instantiates a new Elastic load balancer config.
@@ -51,7 +51,6 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }
