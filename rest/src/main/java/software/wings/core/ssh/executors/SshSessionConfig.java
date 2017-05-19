@@ -38,14 +38,12 @@ public class SshSessionConfig implements Encryptable {
   @Encrypted private char[] sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields =
-      Arrays.asList("key", "password", "keyPassphrase", "sudoAppPassword");
+  private List<String> encryptedFields = Arrays.asList("key", "password", "keyPassphrase", "sudoAppPassword");
 
   /**
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }

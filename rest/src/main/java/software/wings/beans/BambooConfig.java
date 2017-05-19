@@ -32,7 +32,7 @@ public class BambooConfig extends SettingValue implements Encryptable {
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
   @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("password");
+  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new BambooService config.
@@ -45,7 +45,6 @@ public class BambooConfig extends SettingValue implements Encryptable {
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }

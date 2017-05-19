@@ -30,8 +30,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "User Name") private String userName;
   @JsonView(JsonViews.Internal.class) @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true)
-  private final static List<String> encryptedFields = Arrays.asList("key");
+  @Attributes(title = "Encrypted Fields", required = true) private List<String> encryptedFields = Arrays.asList("key");
 
   /**
    * Instantiates a new host connection attributes.
@@ -53,7 +52,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
    * Gets the list of fields that are encrypted for use in the UI
    * @return List of field names
    */
-  @JsonIgnore
   public List<String> getEncryptedFields() {
     return encryptedFields;
   }
