@@ -353,6 +353,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Workflow createWorkflow(Workflow workflow) {
+    validateWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     String key = wingsPersistence.save(workflow);
@@ -1223,6 +1224,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       Validator.notNullCheck("basicOrchestrationWorkflow", basicOrchestrationWorkflow);
       basicOrchestrationWorkflow.setFailureStrategies(failureStrategies);
+    }
+  }
+
+  private void validateWorkflow(Workflow workflow) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow != null
+        && orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+      // Create Single Phase
+      Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
+      Validator.notNullCheck("serviceId", workflow.getServiceId());
     }
   }
 }
