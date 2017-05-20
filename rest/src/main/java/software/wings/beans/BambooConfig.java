@@ -21,7 +21,7 @@ import java.util.Arrays;
  */
 @JsonTypeName("BAMBOO")
 public class BambooConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Bamboo URL", required = true) @URL @NotEmpty private String bambooUrl;
+  @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
