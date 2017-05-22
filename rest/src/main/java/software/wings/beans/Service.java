@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -43,6 +44,16 @@ public class Service extends Base {
   @Transient private Activity lastDeploymentActivity;
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
+
+  public Service clone() {
+    return aService()
+        .withAppId(getAppId())
+        .withName(getName())
+        .withDescription(getDescription())
+        .withArtifactType(getArtifactType())
+        .withAppContainer(getAppContainer())
+        .build();
+  }
 
   /**
    * Gets name.

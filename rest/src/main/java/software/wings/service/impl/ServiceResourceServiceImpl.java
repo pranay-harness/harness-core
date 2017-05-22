@@ -14,6 +14,7 @@ import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -44,7 +45,6 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -124,7 +124,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                          .orElse(null);
     if (withBuildSource && appIdSearchFilter != null) {
       List<ArtifactStream> artifactStreams =
-          artifactStreamService.list(Builder.aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
+          artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).build()).getResponse();
       Map<String, List<ArtifactStream>> serviceToBuildSourceMap =
           artifactStreams.stream().collect(Collectors.groupingBy(ArtifactStream::getServiceId));
       if (serviceToBuildSourceMap != null) {
@@ -156,45 +156,33 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service clone(String appId, String originalServiceId, Service service) {
     Service originalService = get(appId, originalServiceId, true);
+    Service clonedService = originalService.clone();
+    clonedService.setName(service.getName());
+    clonedService.setDescription(service.getDescription());
 
-    /*
-    1. service ArtifactType: done
-    2. ArtifactSources: done
-    3. config files: done
-    4. config vars: done
-    5. command: done
-    6. AppContainer: done
-     */
-
-    service.setAppContainer(originalService.getAppContainer());
-    service.setArtifactType(originalService.getArtifactType());
-    service.setUuid(null);
-    Service clonedService = wingsPersistence.saveAndGet(Service.class, service);
-    //    return clonedService;
+    Service savedCloneService = wingsPersistence.saveAndGet(Service.class, clonedService);
 
     originalService.getServiceCommands().forEach(serviceCommand -> {
       ServiceCommand clonedServiceCommand = serviceCommand.clone();
-      addCommand(clonedService.getAppId(), clonedService.getUuid(), clonedServiceCommand);
+      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand);
     });
 
     List<ArtifactStream> artifactStreams = artifactStreamService
-                                               .list(Builder.aPageRequest()
+                                               .list(aPageRequest()
                                                          .addFilter("appId", Operator.EQ, originalService.getAppId())
                                                          .addFilter("serviceId", Operator.EQ, originalService.getUuid())
                                                          .build())
                                                .getResponse();
     artifactStreams.forEach(originalArtifactStream -> {
       ArtifactStream clonedArtifactStream = originalArtifactStream.clone();
-      clonedArtifactStream.setServiceId(clonedService.getUuid());
+      clonedArtifactStream.setServiceId(savedCloneService.getUuid());
       artifactStreamService.create(clonedArtifactStream);
     });
 
     originalService.getConfigFiles().forEach(originalConfigFile -> {
       File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
-
-      // TODO:: add accountId
       ConfigFile clonedConfigFile = originalConfigFile.clone();
-      clonedConfigFile.setEntityId(clonedService.getUuid());
+      clonedConfigFile.setEntityId(savedCloneService.getUuid());
 
       try {
         configService.save(clonedConfigFile, new FileInputStream(file));
@@ -206,15 +194,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
       serviceVariableService.getServiceVariablesForEntity(
-          originalServiceVariable.getAppId(), originalServiceVariable.getTemplateId(), clonedService.getUuid());
-
-      // TODO:: add accountId
+          originalServiceVariable.getAppId(), originalServiceVariable.getTemplateId(), savedCloneService.getUuid());
       ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
-      clonedServiceVariable.setEntityId(clonedService.getUuid());
+      clonedServiceVariable.setEntityId(savedCloneService.getUuid());
 
       serviceVariableService.save(clonedServiceVariable);
     });
-    return clonedService;
+    return savedCloneService;
   }
 
   @Override
@@ -317,8 +303,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // Ensure service is safe to delete
 
     List<Workflow> workflows =
-        workflowService.listWorkflows(Builder.aPageRequest().addFilter("appId", Operator.EQ, appId).build())
-            .getResponse();
+        workflowService.listWorkflows(aPageRequest().addFilter("appId", Operator.EQ, appId).build()).getResponse();
 
     List<Workflow> serviceWorkflows =
         workflows.stream()
