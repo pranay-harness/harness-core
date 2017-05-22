@@ -741,6 +741,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public Workflow cloneWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
+    Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
+    Workflow clonedWorkflow = originalWorkflow.clone();
+    clonedWorkflow.setName(workflow.getName());
+    clonedWorkflow.setDescription(workflow.getDescription());
+    Workflow savedWorkflow = createWorkflow(clonedWorkflow);
+    savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false);
+  }
+
+  @Override
   public List<NotificationRule> updateNotificationRules(
       String appId, String workflowId, List<NotificationRule> notificationRules) {
     Workflow workflow = readWorkflow(appId, workflowId);

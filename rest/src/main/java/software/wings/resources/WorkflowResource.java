@@ -64,8 +64,10 @@ public class WorkflowResource {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param pageRequest the page request
+   * @param appId                   the app id
+   * @param pageRequest             the page request
+   * @param previousExecutionsCount the previous executions count
+   * @param workflowTypes           the workflow types
    * @return the rest response
    */
   @GET
@@ -88,8 +90,9 @@ public class WorkflowResource {
   /**
    * Read.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the workflow id
+   * @param version    the version
    * @return the rest response
    */
   @GET
@@ -104,7 +107,7 @@ public class WorkflowResource {
   /**
    * Creates a workflow
    *
-   * @param appId         the app id
+   * @param appId    the app id
    * @param workflow the workflow
    * @return the rest response
    */
@@ -120,7 +123,7 @@ public class WorkflowResource {
   /**
    * Delete.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the orchestration id
    * @return the rest response
    */
@@ -136,7 +139,7 @@ public class WorkflowResource {
   /**
    * Update.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the workflow id
    * @param workflow   the workflow
    * @return the rest response
@@ -153,11 +156,29 @@ public class WorkflowResource {
   }
 
   /**
+   * Clone workflow rest response.
+   *
+   * @param appId      the app id
+   * @param workflowId the workflow id
+   * @param workflow   the workflow
+   * @return the rest response
+   */
+  @POST
+  @Path("{workflowId}/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Workflow> cloneWorkflow(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, Workflow workflow) {
+    workflow.setAppId(appId);
+    return new RestResponse<>(workflowService.cloneWorkflow(appId, workflowId, workflow));
+  }
+
+  /**
    * Update.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the orchestration id
-   * @param phaseStep   the pre-deployment steps
+   * @param phaseStep  the pre-deployment steps
    * @return the rest response
    */
   @PUT
@@ -172,9 +193,9 @@ public class WorkflowResource {
   /**
    * Update.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the orchestration id
-   * @param phaseStep   the pre-deployment steps
+   * @param phaseStep  the pre-deployment steps
    * @return the rest response
    */
   @PUT
@@ -190,7 +211,7 @@ public class WorkflowResource {
    * Creates the phase.
    *
    * @param appId         the app id
-   * @param workflowId the orchestration id
+   * @param workflowId    the orchestration id
    * @param workflowPhase the phase
    * @return the rest response
    */
@@ -207,8 +228,8 @@ public class WorkflowResource {
    * Updates the phase.
    *
    * @param appId         the app id
-   * @param workflowId the orchestration id
-   * @param phaseId the orchestration id
+   * @param workflowId    the orchestration id
+   * @param phaseId       the orchestration id
    * @param workflowPhase the phase
    * @return the rest response
    */
@@ -225,9 +246,9 @@ public class WorkflowResource {
   /**
    * Updates the phase.
    *
-   * @param appId         the app id
-   * @param workflowId the orchestration id
-   * @param phaseId the orchestration id
+   * @param appId                 the app id
+   * @param workflowId            the orchestration id
+   * @param phaseId               the orchestration id
    * @param rollbackWorkflowPhase the rollback workflow phase
    * @return the rest response
    */
@@ -245,9 +266,9 @@ public class WorkflowResource {
   /**
    * Delete.
    *
-   * @param appId           the app id
+   * @param appId      the app id
    * @param workflowId the orchestration id
-   * @param phaseId the orchestration id
+   * @param phaseId    the orchestration id
    * @return the rest response
    */
   @DELETE
@@ -264,9 +285,10 @@ public class WorkflowResource {
    * Updates the GraphNode.
    *
    * @param appId         the app id
-   * @param workflowId the orchestration id
-   * @param nodeId the nodeId
-   * @param node the node
+   * @param workflowId    the orchestration id
+   * @param subworkflowId the subworkflow id
+   * @param nodeId        the nodeId
+   * @param node          the node
    * @return the rest response
    */
   @PUT
@@ -283,9 +305,9 @@ public class WorkflowResource {
   /**
    * Update.
    *
-   * @param appId           the app id
-   * @param workflowId the orchestration id
-   * @param notificationRules   the notificationRules
+   * @param appId             the app id
+   * @param workflowId        the orchestration id
+   * @param notificationRules the notificationRules
    * @return the rest response
    */
   @PUT
@@ -300,9 +322,9 @@ public class WorkflowResource {
   /**
    * Update.
    *
-   * @param appId           the app id
-   * @param workflowId the orchestration id
-   * @param failureStrategies   the failureStrategies
+   * @param appId             the app id
+   * @param workflowId        the orchestration id
+   * @param failureStrategies the failureStrategies
    * @return the rest response
    */
   @PUT
@@ -317,9 +339,9 @@ public class WorkflowResource {
   /**
    * Update.
    *
-   * @param appId           the app id
-   * @param workflowId the orchestration id
-   * @param userVariables   the user variables
+   * @param appId         the app id
+   * @param workflowId    the orchestration id
+   * @param userVariables the user variables
    * @return the rest response
    */
   @PUT
@@ -334,8 +356,10 @@ public class WorkflowResource {
   /**
    * Stencils rest response.
    *
-   * @param appId the app id
-   * @param envId the env id
+   * @param appId      the app id
+   * @param envId      the env id
+   * @param workflowId the workflow id
+   * @param phaseId    the phase id
    * @return the rest response
    */
   @GET

@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -178,4 +177,6 @@ public interface WorkflowService {
   List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables);
 
   Node updateGraphNode(@NotNull String appId, @NotNull String workflowId, @NotNull String subworkflowId, Node node);
+
+  Workflow cloneWorkflow(String appId, String workflowId, Workflow workflow);
 }
