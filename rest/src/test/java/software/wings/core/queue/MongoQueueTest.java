@@ -7,7 +7,7 @@ import com.google.common.base.MoreObjects;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -25,7 +25,7 @@ import javax.inject.Named;
  * Created by peeyushaggarwal on 4/11/16.
  */
 public class MongoQueueTest extends WingsBaseTest {
-  @Inject @Named("primaryDatastore") private Datastore datastore;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
   private MongoQueueImpl<QueuableObject> queue;
 

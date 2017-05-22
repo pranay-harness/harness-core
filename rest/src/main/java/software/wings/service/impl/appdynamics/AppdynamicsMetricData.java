@@ -58,4 +58,62 @@ public class AppdynamicsMetricData {
         + "metricName='" + metricName + '\'' + ", metricId=" + metricId + ", metricPath='" + metricPath + '\''
         + ", frequency='" + frequency + '\'' + ", metricValues=" + Arrays.toString(metricValues) + '}';
   }
+
+  public static final class Builder {
+    private String metricName;
+    private long metricId;
+    private String metricPath;
+    private String frequency;
+    private AppdynamicsMetricDataValue[] metricValues;
+
+    private Builder() {}
+
+    public static Builder anAppdynamicsMetricsData() {
+      return new Builder();
+    }
+
+    public Builder withMetricName(String metricName) {
+      this.metricName = metricName;
+      return this;
+    }
+
+    public Builder withMetricId(long metricId) {
+      this.metricId = metricId;
+      return this;
+    }
+
+    public Builder withMetricPath(String metricPath) {
+      this.metricPath = metricPath;
+      return this;
+    }
+
+    public Builder withFrequency(String frequency) {
+      this.frequency = frequency;
+      return this;
+    }
+
+    public Builder withMetricValues(AppdynamicsMetricDataValue[] amdv) {
+      this.metricValues = amdv;
+      return this;
+    }
+
+    public Builder but() {
+      return anAppdynamicsMetricsData()
+          .withMetricName(metricName)
+          .withMetricId(metricId)
+          .withMetricPath(metricPath)
+          .withFrequency(frequency)
+          .withMetricValues(metricValues);
+    }
+
+    public AppdynamicsMetricData build() {
+      AppdynamicsMetricData appdynamicsMetricData = new AppdynamicsMetricData();
+      appdynamicsMetricData.setMetricName(metricName);
+      appdynamicsMetricData.setMetricId(metricId);
+      appdynamicsMetricData.setMetricPath(metricPath);
+      appdynamicsMetricData.setFrequency(frequency);
+      appdynamicsMetricData.setMetricValues(metricValues);
+      return appdynamicsMetricData;
+    }
+  }
 }

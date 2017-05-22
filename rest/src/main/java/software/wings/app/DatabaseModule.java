@@ -12,7 +12,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
@@ -33,10 +33,10 @@ import java.util.Map;
  */
 public class DatabaseModule extends AbstractModule {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private Datastore primaryDatastore;
-  private Datastore secondaryDatastore;
+  private AdvancedDatastore primaryDatastore;
+  private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
-  private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
+  private Map<ReadPref, AdvancedDatastore> datastoreMap = Maps.newHashMap();
 
   /**
    * Creates a guice module for portal app.
@@ -50,7 +50,7 @@ public class DatabaseModule extends AbstractModule {
     morphia.getMapper().getOptions().setMapSubPackages(true);
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     MongoClient mongoClient = new MongoClient(uri);
-    this.primaryDatastore = morphia.createDatastore(mongoClient, uri.getDatabase());
+    this.primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     DistributedLockSvcOptions distributedLockSvcOptions =
         new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
     distributedLockSvcOptions.setEnableHistory(false);
@@ -58,7 +58,7 @@ public class DatabaseModule extends AbstractModule {
         new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
 
     if (uri.getHosts().size() > 1) {
-      this.secondaryDatastore = morphia.createDatastore(mongoClient, uri.getDatabase());
+      this.secondaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     } else {
       this.secondaryDatastore = primaryDatastore;
     }
@@ -78,7 +78,7 @@ public class DatabaseModule extends AbstractModule {
    * @param distributedLockSvc the distributed lock svc
    */
   public DatabaseModule(
-      Datastore primaryDatastore, Datastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
+      AdvancedDatastore primaryDatastore, AdvancedDatastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
     this.primaryDatastore = primaryDatastore;
     this.secondaryDatastore = secondaryDatastore;
 
@@ -143,9 +143,9 @@ public class DatabaseModule extends AbstractModule {
    */
   @Override
   protected void configure() {
-    bind(Datastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
-    bind(Datastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
-    bind(new TypeLiteral<Map<ReadPref, Datastore>>() {})
+    bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
+    bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
+    bind(new TypeLiteral<Map<ReadPref, AdvancedDatastore>>() {})
         .annotatedWith(Names.named("datastoreMap"))
         .toInstance(datastoreMap);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
@@ -156,7 +156,7 @@ public class DatabaseModule extends AbstractModule {
    *
    * @return the primary datastore
    */
-  public Datastore getPrimaryDatastore() {
+  public AdvancedDatastore getPrimaryDatastore() {
     return primaryDatastore;
   }
 }

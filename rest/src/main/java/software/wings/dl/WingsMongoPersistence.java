@@ -9,12 +9,14 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import com.google.inject.Singleton;
 
 import com.mongodb.DBCollection;
+import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -45,10 +47,10 @@ import javax.inject.Named;
  */
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
-  private Datastore primaryDatastore;
-  private Datastore secondaryDatastore;
+  private AdvancedDatastore primaryDatastore;
+  private AdvancedDatastore secondaryDatastore;
 
-  private Map<ReadPref, Datastore> datastoreMap;
+  private Map<ReadPref, AdvancedDatastore> datastoreMap;
 
   /**
    * Creates a new object for wings mongo persistence.
@@ -58,9 +60,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * @param datastoreMap       datastore map based on read preference to datastore.
    */
   @Inject
-  public WingsMongoPersistence(@Named("primaryDatastore") Datastore primaryDatastore,
-      @Named("secondaryDatastore") Datastore secondaryDatastore,
-      @Named("datastoreMap") Map<ReadPref, Datastore> datastoreMap) {
+  public WingsMongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore,
+      @Named("secondaryDatastore") AdvancedDatastore secondaryDatastore,
+      @Named("datastoreMap") Map<ReadPref, AdvancedDatastore> datastoreMap) {
     this.primaryDatastore = primaryDatastore;
     this.secondaryDatastore = secondaryDatastore;
     this.datastoreMap = datastoreMap;
@@ -188,6 +190,38 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       }
     }
     Iterable<Key<T>> keys = primaryDatastore.save(ts);
+    for (T t : ts) {
+      if (SettingAttribute.class.isInstance(t)) {
+        this.decryptIfNecessary(((SettingAttribute) t).getValue());
+      } else if (t instanceof Encryptable) {
+        this.decryptIfNecessary(t);
+      }
+    }
+    List<String> ids = new ArrayList<>();
+    keys.forEach(tKey -> ids.add((String) tKey.getId()));
+    return ids;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
+    for (T t : ts) {
+      if (SettingAttribute.class.isInstance(t)) {
+        this.encryptIfNecessary(((SettingAttribute) t).getValue());
+      } else if (t instanceof Encryptable) {
+        this.encryptIfNecessary(t);
+      }
+    }
+    InsertOptions insertOptions = new InsertOptions();
+    insertOptions.continueOnError(true);
+    Iterable<Key<T>> keys = new ArrayList<>();
+    try {
+      keys = primaryDatastore.insert(ts, insertOptions);
+    } catch (DuplicateKeyException dke) {
+      // ignore
+    }
     for (T t : ts) {
       if (SettingAttribute.class.isInstance(t)) {
         this.decryptIfNecessary(((SettingAttribute) t).getValue());
@@ -428,7 +462,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    * {@inheritDoc}
    */
   @Override
-  public Datastore getDatastore() {
+  public AdvancedDatastore getDatastore() {
     return primaryDatastore;
   }
 

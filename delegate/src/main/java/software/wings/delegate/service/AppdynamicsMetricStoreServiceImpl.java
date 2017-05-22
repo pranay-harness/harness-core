@@ -19,9 +19,9 @@ public class AppdynamicsMetricStoreServiceImpl implements AppdynamicsMetricStore
   @Inject private ManagerClient managerClient;
 
   @Override
-  public void save(String accountId, List<AppdynamicsMetricData> metricData) {
+  public void save(String accountId, long appId, long tierId, List<AppdynamicsMetricData> metricData) {
     try {
-      execute(managerClient.saveAppdynamicsMetrics(accountId, metricData));
+      execute(managerClient.saveAppdynamicsMetrics(accountId, appId, tierId, metricData));
     } catch (IOException e) {
       e.printStackTrace();
     }

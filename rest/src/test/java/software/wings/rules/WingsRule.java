@@ -39,7 +39,7 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mockito.internal.util.MockUtil;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +86,7 @@ public class WingsRule implements MethodRule {
   private MongodExecutable mongodExecutable;
   private Injector injector;
   private MongoServer mongoServer;
-  private Datastore datastore;
+  private AdvancedDatastore datastore;
   private DistributedLockSvc distributedLockSvc;
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
@@ -119,7 +119,7 @@ public class WingsRule implements MethodRule {
    *
    * @return the datastore
    */
-  public Datastore getDatastore() {
+  public AdvancedDatastore getDatastore() {
     return datastore;
   }
 
@@ -163,7 +163,7 @@ public class WingsRule implements MethodRule {
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
-    datastore = morphia.createDatastore(mongoClient, "wings");
+    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, "wings");
     DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, "wings", "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     distributedLockSvc =

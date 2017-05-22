@@ -8,6 +8,7 @@ import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -29,6 +30,8 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   private static final long APPDYNAMICS_CALL_TIMEOUT = TimeUnit.MINUTES.toMillis(1L);
 
   @com.google.inject.Inject private SettingsService settingsService;
+
+  @Inject private WingsPersistence wingsPersistence;
 
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
@@ -100,5 +103,16 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     } catch (Exception e) {
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, "reason", e.getMessage());
     }
+  }
+
+  @Override
+  public Boolean saveMetricData(
+      String accountId, long appdynamicsAppId, long tierId, List<AppdynamicsMetricData> metricDataList) {
+    for (AppdynamicsMetricData metricData : metricDataList) {
+      List<AppdynamicsMetricDataRecord> metricDataRecords =
+          AppdynamicsMetricDataRecord.generateDataRecords(accountId, appdynamicsAppId, tierId, metricData);
+      wingsPersistence.saveIgnoringDuplicateKeys(metricDataRecords);
+    }
+    return true;
   }
 }

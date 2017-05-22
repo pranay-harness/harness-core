@@ -100,7 +100,9 @@ public class AppdynamicsResource {
   @Timed
   @DelegateAuth
   @ExceptionMetered
-  public RestResponse<Boolean> saveMetricData(List<AppdynamicsMetricData> metricData) throws IOException {
-    return new RestResponse<>(true);
+  public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
+      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
+      List<AppdynamicsMetricData> metricData) throws IOException {
+    return new RestResponse<>(appdynamicsService.saveMetricData(accountId, appdynamicsAppId, tierId, metricData));
   }
 }

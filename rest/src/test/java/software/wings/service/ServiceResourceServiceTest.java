@@ -47,7 +47,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
@@ -101,7 +101,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Mock private ServiceTemplateService serviceTemplateService;
 
-  @Inject @Named("primaryDatastore") private Datastore datastore;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
   @Mock private WingsPersistence wingsPersistence;
 

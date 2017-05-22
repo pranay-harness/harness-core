@@ -128,7 +128,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
         }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
         logger.info("Result: " + metricsData);
-        metricStoreService.save(dataCollectionInfo.getAppDynamicsConfig().getAccountId(), metricsData);
+        metricStoreService.save(dataCollectionInfo.getAppDynamicsConfig().getAccountId(), dataCollectionInfo.getAppId(),
+            dataCollectionInfo.getTierId(), metricsData);
       } catch (Exception e) {
         logger.error("error fetcing appdynamis metrics", e);
       }

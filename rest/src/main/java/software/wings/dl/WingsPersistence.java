@@ -116,6 +116,16 @@ public interface WingsPersistence {
   <T extends Base> List<String> save(List<T> tList);
 
   /**
+   * Save ignoring duplicate key errors.
+   * This saves any new records and skips existing records
+   *
+   * @param <T>   the generic type
+   * @param tList the t list
+   * @return the list
+   */
+  <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> tList);
+
+  /**
    * Save.
    *
    * @param <T> the generic type
