@@ -197,6 +197,12 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
           }
           break;
         }
+        case PROPERTY: {
+          if (replaceArg) {
+            message = message.replace(node + ".", "");
+          }
+          break;
+        }
         default: { break; }
       }
     }

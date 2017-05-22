@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import org.apache.commons.validator.routines.UrlValidator;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
@@ -11,6 +13,8 @@ import java.net.URL;
  * Created by anubhaw on 5/2/17.
  */
 public class HttpUtil {
+  static UrlValidator urlValidator = new UrlValidator(new String[] {"http", "https"});
+
   public static boolean connectableHost(String host, int port) {
     try (Socket socket = new Socket()) {
       socket.connect(new InetSocketAddress(host, port), 5000); // 5 sec timeout
@@ -41,5 +45,8 @@ public class HttpUtil {
     } catch (IOException ignored) {
     }
     return false;
+  }
+  public static boolean validUrl(String url) {
+    return urlValidator.isValid(url);
   }
 }

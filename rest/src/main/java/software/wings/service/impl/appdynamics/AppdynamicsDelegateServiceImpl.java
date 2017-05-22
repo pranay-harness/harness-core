@@ -1,5 +1,7 @@
 package software.wings.service.impl.appdynamics;
 
+import static software.wings.utils.HttpUtil.validUrl;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -180,6 +182,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public void validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
+    if (!validUrl(appDynamicsConfig.getControllerUrl())) {
+      throw new RuntimeException("AppDynamics Controller URL must be a valid URL");
+    }
     Response<List<AppdynamicsApplication>> response = null;
     try {
       final Call<List<AppdynamicsApplication>> request =
@@ -189,12 +194,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         return;
       }
     } catch (Throwable t) {
-      throw new RuntimeException("Could not reach Appdynamics server. " + t.getMessage());
+      throw new RuntimeException("Could not reach AppDynamics server. " + t.getMessage());
     }
 
     final int errorCode = response.code();
     if (errorCode == HttpStatus.SC_UNAUTHORIZED) {
-      throw new RuntimeException("Could not login to Appdynamics server with given credentials");
+      throw new RuntimeException("Could not login to AppDynamics server with the given credentials");
     }
 
     throw new RuntimeException(response.message());

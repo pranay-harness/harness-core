@@ -3,6 +3,7 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -17,11 +18,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.BambooArtifactStream;
+import software.wings.beans.config.NexusConfig;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BambooBuildService;
 
+import java.io.IOException;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -79,5 +84,21 @@ public class BambooBuildServiceTest extends WingsBaseTest {
     BuildDetails lastSuccessfulBuild = bambooBuildService.getLastSuccessfulBuild(
         APP_ID, bambooArtifactStream.getArtifactStreamAttributes(), bambooConfig);
     assertThat(lastSuccessfulBuild.getNumber()).isEqualTo("10");
+  }
+
+  @Test
+  public void shouldValidateInvalidUrl() {
+    BambooConfig bambooConfig = BambooConfig.Builder.aBambooConfig()
+                                    .withBambooUrl("BAD_URL")
+                                    .withUsername("username")
+                                    .withPassword("password".toCharArray())
+                                    .build();
+    try {
+      bambooBuildService.validateArtifactServer(bambooConfig);
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
+      assertThat(e.getParams()).isNotEmpty();
+      assertThat(e.getParams().get("message")).isEqualTo("Bamboo URL must be a valid URL");
+    }
   }
 }

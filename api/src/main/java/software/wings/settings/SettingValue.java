@@ -45,27 +45,27 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Host connection attributes setting variable types.
      */
-    HOST_CONNECTION_ATTRIBUTES,
+    HOST_CONNECTION_ATTRIBUTES("Host Connection Attributes"),
 
     /**
      * Bastion host connection attributes setting variable types.
      */
-    BASTION_HOST_CONNECTION_ATTRIBUTES,
+    BASTION_HOST_CONNECTION_ATTRIBUTES("Bastion Host Connection Attributes"),
 
     /**
      * Smtp setting variable types.
      */
-    SMTP,
+    SMTP("SMTP"),
 
     /**
      * Jenkins setting variable types.
      */
-    JENKINS,
+    JENKINS("Jenkins"),
 
     /**
      * Bamboo setting variable types.
      */
-    BAMBOO,
+    BAMBOO("Bamboo"),
 
     /**
      * String setting variable types.
@@ -75,61 +75,74 @@ public abstract class SettingValue implements ExtensionPoint {
     /**
      * Splunk setting variable types.
      */
-    SPLUNK,
+    SPLUNK("Splunk"),
 
     /**
      * App dynamics setting variable types.
      */
-    APP_DYNAMICS,
+    APP_DYNAMICS("AppDynamics"),
 
     /**
      * Elastic Load Balancer Settings
      */
-    ELB,
+    ELB("Elastic Classic Load Balancer"),
 
     /**
      * Application load balancer setting variable types.
      */
-    ALB,
+    ALB("Elastic Application Load Balancer"),
 
     /**
      * Slack setting variable types.
      */
-    SLACK,
+    SLACK("SLACK"),
 
     /**
      * AWS setting variable types.
      */
-    AWS,
+    AWS("Amazon Web Services"),
 
     /**
      * GCP setting variable types.
      */
-    GCP,
+    GCP("Google Cloud Platform"),
 
     /**
      * Docker registry setting variable types.
      */
-    DOCKER,
+    DOCKER("Docker Registry"),
 
     /**
      * Physical data center setting variable types.
      */
-    PHYSICAL_DATA_CENTER,
+    PHYSICAL_DATA_CENTER("Physical Data Center"),
 
     /**
      * Kubernetes setting variable types.
      */
-    KUBERNETES,
+    KUBERNETES("Kubernetes"),
 
     /**
      * Nexus setting variable types.
      */
-    NEXUS,
+    NEXUS("Nexus"),
 
     /**
      * Encryption setting variable types.
      */
     ENCRYPTION;
+
+    private String displayName;
+
+    SettingVariableTypes() {
+      this.displayName = name();
+    }
+    SettingVariableTypes(String displayName) {
+      this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+      return displayName;
+    }
   }
 }

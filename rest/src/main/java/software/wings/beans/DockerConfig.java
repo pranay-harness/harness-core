@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -15,7 +14,6 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by anubhaw on 1/5/17.
@@ -30,22 +28,12 @@ public class DockerConfig extends SettingValue implements Encryptable {
   @Encrypted
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true)
-  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new Docker registry config.
    */
   public DockerConfig() {
     super(SettingVariableTypes.DOCKER.name());
-  }
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
   }
 
   /**

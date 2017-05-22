@@ -83,10 +83,12 @@ public class CacheModule extends AbstractModule {
     Config config = new XmlConfigBuilder().build();
     config.setInstanceName("wings-hazelcast");
     if (mainConfiguration.getHazelcast() != null) {
-      if (mainConfiguration.getHazelcast().getAwsConfig() != null) {
+      if (mainConfiguration.getHazelcast().getAwsConfig() != null
+          && mainConfiguration.getHazelcast().getAwsConfig().isEnabled()) {
         config.getNetworkConfig().getJoin().setAwsConfig(mainConfiguration.getHazelcast().getAwsConfig());
       }
-      if (mainConfiguration.getHazelcast().getTcpIpConfig() != null) {
+      if (mainConfiguration.getHazelcast().getTcpIpConfig() != null
+          && mainConfiguration.getHazelcast().getTcpIpConfig().isEnabled()) {
         config.getNetworkConfig().getJoin().setTcpIpConfig(mainConfiguration.getHazelcast().getTcpIpConfig());
       }
     }

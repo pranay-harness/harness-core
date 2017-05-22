@@ -1,6 +1,6 @@
 {
   "password": { "ui:widget": "password" },
   "type": { "ui:widget": "hidden" },
-  "encryptedFields": { "ui:widget": "hidden"},
-  "ui:order": [ "type", "nexusUrl", "username", "password", "encryptedFields" ]
+  "custom:encryptedFields": [ "password" ],
+  "ui:order": [ "type", "nexusUrl", "username", "password" ]
 }

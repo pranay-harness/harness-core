@@ -1,4 +1,5 @@
 {
   "secretKey": { "ui:widget": "password" },
+  "custom:encryptedFields": [ "secretKey" ],
   "type": { "ui:widget": "hidden" }
 }

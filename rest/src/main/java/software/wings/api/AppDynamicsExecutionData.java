@@ -176,12 +176,12 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "httpResponseCode",
         anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
+    putNotNull(
+        executionDetails, "response", anExecutionDataValue().withValue(response).withDisplayName("Response").build());
     putNotNull(executionDetails, "assertionStatement",
         anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
     putNotNull(executionDetails, "assertionStatus",
         anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
-    putNotNull(
-        executionDetails, "response", anExecutionDataValue().withValue(response).withDisplayName("response").build());
     putNotNull(executionDetails, "appIdentifier",
         anExecutionDataValue().withValue(appIdentifier).withDisplayName("App Identifier").build());
     putNotNull(executionDetails, "metricPath",

@@ -2,11 +2,6 @@ package software.wings.beans.config;
 
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -19,7 +14,6 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,7 +21,7 @@ import java.util.Objects;
  */
 @JsonTypeName("NEXUS")
 public class NexusConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Nexus URL", required = true) @URL @NotEmpty private String nexusUrl;
+  @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
@@ -35,22 +29,12 @@ public class NexusConfig extends SettingValue implements Encryptable {
   @NotEmpty
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true)
-  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new Nexus config.
    */
   public NexusConfig() {
     super(SettingVariableTypes.NEXUS.name());
-  }
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
   }
 
   public String getNexusUrl() {

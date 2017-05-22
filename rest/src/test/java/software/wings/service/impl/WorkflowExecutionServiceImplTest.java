@@ -419,7 +419,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             WorkflowExecution::getWorkflowId)
         .containsExactly(workflowExecution.getUuid(), app.getUuid(), workflowExecution.getStateMachineId(),
             workflowExecution.getWorkflowId());
-    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.FAILED); // password
   }
 
   /**

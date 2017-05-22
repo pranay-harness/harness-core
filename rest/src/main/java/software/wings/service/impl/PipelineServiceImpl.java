@@ -267,6 +267,15 @@ public class PipelineServiceImpl implements PipelineService {
     return deleted;
   }
 
+  @Override
+  public Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline) {
+    Pipeline originalPipeline = readPipeline(pipeline.getAppId(), originalPipelineId, false);
+    Pipeline clonedPipleline = originalPipeline.clone();
+    clonedPipleline.setName(pipeline.getName());
+    clonedPipleline.setDescription(pipeline.getDescription());
+    return createPipeline(clonedPipleline);
+  }
+
   /**
    * {@inheritDoc}
    */

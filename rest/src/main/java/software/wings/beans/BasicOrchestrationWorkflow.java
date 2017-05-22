@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.common.Constants;
 
@@ -16,6 +18,11 @@ import java.util.Set;
 public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
   public BasicOrchestrationWorkflow() {
     setOrchestrationWorkflowType(OrchestrationWorkflowType.BASIC);
+  }
+
+  @Override
+  public OrchestrationWorkflow clone() {
+    return aBasicOrchestrationWorkflow().withGraph(getGraph()).build();
   }
 
   public static final class BasicOrchestrationWorkflowBuilder {

@@ -58,4 +58,6 @@ public abstract class OrchestrationWorkflow {
   public abstract void setRequiredEntityTypes(Set<EntityType> requiredEntityTypes);
 
   public abstract boolean validate();
+
+  public abstract OrchestrationWorkflow clone();
 }

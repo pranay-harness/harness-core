@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
@@ -31,6 +32,7 @@ public class ServiceCommand extends Base {
   private boolean targetToAllEnv;
 
   @Transient private Command command;
+
   @Transient @JsonIgnore private boolean setAsDefault;
 
   @Transient private String notes;
@@ -226,6 +228,14 @@ public class ServiceCommand extends Base {
     } else {
       return 0;
     }
+  }
+
+  public ServiceCommand clone() {
+    return aServiceCommand()
+        .withName(getName())
+        .withTargetToAllEnv(targetToAllEnv)
+        .withCommand(getCommand().clone())
+        .build();
   }
 
   public static final class Builder {

@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -34,9 +36,8 @@ public class Workflow extends Base {
   @Transient private List<Service> services = new ArrayList<>();
   @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
 
-  @Transient private String serviceId;
-
-  @Transient private String infraMappingId;
+  @Transient private String serviceId; // Only for UI payload to support BasicOrchestration workflow
+  @Transient private String infraMappingId; //// Only for UI payload to support BasicOrchestration workflow
 
   /**
    * Gets name.
@@ -144,6 +145,15 @@ public class Workflow extends Base {
 
   public void setInfraMappingId(String infraMappingId) {
     this.infraMappingId = infraMappingId;
+  }
+
+  public Workflow clone() {
+    return aWorkflow()
+        .withAppId(getAppId())
+        .withEnvId(getEnvId())
+        .withWorkflowType(getWorkflowType())
+        .withName(getName())
+        .build();
   }
 
   public static final class WorkflowBuilder {

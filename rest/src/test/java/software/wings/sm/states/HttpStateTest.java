@@ -310,7 +310,6 @@ public class HttpStateTest extends WingsBaseTest {
    * Should fail on malformed response.
    */
   @Test
-  @Ignore // TODO:: Docker Artifact Stream refactoring: remove @Ignore
   public void shouldFailOnMalformedResponse() {
     wireMockRule.stubFor(get(urlEqualTo("/health/status"))
                              .withHeader("Content-Type", equalTo("application/json"))

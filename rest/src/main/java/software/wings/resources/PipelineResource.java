@@ -126,6 +126,17 @@ public class PipelineResource {
     return new RestResponse<>(pipelineService.updatePipeline(pipeline));
   }
 
+  @POST
+  @Path("{pipelineId}/clone")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(value = ResourceType.PIPELINE)
+  public RestResponse<Pipeline> read(
+      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
+    pipeline.setAppId(appId);
+    return new RestResponse<>(pipelineService.clonePipeline(pipelineId, pipeline));
+  }
+
   /**
    * Delete.
    *

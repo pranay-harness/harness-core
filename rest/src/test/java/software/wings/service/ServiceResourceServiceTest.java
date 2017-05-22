@@ -15,13 +15,16 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
+import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -32,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -40,6 +44,7 @@ import com.google.inject.name.Named;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -61,8 +66,10 @@ import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
@@ -72,16 +79,20 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.stencils.Stencil;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,13 +110,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                              .withArtifactType(JAR)
                                              .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
-  @Mock private ServiceTemplateService serviceTemplateService;
-
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
-  @Mock private WingsPersistence wingsPersistence;
+  @Rule public TemporaryFolder folder = new TemporaryFolder();
 
-  @Mock private ConfigService configService;
   /**
    * The Verifier.
    */
@@ -122,6 +130,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private EntityVersionService entityVersionService;
   @Mock private CommandService commandService;
   @Mock private WorkflowService workflowService;
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private ConfigService configService;
+  @Mock private ServiceVariableService serviceVariableService;
+  @Mock private ArtifactStreamService artifactStreamService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -255,6 +268,89 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
     inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldCloneService() throws IOException {
+    when(wingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class))).thenAnswer(invocation -> {
+      ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+      command.setUuid(ID_KEY);
+      return command;
+    });
+
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("commandString", "bin/startup.sh")
+                                           .build())
+                             .build();
+
+    Command command = aCommand().withGraph(commandGraph).build();
+    command.transformGraph();
+    command.setVersion(1L);
+
+    when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
+
+    Service originalService =
+        builder.but().withCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
+
+    Service savedClonedService = originalService.clone();
+    savedClonedService.setName("Clone Service");
+    savedClonedService.setDescription("clone description");
+    savedClonedService.setUuid("CLONED_SERVICE_ID");
+    when(wingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
+
+    doReturn(savedClonedService)
+        .when(spyServiceResourceService)
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class));
+
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
+        .thenReturn(asList(aConfigFile().withAppId(APP_ID).withUuid("CONFIG_FILE_ID").build()));
+    when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
+
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
+        .thenReturn(asList(aServiceVariable().withAppId(APP_ID).withUuid(SERVICE_VARIABLE_ID).build()));
+
+    when(artifactStreamService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(aJenkinsArtifactStream().build())).build());
+
+    Service clonedService = spyServiceResourceService.clone(
+        APP_ID, SERVICE_ID, aService().withName("Clone Service").withDescription("clone description").build());
+
+    assertThat(clonedService)
+        .isNotNull()
+        .isInstanceOf(Service.class)
+        .hasFieldOrPropertyWithValue("name", "Clone Service")
+        .hasFieldOrPropertyWithValue("description", "clone description")
+        .hasFieldOrPropertyWithValue("artifactType", originalService.getArtifactType())
+        .hasFieldOrPropertyWithValue("appContainer", originalService.getAppContainer());
+
+    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+
+    ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
+    verify(wingsPersistence).saveAndGet(eq(Service.class), serviceArgumentCaptor.capture());
+    Service savedService = serviceArgumentCaptor.getAllValues().get(0);
+    assertThat(savedService)
+        .isNotNull()
+        .isInstanceOf(Service.class)
+        .hasFieldOrPropertyWithValue("name", "Clone Service")
+        .hasFieldOrPropertyWithValue("description", "clone description")
+        .hasFieldOrPropertyWithValue("artifactType", originalService.getArtifactType())
+        .hasFieldOrPropertyWithValue("appContainer", originalService.getAppContainer());
+
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).download(APP_ID, "CONFIG_FILE_ID");
+    verify(configService).save(any(ConfigFile.class), any(InputStream.class));
+    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(serviceVariableService).save(any(ServiceVariable.class));
+    verify(artifactStreamService).list(any(PageRequest.class));
+    verify(artifactStreamService).create(any(ArtifactStream.class));
   }
 
   @Test

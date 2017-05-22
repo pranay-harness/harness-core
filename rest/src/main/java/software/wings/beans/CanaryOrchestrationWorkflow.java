@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.common.UUIDGenerator.getUuid;
@@ -323,6 +324,25 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     return isValid();
+  }
+
+  @Override
+  public OrchestrationWorkflow clone() {
+    return aCanaryOrchestrationWorkflow()
+        .aCanaryOrchestrationWorkflow()
+        .withGraph(getGraph())
+        .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withWorkflowPhaseIds(getWorkflowPhaseIds())
+        .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
+        .withPostDeploymentSteps(getPostDeploymentSteps())
+        .withRollbackWorkflowPhaseIdMap(getRollbackWorkflowPhaseIdMap())
+        .withNotificationRules(getNotificationRules())
+        .withFailureStrategies(getFailureStrategies())
+        .withSystemVariables(getSystemVariables())
+        .withUserVariables(getUserVariables())
+        .withDerivedVariables(getDerivedVariables())
+        .withRequiredEntityTypes(getRequiredEntityTypes())
+        .build();
   }
 
   public static final class CanaryOrchestrationWorkflowBuilder {

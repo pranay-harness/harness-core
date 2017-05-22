@@ -16,6 +16,8 @@ import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.jexl3.JexlException.Parsing;
 import org.apache.commons.jexl3.JexlException.Property;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
+import org.asynchttpclient.HttpResponseStatus;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.TaskType;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -253,10 +256,6 @@ public class HttpState extends State {
       evaluatedHeader = context.renderExpression(evaluatedHeader);
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
-
-    String finalEvaluatedBody = evaluatedBody;
-    String finalEvaluatedHeader = evaluatedHeader;
-
     String delegateTaksId =
         delegateService.queueTask(aDelegateTask()
                                       .withTaskType(getTaskType())
@@ -303,36 +302,40 @@ public class HttpState extends State {
     HttpStateExecutionData executionData = (HttpStateExecutionData) response.values().iterator().next();
     String errorMessage = executionData.getErrorMsg();
     executionData.setAssertionStatement(assertion);
-
-    boolean status = true;
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    boolean assertionStatus = true;
     if (StringUtils.isNotBlank(assertion)) {
-      try {
-        status = (boolean) context.evaluateExpression(assertion, executionData);
-        logger.info("assertion status: {}", status);
+      // check if the request failed
+      if (!executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+        try {
+          assertionStatus = (boolean) context.evaluateExpression(assertion, executionData);
+          logger.info("assertion status: {}", assertionStatus);
 
-      } catch (ClassCastException e) {
-        logger.error("Invalid assertion {} ", e.getMessage());
-        executionData.setErrorMsg(ASSERTION_ERROR_MSG);
-      } catch (JexlException e) {
-        logger.error("Error in httpStateAssertion", e);
-        status = false;
-        if (e instanceof Parsing) {
-          Parsing p = (Parsing) e;
-          executionData.setErrorMsg("Parsing error '" + p.getDetail() + "' in assertion.");
-        } else if (e instanceof Property) {
-          Property pr = (Property) e;
-          executionData.setErrorMsg("Unresolvable property '" + pr.getProperty() + "' in assertion.");
-        } else {
+        } catch (ClassCastException e) {
+          logger.error("Invalid assertion {} ", e.getMessage());
+          executionData.setErrorMsg(ASSERTION_ERROR_MSG);
+        } catch (JexlException e) {
+          logger.error("Error in httpStateAssertion", e);
+          assertionStatus = false;
+          if (e instanceof Parsing) {
+            Parsing p = (Parsing) e;
+            executionData.setErrorMsg("Parsing error '" + p.getDetail() + "' in assertion.");
+          } else if (e instanceof Property) {
+            Property pr = (Property) e;
+            executionData.setErrorMsg("Unresolvable property '" + pr.getProperty() + "' in assertion.");
+          } else {
+            executionData.setErrorMsg(getMessage(e));
+          }
+        } catch (Exception e) {
+          logger.error("Error in httpStateAssertion", e);
           executionData.setErrorMsg(getMessage(e));
+          assertionStatus = false;
         }
-      } catch (Exception e) {
-        logger.error("Error in httpStateAssertion", e);
-        executionData.setErrorMsg(getMessage(e));
-        status = false;
       }
     }
-
-    ExecutionStatus executionStatus = status ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+    if (!assertionStatus || executionData.getStatus().equals(ExecutionStatus.ERROR)) {
+      executionStatus = ExecutionStatus.FAILED;
+    }
     ExecutionResponse executionResponse = new ExecutionResponse();
     executionResponse.setExecutionStatus(executionStatus);
 
