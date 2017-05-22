@@ -21,7 +21,7 @@ import java.util.Objects;
  */
 @JsonTypeName("NEXUS")
 public class NexusConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Nexus URL", required = true) @URL @NotEmpty private String nexusUrl;
+  @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)

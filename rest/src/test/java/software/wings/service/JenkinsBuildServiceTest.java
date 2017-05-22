@@ -32,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;
@@ -138,5 +139,22 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     when(jobWithDetails.getLastSuccessfulBuild().details().getArtifacts()).thenReturn(ImmutableList.of(artifact));
     assertThat(jenkinsBuildService.getArtifactPaths(BUILD_JOB_NAME, null, jenkinsConfig))
         .containsExactly("relativePath");
+  }
+
+  @Test
+  public void shouldValidateInvalidUrl() throws IOException {
+    JenkinsConfig jenkinsConfig = aJenkinsConfig()
+                                      .withJenkinsUrl("BAD_URL")
+                                      .withUsername("username")
+                                      .withPassword("password".toCharArray())
+                                      .withAccountId(ACCOUNT_ID)
+                                      .build();
+    try {
+      jenkinsBuildService.validateArtifactServer(jenkinsConfig);
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
+      assertThat(e.getParams()).isNotEmpty();
+      assertThat(e.getParams().get("message")).isEqualTo("Jenkins URL must be a valid URL");
+    }
   }
 }

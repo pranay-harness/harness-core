@@ -22,7 +22,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
   private String computeProviderId;
   private String computeProviderName;
   private String computeProviderType;
-  private DeploymentType deploymentType;
+  private String deploymentType;
   private String infraMappingId;
   private String infraMappingName;
   private String clusterName;
@@ -46,11 +46,11 @@ public class PhaseExecutionData extends ElementStateExecutionData {
     this.computeProviderId = computeProviderId;
   }
 
-  public DeploymentType getDeploymentType() {
+  public String getDeploymentType() {
     return deploymentType;
   }
 
-  public void setDeploymentType(DeploymentType deploymentType) {
+  public void setDeploymentType(String deploymentType) {
     this.deploymentType = deploymentType;
   }
 
@@ -157,7 +157,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
     private String computeProviderName;
     private String computeProviderType;
     private List<ElementExecutionSummary> elementStatusSummary = new ArrayList<>();
-    private DeploymentType deploymentType;
+    private String deploymentType;
     private String stateName;
     private String infraMappingId;
     private Map<String, ExecutionStatus> instanceIdStatusMap = new HashMap<>();
@@ -208,7 +208,7 @@ public class PhaseExecutionData extends ElementStateExecutionData {
       return this;
     }
 
-    public PhaseExecutionDataBuilder withDeploymentType(DeploymentType deploymentType) {
+    public PhaseExecutionDataBuilder withDeploymentType(String deploymentType) {
       this.deploymentType = deploymentType;
       return this;
     }
