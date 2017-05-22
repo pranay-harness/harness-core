@@ -96,6 +96,9 @@ public class AuditServiceImpl implements AuditService {
    */
   @Override
   public void updateUser(AuditHeader header, User user) {
+    if (header == null) {
+      return;
+    }
     Query<AuditHeader> updateQuery =
         wingsPersistence.createQuery(AuditHeader.class).field(ID_KEY).equal(header.getUuid());
     UpdateOperations<AuditHeader> updateOperations =
