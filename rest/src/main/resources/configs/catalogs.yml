@@ -198,3 +198,5 @@ PLUGIN_CATEGORY:
       value: LoadBalancer
     - name: Connection Attributes
       value: ConnectionAttributes
+    - name: AppDynamics
+      value: APP_DYNAMICS
