@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commandLogs", noClassnameStored = true)
 //@Indexes(@Index(fields = {@Field("activityId"), @Field("hostName")})) //TODO: uncomment
 public class Log extends Base {
-  @NotEmpty @Indexed() private String activityId;
+  @NotEmpty @Indexed private String activityId;
   private String hostName;
   @NotEmpty @Indexed private String commandUnitName;
   private String logLine;
