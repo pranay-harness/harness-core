@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -24,12 +25,13 @@ import java.util.Objects;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+//@Indexes(@Index(fields = {@Field("appId"), @Field("name")}, options = @IndexOptions(unique = true)))
 public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
 
-  @Reference(idOnly = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
+  @Reference(idOnly = true, ignoreMissing = true) private List<ServiceCommand> serviceCommands = Lists.newArrayList();
 
   @Version private long version;
 
@@ -42,6 +44,16 @@ public class Service extends Base {
   @Transient private Activity lastDeploymentActivity;
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
+
+  public Service clone() {
+    return aService()
+        .withAppId(getAppId())
+        .withName(getName())
+        .withDescription(getDescription())
+        .withArtifactType(getArtifactType())
+        .withAppContainer(getAppContainer())
+        .build();
+  }
 
   /**
    * Gets name.

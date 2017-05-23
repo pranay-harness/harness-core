@@ -29,7 +29,7 @@ public class WingsException extends WingsApiException {
     super();
   }
 
-  /**
+  /*
    * Instantiates a new Wings exception.
    *
    * @param message the message

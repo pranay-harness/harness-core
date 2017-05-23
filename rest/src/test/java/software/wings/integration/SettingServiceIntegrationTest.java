@@ -82,8 +82,8 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
     assertThat(response.getStatus()).isEqualTo(400);
     assertThat(response.readEntity(RestResponse.class).getResponseMessages())
         .containsExactly(aResponseMessage()
-                             .withCode(ErrorCode.INVALID_ARGUMENT)
-                             .withMessage("value.jenkinsUrl must be a valid URL")
+                             .withCode(ErrorCode.INVALID_ARTIFACT_SERVER)
+                             .withMessage("Jenkins URL must be a valid URL")
                              .withErrorType(ERROR)
                              .build());
   }

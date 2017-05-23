@@ -3,7 +3,6 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -16,14 +15,13 @@ import software.wings.security.encryption.Encryptable;
 import software.wings.settings.SettingValue;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by anubhaw on 11/22/16.
  */
 @JsonTypeName("BAMBOO")
 public class BambooConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Bamboo URL", required = true) @URL @NotEmpty private String bambooUrl;
+  @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
   @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
@@ -31,22 +29,12 @@ public class BambooConfig extends SettingValue implements Encryptable {
   @Encrypted
   private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
-  @Attributes(title = "Encrypted Fields", required = true)
-  private List<String> encryptedFields = Arrays.asList("password");
 
   /**
    * Instantiates a new BambooService config.
    */
   public BambooConfig() {
     super(SettingVariableTypes.BAMBOO.name());
-  }
-
-  /**
-   * Gets the list of fields that are encrypted for use in the UI
-   * @return List of field names
-   */
-  public List<String> getEncryptedFields() {
-    return encryptedFields;
   }
 
   /**

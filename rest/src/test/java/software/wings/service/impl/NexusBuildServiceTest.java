@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
@@ -13,6 +14,8 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.newrelic.agent.deps.com.google.common.collect.ImmutableList;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,8 +25,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -86,5 +92,22 @@ public class NexusBuildServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails =
         nexusBuildService.getBuilds("nexus", nexusArtifactStream.getArtifactStreamAttributes(), nexusConfig);
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).containsExactly("3.0", "2.1.2");
+  }
+
+  @Test
+  public void shouldValidateInvalidUrl() {
+    NexusConfig nexusConfig = NexusConfig.Builder.aNexusConfig()
+                                  .withNexusUrl("BAD_URL")
+                                  .withUsername("username")
+                                  .withPassword("password".toCharArray())
+                                  .withAccountId(ACCOUNT_ID)
+                                  .build();
+    try {
+      nexusBuildService.validateArtifactServer(nexusConfig);
+    } catch (WingsException e) {
+      assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
+      assertThat(e.getParams()).isNotEmpty();
+      assertThat(e.getParams().get("message")).isEqualTo("Nexus URL must be a valid URL");
+    }
   }
 }

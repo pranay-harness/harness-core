@@ -16,6 +16,7 @@ import software.wings.beans.Service;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ElementNotifyResponseData;
@@ -68,10 +69,12 @@ public class PhaseSubWorkflow extends SubWorkflowState {
         aPhaseExecutionData()
             .withComputeProviderId(infrastructureMapping.getComputeProviderSettingId())
             .withComputeProviderName(infrastructureMapping.getComputeProviderName())
-            .withComputeProviderType(infrastructureMapping.getComputeProviderType())
+            .withComputeProviderType(
+                SettingValue.SettingVariableTypes.valueOf(infrastructureMapping.getComputeProviderType())
+                    .getDisplayName())
             .withInfraMappingId(infraMappingId)
             .withInfraMappingName(infrastructureMapping.getDisplayName())
-            .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()))
+            .withDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()).getDisplayName())
             .withServiceId(serviceId)
             .withServiceName(service.getName())
             .build();

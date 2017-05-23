@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
+import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -131,6 +132,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
+    if (!validUrl(jenkinsConfig.getJenkinsUrl())) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Jenkins URL must be a valid URL");
+    }
+
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
           "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
@@ -140,7 +145,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     boolean running = jenkins.isRunning();
     if (!running) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid jenkins credentials");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Jenkins credentials");
     }
     return running;
   }

@@ -414,7 +414,7 @@ public class NexusServiceImpl implements NexusService {
         case 404:
           return false;
         case 401:
-          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid nexus credentials");
+          throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Nexus credentials");
       }
       throw new WingsException(errorCode, "message", response.message());
     }

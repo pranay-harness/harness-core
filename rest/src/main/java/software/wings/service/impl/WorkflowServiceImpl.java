@@ -353,6 +353,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Workflow createWorkflow(Workflow workflow) {
+    validateWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     String key = wingsPersistence.save(workflow);
@@ -738,6 +739,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .filter(n -> node.getId().equals(n.getId()))
         .findFirst()
         .get();
+  }
+
+  @Override
+  public Workflow cloneWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
+    Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
+    Workflow clonedWorkflow = originalWorkflow.clone();
+    clonedWorkflow.setName(workflow.getName());
+    clonedWorkflow.setDescription(workflow.getDescription());
+    Workflow savedWorkflow = createWorkflow(clonedWorkflow);
+    savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
+    return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false);
   }
 
   @Override
@@ -1223,6 +1235,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       Validator.notNullCheck("basicOrchestrationWorkflow", basicOrchestrationWorkflow);
       basicOrchestrationWorkflow.setFailureStrategies(failureStrategies);
+    }
+  }
+
+  private void validateWorkflow(Workflow workflow) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (orchestrationWorkflow != null
+        && orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
+      // Create Single Phase
+      Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
+      Validator.notNullCheck("serviceId", workflow.getServiceId());
     }
   }
 }

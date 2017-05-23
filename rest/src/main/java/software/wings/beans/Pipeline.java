@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import static software.wings.beans.Pipeline.Builder.aPipeline;
+
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -133,12 +135,32 @@ public class Pipeline extends Base {
         .toString();
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<Service> getServices() {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(List<Service> services) {
     this.services = services;
+  }
+
+  public Pipeline clone() {
+    return aPipeline()
+        .withAppId(getAppId())
+        .withName(name)
+        .withDescription(description)
+        .withPipelineStages(getPipelineStages())
+        .withStateEtaMap(getStateEtaMap())
+        .build();
   }
 
   /**

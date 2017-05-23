@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.List;
@@ -56,6 +58,11 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   @Override
   public boolean validate() {
     return true;
+  }
+
+  @Override
+  public OrchestrationWorkflow clone() {
+    return aCustomOrchestrationWorkflow().withGraph(getGraph()).build();
   }
 
   @Override
