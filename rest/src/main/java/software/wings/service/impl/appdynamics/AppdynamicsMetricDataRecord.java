@@ -337,27 +337,34 @@ public class AppdynamicsMetricDataRecord extends Base {
      * "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Number of
      * Slow Calls" Element 0 and 1 are constant Element 2 is the tier name Element 3 is the BT name Element 4 is
      * constant Element 5 is the node name Element 6 is the metric name
-     *
+     */
+
+    String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
+    String metricName = appdynamicsPathPieces[6];
+    String tierName = appdynamicsPathPieces[2];
+    String btName = appdynamicsPathPieces[3];
+    String nodeName = appdynamicsPathPieces[5];
+    /*
      * An AppDynamics metric name looks like:
      * "BTM|BTs|BT:132632|Component:42159|Average Response Time (ms)"
-     * so right now we only care about element 2, the BT Id.
+     * so right now we only care about element 2, the BT Id, and we delete the first three characters.
      */
-    String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
     String[] metricNamePathPieces = metricData.getMetricName().split(Pattern.quote("|"));
+    long btId = Long.parseLong(metricNamePathPieces[2].substring(3));
     List<AppdynamicsMetricDataRecord> records =
         Arrays.stream(metricData.getMetricValues())
             .map(value
                 -> Builder.anAppdynamicsMetricsDataRecord()
                        .withAccountId(accountId)
                        .withAppdynamicsAppId(appdynamicsAppId)
-                       .withMetricName(appdynamicsPathPieces[6])
+                       .withMetricName(metricName)
                        .withMetricId(metricData.getMetricId())
                        .withMetricType(MetricType.COUNT) // TODO: needs real mapper
                        .withTierId(tierId)
-                       .withTierName(appdynamicsPathPieces[2])
-                       .withBtId(Long.parseLong(metricNamePathPieces[2].substring(3)))
-                       .withBtName(appdynamicsPathPieces[3])
-                       .withNodeName(appdynamicsPathPieces[5])
+                       .withTierName(tierName)
+                       .withBtId(btId)
+                       .withBtName(btName)
+                       .withNodeName(nodeName)
                        .withStartTimeInMillis(value.getStartTimeInMillis())
                        .withValue(value.getValue())
                        .withMin(value.getMin())
