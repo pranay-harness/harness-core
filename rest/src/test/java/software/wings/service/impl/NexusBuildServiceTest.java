@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.newrelic.agent.deps.com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;

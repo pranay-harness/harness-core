@@ -9,6 +9,8 @@ import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class DockerRegistryServiceImpl implements DockerRegistryService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
@@ -98,8 +102,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         String token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
       }
-      if (response.code() != 200) {
+      if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
+        logger.warn("Image name [" + imageName + "] does not exist in Docker registry.");
         throw new WingsException(
             ErrorCode.INVALID_ARGUMENT, "args", "Image name [" + imageName + "] does not exist in Docker registry.");
       }
@@ -107,6 +112,27 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Registry server");
     }
     return true;
+  }
+
+  @Override
+  public boolean validateCredentials(DockerConfig dockerConfig) {
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+    try {
+      DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig);
+      Response response = registryRestClient.getApiVersion(basicAuthHeader).execute();
+      if (response.code() == 401) { // unauthorized
+        String authHeaderValue = response.headers().get("Www-Authenticate");
+        DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+        if (dockerRegistryToken != null) {
+          response = registryRestClient.getApiVersion("Bearer " + dockerRegistryToken.getToken()).execute();
+        }
+      }
+      isSuccessful(response);
+    } catch (IOException e) {
+      logger.error("Error occurred while sending request to server {} ", dockerConfig.getDockerRegistryUrl(), e);
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, "message", e.getMessage());
+    }
+    return false;
   }
 
   private String getToken(DockerConfig dockerConfig, Headers headers, DockerRegistryRestClient registryRestClient) {
@@ -138,7 +164,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.info("Exception occurred while fetching token ", e);
     }
     return null;
   }
@@ -154,14 +180,25 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
             Arrays.stream(headerParts[1].split(","))
                 .map(s -> s.split("="))
                 .collect(Collectors.toMap(s -> s[0], s -> s[1].substring(1, s[1].length() - 1)));
-
         if (tokens.size() == 3 && tokens.get("realm") != null && tokens.get("service") != null
             && tokens.get("scope") != null) {
+          return tokens;
+        } else if (tokens.size() == 2 && tokens.get("realm") != null && tokens.get("service") != null) {
           return tokens;
         }
       }
     }
     return null;
+  }
+  private boolean isSuccessful(Response<?> response) throws IOException {
+    int code = response.code();
+    switch (code) {
+      case 404:
+        return false;
+      case 401:
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message", "Invalid Docker Registry credentials");
+    }
+    return true;
   }
 
   /**
