@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -19,6 +20,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import java.io.IOException;
 import java.util.List;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -88,9 +90,19 @@ public class AppdynamicsResource {
   @ExceptionMetered
   public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
       @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
-      @QueryParam("btName") String btName, @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime)
-      throws IOException {
+      @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durantionInMinutes) throws IOException {
     return new RestResponse<>(
-        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, startTime, endTime));
+        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durantionInMinutes));
+  }
+
+  @POST
+  @Path("/save-metrics")
+  @Timed
+  @DelegateAuth
+  @ExceptionMetered
+  public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
+      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
+      List<AppdynamicsMetricData> metricData) throws IOException {
+    return new RestResponse<>(appdynamicsService.saveMetricData(accountId, appdynamicsAppId, tierId, metricData));
   }
 }

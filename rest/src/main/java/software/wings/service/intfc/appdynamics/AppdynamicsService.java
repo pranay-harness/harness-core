@@ -1,5 +1,6 @@
 package software.wings.service.intfc.appdynamics;
 
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
@@ -7,6 +8,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,5 +34,9 @@ public interface AppdynamicsService {
       throws IOException;
 
   List<AppdynamicsMetricData> getTierBTMetricData(@NotNull String settingId, int appdynamicsAppId, int tierId,
-      @NotNull String btName, long startTime, long endTime) throws IOException;
+      @NotNull String btName, int durantionInMinutes) throws IOException;
+
+  @ValidationGroups(Create.class)
+  Boolean saveMetricData(@NotNull String accountId, @Valid long appdynamicsAppId, @Valid long tierId,
+      @Valid List<AppdynamicsMetricData> metricData) throws IOException;
 }

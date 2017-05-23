@@ -21,6 +21,7 @@ import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.dl.PageResponse;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
@@ -63,6 +64,10 @@ public interface ManagerClient {
       @Query("hostId") String hostId);
 
   @POST("logs") Call<RestResponse<Log>> saveLog(@Query("accountId") String accountId, @Body Log log);
+
+  @POST("appdynamics/save-metrics")
+  Call<RestResponse<Void>> saveAppdynamicsMetrics(@Query("accountId") String accountId, @Query("appId") long appId,
+      @Query("tierId") long tierId, @Body List<AppdynamicsMetricData> metricData);
 
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,

@@ -1,29 +1,41 @@
 package software.wings.integration.appdynamics;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+
+import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.AppDynamicsConfig.Builder;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SortOrder.OrderType;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.utils.JsonUtils;
 
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -31,6 +43,8 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 5/11/17.
  */
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
+  @Inject private AppdynamicsService appdynamicsService;
+
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
@@ -317,5 +331,122 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         System.out.println(JsonUtils.asJson(tierBTMDataResponse.getResource()));
       }
     }
+  }
+
+  @Test
+  public void testAppdynamicsPersistence() throws Exception {
+    final long APPDYNAMICS_APP_ID = 5L;
+    final long METRIC_ID = 4L;
+    final long TIER_ID = 6L;
+    final AppdynamicsMetricDataValue METRIC_VALUE_1 = AppdynamicsMetricDataValue.Builder.anAppdynamicsMetricDataValue()
+                                                          .withStartTimeInMillis(1495432894010L)
+                                                          .withValue(100L)
+                                                          .withMin(5L)
+                                                          .withMax(200L)
+                                                          .withCurrent(50L)
+                                                          .withSum(900L)
+                                                          .withCount(8L)
+                                                          .withStandardDeviation(0.5d)
+                                                          .withOccurrences(3)
+                                                          .withUseRange(true)
+                                                          .build();
+    final AppdynamicsMetricDataValue METRIC_VALUE_2 = AppdynamicsMetricDataValue.Builder.anAppdynamicsMetricDataValue()
+                                                          .withStartTimeInMillis(1495432954010L)
+                                                          .withValue(200L)
+                                                          .withMin(10L)
+                                                          .withMax(400L)
+                                                          .withCurrent(100L)
+                                                          .withSum(1800L)
+                                                          .withCount(16L)
+                                                          .withStandardDeviation(0.25d)
+                                                          .withOccurrences(6)
+                                                          .withUseRange(true)
+                                                          .build();
+    final AppdynamicsMetricDataValue METRIC_VALUE_3 = AppdynamicsMetricDataValue.Builder.anAppdynamicsMetricDataValue()
+                                                          .withStartTimeInMillis(1495433014010L)
+                                                          .withValue(300L)
+                                                          .withMin(15L)
+                                                          .withMax(600L)
+                                                          .withCurrent(150L)
+                                                          .withSum(2700L)
+                                                          .withCount(24L)
+                                                          .withStandardDeviation(0.125d)
+                                                          .withOccurrences(9)
+                                                          .withUseRange(true)
+                                                          .build();
+    final AppdynamicsMetricData METRIC_DATA_1 =
+        AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
+            .withMetricName("BTM|BTs|BT:132632|Component:42159|Average Response Time (ms)")
+            .withMetricId(METRIC_ID)
+            .withMetricPath(
+                "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Average Response Time (ms)")
+            .withFrequency("ONE_MIN")
+            .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_1, METRIC_VALUE_2})
+            .build();
+    final AppdynamicsMetricData METRIC_DATA_2 =
+        AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
+            .withMetricName("BTM|BTs|BT:132632|Component:42159|Average Response Time (ms)")
+            .withMetricId(METRIC_ID)
+            .withMetricPath(
+                "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Average Response Time (ms)")
+            .withFrequency("ONE_MIN")
+            .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_2, METRIC_VALUE_3})
+            .build();
+    final List<AppdynamicsMetricDataRecord> METRIC_DATA_RECORDS_1 =
+        AppdynamicsMetricDataRecord.generateDataRecords(accountId, APPDYNAMICS_APP_ID, TIER_ID, METRIC_DATA_1);
+
+    // insert metric values 1 and 2 using the REST interface
+    WebTarget target = client.target(API_BASE + "/appdynamics/save-metrics?accountId=" + accountId
+        + "&appdynamicsAppId=" + APPDYNAMICS_APP_ID + "&tierId=" + TIER_ID);
+    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        Entity.entity(Arrays.asList(METRIC_DATA_1), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assert (restResponse.getResource());
+
+    // query
+    PageRequest.Builder requestBuilder = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("appdynamicsAppId", Operator.EQ, APPDYNAMICS_APP_ID)
+                                             .addFilter("metricId", Operator.EQ, METRIC_ID)
+                                             .addFilter("tierId", Operator.EQ, TIER_ID)
+                                             .addOrder("startTimeInMillis", OrderType.ASC);
+    PageResponse<AppdynamicsMetricDataRecord> response =
+        wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
+    List<AppdynamicsMetricDataRecord> result = response.getResponse();
+    Assert.assertEquals("result not correct length", 2, result.size());
+    Assert.assertEquals("record 0 not equal", METRIC_DATA_RECORDS_1.get(0), result.get(0));
+    Assert.assertEquals("record 1 not equal", METRIC_DATA_RECORDS_1.get(1), result.get(1));
+
+    // insert metric values 2 and 3 using direct service call
+    // this should result in 1, 2, and 3 all being stored
+    appdynamicsService.saveMetricData(accountId, APPDYNAMICS_APP_ID, TIER_ID, Arrays.asList(METRIC_DATA_2));
+    response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
+    result = response.getResponse();
+    Assert.assertEquals("result not correct length", 3, result.size());
+
+    // more specific query
+    requestBuilder.addFilter("btName", Operator.EQ, "/todolist/")
+        .addFilter("nodeName", Operator.EQ, "test-node")
+        .addFilter("startTimeInMillis", Operator.EQ, 1495432894010L);
+    response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
+    result = response.getResponse();
+    Assert.assertEquals("short result not correct length", 1, result.size());
+
+    // delete
+    Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
+    query.filter("accountId = ", accountId)
+        .filter("appdynamicsAppId = ", APPDYNAMICS_APP_ID)
+        .filter("metricId", METRIC_ID)
+        .filter("tierId", TIER_ID);
+    boolean success = wingsPersistence.delete(query);
+    assert (success);
+    requestBuilder = aPageRequest()
+                         .addFilter("accountId", Operator.EQ, accountId)
+                         .addFilter("appdynamicsAppId", Operator.EQ, APPDYNAMICS_APP_ID)
+                         .addFilter("metricId", Operator.EQ, METRIC_ID)
+                         .addFilter("tierId", Operator.EQ, TIER_ID)
+                         .addOrder("startTimeInMillis", OrderType.ASC);
+    response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
+    result = response.getResponse();
+    Assert.assertEquals("result not correct length", 0, result.size());
   }
 }

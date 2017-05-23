@@ -22,7 +22,7 @@ import com.mongodb.BasicDBObject;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Log;
@@ -46,7 +46,7 @@ public class LogServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private LogService logService;
 
-  @Inject @Named("primaryDatastore") private Datastore datastore;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
   /**
    * Should list logs.

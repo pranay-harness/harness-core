@@ -39,6 +39,6 @@ public interface AppdynamicsDelegateService {
       throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_METRICES_DATA)
-  List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, int appdynamicsAppId, int tierId,
-      String btName, long startTime, long endTime) throws IOException;
+  List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
+      long tierId, String btName, int durantionInMinutes) throws IOException;
 }
