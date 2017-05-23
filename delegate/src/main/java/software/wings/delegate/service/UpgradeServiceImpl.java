@@ -73,7 +73,7 @@ public class UpgradeServiceImpl implements UpgradeService {
       boolean processStarted = timeLimiter.callWithTimeout(
           ()
               -> streamContainsString(new InputStreamReader(pipedInputStream), "botstarted"),
-          10, TimeUnit.MINUTES, false);
+          30, TimeUnit.MINUTES, false);
       if (processStarted) {
         try {
           signalService.pause();
@@ -95,11 +95,26 @@ public class UpgradeServiceImpl implements UpgradeService {
         process.getProcess().waitFor();
       }
     } catch (Exception e) {
+      e.printStackTrace();
       logger.error("Exception while upgrading...", e);
       if (process != null) {
         // Something went wrong restart yourself
-        process.getProcess().destroy();
-        process.getProcess().waitFor();
+        try {
+          process.getProcess().destroy();
+          process.getProcess().waitFor();
+        } catch (Exception ex) {
+          // ignore
+        }
+        try {
+          if (process.getProcess().isAlive()) {
+            process.getProcess().destroyForcibly();
+            if (process.getProcess() != null) {
+              process.getProcess().waitFor();
+            }
+          }
+        } catch (Exception ex) {
+          logger.error("ALERT: Couldn't kill forcibly.");
+        }
       }
     }
   }
