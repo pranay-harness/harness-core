@@ -66,8 +66,9 @@ public interface ManagerClient {
   @POST("logs") Call<RestResponse<Log>> saveLog(@Query("accountId") String accountId, @Body Log log);
 
   @POST("appdynamics/save-metrics")
-  Call<RestResponse<Void>> saveAppdynamicsMetrics(@Query("accountId") String accountId, @Query("appId") long appId,
-      @Query("tierId") long tierId, @Body List<AppdynamicsMetricData> metricData);
+  Call<RestResponse<Void>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
+      @Query("appdynamicsAppId") long appId, @Query("tierId") long tierId,
+      @Body List<AppdynamicsMetricData> metricData);
 
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
