@@ -14,7 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.WingsBaseTest;
 
 import java.net.UnknownHostException;
@@ -31,7 +31,7 @@ public class QueueListenerTest extends WingsBaseTest {
   private MongoQueueImpl<QueuableObject> queue;
   private QueuableObjectListener listener;
 
-  @Inject @Named("primaryDatastore") private Datastore datastore;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
   /**
    * Setup.

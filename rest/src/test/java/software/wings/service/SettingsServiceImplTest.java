@@ -25,7 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
@@ -46,7 +46,7 @@ import javax.inject.Named;
  * Created by anubhaw on 5/23/16.
  */
 public class SettingsServiceImplTest extends WingsBaseTest {
-  @Inject @Named("primaryDatastore") private Datastore datastore;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
   @Mock private WingsPersistence wingsPersistence;
 
   @InjectMocks @Inject private SettingsService settingsService;

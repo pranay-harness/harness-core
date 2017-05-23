@@ -3,7 +3,7 @@ package software.wings.app;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.AbstractQueueListener;
@@ -18,14 +18,14 @@ import software.wings.waitnotify.NotifyEventListener;
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class QueueModule extends AbstractModule {
-  private Datastore datastore;
+  private AdvancedDatastore datastore;
 
   /**
    * Creates a guice module for portal app.
    *
    * @param datastore datastore for queues
    */
-  public QueueModule(Datastore datastore) {
+  public QueueModule(AdvancedDatastore datastore) {
     this.datastore = datastore;
   }
 

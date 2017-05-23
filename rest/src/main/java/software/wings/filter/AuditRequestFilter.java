@@ -16,6 +16,7 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Arrays;
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -47,6 +48,12 @@ public class AuditRequestFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
+    if (Arrays.asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
+            .contains(requestContext.getMethod())) {
+      // do not audit idempotent HttpMethod untill we have finer control auditing.
+      return;
+    }
+
     AuditHeader header = new AuditHeader();
     String url = requestContext.getUriInfo().getAbsolutePath().toString();
     header.setUrl(url);
