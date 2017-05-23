@@ -299,7 +299,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
     } else {
       logger.debug("Delegate task from cache: {}", delegateTask.getUuid());
-      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId, delegateTask);
+      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
     }
     return delegateTask;
   }
