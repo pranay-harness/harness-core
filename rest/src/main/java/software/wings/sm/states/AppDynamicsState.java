@@ -1,51 +1,46 @@
 package software.wings.sm.states;
 
-import static java.util.Arrays.asList;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.AppDynamicsExecutionData;
-import software.wings.api.HttpStateExecutionData;
-import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.TaskType;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by anubhaw on 8/4/16.
  */
-public class AppDynamicsState extends HttpState {
+public class AppDynamicsState extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
+
+  @Transient public static final int EXTRA_DATA_COLLECTION_TIME_MINUTES = 5;
 
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
   @Attributes(required = true, title = "AppDynamics Server")
   private String appDynamicsConfigId;
 
-  @Attributes(required = true, title = "Application Name") private String applicationName;
+  @Attributes(required = true, title = "Application Name") private String applicationId;
 
-  @Attributes(required = true, title = "Tier Name") private String tierName;
+  @Attributes(required = true, title = "Tier Name") private String tierId;
 
-  @Attributes(required = true, title = "Metric Path",
-      description = "Overall Application Performance|Average Response Time (ms)")
-  private String metricPath;
   @DefaultValue("15")
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
+
+  private final AtomicBoolean aborted = new AtomicBoolean(false);
 
   /**
    * Create a new Http State with given name.
@@ -53,60 +48,7 @@ public class AppDynamicsState extends HttpState {
    * @param name name of the state.
    */
   public AppDynamicsState(String name) {
-    super(name);
-    this.setStateType(StateType.APP_DYNAMICS.name());
-  }
-
-  @Override
-  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    AppDynamicsConfig appdConfig =
-        (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
-
-    String evaluatedMetricPath = context.renderExpression(metricPath);
-    String evaluatedAppName = context.renderExpression(applicationName);
-
-    ExecutionResponse executionResponse = super.executeInternal(context, activityId);
-
-    HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
-    logger.info("Metric Data: {}", httpStateExecutionData.getHttpResponseBody());
-
-    executionResponse.setStateExecutionData(AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
-                                                .withAssertionStatement(getAssertion())
-                                                .withAppIdentifier(evaluatedAppName)
-                                                .withMetricPath(evaluatedMetricPath)
-                                                .build());
-
-    return executionResponse;
-  }
-
-  @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
-
-    HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
-
-    AppDynamicsExecutionData appDynamicsExecutionData = (AppDynamicsExecutionData) context.getStateExecutionData();
-
-    executionResponse.setStateExecutionData(AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
-                                                .withHttpResponseCode(httpStateExecutionData.getHttpResponseCode())
-                                                .withAssertionStatement(getAssertion())
-                                                .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
-                                                .withResponse(httpStateExecutionData.getHttpResponseBody())
-                                                .withAppIdentifier(appDynamicsExecutionData.getAppIdentifier())
-                                                .withMetricPath(appDynamicsExecutionData.getMetricPath())
-                                                .build());
-
-    return executionResponse;
-  }
-
-  protected TaskType getTaskType() {
-    return TaskType.APP_DYNAMICS;
-  }
-
-  @SchemaIgnore
-  @Override
-  public List<String> getPatternsForRequiredContextElementType() {
-    return asList(metricPath, getAssertion());
+    super(name, StateType.APP_DYNAMICS.getType());
   }
 
   /**
@@ -114,43 +56,25 @@ public class AppDynamicsState extends HttpState {
    *
    * @return the application identifier
    */
-  public String getApplicationName() {
-    return applicationName;
+  public String getApplicationId() {
+    return applicationId;
   }
 
   /**
    * Sets application identifier.
    *
-   * @param applicationName the application identifier
+   * @param applicationId the application identifier
    */
-  public void setApplicationName(String applicationName) {
-    this.applicationName = applicationName;
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
   }
 
-  public String getTierName() {
-    return tierName;
+  public String getTierId() {
+    return tierId;
   }
 
-  public void setTierName(String tierName) {
-    this.tierName = tierName;
-  }
-
-  /**
-   * Gets metric path.
-   *
-   * @return the metric path
-   */
-  public String getMetricPath() {
-    return metricPath;
-  }
-
-  /**
-   * Sets metric path.
-   *
-   * @param metricPath the metric path
-   */
-  public void setMetricPath(String metricPath) {
-    this.metricPath = metricPath;
+  public void setTierId(String tierId) {
+    this.tierId = tierId;
   }
 
   /**
@@ -189,72 +113,53 @@ public class AppDynamicsState extends HttpState {
     this.appDynamicsConfigId = appDynamicsConfigId;
   }
 
-  @SchemaIgnore
   @Override
-  public String getBody() {
-    return super.getBody();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getMethod() {
-    return super.getMethod();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getHeader() {
-    return super.getHeader();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getUrl() {
-    return super.getUrl();
-  }
-
-  @Override
-  protected String getFinalMethod(ExecutionContext context) {
-    return "GET";
-  }
-
-  @Override
-  protected String getFinalHeader(ExecutionContext context) {
-    AppDynamicsConfig appdConfig =
-        (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
-
-    return "Authorization: Basic "
-        + Base64.encodeBase64String(
-              String.format("%s@%s:%s", appdConfig.getUsername(), appdConfig.getAccountname(), appdConfig.getPassword())
-                  .getBytes(StandardCharsets.UTF_8));
-  }
-
-  @Override
-  protected String getFinalBody(ExecutionContext context) throws UnsupportedEncodingException {
-    return "";
-  }
-
-  @Override
-  protected String getFinalUrl(ExecutionContext context) {
-    AppDynamicsConfig appdConfig =
-        (AppDynamicsConfig) context.getSettingValue(appDynamicsConfigId, StateType.APP_DYNAMICS.name());
-
-    String controllerUrl = appdConfig.getControllerUrl();
-
-    String evaluatedMetricPath = context.renderExpression(metricPath);
-    String evaluatedAppName = context.renderExpression(applicationName);
-    String evaluatedTimeDuration = context.renderExpression(timeDuration);
-    if (StringUtils.isBlank(evaluatedTimeDuration)) {
-      evaluatedTimeDuration = "10";
+  public ExecutionResponse execute(ExecutionContext context) {
+    final long verificationStartTime = System.currentTimeMillis();
+    synchronized (this) {
+      while (
+          System.currentTimeMillis() - verificationStartTime < TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration))
+          && !aborted.get()) {
+        try {
+          this.wait(TimeUnit.MINUTES.toMillis(1L));
+        } catch (InterruptedException e) {
+          // do nothing
+        }
+      }
     }
 
-    return String.format(
-        "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=%s",
-        controllerUrl, urlEncodeString(evaluatedAppName), urlEncodeString(evaluatedMetricPath), evaluatedTimeDuration);
+    if (aborted.get()) {
+      final StateExecutionData stateExecutionData = aStateExecutionData()
+                                                        .withStateName(getName())
+                                                        .withStartTs(verificationStartTime)
+                                                        .withEndTs(System.currentTimeMillis())
+                                                        .withStatus(ExecutionStatus.ABORTED)
+                                                        .build();
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.ABORTED)
+          .withErrorMessage("Verification was aborted")
+          .withStateExecutionData(stateExecutionData)
+          .build();
+    }
+
+    final StateExecutionData stateExecutionData = aStateExecutionData()
+                                                      .withStateName(getName())
+                                                      .withStartTs(verificationStartTime)
+                                                      .withEndTs(System.currentTimeMillis())
+                                                      .withStatus(ExecutionStatus.SUCCESS)
+                                                      .build();
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withErrorMessage("Verification succeeded")
+        .withStateExecutionData(stateExecutionData)
+        .build();
   }
 
-  @Attributes(title = "Assertion")
-  public String getAssertion() {
-    return super.getAssertion();
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {
+    synchronized (this) {
+      aborted.set(true);
+      this.notifyAll();
+    }
   }
 }
