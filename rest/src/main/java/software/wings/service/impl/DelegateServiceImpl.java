@@ -276,7 +276,6 @@ public class DelegateServiceImpl implements DelegateService {
         // Sync
         logger.debug("Delegate task from cache: {}", delegateTask.getUuid());
         if (isBlank(delegateTask.getDelegateId())) {
-          lock.lock();
           logger.debug("Assigning task {} to delegate {}", taskId, delegateId);
           delegateTask.setDelegateId(delegateId);
           Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
