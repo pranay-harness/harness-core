@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -95,5 +94,10 @@ public class LogServiceImpl implements LogService {
   public void deleteActivityLogs(String appId, String activityId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(Log.class).field("appId").equal(appId).field("activityId").equal(activityId));
+  }
+
+  @Override
+  public List<String> batchedSave(List<Log> logs) {
+    return wingsPersistence.save(logs);
   }
 }

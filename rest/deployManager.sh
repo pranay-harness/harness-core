@@ -29,5 +29,9 @@ sed -i 's/carbon.hostedgraphite.com/ec2-34-205-52-18.compute-1.amazonaws.com/' c
 sed -i "s/prefix: server/prefix: ${3}/" config.yml
 
 export HOSTNAME
+<<<<<<< HEAD
 NEW_RELIC_APP_NAME="${2}" nohup java -Dfile.encoding=UTF-8 -jar $HOME/rest-0.0.1-SNAPSHOT-capsule.jar config.yml > portal.log 2>&1 &
+=======
+NEW_RELIC_APP_NAME="${2}" nohup java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar $HOME/rest-0.0.1-SNAPSHOT-capsule.jar config.yml > portal.log 2>&1 &
+>>>>>>> 2ce3dc2... Fix: Batch delegate logs
 cd $HOME/backup; ls -tQ *.yml| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.jar| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.log| tail -n+4 | xargs --no-run-if-empty rm

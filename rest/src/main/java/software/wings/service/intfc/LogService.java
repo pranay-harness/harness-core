@@ -9,6 +9,7 @@ import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 
 import java.io.File;
+import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -58,4 +59,11 @@ public interface LogService {
    * @param activityId the activity id
    */
   void deleteActivityLogs(String appId, String activityId);
+
+  /**
+   * Batched save.
+   *
+   * @param logs the logs
+   */
+  List<String> batchedSave(List<Log> logs);
 }

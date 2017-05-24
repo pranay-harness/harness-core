@@ -10,6 +10,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.service.intfc.LogService;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -36,5 +37,14 @@ public class LogResource {
   @ExceptionMetered
   public RestResponse<Log> save(Log log) {
     return new RestResponse<>(logService.save(log));
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("batched")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> batchSave(List<Log> logs) {
+    return new RestResponse<>(logService.batchedSave(logs));
   }
 }

@@ -64,6 +64,9 @@ public interface ManagerClient {
 
   @POST("logs") Call<RestResponse<Log>> saveLog(@Query("accountId") String accountId, @Body Log log);
 
+  @POST("logs/batched")
+  Call<RestResponse<List<String>>> batchedSaveLogs(@Query("accountId") String accountId, @Body List<Log> logs);
+
   @GET("delegateFiles/fileId")
   Call<RestResponse<String>> getFileIdByVersion(@Query("entityId") String entityId,
       @Query("fileBucket") FileBucket fileBucket, @Query("version") int version, @Query("accountId") String accountId);
