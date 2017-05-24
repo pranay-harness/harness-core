@@ -1,27 +1,24 @@
 package software.wings.sm.states;
 
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.AppDynamicsExecutionData;
-import software.wings.api.HttpStateExecutionData;
-import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.TaskType;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -29,17 +26,21 @@ import java.util.Map;
 public class AppDynamicsState extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
+  @Transient public static final int EXTRA_DATA_COLLECTION_TIME_MINUTES = 5;
+
   @EnumData(enumDataProvider = AppDynamicsSettingProvider.class)
   @Attributes(required = true, title = "AppDynamics Server")
   private String appDynamicsConfigId;
 
-  @Attributes(required = true, title = "Application Name") private String applicationName;
+  @Attributes(required = true, title = "Application Name") private String applicationId;
 
-  @Attributes(required = true, title = "Tier Name") private String tierName;
+  @Attributes(required = true, title = "Tier Name") private String tierId;
 
   @DefaultValue("15")
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
+
+  private final AtomicBoolean aborted = new AtomicBoolean(false);
 
   /**
    * Create a new Http State with given name.
@@ -55,25 +56,25 @@ public class AppDynamicsState extends State {
    *
    * @return the application identifier
    */
-  public String getApplicationName() {
-    return applicationName;
+  public String getApplicationId() {
+    return applicationId;
   }
 
   /**
    * Sets application identifier.
    *
-   * @param applicationName the application identifier
+   * @param applicationId the application identifier
    */
-  public void setApplicationName(String applicationName) {
-    this.applicationName = applicationName;
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
   }
 
-  public String getTierName() {
-    return tierName;
+  public String getTierId() {
+    return tierId;
   }
 
-  public void setTierName(String tierName) {
-    this.tierName = tierName;
+  public void setTierId(String tierId) {
+    this.tierId = tierId;
   }
 
   /**
@@ -114,9 +115,51 @@ public class AppDynamicsState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return null;
+    final long verificationStartTime = System.currentTimeMillis();
+    synchronized (this) {
+      while (
+          System.currentTimeMillis() - verificationStartTime < TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration))
+          && !aborted.get()) {
+        try {
+          this.wait(TimeUnit.MINUTES.toMillis(1L));
+        } catch (InterruptedException e) {
+          // do nothing
+        }
+      }
+    }
+
+    if (aborted.get()) {
+      final StateExecutionData stateExecutionData = aStateExecutionData()
+                                                        .withStateName(getName())
+                                                        .withStartTs(verificationStartTime)
+                                                        .withEndTs(System.currentTimeMillis())
+                                                        .withStatus(ExecutionStatus.ABORTED)
+                                                        .build();
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.ABORTED)
+          .withErrorMessage("Verification was aborted")
+          .withStateExecutionData(stateExecutionData)
+          .build();
+    }
+
+    final StateExecutionData stateExecutionData = aStateExecutionData()
+                                                      .withStateName(getName())
+                                                      .withStartTs(verificationStartTime)
+                                                      .withEndTs(System.currentTimeMillis())
+                                                      .withStatus(ExecutionStatus.SUCCESS)
+                                                      .build();
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withErrorMessage("Verification succeeded")
+        .withStateExecutionData(stateExecutionData)
+        .build();
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    synchronized (this) {
+      aborted.set(true);
+      this.notifyAll();
+    }
+  }
 }

@@ -588,9 +588,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
 
         final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-        dataCollectionInfos.add(
-            new AppdynamicsDataCollectionInfo(appDynamicsConfig, Long.parseLong(appDynamicsState.getApplicationName()),
-                Long.parseLong(appDynamicsState.getTierName()), Integer.parseInt(appDynamicsState.getTimeDuration())));
+        dataCollectionInfos.add(new AppdynamicsDataCollectionInfo(appDynamicsConfig,
+            Long.parseLong(appDynamicsState.getApplicationId()), Long.parseLong(appDynamicsState.getTierId()),
+            Integer.parseInt(appDynamicsState.getTimeDuration())
+                + AppDynamicsState.EXTRA_DATA_COLLECTION_TIME_MINUTES));
       }
     }
 

@@ -66,7 +66,7 @@ public interface ManagerClient {
   @POST("logs") Call<RestResponse<Log>> saveLog(@Query("accountId") String accountId, @Body Log log);
 
   @POST("appdynamics/save-metrics")
-  Call<RestResponse<Void>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
+  Call<RestResponse<Boolean>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
       @Query("appdynamicsAppId") long appId, @Query("tierId") long tierId,
       @Body List<AppdynamicsMetricData> metricData);
 
