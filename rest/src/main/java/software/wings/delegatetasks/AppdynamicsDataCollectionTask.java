@@ -127,7 +127,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
               appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES));
         }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-        logger.info("Result: " + metricsData);
+        logger.debug("Result: " + metricsData);
         metricStoreService.save(dataCollectionInfo.getAppDynamicsConfig().getAccountId(), dataCollectionInfo.getAppId(),
             dataCollectionInfo.getTierId(), metricsData);
       } catch (Exception e) {
