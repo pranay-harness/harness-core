@@ -22,4 +22,6 @@ public interface DockerRegistryRestClient {
   @GET("/v2/{imageName}/tags/list")
   Call<DockerImageTagResponse> listImageTags(
       @Header("Authorization") String bearerAuthHeader, @Path(value = "imageName", encoded = true) String imageName);
+
+  @GET("/v2") Call<Object> getApiVersion(@Header("Authorization") String bearerAuthHeader);
 }

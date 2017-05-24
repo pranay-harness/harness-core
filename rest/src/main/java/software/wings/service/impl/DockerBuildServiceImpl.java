@@ -69,7 +69,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, "message",
           "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
     }
-    return true;
+    return dockerRegistryService.validateCredentials(config);
   }
 
   @Override

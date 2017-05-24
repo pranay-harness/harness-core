@@ -34,4 +34,11 @@ public interface DockerRegistryService {
    * @param imageName
    */
   boolean verifyImageName(DockerConfig dockerConfig, String imageName);
+
+  /**
+   * Validate the credentials
+   * @param dockerConfig
+   * @return
+   */
+  boolean validateCredentials(DockerConfig dockerConfig);
 }
