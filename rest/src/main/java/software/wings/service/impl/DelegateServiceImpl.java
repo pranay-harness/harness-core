@@ -64,6 +64,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 import javax.cache.Caching;
 import javax.inject.Inject;
 
@@ -249,32 +250,42 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
-    logger.debug("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
-    if (delegateTask == null) {
-      logger.debug("Delegate task from cache is null for task {}", taskId);
-      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                      .field("accountId")
-                                      .equal(accountId)
-                                      .field("status")
-                                      .equal(DelegateTask.Status.QUEUED)
-                                      .field("delegateId")
-                                      .doesNotExist()
-                                      .field(ID_KEY)
-                                      .equal(taskId);
-      UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
-      delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
-    } else {
-      logger.debug("Delegate task from cache: {}", delegateTask.getUuid());
-      if (isBlank(delegateTask.getDelegateId())) {
-        logger.debug("Assigning task {} to delegate {}", taskId, delegateId);
-        delegateTask.setDelegateId(delegateId);
-        Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
+    DelegateTask delegateTask;
+    Lock lock = hazelcastInstance.getLock(taskId);
+    lock.lock();
+    try {
+      logger.debug("Acquiring delegate task {} for delegate {}", taskId, delegateId);
+      delegateTask = CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+      if (delegateTask == null) {
+        // Async
+        logger.debug("Delegate task from cache is null for task {}", taskId);
+        Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                        .field("accountId")
+                                        .equal(accountId)
+                                        .field("status")
+                                        .equal(DelegateTask.Status.QUEUED)
+                                        .field("delegateId")
+                                        .doesNotExist()
+                                        .field(ID_KEY)
+                                        .equal(taskId);
+        UpdateOperations<DelegateTask> updateOperations =
+            wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
+        delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
       } else {
-        logger.debug("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
-        delegateTask = null;
+        // Sync
+        logger.debug("Delegate task from cache: {}", delegateTask.getUuid());
+        if (isBlank(delegateTask.getDelegateId())) {
+          lock.lock();
+          logger.debug("Assigning task {} to delegate {}", taskId, delegateId);
+          delegateTask.setDelegateId(delegateId);
+          Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, delegateTask);
+        } else {
+          logger.debug("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
+          delegateTask = null;
+        }
       }
+    } finally {
+      lock.unlock();
     }
     return delegateTask;
   }

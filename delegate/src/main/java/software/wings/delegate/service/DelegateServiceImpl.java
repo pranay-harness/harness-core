@@ -349,7 +349,11 @@ public class DelegateServiceImpl implements DelegateService {
                         execute(managerClient.startTask(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
                     boolean taskAcquired = delegateTask1 != null;
                     if (taskAcquired) {
-                      currentlyExecutingTasks.putIfAbsent(delegateTask.getUuid(), delegateTask1);
+                      if (currentlyExecutingTasks.containsKey(delegateTask.getUuid())) {
+                        logger.error(
+                            "Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
+                      }
+                      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
                     }
                     return taskAcquired;
                   } catch (IOException e) {
@@ -360,8 +364,9 @@ public class DelegateServiceImpl implements DelegateService {
         injector.injectMembers(delegateRunnableTask);
         currentlyExecutingFutures.putIfAbsent(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
       } else {
-        logger.info("DelegateTask excecuting on some other delegate - uuid: {}, accountId: {}",
-            delegateTaskEvent.getDelegateTaskId(), delegateTaskEvent.getAccountId());
+        logger.info("DelegateTask already executing - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
+            delegateTaskEvent.getAccountId());
+        logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keys());
       }
     } catch (IOException e) {
       logger.error("Unable to acquire task ", e);
