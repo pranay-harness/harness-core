@@ -84,7 +84,9 @@ public class DelegateQueueTask implements Runnable {
           spliteratorUnknownSize(CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).iterator(),
               Spliterator.NONNULL),
           false)
-          .filter(stringDelegateTaskEntry -> stringDelegateTaskEntry.getValue().getStatus().equals(Status.QUEUED))
+          .filter(stringDelegateTaskEntry
+              -> stringDelegateTaskEntry.getValue().getStatus().equals(Status.QUEUED)
+                  && stringDelegateTaskEntry.getValue().getDelegateId() == null)
           .forEach(stringDelegateTaskEntry
               -> broadcasterFactory
                      .lookup("/stream/delegate/" + stringDelegateTaskEntry.getValue().getAccountId(), true)
