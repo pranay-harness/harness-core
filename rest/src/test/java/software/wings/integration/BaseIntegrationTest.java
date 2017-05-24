@@ -25,6 +25,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
@@ -82,6 +83,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject protected SettingsService settingsService;
+
+  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {
