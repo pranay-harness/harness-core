@@ -1,7 +1,5 @@
 package software.wings.app;
 
-import static java.util.Spliterators.spliteratorUnknownSize;
-import static java.util.stream.StreamSupport.stream;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
@@ -19,7 +17,6 @@ import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Spliterator;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
@@ -36,6 +33,8 @@ public class DelegateQueueTask implements Runnable {
   @Inject private BroadcasterFactory broadcasterFactory;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -80,17 +79,22 @@ public class DelegateQueueTask implements Runnable {
         }
       } while (delegateTask != null);
 
-      stream(
-          spliteratorUnknownSize(CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).iterator(),
-              Spliterator.NONNULL),
-          false)
-          .filter(stringDelegateTaskEntry
-              -> stringDelegateTaskEntry.getValue().getStatus().equals(Status.QUEUED)
-                  && stringDelegateTaskEntry.getValue().getDelegateId() == null)
-          .forEach(stringDelegateTaskEntry
-              -> broadcasterFactory
-                     .lookup("/stream/delegate/" + stringDelegateTaskEntry.getValue().getAccountId(), true)
-                     .broadcast(stringDelegateTaskEntry.getValue()));
+      CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).forEach(stringDelegateTaskEntry -> {
+        DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
+        if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
+          logger.info("Broadcast queued sync task [{}, {}, {}]", syncDelegateTask.getUuid(),
+              syncDelegateTask.getDelegateId(), syncDelegateTask.getStatus());
+          broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
+              .broadcast(syncDelegateTask);
+        }
+      });
+
+      /*stream(spliteratorUnknownSize(CacheHelper.getCache("delegateSyncCache", String.class,
+         DelegateTask.class).iterator(), Spliterator.NONNULL), false) .filter(stringDelegateTaskEntry ->
+         stringDelegateTaskEntry.getValue().getStatus().equals(Status.QUEUED) &&
+              stringDelegateTaskEntry.getValue().getDelegateId() == null).forEach(
+          stringDelegateTaskEntry -> broadcasterFactory.lookup("/stream/delegate/" +
+         stringDelegateTaskEntry.getValue().getAccountId(), true) .broadcast(stringDelegateTaskEntry.getValue()));*/
 
       PageResponse<DelegateTask> delegateTasks = wingsPersistence.query(
           DelegateTask.class, aPageRequest().addFilter("status", Operator.EQ, Status.QUEUED).build());

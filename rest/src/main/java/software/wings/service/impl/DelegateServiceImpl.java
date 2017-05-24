@@ -230,13 +230,13 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends NotifyResponseData> T executeTask(DelegateTask task, long timeOut) throws InterruptedException {
-    logger.info("Issued task " + task.toString());
-    String queueName = UUIDGenerator.getUuid();
-    task.setQueueName(queueName);
-    task.setUuid(queueName);
-    IQueue<T> topic = hazelcastInstance.getQueue(queueName);
-    CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(queueName, task);
+    String taskId = UUIDGenerator.getUuid();
+    task.setQueueName(taskId);
+    task.setUuid(taskId);
+    IQueue<T> topic = hazelcastInstance.getQueue(taskId);
+    CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+    logger.info("Broadcast new task: {}", taskId);
     T responseData = topic.poll(timeOut, TimeUnit.MILLISECONDS);
     if (responseData == null) {
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Harness Bot");
