@@ -56,19 +56,19 @@ public class SshSessionFactory {
     Session session = null;
     if (config.getKey() != null && config.getKey().length > 0) {
       if (null == config.getKeyPassphrase()) {
-        jsch.addIdentity(
-            config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.ISO_8859_1), null, null);
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.UTF_8), null, null);
       } else {
-        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.ISO_8859_1), null,
-            EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.ISO_8859_1));
+        jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.UTF_8), null,
+            EncryptionUtils.toBytes(config.getKeyPassphrase(), Charsets.UTF_8));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       session.setPassword(new String(config.getPassword()));
+      session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
     }
     session.setConfig("StrictHostKeyChecking", "no");
-    session.setUserInfo(new SshUserInfo(new String(config.getPassword())));
+
     session.setTimeout(config.getSshSessionTimeout());
     session.setServerAliveInterval(10 * 1000); // Send noop packet every 10 sec
 
