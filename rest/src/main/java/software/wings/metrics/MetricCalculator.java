@@ -5,6 +5,7 @@ import com.google.common.math.Stats;
 
 import software.wings.metrics.BucketData.DataSummary;
 import software.wings.metrics.MetricDefinition.ThresholdType;
+import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
 import java.util.ArrayList;
@@ -38,7 +39,29 @@ public class MetricCalculator {
       // subsplit the per-bt data by metric
       ArrayListMultimap<MetricDefinition, AppdynamicsMetricDataRecord> metricData = ArrayListMultimap.create();
       for (AppdynamicsMetricDataRecord record : data.get(btName)) {
-        metricData.put(metricDefinitionMap.get(String.valueOf(record.getMetricId())), record);
+        // TODO: This is temporary logic until we build the interface to let people define metrics in the UI and persist
+        // them If a metric doesn't have the corresponding metric definition, instead of throwing an exception, generate
+        // an appropriate definition
+        MetricDefinition metricDefinition;
+        if (metricDefinitionMap.containsKey(String.valueOf(record.getMetricId()))) {
+          metricDefinition = metricDefinitionMap.get(String.valueOf(record.getMetricId()));
+        } else {
+          MetricType metricType = MetricType.COUNT;
+          if (record.getMetricName().endsWith("(ms)")) {
+            metricType = MetricType.TIME;
+          }
+          metricDefinition = AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
+                                 .withAccountId(record.getAccountId())
+                                 .withAppdynamicsAppId(record.getAppdynamicsAppId())
+                                 .withMetricId(String.valueOf(record.getMetricId()))
+                                 .withMetricName(record.getMetricName())
+                                 .withMetricType(metricType)
+                                 .withMediumThreshold(1.0)
+                                 .withHighThreshold(2.0)
+                                 .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+                                 .build();
+        }
+        metricData.put(metricDefinition, record);
       }
 
       Map<String, BucketData> metricDataMap = new HashMap<>();

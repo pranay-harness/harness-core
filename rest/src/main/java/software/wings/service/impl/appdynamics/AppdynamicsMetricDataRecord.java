@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.metrics.MetricType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -337,6 +338,9 @@ public class AppdynamicsMetricDataRecord extends Base {
 
   public static List<AppdynamicsMetricDataRecord> generateDataRecords(
       String accountId, long appdynamicsAppId, long tierId, AppdynamicsMetricData metricData) {
+    if (metricData.getMetricName().equals("METRIC DATA NOT FOUND")) {
+      return new ArrayList<>();
+    }
     /*
      * An AppDynamics metric path looks like:
      * "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Number of

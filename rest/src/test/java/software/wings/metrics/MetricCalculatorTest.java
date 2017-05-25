@@ -115,6 +115,28 @@ public class MetricCalculatorTest {
     assertEquals(180000, loginArtData.getEndTimeMillis());
     assertEquals(RiskLevel.MEDIUM, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
+
+    // with missing metric definition
+    metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION);
+    output = MetricCalculator.calculateMetrics(metricDefinitions, data);
+    assertEquals(2, output.keySet().size());
+    todolistMap = output.get("todolist");
+    assertEquals(2, todolistMap.keySet().size());
+    todolistCallData = todolistMap.get("Calls per Minute");
+    assertEquals(60000, todolistCallData.getStartTimeMillis());
+    assertEquals(180000, todolistCallData.getEndTimeMillis());
+    assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
+    assertEquals(4, todolistCallData.getOldData().getNodeCount());
+    todolistArtData = todolistMap.get("Average Response Time (ms)");
+    assertEquals(60000, todolistArtData.getStartTimeMillis());
+    assertEquals(180000, todolistArtData.getEndTimeMillis());
+    assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
+    assertEquals(2, todolistArtData.getOldData().getNodeCount());
+    loginArtData = output.get("login").get("Average Response Time (ms)");
+    assertEquals(60000, loginArtData.getStartTimeMillis());
+    assertEquals(180000, loginArtData.getEndTimeMillis());
+    assertEquals(RiskLevel.MEDIUM, loginArtData.getRisk());
+    assertEquals(2, loginArtData.getOldData().getNodeCount());
   }
 
   @Test
