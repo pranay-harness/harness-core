@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.Role.Builder.aRole;
@@ -7,6 +8,9 @@ import static software.wings.beans.RoleType.ACCOUNT_ADMIN;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 
@@ -14,20 +18,25 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
+import software.wings.beans.AppContainer;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SystemCatalog;
+import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.licensing.LicenseManager;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SystemCatalogService;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -55,6 +64,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SettingsService settingsService;
   @Inject private ExecutorService executorService;
   @Inject private AppService appService;
+  @Inject private AppContainerService appContainerService;
+  @Inject private SystemCatalogService systemCatalogService;
 
   @Override
   public Account save(@Valid Account account) {
@@ -71,6 +82,7 @@ public class AccountServiceImpl implements AccountService {
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
         .forEach(role -> createDefaultNotificationGroup(account, role));
+    createSystemAppContainers(account);
   }
 
   List<Role> createDefaultRoles(Account account) {
@@ -163,6 +175,10 @@ public class AccountServiceImpl implements AccountService {
         wingsPersistence.createQuery(Account.class).field("companyName").equal(companyName));
   }
 
+  @Override
+  public List<Account> list(PageRequest<Account> pageRequest) {
+    return wingsPersistence.query(Account.class, pageRequest).getResponse();
+  }
   private void createDefaultNotificationGroup(Account account, Role role) {
     String name = role.getRoleType().getDisplayName();
     // check if the notification group name exists
@@ -182,6 +198,33 @@ public class AccountServiceImpl implements AccountService {
     } else {
       logger.info("Default notification group already exists for role {} and account {}",
           ACCOUNT_ADMIN.getDisplayName(), account.getAccountName());
+    }
+  }
+
+  private void createSystemAppContainers(Account account) {
+    List<SystemCatalog> systemCatalogs =
+        systemCatalogService.list(aPageRequest().addFilter("catalogType", EQ, APPSTACK).build());
+    logger.debug("Creating default system app containers  ");
+    for (SystemCatalog systemCatalog : systemCatalogs) {
+      AppContainer appContainer = anAppContainer()
+                                      .withAccountId(account.getUuid())
+                                      .withAppId(systemCatalog.getAppId())
+                                      .withChecksum(systemCatalog.getChecksum())
+                                      .withChecksumType(systemCatalog.getChecksumType())
+                                      .withFamily(systemCatalog.getFamily())
+                                      .withStackRootDirectory(systemCatalog.getStackRootDirectory())
+                                      .withFileUuid(systemCatalog.getFileUuid())
+                                      .withFileType(systemCatalog.getFileType())
+                                      .withSize(systemCatalog.getSize())
+                                      .withName(systemCatalog.getName())
+                                      .withSystemCreated(true)
+                                      .withDescription(systemCatalog.getNotes())
+                                      .build();
+      try {
+        appContainerService.save(appContainer);
+      } catch (Exception e) {
+        logger.warn("Error while creating system app container {}", appContainer);
+      }
     }
   }
 

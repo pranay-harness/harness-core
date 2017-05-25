@@ -10,6 +10,7 @@ import com.google.common.io.Files;
 
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.AppContainer;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -75,6 +76,13 @@ public class AppContainerServiceImpl implements AppContainerService {
     uploadAppContainerFile(appContainer, in, fileBucket);
     return wingsPersistence.saveAndGet(AppContainer.class, appContainer);
   }
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public AppContainer save(AppContainer appContainer) {
+    return wingsPersistence.saveAndGet(AppContainer.class, appContainer);
+  }
 
   /**
    * {@inheritDoc}
@@ -83,6 +91,9 @@ public class AppContainerServiceImpl implements AppContainerService {
   public AppContainer update(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
     Validator.notNullCheck("App Stack", storedAppContainer);
+    if (storedAppContainer.isSystemCreated()) {
+      throw new WingsException(INVALID_REQUEST, "message", "System created Application Stack can not be updated");
+    }
 
     if (newPlatformSoftwareBinaryUploaded(storedAppContainer, appContainer)) {
       uploadAppContainerFile(appContainer, in, fileBucket);
@@ -99,11 +110,12 @@ public class AppContainerServiceImpl implements AppContainerService {
   public void delete(String accountId, String appContainerId) {
     AppContainer appContainer = get(accountId, appContainerId);
     Validator.notNullCheck("App Stack", appContainer);
-
     ensureAppContainerNotInUse(appContainerId);
     // safe to delete
     wingsPersistence.delete(AppContainer.class, appContainerId);
-    fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
+    if (!appContainer.isSystemCreated()) {
+      fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
+    }
   }
 
   private boolean newPlatformSoftwareBinaryUploaded(AppContainer storedAppContainer, AppContainer appContainer) {
@@ -118,7 +130,7 @@ public class AppContainerServiceImpl implements AppContainerService {
     if (services.size() > 0) {
       throw new WingsException(INVALID_REQUEST, "message",
           String.format(
-              "Application stack is in use by %s service%s.", services.size(), services.size() == 1 ? "" : "s"));
+              "Application Stack is in use by %s service%s.", services.size(), services.size() == 1 ? "" : "s"));
     }
   }
 

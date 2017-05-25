@@ -1,0 +1,424 @@
+package software.wings.beans;
+
+import org.mongodb.morphia.annotations.Entity;
+import software.wings.utils.ContainerFamily;
+import software.wings.utils.FileType;
+
+/**
+ * Created by sgurubelli on 5/23/17.
+ */
+@Entity(value = "systemCatalogs", noClassnameStored = true)
+public class SystemCatalog extends BaseFile {
+  private CatalogType catalogType;
+  private String stackRootDirectory;
+  private FileType fileType;
+  private ContainerFamily family;
+  private String notes;
+
+  /**
+   *  Getter for Catalog Type
+   * @return
+   */
+  public CatalogType getCatalogType() {
+    return catalogType;
+  }
+
+  /**
+   *
+   * @param catalogType
+   */
+  public void setCatalogType(CatalogType catalogType) {
+    this.catalogType = catalogType;
+  }
+
+  /**
+   *
+   * @return
+   */
+  public String getStackRootDirectory() {
+    return stackRootDirectory;
+  }
+
+  /**
+   *
+   * @param stackRootDirectory
+   */
+  public void setStackRootDirectory(String stackRootDirectory) {
+    this.stackRootDirectory = stackRootDirectory;
+  }
+
+  /**
+   *
+   * @return
+   */
+  public FileType getFileType() {
+    return fileType;
+  }
+
+  /**
+   * Setter for property 'fileType'
+   *
+   * @param fileType
+   */
+  public void setFileType(FileType fileType) {
+    this.fileType = fileType;
+  }
+
+  /**
+   * Getter for property 'family'.
+   *
+   * @return Value for property 'family'.
+   */
+  public ContainerFamily getFamily() {
+    return family;
+  }
+
+  /**
+   * Setter for property 'family'.
+   *
+   * @param family Value to set for property 'family'.
+   */
+  public void setFamily(ContainerFamily family) {
+    this.family = family;
+  }
+
+  /**
+   * Get notes
+   * @return
+   */
+  public String getNotes() {
+    return notes;
+  }
+
+  /**
+   * Set notes
+   * @param notes
+   */
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    if (!super.equals(o))
+      return false;
+
+    SystemCatalog that = (SystemCatalog) o;
+
+    if (catalogType != that.catalogType)
+      return false;
+    if (stackRootDirectory != null ? !stackRootDirectory.equals(that.stackRootDirectory)
+                                   : that.stackRootDirectory != null)
+      return false;
+    if (fileType != that.fileType)
+      return false;
+    if (family != that.family)
+      return false;
+    return notes != null ? notes.equals(that.notes) : that.notes == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (catalogType != null ? catalogType.hashCode() : 0);
+    result = 31 * result + (stackRootDirectory != null ? stackRootDirectory.hashCode() : 0);
+    result = 31 * result + (fileType != null ? fileType.hashCode() : 0);
+    result = 31 * result + (family != null ? family.hashCode() : 0);
+    result = 31 * result + (notes != null ? notes.hashCode() : 0);
+    return result;
+  }
+
+  /**
+   * The enum Config override type.
+   */
+  public enum CatalogType {
+
+    /**
+     * Application Stacks
+     */
+    APPSTACK
+  }
+
+  /**
+   * The type Builder.
+   */
+  public static final class Builder {
+    private String name;
+    private String fileUuid;
+    private String fileName;
+    private String mimeType;
+    private long size;
+    private ChecksumType checksumType = ChecksumType.MD5;
+    private String checksum;
+    private String uuid;
+    private String appId;
+    private EmbeddedUser createdBy;
+    private long createdAt;
+    private EmbeddedUser lastUpdatedBy;
+    private long lastUpdatedAt;
+    private CatalogType catalogType;
+    private String stackRootDirectory;
+    private FileType fileType;
+    private ContainerFamily family;
+    private String notes;
+
+    private Builder() {}
+
+    /**
+     * An app container builder.
+     *
+     * @return the builder
+     */
+    public static Builder aSystemCatalog() {
+      return new Builder();
+    }
+
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /**
+     * With file uuid builder.
+     *
+     * @param fileUuid the file uuid
+     * @return the builder
+     */
+    public Builder withFileUuid(String fileUuid) {
+      this.fileUuid = fileUuid;
+      return this;
+    }
+
+    /**
+     * With file name builder.
+     *
+     * @param fileName the file name
+     * @return the builder
+     */
+    public Builder withFileName(String fileName) {
+      this.fileName = fileName;
+      return this;
+    }
+
+    /**
+     * With mime type builder.
+     *
+     * @param mimeType the mime type
+     * @return the builder
+     */
+    public Builder withMimeType(String mimeType) {
+      this.mimeType = mimeType;
+      return this;
+    }
+
+    /**
+     * With size builder.
+     *
+     * @param size the size
+     * @return the builder
+     */
+    public Builder withSize(long size) {
+      this.size = size;
+      return this;
+    }
+
+    /**
+     * With checksum type builder.
+     *
+     * @param checksumType the checksum type
+     * @return the builder
+     */
+    public Builder withChecksumType(ChecksumType checksumType) {
+      this.checksumType = checksumType;
+      return this;
+    }
+
+    /**
+     * With checksum builder.
+     *
+     * @param checksum the checksum
+     * @return the builder
+     */
+    public Builder withChecksum(String checksum) {
+      this.checksum = checksum;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
+    public Builder withCreatedBy(EmbeddedUser createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
+    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    /**
+     * With catalogtype at builder
+     * @param catalogType
+     * @return
+     */
+    public Builder withCatalogType(CatalogType catalogType) {
+      this.catalogType = catalogType;
+      return this;
+    }
+
+    /**
+     * With filetype at builder
+     * @param fileType
+     * @return
+     */
+    public Builder withFileType(FileType fileType) {
+      this.fileType = fileType;
+      return this;
+    }
+
+    /**
+     * With stack root directory builder
+     * @param stackRootDirectory
+     * @return
+     */
+    public Builder withStackRootDirectory(String stackRootDirectory) {
+      this.stackRootDirectory = stackRootDirectory;
+      return this;
+    }
+
+    /**
+     * With family builder.
+     *
+     * @param family the family
+     * @return the builder
+     */
+    public Builder withFamily(ContainerFamily family) {
+      this.family = family;
+      return this;
+    }
+
+    public Builder withNotes(String notes) {
+      this.notes = notes;
+      return this;
+    }
+
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
+    public Builder but() {
+      return aSystemCatalog()
+          .withName(name)
+          .withFileUuid(fileUuid)
+          .withFileName(fileName)
+          .withMimeType(mimeType)
+          .withSize(size)
+          .withChecksumType(checksumType)
+          .withChecksum(checksum)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withCatalogType(catalogType)
+          .withFileType(fileType)
+          .withStackRootDirectory(stackRootDirectory)
+          .withFamily(family)
+          .withNotes(notes);
+    }
+
+    /**
+     * Build app container.
+     *
+     * @return the app container
+     */
+    public SystemCatalog build() {
+      SystemCatalog systemCatalog = new SystemCatalog();
+      systemCatalog.setName(name);
+      systemCatalog.setFileUuid(fileUuid);
+      systemCatalog.setFileName(fileName);
+      systemCatalog.setMimeType(mimeType);
+      systemCatalog.setSize(size);
+      systemCatalog.setChecksumType(checksumType);
+      systemCatalog.setChecksum(checksum);
+      systemCatalog.setUuid(uuid);
+      systemCatalog.setAppId(appId);
+      systemCatalog.setCreatedBy(createdBy);
+      systemCatalog.setCreatedAt(createdAt);
+      systemCatalog.setLastUpdatedBy(lastUpdatedBy);
+      systemCatalog.setLastUpdatedAt(lastUpdatedAt);
+      systemCatalog.setCatalogType(catalogType);
+      systemCatalog.setFileType(fileType);
+      systemCatalog.setStackRootDirectory(stackRootDirectory);
+      systemCatalog.setFamily(family);
+      systemCatalog.setNotes(notes);
+      return systemCatalog;
+    }
+  }
+}

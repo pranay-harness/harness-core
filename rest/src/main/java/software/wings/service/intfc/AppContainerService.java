@@ -30,6 +30,12 @@ public interface AppContainerService {
   AppContainer save(@Valid AppContainer appContainer, @NotNull InputStream inputStream, @NotNull FileBucket bucket);
 
   /**
+   * Save app container referecnce to file uuid
+   * @param appContainer
+   * @return
+   */
+  AppContainer save(@Valid AppContainer appContainer);
+  /**
    * Update.
    *
    * @param appContainer the app container

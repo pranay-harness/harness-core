@@ -2,9 +2,12 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
+import software.wings.beans.SystemCatalog;
+import software.wings.dl.PageRequest;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -27,4 +30,12 @@ public interface AccountService {
   String suggestAccountName(@NotNull String accountName);
 
   boolean exists(String accountName);
+
+  /**
+   * List.
+   *
+   * @param request the request
+   * @return the list of System Catalogs
+   */
+  List<Account> list(@NotNull PageRequest<Account> request);
 }

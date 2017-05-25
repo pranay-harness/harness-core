@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
@@ -93,7 +94,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup existingGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroup.getUuid());
     if (!existingGroup.isEditable()) {
-      throw new WingsException(ErrorCode.UPDATE_NOT_ALLOWED);
+      throw new WingsException(INVALID_REQUEST, "message", "Default Notification Group can not be updated");
     }
     return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
   }
@@ -103,7 +104,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup notificationGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
     if (!notificationGroup.isEditable()) {
-      throw new WingsException(ErrorCode.DELETE_NOT_ALLOWED);
+      throw new WingsException(INVALID_REQUEST, "message", "Default Notification group can not be deleted");
     }
     return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
   }

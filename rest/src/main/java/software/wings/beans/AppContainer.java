@@ -30,6 +30,7 @@ public class AppContainer extends BaseFile {
   private String stackRootDirectory;
   private FileType fileType;
   @NotEmpty private String accountId;
+  private boolean systemCreated;
 
   /**
    * Is standard boolean.
@@ -147,10 +148,19 @@ public class AppContainer extends BaseFile {
     this.accountId = accountId;
   }
 
+  public boolean isSystemCreated() {
+    return systemCreated;
+  }
+
+  public void setSystemCreated(boolean systemCreated) {
+    this.systemCreated = systemCreated;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(standard, description, standardUpload, family, stackRootDirectory, fileType, accountId);
+        + Objects.hash(
+              standard, description, standardUpload, family, stackRootDirectory, fileType, accountId, systemCreated);
   }
 
   @Override
@@ -163,6 +173,7 @@ public class AppContainer extends BaseFile {
         .add("stackRootDirectory", stackRootDirectory)
         .add("fileType", fileType)
         .add("accountId", accountId)
+        .add("systemCreated", systemCreated)
         .toString();
   }
 
@@ -181,7 +192,8 @@ public class AppContainer extends BaseFile {
     return Objects.equals(this.standard, other.standard) && Objects.equals(this.description, other.description)
         && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family)
         && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
-        && Objects.equals(this.fileType, other.fileType) && Objects.equals(this.accountId, other.accountId);
+        && Objects.equals(this.fileType, other.fileType) && Objects.equals(this.accountId, other.accountId)
+        && Objects.equals(this.systemCreated, other.systemCreated);
   }
 
   /**
@@ -207,6 +219,8 @@ public class AppContainer extends BaseFile {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private boolean systemCreated;
+    private String accountId;
 
     private Builder() {}
 
@@ -429,6 +443,25 @@ public class AppContainer extends BaseFile {
     }
 
     /**
+     * With accountid at builder
+     * @param accountId
+     * @return
+     */
+    public Builder withAccountId(String accountId) {
+      this.accountId = accountId;
+      return this;
+    }
+    /**
+     * With System Created at builder.
+     * @param systemCreated
+     * @return
+     */
+    public Builder withSystemCreated(boolean systemCreated) {
+      this.systemCreated = systemCreated;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -453,7 +486,9 @@ public class AppContainer extends BaseFile {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withSystemCreated(systemCreated)
+          .withAccountId(accountId);
     }
 
     /**
@@ -482,6 +517,8 @@ public class AppContainer extends BaseFile {
       appContainer.setCreatedAt(createdAt);
       appContainer.setLastUpdatedBy(lastUpdatedBy);
       appContainer.setLastUpdatedAt(lastUpdatedAt);
+      appContainer.setSystemCreated(systemCreated);
+      appContainer.setAccountId(accountId);
       return appContainer;
     }
   }

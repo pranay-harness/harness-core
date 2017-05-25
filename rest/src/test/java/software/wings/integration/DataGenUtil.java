@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -22,6 +23,7 @@ import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.randomSeedString;
 import static software.wings.integration.SeedData.seedNames;
+import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.inject.Inject;
@@ -29,9 +31,11 @@ import com.google.inject.Inject;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig.Builder;
 import software.wings.beans.Application;
@@ -44,10 +48,13 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.SystemCatalog;
+import software.wings.beans.SystemCatalog.CatalogType;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-
+import software.wings.service.intfc.FileService.FileBucket;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -86,6 +93,8 @@ public class DataGenUtil extends BaseIntegrationTest {
   private SettingAttribute envAttr = null;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private MainConfiguration configuration;
+  @Inject private SystemCatalogService systemCatalogService;
 
   /**
    * Generated Data for across the API use.
@@ -127,7 +136,6 @@ public class DataGenUtil extends BaseIntegrationTest {
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
       createAppSettings(application.getAccountId());
     }
-
     verifyAccountAndApplicationSetup(apps);
   }
 
