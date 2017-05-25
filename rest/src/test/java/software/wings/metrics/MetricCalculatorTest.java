@@ -203,7 +203,7 @@ public class MetricCalculatorTest {
       long value) {
     return AppdynamicsMetricDataRecord.Builder.anAppdynamicsMetricsDataRecord()
         .withAccountId("account_id")
-        .withAppdynamicsAppId(5)
+        .withAppdAppId(5)
         .withMetricId(metricId)
         .withMetricName(metricName)
         .withMetricType(metricType)
@@ -212,7 +212,7 @@ public class MetricCalculatorTest {
         .withBtId(btId)
         .withBtName(btName)
         .withNodeName(nodeName)
-        .withStartTimeInMillis(startTime)
+        .withStartTime(startTime)
         .withValue(value)
         .withMin(value)
         .withMax(value)

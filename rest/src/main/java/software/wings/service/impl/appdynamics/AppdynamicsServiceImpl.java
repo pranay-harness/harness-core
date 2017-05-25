@@ -139,12 +139,12 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       throws IOException {
     PageRequest.Builder requestBuilder = aPageRequest()
                                              .addFilter("accountId", Operator.EQ, accountId)
-                                             .addFilter("appdynamicsAppId", Operator.EQ, appdynamicsAppId)
+                                             .addFilter("appdAppId", Operator.EQ, appdynamicsAppId)
                                              .addFilter("tierId", Operator.EQ, tierId)
                                              .addFilter("btname", Operator.IN, btList)
-                                             .addFilter("startTimeInMillis", Operator.GT, startTimeInMillis - 1)
+                                             .addFilter("startTime", Operator.GT, startTimeInMillis - 1)
                                              .addFilter("endTimeInMillis", Operator.LT, endTimeInMillis)
-                                             .addOrder("startTimeInMillis", OrderType.ASC);
+                                             .addOrder("startTime", OrderType.ASC);
     PageResponse<AppdynamicsMetricDataRecord> response =
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     ArrayListMultimap<String, AppdynamicsMetricDataRecord> dataMap = ArrayListMultimap.create();

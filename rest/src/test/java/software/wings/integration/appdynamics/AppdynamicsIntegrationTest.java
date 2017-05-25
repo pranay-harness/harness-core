@@ -344,7 +344,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                                                           .withMin(5L)
                                                           .withMax(200L)
                                                           .withCurrent(50L)
-                                                          .withSum(900L)
+                                                          .withSum(910L)
                                                           .withCount(8L)
                                                           .withStandardDeviation(0.5d)
                                                           .withOccurrences(3)
@@ -405,10 +405,10 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // query
     PageRequest.Builder requestBuilder = aPageRequest()
                                              .addFilter("accountId", Operator.EQ, accountId)
-                                             .addFilter("appdynamicsAppId", Operator.EQ, APPDYNAMICS_APP_ID)
+                                             .addFilter("appdAppId", Operator.EQ, APPDYNAMICS_APP_ID)
                                              .addFilter("metricId", Operator.EQ, METRIC_ID)
                                              .addFilter("tierId", Operator.EQ, TIER_ID)
-                                             .addOrder("startTimeInMillis", OrderType.ASC);
+                                             .addOrder("startTime", OrderType.ASC);
     PageResponse<AppdynamicsMetricDataRecord> response =
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     List<AppdynamicsMetricDataRecord> result = response.getResponse();
@@ -426,21 +426,21 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     // more specific query
     requestBuilder.addFilter("btName", Operator.EQ, "/todolist/")
         .addFilter("nodeName", Operator.EQ, "test-node")
-        .addFilter("startTimeInMillis", Operator.EQ, 1495432894010L);
+        .addFilter("startTime", Operator.EQ, 1495432894010L);
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("short result not correct length", 1, result.size());
     /*
         // delete
         Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
-        query.filter("accountId = ", accountId).filter("appdynamicsAppId = ", APPDYNAMICS_APP_ID).filter("metricId",
+        query.filter("accountId = ", accountId).filter("appdAppId = ", APPDYNAMICS_APP_ID).filter("metricId",
        METRIC_ID).filter("tierId", TIER_ID); boolean success = wingsPersistence.delete(query); assert(success);
         requestBuilder = aPageRequest()
             .addFilter("accountId", Operator.EQ, accountId)
-            .addFilter("appdynamicsAppId", Operator.EQ, APPDYNAMICS_APP_ID)
+            .addFilter("appdAppId", Operator.EQ, APPDYNAMICS_APP_ID)
             .addFilter("metricId", Operator.EQ, METRIC_ID)
             .addFilter("tierId", Operator.EQ, TIER_ID)
-            .addOrder("startTimeInMillis", OrderType.ASC);
+            .addOrder("startTime", OrderType.ASC);
         response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
         result = response.getResponse();
         Assert.assertEquals("result not correct length", 0, result.size());

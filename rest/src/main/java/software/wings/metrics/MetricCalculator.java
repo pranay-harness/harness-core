@@ -52,7 +52,7 @@ public class MetricCalculator {
           }
           metricDefinition = AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
                                  .withAccountId(record.getAccountId())
-                                 .withAppdynamicsAppId(record.getAppdynamicsAppId())
+                                 .withAppdynamicsAppId(record.getAppdAppId())
                                  .withMetricId(String.valueOf(record.getMetricId()))
                                  .withMetricName(record.getMetricName())
                                  .withMetricType(metricType)
@@ -103,10 +103,9 @@ public class MetricCalculator {
   public static BucketData parse(MetricDefinition metricDefinition, List<List<AppdynamicsMetricDataRecord>> records) {
     DataSummary oldSummary = parsePartial(metricDefinition, records.get(0));
     DataSummary newSummary = parsePartial(metricDefinition, records.get(1));
-    long startTimeMillis =
-        Math.min(records.get(0).get(0).getStartTimeInMillis(), records.get(1).get(0).getStartTimeInMillis());
-    long endTimeMillis = Math.max(records.get(0).get(records.get(0).size() - 1).getStartTimeInMillis(),
-                             records.get(1).get(records.get(1).size() - 1).getStartTimeInMillis())
+    long startTimeMillis = Math.min(records.get(0).get(0).getStartTime(), records.get(1).get(0).getStartTime());
+    long endTimeMillis = Math.max(records.get(0).get(records.get(0).size() - 1).getStartTime(),
+                             records.get(1).get(records.get(1).size() - 1).getStartTime())
         + TimeUnit.MINUTES.toMillis(1);
     RiskLevel risk = RiskLevel.LOW;
     // default thresholds: 1-2x = medium, >2x high
@@ -152,7 +151,7 @@ public class MetricCalculator {
     TreeMap<Long, List<Double>> tempValueMap = new TreeMap<>();
     HashSet<String> nodeSet = new HashSet<>();
     for (AppdynamicsMetricDataRecord record : records) {
-      Long startTime = record.getStartTimeInMillis();
+      Long startTime = record.getStartTime();
       nodeSet.add(record.getNodeName());
       // this combines the values across all nodes for each time period
       if (tempValueMap.containsKey(startTime)) {
