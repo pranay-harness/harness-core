@@ -430,20 +430,23 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("short result not correct length", 1, result.size());
-    /*
-        // delete
-        Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
-        query.filter("accountId = ", accountId).filter("appdAppId = ", APPDYNAMICS_APP_ID).filter("metricId",
-       METRIC_ID).filter("tierId", TIER_ID); boolean success = wingsPersistence.delete(query); assert(success);
-        requestBuilder = aPageRequest()
-            .addFilter("accountId", Operator.EQ, accountId)
-            .addFilter("appdAppId", Operator.EQ, APPDYNAMICS_APP_ID)
-            .addFilter("metricId", Operator.EQ, METRIC_ID)
-            .addFilter("tierId", Operator.EQ, TIER_ID)
-            .addOrder("startTime", OrderType.ASC);
-        response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
-        result = response.getResponse();
-        Assert.assertEquals("result not correct length", 0, result.size());
-        */
+
+    // delete
+    Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
+    query.filter("accountId = ", accountId)
+        .filter("appdAppId = ", APPDYNAMICS_APP_ID)
+        .filter("metricId", METRIC_ID)
+        .filter("tierId", TIER_ID);
+    boolean success = wingsPersistence.delete(query);
+    assert (success);
+    requestBuilder = aPageRequest()
+                         .addFilter("accountId", Operator.EQ, accountId)
+                         .addFilter("appdAppId", Operator.EQ, APPDYNAMICS_APP_ID)
+                         .addFilter("metricId", Operator.EQ, METRIC_ID)
+                         .addFilter("tierId", Operator.EQ, TIER_ID)
+                         .addOrder("startTime", OrderType.ASC);
+    response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
+    result = response.getResponse();
+    Assert.assertEquals("result not correct length", 0, result.size());
   }
 }
