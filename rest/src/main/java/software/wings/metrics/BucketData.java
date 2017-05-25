@@ -13,16 +13,8 @@ public class BucketData {
   private long startTimeMillis;
   private long endTimeMillis;
   private RiskLevel risk;
-  private Stats stats;
-  private String displayValue;
-
-  public BucketData(long startTimeMillis, long endTimeMillis, RiskLevel risk, Stats stats, String displayValue) {
-    this.startTimeMillis = startTimeMillis;
-    this.endTimeMillis = endTimeMillis;
-    this.risk = risk;
-    this.stats = stats;
-    this.displayValue = displayValue;
-  }
+  private DataSummary oldData;
+  private DataSummary newData;
 
   public long getStartTimeMillis() {
     return startTimeMillis;
@@ -48,20 +40,20 @@ public class BucketData {
     this.risk = risk;
   }
 
-  public Stats getStats() {
-    return stats;
+  public DataSummary getOldData() {
+    return oldData;
   }
 
-  public void setStats(Stats stats) {
-    this.stats = stats;
+  public void setOldData(DataSummary summary) {
+    this.oldData = summary;
   }
 
-  public String getDisplayValue() {
-    return displayValue;
+  public DataSummary getNewData() {
+    return newData;
   }
 
-  public void setDisplayValue(String displayValue) {
-    this.displayValue = displayValue;
+  public void setNewData(DataSummary summary) {
+    this.newData = summary;
   }
 
   @Override
@@ -70,8 +62,119 @@ public class BucketData {
     s.append("Start: ").append(startTimeMillis).append(" (").append(new Date(startTimeMillis).toString()).append(")\n");
     s.append("End: ").append(endTimeMillis).append(" (").append(new Date(endTimeMillis).toString()).append(")\n");
     s.append("Risk: ").append(risk.name()).append("\n");
-    s.append("DisplayValue: ").append(displayValue).append("\n");
-    s.append("Stats: ").append(stats);
+    s.append("OldData: ").append(oldData).append("\n");
+    s.append("NewData: ").append(newData).append("\n");
     return s.toString();
+  }
+
+  public class DataSummary {
+    private int nodeCount;
+    private Stats stats;
+    private String displayValue;
+    private boolean missingData;
+
+    public DataSummary(int nodeCount, Stats stats, String displayValue, boolean missingData) {
+      this.nodeCount = nodeCount;
+      this.stats = stats;
+      this.displayValue = displayValue;
+      this.missingData = missingData;
+    }
+
+    public int getNodeCount() {
+      return nodeCount;
+    }
+
+    public void setNodeCount(int nodeCount) {
+      this.nodeCount = nodeCount;
+    }
+
+    public Stats getStats() {
+      return stats;
+    }
+
+    public void setStats(Stats stats) {
+      this.stats = stats;
+    }
+
+    public String getDisplayValue() {
+      return displayValue;
+    }
+
+    public void setDisplayValue(String displayValue) {
+      this.displayValue = displayValue;
+    }
+
+    public boolean isMissingData() {
+      return missingData;
+    }
+
+    public void setMissingData(boolean missingData) {
+      this.missingData = missingData;
+    }
+
+    @Override
+    public String toString() {
+      return "DataSummary{"
+          + "nodeCount=" + nodeCount + ", stats=" + stats + ", displayValue='" + displayValue + '\''
+          + ", missingData=" + missingData + '}';
+    }
+  }
+
+  public static final class Builder {
+    private long startTimeMillis;
+    private long endTimeMillis;
+    private RiskLevel risk;
+    private DataSummary oldData;
+    private DataSummary newData;
+
+    private Builder() {}
+
+    public static Builder aBucketData() {
+      return new Builder();
+    }
+
+    public Builder withStartTimeMillis(long startTimeMillis) {
+      this.startTimeMillis = startTimeMillis;
+      return this;
+    }
+
+    public Builder withEndTimeMillis(long endTimeMillis) {
+      this.endTimeMillis = endTimeMillis;
+      return this;
+    }
+
+    public Builder withRisk(RiskLevel risk) {
+      this.risk = risk;
+      return this;
+    }
+
+    public Builder withOldData(DataSummary oldData) {
+      this.oldData = oldData;
+      return this;
+    }
+
+    public Builder withNewData(DataSummary newData) {
+      this.newData = newData;
+      return this;
+    }
+
+    public Builder but() {
+      return aBucketData()
+          .withStartTimeMillis(startTimeMillis)
+          .withEndTimeMillis(endTimeMillis)
+          .withRisk(risk)
+          .withOldData(oldData)
+          .withNewData(newData);
+    }
+
+    public BucketData build() {
+      BucketData bucketData = new BucketData();
+      bucketData.setStartTimeMillis(startTimeMillis);
+      bucketData.setEndTimeMillis(endTimeMillis);
+      bucketData.setRisk(risk);
+      bucketData.setOldData(oldData);
+      bucketData.setNewData(newData);
+      return bucketData;
+    }
   }
 }
