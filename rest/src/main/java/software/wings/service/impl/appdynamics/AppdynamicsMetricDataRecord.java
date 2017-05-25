@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.metrics.MetricType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -25,26 +26,26 @@ import javax.validation.constraints.NotNull;
   @Index(fields =
       {
         @Field("accountId")
-        , @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName"),
-            @Field("startTimeInMillis")
+        , @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName"),
+            @Field("startTime")
       },
       options = @IndexOptions(unique = true))
   ,
       @Index(fields = {
         @Field("accountId")
-        , @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName")
+        , @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName")
       }), @Index(fields = {
-        @Field("accountId"), @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId"), @Field("btName")
+        @Field("accountId"), @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName")
       }), @Index(fields = {
-        @Field("accountId"), @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId")
+        @Field("accountId"), @Field("appdAppId"), @Field("metricId"), @Field("tierId")
       }), @Index(fields = { @Field("accountId")
-                            , @Field("appdynamicsAppId"), @Field("metricId") })
+                            , @Field("appdAppId"), @Field("metricId") })
 })
 public class AppdynamicsMetricDataRecord extends Base {
   // TODO: needs mapping from appd identifiers to harness id
 
   @NotEmpty private String accountId;
-  @NotNull private long appdynamicsAppId;
+  @NotNull private long appdAppId;
   @NotEmpty private String metricName;
   @NotNull private long metricId;
   @NotNull private MetricType metricType;
@@ -53,12 +54,12 @@ public class AppdynamicsMetricDataRecord extends Base {
   @NotEmpty private long btId;
   @NotEmpty private String btName;
   @NotEmpty private String nodeName;
-  @NotEmpty private long startTimeInMillis;
-  private long value;
-  private long min;
-  private long max;
-  private long current;
-  private long sum;
+  @NotEmpty private long startTime;
+  private double value;
+  private double min;
+  private double max;
+  private double current;
+  private double sum;
   private long count;
   private double standardDeviation;
   private int occurrences;
@@ -73,11 +74,11 @@ public class AppdynamicsMetricDataRecord extends Base {
   }
 
   public long getAppdynamicsAppId() {
-    return appdynamicsAppId;
+    return appdAppId;
   }
 
   public void setAppdynamicsAppId(long appdynamicsAppId) {
-    this.appdynamicsAppId = appdynamicsAppId;
+    this.appdAppId = appdynamicsAppId;
   }
 
   public String getMetricName() {
@@ -145,50 +146,50 @@ public class AppdynamicsMetricDataRecord extends Base {
   }
 
   public long getStartTimeInMillis() {
-    return startTimeInMillis;
+    return startTime;
   }
 
   public void setStartTimeInMillis(long startTimeInMillis) {
-    this.startTimeInMillis = startTimeInMillis;
+    this.startTime = startTimeInMillis;
   }
 
-  public long getValue() {
+  public double getValue() {
     return value;
   }
 
-  public void setValue(long value) {
+  public void setValue(double value) {
     this.value = value;
   }
 
-  public long getMin() {
+  public double getMin() {
     return min;
   }
 
-  public void setMin(long min) {
+  public void setMin(double min) {
     this.min = min;
   }
 
-  public long getMax() {
+  public double getMax() {
     return max;
   }
 
-  public void setMax(long max) {
+  public void setMax(double max) {
     this.max = max;
   }
 
-  public long getCurrent() {
+  public double getCurrent() {
     return current;
   }
 
-  public void setCurrent(long current) {
+  public void setCurrent(double current) {
     this.current = current;
   }
 
-  public long getSum() {
+  public double getSum() {
     return sum;
   }
 
-  public void setSum(long sum) {
+  public void setSum(double sum) {
     this.sum = sum;
   }
 
@@ -232,23 +233,23 @@ public class AppdynamicsMetricDataRecord extends Base {
       return false;
 
     AppdynamicsMetricDataRecord that = (AppdynamicsMetricDataRecord) o;
-    if (appdynamicsAppId != that.appdynamicsAppId)
+    if (appdAppId != that.appdAppId)
       return false;
     if (metricId != that.metricId)
       return false;
     if (tierId != that.tierId)
       return false;
-    if (startTimeInMillis != that.startTimeInMillis)
+    if (startTime != that.startTime)
       return false;
-    if (value != that.value)
+    if (Double.compare(that.value, value) != 0)
       return false;
-    if (min != that.min)
+    if (Double.compare(that.min, min) != 0)
       return false;
-    if (max != that.max)
+    if (Double.compare(that.max, max) != 0)
       return false;
-    if (current != that.current)
+    if (Double.compare(that.current, current) != 0)
       return false;
-    if (sum != that.sum)
+    if (Double.compare(that.sum, sum) != 0)
       return false;
     if (count != that.count)
       return false;
@@ -278,7 +279,7 @@ public class AppdynamicsMetricDataRecord extends Base {
     int result = super.hashCode();
     long temp;
     result = 31 * result + accountId.hashCode();
-    result = 31 * result + (int) (appdynamicsAppId ^ (appdynamicsAppId >>> 32));
+    result = 31 * result + (int) (appdAppId ^ (appdAppId >>> 32));
     result = 31 * result + metricName.hashCode();
     result = 31 * result + (int) (metricId ^ (metricId >>> 32));
     result = 31 * result + metricType.hashCode();
@@ -287,12 +288,17 @@ public class AppdynamicsMetricDataRecord extends Base {
     result = 31 * result + tierName.hashCode();
     result = 31 * result + btName.hashCode();
     result = 31 * result + nodeName.hashCode();
-    result = 31 * result + (int) (startTimeInMillis ^ (startTimeInMillis >>> 32));
-    result = 31 * result + (int) (value ^ (value >>> 32));
-    result = 31 * result + (int) (min ^ (min >>> 32));
-    result = 31 * result + (int) (max ^ (max >>> 32));
-    result = 31 * result + (int) (current ^ (current >>> 32));
-    result = 31 * result + (int) (sum ^ (sum >>> 32));
+    result = 31 * result + (int) (startTime ^ (startTime >>> 32));
+    temp = Double.doubleToLongBits(value);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(min);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(max);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(current);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(sum);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
     result = 31 * result + (int) (count ^ (count >>> 32));
     temp = Double.doubleToLongBits(standardDeviation);
     result = 31 * result + (int) (temp ^ (temp >>> 32));
@@ -308,7 +314,7 @@ public class AppdynamicsMetricDataRecord extends Base {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("accountId", accountId)
-        .add("appdynamicsAppId", appdynamicsAppId)
+        .add("appdynamicsAppId", appdAppId)
         .add("metricName", metricName)
         .add("metricId", metricId)
         .add("metricType", metricType)
@@ -317,7 +323,7 @@ public class AppdynamicsMetricDataRecord extends Base {
         .add("tierName", tierName)
         .add("btName", btName)
         .add("nodeName", nodeName)
-        .add("startTimeInMillis", startTimeInMillis)
+        .add("startTimeInMillis", startTime)
         .add("value", value)
         .add("min", min)
         .add("max", max)
@@ -332,6 +338,9 @@ public class AppdynamicsMetricDataRecord extends Base {
 
   public static List<AppdynamicsMetricDataRecord> generateDataRecords(
       String accountId, long appdynamicsAppId, long tierId, AppdynamicsMetricData metricData) {
+    if (metricData.getMetricName().equals("METRIC DATA NOT FOUND")) {
+      return new ArrayList<>();
+    }
     /*
      * An AppDynamics metric path looks like:
      * "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Number of
@@ -392,11 +401,11 @@ public class AppdynamicsMetricDataRecord extends Base {
     private String btName;
     private String nodeName;
     private long startTimeInMillis;
-    private long value;
-    private long min;
-    private long max;
-    private long current;
-    private long sum;
+    private double value;
+    private double min;
+    private double max;
+    private double current;
+    private double sum;
     private long count;
     private double standardDeviation;
     private int occurrences;
@@ -468,27 +477,27 @@ public class AppdynamicsMetricDataRecord extends Base {
       return this;
     }
 
-    public Builder withValue(long value) {
+    public Builder withValue(double value) {
       this.value = value;
       return this;
     }
 
-    public Builder withMin(long min) {
+    public Builder withMin(double min) {
       this.min = min;
       return this;
     }
 
-    public Builder withMax(long max) {
+    public Builder withMax(double max) {
       this.max = max;
       return this;
     }
 
-    public Builder withCurrent(long current) {
+    public Builder withCurrent(double current) {
       this.current = current;
       return this;
     }
 
-    public Builder withSum(long sum) {
+    public Builder withSum(double sum) {
       this.sum = sum;
       return this;
     }
