@@ -2,6 +2,7 @@ package software.wings.metrics;
 
 import com.google.common.math.Stats;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.joda.time.DateTime;
 
 import java.util.Date;
@@ -88,6 +89,7 @@ public class BucketData {
       this.nodeCount = nodeCount;
     }
 
+    @JsonIgnore
     public Stats getStats() {
       return stats;
     }
