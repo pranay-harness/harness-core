@@ -1,9 +1,3 @@
 {
-  "ui:order": ["appDynamicsConfigId", "applicationName", "tierName", "metricPath", "timeDuration", "assertion"],
-  "metricPath": {
-    "ui:widget": "textarea"
-  },
-  "assertion": {
-    "ui:widget": "textarea"
-  }
+  "ui:order": ["appDynamicsConfigId", "applicationId", "tierId", "timeDuration"]
 }

@@ -69,7 +69,7 @@ public interface ManagerClient {
   Call<RestResponse<List<String>>> batchedSaveLogs(@Query("accountId") String accountId, @Body List<Log> logs);
 
   @POST("appdynamics/save-metrics")
-  Call<RestResponse<Void>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
+  Call<RestResponse<Boolean>> saveAppdynamicsMetrics(@Query("accountId") String accountId,
       @Query("appdynamicsAppId") long appId, @Query("tierId") long tierId,
       @Body List<AppdynamicsMetricData> metricData);
 
