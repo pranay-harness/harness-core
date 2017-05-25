@@ -54,7 +54,7 @@ public class Command extends Base implements CommandUnit {
   @Attributes(title = "Name")
   private String referenceId;
 
-  @SchemaIgnore @NotNull private Graph graph;
+  @SchemaIgnore @NotNull private transient Graph graph;
 
   @SchemaIgnore private Long version;
 
