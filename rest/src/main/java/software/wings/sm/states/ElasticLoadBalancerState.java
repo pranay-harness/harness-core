@@ -70,8 +70,7 @@ public class ElasticLoadBalancerState extends State {
     if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       loadBalancerName = ((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId();
       region = ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
-      SettingAttribute settingAttribute =
-          settingsService.get(context.getAppId(), infrastructureMapping.getComputeProviderSettingId());
+      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
       return execute(
           context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
