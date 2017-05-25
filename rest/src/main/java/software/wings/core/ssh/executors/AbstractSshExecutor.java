@@ -288,7 +288,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   private void saveExecutionLog(String line) {
-    logger.info(line);
     logService.save(config.getAccountId(),
         aLog()
             .withAppId(config.getAppId())
@@ -301,7 +300,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   private void saveExecutionLogError(String line) {
-    logger.error(line);
     logService.save(config.getAccountId(),
         aLog()
             .withAppId(config.getAppId())
