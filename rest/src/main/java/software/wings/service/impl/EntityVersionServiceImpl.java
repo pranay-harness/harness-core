@@ -19,12 +19,14 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EntityVersionService;
 
+import java.io.File;
 import javax.inject.Inject;
 
 /**
@@ -38,6 +40,9 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public PageResponse<EntityVersionCollection> listEntityVersions(PageRequest<EntityVersionCollection> pageRequest) {
+    if (new File(Constants.MAINTENANCE).exists()) {
+      throw new WingsException(ErrorCode.RESOURCE_NOT_FOUND);
+    }
     return wingsPersistence.query(EntityVersionCollection.class, pageRequest);
   }
 

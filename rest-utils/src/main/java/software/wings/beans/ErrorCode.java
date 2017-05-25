@@ -57,6 +57,11 @@ public enum ErrorCode {
   USER_DOMAIN_NOT_ALLOWED("USER_DOMAIN_NOT_ALLOWED", UNAUTHORIZED),
 
   /**
+   *
+   */
+  RESOURCE_NOT_FOUND("NOT_FOUND", NOT_FOUND),
+
+  /**
    * Role does not exist error codes.
    */
   ROLE_DOES_NOT_EXIST("ROLE_DOES_NOT_EXIST", UNAUTHORIZED),
