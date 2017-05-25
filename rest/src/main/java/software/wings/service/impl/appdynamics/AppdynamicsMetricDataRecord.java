@@ -54,11 +54,11 @@ public class AppdynamicsMetricDataRecord extends Base {
   @NotEmpty private String btName;
   @NotEmpty private String nodeName;
   @NotEmpty private long startTimeInMillis;
-  private long value;
-  private long min;
-  private long max;
-  private long current;
-  private long sum;
+  private double value;
+  private double min;
+  private double max;
+  private double current;
+  private double sum;
   private long count;
   private double standardDeviation;
   private int occurrences;
@@ -152,43 +152,43 @@ public class AppdynamicsMetricDataRecord extends Base {
     this.startTimeInMillis = startTimeInMillis;
   }
 
-  public long getValue() {
+  public double getValue() {
     return value;
   }
 
-  public void setValue(long value) {
+  public void setValue(double value) {
     this.value = value;
   }
 
-  public long getMin() {
+  public double getMin() {
     return min;
   }
 
-  public void setMin(long min) {
+  public void setMin(double min) {
     this.min = min;
   }
 
-  public long getMax() {
+  public double getMax() {
     return max;
   }
 
-  public void setMax(long max) {
+  public void setMax(double max) {
     this.max = max;
   }
 
-  public long getCurrent() {
+  public double getCurrent() {
     return current;
   }
 
-  public void setCurrent(long current) {
+  public void setCurrent(double current) {
     this.current = current;
   }
 
-  public long getSum() {
+  public double getSum() {
     return sum;
   }
 
-  public void setSum(long sum) {
+  public void setSum(double sum) {
     this.sum = sum;
   }
 
@@ -240,15 +240,15 @@ public class AppdynamicsMetricDataRecord extends Base {
       return false;
     if (startTimeInMillis != that.startTimeInMillis)
       return false;
-    if (value != that.value)
+    if (Double.compare(that.value, value) != 0)
       return false;
-    if (min != that.min)
+    if (Double.compare(that.min, min) != 0)
       return false;
-    if (max != that.max)
+    if (Double.compare(that.max, max) != 0)
       return false;
-    if (current != that.current)
+    if (Double.compare(that.current, current) != 0)
       return false;
-    if (sum != that.sum)
+    if (Double.compare(that.sum, sum) != 0)
       return false;
     if (count != that.count)
       return false;
@@ -288,11 +288,16 @@ public class AppdynamicsMetricDataRecord extends Base {
     result = 31 * result + btName.hashCode();
     result = 31 * result + nodeName.hashCode();
     result = 31 * result + (int) (startTimeInMillis ^ (startTimeInMillis >>> 32));
-    result = 31 * result + (int) (value ^ (value >>> 32));
-    result = 31 * result + (int) (min ^ (min >>> 32));
-    result = 31 * result + (int) (max ^ (max >>> 32));
-    result = 31 * result + (int) (current ^ (current >>> 32));
-    result = 31 * result + (int) (sum ^ (sum >>> 32));
+    temp = Double.doubleToLongBits(value);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(min);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(max);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(current);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+    temp = Double.doubleToLongBits(sum);
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
     result = 31 * result + (int) (count ^ (count >>> 32));
     temp = Double.doubleToLongBits(standardDeviation);
     result = 31 * result + (int) (temp ^ (temp >>> 32));
@@ -392,11 +397,11 @@ public class AppdynamicsMetricDataRecord extends Base {
     private String btName;
     private String nodeName;
     private long startTimeInMillis;
-    private long value;
-    private long min;
-    private long max;
-    private long current;
-    private long sum;
+    private double value;
+    private double min;
+    private double max;
+    private double current;
+    private double sum;
     private long count;
     private double standardDeviation;
     private int occurrences;
@@ -468,27 +473,27 @@ public class AppdynamicsMetricDataRecord extends Base {
       return this;
     }
 
-    public Builder withValue(long value) {
+    public Builder withValue(double value) {
       this.value = value;
       return this;
     }
 
-    public Builder withMin(long min) {
+    public Builder withMin(double min) {
       this.min = min;
       return this;
     }
 
-    public Builder withMax(long max) {
+    public Builder withMax(double max) {
       this.max = max;
       return this;
     }
 
-    public Builder withCurrent(long current) {
+    public Builder withCurrent(double current) {
       this.current = current;
       return this;
     }
 
-    public Builder withSum(long sum) {
+    public Builder withSum(double sum) {
       this.sum = sum;
       return this;
     }

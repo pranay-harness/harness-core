@@ -1,15 +1,27 @@
 package software.wings.service.impl.appdynamics;
 
 import static software.wings.beans.DelegateTask.Context.Builder.aContext;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.Context;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.metrics.BucketData;
+import software.wings.metrics.MetricCalculator;
+import software.wings.metrics.MetricDefinition;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -17,9 +29,14 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -114,5 +131,36 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       wingsPersistence.saveIgnoringDuplicateKeys(metricDataRecords);
     }
     return true;
+  }
+
+  @Override
+  public Map<String, Map<String, BucketData>> generateMetrics(@NotNull String accountId, @Valid long appdynamicsAppId,
+      @Valid long tierId, @NotEmpty List<String> btList, @Valid long startTimeInMillis, @Valid long endTimeInMillis)
+      throws IOException {
+    PageRequest.Builder requestBuilder = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("appdynamicsAppId", Operator.EQ, appdynamicsAppId)
+                                             .addFilter("tierId", Operator.EQ, tierId)
+                                             .addFilter("btname", Operator.IN, btList)
+                                             .addFilter("startTimeInMillis", Operator.GT, startTimeInMillis - 1)
+                                             .addFilter("endTimeInMillis", Operator.LT, endTimeInMillis)
+                                             .addOrder("startTimeInMillis", OrderType.ASC);
+    PageResponse<AppdynamicsMetricDataRecord> response =
+        wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
+    ArrayListMultimap<String, AppdynamicsMetricDataRecord> dataMap = ArrayListMultimap.create();
+    Set<Long> metricIds = new HashSet<>();
+    for (AppdynamicsMetricDataRecord record : response.getResponse()) {
+      dataMap.put(record.getBtName(), record);
+      metricIds.add(record.getMetricId());
+    }
+    requestBuilder = aPageRequest()
+                         .addFilter("accountId", Operator.EQ, accountId)
+                         .addFilter("appdynamicsAppId", Operator.EQ, appdynamicsAppId)
+                         .addFilter("metricId", Operator.IN, metricIds);
+    PageResponse<MetricDefinition> metricDefinitions =
+        wingsPersistence.query(MetricDefinition.class, requestBuilder.build());
+    Map<String, Map<String, BucketData>> metricSummaries =
+        MetricCalculator.calculateMetrics(metricDefinitions.getResponse(), dataMap);
+    return metricSummaries;
   }
 }
