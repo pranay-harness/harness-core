@@ -26,26 +26,26 @@ import javax.validation.constraints.NotNull;
   @Index(fields =
       {
         @Field("accountId")
-        , @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName"),
-            @Field("startTimeInMillis")
+        , @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName"),
+            @Field("startTime")
       },
       options = @IndexOptions(unique = true))
   ,
       @Index(fields = {
         @Field("accountId")
-        , @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName")
+        , @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName")
       }), @Index(fields = {
-        @Field("accountId"), @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId"), @Field("btName")
+        @Field("accountId"), @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName")
       }), @Index(fields = {
-        @Field("accountId"), @Field("appdynamicsAppId"), @Field("metricId"), @Field("tierId")
+        @Field("accountId"), @Field("appdAppId"), @Field("metricId"), @Field("tierId")
       }), @Index(fields = { @Field("accountId")
-                            , @Field("appdynamicsAppId"), @Field("metricId") })
+                            , @Field("appdAppId"), @Field("metricId") })
 })
 public class AppdynamicsMetricDataRecord extends Base {
   // TODO: needs mapping from appd identifiers to harness id
 
   @NotEmpty private String accountId;
-  @NotNull private long appdynamicsAppId;
+  @NotNull private long appdAppId;
   @NotEmpty private String metricName;
   @NotNull private long metricId;
   @NotNull private MetricType metricType;
@@ -54,7 +54,7 @@ public class AppdynamicsMetricDataRecord extends Base {
   @NotEmpty private long btId;
   @NotEmpty private String btName;
   @NotEmpty private String nodeName;
-  @NotEmpty private long startTimeInMillis;
+  @NotEmpty private long startTime;
   private double value;
   private double min;
   private double max;
@@ -74,11 +74,11 @@ public class AppdynamicsMetricDataRecord extends Base {
   }
 
   public long getAppdynamicsAppId() {
-    return appdynamicsAppId;
+    return appdAppId;
   }
 
   public void setAppdynamicsAppId(long appdynamicsAppId) {
-    this.appdynamicsAppId = appdynamicsAppId;
+    this.appdAppId = appdynamicsAppId;
   }
 
   public String getMetricName() {
@@ -146,11 +146,11 @@ public class AppdynamicsMetricDataRecord extends Base {
   }
 
   public long getStartTimeInMillis() {
-    return startTimeInMillis;
+    return startTime;
   }
 
   public void setStartTimeInMillis(long startTimeInMillis) {
-    this.startTimeInMillis = startTimeInMillis;
+    this.startTime = startTimeInMillis;
   }
 
   public double getValue() {
@@ -233,13 +233,13 @@ public class AppdynamicsMetricDataRecord extends Base {
       return false;
 
     AppdynamicsMetricDataRecord that = (AppdynamicsMetricDataRecord) o;
-    if (appdynamicsAppId != that.appdynamicsAppId)
+    if (appdAppId != that.appdAppId)
       return false;
     if (metricId != that.metricId)
       return false;
     if (tierId != that.tierId)
       return false;
-    if (startTimeInMillis != that.startTimeInMillis)
+    if (startTime != that.startTime)
       return false;
     if (Double.compare(that.value, value) != 0)
       return false;
@@ -279,7 +279,7 @@ public class AppdynamicsMetricDataRecord extends Base {
     int result = super.hashCode();
     long temp;
     result = 31 * result + accountId.hashCode();
-    result = 31 * result + (int) (appdynamicsAppId ^ (appdynamicsAppId >>> 32));
+    result = 31 * result + (int) (appdAppId ^ (appdAppId >>> 32));
     result = 31 * result + metricName.hashCode();
     result = 31 * result + (int) (metricId ^ (metricId >>> 32));
     result = 31 * result + metricType.hashCode();
@@ -288,7 +288,7 @@ public class AppdynamicsMetricDataRecord extends Base {
     result = 31 * result + tierName.hashCode();
     result = 31 * result + btName.hashCode();
     result = 31 * result + nodeName.hashCode();
-    result = 31 * result + (int) (startTimeInMillis ^ (startTimeInMillis >>> 32));
+    result = 31 * result + (int) (startTime ^ (startTime >>> 32));
     temp = Double.doubleToLongBits(value);
     result = 31 * result + (int) (temp ^ (temp >>> 32));
     temp = Double.doubleToLongBits(min);
@@ -314,7 +314,7 @@ public class AppdynamicsMetricDataRecord extends Base {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("accountId", accountId)
-        .add("appdynamicsAppId", appdynamicsAppId)
+        .add("appdynamicsAppId", appdAppId)
         .add("metricName", metricName)
         .add("metricId", metricId)
         .add("metricType", metricType)
@@ -323,7 +323,7 @@ public class AppdynamicsMetricDataRecord extends Base {
         .add("tierName", tierName)
         .add("btName", btName)
         .add("nodeName", nodeName)
-        .add("startTimeInMillis", startTimeInMillis)
+        .add("startTimeInMillis", startTime)
         .add("value", value)
         .add("min", min)
         .add("max", max)
