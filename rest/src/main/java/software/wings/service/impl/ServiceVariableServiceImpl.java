@@ -115,13 +115,13 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public List<ServiceVariable> getServiceVariablesForEntity(String appId, String templateId, String entityId) {
-    List<ServiceVariable> variables =
-        list(aPageRequest()
-                 .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-                 .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
-                 .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
-                 .build())
-            .getResponse();
+    PageRequest<ServiceVariable> request =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
+            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
+            .build();
+    List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
     variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
     return variables;
   }
@@ -129,14 +129,16 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public List<ServiceVariable> getServiceVariablesByTemplate(
       String appId, String envId, ServiceTemplate serviceTemplate) {
-    List<ServiceVariable> variables = wingsPersistence.createQuery(ServiceVariable.class)
-                                          .field("appId")
-                                          .equal(appId)
-                                          .field("envId")
-                                          .equal(envId)
-                                          .field("templateId")
-                                          .equal(serviceTemplate.getUuid())
-                                          .asList();
+    PageRequest<ServiceVariable> request =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+            .addFilter(aSearchFilter().withField("envId", Operator.EQ, envId).build())
+            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, serviceTemplate.getUuid()).build())
+            .build();
+    List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
+    //    List<ServiceVariable> variables =
+    //    wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(appId).field("envId").equal(envId).field("templateId")
+    //        .equal(serviceTemplate.getUuid()).asList();
     variables.forEach(serviceVariable -> maskEncryptedFields(serviceVariable));
     return variables;
   }
