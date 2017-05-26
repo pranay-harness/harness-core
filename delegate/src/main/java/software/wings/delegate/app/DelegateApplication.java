@@ -49,7 +49,8 @@ public class DelegateApplication {
     if (args.length > 1 && StringUtils.equals(args[1], "upgrade")) {
       upgrade = true;
     }
-    logger.info("Starting Bot ");
+    logger.info("Starting Bot");
+    logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
     delegateApplication.run(
         new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class), upgrade);

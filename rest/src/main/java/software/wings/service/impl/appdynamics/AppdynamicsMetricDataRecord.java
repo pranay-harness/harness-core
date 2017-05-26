@@ -73,11 +73,11 @@ public class AppdynamicsMetricDataRecord extends Base {
     this.accountId = accountId;
   }
 
-  public long getAppdynamicsAppId() {
+  public long getAppdAppId() {
     return appdAppId;
   }
 
-  public void setAppdynamicsAppId(long appdynamicsAppId) {
+  public void setAppdAppId(long appdynamicsAppId) {
     this.appdAppId = appdynamicsAppId;
   }
 
@@ -145,11 +145,11 @@ public class AppdynamicsMetricDataRecord extends Base {
     this.nodeName = nodeName;
   }
 
-  public long getStartTimeInMillis() {
+  public long getStartTime() {
     return startTime;
   }
 
-  public void setStartTimeInMillis(long startTimeInMillis) {
+  public void setStartTime(long startTimeInMillis) {
     this.startTime = startTimeInMillis;
   }
 
@@ -365,7 +365,7 @@ public class AppdynamicsMetricDataRecord extends Base {
             .map(value
                 -> Builder.anAppdynamicsMetricsDataRecord()
                        .withAccountId(accountId)
-                       .withAppdynamicsAppId(appdynamicsAppId)
+                       .withAppdAppId(appdynamicsAppId)
                        .withMetricName(metricName)
                        .withMetricId(metricData.getMetricId())
                        .withMetricType(MetricType.COUNT) // TODO: needs real mapper
@@ -374,7 +374,7 @@ public class AppdynamicsMetricDataRecord extends Base {
                        .withBtId(btId)
                        .withBtName(btName)
                        .withNodeName(nodeName)
-                       .withStartTimeInMillis(value.getStartTimeInMillis())
+                       .withStartTime(value.getStartTimeInMillis())
                        .withValue(value.getValue())
                        .withMin(value.getMin())
                        .withMax(value.getMax())
@@ -391,7 +391,7 @@ public class AppdynamicsMetricDataRecord extends Base {
 
   public static final class Builder {
     private String accountId;
-    private long appdynamicsAppId;
+    private long appdAppId;
     private String metricName;
     private long metricId;
     private MetricType metricType;
@@ -400,7 +400,7 @@ public class AppdynamicsMetricDataRecord extends Base {
     private long btId;
     private String btName;
     private String nodeName;
-    private long startTimeInMillis;
+    private long startTime;
     private double value;
     private double min;
     private double max;
@@ -427,8 +427,8 @@ public class AppdynamicsMetricDataRecord extends Base {
       return this;
     }
 
-    public Builder withAppdynamicsAppId(long appdynamicsAppId) {
-      this.appdynamicsAppId = appdynamicsAppId;
+    public Builder withAppdAppId(long appdynamicsAppId) {
+      this.appdAppId = appdynamicsAppId;
       return this;
     }
 
@@ -472,8 +472,8 @@ public class AppdynamicsMetricDataRecord extends Base {
       return this;
     }
 
-    public Builder withStartTimeInMillis(long startTimeInMillis) {
-      this.startTimeInMillis = startTimeInMillis;
+    public Builder withStartTime(long startTimeInMillis) {
+      this.startTime = startTimeInMillis;
       return this;
     }
 
@@ -525,7 +525,7 @@ public class AppdynamicsMetricDataRecord extends Base {
     public Builder but() {
       return anAppdynamicsMetricsDataRecord()
           .withAccountId(accountId)
-          .withAppdynamicsAppId(appdynamicsAppId)
+          .withAppdAppId(appdAppId)
           .withMetricName(metricName)
           .withMetricId(metricId)
           .withMetricType(metricType)
@@ -534,7 +534,7 @@ public class AppdynamicsMetricDataRecord extends Base {
           .withBtId(btId)
           .withBtName(btName)
           .withNodeName(nodeName)
-          .withStartTimeInMillis(startTimeInMillis)
+          .withStartTime(startTime)
           .withValue(value)
           .withMin(min)
           .withMax(max)
@@ -549,7 +549,7 @@ public class AppdynamicsMetricDataRecord extends Base {
     public AppdynamicsMetricDataRecord build() {
       AppdynamicsMetricDataRecord appdynamicsMetricDataRecord = new AppdynamicsMetricDataRecord();
       appdynamicsMetricDataRecord.setAccountId(accountId);
-      appdynamicsMetricDataRecord.setAppdynamicsAppId(appdynamicsAppId);
+      appdynamicsMetricDataRecord.setAppdAppId(appdAppId);
       appdynamicsMetricDataRecord.setMetricName(metricName);
       appdynamicsMetricDataRecord.setMetricId(metricId);
       appdynamicsMetricDataRecord.setMetricType(metricType);
@@ -558,7 +558,7 @@ public class AppdynamicsMetricDataRecord extends Base {
       appdynamicsMetricDataRecord.setBtId(btId);
       appdynamicsMetricDataRecord.setBtName(btName);
       appdynamicsMetricDataRecord.setNodeName(nodeName);
-      appdynamicsMetricDataRecord.setStartTimeInMillis(startTimeInMillis);
+      appdynamicsMetricDataRecord.setStartTime(startTime);
       appdynamicsMetricDataRecord.setValue(value);
       appdynamicsMetricDataRecord.setMin(min);
       appdynamicsMetricDataRecord.setMax(max);

@@ -13,6 +13,7 @@ import software.wings.api.LoadBalancer;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SystemCatalog;
 import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -84,6 +85,7 @@ import software.wings.service.impl.SetupServiceImpl;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
+import software.wings.service.impl.SystemCatalogSeviceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
@@ -131,6 +133,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.StatisticsService;
+import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -221,6 +224,7 @@ public class WingsModule extends AbstractModule {
     bind(NexusService.class).to(NexusServiceImpl.class);
     bind(NexusBuildService.class).to(NexusBuildServiceImpl.class);
     bind(AppdynamicsService.class).to(AppdynamicsServiceImpl.class);
+    bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

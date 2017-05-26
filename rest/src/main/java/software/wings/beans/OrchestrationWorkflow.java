@@ -14,7 +14,8 @@ import java.util.Set;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CanaryOrchestrationWorkflow.class, name = "CANARY")
   , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM"),
-      @JsonSubTypes.Type(value = BasicOrchestrationWorkflow.class, name = "BASIC")
+      @JsonSubTypes.Type(value = BasicOrchestrationWorkflow.class, name = "BASIC"),
+      @JsonSubTypes.Type(value = MultiServiceOrchestrationWorkflow.class, name = "MULTI_SERVICE")
 })
 public abstract class OrchestrationWorkflow {
   private OrchestrationWorkflowType orchestrationWorkflowType;

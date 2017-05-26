@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.metrics.BucketData;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -19,6 +20,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -104,5 +106,17 @@ public class AppdynamicsResource {
       @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
       List<AppdynamicsMetricData> metricData) throws IOException {
     return new RestResponse<>(appdynamicsService.saveMetricData(accountId, appdynamicsAppId, tierId, metricData));
+  }
+
+  @GET
+  @Path("/generate-metrics")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, Map<String, BucketData>>> generateMetrics(
+      @QueryParam("accountId") final String accountId, @QueryParam("appdynamicsAppId") int appdynamicsAppId,
+      @QueryParam("tierId") int tierId, @QueryParam("startTimeInMillis") long startTimeInMillis,
+      @QueryParam("endTimeInMillis") long endTimeInMillis, List<String> btList) throws IOException {
+    return new RestResponse<>(appdynamicsService.generateMetrics(
+        accountId, appdynamicsAppId, tierId, btList, startTimeInMillis, endTimeInMillis));
   }
 }

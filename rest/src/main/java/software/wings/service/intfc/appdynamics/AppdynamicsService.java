@@ -1,7 +1,9 @@
 package software.wings.service.intfc.appdynamics;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
+import software.wings.metrics.BucketData;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -12,6 +14,7 @@ import software.wings.utils.validation.Create;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -39,4 +42,8 @@ public interface AppdynamicsService {
   @ValidationGroups(Create.class)
   Boolean saveMetricData(@NotNull String accountId, @Valid long appdynamicsAppId, @Valid long tierId,
       @Valid List<AppdynamicsMetricData> metricData) throws IOException;
+
+  Map<String, Map<String, BucketData>> generateMetrics(@NotNull String accountId, @Valid long appdynamicsAppId,
+      @Valid long tierId, @NotEmpty List<String> btList, @Valid long startTimeInMillis, @Valid long endTimeInMillis)
+      throws IOException;
 }

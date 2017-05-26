@@ -12,6 +12,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
+import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 
@@ -59,6 +60,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
@@ -85,7 +87,6 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
@@ -542,6 +543,50 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getFailureStrategies().get(0)).isNotNull();
     assertThat(orchestrationWorkflow.getFailureStrategies().get(0).getRepairActionCode())
         .isEqualTo(RepairActionCode.ROLLBACK_WORKFLOW);
+
+    PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, APP_ID)
+            .addFilter("originId", Operator.EQ, workflow.getUuid())
+            .build());
+
+    assertThat(res).isNotNull().hasSize(1);
+    assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
+
+    logger.info(JsonUtils.asJson(workflow2));
+  }
+  @Test
+  public void shouldCreateMultiServiceWorkflow() {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withOrchestrationWorkflow(
+                aMultiServiceOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    MultiServiceOrchestrationWorkflow orchestrationWorkflow =
+        (MultiServiceOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow)
+        .isNotNull()
+        .hasFieldOrProperty("preDeploymentSteps")
+        .hasFieldOrProperty("postDeploymentSteps")
+        .hasFieldOrProperty("graph");
+    assertThat(orchestrationWorkflow.getGraph()).isNotNull();
+    assertThat(orchestrationWorkflow.getGraph().getNodes())
+        .extracting("id")
+        .contains(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
+            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
+
+    assertThat(orchestrationWorkflow.getGraph().getSubworkflows())
+        .containsKeys(orchestrationWorkflow.getPostDeploymentSteps().getUuid(),
+            orchestrationWorkflow.getPostDeploymentSteps().getUuid());
 
     PageResponse<StateMachine> res = wingsPersistence.query(StateMachine.class,
         aPageRequest()
