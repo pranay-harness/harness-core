@@ -13,6 +13,7 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -56,6 +57,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -212,6 +214,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
         } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
           workflowPhase = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+        } else if (orchestrationWorkflow instanceof MultiServiceOrchestrationWorkflow) {
+          workflowPhase =
+              ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
         }
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
@@ -353,7 +358,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public Workflow createWorkflow(Workflow workflow) {
-    validateWorkflow(workflow);
+    validateBasicWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     String key = wingsPersistence.save(workflow);
@@ -366,8 +371,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
           workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
-        createDefaultNotificationRule(workflow);
-        createDefaultFailureStrategy(workflow);
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
         // Create Single Phase
         Validator.notNullCheck("infraMappingId", workflow.getInfraMappingId());
@@ -377,9 +380,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                           .withServiceId(workflow.getServiceId())
                                           .build();
         attachWorkflowPhase(workflow, workflowPhase);
-        createDefaultNotificationRule(workflow);
-        createDefaultFailureStrategy(workflow);
+      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+        MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
+            (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+        if (canaryOrchestrationWorkflow.getWorkflowPhases() != null
+            && !canaryOrchestrationWorkflow.getWorkflowPhases().isEmpty()) {
+          List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+          canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
+          workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
+        }
       }
+      createDefaultNotificationRule(workflow);
+      createDefaultFailureStrategy(workflow);
       orchestrationWorkflow.onSave();
       updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
@@ -629,13 +641,34 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-    } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false);
       basicOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
+      MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
+          (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+      boolean serviceRepeat = false;
+      if (multiServiceOrchestrationWorkflow.getWorkflowPhaseIds() != null) {
+        for (String phaseId : multiServiceOrchestrationWorkflow.getWorkflowPhaseIds()) {
+          WorkflowPhase existingPhase = multiServiceOrchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
+          if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+              && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
+              && existingPhase.getInfraMappingId().equals(workflowPhase.getInfraMappingId())) {
+            serviceRepeat = true;
+            break;
+          }
+        }
+      }
+      generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
+      multiServiceOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
+
+      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
+      multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
+          workflowPhase.getUuid(), rollbackWorkflowPhase);
     }
   }
 
@@ -1210,12 +1243,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      Validator.notNullCheck("canaryOrchestrationWorkflow", canaryOrchestrationWorkflow);
       canaryOrchestrationWorkflow.setNotificationRules(notificationRules);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
-      Validator.notNullCheck(("basicOrchestrationWorkflow"), basicOrchestrationWorkflow);
       basicOrchestrationWorkflow.setNotificationRules(notificationRules);
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+      MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
+          (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+      Validator.notNullCheck("multiServiceOrchestrationWorkflow", multiServiceOrchestrationWorkflow);
+      multiServiceOrchestrationWorkflow.setNotificationRules(notificationRules);
     }
   }
 
@@ -1229,16 +1265,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      Validator.notNullCheck("canaryOrchestrationWorkflow", canaryOrchestrationWorkflow);
       canaryOrchestrationWorkflow.setFailureStrategies(failureStrategies);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
-      Validator.notNullCheck("basicOrchestrationWorkflow", basicOrchestrationWorkflow);
       basicOrchestrationWorkflow.setFailureStrategies(failureStrategies);
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
+      MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
+          (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
+      multiServiceOrchestrationWorkflow.setFailureStrategies(failureStrategies);
     }
   }
 
-  private void validateWorkflow(Workflow workflow) {
+  private void validateBasicWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null
         && orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BASIC)) {

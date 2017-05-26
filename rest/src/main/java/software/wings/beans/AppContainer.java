@@ -31,6 +31,8 @@ public class AppContainer extends BaseFile {
   private FileType fileType;
   @NotEmpty private String accountId;
   private boolean systemCreated;
+  private String version;
+  private boolean hardened;
 
   /**
    * Is standard boolean.
