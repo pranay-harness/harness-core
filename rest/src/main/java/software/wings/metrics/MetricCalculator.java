@@ -194,6 +194,6 @@ public class MetricCalculator {
     } else if (metricDefinition.getMetricType() == MetricType.TIME) {
       displayValue = String.valueOf(stats.mean());
     }
-    return new BucketData().new DataSummary(nodeCount, stats, displayValue, missingData);
+    return new BucketData().new DataSummary(nodeCount, new ArrayList<>(nodeSet), stats, displayValue, missingData);
   }
 }
