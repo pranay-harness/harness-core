@@ -116,6 +116,13 @@ public class InstanceElement implements ContextElement {
     this.serviceTemplateElement = serviceTemplateElement;
   }
 
+  @Override
+  public String toString() {
+    return "InstanceElement{"
+        + "uuid='" + uuid + '\'' + ", displayName='" + displayName + '\'' + ", hostName='" + hostName + '\''
+        + ", hostElement=" + hostElement + ", serviceTemplateElement=" + serviceTemplateElement + '}';
+  }
+
   /**
    * The type Builder.
    */
