@@ -125,6 +125,8 @@ public interface WorkflowService {
 
   StateMachine readStateMachine(String appId, String originId, Integer version);
 
+  StateMachine readStateMachine(String appId, String stateMachineId);
+
   /**
    * Read latest simple workflow .
    *

@@ -4,13 +4,18 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ArrayListMultimap;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.metrics.BucketData.DataSummary;
 import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +28,52 @@ public class MetricCalculatorTest {
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withAccountId("account_id")
           .withAppdynamicsAppId(5)
-          .withMetricId("6")
+          .withMetricId("0")
           .withMetricName("Calls per Minute")
+          .withMetricType(MetricType.COUNT)
+          .withMediumThreshold(1)
+          .withHighThreshold(2)
+          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+          .build();
+  private AppdynamicsMetricDefinition SLOW_CALLS_METRIC_DEFINITION =
+      AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
+          .withAccountId("account_id")
+          .withAppdynamicsAppId(5)
+          .withMetricId("1")
+          .withMetricName("Number of Slow Calls")
+          .withMetricType(MetricType.COUNT)
+          .withMediumThreshold(1)
+          .withHighThreshold(2)
+          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+          .build();
+  private AppdynamicsMetricDefinition VERY_SLOW_CALLS_METRIC_DEFINITION =
+      AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
+          .withAccountId("account_id")
+          .withAppdynamicsAppId(5)
+          .withMetricId("2")
+          .withMetricName("Number of Very Slow Calls")
+          .withMetricType(MetricType.COUNT)
+          .withMediumThreshold(1)
+          .withHighThreshold(2)
+          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+          .build();
+  private AppdynamicsMetricDefinition ERRORS_METRIC_DEFINITION =
+      AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
+          .withAccountId("account_id")
+          .withAppdynamicsAppId(5)
+          .withMetricId("3")
+          .withMetricName("Error Count")
+          .withMetricType(MetricType.COUNT)
+          .withMediumThreshold(1)
+          .withHighThreshold(2)
+          .withThresholdType(ThresholdType.ALERT_WHEN_HIGHER)
+          .build();
+  private AppdynamicsMetricDefinition STALLS_METRIC_DEFINITION =
+      AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
+          .withAccountId("account_id")
+          .withAppdynamicsAppId(5)
+          .withMetricId("4")
+          .withMetricName("Stall Count")
           .withMetricType(MetricType.COUNT)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -34,8 +83,8 @@ public class MetricCalculatorTest {
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
           .withAccountId("account_id")
           .withAppdynamicsAppId(5)
-          .withMetricId("8")
-          .withMetricName("Average Response Time (ms)")
+          .withMetricId("5")
+          .withMetricName("95th Percentile Response Time (ms)")
           .withMetricType(MetricType.TIME)
           .withMediumThreshold(1)
           .withHighThreshold(2)
@@ -196,6 +245,39 @@ public class MetricCalculatorTest {
     assertEquals(8.5, summary.getStats().mean(), 0.05);
     assertEquals("8.5", summary.getDisplayValue());
     assertEquals(false, summary.isMissingData());
+  }
+
+  @Test
+  @Ignore
+  public void generateFullSampleJson() {
+    List<MetricDefinition> metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION, SLOW_CALLS_METRIC_DEFINITION,
+        VERY_SLOW_CALLS_METRIC_DEFINITION, ERRORS_METRIC_DEFINITION, STALLS_METRIC_DEFINITION, ART_METRIC_DEFINITION);
+    ArrayListMultimap<String, AppdynamicsMetricDataRecord> data = ArrayListMultimap.create();
+    String[] bts = new String[] {"todolist", "login"};
+    String[] metrics = new String[] {"Calls per Minute", "Number of Slow Calls", "Number of Very Slow Calls",
+        "Error Count", "Stall Count", "95th Percentile Response Time (ms)"};
+    String[] nodes = new String[] {"alpha", "beta", "gamma", "delta"};
+    int val = 5;
+    for (int b = 0; b < bts.length; b++) {
+      for (MetricDefinition metric : metricDefinitions) {
+        for (int n = 0; n < nodes.length; n++) {
+          for (int s = 0; s < 3; s++) {
+            data.put(bts[b],
+                createAppdynamicsMetricDataRecord(Long.parseLong(metric.getMetricId()), metric.getMetricName(),
+                    metric.getMetricType(), 1, "test-tier", b, bts[b], nodes[n], s * 60000, val));
+            val++;
+          }
+        }
+      }
+    }
+    Map<String, Map<String, BucketData>> output = MetricCalculator.calculateMetrics(metricDefinitions, data);
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      String b = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(output);
+      System.out.println(b);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
   }
 
   private AppdynamicsMetricDataRecord createAppdynamicsMetricDataRecord(long metricId, String metricName,

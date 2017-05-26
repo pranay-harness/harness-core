@@ -21,6 +21,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -41,6 +42,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter.Operator;
@@ -100,7 +102,6 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -399,7 +400,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
 
-    WorkflowStandardParams stdParams = new WorkflowStandardParams();
+    WorkflowStandardParams stdParams;
+    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY) {
+      stdParams = new CanaryWorkflowStandardParams();
+    } else {
+      stdParams = new WorkflowStandardParams();
+    }
+
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
     if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {

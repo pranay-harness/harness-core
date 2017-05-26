@@ -141,9 +141,9 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                              .addFilter("accountId", Operator.EQ, accountId)
                                              .addFilter("appdAppId", Operator.EQ, appdynamicsAppId)
                                              .addFilter("tierId", Operator.EQ, tierId)
-                                             .addFilter("btname", Operator.IN, btList)
+                                             .addFilter("btName", Operator.IN, btList.toArray())
                                              .addFilter("startTime", Operator.GT, startTimeInMillis - 1)
-                                             .addFilter("endTimeInMillis", Operator.LT, endTimeInMillis)
+                                             .addFilter("startTime", Operator.LT, endTimeInMillis)
                                              .addOrder("startTime", OrderType.ASC);
     PageResponse<AppdynamicsMetricDataRecord> response =
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
@@ -155,7 +155,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     }
     requestBuilder = aPageRequest()
                          .addFilter("accountId", Operator.EQ, accountId)
-                         .addFilter("appdynamicsAppId", Operator.EQ, appdynamicsAppId)
+                         //        .addFilter("appdynamicsAppId", Operator.EQ, appdynamicsAppId)
                          .addFilter("metricId", Operator.IN, metricIds);
     PageResponse<MetricDefinition> metricDefinitions =
         wingsPersistence.query(MetricDefinition.class, requestBuilder.build());

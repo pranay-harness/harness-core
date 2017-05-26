@@ -478,6 +478,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return wingsPersistence.get(StateMachine.class, req);
   }
 
+  public StateMachine readStateMachine(String appId, String stateMachineId) {
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValues(appId);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+
+    return wingsPersistence.get(StateMachine.class, req);
+  }
+
   @Override
   public StateMachine readStateMachine(String appId, String originId, Integer version) {
     PageRequest<StateMachine> req = new PageRequest<>();

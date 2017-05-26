@@ -64,7 +64,13 @@ public class ExecutionContextImpl implements ExecutionContext {
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
     if (!isEmpty(stateExecutionInstance.getContextElements())) {
-      stateExecutionInstance.getContextElements().forEach(contextElement -> injector.injectMembers(contextElement));
+      stateExecutionInstance.getContextElements().forEach(contextElement -> {
+        injector.injectMembers(contextElement);
+        if (contextElement instanceof ExecutionContextAware) {
+          ((ExecutionContextAware) contextElement).setExecutionContext(this);
+        }
+
+      });
     }
     if (!isEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {
       stateExecutionInstance.getExecutionEventAdvisors().forEach(advisor -> { injector.injectMembers(advisor); });

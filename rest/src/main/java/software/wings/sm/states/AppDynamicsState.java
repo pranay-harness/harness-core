@@ -7,7 +7,10 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.CanaryWorkflowStandardParams;
+import software.wings.api.InfraNodeRequest;
 import software.wings.service.impl.AppDynamicsSettingProvider;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -17,6 +20,7 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -115,6 +119,12 @@ public class AppDynamicsState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    List<InfraNodeRequest> infraNodeRequests = canaryWorkflowStandardParams.getInfraNodeRequests();
+    logger.info("infraNodeRequests: {}", infraNodeRequests);
+
+    logger.info("Current Phase Instances: {}", canaryWorkflowStandardParams.getInstances());
+
     final long verificationStartTime = System.currentTimeMillis();
     synchronized (this) {
       while (
