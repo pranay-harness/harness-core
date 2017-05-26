@@ -74,6 +74,9 @@ public class BucketData {
     private String displayValue;
     private boolean missingData;
 
+    // needed for Jackson
+    public DataSummary() {}
+
     public DataSummary(int nodeCount, Stats stats, String displayValue, boolean missingData) {
       this.nodeCount = nodeCount;
       this.stats = stats;

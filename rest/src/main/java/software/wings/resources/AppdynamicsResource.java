@@ -108,7 +108,7 @@ public class AppdynamicsResource {
     return new RestResponse<>(appdynamicsService.saveMetricData(accountId, appdynamicsAppId, tierId, metricData));
   }
 
-  @GET
+  @POST
   @Path("/generate-metrics")
   @Timed
   @ExceptionMetered

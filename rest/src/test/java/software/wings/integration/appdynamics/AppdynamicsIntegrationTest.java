@@ -21,6 +21,8 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.metrics.BucketData;
+import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -34,6 +36,7 @@ import software.wings.utils.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -338,6 +341,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     final long APPDYNAMICS_APP_ID = 5L;
     final long METRIC_ID = 4L;
     final long TIER_ID = 6L;
+    final String BT_NAME = "todolist";
+    final String METRIC_NAME = "Average Response Time (ms)";
     final AppdynamicsMetricDataValue METRIC_VALUE_1 = AppdynamicsMetricDataValue.Builder.anAppdynamicsMetricDataValue()
                                                           .withStartTimeInMillis(1495432894010L)
                                                           .withValue(100L)
@@ -376,19 +381,19 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                                                           .build();
     final AppdynamicsMetricData METRIC_DATA_1 =
         AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
-            .withMetricName("BTM|BTs|BT:132632|Component:42159|Average Response Time (ms)")
+            .withMetricName("BTM|BTs|BT:132632|Component:42159|" + METRIC_NAME)
             .withMetricId(METRIC_ID)
-            .withMetricPath(
-                "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Average Response Time (ms)")
+            .withMetricPath("Business Transaction Performance|Business Transactions|test-tier|" + BT_NAME
+                + "|Individual Nodes|test-node|" + METRIC_NAME)
             .withFrequency("ONE_MIN")
             .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_1, METRIC_VALUE_2})
             .build();
     final AppdynamicsMetricData METRIC_DATA_2 =
         AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
-            .withMetricName("BTM|BTs|BT:132632|Component:42159|Average Response Time (ms)")
+            .withMetricName("BTM|BTs|BT:132632|Component:42159|" + METRIC_NAME)
             .withMetricId(METRIC_ID)
-            .withMetricPath(
-                "Business Transaction Performance|Business Transactions|test-tier|/todolist/|Individual Nodes|test-node|Average Response Time (ms)")
+            .withMetricPath("Business Transaction Performance|Business Transactions|test-tier|" + BT_NAME
+                + "|Individual Nodes|test-node|" + METRIC_NAME)
             .withFrequency("ONE_MIN")
             .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_2, METRIC_VALUE_3})
             .build();
@@ -424,12 +429,23 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     Assert.assertEquals("result not correct length", 3, result.size());
 
     // more specific query
-    requestBuilder.addFilter("btName", Operator.EQ, "/todolist/")
+    requestBuilder.addFilter("btName", Operator.EQ, BT_NAME)
         .addFilter("nodeName", Operator.EQ, "test-node")
         .addFilter("startTime", Operator.EQ, 1495432894010L);
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("short result not correct length", 1, result.size());
+
+    // generate metrics using the REST interface
+    target = client.target(API_BASE + "/appdynamics/generate-metrics?accountId=" + accountId
+        + "&appdynamicsAppId=" + APPDYNAMICS_APP_ID + "&tierId=" + TIER_ID + "&startTimeInMillis=1495432894010"
+        + "&endTimeInMillis=1495433114010");
+    RestResponse<Map<String, Map<String, BucketData>>> metricRestResponse =
+        getRequestBuilderWithAuthHeader(target).post(Entity.entity(Arrays.asList(BT_NAME), APPLICATION_JSON),
+            new GenericType<RestResponse<Map<String, Map<String, BucketData>>>>() {});
+    Map<String, Map<String, BucketData>> generatedMetrics = metricRestResponse.getResource();
+    Assert.assertEquals(RiskLevel.HIGH, generatedMetrics.get(BT_NAME).get(METRIC_NAME).getRisk());
+    Assert.assertEquals("100.0", generatedMetrics.get(BT_NAME).get(METRIC_NAME).getOldData().getDisplayValue());
 
     // delete
     Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
