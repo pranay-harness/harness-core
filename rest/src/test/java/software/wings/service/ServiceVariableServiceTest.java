@@ -172,17 +172,20 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
 
-    when(query.asList()).thenReturn(Arrays.asList(SERVICE_VARIABLE));
+    PageRequest<ServiceVariable> request =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
+            .addFilter(aSearchFilter().withField("envId", Operator.EQ, ENV_ID).build())
+            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
+            .build();
+    PageResponse<ServiceVariable> resp = new PageResponse<>();
+    resp.setResponse(Arrays.asList(SERVICE_VARIABLE));
+    when(wingsPersistence.query(ServiceVariable.class, request)).thenReturn(resp);
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
     List<ServiceVariable> serviceVariables =
         serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate);
 
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field("templateId");
-    verify(end).equal(TEMPLATE_ID);
+    verify(wingsPersistence).query(ServiceVariable.class, request);
     assertThat(serviceVariables.get(0)).isEqualTo(SERVICE_VARIABLE);
   }
 
