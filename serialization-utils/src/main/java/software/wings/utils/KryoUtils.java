@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
+import com.esotericsoftware.minlog.Log;
 import de.javakaffee.kryoserializers.ArraysAsListSerializer;
 import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
 import de.javakaffee.kryoserializers.JdkProxySerializer;
@@ -40,6 +41,7 @@ public class KryoUtils {
       new KryoPool
           .Builder(() -> {
             Kryo kryo = new Kryo();
+            Log.TRACE();
             kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
                 FieldSerializer.CachedFieldNameStrategy.EXTENDED);
             kryo.getFieldSerializerConfig().setCopyTransient(false);
