@@ -148,7 +148,7 @@ public class WingsRule implements MethodRule {
     } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
         MongoClientURI clientUri =
-            new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:37017/wings"));
+            new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/wings"));
         mongoClient = new MongoClient(clientUri);
       } catch (NumberFormatException ex) {
         port = 27017;
