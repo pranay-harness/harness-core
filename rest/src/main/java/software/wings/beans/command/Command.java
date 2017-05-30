@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 public class Command extends Base implements CommandUnit {
   @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
-  @SchemaIgnore private CommandExecutionStatus commandExecutionStatus;
+  @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
 
   @SchemaIgnore private boolean artifactNeeded = false;
   @SchemaIgnore private String deploymentType;

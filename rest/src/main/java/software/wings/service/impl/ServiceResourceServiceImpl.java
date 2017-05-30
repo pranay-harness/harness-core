@@ -2,16 +2,20 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -39,6 +43,7 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -68,6 +73,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +81,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -218,6 +225,53 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
     clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
     return addCommand(appId, serviceId, clonedServiceCommand);
+  }
+
+  @Override
+  public List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName) {
+    Map<String, Integer> commandNameVersionMap =
+        get(appId, serviceId)
+            .getServiceCommands()
+            .stream()
+            .filter(serviceCommand -> serviceCommand.getVersionForEnv(envId) != 0)
+            .collect(toMap(ServiceCommand::getName, serviceCommand -> serviceCommand.getVersionForEnv(envId)));
+
+    return getFlattenCommandUnitList(appId, serviceId, commandName, commandNameVersionMap);
+  }
+
+  private List<CommandUnit> getFlattenCommandUnitList(
+      String appId, String serviceId, String commandName, Map<String, Integer> commandNameVersionMap) {
+    int version = EntityVersion.INITIAL_VERSION;
+    if (commandNameVersionMap != null) {
+      version = commandNameVersionMap.get(commandName);
+    }
+
+    Command command = getCommandByNameAndVersion(appId, serviceId, commandName, version).getCommand();
+
+    Command executableCommand = command;
+    if (executableCommand == null) {
+      return new ArrayList<>();
+    }
+
+    if (isNotBlank(command.getReferenceId())) {
+      executableCommand = getCommandByNameAndVersion(
+          appId, serviceId, command.getReferenceId(), commandNameVersionMap.get(command.getReferenceId()))
+                              .getCommand();
+      if (executableCommand == null) {
+        throw new WingsException(COMMAND_DOES_NOT_EXIST);
+      }
+    }
+
+    return executableCommand.getCommandUnits()
+        .stream()
+        .flatMap(commandUnit -> {
+          if (COMMAND.equals(commandUnit.getCommandUnitType())) {
+            return getFlattenCommandUnitList(appId, serviceId, commandUnit.getName(), commandNameVersionMap).stream();
+          } else {
+            return Stream.of(commandUnit);
+          }
+        })
+        .collect(toList());
   }
 
   private Service addDefaultCommands(Service service) {

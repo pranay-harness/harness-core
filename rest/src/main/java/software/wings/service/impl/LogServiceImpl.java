@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.io.Files;
@@ -14,6 +16,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;
@@ -23,6 +26,8 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -34,6 +39,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class LogServiceImpl implements LogService {
   private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ActivityService activityService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)
@@ -98,6 +104,11 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public List<String> batchedSave(List<Log> logs) {
-    return wingsPersistence.save(logs);
+    List<String> savedLogIds = wingsPersistence.save(logs);
+    // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
+    Map<String, Map<String, Log>> activityCommandUnitLastLogMap = logs.stream().collect(
+        groupingBy(Log::getActivityId, toMap(Log::getCommandUnitName, Function.identity(), (l1, l2) -> l2)));
+    activityService.updateCommandUnitStatus(activityCommandUnitLastLogMap);
+    return savedLogIds;
   }
 }
