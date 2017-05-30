@@ -1,8 +1,12 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
+
+import java.util.Objects;
 
 /**
  * Created by sgurubelli on 5/23/17.
@@ -14,6 +18,8 @@ public class SystemCatalog extends BaseFile {
   private FileType fileType;
   private ContainerFamily family;
   private String notes;
+  private String version;
+  private boolean hardened;
 
   /**
    *  Getter for Catalog Type
@@ -98,6 +104,30 @@ public class SystemCatalog extends BaseFile {
     this.notes = notes;
   }
 
+  /**
+   * Get Version
+   * @return
+   */
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
+  /**
+   *
+   * @return
+   */
+  public boolean isHardened() {
+    return hardened;
+  }
+
+  public void setHardened(boolean hardened) {
+    this.hardened = hardened;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -106,30 +136,28 @@ public class SystemCatalog extends BaseFile {
       return false;
     if (!super.equals(o))
       return false;
-
     SystemCatalog that = (SystemCatalog) o;
-
-    if (catalogType != that.catalogType)
-      return false;
-    if (stackRootDirectory != null ? !stackRootDirectory.equals(that.stackRootDirectory)
-                                   : that.stackRootDirectory != null)
-      return false;
-    if (fileType != that.fileType)
-      return false;
-    if (family != that.family)
-      return false;
-    return notes != null ? notes.equals(that.notes) : that.notes == null;
+    return hardened == that.hardened && catalogType == that.catalogType
+        && Objects.equals(stackRootDirectory, that.stackRootDirectory) && fileType == that.fileType
+        && family == that.family && Objects.equals(notes, that.notes) && Objects.equals(version, that.version);
   }
 
   @Override
   public int hashCode() {
-    int result = super.hashCode();
-    result = 31 * result + (catalogType != null ? catalogType.hashCode() : 0);
-    result = 31 * result + (stackRootDirectory != null ? stackRootDirectory.hashCode() : 0);
-    result = 31 * result + (fileType != null ? fileType.hashCode() : 0);
-    result = 31 * result + (family != null ? family.hashCode() : 0);
-    result = 31 * result + (notes != null ? notes.hashCode() : 0);
-    return result;
+    return Objects.hash(super.hashCode(), catalogType, stackRootDirectory, fileType, family, notes, version, hardened);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("catalogType", catalogType)
+        .add("stackRootDirectory", stackRootDirectory)
+        .add("fileType", fileType)
+        .add("family", family)
+        .add("notes", notes)
+        .add("version", version)
+        .add("hardened", hardened)
+        .toString();
   }
 
   /**
@@ -165,6 +193,8 @@ public class SystemCatalog extends BaseFile {
     private FileType fileType;
     private ContainerFamily family;
     private String notes;
+    private String version;
+    private boolean hardened;
 
     private Builder() {}
 
@@ -367,6 +397,26 @@ public class SystemCatalog extends BaseFile {
     }
 
     /**
+     *
+     * @param hardened
+     * @return
+     */
+    public Builder withHardened(boolean hardened) {
+      this.hardened = hardened;
+      return this;
+    }
+
+    /**
+     *
+     * @param version
+     * @return
+     */
+    public Builder withVersion(String version) {
+      this.version = version;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -390,7 +440,9 @@ public class SystemCatalog extends BaseFile {
           .withFileType(fileType)
           .withStackRootDirectory(stackRootDirectory)
           .withFamily(family)
-          .withNotes(notes);
+          .withNotes(notes)
+          .withHardened(hardened)
+          .withVersion(version);
     }
 
     /**
@@ -418,6 +470,7 @@ public class SystemCatalog extends BaseFile {
       systemCatalog.setStackRootDirectory(stackRootDirectory);
       systemCatalog.setFamily(family);
       systemCatalog.setNotes(notes);
+      systemCatalog.setVersion(version);
       return systemCatalog;
     }
   }

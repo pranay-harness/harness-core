@@ -31,7 +31,7 @@ public class AppContainer extends BaseFile {
   private FileType fileType;
   @NotEmpty private String accountId;
   private boolean systemCreated;
-  private String version;
+  @FormDataParam(("version")) private String version;
   private boolean hardened;
 
   /**
@@ -158,11 +158,26 @@ public class AppContainer extends BaseFile {
     this.systemCreated = systemCreated;
   }
 
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
+  public boolean isHardened() {
+    return hardened;
+  }
+
+  public void setHardened(boolean hardened) {
+    this.hardened = hardened;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              standard, description, standardUpload, family, stackRootDirectory, fileType, accountId, systemCreated);
+        + Objects.hash(standard, description, standardUpload, family, stackRootDirectory, fileType, accountId,
+              systemCreated, hardened, version);
   }
 
   @Override
@@ -195,7 +210,8 @@ public class AppContainer extends BaseFile {
         && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family)
         && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
         && Objects.equals(this.fileType, other.fileType) && Objects.equals(this.accountId, other.accountId)
-        && Objects.equals(this.systemCreated, other.systemCreated);
+        && Objects.equals(this.systemCreated, other.systemCreated) && Objects.equals(this.version, other.version)
+        && Objects.equals(this.hardened, other.hardened);
   }
 
   /**
@@ -223,6 +239,8 @@ public class AppContainer extends BaseFile {
     private long lastUpdatedAt;
     private boolean systemCreated;
     private String accountId;
+    private String version;
+    private boolean hardened;
 
     private Builder() {}
 
@@ -464,6 +482,22 @@ public class AppContainer extends BaseFile {
     }
 
     /**
+     * With Hardened at builder.
+     */
+    public Builder withHardened(boolean hardened) {
+      this.hardened = hardened;
+      return this;
+    }
+
+    /**
+     * With Version at builder
+     */
+    public Builder withVersion(String version) {
+      this.version = version;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -490,7 +524,9 @@ public class AppContainer extends BaseFile {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withSystemCreated(systemCreated)
-          .withAccountId(accountId);
+          .withAccountId(accountId)
+          .withHardened(hardened)
+          .withVersion(version);
     }
 
     /**
@@ -521,6 +557,8 @@ public class AppContainer extends BaseFile {
       appContainer.setLastUpdatedAt(lastUpdatedAt);
       appContainer.setSystemCreated(systemCreated);
       appContainer.setAccountId(accountId);
+      appContainer.setHardened(hardened);
+      appContainer.setVersion(version);
       return appContainer;
     }
   }

@@ -47,6 +47,13 @@ public interface AppContainerService {
   AppContainer update(@Valid AppContainer appContainer, @NotNull InputStream inputStream, @NotNull FileBucket bucket);
 
   /**
+   * Update
+   * @param appContainer
+   * @return
+   */
+  @ValidationGroups(Update.class) AppContainer update(@Valid AppContainer appContainer);
+
+  /**
    * List.
    *
    * @param request the request
