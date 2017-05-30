@@ -292,7 +292,6 @@ public class StateMachineExecutor {
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
-      logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
       ex = exception;
     }
 
