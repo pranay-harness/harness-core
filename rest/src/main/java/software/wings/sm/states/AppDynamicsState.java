@@ -48,7 +48,7 @@ public class AppDynamicsState extends State {
 
   @Attributes(required = true, title = "Tier Name") private String tierId;
 
-  @DefaultValue("2")
+  @DefaultValue("15")
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
 
