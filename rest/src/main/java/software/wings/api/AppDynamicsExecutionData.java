@@ -2,190 +2,113 @@ package software.wings.api;
 
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
-import com.google.common.base.MoreObjects;
-
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by anubhaw on 8/4/16.
  */
 public class AppDynamicsExecutionData extends StateExecutionData {
-  private String appIdentifier;
-  private String metricPath;
-  private String assertionStatement;
-  private String assertionStatus;
-  private int httpResponseCode;
-  private String response;
+  private String correlationId;
+  private String appDynamicsConfigId;
+  private long appDynamicsApplicationId;
+  private long appdynamicsTierId;
 
-  /**
-   * Gets assertion statement.
-   *
-   * @return the assertion statement
-   */
-  public String getAssertionStatement() {
-    return assertionStatement;
+  public String getAppDynamicsConfigId() {
+    return appDynamicsConfigId;
   }
 
-  /**
-   * Sets assertion statement.
-   *
-   * @param assertionStatement the assertion statement
-   */
-  public void setAssertionStatement(String assertionStatement) {
-    this.assertionStatement = assertionStatement;
+  public void setAppDynamicsConfigId(String appDynamicsConfigId) {
+    this.appDynamicsConfigId = appDynamicsConfigId;
   }
 
-  /**
-   * Gets assertion status.
-   *
-   * @return the assertion status
-   */
-  public String getAssertionStatus() {
-    return assertionStatus;
+  public long getAppDynamicsApplicationId() {
+    return appDynamicsApplicationId;
   }
 
-  /**
-   * Sets assertion status.
-   *
-   * @param assertionStatus the assertion status
-   */
-  public void setAssertionStatus(String assertionStatus) {
-    this.assertionStatus = assertionStatus;
+  public void setAppDynamicsApplicationId(long appDynamicsApplicationId) {
+    this.appDynamicsApplicationId = appDynamicsApplicationId;
   }
 
-  /**
-   * Gets http response code.
-   *
-   * @return the http response code
-   */
-  public int getHttpResponseCode() {
-    return httpResponseCode;
+  public long getAppdynamicsTierId() {
+    return appdynamicsTierId;
   }
 
-  /**
-   * Sets http response code.
-   *
-   * @param httpResponseCode the http response code
-   */
-  public void setHttpResponseCode(int httpResponseCode) {
-    this.httpResponseCode = httpResponseCode;
+  public void setAppdynamicsTierId(long appdynamicsTierId) {
+    this.appdynamicsTierId = appdynamicsTierId;
   }
 
-  /**
-   * Gets response.
-   *
-   * @return the response
-   */
-  public String getResponse() {
-    return response;
+  public String getCorrelationId() {
+    return correlationId;
   }
 
-  /**
-   * Sets response.
-   *
-   * @param response the response
-   */
-  public void setResponse(String response) {
-    this.response = response;
+  public void setCorrelationId(String correlationId) {
+    this.correlationId = correlationId;
   }
 
-  /**
-   * Gets app identifier.
-   *
-   * @return the app identifier
-   */
-  public String getAppIdentifier() {
-    return appIdentifier;
-  }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof AppDynamicsExecutionData))
+      return false;
 
-  /**
-   * Sets app identifier.
-   *
-   * @param appIdentifier the app identifier
-   */
-  public void setAppIdentifier(String appIdentifier) {
-    this.appIdentifier = appIdentifier;
-  }
+    AppDynamicsExecutionData that = (AppDynamicsExecutionData) o;
 
-  /**
-   * Gets metric path.
-   *
-   * @return the metric path
-   */
-  public String getMetricPath() {
-    return metricPath;
-  }
-
-  /**
-   * Sets metric path.
-   *
-   * @param metricPath the metric path
-   */
-  public void setMetricPath(String metricPath) {
-    this.metricPath = metricPath;
+    if (appDynamicsApplicationId != that.appDynamicsApplicationId)
+      return false;
+    if (appdynamicsTierId != that.appdynamicsTierId)
+      return false;
+    if (!correlationId.equals(that.correlationId))
+      return false;
+    return appDynamicsConfigId.equals(that.appDynamicsConfigId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(assertionStatement, assertionStatus, httpResponseCode, response);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final AppDynamicsExecutionData other = (AppDynamicsExecutionData) obj;
-    return Objects.equals(this.assertionStatement, other.assertionStatement)
-        && Objects.equals(this.assertionStatus, other.assertionStatus)
-        && Objects.equals(this.httpResponseCode, other.httpResponseCode)
-        && Objects.equals(this.response, other.response);
+    int result = correlationId.hashCode();
+    result = 31 * result + appDynamicsConfigId.hashCode();
+    result = 31 * result + (int) (appDynamicsApplicationId ^ (appDynamicsApplicationId >>> 32));
+    result = 31 * result + (int) (appdynamicsTierId ^ (appdynamicsTierId >>> 32));
+    return result;
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("assertionStatement", assertionStatement)
-        .add("assertionStatus", assertionStatus)
-        .add("httpResponseCode", httpResponseCode)
-        .add("response", response)
-        .toString();
+    return "AppDynamicsExecutionData{"
+        + "correlationId='" + correlationId + '\'' + ", appDynamicsConfigId='" + appDynamicsConfigId + '\''
+        + ", appDynamicsApplicationId=" + appDynamicsApplicationId + ", appdynamicsTierId=" + appdynamicsTierId + '}';
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(executionDetails, "httpResponseCode",
-        anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
-    putNotNull(executionDetails, "assertionStatement",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
-    putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+    putNotNull(executionDetails, "appDynamicsConfigId",
+        anExecutionDataValue().withValue(appDynamicsConfigId).withDisplayName("Appdynamics Config Id").build());
+    putNotNull(executionDetails, "appDynamicsApplicationId",
+        anExecutionDataValue()
+            .withValue(appDynamicsApplicationId)
+            .withDisplayName("Appdynamics Application Id")
+            .build());
+    putNotNull(executionDetails, "appdynamicsTierId",
+        anExecutionDataValue().withValue(appdynamicsTierId).withDisplayName("Appdynamics Tier Id").build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "httpResponseCode",
-        anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
-    putNotNull(
-        executionDetails, "response", anExecutionDataValue().withValue(response).withDisplayName("Response").build());
-    putNotNull(executionDetails, "assertionStatement",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
-    putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
-    putNotNull(executionDetails, "appIdentifier",
-        anExecutionDataValue().withValue(appIdentifier).withDisplayName("App Identifier").build());
-    putNotNull(executionDetails, "metricPath",
-        anExecutionDataValue().withValue(metricPath).withDisplayName("Metric Path").build());
+    putNotNull(executionDetails, "appDynamicsConfigId",
+        anExecutionDataValue().withValue(appDynamicsConfigId).withDisplayName("Appdynamics Config Id").build());
+    putNotNull(executionDetails, "appDynamicsApplicationId",
+        anExecutionDataValue()
+            .withValue(appDynamicsApplicationId)
+            .withDisplayName("Appdynamics Application Id")
+            .build());
+    putNotNull(executionDetails, "appdynamicsTierId",
+        anExecutionDataValue().withValue(appdynamicsTierId).withDisplayName("Appdynamics Tier Id").build());
     return executionDetails;
   }
 
@@ -193,12 +116,10 @@ public class AppDynamicsExecutionData extends StateExecutionData {
    * The type Builder.
    */
   public static final class Builder {
-    private String appIdentifier;
-    private String metricPath;
-    private String assertionStatement;
-    private String assertionStatus;
-    private int httpResponseCode;
-    private String response;
+    private String correlationId;
+    private String appDynamicsConfigId;
+    private long appDynamicsApplicationId;
+    private long appdynamicsTierId;
     private String stateName;
     private Long startTs;
     private Long endTs;
@@ -216,69 +137,23 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       return new Builder();
     }
 
-    /**
-     * With app identifier builder.
-     *
-     * @param appIdentifier the app identifier
-     * @return the builder
-     */
-    public Builder withAppIdentifier(String appIdentifier) {
-      this.appIdentifier = appIdentifier;
+    public Builder withCorrelationId(String correlationId) {
+      this.correlationId = correlationId;
       return this;
     }
 
-    /**
-     * With metric path builder.
-     *
-     * @param metricPath the metric path
-     * @return the builder
-     */
-    public Builder withMetricPath(String metricPath) {
-      this.metricPath = metricPath;
+    public Builder withAppDynamicsConfigID(String appDynamicsConfigId) {
+      this.appDynamicsConfigId = appDynamicsConfigId;
       return this;
     }
 
-    /**
-     * With assertion statement builder.
-     *
-     * @param assertionStatement the assertion statement
-     * @return the builder
-     */
-    public Builder withAssertionStatement(String assertionStatement) {
-      this.assertionStatement = assertionStatement;
+    public Builder withAppDynamicsApplicationId(long appDynamicsApplicationId) {
+      this.appDynamicsApplicationId = appDynamicsApplicationId;
       return this;
     }
 
-    /**
-     * With assertion status builder.
-     *
-     * @param assertionStatus the assertion status
-     * @return the builder
-     */
-    public Builder withAssertionStatus(String assertionStatus) {
-      this.assertionStatus = assertionStatus;
-      return this;
-    }
-
-    /**
-     * With http response code builder.
-     *
-     * @param httpResponseCode the http response code
-     * @return the builder
-     */
-    public Builder withHttpResponseCode(int httpResponseCode) {
-      this.httpResponseCode = httpResponseCode;
-      return this;
-    }
-
-    /**
-     * With response builder.
-     *
-     * @param response the response
-     * @return the builder
-     */
-    public Builder withResponse(String response) {
-      this.response = response;
+    public Builder withAppdynamicsTierId(long appdynamicsTierId) {
+      this.appdynamicsTierId = appdynamicsTierId;
       return this;
     }
 
@@ -344,12 +219,10 @@ public class AppDynamicsExecutionData extends StateExecutionData {
      */
     public Builder but() {
       return anAppDynamicsExecutionData()
-          .withAppIdentifier(appIdentifier)
-          .withMetricPath(metricPath)
-          .withAssertionStatement(assertionStatement)
-          .withAssertionStatus(assertionStatus)
-          .withHttpResponseCode(httpResponseCode)
-          .withResponse(response)
+          .withCorrelationId(correlationId)
+          .withAppDynamicsConfigID(appDynamicsConfigId)
+          .withAppDynamicsApplicationId(appDynamicsApplicationId)
+          .withAppdynamicsTierId(appdynamicsTierId)
           .withStateName(stateName)
           .withStartTs(startTs)
           .withEndTs(endTs)
@@ -364,12 +237,10 @@ public class AppDynamicsExecutionData extends StateExecutionData {
      */
     public AppDynamicsExecutionData build() {
       AppDynamicsExecutionData appDynamicsExecutionData = new AppDynamicsExecutionData();
-      appDynamicsExecutionData.setAppIdentifier(appIdentifier);
-      appDynamicsExecutionData.setMetricPath(metricPath);
-      appDynamicsExecutionData.setAssertionStatement(assertionStatement);
-      appDynamicsExecutionData.setAssertionStatus(assertionStatus);
-      appDynamicsExecutionData.setHttpResponseCode(httpResponseCode);
-      appDynamicsExecutionData.setResponse(response);
+      appDynamicsExecutionData.setCorrelationId(correlationId);
+      appDynamicsExecutionData.setAppDynamicsConfigId(appDynamicsConfigId);
+      appDynamicsExecutionData.setAppDynamicsApplicationId(appDynamicsApplicationId);
+      appDynamicsExecutionData.setAppdynamicsTierId(appdynamicsTierId);
       appDynamicsExecutionData.setStateName(stateName);
       appDynamicsExecutionData.setStartTs(startTs);
       appDynamicsExecutionData.setEndTs(endTs);
