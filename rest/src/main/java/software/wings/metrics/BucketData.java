@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.joda.time.DateTime;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by mike@ on 4/11/17.
@@ -70,6 +71,7 @@ public class BucketData {
 
   public class DataSummary {
     private int nodeCount;
+    private List<String> nodeList;
     private Stats stats;
     private String displayValue;
     private boolean missingData;
@@ -77,8 +79,9 @@ public class BucketData {
     // needed for Jackson
     public DataSummary() {}
 
-    public DataSummary(int nodeCount, Stats stats, String displayValue, boolean missingData) {
+    public DataSummary(int nodeCount, List<String> nodeList, Stats stats, String displayValue, boolean missingData) {
       this.nodeCount = nodeCount;
+      this.nodeList = nodeList;
       this.stats = stats;
       this.displayValue = displayValue;
       this.missingData = missingData;
@@ -90,6 +93,14 @@ public class BucketData {
 
     public void setNodeCount(int nodeCount) {
       this.nodeCount = nodeCount;
+    }
+
+    public List<String> getNodeList() {
+      return nodeList;
+    }
+
+    public void setNodeList(List<String> nodeList) {
+      this.nodeList = nodeList;
     }
 
     @JsonIgnore
@@ -120,8 +131,8 @@ public class BucketData {
     @Override
     public String toString() {
       return "DataSummary{"
-          + "nodeCount=" + nodeCount + ", stats=" + stats + ", displayValue='" + displayValue + '\''
-          + ", missingData=" + missingData + '}';
+          + "nodeCount=" + nodeCount + ", nodeList=" + nodeList + ", stats=" + stats + ", displayValue='" + displayValue
+          + '\'' + ", missingData=" + missingData + '}';
     }
   }
 

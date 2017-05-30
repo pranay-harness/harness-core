@@ -1,13 +1,13 @@
 package software.wings.metrics;
 
+import static org.hamcrest.collection.IsArrayContainingInAnyOrder.arrayContainingInAnyOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ArrayListMultimap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import org.junit.Before;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.metrics.BucketData.DataSummary;
@@ -15,7 +15,6 @@ import software.wings.metrics.MetricDefinition.ThresholdType;
 import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -216,6 +215,7 @@ public class MetricCalculatorTest {
             BT2_CALL_RECORD_6, BT2_CALL_RECORD_7, BT2_CALL_RECORD_8);
     DataSummary summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS);
     assertEquals(4, summary.getNodeCount());
+    assertThat(summary.getNodeList().toArray(), arrayContainingInAnyOrder("node1", "node2", "node3", "node4"));
     assertEquals(68, summary.getStats().sum(), 0.05);
     assertEquals("68.0", summary.getDisplayValue());
     assertEquals(false, summary.isMissingData());
@@ -234,6 +234,7 @@ public class MetricCalculatorTest {
         Arrays.asList(BT2_CALL_RECORD_1, BT2_CALL_RECORD_5, BT2_CALL_RECORD_9);
     summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS_WITH_EXTRA_LATE_DATA);
     assertEquals(1, summary.getNodeCount());
+    assertEquals("node1", summary.getNodeList().get(0));
     assertEquals(29, summary.getStats().sum(), 0.05);
     assertEquals("29.0", summary.getDisplayValue());
     assertEquals(true, summary.isMissingData());
