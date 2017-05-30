@@ -11,7 +11,9 @@ import software.wings.api.AppDynamicsExecutionData;
 import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InfraNodeRequest;
+import software.wings.api.InstanceElement;
 import software.wings.service.impl.AppDynamicsSettingProvider;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -23,6 +25,7 @@ import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +56,8 @@ public class AppDynamicsState extends State {
   private String timeDuration;
 
   @Inject @Transient private WaitNotifyEngine waitNotifyEngine;
+
+  @Inject @org.simpleframework.xml.Transient private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Create a new Http State with given name.
@@ -127,18 +132,16 @@ public class AppDynamicsState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    List<InfraNodeRequest> infraNodeRequests = canaryWorkflowStandardParams.getInfraNodeRequests();
-    logger.info("infraNodeRequests: {}", infraNodeRequests);
-
-    logger.info("Current Phase Instances: {}", canaryWorkflowStandardParams.getInstances());
-
-    final AppDynamicsExecutionData executionData = AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
-                                                       .withAppDynamicsConfigID(appDynamicsConfigId)
-                                                       .withAppDynamicsApplicationId(Long.parseLong(applicationId))
-                                                       .withAppdynamicsTierId(Long.parseLong(tierId))
-                                                       .withCorrelationId(UUID.randomUUID().toString())
-                                                       .build();
+    final List<String> canaryNewHostNames = getCanaryNewHostNames(context);
+    final AppDynamicsExecutionData executionData =
+        AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
+            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .withCanaryNewHostNames(canaryNewHostNames)
+            .withAppDynamicsConfigID(appDynamicsConfigId)
+            .withAppDynamicsApplicationId(Long.parseLong(applicationId))
+            .withAppdynamicsTierId(Long.parseLong(tierId))
+            .withCorrelationId(UUID.randomUUID().toString())
+            .build();
     final AppdynamicsAnalysisResponse response = anAppdynamicsAnalysisResponse()
                                                      .withAppDynamicsExecutionData(executionData)
                                                      .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -164,6 +167,20 @@ public class AppDynamicsState extends State {
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
         .build();
+  }
+
+  private List<String> getCanaryNewHostNames(ExecutionContext context) {
+    CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    List<InfraNodeRequest> infraNodeRequests = canaryWorkflowStandardParams.getInfraNodeRequests();
+    logger.info("infraNodeRequests: {}", infraNodeRequests);
+    logger.info("Current Phase Instances: {}", canaryWorkflowStandardParams.getInstances());
+    final List<String> rv = new ArrayList<>();
+
+    for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
+      rv.add(instanceElement.getHostName());
+    }
+
+    return rv;
   }
 
   @Override
