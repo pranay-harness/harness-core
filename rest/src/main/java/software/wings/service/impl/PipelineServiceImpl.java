@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
+import de.danielbechler.util.Collections;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,14 +316,12 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private void validatePipeline(Pipeline pipeline) {
+    if (Collections.isEmpty(pipeline.getPipelineStages())) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one pipeline stage required");
+    }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().size() == 0) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Invalid pipeline stage");
-      }
-
-      if (pipelineStage.getPipelineStageElements().size() > 1) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST, "message",
-            "Pipeline with more than one execution in one stage in not supported");
       }
 
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {

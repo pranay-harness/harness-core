@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
@@ -13,6 +14,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
@@ -28,7 +30,7 @@ import java.util.Map;
  *
  * @author Rishi.
  */
-public class WorkflowStandardParams implements ContextElement {
+public class WorkflowStandardParams implements ExecutionContextAware, ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
 
   @Transient @Inject private transient AppService appService;
@@ -59,6 +61,8 @@ public class WorkflowStandardParams implements ContextElement {
   private Long endTs;
 
   private String timestampId = System.currentTimeMillis() + "-" + nextInt(0, 1000);
+
+  @Transient @JsonIgnore private transient ExecutionContext context;
 
   /**
    * {@inheritDoc}
@@ -337,6 +341,19 @@ public class WorkflowStandardParams implements ContextElement {
    * @param uuid the uuid
    */
   public void setUuid(String uuid) {}
+
+  public List<InstanceElement> getInstances() {
+    return (List<InstanceElement>) context.evaluateExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION);
+  }
+
+  protected ExecutionContext getContext() {
+    return context;
+  }
+
+  @Override
+  public void setExecutionContext(ExecutionContext executionContext) {
+    this.context = executionContext;
+  }
 
   /**
    * The type Builder.
