@@ -5,6 +5,7 @@ import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.util.stream.Collectors.toMap;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -67,7 +68,9 @@ public class InitSshCommandUnit extends SshCommandUnit {
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
     preInitCommand = "mkdir -p " + executionStagingDir;
-    envVariables.putAll(context.getServiceVariables());
+    for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
+      envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
+    }
     envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
@@ -128,6 +131,22 @@ public class InitSshCommandUnit extends SshCommandUnit {
     }
     context.addEnvVariables(envVariables);
     return commandExecutionStatus;
+  }
+
+  @VisibleForTesting
+  static String escapifyString(String input) {
+    return input.replaceAll("\\\\", "\\\\\\\\")
+        .replaceAll("&", "\\\\&")
+        .replaceAll("\\$", "\\\\\\$")
+        .replaceAll("`", "\\\\`")
+        .replaceAll("\"", "\\\\\"")
+        .replaceAll("'", "\\\\'")
+        .replaceAll("\\(", "\\\\(")
+        .replaceAll("\\)", "\\\\)")
+        .replaceAll("\\|", "\\\\|")
+        .replaceAll("<", "\\\\<")
+        .replaceAll(">", "\\\\>")
+        .replaceAll(";", "\\\\;");
   }
 
   /**

@@ -1,12 +1,14 @@
 package software.wings.sm.states;
 
+import static software.wings.api.AppdynamicsAnalysisResponse.Builder.anAppdynamicsAnalysisResponse;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.AppDynamicsExecutionData;
+import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InfraNodeRequest;
 import software.wings.service.impl.AppDynamicsSettingProvider;
@@ -15,14 +17,20 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -44,7 +52,7 @@ public class AppDynamicsState extends State {
   @Attributes(title = "Analyze Time duration (in minutes)", description = "Default 15 minutes")
   private String timeDuration;
 
-  private final AtomicBoolean aborted = new AtomicBoolean(false);
+  @Inject @Transient private WaitNotifyEngine waitNotifyEngine;
 
   /**
    * Create a new Http State with given name.
@@ -125,51 +133,39 @@ public class AppDynamicsState extends State {
 
     logger.info("Current Phase Instances: {}", canaryWorkflowStandardParams.getInstances());
 
-    final long verificationStartTime = System.currentTimeMillis();
-    synchronized (this) {
-      while (
-          System.currentTimeMillis() - verificationStartTime < TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration))
-          && !aborted.get()) {
-        try {
-          this.wait(TimeUnit.MINUTES.toMillis(1L));
-        } catch (InterruptedException e) {
-          // do nothing
-        }
-      }
-    }
+    final AppDynamicsExecutionData executionData = AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
+                                                       .withAppDynamicsConfigID(appDynamicsConfigId)
+                                                       .withAppDynamicsApplicationId(Long.parseLong(applicationId))
+                                                       .withAppdynamicsTierId(Long.parseLong(tierId))
+                                                       .withCorrelationId(UUID.randomUUID().toString())
+                                                       .build();
+    final AppdynamicsAnalysisResponse response = anAppdynamicsAnalysisResponse()
+                                                     .withAppDynamicsExecutionData(executionData)
+                                                     .withExecutionStatus(ExecutionStatus.SUCCESS)
+                                                     .build();
+    final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    scheduledExecutorService.schedule(() -> {
+      waitNotifyEngine.notify(executionData.getCorrelationId(), response);
+    }, Long.parseLong(timeDuration), TimeUnit.MINUTES);
 
-    if (aborted.get()) {
-      final StateExecutionData stateExecutionData = aStateExecutionData()
-                                                        .withStateName(getName())
-                                                        .withStartTs(verificationStartTime)
-                                                        .withEndTs(System.currentTimeMillis())
-                                                        .withStatus(ExecutionStatus.ABORTED)
-                                                        .build();
-      return anExecutionResponse()
-          .withExecutionStatus(ExecutionStatus.ABORTED)
-          .withErrorMessage("Verification was aborted")
-          .withStateExecutionData(stateExecutionData)
-          .build();
-    }
-
-    final StateExecutionData stateExecutionData = aStateExecutionData()
-                                                      .withStateName(getName())
-                                                      .withStartTs(verificationStartTime)
-                                                      .withEndTs(System.currentTimeMillis())
-                                                      .withStatus(ExecutionStatus.SUCCESS)
-                                                      .build();
     return anExecutionResponse()
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .withErrorMessage("Verification succeeded")
-        .withStateExecutionData(stateExecutionData)
+        .withStateExecutionData(executionData)
         .build();
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {
-    synchronized (this) {
-      aborted.set(true);
-      this.notifyAll();
-    }
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    AppdynamicsAnalysisResponse executionResponse = (AppdynamicsAnalysisResponse) response.values().iterator().next();
+    return anExecutionResponse()
+        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
+        .build();
   }
+
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
 }

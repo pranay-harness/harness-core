@@ -14,13 +14,11 @@ import software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
-import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextAware;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
@@ -44,20 +42,19 @@ import javax.inject.Inject;
 /**
  * Created by rishi on 5/25/17.
  */
-public class CanaryWorkflowStandardParams extends WorkflowStandardParams implements ExecutionContextAware {
+public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
   @Inject @Transient private transient WorkflowService workflowService;
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
-  @Transient private transient ExecutionContext context;
-
   public List<InfraNodeRequest> getInfraNodeRequests() {
     return getInfraNodeRequestsByPhase(null);
   }
 
   public List<InfraNodeRequest> getInfraNodeRequestsByPhase(String phaseName) {
+    ExecutionContext context = getContext();
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     StateExecutionInstance stateExecutionInstance = executionContext.getStateExecutionInstance();
     StateMachine rootStateMachine =
@@ -192,14 +189,5 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams impleme
         .filter(state -> asList(infraStateTypes).contains(state.getStateType()))
         .findFirst()
         .get();
-  }
-
-  public List<InstanceElement> getInstances() {
-    return (List<InstanceElement>) context.evaluateExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION);
-  }
-
-  @Override
-  public void setExecutionContext(ExecutionContext executionContext) {
-    this.context = executionContext;
   }
 }
