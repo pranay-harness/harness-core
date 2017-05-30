@@ -27,10 +27,10 @@ public interface ServiceVariableService {
   /**
    * Save service variable.
    *
-   * @param configFile the config file
+   * @param serviceVariable the service variable
    * @return the service variable
    */
-  @ValidationGroups(Create.class) ServiceVariable save(@Valid ServiceVariable configFile);
+  @ValidationGroups(Create.class) ServiceVariable save(@Valid ServiceVariable serviceVariable);
 
   /**
    * Get service variable.
