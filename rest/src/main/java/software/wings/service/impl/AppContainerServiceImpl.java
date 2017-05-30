@@ -10,7 +10,6 @@ import com.google.common.io.Files;
 
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.AppContainer;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -92,14 +91,24 @@ public class AppContainerServiceImpl implements AppContainerService {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
     Validator.notNullCheck("App Stack", storedAppContainer);
     if (storedAppContainer.isSystemCreated()) {
-      throw new WingsException(INVALID_REQUEST, "message", "System created Application Stack can not be updated");
+      throw new WingsException(INVALID_REQUEST, "message", "System created Application Stack can not be updated.");
     }
-
     if (newPlatformSoftwareBinaryUploaded(storedAppContainer, appContainer)) {
       uploadAppContainerFile(appContainer, in, fileBucket);
     }
     wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(),
-        of("name", appContainer.getName(), "description", appContainer.getDescription()));
+        of("name", appContainer.getName(), "description", appContainer.getDescription(), "version",
+            appContainer.getVersion(), "hardened", appContainer.isHardened()));
+    return get(appContainer.getAccountId(), appContainer.getUuid());
+  }
+
+  @Override
+  public AppContainer update(AppContainer appContainer) {
+    AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
+    Validator.notNullCheck("App Stack", storedAppContainer);
+    wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(),
+        of("name", appContainer.getName(), "description", appContainer.getDescription(), "version",
+            appContainer.getVersion(), "hardened", appContainer.isHardened(), "fileName", appContainer.getFileName()));
     return get(appContainer.getAccountId(), appContainer.getUuid());
   }
 

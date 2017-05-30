@@ -1,9 +1,7 @@
 package software.wings.service.impl;
 
-import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
+import static com.google.common.collect.ImmutableMap.of;
 
-import software.wings.app.FileUploadLimit;
-import software.wings.beans.AppContainer;
 import software.wings.beans.Base;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
@@ -15,6 +13,7 @@ import software.wings.utils.BoundedInputStream;
 import software.wings.utils.FileType;
 import software.wings.utils.FileTypeDetector;
 import software.wings.utils.Misc;
+import software.wings.utils.Validator;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -42,6 +41,19 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
     return wingsPersistence.saveAndGet(SystemCatalog.class, systemCatalog);
   }
 
+  @Override
+  public SystemCatalog update(SystemCatalog systemCatalog, String url, FileBucket fileBucket, long size) {
+    SystemCatalog storedSystemCatalog = get(systemCatalog.getUuid());
+    Validator.notNullCheck("System Catalog", storedSystemCatalog);
+    if (newPlatformSoftwareBinaryUploaded(storedSystemCatalog, systemCatalog)) {
+      uploadSystemCatalogFile(systemCatalog, url, fileBucket, size);
+    }
+    wingsPersistence.updateFields(SystemCatalog.class, systemCatalog.getUuid(),
+        of("name", systemCatalog.getName(), "notes", systemCatalog.getNotes(), "version", systemCatalog.getVersion(),
+            "hardened", systemCatalog.isHardened()));
+    return get(systemCatalog.getUuid());
+  }
+
   private void uploadSystemCatalogFile(SystemCatalog systemCatalog, String url, FileBucket fileBucket, long size) {
     BufferedInputStream in = new BufferedInputStream(BoundedInputStream.getBoundedStreamForUrl(url, size));
 
@@ -66,5 +78,15 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
   @Override
   public List<SystemCatalog> list(PageRequest<SystemCatalog> pageRequest) {
     return wingsPersistence.query(SystemCatalog.class, pageRequest).getResponse();
+  }
+
+  @Override
+  public SystemCatalog get(String systemCatalogId) {
+    return wingsPersistence.get(SystemCatalog.class, systemCatalogId);
+  }
+
+  private boolean newPlatformSoftwareBinaryUploaded(SystemCatalog storedSystemCatalog, SystemCatalog systemCatalog) {
+    return !(
+        systemCatalog.getChecksum() != null && systemCatalog.getChecksum().equals(storedSystemCatalog.getChecksum()));
   }
 }
