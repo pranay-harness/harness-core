@@ -25,7 +25,8 @@
 
 ### Build
 
-1) Clone form git repository: https://github.com/wings-software/wings
+1) Clone form git repository: https://github.com/wings-software/wings 
+
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
    to setup your SSH keys. You can then use SSH to interact with git 
    
