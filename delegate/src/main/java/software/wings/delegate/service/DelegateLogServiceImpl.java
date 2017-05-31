@@ -18,11 +18,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by peeyushaggarwal on 1/9/17.
  */
 @Singleton
+@ValidateOnExecution
 public class DelegateLogServiceImpl implements DelegateLogService {
   @Inject private ManagerClient managerClient;
   private final Logger logger = LoggerFactory.getLogger(getClass());

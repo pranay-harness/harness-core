@@ -173,8 +173,7 @@ public class ActivityServiceImpl implements ActivityService {
     activity.getCommandUnits().forEach(commandUnit -> {
       Log log = commandUnitLastLogMap.get(commandUnit.getName());
       if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
-        commandUnit.setCommandExecutionStatus(
-            log.getCommandExecutionStatus() != null ? log.getCommandExecutionStatus() : RUNNING);
+        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
       }
     });
 

@@ -5,6 +5,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.DelegateLogService;
 
 /**
@@ -32,6 +33,7 @@ public class ExecutionLogCallback {
               .withLogLevel(logLevel)
               .withCommandUnitName(commandName)
               .withLogLine(line)
+              .withExecutionResult(CommandExecutionStatus.RUNNING)
               .build());
     } else {
       logger.error("No logService injected. Couldn't save log [{}:{}]", logLevel, line);

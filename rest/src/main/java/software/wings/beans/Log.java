@@ -19,7 +19,7 @@ public class Log extends Base {
   @NotEmpty @Indexed private String commandUnitName;
   private String logLine;
   @NotNull private LogLevel logLevel;
-  private CommandExecutionStatus commandExecutionStatus;
+  @NotNull private CommandExecutionStatus commandExecutionStatus;
 
   /**
    * Gets activity id.
