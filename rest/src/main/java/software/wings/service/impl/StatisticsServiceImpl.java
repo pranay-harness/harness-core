@@ -35,6 +35,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActivityStatusAggregation;
@@ -50,6 +51,7 @@ import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
@@ -105,27 +107,37 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   @Override
   public Map<String, AppKeyStatistics> getApplicationKeyStats(List<String> appIds, int numOfDays) {
-    List<Activity> activities =
-        wingsPersistence.createQuery(Activity.class)
-            .field("createdAt")
-            .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays))
-            .field("appId")
-            .in(appIds)
-            .field("workflowType")
-            .in(asList(ORCHESTRATION, SIMPLE))
-            .retrievedFields(true, "appId", "environmentType", "serviceInstanceId", "artifactId", "workflowExecutionId")
-            .asList();
-
-    Map<String, List<Activity>> activitiesByApp = activities.stream().collect(groupingBy(Activity::getAppId));
-
-    appIds.forEach(appId -> activitiesByApp.computeIfAbsent(appId, id -> asList()));
+    long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
     Map<String, AppKeyStatistics> appKeyStatisticsMap = new HashMap<>();
-    activitiesByApp.forEach((appId, activityList) -> {
-      AppKeyStatistics keyStatistics = getAppKeyStatistics(activityList);
-      appKeyStatisticsMap.put(appId, keyStatistics);
-    });
-    appIds.forEach(appId -> appKeyStatisticsMap.computeIfAbsent(appId, v -> new AppKeyStatistics()));
+
+    PageRequest pageRequest =
+        aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
+            .addFilter(
+                aSearchFilter().withField("workflowType", Operator.IN, ORCHESTRATION, WorkflowType.SIMPLE).build())
+            .addFilter("appId", Operator.IN, appIds.toArray())
+            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+            .build();
+
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, false, false);
+    if (pageResponse != null) {
+      List<WorkflowExecution> workflowExecutions =
+          workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
+
+      Map<String, List<WorkflowExecution>> workflowExecutionsByApp =
+          workflowExecutions.stream().collect(groupingBy(WorkflowExecution::getAppId));
+
+      appIds.forEach(appId -> workflowExecutionsByApp.computeIfAbsent(appId, id -> asList()));
+
+      workflowExecutionsByApp.forEach((appId, wexList) -> {
+        AppKeyStatistics keyStatistics = getAppKeyStatistics(wexList);
+        appKeyStatisticsMap.put(appId, keyStatistics);
+      });
+      appIds.forEach(appId -> appKeyStatisticsMap.computeIfAbsent(appId, v -> new AppKeyStatistics()));
+    }
     return appKeyStatisticsMap;
   }
 
@@ -135,32 +147,40 @@ public class StatisticsServiceImpl implements StatisticsService {
     return appKeyStatisticsMap.get(appId);
   }
 
-  public AppKeyStatistics getAppKeyStatistics(List<Activity> applicationActivities) {
+  public AppKeyStatistics getAppKeyStatistics(List<WorkflowExecution> workflowExecutions) {
     AppKeyStatistics appKeyStatistics = new AppKeyStatistics();
 
-    Map<EnvironmentType, List<Activity>> activitiesByEnvType = applicationActivities.stream().collect(
-        groupingBy(activity -> PROD.equals(activity.getEnvironmentType()) ? PROD : NON_PROD));
-    activitiesByEnvType.computeIfAbsent(PROD, v -> asList());
-    activitiesByEnvType.computeIfAbsent(NON_PROD, v -> asList());
+    Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
+        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
 
-    activitiesByEnvType.forEach((environmentType, activities) -> {
-      int deployments =
-          (int) activities.stream().map(Activity::getWorkflowExecutionId).filter(Objects::nonNull).distinct().count();
-      int instances = activities.size();
-      int artifacts =
-          (int) activities.stream().map(Activity::getArtifactId).filter(Objects::nonNull).distinct().count();
+    wflExecutionByEnvType.computeIfAbsent(PROD, v -> asList());
+    wflExecutionByEnvType.computeIfAbsent(NON_PROD, v -> asList());
+    wflExecutionByEnvType.forEach((environmentType, wflExecutions) -> {
+      int deploymentCount = wflExecutions.size();
+      int instanceCount = wflExecutions.stream()
+                              .filter(wex -> wex.getServiceExecutionSummaries() != null)
+                              .flatMap(wex -> wex.getServiceExecutionSummaries().stream())
+                              .map(elementExecutionSummary -> elementExecutionSummary.getInstancesCount())
+                              .mapToInt(i -> i)
+                              .sum();
+      int artifactCount =
+          (int) wflExecutions.stream()
+              .map(WorkflowExecution::getExecutionArgs)
+              .filter(executionArgs -> executionArgs != null && executionArgs.getArtifactIdNames() != null)
+              .flatMap(executionArgs -> executionArgs.getArtifactIdNames().keySet().stream())
+              .distinct()
+              .count();
       appKeyStatistics.getStatsMap().put(environmentType,
           anAppKeyStatistics()
-              .withInstanceCount(instances)
-              .withDeploymentCount(deployments)
-              .withArtifactCount(artifacts)
+              .withInstanceCount(instanceCount)
+              .withDeploymentCount(deploymentCount)
+              .withArtifactCount(artifactCount)
               .build());
     });
     appKeyStatistics.getStatsMap().put(
         ALL, mergeAppKeyStats(appKeyStatistics.getStatsMap().get(PROD), appKeyStatistics.getStatsMap().get(NON_PROD)));
     return appKeyStatistics;
   }
-
   private AppKeyStatsBreakdown mergeAppKeyStats(AppKeyStatsBreakdown prod, AppKeyStatsBreakdown nonProd) {
     return anAppKeyStatistics()
         .withInstanceCount(prod.getInstanceCount() + nonProd.getInstanceCount())
@@ -250,19 +270,23 @@ public class StatisticsServiceImpl implements StatisticsService {
       pageRequest.addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build());
     }
 
-    List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
-
-    Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType =
-        workflowExecutions.parallelStream().collect(groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
-
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
-    deploymentStats.getStatsMap().put(
-        PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.PROD)));
-    deploymentStats.getStatsMap().put(
-        NON_PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.NON_PROD)));
-    deploymentStats.getStatsMap().put(
-        ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
+    PageResponse<WorkflowExecution> pageResponse =
+        workflowExecutionService.listExecutions(pageRequest, false, false, false);
+
+    if (pageResponse != null) {
+      List<WorkflowExecution> workflowExecutions = pageResponse.getResponse();
+
+      Map<EnvironmentType, List<WorkflowExecution>> wflExecutionByEnvType = workflowExecutions.parallelStream().collect(
+          groupingBy(wex -> PROD.equals(wex.getEnvType()) ? PROD : NON_PROD));
+
+      deploymentStats.getStatsMap().put(
+          PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.PROD)));
+      deploymentStats.getStatsMap().put(
+          NON_PROD, getDeploymentStatisticsByEnvType(numOfDays, wflExecutionByEnvType.get(EnvironmentType.NON_PROD)));
+      deploymentStats.getStatsMap().put(
+          ALL, merge(deploymentStats.getStatsMap().get(PROD), deploymentStats.getStatsMap().get(NON_PROD)));
+    }
     return deploymentStats;
   }
 
@@ -373,14 +397,16 @@ public class StatisticsServiceImpl implements StatisticsService {
     long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
 
     List<TopConsumer> topConsumers = new ArrayList<>();
-    Query<Activity> query = wingsPersistence.createQuery(Activity.class)
-                                .field("createdAt")
-                                .greaterThanOrEq(epochMilli)
-                                .field("status")
-                                .hasAnyOf(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .field("createdAt")
+                                         .greaterThanOrEq(epochMilli)
+                                         .field("status")
+                                         .hasAnyOf(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                         .field("workflowType")
+                                         .hasAnyOf(asList(ORCHESTRATION, SIMPLE));
 
     wingsPersistence.getDatastore()
-        .createAggregation(Activity.class)
+        .createAggregation(WorkflowExecution.class)
         .match(query)
         .group(Group.id(grouping("appId"), grouping("status")), grouping("count", new Accumulator("$sum", 1)))
         .group("_id.appId",

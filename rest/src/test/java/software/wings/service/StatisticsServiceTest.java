@@ -91,20 +91,18 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private StatisticsService statisticsService;
 
-  @Mock private Query<Activity> activityQuery;
-  @Mock private FieldEnd activityQueryFieldEnd;
+  @Mock private Query<WorkflowExecution> workflowExecutionQuery;
+  @Mock private FieldEnd workflowExecutionQueryFieldEnd;
   @Mock private AggregationPipeline aggregationPipeline;
 
   @Before
   public void setUp() throws Exception {
-    when(wingsPersistence.createQuery(Activity.class)).thenReturn(activityQuery);
-    when(activityQuery.field(any())).thenReturn(activityQueryFieldEnd);
-    when(activityQueryFieldEnd.in(any())).thenReturn(activityQuery);
-    when(activityQueryFieldEnd.greaterThanOrEq(any())).thenReturn(activityQuery);
-    when(activityQueryFieldEnd.hasAnyOf(any())).thenReturn(activityQuery);
-    when(activityQuery.retrievedFields(anyBoolean(), anyVararg())).thenReturn(activityQuery);
-
-    when(wingsPersistence.getDatastore().createAggregation(Activity.class)).thenReturn(aggregationPipeline);
+    when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
+    when(workflowExecutionQuery.field(any())).thenReturn(workflowExecutionQueryFieldEnd);
+    when(workflowExecutionQueryFieldEnd.in(any())).thenReturn(workflowExecutionQuery);
+    when(workflowExecutionQueryFieldEnd.greaterThanOrEq(any())).thenReturn(workflowExecutionQuery);
+    when(workflowExecutionQueryFieldEnd.hasAnyOf(any())).thenReturn(workflowExecutionQuery);
+    when(wingsPersistence.getDatastore().createAggregation(WorkflowExecution.class)).thenReturn(aggregationPipeline);
     when(aggregationPipeline.match(any(Query.class))).thenReturn(aggregationPipeline);
     when(aggregationPipeline.group(anyList(), any(Group.class))).thenReturn(aggregationPipeline);
     when(aggregationPipeline.group(anyString(), any(Group.class))).thenReturn(aggregationPipeline);
@@ -134,27 +132,60 @@ public class StatisticsServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetApplicationKeyStats() {
-    when(activityQuery.asList())
-        .thenReturn(asList(anActivity()
-                               .withAppId(APP_ID)
-                               .withArtifactId(ARTIFACT_ID)
-                               .withWorkflowExecutionId(WORKFLOW_EXECUTION_ID)
-                               .withEnvironmentType(EnvironmentType.PROD)
-                               .build(),
-            anActivity()
-                .withAppId(APP_ID)
-                .withArtifactId(ARTIFACT_ID)
-                .withWorkflowExecutionId(WORKFLOW_EXECUTION_ID)
-                .withEnvironmentType(EnvironmentType.NON_PROD)
-                .build()));
+    long endEpoch = LocalDate.now(ZoneId.systemDefault())
+                        .minus(0, ChronoUnit.DAYS)
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli();
+    long startEpoch = LocalDate.now(ZoneId.systemDefault())
+                          .minus(29, ChronoUnit.DAYS)
+                          .atStartOfDay(ZoneId.systemDefault())
+                          .toInstant()
+                          .toEpochMilli();
+
+    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
+        anElementExecutionSummary().withInstanceStatusSummaries(asList(anInstanceStatusSummary().build())).build());
+
+    List<WorkflowExecution> executions = asList(aWorkflowExecution()
+                                                    .withAppId(APP_ID)
+                                                    .withEnvType(EnvironmentType.PROD)
+                                                    .withStatus(ExecutionStatus.SUCCESS)
+                                                    .withServiceExecutionSummaries(serviceExecutionSummaries)
+                                                    .withCreatedAt(endEpoch)
+                                                    .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withEnvType(EnvironmentType.PROD)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(endEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withEnvType(EnvironmentType.NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build(),
+        aWorkflowExecution()
+            .withAppId(APP_ID)
+            .withEnvType(EnvironmentType.NON_PROD)
+            .withStatus(ExecutionStatus.FAILED)
+            .withServiceExecutionSummaries(serviceExecutionSummaries)
+            .withCreatedAt(startEpoch)
+            .build());
+
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false)))
+        .thenReturn(aPageResponse().withResponse(executions).build());
+
     Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(asList(APP_ID), 10);
     AppKeyStatistics appKeyStatistics = new AppKeyStatistics();
     appKeyStatistics.setStatsMap(ImmutableMap.of(EnvironmentType.PROD,
-        anAppKeyStatistics().withArtifactCount(1).withDeploymentCount(1).withInstanceCount(1).build(),
+        anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(2).withInstanceCount(2).build(),
         EnvironmentType.NON_PROD,
-        anAppKeyStatistics().withArtifactCount(1).withDeploymentCount(1).withInstanceCount(1).build(),
+        anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(2).withInstanceCount(2).build(),
         EnvironmentType.ALL,
-        anAppKeyStatistics().withArtifactCount(2).withDeploymentCount(2).withInstanceCount(2).build()));
+        anAppKeyStatistics().withArtifactCount(0).withDeploymentCount(4).withInstanceCount(4).build()));
     assertThat(applicationKeyStats).hasSize(1).containsOnlyKeys(APP_ID);
     assertThat(applicationKeyStats.get(APP_ID)).isEqualTo(appKeyStatistics);
   }
@@ -199,7 +230,6 @@ public class StatisticsServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   public void shouldGetDeploymentStatistics() {
     long endEpoch = LocalDate.now(ZoneId.systemDefault())
                         .minus(0, ChronoUnit.DAYS)
