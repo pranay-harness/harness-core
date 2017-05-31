@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -151,6 +153,18 @@ public class Log extends Base {
         && Objects.equals(this.commandUnitName, other.commandUnitName) && Objects.equals(this.logLine, other.logLine)
         && Objects.equals(this.logLevel, other.logLevel)
         && Objects.equals(this.commandExecutionStatus, other.commandExecutionStatus);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("activityId", activityId)
+        .add("hostName", hostName)
+        .add("commandUnitName", commandUnitName)
+        .add("logLine", logLine)
+        .add("logLevel", logLevel)
+        .add("commandExecutionStatus", commandExecutionStatus)
+        .toString();
   }
 
   /**

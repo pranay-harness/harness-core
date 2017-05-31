@@ -15,6 +15,8 @@ import software.wings.managerclient.ManagerClient;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -26,28 +28,34 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class DelegateLogServiceImpl implements DelegateLogService {
-  @Inject private ManagerClient managerClient;
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  private Cache<String, List<Log>> cache;
 
-  private Cache<String, List<Log>> cache =
-      Caffeine.newBuilder()
-          .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
-          .removalListener((String accountId, List<Log> logs, RemovalCause removalCause) -> {
-            if (accountId == null || logs == null || logs.size() == 0) {
-              logger.error("Unexpected Cache eviction accountId={}, logs={}", accountId, logs);
-              return;
-            }
-            try {
-              RestResponse<List<String>> restResponse = execute(managerClient.batchedSaveLogs(accountId, logs));
-              logger.info("{} log lines dispatched for accountId: {}", restResponse.getResource().size(), accountId);
-            } catch (IOException e) {
-              e.printStackTrace();
-              logger.error("Dispatch log failed. printing lost logs[{}]", logs.size());
-              logs.forEach(log -> logger.error(log.toString()));
-              logger.error("Finished printing lost logs");
-            }
-          })
-          .build();
+  @Inject
+  public DelegateLogServiceImpl(ManagerClient managerClient, ExecutorService executorService) {
+    this.cache =
+        Caffeine.newBuilder()
+            .executor(executorService)
+            .expireAfterWrite(1000, TimeUnit.MILLISECONDS)
+            .removalListener((String accountId, List<Log> logs, RemovalCause removalCause) -> {
+              if (accountId == null || logs.size() == 0) {
+                logger.error("Unexpected Cache eviction accountId={}, logs={}", accountId, logs);
+                return;
+              }
+              try {
+                RestResponse<List<String>> restResponse = execute(managerClient.batchedSaveLogs(accountId, logs));
+                logger.info("{} log lines dispatched for accountId: {}", restResponse.getResource().size(), accountId);
+              } catch (IOException e) {
+                e.printStackTrace();
+                logger.error("Dispatch log failed. printing lost logs[{}]", logs.size());
+                logs.forEach(log -> logger.error(log.toString()));
+                logger.error("Finished printing lost logs");
+              }
+            })
+            .build();
+    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+        () -> this.cache.cleanUp(), 1000, 1000, TimeUnit.MILLISECONDS); // periodic cleanup for expired keys
+  }
 
   @Override
   public void save(String accountId, Log log) {
