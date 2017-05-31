@@ -18,6 +18,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
   private long appDynamicsApplicationId;
   private long appdynamicsTierId;
   private List<String> canaryNewHostNames;
+  private List<String> btNames;
 
   public String getAppDynamicsConfigId() {
     return appDynamicsConfigId;
@@ -67,6 +68,14 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     this.canaryNewHostNames = canaryNewHostNames;
   }
 
+  public List<String> getBtNames() {
+    return btNames;
+  }
+
+  public void setBtNames(List<String> btNames) {
+    this.btNames = btNames;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -86,8 +95,10 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       return false;
     if (!appDynamicsConfigId.equals(that.appDynamicsConfigId))
       return false;
-    return canaryNewHostNames != null ? canaryNewHostNames.equals(that.canaryNewHostNames)
-                                      : that.canaryNewHostNames == null;
+    if (canaryNewHostNames != null ? !canaryNewHostNames.equals(that.canaryNewHostNames)
+                                   : that.canaryNewHostNames != null)
+      return false;
+    return btNames != null ? btNames.equals(that.btNames) : that.btNames == null;
   }
 
   @Override
@@ -98,6 +109,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     result = 31 * result + (int) (appDynamicsApplicationId ^ (appDynamicsApplicationId >>> 32));
     result = 31 * result + (int) (appdynamicsTierId ^ (appdynamicsTierId >>> 32));
     result = 31 * result + (canaryNewHostNames != null ? canaryNewHostNames.hashCode() : 0);
+    result = 31 * result + (btNames != null ? btNames.hashCode() : 0);
     return result;
   }
 
@@ -107,7 +119,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
         + "correlationId='" + correlationId + '\'' + ", stateExecutionInstanceId='" + stateExecutionInstanceId + '\''
         + ", appDynamicsConfigId='" + appDynamicsConfigId + '\''
         + ", appDynamicsApplicationId=" + appDynamicsApplicationId + ", appdynamicsTierId=" + appdynamicsTierId
-        + ", canaryNewHostNames=" + canaryNewHostNames + '}';
+        + ", canaryNewHostNames=" + canaryNewHostNames + ", btNames=" + btNames + '}';
   }
 
   @Override
@@ -159,6 +171,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     private ExecutionStatus status;
     private String errorMsg;
     private List<String> canaryNewHostNames;
+    private List<String> btNames;
 
     private Builder() {}
 
@@ -198,6 +211,11 @@ public class AppDynamicsExecutionData extends StateExecutionData {
 
     public Builder withCanaryNewHostNames(List<String> canaryNewHostNames) {
       this.canaryNewHostNames = canaryNewHostNames;
+      return this;
+    }
+
+    public Builder withBtNames(List<String> btNames) {
+      this.btNames = btNames;
       return this;
     }
 
@@ -292,6 +310,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       appDynamicsExecutionData.setEndTs(endTs);
       appDynamicsExecutionData.setStatus(status);
       appDynamicsExecutionData.setErrorMsg(errorMsg);
+      appDynamicsExecutionData.setBtNames(btNames);
       return appDynamicsExecutionData;
     }
   }
