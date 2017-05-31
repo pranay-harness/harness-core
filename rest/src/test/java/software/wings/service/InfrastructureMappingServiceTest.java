@@ -436,36 +436,37 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   public void shouldListLaunchConfigs() {
     AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
+                                                            .withUuid(INFRA_MAPPING_ID)
                                                             .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                            .withComputeProviderSettingId(SETTING_ID)
+                                                            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                             .withAppId(APP_ID)
                                                             .withEnvId(ENV_ID)
                                                             .withComputeProviderType(AWS.name())
                                                             .withUuid(INFRA_MAPPING_ID)
                                                             .withServiceTemplateId(TEMPLATE_ID)
+                                                            .withRegion(Regions.US_EAST_1.getName())
                                                             .build();
 
-    when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
-        .thenReturn(asList(new Key<ServiceTemplate>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
-    when(query.get()).thenReturn(awsInfrastructureMapping);
+    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(awsInfrastructureMapping);
 
     SettingAttribute computeProviderSetting =
         aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(Builder.anAwsConfig().build()).build();
     when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
-    when(awsInfrastructureProvider.listLaunchConfigurations(computeProviderSetting))
+    when(awsInfrastructureProvider.listLaunchConfigurations(computeProviderSetting, Regions.US_EAST_1.getName()))
         .thenReturn(asList(new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
 
     List<LaunchConfiguration> launchConfigurations =
-        infrastructureMappingService.listLaunchConfigs(APP_ID, ENV_ID, SERVICE_ID, COMPUTE_PROVIDER_ID);
+        infrastructureMappingService.listLaunchConfigs(APP_ID, ENV_ID, INFRA_MAPPING_ID);
 
     assertThat(launchConfigurations)
         .hasSize(1)
         .extracting(LaunchConfiguration::getLaunchConfigurationName)
         .isEqualTo(asList("LAUNCH_CONFIG"));
-    verify(serviceTemplateService).getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID);
+    verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(settingsService).get(COMPUTE_PROVIDER_ID);
-    verify(awsInfrastructureProvider).listLaunchConfigurations(computeProviderSetting);
+    verify(awsInfrastructureProvider).listLaunchConfigurations(computeProviderSetting, Regions.US_EAST_1.getName());
   }
 
   @Test

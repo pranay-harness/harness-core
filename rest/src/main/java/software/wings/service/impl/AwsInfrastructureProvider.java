@@ -189,8 +189,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       String region, SettingAttribute computeProviderSetting, String launcherConfigName, int instanceCount) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
 
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonAutoScalingClient amazonAutoScalingClient = awsHelperService.getAmazonAutoScalingClient(
+        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     AmazonEC2Client amazonEc2Client =
         awsHelperService.getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
@@ -301,10 +301,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return allRunning;
   }
 
-  public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting) {
+  public List<LaunchConfiguration> listLaunchConfigurations(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonAutoScalingClient amazonAutoScalingClient = awsHelperService.getAmazonAutoScalingClient(
+        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     // TODO:: remove direct usage of LaunchConfiguration
     return amazonAutoScalingClient.describeLaunchConfigurations().getLaunchConfigurations();
   }
