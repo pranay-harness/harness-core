@@ -5,6 +5,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,9 +13,12 @@ import java.util.Map;
  */
 public class AppDynamicsExecutionData extends StateExecutionData {
   private String correlationId;
+  private String stateExecutionInstanceId;
   private String appDynamicsConfigId;
   private long appDynamicsApplicationId;
   private long appdynamicsTierId;
+  private List<String> canaryNewHostNames;
+  private List<String> btNames;
 
   public String getAppDynamicsConfigId() {
     return appDynamicsConfigId;
@@ -48,6 +52,30 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     this.correlationId = correlationId;
   }
 
+  public String getStateExecutionInstanceId() {
+    return stateExecutionInstanceId;
+  }
+
+  public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
+    this.stateExecutionInstanceId = stateExecutionInstanceId;
+  }
+
+  public List<String> getCanaryNewHostNames() {
+    return canaryNewHostNames;
+  }
+
+  public void setCanaryNewHostNames(List<String> canaryNewHostNames) {
+    this.canaryNewHostNames = canaryNewHostNames;
+  }
+
+  public List<String> getBtNames() {
+    return btNames;
+  }
+
+  public void setBtNames(List<String> btNames) {
+    this.btNames = btNames;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -63,28 +91,42 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       return false;
     if (!correlationId.equals(that.correlationId))
       return false;
-    return appDynamicsConfigId.equals(that.appDynamicsConfigId);
+    if (!stateExecutionInstanceId.equals(that.stateExecutionInstanceId))
+      return false;
+    if (!appDynamicsConfigId.equals(that.appDynamicsConfigId))
+      return false;
+    if (canaryNewHostNames != null ? !canaryNewHostNames.equals(that.canaryNewHostNames)
+                                   : that.canaryNewHostNames != null)
+      return false;
+    return btNames != null ? btNames.equals(that.btNames) : that.btNames == null;
   }
 
   @Override
   public int hashCode() {
     int result = correlationId.hashCode();
+    result = 31 * result + stateExecutionInstanceId.hashCode();
     result = 31 * result + appDynamicsConfigId.hashCode();
     result = 31 * result + (int) (appDynamicsApplicationId ^ (appDynamicsApplicationId >>> 32));
     result = 31 * result + (int) (appdynamicsTierId ^ (appdynamicsTierId >>> 32));
+    result = 31 * result + (canaryNewHostNames != null ? canaryNewHostNames.hashCode() : 0);
+    result = 31 * result + (btNames != null ? btNames.hashCode() : 0);
     return result;
   }
 
   @Override
   public String toString() {
     return "AppDynamicsExecutionData{"
-        + "correlationId='" + correlationId + '\'' + ", appDynamicsConfigId='" + appDynamicsConfigId + '\''
-        + ", appDynamicsApplicationId=" + appDynamicsApplicationId + ", appdynamicsTierId=" + appdynamicsTierId + '}';
+        + "correlationId='" + correlationId + '\'' + ", stateExecutionInstanceId='" + stateExecutionInstanceId + '\''
+        + ", appDynamicsConfigId='" + appDynamicsConfigId + '\''
+        + ", appDynamicsApplicationId=" + appDynamicsApplicationId + ", appdynamicsTierId=" + appdynamicsTierId
+        + ", canaryNewHostNames=" + canaryNewHostNames + ", btNames=" + btNames + '}';
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(executionDetails, "stateExecutionInstanceId",
+        anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
     putNotNull(executionDetails, "appDynamicsConfigId",
         anExecutionDataValue().withValue(appDynamicsConfigId).withDisplayName("Appdynamics Config Id").build());
     putNotNull(executionDetails, "appDynamicsApplicationId",
@@ -100,6 +142,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(executionDetails, "stateExecutionInstanceId",
+        anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
     putNotNull(executionDetails, "appDynamicsConfigId",
         anExecutionDataValue().withValue(appDynamicsConfigId).withDisplayName("Appdynamics Config Id").build());
     putNotNull(executionDetails, "appDynamicsApplicationId",
@@ -117,6 +161,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
    */
   public static final class Builder {
     private String correlationId;
+    private String stateExecutionInstanceId;
     private String appDynamicsConfigId;
     private long appDynamicsApplicationId;
     private long appdynamicsTierId;
@@ -125,6 +170,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     private Long endTs;
     private ExecutionStatus status;
     private String errorMsg;
+    private List<String> canaryNewHostNames;
+    private List<String> btNames;
 
     private Builder() {}
 
@@ -152,8 +199,23 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
+      this.stateExecutionInstanceId = stateExecutionInstanceId;
+      return this;
+    }
+
     public Builder withAppdynamicsTierId(long appdynamicsTierId) {
       this.appdynamicsTierId = appdynamicsTierId;
+      return this;
+    }
+
+    public Builder withCanaryNewHostNames(List<String> canaryNewHostNames) {
+      this.canaryNewHostNames = canaryNewHostNames;
+      return this;
+    }
+
+    public Builder withBtNames(List<String> btNames) {
+      this.btNames = btNames;
       return this;
     }
 
@@ -238,6 +300,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     public AppDynamicsExecutionData build() {
       AppDynamicsExecutionData appDynamicsExecutionData = new AppDynamicsExecutionData();
       appDynamicsExecutionData.setCorrelationId(correlationId);
+      appDynamicsExecutionData.setStateExecutionInstanceId(stateExecutionInstanceId);
+      appDynamicsExecutionData.setCanaryNewHostNames(canaryNewHostNames);
       appDynamicsExecutionData.setAppDynamicsConfigId(appDynamicsConfigId);
       appDynamicsExecutionData.setAppDynamicsApplicationId(appDynamicsApplicationId);
       appDynamicsExecutionData.setAppdynamicsTierId(appdynamicsTierId);
@@ -246,6 +310,7 @@ public class AppDynamicsExecutionData extends StateExecutionData {
       appDynamicsExecutionData.setEndTs(endTs);
       appDynamicsExecutionData.setStatus(status);
       appDynamicsExecutionData.setErrorMsg(errorMsg);
+      appDynamicsExecutionData.setBtNames(btNames);
       return appDynamicsExecutionData;
     }
   }
