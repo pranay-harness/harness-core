@@ -84,6 +84,8 @@ Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLoc
 ### Before you can use the client:
 1) From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles. The admin username and password are in DataGenUtil.
 
+2) Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
+
 ### Note:
 1) To build UI Go to wings-ui and follow READ me instructions.
 

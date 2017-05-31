@@ -860,6 +860,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public StateExecutionInstance getStateExecutionData(String appId, String stateExecutionInstanceId) {
+    return wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+  }
+
+  @Override
   public void deleteByWorkflow(String appId, String workflowId) {
     wingsPersistence.createQuery(WorkflowExecution.class)
         .field("appId")

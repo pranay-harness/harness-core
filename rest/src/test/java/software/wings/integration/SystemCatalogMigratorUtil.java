@@ -56,16 +56,16 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
       "https://s3.amazonaws.com/harness-catalogs/appstack/apache-tomcat-8.5.15-hardened.tar.gz";
 
   @Test
-  public void createSystemAppStackCatalogs() throws IOException {
+  public void createOrUpdateSystemAppStackCatalogs() throws IOException {
     long fileSize = configuration.getFileUploadLimits().getAppContainerLimit();
     List<SystemCatalog> systemCatalogs = (systemCatalogService.list(
         aPageRequest().addFilter("catalogType", EQ, APPSTACK).addFilter("family", EQ, TOMCAT).build()));
-    List<String> catalognames = systemCatalogs.stream().map(SystemCatalog::getFileName).collect(Collectors.toList());
-
+    Map<String, SystemCatalog> fileToSystemCatalog =
+        systemCatalogs.stream().collect(Collectors.toMap(SystemCatalog::getFileName, Function.identity()));
     System.out.println("Creating System App Stack Catalogs");
     // Create Tomcat 7 Standard
-    SystemCatalog systemCatalog = null;
-    if (!catalognames.contains("apache-tomcat-7.0.78.tar.gz")) {
+    SystemCatalog systemCatalog;
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78.tar.gz")) {
       systemCatalog = aSystemCatalog()
                           .withCatalogType(APPSTACK)
                           .withName("Standard Tomcat 7")
@@ -73,10 +73,16 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
                           .withAppId(Base.GLOBAL_APP_ID)
                           .withFamily(TOMCAT)
                           .withNotes("System created.")
+                          .withVersion("7.0.78")
                           .build();
       systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
+    } else {
+      // call update --> Support the update
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78.tar.gz");
+      systemCatalog.setVersion("7.0.78");
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
     }
-    if (!catalognames.contains("apache-tomcat-7.0.78-hardened.tar.gz")) {
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78-hardened.tar.gz")) {
       systemCatalog = aSystemCatalog()
                           .withCatalogType(APPSTACK)
                           .withName("Hardened Tomcat 7")
@@ -84,10 +90,17 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
                           .withAppId(Base.GLOBAL_APP_ID)
                           .withFamily(TOMCAT)
                           .withNotes("System created. Hardened Version")
+                          .withVersion("7.0.78")
+                          .withHardened(true)
                           .build();
       systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
+    } else {
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78-hardened.tar.gz");
+      systemCatalog.setVersion("7.0.78");
+      systemCatalog.setHardened(true);
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
     }
-    if (!catalognames.contains("apache-tomcat-8.5.15.tar.gz")) {
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15.tar.gz")) {
       systemCatalog = aSystemCatalog()
                           .withCatalogType(APPSTACK)
                           .withName("Standard Tomcat 8")
@@ -95,24 +108,36 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
                           .withAppId(Base.GLOBAL_APP_ID)
                           .withFamily(TOMCAT)
                           .withNotes("System created.")
+                          .withVersion("8.5.15")
                           .build();
       systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT8, PLATFORMS, fileSize);
+    } else {
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15.tar.gz");
+      systemCatalog.setVersion("8.5.15");
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8, PLATFORMS, fileSize);
     }
-    if (!catalognames.contains("apache-tomcat-8.5.15-hardened.tar.gz")) {
+    if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15-hardened.tar.gz")) {
       systemCatalog = aSystemCatalog()
                           .withCatalogType(APPSTACK)
                           .withName("Hardened Tomcat 8")
                           .withFileName("apache-tomcat-8.5.15-hardened.tar.gz")
                           .withAppId(Base.GLOBAL_APP_ID)
                           .withFamily(TOMCAT)
-                          .withNotes("System created. Hardened Version")
+                          .withNotes("System created. Hardened Version.")
+                          .withVersion("8.5.15")
+                          .withHardened(true)
                           .build();
       systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
+    } else {
+      systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15-hardened.tar.gz");
+      systemCatalog.setVersion("8.5.15");
+      systemCatalog.setHardened(true);
+      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
     }
   }
 
   @Test
-  public void createSystemAppContainers() {
+  public void createOrUpdateSystemAppContainers() {
     System.out.println("Creating System App Containers");
     List<Account> accounts =
         accountService.list(aPageRequest().withLimit(PageRequest.UNLIMITED).addFieldsIncluded("uuid").build());
@@ -130,12 +155,15 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
                                         .withChecksumType(systemCatalog.getChecksumType())
                                         .withFamily(systemCatalog.getFamily())
                                         .withStackRootDirectory(systemCatalog.getStackRootDirectory())
+                                        .withFileName(systemCatalog.getFileName())
                                         .withFileUuid(systemCatalog.getFileUuid())
                                         .withFileType(systemCatalog.getFileType())
                                         .withSize(systemCatalog.getSize())
                                         .withName(systemCatalog.getName())
                                         .withSystemCreated(true)
                                         .withDescription(systemCatalog.getNotes())
+                                        .withHardened(systemCatalog.isHardened())
+                                        .withVersion(systemCatalog.getVersion())
                                         .build();
         try {
           PageResponse<AppContainer> pageResponse =
@@ -145,6 +173,13 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
                                            .build());
           if (CollectionUtils.isEmpty(pageResponse.getResponse())) {
             appContainerService.save(appContainer);
+          } else {
+            AppContainer storedAppContainer = pageResponse.getResponse().get(0);
+            storedAppContainer.setVersion(systemCatalog.getVersion());
+            storedAppContainer.setHardened(systemCatalog.isHardened());
+            storedAppContainer.setDescription(systemCatalog.getNotes());
+            storedAppContainer.setFileName(systemCatalog.getFileName());
+            appContainerService.update(storedAppContainer);
           }
         } catch (Exception e) {
           e.printStackTrace();

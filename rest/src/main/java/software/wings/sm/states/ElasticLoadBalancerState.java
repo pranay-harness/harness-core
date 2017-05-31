@@ -178,6 +178,11 @@ public class ElasticLoadBalancerState extends State {
 
   public enum Operation { Enable, Disable }
 
+  @Override
+  public ContextElementType getRequiredContextElementType() {
+    return ContextElementType.INSTANCE;
+  }
+
   private enum Entity {
     Instance("${instance}"),
     Custom("");

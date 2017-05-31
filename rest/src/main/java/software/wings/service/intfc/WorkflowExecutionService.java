@@ -12,6 +12,8 @@ import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -184,6 +186,14 @@ public interface WorkflowExecutionService {
    * @return the execution details for node
    */
   Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
+
+  /**
+   * Returns the details of the state execution for give id
+   * @param appId
+   * @param stateExecutionInstanceId
+   * @return
+   */
+  StateExecutionInstance getStateExecutionData(String appId, String stateExecutionInstanceId);
 
   /**
    * Delete by workflow.

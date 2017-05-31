@@ -219,6 +219,8 @@ public class AccountServiceImpl implements AccountService {
                                       .withName(systemCatalog.getName())
                                       .withSystemCreated(true)
                                       .withDescription(systemCatalog.getNotes())
+                                      .withVersion(systemCatalog.getVersion())
+                                      .withHardened(systemCatalog.isHardened())
                                       .build();
       try {
         appContainerService.save(appContainer);

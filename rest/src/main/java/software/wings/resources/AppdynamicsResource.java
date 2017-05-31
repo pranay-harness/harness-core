@@ -116,6 +116,10 @@ public class AppdynamicsResource {
       @QueryParam("accountId") final String accountId, @QueryParam("appdynamicsAppId") int appdynamicsAppId,
       @QueryParam("tierId") int tierId, @QueryParam("startTimeInMillis") long startTimeInMillis,
       @QueryParam("endTimeInMillis") long endTimeInMillis, List<String> btList) throws IOException {
+    // endTimeInMillis is optional
+    if (endTimeInMillis <= 0) {
+      endTimeInMillis = System.currentTimeMillis();
+    }
     return new RestResponse<>(appdynamicsService.generateMetrics(
         accountId, appdynamicsAppId, tierId, btList, startTimeInMillis, endTimeInMillis));
   }

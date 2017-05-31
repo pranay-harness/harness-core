@@ -33,4 +33,22 @@ public interface SystemCatalogService {
    * @return the list of System Catalogs
    */
   List<SystemCatalog> list(@NotNull PageRequest<SystemCatalog> request);
+
+  /**
+   * Update
+   * @param systemCatalog
+   * @param url
+   * @param bucket
+   * @param size
+   * @return SystemCatalog
+   */
+  SystemCatalog update(@Valid SystemCatalog systemCatalog, @NotNull String url, @NotNull FileService.FileBucket bucket,
+      @NotNull long size);
+
+  /**
+   * Get.
+   * @param systemCatalogId
+   * @return SystemCatalog
+   */
+  SystemCatalog get(@NotNull String systemCatalogId);
 }

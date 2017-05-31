@@ -33,7 +33,7 @@ public interface AppdynamicsService {
 
   void validateConfig(@NotNull SettingAttribute settingAttribute);
 
-  List<AppdynamicsMetric> getTierBTMetrics(@NotNull String settingId, int appdynamicsAppId, int tierId)
+  List<AppdynamicsMetric> getTierBTMetrics(@NotNull String settingId, long appdynamicsAppId, long tierId)
       throws IOException;
 
   List<AppdynamicsMetricData> getTierBTMetricData(@NotNull String settingId, int appdynamicsAppId, int tierId,
