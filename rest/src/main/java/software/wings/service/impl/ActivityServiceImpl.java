@@ -173,13 +173,8 @@ public class ActivityServiceImpl implements ActivityService {
     activity.getCommandUnits().forEach(commandUnit -> {
       Log log = commandUnitLastLogMap.get(commandUnit.getName());
       if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
-        commandUnit.setCommandExecutionStatus(
-            log.getCommandExecutionStatus() != null ? log.getCommandExecutionStatus() : RUNNING);
+        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
       }
-    });
-
-    activity.getCommandUnits().forEach(commandUnit -> {
-      logger.info("Test::: {} - {}" + commandUnit.getName(), commandUnit.getCommandExecutionStatus());
     });
     wingsPersistence.update(activity,
         wingsPersistence.createUpdateOperations(Activity.class).set("commandUnits", activity.getCommandUnits()));

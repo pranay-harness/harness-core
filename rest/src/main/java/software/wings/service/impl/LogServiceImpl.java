@@ -10,6 +10,8 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
@@ -40,6 +42,7 @@ public class LogServiceImpl implements LogService {
   private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ActivityService activityService;
+  private Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)
