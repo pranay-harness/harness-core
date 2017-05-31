@@ -91,7 +91,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppdynamicsMetric> getTierBTMetrics(String settingId, int appdynamicsAppId, int tierId)
+  public List<AppdynamicsMetric> getTierBTMetrics(String settingId, long appdynamicsAppId, long tierId)
       throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
