@@ -162,27 +162,32 @@ public class ActivityServiceImpl implements ActivityService {
 
     if (!isSaved) {
       logger.error("Activity:{} commandUnit status couldn't be updated after {} retries", activityId, retry);
-    } else if (isSaved && retry > 0) {
+    } else if (retry > 0) {
       logger.warn("Version conflict encountered. Resolved in {} retry", retry);
     }
   }
 
   private void updateActivityCommandUnitStatus(String activityId, Map<String, Log> commandUnitLastLogMap) {
     String appId = commandUnitLastLogMap.values().iterator().next().getAppId();
-    Activity activity = get(appId, activityId);
+    Activity activity = get(activityId, appId);
     activity.getCommandUnits().forEach(commandUnit -> {
       Log log = commandUnitLastLogMap.get(commandUnit.getName());
       if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
-        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
+        commandUnit.setCommandExecutionStatus(
+            log.getCommandExecutionStatus() != null ? log.getCommandExecutionStatus() : RUNNING);
       }
+    });
+
+    activity.getCommandUnits().forEach(commandUnit -> {
+      logger.info("Test::: {} - {}" + commandUnit.getName(), commandUnit.getCommandExecutionStatus());
     });
     wingsPersistence.update(activity,
         wingsPersistence.createUpdateOperations(Activity.class).set("commandUnits", activity.getCommandUnits()));
   }
 
   private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
-    return (log != null && log.getCommandExecutionStatus() != null)
+    return (log != null
         && (QUEUED.equals(commandUnit.getCommandExecutionStatus())
-               || RUNNING.equals(commandUnit.getCommandExecutionStatus()));
+               || RUNNING.equals(commandUnit.getCommandExecutionStatus())));
   }
 }
