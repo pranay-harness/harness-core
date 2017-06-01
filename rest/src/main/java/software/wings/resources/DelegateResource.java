@@ -9,6 +9,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -51,6 +53,7 @@ import javax.ws.rs.core.Response;
 public class DelegateResource {
   private DelegateService delegateService;
   private DownloadTokenService downloadTokenService;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject
   public DelegateResource(DelegateService delegateService, DownloadTokenService downloadTokenService) {
@@ -106,7 +109,10 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
-    return new RestResponse<>(delegateService.register(delegate));
+    long startTime = System.currentTimeMillis();
+    Delegate register = delegateService.register(delegate);
+    logger.info("Delegate registration took {} in ms", (System.currentTimeMillis() - startTime));
+    return new RestResponse<>(register);
   }
 
   @POST
