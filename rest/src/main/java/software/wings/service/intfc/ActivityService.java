@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
+import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -9,6 +10,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -92,4 +94,11 @@ public interface ActivityService {
    * @param envId the env id
    */
   void deleteByEnvironment(String appId, String envId);
+
+  /**
+   * Update command unit status.
+   *
+   * @param activityCommandUnitLastLogMap the activity command unit last log map
+   */
+  void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap);
 }

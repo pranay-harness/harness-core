@@ -20,7 +20,6 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.Instance;
-import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.model.Cluster;
@@ -69,21 +68,12 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(awsHelperService.getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY)).thenReturn(amazonAutoScalingClient);
     when(awsHelperService.getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
         .thenReturn(amazonEC2Client);
     when(awsHelperService.getAmazonEcsClient(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
         .thenReturn(amazonECSClient);
-  }
-
-  @Test
-  public void shouldProvisionNodesWithExistingAutoScalingGroup() {
-    ecsContainerService.provisionNodes(connectorConfig, AUTO_SCALING_GROUP_NAME, DESIRED_CAPACITY);
-    verify(awsHelperService).getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY);
-    verify(amazonAutoScalingClient)
-        .setDesiredCapacity(new SetDesiredCapacityRequest()
-                                .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
-                                .withDesiredCapacity(DESIRED_CAPACITY));
+    when(awsHelperService.getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY))
+        .thenReturn(amazonAutoScalingClient);
   }
 
   @Test

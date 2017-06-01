@@ -5,6 +5,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -56,6 +57,7 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
             .withLogLevel(INFO)
             .withCommandUnitName(commandUnit.getName())
             .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .withExecutionResult(RUNNING)
             .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -74,6 +76,7 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
               .withLogLine("Command execution failed")
               .withCommandUnitName(commandUnit.getName())
               .withExecutionResult(commandExecutionStatus)
+              .withExecutionResult(FAILURE)
               .build());
     }
 

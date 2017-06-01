@@ -97,13 +97,12 @@ public interface InfrastructureMappingService {
   /**
    * List launch configs list.
    *
-   * @param appId             the app id
-   * @param envId             the env id
-   * @param serviceId         the service id
-   * @param computeProviderId the compute provider id
+   * @param appId          the app id
+   * @param envId          the env id
+   * @param infraMappingId the infra mapping id
    * @return the list
    */
-  List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String serviceId, String computeProviderId);
+  List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String infraMappingId);
 
   /**
    * Gets infra mapping by compute provider and service id.

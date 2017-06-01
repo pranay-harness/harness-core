@@ -137,6 +137,8 @@ public abstract class ContainerServiceDeploy extends State {
                                            .withWorkflowExecutionName(context.getWorkflowExecutionName())
                                            .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                            .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
+                                           .withCommandUnits(serviceResourceService.getFlattenCommandUnitList(
+                                               app.getUuid(), serviceId, env.getUuid(), command.getName()))
                                            .withCommandType(command.getCommandUnitType().name())
                                            .withServiceVariables(context.getServiceVariables());
 

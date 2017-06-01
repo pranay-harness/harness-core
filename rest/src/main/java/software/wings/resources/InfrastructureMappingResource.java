@@ -80,14 +80,12 @@ public class InfrastructureMappingResource {
   }
 
   @GET
-  @Path("compute-providers/{computeProviderId}/launchconfigs")
+  @Path("{infraMappingId}/launchconfigs")
   @Timed
   @ExceptionMetered
   public RestResponse<List<LaunchConfiguration>> listLaunchConfigs(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
-      @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(
-        infrastructureMappingService.listLaunchConfigs(appId, envId, serviceId, computeProviderId));
+      @QueryParam("envId") String envId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listLaunchConfigs(appId, envId, infraMappingId));
   }
 
   @PUT

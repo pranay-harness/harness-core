@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -252,4 +253,15 @@ public interface ServiceResourceService {
    * @return the service
    */
   Service cloneCommand(String appId, String serviceId, String commandName, ServiceCommand command);
+
+  /**
+   * Gets flatten command unit list.
+   *
+   * @param appId          the app id
+   * @param serviceId      the service id
+   * @param envId          the env id
+   * @param commandName    the command name
+   * @return the flatten command unit list
+   */
+  List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName);
 }

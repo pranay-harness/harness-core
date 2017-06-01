@@ -75,7 +75,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(awsHelperService.getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY))
         .thenReturn(amazonEC2Client);
-    when(awsHelperService.getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY)).thenReturn(amazonAutoScalingClient);
+    when(awsHelperService.getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY))
+        .thenReturn(amazonAutoScalingClient);
   }
 
   @Test
@@ -159,7 +160,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
             anAwsHost().withHostName(HOST_NAME).withInstance(new Instance().withInstanceId("INSTANCE_ID")).build()));
 
     verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
-    verify(awsHelperService).getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY);
+    verify(awsHelperService).getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY);
     verify(awsHelperService).canConnectToHost(HOST_NAME, 22, 30000);
     verify(amazonAutoScalingClient).describeLaunchConfigurations(any(DescribeLaunchConfigurationsRequest.class));
     verify(amazonEC2Client).runInstances(any(RunInstancesRequest.class));
@@ -187,13 +188,14 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .thenReturn(new DescribeLaunchConfigurationsResult().withLaunchConfigurations(
             new LaunchConfiguration().withLaunchConfigurationName("LAUNCH_CONFIG")));
 
-    List<LaunchConfiguration> launchConfigurations = infrastructureProvider.listLaunchConfigurations(awsSetting);
+    List<LaunchConfiguration> launchConfigurations =
+        infrastructureProvider.listLaunchConfigurations(awsSetting, Regions.US_EAST_1.getName());
 
     assertThat(launchConfigurations)
         .hasSize(1)
         .extracting(LaunchConfiguration::getLaunchConfigurationName)
         .containsExactly("LAUNCH_CONFIG");
-    verify(awsHelperService).getAmazonAutoScalingClient(ACCESS_KEY, SECRET_KEY);
+    verify(awsHelperService).getAmazonAutoScalingClient(Regions.US_EAST_1, ACCESS_KEY, SECRET_KEY);
     verify(amazonAutoScalingClient).describeLaunchConfigurations();
   }
 }

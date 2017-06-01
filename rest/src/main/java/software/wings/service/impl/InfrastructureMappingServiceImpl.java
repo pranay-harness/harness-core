@@ -604,28 +604,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<LaunchConfiguration> listLaunchConfigs(
-      String appId, String envId, String serviceId, String computeProviderId) {
-    Object serviceTemplateId =
-        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0).getId();
-    InfrastructureMapping infrastructureMapping = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                      .field("appId")
-                                                      .equal(appId)
-                                                      .field("envId")
-                                                      .equal(envId)
-                                                      .field("serviceTemplateId")
-                                                      .equal(serviceTemplateId)
-                                                      .field("computeProviderSettingId")
-                                                      .equal(computeProviderId)
-                                                      .get();
+  public List<LaunchConfiguration> listLaunchConfigs(String appId, String envId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     Validator.notNullCheck("Infra Mapping", infrastructureMapping);
 
     if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+      SettingAttribute computeProviderSetting =
+          settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       Validator.notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider.listLaunchConfigurations(computeProviderSetting);
+      return infrastructureProvider.listLaunchConfigurations(
+          computeProviderSetting, ((AwsInfrastructureMapping) infrastructureMapping).getRegion());
     }
     return Collections.emptyList();
   }

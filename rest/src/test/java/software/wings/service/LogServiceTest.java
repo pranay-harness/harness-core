@@ -27,6 +27,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.LogService;
@@ -41,7 +42,8 @@ public class LogServiceTest extends WingsBaseTest {
                                              .withHostName(HOST_NAME)
                                              .withLogLine("INFO 1 2 3")
                                              .withCommandUnitName(COMMAND_UNIT_NAME)
-                                             .withLogLevel(INFO);
+                                             .withLogLevel(INFO)
+                                             .withExecutionResult(CommandExecutionStatus.RUNNING);
 
   @Mock private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private LogService logService;
