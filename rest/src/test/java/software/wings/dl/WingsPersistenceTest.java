@@ -566,6 +566,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     char[] password = "bar".toCharArray();
     ServiceVariable serviceVariable = ServiceVariable.Builder.aServiceVariable()
                                           .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                          .withAppId("myapp")
                                           .withTemplateId(TEMPLATE_ID)
                                           .withEnvId(ENV_ID)
                                           .withEntityType(EntityType.SERVICE)
