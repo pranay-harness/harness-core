@@ -212,14 +212,12 @@ public class ServiceVariable extends Base implements Encryptable {
   @Override
   @SchemaIgnore
   public String getAccountId() {
-    return entityId;
+    return this.getAppId();
   }
 
   @Override
   @SchemaIgnore
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
-  }
+  public void setAccountId(String accountId) {}
 
   /**
    * Getter for property 'overrideType'.
