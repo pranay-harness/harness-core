@@ -238,6 +238,8 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Broadcast new task: {}", taskId);
     T responseData = topic.poll(timeOut, TimeUnit.MILLISECONDS);
     if (responseData == null) {
+      logger.error("Task [{}] timed out. remove it from cache", task.toString());
+      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Harness Bot");
     }
     return responseData;
