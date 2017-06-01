@@ -144,15 +144,17 @@ public class MetricCalculatorTest {
     data.put("login", BT4_ART_RECORD_2);
     data.put("login", BT4_ART_RECORD_3);
     data.put("login", BT4_ART_RECORD_4);
-    Map<String, Map<String, BucketData>> output = MetricCalculator.calculateMetrics(metricDefinitions, data);
+    Map<String, Map<String, BucketData>> output =
+        MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
     assertEquals(2, output.keySet().size());
     Map<String, BucketData> todolistMap = output.get("todolist");
     assertEquals(2, todolistMap.keySet().size());
     BucketData todolistCallData = todolistMap.get("Calls per Minute");
+    System.out.println(todolistCallData);
     assertEquals(60000, todolistCallData.getStartTimeMillis());
     assertEquals(180000, todolistCallData.getEndTimeMillis());
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
-    assertEquals(4, todolistCallData.getOldData().getNodeCount());
+    assertEquals(2, todolistCallData.getOldData().getNodeCount());
     BucketData todolistArtData = todolistMap.get("Average Response Time (ms)");
     assertEquals(60000, todolistArtData.getStartTimeMillis());
     assertEquals(180000, todolistArtData.getEndTimeMillis());
@@ -161,12 +163,12 @@ public class MetricCalculatorTest {
     BucketData loginArtData = output.get("login").get("Average Response Time (ms)");
     assertEquals(60000, loginArtData.getStartTimeMillis());
     assertEquals(180000, loginArtData.getEndTimeMillis());
-    assertEquals(RiskLevel.MEDIUM, loginArtData.getRisk());
+    assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
 
     // with missing metric definition
     metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION);
-    output = MetricCalculator.calculateMetrics(metricDefinitions, data);
+    output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
     assertEquals(2, output.keySet().size());
     todolistMap = output.get("todolist");
     assertEquals(2, todolistMap.keySet().size());
@@ -174,7 +176,7 @@ public class MetricCalculatorTest {
     assertEquals(60000, todolistCallData.getStartTimeMillis());
     assertEquals(180000, todolistCallData.getEndTimeMillis());
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
-    assertEquals(4, todolistCallData.getOldData().getNodeCount());
+    assertEquals(2, todolistCallData.getOldData().getNodeCount());
     todolistArtData = todolistMap.get("Average Response Time (ms)");
     assertEquals(60000, todolistArtData.getStartTimeMillis());
     assertEquals(180000, todolistArtData.getEndTimeMillis());
@@ -183,7 +185,7 @@ public class MetricCalculatorTest {
     loginArtData = output.get("login").get("Average Response Time (ms)");
     assertEquals(60000, loginArtData.getStartTimeMillis());
     assertEquals(180000, loginArtData.getEndTimeMillis());
-    assertEquals(RiskLevel.MEDIUM, loginArtData.getRisk());
+    assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
   }
 
@@ -271,7 +273,8 @@ public class MetricCalculatorTest {
         }
       }
     }
-    Map<String, Map<String, BucketData>> output = MetricCalculator.calculateMetrics(metricDefinitions, data);
+    Map<String, Map<String, BucketData>> output =
+        MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node1", "node2"));
     ObjectMapper mapper = new ObjectMapper();
     try {
       String b = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(output);

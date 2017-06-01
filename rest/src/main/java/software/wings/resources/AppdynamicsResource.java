@@ -92,9 +92,9 @@ public class AppdynamicsResource {
   @ExceptionMetered
   public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
       @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
-      @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durantionInMinutes) throws IOException {
+      @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durationInMinutes) throws IOException {
     return new RestResponse<>(
-        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durantionInMinutes));
+        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durationInMinutes));
   }
 
   @POST
@@ -108,19 +108,42 @@ public class AppdynamicsResource {
     return new RestResponse<>(appdynamicsService.saveMetricData(accountId, appdynamicsAppId, tierId, metricData));
   }
 
-  @POST
+  /*
+  @GET
+  @Path("/generate-metrics")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, Map<String, BucketData>>> generateMetrics(@QueryParam("settingId") final String
+  settingId, @QueryParam("accountId") final String accountId,
+      @QueryParam("appdynamicsAppId") int appdynamicsAppId, @QueryParam("tierId") int tierId,
+  @QueryParam("startTimeInMillis") long startTimeInMillis,
+      @QueryParam("endTimeInMillis") long endTimeInMillis, List<String> btList) throws IOException {
+    // endTimeInMillis is optional
+    if(endTimeInMillis <= 0) {
+      endTimeInMillis = System.currentTimeMillis();
+    }
+    return new RestResponse<>(appdynamicsService.generateMetrics(settingId, accountId, appdynamicsAppId, tierId, btList,
+  startTimeInMillis, endTimeInMillis));
+  }
+*/
+
+  @GET
   @Path("/generate-metrics")
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, Map<String, BucketData>>> generateMetrics(
-      @QueryParam("accountId") final String accountId, @QueryParam("appdynamicsAppId") int appdynamicsAppId,
-      @QueryParam("tierId") int tierId, @QueryParam("startTimeInMillis") long startTimeInMillis,
-      @QueryParam("endTimeInMillis") long endTimeInMillis, List<String> btList) throws IOException {
-    // endTimeInMillis is optional
-    if (endTimeInMillis <= 0) {
-      endTimeInMillis = System.currentTimeMillis();
-    }
-    return new RestResponse<>(appdynamicsService.generateMetrics(
-        accountId, appdynamicsAppId, tierId, btList, startTimeInMillis, endTimeInMillis));
+      @QueryParam("stateExecutionId") final String stateExecutionId, @QueryParam("accountId") final String accountId)
+      throws IOException {
+    return new RestResponse<>(appdynamicsService.generateMetrics(stateExecutionId, accountId));
+  }
+
+  @GET
+  @Path("/get-completed-metrics")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, Map<String, BucketData>>> retrieveCompletedMetrics(
+      @QueryParam("stateExecutionId") final String stateExecutionInstanceId,
+      @QueryParam("accountId") final String accountId) {
+    return new RestResponse<>(appdynamicsService.retrieveCompletedMetrics(stateExecutionInstanceId, accountId));
   }
 }
