@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
         , @Field("appdAppId"), @Field("metricId"), @Field("tierId"), @Field("btName"), @Field("nodeName"),
             @Field("startTime")
       },
-      options = @IndexOptions(unique = true))
+      options = @IndexOptions(unique = true, name = "appDynamicsMetricsUniqueIdx"))
   ,
       @Index(fields = {
         @Field("accountId")

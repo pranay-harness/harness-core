@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
       , @Field("templateId"), @Field("overrideType"), @Field("instances"), @Field("expression"), @Field("type"),
           @Field("name")
     },
-    options = @IndexOptions(unique = true)))
+    options = @IndexOptions(unique = true, name = "serviceVariableUniqueIdx")))
 public class ServiceVariable extends Base implements Encryptable {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
