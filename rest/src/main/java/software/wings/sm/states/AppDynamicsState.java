@@ -12,7 +12,10 @@ import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InfraNodeRequest;
 import software.wings.api.InstanceElement;
+import software.wings.beans.Application;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.metrics.BucketData;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -23,12 +26,12 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +67,8 @@ public class AppDynamicsState extends State {
   @Inject @Transient private WorkflowExecutionService workflowExecutionService;
 
   @Inject @Transient private AppdynamicsService appdynamicsService;
+
+  @Inject @Transient private WingsPersistence wingsPersistence;
 
   /**
    * Create a new Http State with given name.
@@ -171,6 +176,20 @@ public class AppDynamicsState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     AppdynamicsAnalysisResponse executionResponse = (AppdynamicsAnalysisResponse) response.values().iterator().next();
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    Application app = workflowStandardParams.getApp();
+    //    Map<String, Map<String, BucketData>> finalMetrics = appdynamicsService.generateMetrics(app.getAccountId(),
+    //    Long.parseLong(applicationId), Long.parseLong(tierId), appDynamicsExecutionData.getBtNames(),
+    //    context.getStateExecutionData().getStartTs(), context.getStateExecutionData().getEndTs());
+    Map<String, Map<String, BucketData>> finalMetrics =
+        appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId(), app.getAppId());
+    List<BucketData> buckets = new ArrayList<>();
+    for (String bt : finalMetrics.keySet()) {
+      for (String metric : finalMetrics.get(bt).keySet()) {
+        buckets.add(finalMetrics.get(bt).get(metric));
+      }
+    }
+    List<String> ids = wingsPersistence.save(buckets);
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
