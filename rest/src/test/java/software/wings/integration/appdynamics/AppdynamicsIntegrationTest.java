@@ -460,10 +460,6 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     target = client.target(API_BASE + "/appdynamics/generate-metrics?settingId=" + settingId + "&accountId=" + accountId
         + "&appdynamicsAppId=" + app.getId() + "&tierId=" + tier.getId() + "&startTimeInMillis=1495432894010"
         + "&endTimeInMillis=1495433114010");
-    //    RestResponse<Map<String, Map<String, BucketData>>> metricRestResponse =
-    //        getRequestBuilderWithAuthHeader(target).post(Entity.entity(Arrays.asList(BT_NAME), APPLICATION_JSON), new
-    //        GenericType<RestResponse<Map<String, Map<String, BucketData>>>>() {
-    //        });
     RestResponse<Map<String, Map<String, BucketData>>> metricRestResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<Map<String, Map<String, BucketData>>>>() {});
     Map<String, Map<String, BucketData>> generatedMetrics = metricRestResponse.getResource();

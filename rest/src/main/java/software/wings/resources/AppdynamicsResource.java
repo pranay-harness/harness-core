@@ -117,14 +117,4 @@ public class AppdynamicsResource {
       @QueryParam("appId") final String appId) throws IOException {
     return new RestResponse<>(appdynamicsService.generateMetrics(stateExecutionId, accountId, appId));
   }
-
-  @GET
-  @Path("/get-completed-metrics")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Map<String, Map<String, BucketData>>> retrieveCompletedMetrics(
-      @QueryParam("stateExecutionId") final String stateExecutionInstanceId,
-      @QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(appdynamicsService.retrieveCompletedMetrics(stateExecutionInstanceId, accountId));
-  }
 }
