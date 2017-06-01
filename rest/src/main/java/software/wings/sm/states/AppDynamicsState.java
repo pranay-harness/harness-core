@@ -32,7 +32,6 @@ import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -183,7 +182,7 @@ public class AppDynamicsState extends State {
     //    Long.parseLong(applicationId), Long.parseLong(tierId), appDynamicsExecutionData.getBtNames(),
     //    context.getStateExecutionData().getStartTs(), context.getStateExecutionData().getEndTs());
     Map<String, Map<String, BucketData>> finalMetrics =
-        appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId());
+        appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId(), app.getAppId());
     List<BucketData> buckets = new ArrayList<>();
     for (String bt : finalMetrics.keySet()) {
       for (String metric : finalMetrics.get(bt).keySet()) {
