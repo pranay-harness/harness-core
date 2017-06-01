@@ -123,6 +123,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
+    logger.info("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
     Account account = accountService.get(accountId);
     if (account == null) {
       throw new WingsException(ACCESS_DENIED);
