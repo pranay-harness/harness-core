@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -36,13 +39,11 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -314,7 +315,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     try { // TODO:: remove it
       serviceTemplate = get(appId, envId, templateId, false);
     } catch (Exception ex) {
-      return Arrays.asList();
+      return emptyList();
     }
 
     /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
@@ -322,7 +323,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId);
     List<ConfigFile> templateConfigFiles =
-        configService.getConfigFilesForEntity(appId, templateId, serviceTemplate.getServiceId(), envId);
+        configService.getConfigFilesForEntity(appId, templateId, serviceTemplate.getUuid(), envId);
 
     return overrideConfigFiles(serviceConfigFiles, templateConfigFiles);
   }
@@ -337,13 +338,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     try { // TODO:: remove it
       serviceTemplate = get(appId, envId, templateId, false);
     } catch (Exception ex) {
-      return Arrays.asList();
+      return emptyList();
     }
 
     List<ServiceVariable> serviceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getServiceId());
+        serviceVariableService.getServiceVariablesForEntity(appId, templateId, serviceTemplate.getUuid());
 
     return overrideServiceSettings(serviceVariables, templateServiceVariables);
   }
@@ -356,8 +357,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     logger.info("Config files before overrides [{}]", existingFiles.toString());
     logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
     if (newFiles != null && !newFiles.isEmpty()) {
-      existingFiles = Stream.concat(newFiles.stream(), existingFiles.stream())
-                          .filter(new TreeSet<>(Comparator.comparing(ConfigFile::getName))::add)
+      existingFiles = concat(newFiles.stream(), existingFiles.stream())
+                          .filter(new TreeSet<>(comparing(ConfigFile::getName))::add)
                           .collect(toList());
     }
     logger.info("Config files after overrides [{}]", existingFiles.toString());
@@ -367,20 +368,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   /**
    * Override service settings list.
    *
-   * @param existingFiles the existing files
-   * @param newFiles      the new files
+   * @param existingServiceVariables the existing files
+   * @param newServiceVariables      the new files
    * @return the list
    */
   public List<ServiceVariable> overrideServiceSettings(
-      List<ServiceVariable> existingFiles, List<ServiceVariable> newFiles) {
-    logger.info("Config files before overrides [{}]", existingFiles.toString());
-    logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
-    if (newFiles != null && !newFiles.isEmpty()) {
-      existingFiles = Stream.concat(newFiles.stream(), existingFiles.stream())
-                          .filter(new TreeSet<>(Comparator.comparing(ServiceVariable::getName))::add)
-                          .collect(toList());
+      List<ServiceVariable> existingServiceVariables, List<ServiceVariable> newServiceVariables) {
+    logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
+    logger.info(
+        "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
+    if (newServiceVariables != null && !newServiceVariables.isEmpty()) {
+      existingServiceVariables = concat(newServiceVariables.stream(), existingServiceVariables.stream())
+                                     .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
+                                     .collect(toList());
     }
-    logger.info("Config files after overrides [{}]", existingFiles.toString());
-    return existingFiles;
+    logger.info("Service variables after overrides [{}]", existingServiceVariables.toString());
+    return existingServiceVariables;
   }
 }
