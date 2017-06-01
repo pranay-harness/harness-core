@@ -1,19 +1,17 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
-import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
-import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -30,20 +28,20 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Builder;
 import software.wings.beans.Event.Type;
 import software.wings.beans.WorkflowType;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.EventEmitter;
@@ -137,17 +135,15 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetActivityCommandUnits() {
-    Activity activity = builder.but().withCommandNameVersionMap(ImmutableMap.of(COMMAND_NAME, 1)).build();
+    List<CommandUnit> commandUnitList = asList(new InitSshCommandUnit(),
+        anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build(),
+        new CleanupSshCommandUnit());
+    Activity activity = builder.but()
+                            .withCommandName(COMMAND_NAME)
+                            .withCommandType(CommandUnitType.COMMAND.name())
+                            .withCommandUnits(commandUnitList)
+                            .build();
     String activityId = wingsPersistence.save(activity);
-    Command command =
-        aCommand()
-            .withName(COMMAND_NAME)
-            .addCommandUnits(
-                anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build())
-            .build();
-    command.setDeploymentType(DeploymentType.SSH.name());
-    when(serviceResourceService.getCommandByNameAndVersion(APP_ID, SERVICE_ID, COMMAND_NAME, 1))
-        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)
         .hasSize(3)

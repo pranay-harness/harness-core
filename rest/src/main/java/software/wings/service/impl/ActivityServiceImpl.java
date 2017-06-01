@@ -1,41 +1,34 @@
 package software.wings.service.impl;
 
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.command.CommandUnitType.COMMAND;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.QUEUED;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.inject.Inject;
 
-import software.wings.api.DeploymentType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
-import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Event.Type;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.CleanupSshCommandUnit;
-import software.wings.beans.command.Command;
+import software.wings.beans.Log;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
-import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -45,12 +38,12 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class ActivityServiceImpl implements ActivityService {
+  public static final int MAX_ACTIVITY_VERSION_RETRY = 5;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private LogService logService;
-  @Inject private ArtifactService artifactService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EventEmitter eventEmitter;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
@@ -103,74 +96,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public List<CommandUnit> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
-
-    int version = EntityVersion.INITIAL_VERSION;
-    if (activity.getCommandNameVersionMap() != null) {
-      version = activity.getCommandNameVersionMap().get(activity.getCommandName());
-    }
-
-    Command command =
-        serviceResourceService
-            .getCommandByNameAndVersion(appId, activity.getServiceId(), activity.getCommandName(), version)
-            .getCommand();
-    List<CommandUnit> commandUnits =
-        getFlattenCommandUnitList(appId, activity.getServiceId(), activity.getCommandNameVersionMap(), command);
-    if (commandUnits != null && commandUnits.size() > 0) {
-      if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
-        commandUnits.add(0, new InitSshCommandUnit());
-        commandUnits.add(new CleanupSshCommandUnit());
-      }
-      boolean markNextQueued = false;
-      for (CommandUnit commandUnit : commandUnits) {
-        CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
-        if (!markNextQueued) {
-          commandExecutionStatus = logService.getUnitExecutionResult(appId, activityId, commandUnit.getName());
-          if (commandExecutionStatus == CommandExecutionStatus.FAILURE
-              || commandExecutionStatus == CommandExecutionStatus.RUNNING) {
-            markNextQueued = true;
-          }
-        }
-        commandUnit.setCommandExecutionStatus(commandExecutionStatus);
-      }
-    }
-    return commandUnits;
-  }
-
-  /**
-   * Gets flatten command unit list.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   * @param command   the command
-   * @return the flatten command unit list
-   */
-  private List<CommandUnit> getFlattenCommandUnitList(
-      String appId, String serviceId, Map<String, Integer> commandNameVersionMap, Command command) {
-    Command executableCommand = command;
-    if (executableCommand == null) {
-      return new ArrayList<>();
-    }
-
-    if (isNotBlank(command.getReferenceId())) {
-      executableCommand = serviceResourceService
-                              .getCommandByNameAndVersion(appId, serviceId, command.getReferenceId(),
-                                  commandNameVersionMap.get(command.getReferenceId()))
-                              .getCommand();
-      if (executableCommand == null) {
-        throw new WingsException(COMMAND_DOES_NOT_EXIST);
-      }
-    }
-
-    return executableCommand.getCommandUnits()
-        .stream()
-        .flatMap(commandUnit -> {
-          if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-            return getFlattenCommandUnitList(appId, serviceId, commandNameVersionMap, (Command) commandUnit).stream();
-          } else {
-            return Stream.of(commandUnit);
-          }
-        })
-        .collect(toList());
+    return activity.getCommandUnits();
   }
 
   @Override
@@ -214,5 +140,49 @@ public class ActivityServiceImpl implements ActivityService {
         .equal(envId)
         .asKeyList()
         .forEach(activityKey -> delete(appId, (String) activityKey.getId()));
+  }
+
+  @Override
+  public void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap) {
+    activityCommandUnitLastLogMap.forEach(this ::updateActivityCommandUnitStatusWithRetry);
+  }
+
+  private void updateActivityCommandUnitStatusWithRetry(String activityId, Map<String, Log> commandUnitLastLogMap) {
+    boolean isSaved = false;
+    int retry = 0;
+
+    do {
+      try {
+        updateActivityCommandUnitStatus(activityId, commandUnitLastLogMap);
+        isSaved = true;
+      } catch (ConcurrentModificationException ignored) {
+        retry++;
+      }
+    } while (!isSaved && retry < MAX_ACTIVITY_VERSION_RETRY);
+
+    if (!isSaved) {
+      logger.error("Activity:{} commandUnit status couldn't be updated after {} retries", activityId, retry);
+    } else if (retry > 0) {
+      logger.warn("Version conflict encountered. Resolved in {} retry", retry);
+    }
+  }
+
+  private void updateActivityCommandUnitStatus(String activityId, Map<String, Log> commandUnitLastLogMap) {
+    String appId = commandUnitLastLogMap.values().iterator().next().getAppId();
+    Activity activity = get(activityId, appId);
+    activity.getCommandUnits().forEach(commandUnit -> {
+      Log log = commandUnitLastLogMap.get(commandUnit.getName());
+      if (isCommandUnitStatusUpdatableByLogStatus(commandUnit, log)) {
+        commandUnit.setCommandExecutionStatus(log.getCommandExecutionStatus());
+      }
+    });
+    wingsPersistence.update(activity,
+        wingsPersistence.createUpdateOperations(Activity.class).set("commandUnits", activity.getCommandUnits()));
+  }
+
+  private boolean isCommandUnitStatusUpdatableByLogStatus(CommandUnit commandUnit, Log log) {
+    return (log != null
+        && (QUEUED.equals(commandUnit.getCommandExecutionStatus())
+               || RUNNING.equals(commandUnit.getCommandExecutionStatus())));
   }
 }

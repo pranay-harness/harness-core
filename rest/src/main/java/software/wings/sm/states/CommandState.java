@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -22,6 +21,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.SimpleWorkflowParam;
@@ -41,12 +41,13 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
-import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -253,12 +254,7 @@ public class CommandState extends State {
               .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
               .withCommandType(command.getCommandUnitType().name())
               .withHostName(host.getHostName())
-              .withCommandNameVersionMap(
-                  service.getServiceCommands()
-                      .stream()
-                      .filter(serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()) != 0)
-                      .collect(toMap(ServiceCommand::getName,
-                          serviceCommand -> serviceCommand.getVersionForEnv(serviceInstance.getEnvId()))))
+              .withCommandUnits(getFlattenCommandUnits(appId, envId, service, command))
               .withServiceVariables(context.getServiceVariables());
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
@@ -339,6 +335,16 @@ public class CommandState extends State {
         .withStateExecutionData(executionDataBuilder.build())
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  public List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, Command command) {
+    List<CommandUnit> flattenCommandUnitList =
+        serviceResourceService.getFlattenCommandUnitList(appId, service.getUuid(), envId, commandName);
+    if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {
+      flattenCommandUnitList.add(0, new InitSshCommandUnit());
+      flattenCommandUnitList.add(new CleanupSshCommandUnit());
+    }
+    return flattenCommandUnitList;
   }
 
   private Artifact findArtifact(

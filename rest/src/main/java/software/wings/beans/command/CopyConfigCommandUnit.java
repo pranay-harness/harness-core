@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
@@ -67,9 +68,10 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
               .withLogLevel(ERROR)
               .withCommandUnitName(getName())
               .withLogLine("Unable to fetch config file information")
+              .withExecutionResult(FAILURE)
               .build());
       logger.error("Unable to fetch log file information ", e);
-      return CommandExecutionStatus.FAILURE;
+      return FAILURE;
     }
 
     CommandExecutionStatus result = CommandExecutionStatus.SUCCESS;
@@ -93,16 +95,17 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
                   .withLogLevel(ERROR)
                   .withCommandUnitName(getName())
                   .withLogLine(message)
+                  .withExecutionResult(FAILURE)
                   .build());
-          result = CommandExecutionStatus.FAILURE;
+          result = FAILURE;
           break;
         }
         result = (context).copyGridFsFiles(
                      path, FileBucket.CONFIGS, Collections.singletonList(Pair.of(fileId, destFile.getName())))
-                == CommandExecutionStatus.FAILURE
-            ? CommandExecutionStatus.FAILURE
+                == FAILURE
+            ? FAILURE
             : CommandExecutionStatus.SUCCESS;
-        if (CommandExecutionStatus.FAILURE == result) {
+        if (FAILURE == result) {
           break;
         }
       }

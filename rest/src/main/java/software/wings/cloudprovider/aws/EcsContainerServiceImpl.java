@@ -6,14 +6,13 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.Instance;
-import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
-import com.amazonaws.services.autoscaling.model.SetDesiredCapacityResult;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
 import com.amazonaws.services.cloudformation.model.CreateStackResult;
@@ -772,20 +771,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public void provisionNodes(
-      SettingAttribute connectorConfig, String autoScalingGroupName, Integer desiredClusterSize) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
-    // TODO: add validation for autoscalingGroupName and desiredClusterSize
-    SetDesiredCapacityResult setDesiredCapacityResult =
-        amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
-                                                       .withAutoScalingGroupName(autoScalingGroupName)
-                                                       .withDesiredCapacity(desiredClusterSize));
-  }
-
-  @Override
   public void provisionNodes(String region, SettingAttribute connectorConfig, Integer clusterSize,
       String launchConfigName, Map<String, Object> params) {
     AwsConfig awsConfig = validateAndGetAwsConfig(connectorConfig);
@@ -797,8 +782,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     logger.info("Successfully created empty cluster " + params.get("clusterName"));
 
     logger.info("Creating autoscaling group for cluster...");
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        awsHelperService.getAmazonAutoScalingClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonAutoScalingClient amazonAutoScalingClient = awsHelperService.getAmazonAutoScalingClient(
+        Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
 
     Integer maxSize = (Integer) params.computeIfAbsent("maxSize", s -> 2 * clusterSize); // default 200%
     Integer minSize = (Integer) params.computeIfAbsent("minSize", s -> clusterSize / 2); // default 50%

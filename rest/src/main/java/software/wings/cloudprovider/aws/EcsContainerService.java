@@ -17,15 +17,6 @@ import java.util.Map;
 public interface EcsContainerService {
   /**
    * Provision nodes.
-   *
-   * @param connectorConfig      the connector config
-   * @param autoScalingGroupName the auto scaling group name
-   * @param clusterSize          the cluster size
-   */
-  void provisionNodes(SettingAttribute connectorConfig, String autoScalingGroupName, Integer clusterSize);
-
-  /**
-   * Provision nodes.
    */
   void provisionNodes(String region, SettingAttribute connectorConfig, Integer clusterSize, String launchConfigName,
       Map<String, Object> params);

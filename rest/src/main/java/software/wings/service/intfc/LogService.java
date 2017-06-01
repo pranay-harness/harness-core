@@ -65,5 +65,5 @@ public interface LogService {
    *
    * @param logs the logs
    */
-  List<String> batchedSave(List<Log> logs);
+  List<String> batchedSave(@Valid List<Log> logs);
 }

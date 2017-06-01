@@ -9,6 +9,7 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
+import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.ec2.AmazonEC2Client;
@@ -21,6 +22,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
+import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder;
 import com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import org.apache.commons.io.IOUtils;
@@ -103,15 +105,11 @@ public class AwsHelperService {
     return new AmazonCloudFormationClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
   }
 
-  /**
-   * Gets amazon auto scaling client.
-   *
-   * @param accessKey the access key
-   * @param secretKey the secret key
-   * @return the amazon auto scaling client
-   */
-  public AmazonAutoScalingClient getAmazonAutoScalingClient(String accessKey, char[] secretKey) {
-    return new AmazonAutoScalingClient(new BasicAWSCredentials(accessKey, new String(secretKey)));
+  public AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, String accessKey, char[] secretKey) {
+    return (AmazonAutoScalingClient) AmazonAutoScalingClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
   }
 
   public AmazonElasticLoadBalancingClient getAmazonElasticLoadBalancingClient(String accessKey, char[] secretKey) {
@@ -120,11 +118,12 @@ public class AwsHelperService {
 
   public com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient getClassicElbClient(
       Regions region, String accessKey, char[] secretKey) {
-    return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) com.amazonaws.services
-        .elasticloadbalancing.AmazonElasticLoadBalancingClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+    return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient)
+        AmazonElasticLoadBalancingClientBuilder.standard()
+            .withRegion(region)
+            .withCredentials(
+                new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+            .build();
   }
 
   public String getHostnameFromDnsName(String dnsName) {
@@ -135,7 +134,6 @@ public class AwsHelperService {
 
   /**
    * Gets instance id.
-   *
    *
    * @param region
    * @param accessKey the access key

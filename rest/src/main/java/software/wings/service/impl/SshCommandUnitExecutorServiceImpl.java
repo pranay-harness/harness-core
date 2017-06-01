@@ -6,6 +6,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 
 import com.google.common.base.Joiner;
@@ -75,6 +76,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             .withLogLevel(INFO)
             .withCommandUnitName(commandUnit.getName())
             .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .withExecutionResult(RUNNING)
             .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
