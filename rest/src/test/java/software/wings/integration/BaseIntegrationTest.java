@@ -84,7 +84,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   @Inject private AccountService accountService;
   @Inject protected SettingsService settingsService;
 
-  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
+  //  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 
   @BeforeClass
   public static void setup() throws KeyManagementException, NoSuchAlgorithmException {
