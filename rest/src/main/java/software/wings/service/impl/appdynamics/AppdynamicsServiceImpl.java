@@ -21,6 +21,7 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData;
 import software.wings.metrics.MetricCalculator;
 import software.wings.metrics.MetricDefinition;
+import software.wings.metrics.MetricSummary;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -132,24 +133,16 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     return true;
   }
 
-  public Map<String, Map<String, BucketData>> generateMetrics(
-      String stateExecutionInstanceId, String accountId, String appId) {
+  public MetricSummary generateMetrics(String stateExecutionInstanceId, String accountId, String appId) {
     PageRequest.Builder requestBuilder =
         aPageRequest()
             .addFilter("stateExecutionInstanceId", Operator.EQ, stateExecutionInstanceId)
             .addFilter("accountId", Operator.EQ, accountId);
-    PageResponse<BucketData> response = wingsPersistence.query(BucketData.class, requestBuilder.build());
-    // If there are matching BucketData records, it means this state has completed and return the summary written to the
-    // persistence layer.
+    PageResponse<MetricSummary> response = wingsPersistence.query(MetricSummary.class, requestBuilder.build());
+    // If there is a matching MetricSummary record, it means this state has completed and we return the summary written
+    // to the persistence layer.
     if (response.getResponse() != null && response.getResponse().size() > 0) {
-      Map<String, Map<String, BucketData>> metricSummaries = new HashMap<>();
-      for (BucketData bucketData : response.getResponse()) {
-        if (metricSummaries.get(bucketData.getBtId()) == null) {
-          metricSummaries.put(bucketData.getBtId(), new HashMap<>());
-        }
-        metricSummaries.get(bucketData.getBtId()).put(bucketData.getMetricName(), bucketData);
-      }
-      return metricSummaries;
+      return response.getResponse().get(0);
     }
 
     // Otherwise, generate the metrics from the AppdynamicsMetricDataRecords.
@@ -184,8 +177,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                          .addFilter("metricId", Operator.IN, metricIds);
     PageResponse<MetricDefinition> metricDefinitions =
         wingsPersistence.query(MetricDefinition.class, requestBuilder.build());
-    Map<String, Map<String, BucketData>> metricSummaries =
-        MetricCalculator.calculateMetrics(metricDefinitions.getResponse(), dataMap, newNodeNames);
-    return metricSummaries;
+    return MetricCalculator.calculateMetrics(metricDefinitions.getResponse(), dataMap, newNodeNames);
   }
 }

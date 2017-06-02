@@ -12,6 +12,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.metrics.BucketData.DataSummary;
 import software.wings.metrics.MetricDefinition.ThresholdType;
+import software.wings.metrics.MetricSummary.BTMetrics;
 import software.wings.metrics.appdynamics.AppdynamicsMetricDefinition;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataRecord;
 
@@ -23,10 +24,12 @@ import java.util.Map;
  * Created by mike@ on 5/24/17.
  */
 public class MetricCalculatorTest {
+  private final String ACCOUNT_ID = "account_id";
+  private final long APPD_APP_ID = 5;
   private AppdynamicsMetricDefinition CALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withAccountId("account_id")
-          .withAppdynamicsAppId(5)
+          .withAccountId(ACCOUNT_ID)
+          .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("0")
           .withMetricName("Calls per Minute")
           .withMetricType(MetricType.COUNT)
@@ -36,8 +39,8 @@ public class MetricCalculatorTest {
           .build();
   private AppdynamicsMetricDefinition SLOW_CALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withAccountId("account_id")
-          .withAppdynamicsAppId(5)
+          .withAccountId(ACCOUNT_ID)
+          .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("1")
           .withMetricName("Number of Slow Calls")
           .withMetricType(MetricType.COUNT)
@@ -47,8 +50,8 @@ public class MetricCalculatorTest {
           .build();
   private AppdynamicsMetricDefinition VERY_SLOW_CALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withAccountId("account_id")
-          .withAppdynamicsAppId(5)
+          .withAccountId(ACCOUNT_ID)
+          .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("2")
           .withMetricName("Number of Very Slow Calls")
           .withMetricType(MetricType.COUNT)
@@ -58,8 +61,8 @@ public class MetricCalculatorTest {
           .build();
   private AppdynamicsMetricDefinition ERRORS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withAccountId("account_id")
-          .withAppdynamicsAppId(5)
+          .withAccountId(ACCOUNT_ID)
+          .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("3")
           .withMetricName("Error Count")
           .withMetricType(MetricType.COUNT)
@@ -69,8 +72,8 @@ public class MetricCalculatorTest {
           .build();
   private AppdynamicsMetricDefinition STALLS_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withAccountId("account_id")
-          .withAppdynamicsAppId(5)
+          .withAccountId(ACCOUNT_ID)
+          .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("4")
           .withMetricName("Stall Count")
           .withMetricType(MetricType.COUNT)
@@ -80,8 +83,8 @@ public class MetricCalculatorTest {
           .build();
   private AppdynamicsMetricDefinition ART_METRIC_DEFINITION =
       AppdynamicsMetricDefinition.Builder.anAppdynamicsMetricDefinition()
-          .withAccountId("account_id")
-          .withAppdynamicsAppId(5)
+          .withAccountId(ACCOUNT_ID)
+          .withAppdynamicsAppId(APPD_APP_ID)
           .withMetricId("5")
           .withMetricName("95th Percentile Response Time (ms)")
           .withMetricType(MetricType.TIME)
@@ -144,47 +147,49 @@ public class MetricCalculatorTest {
     data.put("login", BT4_ART_RECORD_2);
     data.put("login", BT4_ART_RECORD_3);
     data.put("login", BT4_ART_RECORD_4);
-    Map<String, Map<String, BucketData>> output =
-        MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
-    assertEquals(2, output.keySet().size());
-    Map<String, BucketData> todolistMap = output.get("todolist");
-    assertEquals(2, todolistMap.keySet().size());
-    BucketData todolistCallData = todolistMap.get("Calls per Minute");
+    MetricSummary output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
+    assertEquals(ACCOUNT_ID, output.getAccountId());
+    assertEquals(60000, output.getStartTimeMillis());
+    assertEquals(180000, output.getEndTimeMillis());
+    assertEquals(2, output.getBtMetricsMap().size());
+    BTMetrics todolistMetrics = output.getBtMetricsMap().get("todolist");
+    assertEquals(2, todolistMetrics.getMetricsMap().size());
+    assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
+    assertEquals(2, todolistMetrics.getBtRiskSummary().size());
+    BucketData todolistCallData = todolistMetrics.getMetricBucketData("Calls per Minute");
     System.out.println(todolistCallData);
-    assertEquals(60000, todolistCallData.getStartTimeMillis());
-    assertEquals(180000, todolistCallData.getEndTimeMillis());
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
-    BucketData todolistArtData = todolistMap.get("Average Response Time (ms)");
-    assertEquals(60000, todolistArtData.getStartTimeMillis());
-    assertEquals(180000, todolistArtData.getEndTimeMillis());
+    BucketData todolistArtData = todolistMetrics.getMetricBucketData("Average Response Time (ms)");
     assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
     assertEquals(2, todolistArtData.getOldData().getNodeCount());
-    BucketData loginArtData = output.get("login").get("Average Response Time (ms)");
-    assertEquals(60000, loginArtData.getStartTimeMillis());
-    assertEquals(180000, loginArtData.getEndTimeMillis());
+    BucketData loginArtData = output.getBtMetricsMap().get("login").getMetricBucketData("Average Response Time (ms)");
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
+
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      String b = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(output);
+      System.out.println(b);
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
 
     // with missing metric definition
     metricDefinitions = Arrays.asList(CALLS_METRIC_DEFINITION);
     output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
-    assertEquals(2, output.keySet().size());
-    todolistMap = output.get("todolist");
-    assertEquals(2, todolistMap.keySet().size());
-    todolistCallData = todolistMap.get("Calls per Minute");
-    assertEquals(60000, todolistCallData.getStartTimeMillis());
-    assertEquals(180000, todolistCallData.getEndTimeMillis());
+    assertEquals(2, output.getBtMetricsMap().size());
+    todolistMetrics = output.getBtMetricsMap().get("todolist");
+    assertEquals(2, todolistMetrics.getMetricsMap().size());
+    assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
+    assertEquals(2, todolistMetrics.getBtRiskSummary().size());
+    todolistCallData = todolistMetrics.getMetricBucketData("Calls per Minute");
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
-    todolistArtData = todolistMap.get("Average Response Time (ms)");
-    assertEquals(60000, todolistArtData.getStartTimeMillis());
-    assertEquals(180000, todolistArtData.getEndTimeMillis());
+    todolistArtData = todolistMetrics.getMetricBucketData("Average Response Time (ms)");
     assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
     assertEquals(2, todolistArtData.getOldData().getNodeCount());
-    loginArtData = output.get("login").get("Average Response Time (ms)");
-    assertEquals(60000, loginArtData.getStartTimeMillis());
-    assertEquals(180000, loginArtData.getEndTimeMillis());
+    loginArtData = output.getBtMetricsMap().get("login").getMetricBucketData("Average Response Time (ms)");
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
   }
@@ -200,8 +205,6 @@ public class MetricCalculatorTest {
         Arrays.asList(BT2_CALL_RECORD_3, BT2_CALL_RECORD_4, BT2_CALL_RECORD_7, BT2_CALL_RECORD_8);
     List<List<AppdynamicsMetricDataRecord>> records = Arrays.asList(oldRecords, newRecords);
     BucketData bucketData = MetricCalculator.parse(CALLS_METRIC_DEFINITION, records);
-    assertEquals(60000, bucketData.getStartTimeMillis());
-    assertEquals(180000, bucketData.getEndTimeMillis());
     // newRecords sum = 38, oldRecords sum = 30, so medium risk
     assertEquals(RiskLevel.MEDIUM, bucketData.getRisk());
     assertEquals(2, bucketData.getOldData().getNodeCount());
@@ -260,21 +263,20 @@ public class MetricCalculatorTest {
     String[] metrics = new String[] {"Calls per Minute", "Number of Slow Calls", "Number of Very Slow Calls",
         "Error Count", "Stall Count", "95th Percentile Response Time (ms)"};
     String[] nodes = new String[] {"alpha", "beta", "gamma", "delta"};
-    int val = 5;
+
     for (int b = 0; b < bts.length; b++) {
       for (MetricDefinition metric : metricDefinitions) {
         for (int n = 0; n < nodes.length; n++) {
           for (int s = 0; s < 3; s++) {
+            int val = (int) (Math.random() * 100);
             data.put(bts[b],
                 createAppdynamicsMetricDataRecord(Long.parseLong(metric.getMetricId()), metric.getMetricName(),
                     metric.getMetricType(), 1, "test-tier", b, bts[b], nodes[n], s * 60000, val));
-            val++;
           }
         }
       }
     }
-    Map<String, Map<String, BucketData>> output =
-        MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node1", "node2"));
+    MetricSummary output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("alpha", "beta"));
     ObjectMapper mapper = new ObjectMapper();
     try {
       String b = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(output);
