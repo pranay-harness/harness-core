@@ -5,6 +5,7 @@ import com.google.api.client.util.Throwables;
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.common.Constants;
 
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +37,10 @@ public class Misc {
     } catch (InterruptedException exception) {
       // Ignore
     }
+  }
+
+  public static void quietSleep(int delay, TimeUnit unit) {
+    quietSleep((int) unit.toMillis(delay));
   }
 
   public static void sleepWithRuntimeException(int delay) {

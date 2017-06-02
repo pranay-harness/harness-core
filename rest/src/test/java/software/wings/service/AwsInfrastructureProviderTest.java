@@ -144,7 +144,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .thenReturn(new DescribeInstancesResult().withReservations(
             new Reservation().withInstances(new Instance()
                                                 .withPrivateDnsName(HOST_NAME)
-                                                .withPrivateDnsName(HOST_NAME)
+                                                .withPublicDnsName(HOST_NAME)
                                                 .withInstanceId("INSTANCE_ID")
                                                 .withState(new InstanceState().withName("running")))));
     when(awsHelperService.canConnectToHost(HOST_NAME, 22, 30 * 1000)).thenReturn(true);
