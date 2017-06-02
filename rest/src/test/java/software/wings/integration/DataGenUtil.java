@@ -41,6 +41,7 @@ import software.wings.beans.AppDynamicsConfig.Builder;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMappingType;
@@ -198,6 +199,20 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
+
+    SettingAttribute dockerSettingAttribute =
+        aSettingAttribute()
+            .withName("Wings Docker Registry")
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(accountId)
+            .withValue(DockerConfig.Builder.aDockerConfig()
+                           .withAccountId(accountId)
+                           .withDockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                           .withUsername("wingsplugins")
+                           .withPassword("W!ngs@DockerHub".toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.saveAndGet(SettingAttribute.class, dockerSettingAttribute);
 
     SettingAttribute smtpSettingAttribute = aSettingAttribute()
                                                 .withCategory(Category.CONNECTOR)
