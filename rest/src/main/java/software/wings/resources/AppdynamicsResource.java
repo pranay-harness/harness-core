@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.BucketData;
+import software.wings.metrics.MetricSummary;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -112,19 +113,8 @@ public class AppdynamicsResource {
   @Path("/generate-metrics")
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<String, Map<String, BucketData>>> generateMetrics(
-      @QueryParam("stateExecutionId") final String stateExecutionId, @QueryParam("accountId") final String accountId,
-      @QueryParam("appId") final String appId) throws IOException {
+  public RestResponse<MetricSummary> generateMetrics(@QueryParam("stateExecutionId") final String stateExecutionId,
+      @QueryParam("accountId") final String accountId, @QueryParam("appId") final String appId) throws IOException {
     return new RestResponse<>(appdynamicsService.generateMetrics(stateExecutionId, accountId, appId));
-  }
-
-  @GET
-  @Path("/get-completed-metrics")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Map<String, Map<String, BucketData>>> retrieveCompletedMetrics(
-      @QueryParam("stateExecutionId") final String stateExecutionInstanceId,
-      @QueryParam("accountId") final String accountId) {
-    return new RestResponse<>(appdynamicsService.retrieveCompletedMetrics(stateExecutionInstanceId, accountId));
   }
 }

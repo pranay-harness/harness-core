@@ -340,7 +340,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
-    Response<DelegateTask> acquireResponse = null;
+    if (currentlyExecutingTasks.contains(delegateTaskEvent.getDelegateTaskId())) {
+      logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
+      return;
+    }
 
     try {
       DelegateTask delegateTask =

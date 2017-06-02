@@ -337,7 +337,7 @@ public class CommandState extends State {
         .build();
   }
 
-  public List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, Command command) {
+  private List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, Command command) {
     List<CommandUnit> flattenCommandUnitList =
         serviceResourceService.getFlattenCommandUnitList(appId, service.getUuid(), envId, commandName);
     if (DeploymentType.SSH.name().equals(command.getDeploymentType())) {

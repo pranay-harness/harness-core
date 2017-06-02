@@ -28,18 +28,25 @@ public class MetricCalculator {
    * @param data A Multimap of metric names to all of the data records for that name.
    * @return A Map of BT names to a map of metric names to metric data.
    */
-  public static Map<String, Map<String, BucketData>> calculateMetrics(List<MetricDefinition> metricDefinitions,
+  public static MetricSummary calculateMetrics(List<MetricDefinition> metricDefinitions,
       ArrayListMultimap<String, AppdynamicsMetricDataRecord> data, List<String> newNodeNames) {
-    Map<String, Map<String, BucketData>> outputMap = new HashMap<>();
+    Map<String, MetricSummary.BTMetrics> btMetricDataMap = new HashMap<>();
     // create a map of metric ID to metric definition
     Map<String, MetricDefinition> metricDefinitionMap = new HashMap<>();
     metricDefinitions.forEach(definition -> metricDefinitionMap.put(definition.getMetricId(), definition));
+
+    String accountId = data.values().iterator().next().getAccountId();
+    String appdAppId = data.values().iterator().next().getAppId();
+    long startTimeMillis = System.currentTimeMillis();
+    long endTimeMillis = 0;
 
     // split the data by btName
     for (String btName : data.keySet()) {
       // subsplit the per-bt data by metric
       ArrayListMultimap<MetricDefinition, AppdynamicsMetricDataRecord> metricData = ArrayListMultimap.create();
       for (AppdynamicsMetricDataRecord record : data.get(btName)) {
+        startTimeMillis = Math.min(record.getStartTime(), startTimeMillis);
+        endTimeMillis = Math.max(record.getStartTime(), endTimeMillis);
         // TODO: This is temporary logic until we build the interface to let people define metrics in the UI and persist
         // them If a metric doesn't have the corresponding metric definition, instead of throwing an exception, generate
         // an appropriate definition
@@ -65,21 +72,28 @@ public class MetricCalculator {
         metricData.put(metricDefinition, record);
       }
 
-      Map<String, BucketData> metricDataMap = new HashMap<>();
+      Map<MetricSummary.Metric, BucketData> metricDataMap = new HashMap<>();
       for (MetricDefinition metricDefinition : metricData.keySet()) {
         List<AppdynamicsMetricDataRecord> singleMetricData = metricData.get(metricDefinition);
         // subsplit the per-bt/metric data by old/new
         List<List<AppdynamicsMetricDataRecord>> splitData = splitDataIntoOldAndNew(singleMetricData, newNodeNames);
         BucketData bucketData = parse(metricDefinition, splitData);
-        bucketData.setAccountId(metricDefinition.getAccountId());
-        bucketData.setBtName(btName);
-        bucketData.setMetricName(metricDefinition.getMetricName());
-        bucketData.setMetricId(metricDefinition.getMetricId());
-        metricDataMap.put(metricDefinition.getMetricName(), bucketData);
+        MetricSummary.Metric metric =
+            new MetricSummary().new Metric(metricDefinition.getMetricName(), metricDefinition.getMetricId());
+        metricDataMap.put(metric, bucketData);
       }
-      outputMap.put(btName, metricDataMap);
+
+      MetricSummary.BTMetrics btMetrics = calculateOverallBTRisk(metricDataMap);
+      btMetricDataMap.put(btName, btMetrics);
     }
-    return outputMap;
+    endTimeMillis += TimeUnit.MINUTES.toMillis(1);
+    MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
+                                      .withAccountId(accountId)
+                                      .withBtMetricsMap(btMetricDataMap)
+                                      .withStartTimeMillis(startTimeMillis)
+                                      .withEndTimeMillis(endTimeMillis)
+                                      .build();
+    return metricSummary;
   }
 
   /**
@@ -90,7 +104,6 @@ public class MetricCalculator {
    */
   public static List<List<AppdynamicsMetricDataRecord>> splitDataIntoOldAndNew(
       List<AppdynamicsMetricDataRecord> data, List<String> newNodeNames) {
-    // TODO: Rishi
     List<List<AppdynamicsMetricDataRecord>> output = new ArrayList<>();
     List<AppdynamicsMetricDataRecord> oldData = new ArrayList<>();
     List<AppdynamicsMetricDataRecord> newData = new ArrayList<>();
@@ -157,13 +170,8 @@ public class MetricCalculator {
         }
       }
     }
-    BucketData bucketData = BucketData.Builder.aBucketData()
-                                .withStartTimeMillis(startTimeMillis)
-                                .withEndTimeMillis(endTimeMillis)
-                                .withRisk(risk)
-                                .withOldData(oldSummary)
-                                .withNewData(newSummary)
-                                .build();
+    BucketData bucketData =
+        BucketData.Builder.aBucketData().withRisk(risk).withOldData(oldSummary).withNewData(newSummary).build();
     return bucketData;
   }
 
@@ -225,5 +233,32 @@ public class MetricCalculator {
       displayValue = String.valueOf(stats.mean());
     }
     return new BucketData().new DataSummary(nodeCount, new ArrayList<>(nodeSet), stats, displayValue, missingData);
+  }
+
+  public static MetricSummary.BTMetrics calculateOverallBTRisk(
+      Map<MetricSummary.Metric, BucketData> metricBucketDataMap) {
+    RiskLevel risk = RiskLevel.LOW;
+    List<String> messages = new ArrayList<>();
+    for (MetricSummary.Metric metric : metricBucketDataMap.keySet()) {
+      BucketData bucketData = metricBucketDataMap.get(metric);
+      if (bucketData.getRisk().compareTo(risk) < 0) {
+        risk = bucketData.getRisk();
+      }
+    }
+    for (MetricSummary.Metric metric : metricBucketDataMap.keySet()) {
+      BucketData bucketData = metricBucketDataMap.get(metric);
+      if (bucketData.getRisk() == risk) {
+        StringBuilder s = new StringBuilder();
+        s.append(risk.name()).append(": ");
+        s.append(metric.getMetricName());
+        s.append(" (old value: ")
+            .append(bucketData.getOldData() == null ? "<null>" : bucketData.getOldData().getDisplayValue());
+        s.append(", new value: ")
+            .append(bucketData.getNewData() == null ? "<null>" : bucketData.getNewData().getDisplayValue());
+        s.append(")");
+        messages.add(s.toString());
+      }
+    }
+    return new MetricSummary().new BTMetrics(risk, messages, metricBucketDataMap);
   }
 }
