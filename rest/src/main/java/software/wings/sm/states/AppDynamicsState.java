@@ -16,6 +16,7 @@ import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData;
+import software.wings.metrics.MetricSummary;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -178,18 +179,9 @@ public class AppDynamicsState extends State {
     AppdynamicsAnalysisResponse executionResponse = (AppdynamicsAnalysisResponse) response.values().iterator().next();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Application app = workflowStandardParams.getApp();
-    //    Map<String, Map<String, BucketData>> finalMetrics = appdynamicsService.generateMetrics(app.getAccountId(),
-    //    Long.parseLong(applicationId), Long.parseLong(tierId), appDynamicsExecutionData.getBtNames(),
-    //    context.getStateExecutionData().getStartTs(), context.getStateExecutionData().getEndTs());
-    Map<String, Map<String, BucketData>> finalMetrics =
+    MetricSummary finalMetrics =
         appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId(), app.getAppId());
-    List<BucketData> buckets = new ArrayList<>();
-    for (String bt : finalMetrics.keySet()) {
-      for (String metric : finalMetrics.get(bt).keySet()) {
-        buckets.add(finalMetrics.get(bt).get(metric));
-      }
-    }
-    List<String> ids = wingsPersistence.save(buckets);
+    String id = wingsPersistence.save(finalMetrics);
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
