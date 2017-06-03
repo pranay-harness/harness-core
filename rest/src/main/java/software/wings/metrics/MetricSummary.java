@@ -9,7 +9,6 @@ import software.wings.beans.Base;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by mike@ on 6/1/17.
@@ -73,51 +72,15 @@ public class MetricSummary extends Base {
     return s.toString();
   }
 
-  public class Metric {
-    private String metricName;
-    private String metricId;
-
-    public Metric() {}
-
-    public Metric(String metricName, String metricId) {
-      this.metricName = metricName;
-      this.metricId = metricId;
-    }
-
-    public String getMetricName() {
-      return metricName;
-    }
-
-    public void setMetricName(String metricName) {
-      this.metricName = metricName;
-    }
-
-    public String getMetricId() {
-      return metricId;
-    }
-
-    public void setMetricId(String metricId) {
-      this.metricId = metricId;
-    }
-
-    @Override
-    //    public String toString() {
-    //      return MoreObjects.toStringHelper(this).add("metricName", metricName).add("metricId", metricId).toString();
-    //    }
-    public String toString() {
-      return metricName;
-    }
-  }
-
-  public class BTMetrics {
+  public static class BTMetrics {
     private RiskLevel btRisk;
     private List<String> btRiskSummary;
-    private Map<Metric, BucketData> metricsMap;
+    private Map<String, BucketData> metricsMap;
 
     // needed for Jackson
     public BTMetrics() {}
 
-    public BTMetrics(RiskLevel btRisk, List<String> btRiskSummary, Map<Metric, BucketData> metricsMap) {
+    public BTMetrics(RiskLevel btRisk, List<String> btRiskSummary, Map<String, BucketData> metricsMap) {
       this.btRisk = btRisk;
       this.btRiskSummary = btRiskSummary;
       this.metricsMap = metricsMap;
@@ -139,21 +102,12 @@ public class MetricSummary extends Base {
       this.btRiskSummary = btRiskSummary;
     }
 
-    public Map<Metric, BucketData> getMetricsMap() {
+    public Map<String, BucketData> getMetricsMap() {
       return metricsMap;
     }
 
-    public void setMetricsMap(Map<Metric, BucketData> metricsMap) {
+    public void setMetricsMap(Map<String, BucketData> metricsMap) {
       this.metricsMap = metricsMap;
-    }
-
-    public BucketData getMetricBucketData(String metric) {
-      Optional<Metric> optionalMetric =
-          metricsMap.keySet().stream().filter(m -> m.getMetricName().equalsIgnoreCase(metric)).findFirst();
-      if (optionalMetric.isPresent()) {
-        return metricsMap.get(optionalMetric.get());
-      }
-      return null;
     }
 
     @Override

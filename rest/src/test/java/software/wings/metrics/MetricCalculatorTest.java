@@ -156,14 +156,14 @@ public class MetricCalculatorTest {
     assertEquals(2, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
     assertEquals(2, todolistMetrics.getBtRiskSummary().size());
-    BucketData todolistCallData = todolistMetrics.getMetricBucketData("Calls per Minute");
+    BucketData todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
     System.out.println(todolistCallData);
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
-    BucketData todolistArtData = todolistMetrics.getMetricBucketData("Average Response Time (ms)");
+    BucketData todolistArtData = todolistMetrics.getMetricsMap().get("Average Response Time (ms)");
     assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
     assertEquals(2, todolistArtData.getOldData().getNodeCount());
-    BucketData loginArtData = output.getBtMetricsMap().get("login").getMetricBucketData("Average Response Time (ms)");
+    BucketData loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get("Average Response Time (ms)");
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
 
@@ -183,13 +183,13 @@ public class MetricCalculatorTest {
     assertEquals(2, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
     assertEquals(2, todolistMetrics.getBtRiskSummary().size());
-    todolistCallData = todolistMetrics.getMetricBucketData("Calls per Minute");
+    todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
-    todolistArtData = todolistMetrics.getMetricBucketData("Average Response Time (ms)");
+    todolistArtData = todolistMetrics.getMetricsMap().get("Average Response Time (ms)");
     assertEquals(RiskLevel.MEDIUM, todolistArtData.getRisk());
     assertEquals(2, todolistArtData.getOldData().getNodeCount());
-    loginArtData = output.getBtMetricsMap().get("login").getMetricBucketData("Average Response Time (ms)");
+    loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get("Average Response Time (ms)");
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
   }
