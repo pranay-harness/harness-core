@@ -3,7 +3,11 @@ package software.wings.beans;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.sm.StateType.FORK;
+import static software.wings.sm.StateType.REPEAT;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Embedded;
@@ -188,6 +192,21 @@ public class PhaseStep {
     }
 
     Node originNode = null;
+    Node repeatNode = null;
+    if (deploymentType != null && deploymentType == DeploymentType.SSH
+        && (phaseStepType == DEPLOY_SERVICE || phaseStepType == DISABLE_SERVICE || phaseStepType == ENABLE_SERVICE)) {
+      // TODO - temp rollback
+
+      repeatNode = aNode()
+                       .withType(REPEAT.name())
+                       .withName("All Instances")
+                       .addProperty("executionStrategy", "PARALLEL")
+                       .addProperty("repeatElementExpression", "${instances}")
+                       .build();
+
+      graphBuilder.addNodes(repeatNode);
+    }
+
     if (stepsInParallel && steps.size() > 1) {
       Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(name + "-FORK").build();
       graphBuilder.addNodes(forkNode);
@@ -220,7 +239,17 @@ public class PhaseStep {
         id1 = id2;
       }
     }
-    originNode.setOrigin(true);
+    if (repeatNode == null) {
+      originNode.setOrigin(true);
+    } else {
+      repeatNode.setOrigin(true);
+      graphBuilder.addLinks(aLink()
+                                .withId(getUuid())
+                                .withFrom(repeatNode.getId())
+                                .withTo(originNode.getId())
+                                .withType(TransitionType.REPEAT.name())
+                                .build());
+    }
 
     return graphBuilder.build();
   }
