@@ -49,9 +49,7 @@ public enum ContainerFamily {
                             .withType(EXEC.name())
                             .withName("Start Service")
                             .addProperty("commandPath", "$WINGS_RUNTIME_PATH/tomcat/bin")
-                            .addProperty("commandString",
-                                "export CATALINA_OPTS=\"$CATALINA_OPTS -javaagent:$HOME/appagent/javaagent.jar\"\n"
-                                    + "./startup.sh")
+                            .addProperty("commandString", "./startup.sh")
                             .addProperty("tailFiles", true)
                             .addProperty("tailPatterns",
                                 singletonList(of("filePath", "$WINGS_RUNTIME_PATH/tomcat/logs/catalina.out", "pattern",
