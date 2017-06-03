@@ -72,15 +72,13 @@ public class MetricCalculator {
         metricData.put(metricDefinition, record);
       }
 
-      Map<MetricSummary.Metric, BucketData> metricDataMap = new HashMap<>();
+      Map<String, BucketData> metricDataMap = new HashMap<>();
       for (MetricDefinition metricDefinition : metricData.keySet()) {
         List<AppdynamicsMetricDataRecord> singleMetricData = metricData.get(metricDefinition);
         // subsplit the per-bt/metric data by old/new
         List<List<AppdynamicsMetricDataRecord>> splitData = splitDataIntoOldAndNew(singleMetricData, newNodeNames);
         BucketData bucketData = parse(metricDefinition, splitData);
-        MetricSummary.Metric metric =
-            new MetricSummary().new Metric(metricDefinition.getMetricName(), metricDefinition.getMetricId());
-        metricDataMap.put(metric, bucketData);
+        metricDataMap.put(metricDefinition.getMetricName(), bucketData);
       }
 
       MetricSummary.BTMetrics btMetrics = calculateOverallBTRisk(metricDataMap);
@@ -157,15 +155,15 @@ public class MetricCalculator {
         ratio = newSummary.getStats().mean() / oldSummary.getStats().mean();
       }
       if (metricDefinition.getThresholdType() == ThresholdType.ALERT_WHEN_HIGHER) {
-        if (ratio >= metricDefinition.getHighThreshold()) {
+        if (ratio > metricDefinition.getHighThreshold()) {
           risk = RiskLevel.HIGH;
-        } else if (ratio >= metricDefinition.getMediumThreshold() && ratio < metricDefinition.getHighThreshold()) {
+        } else if (ratio > metricDefinition.getMediumThreshold() && ratio <= metricDefinition.getHighThreshold()) {
           risk = RiskLevel.MEDIUM;
         }
       } else if (metricDefinition.getThresholdType() == ThresholdType.ALERT_WHEN_LOWER) {
-        if (ratio <= metricDefinition.getHighThreshold()) {
+        if (ratio < metricDefinition.getHighThreshold()) {
           risk = RiskLevel.HIGH;
-        } else if (ratio <= metricDefinition.getMediumThreshold() && ratio > metricDefinition.getHighThreshold()) {
+        } else if (ratio < metricDefinition.getMediumThreshold() && ratio >= metricDefinition.getHighThreshold()) {
           risk = RiskLevel.MEDIUM;
         }
       }
@@ -235,22 +233,21 @@ public class MetricCalculator {
     return new BucketData().new DataSummary(nodeCount, new ArrayList<>(nodeSet), stats, displayValue, missingData);
   }
 
-  public static MetricSummary.BTMetrics calculateOverallBTRisk(
-      Map<MetricSummary.Metric, BucketData> metricBucketDataMap) {
+  public static MetricSummary.BTMetrics calculateOverallBTRisk(Map<String, BucketData> metricBucketDataMap) {
     RiskLevel risk = RiskLevel.LOW;
     List<String> messages = new ArrayList<>();
-    for (MetricSummary.Metric metric : metricBucketDataMap.keySet()) {
+    for (String metric : metricBucketDataMap.keySet()) {
       BucketData bucketData = metricBucketDataMap.get(metric);
       if (bucketData.getRisk().compareTo(risk) < 0) {
         risk = bucketData.getRisk();
       }
     }
-    for (MetricSummary.Metric metric : metricBucketDataMap.keySet()) {
+    for (String metric : metricBucketDataMap.keySet()) {
       BucketData bucketData = metricBucketDataMap.get(metric);
       if (bucketData.getRisk() == risk) {
         StringBuilder s = new StringBuilder();
         s.append(risk.name()).append(": ");
-        s.append(metric.getMetricName());
+        s.append(metric);
         s.append(" (old value: ")
             .append(bucketData.getOldData() == null ? "<null>" : bucketData.getOldData().getDisplayValue());
         s.append(", new value: ")
@@ -259,6 +256,6 @@ public class MetricCalculator {
         messages.add(s.toString());
       }
     }
-    return new MetricSummary().new BTMetrics(risk, messages, metricBucketDataMap);
+    return new MetricSummary.BTMetrics(risk, messages, metricBucketDataMap);
   }
 }
