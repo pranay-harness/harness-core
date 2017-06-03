@@ -12,7 +12,9 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import software.wings.api.AppDynamicsExecutionData;
 import software.wings.beans.AppDynamicsConfig.Builder;
+import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -21,7 +23,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.metrics.BucketData;
+import software.wings.metrics.MetricSummary;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.appdynamics.AppdynamicsApplication;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
@@ -32,11 +34,12 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -50,6 +53,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   final long METRIC_ID = 4L;
   final String METRIC_NAME = "Average Response Time (ms)";
+  final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
 
   @Before
   public void setUp() throws Exception {
@@ -59,13 +63,13 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
             .withName("AppDynamics")
-            .withAccountId(accountId)
+            .withAccountId(ACCOUNT_ID)
             .withValue(Builder.anAppDynamicsConfig()
                            .withControllerUrl("https://wings251.saas.appdynamics.com/controller")
                            .withUsername("appd-user")
                            .withAccountname("wings251")
                            .withPassword("5PdEYf9H".toCharArray())
-                           .withAccountId(accountId)
+                           .withAccountId(ACCOUNT_ID)
                            .build())
             .build();
     wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);
@@ -74,12 +78,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testGetAllApplications() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
 
@@ -95,12 +99,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testGetAllTiers() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
 
@@ -115,7 +119,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
     WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
-        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
     Assert.assertTrue(tierRestResponse.getResource().size() > 0);
@@ -132,12 +136,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testGetAllNodes() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
 
@@ -152,7 +156,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
     WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
-        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
     Assert.assertTrue(tierRestResponse.getResource().size() > 0);
@@ -166,7 +170,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
       WebTarget nodeTarget =
           client.target(API_BASE + "/appdynamics/nodes?settingId=" + appdynamicsSettings.get(0).getUuid()
-              + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+              + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
 
       RestResponse<List<AppdynamicsNode>> nodeRestResponse =
           getRequestBuilderWithAuthHeader(nodeTarget).get(new GenericType<RestResponse<List<AppdynamicsNode>>>() {});
@@ -194,12 +198,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testGetAllBusinessTransactions() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
 
@@ -214,7 +218,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
     WebTarget btTarget = client.target(API_BASE + "/appdynamics/business-transactions?settingId="
-        + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+        + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsBusinessTransaction>> btRestResponse = getRequestBuilderWithAuthHeader(btTarget).get(
         new GenericType<RestResponse<List<AppdynamicsBusinessTransaction>>>() {});
     Assert.assertTrue(btRestResponse.getResource().size() > 0);
@@ -233,12 +237,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testGetAllTierBTMetrics() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
 
@@ -253,7 +257,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
     WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
-        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
     Assert.assertTrue(tierRestResponse.getResource().size() > 0);
@@ -261,7 +265,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       WebTarget btMetricsTarget =
           client.target(API_BASE + "/appdynamics/tier-bt-metrics?settingId=" + appdynamicsSettings.get(0).getUuid()
-              + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+              + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
       RestResponse<List<AppdynamicsMetric>> tierBTMResponse =
           getRequestBuilderWithAuthHeader(btMetricsTarget)
               .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
@@ -286,12 +290,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Ignore
   public void testGetBTMetricData() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
 
     // get all applications
     WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + accountId);
+        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
 
@@ -306,7 +310,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
     Assert.assertTrue("could not find MyApp application in appdynamics", appId > 0);
     WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
-        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
     Assert.assertTrue(tierRestResponse.getResource().size() > 0);
@@ -314,7 +318,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
       WebTarget btMetricsTarget =
           client.target(API_BASE + "/appdynamics/tier-bt-metrics?settingId=" + appdynamicsSettings.get(0).getUuid()
-              + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+              + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
       RestResponse<List<AppdynamicsMetric>> tierBTMResponse =
           getRequestBuilderWithAuthHeader(btMetricsTarget)
               .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
@@ -327,7 +331,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         Assert.assertTrue("failed for " + btMetric.getName(), btMetric.getChildMetrices().size() > 0);
 
         final String url = API_BASE + "/appdynamics/get-metric-data?settingId=" + appdynamicsSettings.get(0).getUuid()
-            + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId() + "&btName="
+            + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId() + "&btName="
             + btMetric.getName() + "&startTime=" + (System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5))
             + "&endTime=" + System.currentTimeMillis();
         WebTarget btMetricsDataTarget = client.target(url.replaceAll(" ", "%20"));
@@ -340,14 +344,13 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testAppdynamicsPersistence() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(accountId, "APP_DYNAMICS");
+        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     Assert.assertEquals(1, appdynamicsSettings.size());
     String settingId = appdynamicsSettings.get(0).getUuid();
     WebTarget appTarget =
-        client.target(API_BASE + "/appdynamics/applications?settingId=" + settingId + "&accountId=" + accountId);
+        client.target(API_BASE + "/appdynamics/applications?settingId=" + settingId + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<AppdynamicsApplication>> appRestResponse = getRequestBuilderWithAuthHeader(appTarget).get(
         new GenericType<RestResponse<List<AppdynamicsApplication>>>() {});
     long appId = 0;
@@ -358,12 +361,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       }
     }
     WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + settingId
-        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId);
+        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
     AppdynamicsTier tier = tierRestResponse.getResource().get(0);
     WebTarget btMetricsTarget = client.target(API_BASE + "/appdynamics/tier-bt-metrics?settingId=" + settingId
-        + "&accountId=" + accountId + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
+        + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
     RestResponse<List<AppdynamicsMetric>> tierBTMResponse =
         getRequestBuilderWithAuthHeader(btMetricsTarget).get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {
         });
@@ -404,37 +407,56 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                                                           .withOccurrences(9)
                                                           .withUseRange(true)
                                                           .build();
-    final AppdynamicsMetricData METRIC_DATA_1 =
+    final AppdynamicsMetricData METRIC_DATA_ALPHA_1 =
         AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
             .withMetricName("BTM|BTs|BT:132632|Component:42159|" + METRIC_NAME)
             .withMetricId(METRIC_ID)
             .withMetricPath("Business Transaction Performance|Business Transactions|test-tier|" + btName
-                + "|Individual Nodes|test-node|" + METRIC_NAME)
+                + "|Individual Nodes|alpha|" + METRIC_NAME)
             .withFrequency("ONE_MIN")
             .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_1, METRIC_VALUE_2})
             .build();
-    final AppdynamicsMetricData METRIC_DATA_2 =
+    final AppdynamicsMetricData METRIC_DATA_ALPHA_2 =
         AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
             .withMetricName("BTM|BTs|BT:132632|Component:42159|" + METRIC_NAME)
             .withMetricId(METRIC_ID)
             .withMetricPath("Business Transaction Performance|Business Transactions|test-tier|" + btName
-                + "|Individual Nodes|test-node|" + METRIC_NAME)
+                + "|Individual Nodes|alpha|" + METRIC_NAME)
             .withFrequency("ONE_MIN")
             .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_2, METRIC_VALUE_3})
             .build();
-    final List<AppdynamicsMetricDataRecord> METRIC_DATA_RECORDS_1 =
-        AppdynamicsMetricDataRecord.generateDataRecords(accountId, appId, tier.getId(), METRIC_DATA_1);
+    final AppdynamicsMetricData METRIC_DATA_BETA_1 =
+        AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
+            .withMetricName("BTM|BTs|BT:132632|Component:42159|" + METRIC_NAME)
+            .withMetricId(METRIC_ID)
+            .withMetricPath("Business Transaction Performance|Business Transactions|test-tier|" + btName
+                + "|Individual Nodes|beta|" + METRIC_NAME)
+            .withFrequency("ONE_MIN")
+            .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_1, METRIC_VALUE_2})
+            .build();
+    final AppdynamicsMetricData METRIC_DATA_BETA_2 =
+        AppdynamicsMetricData.Builder.anAppdynamicsMetricsData()
+            .withMetricName("BTM|BTs|BT:132632|Component:42159|" + METRIC_NAME)
+            .withMetricId(METRIC_ID)
+            .withMetricPath("Business Transaction Performance|Business Transactions|test-tier|" + btName
+                + "|Individual Nodes|beta|" + METRIC_NAME)
+            .withFrequency("ONE_MIN")
+            .withMetricValues(new AppdynamicsMetricDataValue[] {METRIC_VALUE_2, METRIC_VALUE_3})
+            .build();
+    final List<AppdynamicsMetricDataRecord> METRIC_DATA_RECORDS_ALPHA_1 =
+        AppdynamicsMetricDataRecord.generateDataRecords(ACCOUNT_ID, appId, tier.getId(), METRIC_DATA_ALPHA_1);
 
     // insert metric values 1 and 2 using the REST interface
-    WebTarget target = client.target(API_BASE + "/appdynamics/save-metrics?accountId=" + accountId
+    WebTarget target = client.target(API_BASE + "/appdynamics/save-metrics?accountId=" + ACCOUNT_ID
         + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(target).post(
-        Entity.entity(Arrays.asList(METRIC_DATA_1), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+        Entity.entity(Arrays.asList(METRIC_DATA_ALPHA_1), APPLICATION_JSON),
+        new GenericType<RestResponse<Boolean>>() {});
     assert (restResponse.getResource());
 
     // query
     PageRequest.Builder requestBuilder = aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
                                              .addFilter("appdAppId", Operator.EQ, appId)
                                              .addFilter("metricId", Operator.EQ, METRIC_ID)
                                              .addFilter("tierId", Operator.EQ, tier.getId())
@@ -443,45 +465,72 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     List<AppdynamicsMetricDataRecord> result = response.getResponse();
     Assert.assertEquals("result not correct length", 2, result.size());
-    Assert.assertEquals("record 0 not equal", METRIC_DATA_RECORDS_1.get(0), result.get(0));
-    Assert.assertEquals("record 1 not equal", METRIC_DATA_RECORDS_1.get(1), result.get(1));
+    Assert.assertEquals("record 0 not equal", METRIC_DATA_RECORDS_ALPHA_1.get(0), result.get(0));
+    Assert.assertEquals("record 1 not equal", METRIC_DATA_RECORDS_ALPHA_1.get(1), result.get(1));
 
     // insert metric values 2 and 3 using direct service call
     // this should result in 1, 2, and 3 all being stored
-    appdynamicsService.saveMetricData(accountId, appId, tier.getId(), Arrays.asList(METRIC_DATA_2));
+    appdynamicsService.saveMetricData(ACCOUNT_ID, appId, tier.getId(), Arrays.asList(METRIC_DATA_ALPHA_2));
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("result not correct length", 3, result.size());
 
     // more specific query
     requestBuilder.addFilter("btName", Operator.EQ, btName)
-        .addFilter("nodeName", Operator.EQ, "test-node")
+        .addFilter("nodeName", Operator.EQ, "alpha")
         .addFilter("startTime", Operator.EQ, 1495432894010L);
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("short result not correct length", 1, result.size());
 
     // generate metrics using the REST interface
+    // insert beta nodes
+    appdynamicsService.saveMetricData(
+        ACCOUNT_ID, appId, tier.getId(), Arrays.asList(METRIC_DATA_BETA_1, METRIC_DATA_BETA_2));
 
-    target = client.target(API_BASE + "/appdynamics/generate-metrics?settingId=" + settingId + "&accountId=" + accountId
-        + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId() + "&startTimeInMillis=1495432894010"
-        + "&endTimeInMillis=1495433114010");
-    RestResponse<Map<String, Map<String, BucketData>>> metricRestResponse = getRequestBuilderWithAuthHeader(target).get(
-        new GenericType<RestResponse<Map<String, Map<String, BucketData>>>>() {});
-    Map<String, Map<String, BucketData>> generatedMetrics = metricRestResponse.getResource();
-    Assert.assertEquals(RiskLevel.HIGH, generatedMetrics.get(btName).get(METRIC_NAME).getRisk());
-    Assert.assertEquals("100.0", generatedMetrics.get(btName).get(METRIC_NAME).getOldData().getDisplayValue());
+    // requires sample StateExecutionInstance
+    Query<Application> appQuery = wingsPersistence.createQuery(Application.class);
+    appQuery.filter("accountId = ", ACCOUNT_ID);
+    Application app = wingsPersistence.executeGetOneQuery(appQuery);
+    AppDynamicsExecutionData aed = AppDynamicsExecutionData.Builder.anAppDynamicsExecutionData()
+                                       .withAppDynamicsApplicationId(appId)
+                                       .withAppdynamicsTierId(tier.getId())
+                                       .withBtNames(Arrays.asList(btName))
+                                       .withCanaryNewHostNames(Arrays.asList("beta"))
+                                       .withStartTs(METRIC_VALUE_1.getStartTimeInMillis())
+                                       .withEndTs(METRIC_VALUE_3.getStartTimeInMillis() + TimeUnit.MINUTES.toMillis(1))
+                                       .withCorrelationId("correlation_id")
+                                       .withStateExecutionInstanceId("state_execution_instance_id")
+                                       .withAppDynamicsConfigID(settingId)
+                                       .build();
+    StateExecutionInstance sei = StateExecutionInstance.Builder.aStateExecutionInstance()
+                                     .addStateExecutionData(StateType.APP_DYNAMICS.getName(), aed)
+                                     .withAppId(app.getAppId())
+                                     .withUuid("state_execution_instance_id")
+                                     .build();
+    wingsPersistence.save(sei);
+    target = client.target(API_BASE + "/appdynamics/generate-metrics?stateExecutionId="
+        + "state_execution_instance_id"
+        + "&accountId=" + ACCOUNT_ID + "&appId=" + app.getAppId());
+
+    RestResponse<MetricSummary> metricRestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<MetricSummary>>() {});
+    MetricSummary generatedMetrics = metricRestResponse.getResource();
+    Assert.assertEquals(
+        RiskLevel.LOW, generatedMetrics.getBtMetricsMap().get(btName).getMetricsMap().get(METRIC_NAME).getRisk());
+    Assert.assertEquals("200.0",
+        generatedMetrics.getBtMetricsMap().get(btName).getMetricsMap().get(METRIC_NAME).getOldData().getDisplayValue());
 
     // delete
     Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);
-    query.filter("accountId = ", accountId)
+    query.filter("accountId = ", ACCOUNT_ID)
         .filter("appdAppId = ", appId)
         .filter("metricId", METRIC_ID)
         .filter("tierId", tier.getId());
     boolean success = wingsPersistence.delete(query);
     assert (success);
     requestBuilder = aPageRequest()
-                         .addFilter("accountId", Operator.EQ, accountId)
+                         .addFilter("accountId", Operator.EQ, ACCOUNT_ID)
                          .addFilter("appdAppId", Operator.EQ, appId)
                          .addFilter("metricId", Operator.EQ, METRIC_ID)
                          .addFilter("tierId", Operator.EQ, tier.getId())
@@ -489,5 +538,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     response = wingsPersistence.query(AppdynamicsMetricDataRecord.class, requestBuilder.build());
     result = response.getResponse();
     Assert.assertEquals("result not correct length", 0, result.size());
+
+    success = wingsPersistence.delete(StateExecutionInstance.class, "state_execution_instance_id");
+    assert (success);
   }
 }
