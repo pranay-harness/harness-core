@@ -42,7 +42,11 @@ public class ArtifactCollectionJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
     String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
-    executorService.submit(() -> collectNewArtifactsFromArtifactStream(appId, artifactStreamId));
+    try {
+      collectNewArtifactsFromArtifactStream(appId, artifactStreamId);
+    } catch (Exception ex) {
+      logger.error("Artifact collection cron failed with error : {}", ex);
+    }
   }
 
   private void collectNewArtifactsFromArtifactStream(String appId, String artifactStreamId) {
