@@ -7,6 +7,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.rules.RepeatRule;
 import software.wings.rules.WingsRule;
 
 /**
@@ -25,6 +26,8 @@ public abstract class WingsBaseTest {
    * The Mockito rule.
    */
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  @Rule public RepeatRule repeatRule = new RepeatRule();
 
   /**
    * Log test case name.

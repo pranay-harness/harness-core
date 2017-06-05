@@ -17,6 +17,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.rules.RepeatRule.Repeat;
 
 import java.util.Arrays;
 import javax.ws.rs.client.Entity;
@@ -48,6 +49,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5)
   public void shouldSaveJenkinsConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
@@ -64,6 +66,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                                     .build(),
                       APPLICATION_JSON),
                 new GenericType<RestResponse<SettingAttribute>>() {});
+
     assertThat(restResponse.getResource())
         .isInstanceOf(SettingAttribute.class)
         .extracting("value")
