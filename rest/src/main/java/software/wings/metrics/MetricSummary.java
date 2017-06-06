@@ -2,6 +2,7 @@ package software.wings.metrics;
 
 import com.google.common.base.MoreObjects;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class MetricSummary extends Base {
   @Indexed private String accountId;
   @Indexed private String stateExecutionInstanceId;
-  private Map<String, BTMetrics> btMetricsMap;
+  @Embedded private Map<String, BTMetrics> btMetricsMap;
   private long startTimeMillis;
   private long endTimeMillis;
 
