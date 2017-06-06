@@ -48,7 +48,7 @@ case "$OSTYPE" in
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-macosx-x64.tar.gz
+    JVM_URL=http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jre-8u131-linux-x64.tar.gz
     ;;
   bsd*)
     echo "freebsd not supported."

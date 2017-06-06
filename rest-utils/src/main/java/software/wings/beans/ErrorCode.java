@@ -57,7 +57,7 @@ public enum ErrorCode {
   USER_DOMAIN_NOT_ALLOWED("USER_DOMAIN_NOT_ALLOWED", UNAUTHORIZED),
 
   /**
-   *
+   * Resource not found error code.
    */
   RESOURCE_NOT_FOUND("NOT_FOUND", NOT_FOUND),
 
@@ -342,16 +342,28 @@ public enum ErrorCode {
    */
   UPDATE_NOT_ALLOWED("UPDATE_NOT_ALLOWED"),
 
+  /**
+   * Delete not allowed error code.
+   */
   DELETE_NOT_ALLOWED("DELETE_NOT_ALLOWED"),
 
+  /**
+   * Appdynamics configuration error error code.
+   */
   APPDYNAMICS_CONFIGURATION_ERROR("APPDYNAMICS_CONFIGURATION_ERROR"),
 
+  /**
+   * Appdynamics error error code.
+   */
   APPDYNAMICS_ERROR("APPDYNAMICS_ERROR"),
 
   /**
    * Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
    */
-  ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED");
+  ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"), /**
+                                                           * Unavailable delegates error code.
+                                                           */
+  UNAVAILABLE_DELEGATES("UNAVAILABLE_DELEGATES");
 
   /**
    * The constant ARGS_NAME.

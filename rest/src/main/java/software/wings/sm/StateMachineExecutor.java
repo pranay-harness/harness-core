@@ -253,7 +253,7 @@ public class StateMachineExecutor {
 
       long wakeupTs = System.currentTimeMillis() + (currentState.getWaitInterval() * 1000);
       JobDetail job = JobBuilder.newJob(NotifyJob.class)
-                          .withIdentity(Constants.WAIT_RESUME_GROUP, resumeId)
+                          .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
                           .usingJobData("correlationId", resumeId)
                           .usingJobData("executionStatus", ExecutionStatus.SUCCESS.name())
                           .build();

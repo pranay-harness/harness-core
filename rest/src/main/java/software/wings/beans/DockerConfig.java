@@ -144,7 +144,6 @@ public class DockerConfig extends SettingValue implements Encryptable {
    */
   public static final class Builder {
     private String dockerRegistryUrl;
-    private String type;
     private String username;
     private char[] password;
     private String accountId;
@@ -168,17 +167,6 @@ public class DockerConfig extends SettingValue implements Encryptable {
      */
     public Builder withDockerRegistryUrl(String dockerRegistryUrl) {
       this.dockerRegistryUrl = dockerRegistryUrl;
-      return this;
-    }
-
-    /**
-     * With type builder.
-     *
-     * @param type the type
-     * @return the builder
-     */
-    public Builder withType(String type) {
-      this.type = type;
       return this;
     }
 
@@ -223,7 +211,6 @@ public class DockerConfig extends SettingValue implements Encryptable {
     public Builder but() {
       return aDockerConfig()
           .withDockerRegistryUrl(dockerRegistryUrl)
-          .withType(type)
           .withUsername(username)
           .withPassword(password)
           .withAccountId(accountId);
@@ -237,7 +224,6 @@ public class DockerConfig extends SettingValue implements Encryptable {
     public DockerConfig build() {
       DockerConfig dockerConfig = new DockerConfig();
       dockerConfig.setDockerRegistryUrl(dockerRegistryUrl);
-      dockerConfig.setType(type);
       dockerConfig.setUsername(username);
       dockerConfig.setPassword(password);
       dockerConfig.setAccountId(accountId);
