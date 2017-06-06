@@ -145,6 +145,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for invalid credential.
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldThrowExceptionForInvalidCredential() {
     executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
     Assertions.assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -180,7 +181,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for connection timeout.
    */
   @Test
-  @Repeat(times = 2, successes = 1)
+  @Repeat(times = 3, successes = 1)
   public void shouldThrowExceptionForConnectionTimeout() {
     executor.init(configBuilder.but().withSshConnectionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
