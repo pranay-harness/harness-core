@@ -19,6 +19,7 @@ public class MetricSummary extends Base {
   @Indexed private String accountId;
   @Indexed private String stateExecutionInstanceId;
   @Embedded private Map<String, BTMetrics> btMetricsMap;
+  private RiskLevel riskLevel;
   private long startTimeMillis;
   private long endTimeMillis;
 
@@ -46,6 +47,14 @@ public class MetricSummary extends Base {
     this.btMetricsMap = btMetricsMap;
   }
 
+  public RiskLevel getRiskLevel() {
+    return riskLevel;
+  }
+
+  public void setRiskLevel(RiskLevel risk) {
+    this.riskLevel = risk;
+  }
+
   public long getStartTimeMillis() {
     return startTimeMillis;
   }
@@ -69,6 +78,7 @@ public class MetricSummary extends Base {
     s.append("State Execution Instance: ").append(stateExecutionInstanceId).append("\n");
     s.append("Start: ").append(startTimeMillis).append(" (").append(new Date(startTimeMillis).toString()).append(")\n");
     s.append("End: ").append(endTimeMillis).append(" (").append(new Date(endTimeMillis).toString()).append(")\n");
+    s.append("Risk: ").append(riskLevel).append("\n");
     s.append("BTMetrics: ").append(btMetricsMap.toString()).append("\n");
     return s.toString();
   }
@@ -125,6 +135,7 @@ public class MetricSummary extends Base {
     private String accountId;
     private String stateExecutionInstanceId;
     private Map<String, BTMetrics> btMetricsMap;
+    private RiskLevel risk;
     private long startTimeMillis;
     private long endTimeMillis;
 
@@ -149,6 +160,11 @@ public class MetricSummary extends Base {
       return this;
     }
 
+    public Builder withRiskLevel(RiskLevel risk) {
+      this.risk = risk;
+      return this;
+    }
+
     public Builder withStartTimeMillis(long startTimeMillis) {
       this.startTimeMillis = startTimeMillis;
       return this;
@@ -164,6 +180,7 @@ public class MetricSummary extends Base {
           .withAccountId(accountId)
           .withStateExecutionInstanceId(stateExecutionInstanceId)
           .withBtMetricsMap(btMetricsMap)
+          .withRiskLevel(risk)
           .withStartTimeMillis(startTimeMillis)
           .withEndTimeMillis(endTimeMillis);
     }
@@ -173,6 +190,7 @@ public class MetricSummary extends Base {
       metricSummary.setAccountId(accountId);
       metricSummary.setStateExecutionInstanceId(stateExecutionInstanceId);
       metricSummary.setBtMetricsMap(btMetricsMap);
+      metricSummary.setRiskLevel(risk);
       metricSummary.setStartTimeMillis(startTimeMillis);
       metricSummary.setEndTimeMillis(endTimeMillis);
       return metricSummary;

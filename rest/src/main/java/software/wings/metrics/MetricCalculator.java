@@ -110,9 +110,18 @@ public class MetricCalculator {
     }
     endTimeMillis += TimeUnit.MINUTES.toMillis(1);
 
+    RiskLevel risk = RiskLevel.LOW;
+    for (String bt : btMetricDataMap.keySet()) {
+      MetricSummary.BTMetrics btMetrics = btMetricDataMap.get(bt);
+      if (btMetrics.getBtRisk().compareTo(risk) < 0) {
+        risk = btMetrics.getBtRisk();
+      }
+    }
+
     MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
                                       .withAccountId(accountId)
                                       .withBtMetricsMap(btMetricDataMap)
+                                      .withRiskLevel(risk)
                                       .withStartTimeMillis(startTimeMillis)
                                       .withEndTimeMillis(endTimeMillis)
                                       .build();
