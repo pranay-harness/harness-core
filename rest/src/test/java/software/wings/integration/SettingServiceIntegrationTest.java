@@ -35,12 +35,12 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   private static final String NEXUS_URL = "https://nexus.wings.software";
   private static final String NEXUS_USERNAME = "admin";
   private static final char[] NEXUS_PASSWORD = "wings123!".toCharArray();
-  public static final String BAMBOO_URL = "http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/";
-  public static final String BAMBOO_USERNAME = "wingsbuild";
-  public static final char[] BAMBOO_PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray();
-  public static final String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
-  public static final String DOCKER_USERNAME = "wingsplugins";
-  public static final char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
+  private static final String BAMBOO_URL = "http://ec2-34-202-14-12.compute-1.amazonaws.com:8085/";
+  private static final String BAMBOO_USERNAME = "wingsbuild";
+  private static final char[] BAMBOO_PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray();
+  private static final String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
+  private static final String DOCKER_USERNAME = "wingsplugins";
+  private static final char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
 
   @Before
   public void setUp() throws Exception {
@@ -168,7 +168,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
         .isInstanceOf(SettingAttribute.class)
         .extracting("value")
         .extracting("dockerRegistryUrl", "username", "password", "accountId")
-        .contains(tuple(DOCKER_REGISTRY_URL, DOCKER_PASSOWRD, null, accountId));
+        .contains(tuple(DOCKER_REGISTRY_URL, DOCKER_USERNAME, null, accountId));
   }
 
   private WebTarget getListWebTarget(String accountId) {
