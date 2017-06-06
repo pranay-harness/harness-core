@@ -82,6 +82,30 @@ public class Transition {
     this.transitionType = transitionType;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+
+    Transition that = (Transition) o;
+
+    if (fromState != null ? !fromState.equals(that.fromState) : that.fromState != null)
+      return false;
+    if (toState != null ? !toState.equals(that.toState) : that.toState != null)
+      return false;
+    return transitionType == that.transitionType;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = fromState != null ? fromState.hashCode() : 0;
+    result = 31 * result + (toState != null ? toState.hashCode() : 0);
+    result = 31 * result + (transitionType != null ? transitionType.hashCode() : 0);
+    return result;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */

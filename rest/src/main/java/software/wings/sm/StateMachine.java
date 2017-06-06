@@ -1,9 +1,7 @@
 package software.wings.sm;
 
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.stream.Collectors.toList;
-import static org.apache.sshd.common.util.GenericUtils.isEmpty;
+import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.StateType.REPEAT;
 import static software.wings.sm.Transition.Builder.aTransition;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
@@ -27,8 +25,6 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
-import software.wings.common.InstanceExpressionProcessor;
-import software.wings.common.ServiceExpressionProcessor;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
@@ -36,10 +32,7 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.utils.MapperUtils;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -188,7 +181,7 @@ public class StateMachine extends Base {
     }
     setInitialStateName(originStateName);
     validate();
-    addRepeatersBasedOnRequiredContextElement();
+    addRepeatersForRequiredContextElement();
     clearCache();
   }
 
@@ -280,7 +273,7 @@ public class StateMachine extends Base {
       setInitialStateName(originStateName);
       validate();
 
-      addRepeatersBasedOnRequiredContextElement();
+      addRepeatersForRequiredContextElement();
       clearCache();
     } catch (IllegalArgumentException e) {
       throw new WingsException(e);
@@ -342,6 +335,7 @@ public class StateMachine extends Base {
       states = new ArrayList<>();
     }
     states.add(state);
+    cachedStatesMap = null;
     return state;
   }
 
@@ -374,6 +368,7 @@ public class StateMachine extends Base {
       transitions = new ArrayList<>();
     }
     transitions.add(transition);
+    cachedTransitionFlowMap = null;
     return transition;
   }
 
@@ -681,78 +676,138 @@ public class StateMachine extends Base {
   /**
    * Add repeaters based on state required context element.
    */
-  void addRepeatersBasedOnRequiredContextElement() {
-    for (List<State> path : getPaths()) {
-      List<ContextElementType> contextElementsPresent = Lists.newArrayList(ContextElementType.OTHER);
-      for (int i = 0; i < path.size(); i++) {
-        State state = path.get(i);
+  void addRepeatersForRequiredContextElement() {
+    List<String> stateNamesInOrder = new ArrayList<>();
+    buildStateNamesInOrderByAppearance(getInitialState(), stateNamesInOrder);
 
-        if (state instanceof RepeatState) {
-          contextElementsPresent.add(((RepeatState) state).getRepeatElementType());
-          continue;
+    for (String stateName : stateNamesInOrder) {
+      State state = getState(stateName);
+      if (state instanceof RepeatState) {
+        continue;
+      }
+      ContextElementType requiredContextElementType = state.getRequiredContextElementType();
+      if (requiredContextElementType == null && state.getPatternsForRequiredContextElementType() != null) {
+        requiredContextElementType = scanRequiredContextElementType(state.getPatternsForRequiredContextElementType());
+      }
+
+      if (requiredContextElementType == null) {
+        continue;
+      }
+      List<Transition> transitionsToOldState = getTransitionsTo(state);
+      if (transitionsToOldState == null || transitionsToOldState.isEmpty()) {
+        if (!initialStateName.equals(stateName)) {
+          throw new WingsException("Inconsistent state");
         }
-        ContextElementType requiredContextElementType = state.getRequiredContextElementType();
-        if (requiredContextElementType == null && state.getPatternsForRequiredContextElementType() != null) {
-          requiredContextElementType = scanRequiredContextElementType(state.getPatternsForRequiredContextElementType());
-        }
-
-        if (requiredContextElementType == null || contextElementsPresent.contains(requiredContextElementType)) {
-          continue;
-        }
-
-        List<Transition> transitionsToOldState = getTransitionsTo(state);
-        List<Transition> transitionsFromOldState = getTransitionFrom(state);
-
-        String newStateName =
-            state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, requiredContextElementType.name());
-        State newRepeatState =
-            addState(aRepeatState()
-                         .withName(state.getName())
-                         .withRepeatElementType(requiredContextElementType)
-                         .withExecutionStrategy(ExecutionStrategy.PARALLEL)
-                         .withRepeatElementExpression(
-                             WingsExpressionProcessorFactory.getDefaultExpression(requiredContextElementType))
-                         .withRepeatTransitionStateName(newStateName)
-                         .build());
-
-        transitions.removeAll(transitionsToOldState);
-        transitions.removeAll(transitionsFromOldState);
-
-        state.setName(state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, requiredContextElementType.name()));
-
+        State newRepeatState = createRepeatState(stateName, requiredContextElementType);
+        setInitialStateName(newRepeatState.getName());
         addTransition(aTransition()
                           .withTransitionType(TransitionType.REPEAT)
                           .withFromState(newRepeatState)
                           .withToState(state)
                           .build());
-        for (Transition transitionToOldState : transitionsToOldState) {
-          addTransition(aTransition()
-                            .withTransitionType(transitionToOldState.getTransitionType())
-                            .withFromState(transitionToOldState.getFromState())
-                            .withToState(newRepeatState)
-                            .build());
-          for (Transition transitionFromOldState : transitionsFromOldState) {
-            addTransition(aTransition()
-                              .withTransitionType(transitionFromOldState.getTransitionType())
-                              .withFromState(newRepeatState)
-                              .withToState(transitionFromOldState.getToState())
-                              .build());
-          }
+        continue;
+      } else {
+        Map<Transition, Set<ContextElementType>> availableContextsByTransition = new HashMap<>();
+        buildAvailableContextsByTransition(getInitialState(), new HashSet<>(), availableContextsByTransition);
+        ContextElementType finalRequiredContextElementType = requiredContextElementType;
+        List<Transition> transitionsForRequired =
+            transitionsToOldState.stream()
+                .filter(transition
+                    -> availableContextsByTransition.get(transition) == null
+                        || !availableContextsByTransition.get(transition).contains(finalRequiredContextElementType))
+                .collect(toList());
+        if (transitionsForRequired.isEmpty()) {
+          continue;
         }
+        State newRepeatState = createRepeatState(stateName, requiredContextElementType);
+        transitionsForRequired.forEach(transition -> { transition.setToState(newRepeatState); });
+        addTransition(aTransition()
+                          .withTransitionType(TransitionType.REPEAT)
+                          .withFromState(newRepeatState)
+                          .withToState(state)
+                          .build());
       }
     }
   }
 
+  private State createRepeatState(String stateName, ContextElementType requiredContextElementType) {
+    return addState(aRepeatState()
+                        .withName("Repeat " + stateName)
+                        .withRepeatElementType(requiredContextElementType)
+                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                        .withRepeatElementExpression(
+                            WingsExpressionProcessorFactory.getDefaultExpression(requiredContextElementType))
+                        .withRepeatTransitionStateName(stateName)
+                        .build());
+  }
+
+  private void buildAvailableContextsByTransition(State state, Set<ContextElementType> previousContexts,
+      Map<Transition, Set<ContextElementType>> availableContextsByTransition) {
+    List<Transition> transitionFrom = getTransitionFrom(state);
+    if (transitionFrom == null || transitionFrom.isEmpty()) {
+      return;
+    }
+    transitionFrom.forEach(transition -> {
+      Set<ContextElementType> newContexts = previousContexts;
+      if (transition.getTransitionType() == TransitionType.REPEAT) {
+        newContexts = new HashSet<>(previousContexts);
+        newContexts.add(((RepeatState) state).getRepeatElementType());
+      }
+      availableContextsByTransition.put(transition, newContexts);
+      buildAvailableContextsByTransition(transition.getToState(), newContexts, availableContextsByTransition);
+    });
+  }
+
+  private void buildStateNamesInOrderByAppearance(State state, List<String> stateNamesInOrder) {
+    List<State> nextStates = getNextStates(state.getName());
+    if (nextStates == null || nextStates.isEmpty()) {
+      stateNamesInOrder.add(state.getName());
+      return;
+    }
+
+    int ind = getLeastIndexPresentNextStates(stateNamesInOrder, nextStates);
+    if (ind == Integer.MAX_VALUE) {
+      stateNamesInOrder.add(state.getName());
+    } else {
+      stateNamesInOrder.add(ind, state.getName());
+    }
+    nextStates.stream().forEach(nextState -> {
+      if (!stateNamesInOrder.contains(nextState.getName())) {
+        buildStateNamesInOrderByAppearance(nextState, stateNamesInOrder);
+      }
+    });
+  }
+
+  private int getLeastIndexPresentNextStates(List<String> stateNamesInOrder, List<State> nextStates) {
+    int ind = Integer.MAX_VALUE;
+    for (State nextState : nextStates) {
+      int ind2 = stateNamesInOrder.indexOf(nextState.getName());
+      ind = (ind2 < 0 || ind2 > ind) ? ind : ind2;
+    }
+    return ind;
+  }
+
+  private Map<String, List<Transition>> fromStateTransitionMap() {
+    Map<String, List<Transition>> fromTransitionMap = new HashMap<>();
+    getTransitions().forEach(transition -> {
+      if (fromTransitionMap.get(transition.getFromState().getName()) == null) {
+        fromTransitionMap.put(transition.getFromState().getName(), new ArrayList<>());
+      }
+      fromTransitionMap.get(transition.getFromState().getName()).add(transition);
+    });
+    return fromTransitionMap;
+  }
+
   private ContextElementType scanRequiredContextElementType(List<String> patternsForRequiredContextElementType) {
-    InstanceExpressionProcessor instanceExpressionProcessor = new InstanceExpressionProcessor(null);
-    if (patternsForRequiredContextElementType.stream().anyMatch(
-            pattern -> pattern != null && pattern.contains(ContextElementType.INSTANCE.name().toLowerCase()))) {
+    if (patternsForRequiredContextElementType.stream().anyMatch(pattern
+            -> pattern != null
+                && (pattern.contains(EXPRESSION_PREFIX + ContextElement.INSTANCE)
+                       || pattern.contains(EXPRESSION_PREFIX + ContextElement.HOST)))) {
       return ContextElementType.INSTANCE;
     }
 
-    ServiceExpressionProcessor serviceExpressionProcessor = new ServiceExpressionProcessor(null);
     if (patternsForRequiredContextElementType.stream().anyMatch(
-            pattern -> serviceExpressionProcessor.matches(pattern))) {
+            pattern -> pattern != null && pattern.contains(EXPRESSION_PREFIX + ContextElement.SERVICE))) {
       return ContextElementType.SERVICE;
     }
 
@@ -761,26 +816,6 @@ public class StateMachine extends Base {
 
   private List<Transition> getTransitionsTo(State state) {
     return transitions.stream().filter(transition -> transition.getToState() == state).collect(toList());
-  }
-
-  private List<List<State>> getPaths() {
-    return getPaths(new ArrayDeque<>(Collections.singletonList(getInitialState())), Lists.newArrayList());
-  }
-
-  private List<List<State>> getPaths(Deque<State> path, List<List<State>> paths) {
-    State state = path.peekLast();
-    List<State> nextStates = getNextStates(state.getName());
-    if (!isEmpty(nextStates)) {
-      nextStates.forEach(nextState -> {
-        Deque<State> newPath = new ArrayDeque<>(path);
-        newPath.add(nextState);
-        getPaths(newPath, paths);
-      });
-
-    } else {
-      paths.add(Lists.newArrayList(path));
-    }
-    return paths;
   }
 
   /**
