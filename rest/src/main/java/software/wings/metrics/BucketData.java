@@ -47,7 +47,7 @@ public class BucketData {
     return s.toString();
   }
 
-  public class DataSummary {
+  public static class DataSummary {
     private int nodeCount;
     private List<String> nodeList;
     private Stats stats;
