@@ -81,10 +81,32 @@ public class MetricCalculator {
         metricDataMap.put(metricDefinition.getMetricName(), bucketData);
       }
 
+      // create total calls metric if doesn't exist
+      if (!metricDataMap.containsKey("Total Calls") && metricDataMap.containsKey("Calls per Minute")) {
+        BucketData bucketData = metricDataMap.get("Calls per Minute");
+        BucketData callsBucket = new BucketData();
+        callsBucket.setRisk(bucketData.getRisk());
+        if (callsBucket.getOldData() != null) {
+          DataSummary oldDataSummary = bucketData.getOldData();
+          callsBucket.setOldData(new BucketData.DataSummary(oldDataSummary.getNodeCount(), oldDataSummary.getNodeList(),
+              oldDataSummary.getStats(), oldDataSummary.getDisplayValue(), oldDataSummary.isMissingData()));
+          callsBucket.getOldData().setDisplayValue(String.valueOf(callsBucket.getOldData().getStats().sum()
+              * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1)));
+        }
+        if (callsBucket.getNewData() != null) {
+          DataSummary newDataSummary = bucketData.getOldData();
+          callsBucket.setNewData(new BucketData.DataSummary(newDataSummary.getNodeCount(), newDataSummary.getNodeList(),
+              newDataSummary.getStats(), newDataSummary.getDisplayValue(), newDataSummary.isMissingData()));
+          callsBucket.getNewData().setDisplayValue(String.valueOf(callsBucket.getNewData().getStats().sum()
+              * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1)));
+        }
+        metricDataMap.put("Total Calls", callsBucket);
+      }
       MetricSummary.BTMetrics btMetrics = calculateOverallBTRisk(metricDataMap);
       btMetricDataMap.put(btName, btMetrics);
     }
     endTimeMillis += TimeUnit.MINUTES.toMillis(1);
+
     MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
                                       .withAccountId(accountId)
                                       .withBtMetricsMap(btMetricDataMap)
