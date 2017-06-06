@@ -30,6 +30,9 @@ public class MetricCalculator {
    */
   public static MetricSummary calculateMetrics(List<MetricDefinition> metricDefinitions,
       ArrayListMultimap<String, AppdynamicsMetricDataRecord> data, List<String> newNodeNames) {
+    if (data == null || data.keys() == null || data.values() == null || data.size() == 0) {
+      return null;
+    }
     Map<String, MetricSummary.BTMetrics> btMetricDataMap = new HashMap<>();
     // create a map of metric ID to metric definition
     Map<String, MetricDefinition> metricDefinitionMap = new HashMap<>();
@@ -86,14 +89,14 @@ public class MetricCalculator {
         BucketData bucketData = metricDataMap.get("Calls per Minute");
         BucketData callsBucket = new BucketData();
         callsBucket.setRisk(bucketData.getRisk());
-        if (callsBucket.getOldData() != null) {
+        if (bucketData.getOldData() != null) {
           DataSummary oldDataSummary = bucketData.getOldData();
           callsBucket.setOldData(new BucketData.DataSummary(oldDataSummary.getNodeCount(), oldDataSummary.getNodeList(),
               oldDataSummary.getStats(), oldDataSummary.getDisplayValue(), oldDataSummary.isMissingData()));
           callsBucket.getOldData().setDisplayValue(String.valueOf(callsBucket.getOldData().getStats().sum()
               * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1)));
         }
-        if (callsBucket.getNewData() != null) {
+        if (bucketData.getNewData() != null) {
           DataSummary newDataSummary = bucketData.getOldData();
           callsBucket.setNewData(new BucketData.DataSummary(newDataSummary.getNodeCount(), newDataSummary.getNodeList(),
               newDataSummary.getStats(), newDataSummary.getDisplayValue(), newDataSummary.isMissingData()));
