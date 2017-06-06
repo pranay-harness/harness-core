@@ -153,9 +153,9 @@ public class MetricCalculatorTest {
     assertEquals(180000, output.getEndTimeMillis());
     assertEquals(2, output.getBtMetricsMap().size());
     BTMetrics todolistMetrics = output.getBtMetricsMap().get("todolist");
-    assertEquals(2, todolistMetrics.getMetricsMap().size());
+    assertEquals(3, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
-    assertEquals(2, todolistMetrics.getBtRiskSummary().size());
+    assertEquals(3, todolistMetrics.getBtRiskSummary().size());
     BucketData todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
     System.out.println(todolistCallData);
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
@@ -180,9 +180,9 @@ public class MetricCalculatorTest {
     output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
     assertEquals(2, output.getBtMetricsMap().size());
     todolistMetrics = output.getBtMetricsMap().get("todolist");
-    assertEquals(2, todolistMetrics.getMetricsMap().size());
+    assertEquals(3, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
-    assertEquals(2, todolistMetrics.getBtRiskSummary().size());
+    assertEquals(3, todolistMetrics.getBtRiskSummary().size());
     todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
