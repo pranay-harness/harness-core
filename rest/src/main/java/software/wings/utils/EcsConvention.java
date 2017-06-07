@@ -17,4 +17,22 @@ public class EcsConvention {
   public static String getServiceNamePrefix(String family) {
     return Misc.normalizeExpression(family + DELIMITER);
   }
+
+  public static String getServiceNamePrefixFromServiceName(String serviceName) {
+    return serviceName.substring(0, serviceName.lastIndexOf(DELIMITER) + DELIMITER.length());
+  }
+
+  public static int getRevisionFromServiceName(String name) {
+    if (name != null) {
+      int index = name.lastIndexOf(DELIMITER);
+      if (index >= 0) {
+        try {
+          return Integer.parseInt(name.substring(index + DELIMITER.length()));
+        } catch (NumberFormatException e) {
+          // Ignore
+        }
+      }
+    }
+    return -1;
+  }
 }

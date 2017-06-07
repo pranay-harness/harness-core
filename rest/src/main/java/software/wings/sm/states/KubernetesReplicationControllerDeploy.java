@@ -1,9 +1,12 @@
 package software.wings.sm.states;
 
+import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
+
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.KubernetesConfig;
@@ -14,8 +17,10 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.KubernetesConvention;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -49,6 +54,30 @@ public class KubernetesReplicationControllerDeploy extends ContainerServiceDeplo
       }
     }
     return Optional.empty();
+  }
+
+  @Override
+  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+    int revision = getRevisionFromControllerName(serviceName);
+    if (revision >= ContainerServiceDeploy.KEEP_N_REVISIONS) {
+      int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS + 1;
+      KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(settingAttribute, clusterName);
+      String controllerNamePrefix =
+          KubernetesConvention.getReplicationControllerNamePrefixFromControllerName(serviceName);
+      ReplicationControllerList replicationControllers = kubernetesContainerService.listControllers(kubernetesConfig);
+      if (replicationControllers != null) {
+        for (ReplicationController controller :
+            replicationControllers.getItems()
+                .stream()
+                .filter(
+                    c -> c.getMetadata().getName().startsWith(controllerNamePrefix) && c.getSpec().getReplicas() == 0)
+                .collect(Collectors.toList())) {
+          if (getRevisionFromControllerName(controller.getMetadata().getName()) < minRevisionToKeep) {
+            kubernetesContainerService.deleteController(kubernetesConfig, controller.getMetadata().getName());
+          }
+        }
+      }
+    }
   }
 
   @Override

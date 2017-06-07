@@ -71,6 +71,8 @@ import javax.annotation.Nullable;
  * Created by brett on 4/7/17
  */
 public abstract class ContainerServiceDeploy extends State {
+  protected static final int KEEP_N_REVISIONS = 3;
+
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
 
   @Inject @Transient protected transient SettingsService settingsService;
@@ -199,6 +201,7 @@ public abstract class ContainerServiceDeploy extends State {
     }
     if (commandStateExecutionData.getOldContainerServiceName() == null) {
       buildInstanceStatusSummaries(context, response, commandStateExecutionData);
+      cleanupOldVersions(context, commandStateExecutionData);
       return downsizeOldInstances(context, commandStateExecutionData);
     } else {
       CommandExecutionData commandExecutionData = commandExecutionResult.getCommandExecutionData();
@@ -279,6 +282,22 @@ public abstract class ContainerServiceDeploy extends State {
         .withStateExecutionData(commandStateExecutionData)
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private void cleanupOldVersions(ExecutionContext context, CommandStateExecutionData commandStateExecutionData) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
+    SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    ContainerServiceElement serviceElement = getContainerServiceElement(context);
+    String serviceName = serviceElement.getName();
+    String clusterName = serviceElement.getClusterName();
+    String region = "";
+    if (infrastructureMapping instanceof EcsInfrastructureMapping) {
+      region = ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
+    }
+    cleanup(settingAttribute, region, clusterName, serviceName);
   }
 
   @Override
@@ -382,6 +401,8 @@ public abstract class ContainerServiceDeploy extends State {
 
   protected abstract Optional<Integer> getServiceDesiredCount(
       SettingAttribute settingAttribute, String region, String clusterName, @Nullable String serviceName);
+
+  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {}
 
   private ContainerServiceElement getContainerServiceElement(ExecutionContext context) {
     if (isRollback()) {
