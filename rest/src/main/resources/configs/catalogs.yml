@@ -200,3 +200,11 @@ PLUGIN_CATEGORY:
       value: ConnectionAttributes
     - name: AppDynamics
       value: APP_DYNAMICS
+
+CLOUD_PROVIDERS:
+    - name: Gcp
+      value: GCP
+    - name: Aws
+      value: AWS
+    - name: Physical Data Center
+      value: PHYSICAL_DATA_CENTER
