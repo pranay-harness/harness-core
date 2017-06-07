@@ -71,10 +71,18 @@ CONTAINER_FAMILY:
       value: JBOSS
 
 WORKFLOW_ORCHESTRATION_TYPE:
-    - name: Canary Deployment Workflow
+    - name: Basic
+      value: BASIC
+    - name: Multi-Service
+      value: MULTI_SERVICE
+    - name: Canary
       value: CANARY
-    - name: Blue/Green Deployment Workflow
+    - name: Blue/Green
       value: BLUE_GREEN
+    - name:  Rolling Upgrade
+      value: ROLLING_UPGRADE
+    - name: Custom Workflow
+      value: CUSTOM
 
 FAILURE_TYPE:
     - name: Connectivity Error
