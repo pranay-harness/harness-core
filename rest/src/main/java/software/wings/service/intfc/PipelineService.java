@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -101,4 +102,13 @@ public interface PipelineService {
    * @return the pipeline
    */
   Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline);
+
+  /**
+   * Approve waiting execution
+   * @param appId
+   * @param
+   * @param approvalDetails
+   * @return
+   */
+  boolean approveExecution(String appId, String pipelineExecutionId, ApprovalDetails approvalDetails);
 }

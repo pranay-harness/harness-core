@@ -26,9 +26,6 @@ import static software.wings.utils.WingsTestConstants.*;
  * Created by anubhaw on 11/3/16.
  */
 public class ApprovalStateTest extends WingsBaseTest {
-  @Mock private PipelineService pipelineService;
-  @Mock private UserService userService;
-
   @Mock private ExecutionContextImpl context;
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withArtifactIds(Arrays.asList(ARTIFACT_ID)).build();
@@ -46,10 +43,9 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void shouldExecute() {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(Arrays.asList(User.Builder.anUser().build()));
-    when(userService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
     ExecutionResponse executionResponse = approvalState.execute(context);
-    assertThat(executionResponse.isAsync()).isFalse();
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    verify(pipelineService).refreshPipelineExecutionAsync(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
+    assertThat(executionResponse.isAsync()).isTrue();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.PAUSED);
   }
 }

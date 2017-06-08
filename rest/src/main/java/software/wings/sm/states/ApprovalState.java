@@ -1,26 +1,21 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
-import org.mongodb.morphia.annotations.Transient;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.ApprovalStateExecutionData;
-import software.wings.beans.SortOrder;
-import software.wings.beans.User;
-import software.wings.dl.PageRequest;
-import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.UserService;
+import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
+import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.List;
-import javax.inject.Inject;
+import java.util.Map;
 
 /**
  * A Pause state to pause state machine execution.
@@ -29,10 +24,6 @@ import javax.inject.Inject;
  */
 public class ApprovalState extends State {
   @Attributes(required = true, title = "Group Name") private String groupName;
-
-  @Transient @Inject private PipelineService pipelineService;
-
-  @Transient @Inject private UserService userService;
 
   /**
    * Creates pause state with given name.
@@ -48,26 +39,25 @@ public class ApprovalState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    User user = null;
-    List<User> response = userService
-                              .list(PageRequest.Builder.aPageRequest()
-                                        .addOrder("createdAt", SortOrder.OrderType.ASC)
-                                        .withLimit("1")
-                                        .build())
-                              .getResponse();
-    if (response != null && response.size() == 1) {
-      user = response.get(0).getPublicUser(); // TODO::remove and fetch actual approver
-    }
+    String approvalId = UUIDGenerator.getUuid();
+    ApprovalStateExecutionData executionData = anApprovalStateExecutionData().withApprovalId(approvalId).build();
+    return anExecutionResponse()
+        .withAsync(true)
+        .withExecutionStatus(ExecutionStatus.PAUSED)
+        .withCorrelationIds(asList(approvalId))
+        .withStateExecutionData(executionData)
+        .build();
+  }
 
-    ApprovalStateExecutionData executionData = anApprovalStateExecutionData()
-                                                   .withApprovedBy(user)
-                                                   .withComments("Auto approved.")
-                                                   .withApprovedOn(System.currentTimeMillis())
-                                                   .build();
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    ApprovalStateExecutionData approvalNotifyResponse =
+        (ApprovalStateExecutionData) response.values().iterator().next();
 
-    Misc.sleepWithRuntimeException(2000);
-    pipelineService.refreshPipelineExecutionAsync(
-        ((ExecutionContextImpl) context).getApp().getUuid(), context.getWorkflowExecutionId());
+    ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
+
+    executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
+    executionData.setComments(approvalNotifyResponse.getComments());
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(ExecutionStatus.SUCCESS)
@@ -81,6 +71,12 @@ public class ApprovalState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @SchemaIgnore
+  @Override
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
+  }
 
   /**
    * Gets group name.

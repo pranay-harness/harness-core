@@ -685,9 +685,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     PipelineStage stag1 = new PipelineStage(asList(new PipelineStageElement(
         "DEV", StateType.ENV_STATE.name(), ImmutableMap.of("envId", env.getUuid(), "workflowId", workflow.getUuid()))));
-    PipelineStage stag2 = new PipelineStage(asList(
-        new PipelineStageElement("APPROVAL", StateType.APPROVAL.name(), ImmutableMap.of("envId", env.getUuid()))));
-    List<PipelineStage> pipelineStages = asList(stag1, stag2);
+    // PipelineStage stag2 = new PipelineStage(asList(new PipelineStageElement("APPROVAL", StateType.APPROVAL.name(),
+    // ImmutableMap.of("envId", env.getUuid()))));
+    List<PipelineStage> pipelineStages = asList(stag1);
 
     Pipeline pipeline = aPipeline()
                             .withAppId(app.getUuid())
@@ -709,7 +709,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     PageResponse<StateMachine> res = workflowService.listStateMachines(req);
 
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
-    assertThat(res.get(0).getTransitions()).hasSize(1);
+    assertThat(res.get(0).getTransitions()).hasSize(0);
 
     Artifact artifact = wingsPersistence.saveAndGet(Artifact.class,
         anArtifact()

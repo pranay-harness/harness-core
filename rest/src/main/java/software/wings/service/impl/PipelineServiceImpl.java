@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
+import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -22,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.Application;
+import software.wings.beans.ApprovalDetails;
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
@@ -31,7 +35,9 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
@@ -42,6 +48,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
@@ -51,6 +58,8 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.Validator;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -58,6 +67,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -75,6 +85,8 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private ArtifactService artifactService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private UserService userService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -370,6 +382,24 @@ public class PipelineServiceImpl implements PipelineService {
     pipelineExecution = wingsPersistence.saveAndGet(PipelineExecution.class, pipelineExecution);
     refreshPipelineExecution(appId, pipelineExecution.getWorkflowExecutionId());
     return workflowExecution;
+  }
+
+  @Override
+  public boolean approveExecution(String appId, String pipelineExecutionId, ApprovalDetails approvalDetails) {
+    if (Objects.isNull(approvalDetails.getApprovedBy())) {
+      Validator.notNullCheck("appId", appId);
+      Application application = appService.get(appId);
+      approvalDetails.setApprovedBy(anEmbeddedUser()
+                                        .withEmail(application.getCreatedBy().getEmail())
+                                        .withName(application.getCreatedBy().getName())
+                                        .build());
+    }
+    ApprovalStateExecutionData executionData = anApprovalStateExecutionData()
+                                                   .withApprovedBy(approvalDetails.getApprovedBy())
+                                                   .withComments(approvalDetails.getComments())
+                                                   .build();
+    waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
+    return true;
   }
 
   private List<Artifact> validateAndFetchArtifact(String appId, List<Artifact> artifacts) {

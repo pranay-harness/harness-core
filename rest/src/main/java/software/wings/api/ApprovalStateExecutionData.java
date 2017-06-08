@@ -1,23 +1,30 @@
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
+import software.wings.beans.EmbeddedUser;
 import software.wings.beans.User;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
+import software.wings.waitnotify.NotifyResponseData;
+
+import java.util.Map;
 
 /**
  * Created by anubhaw on 11/10/16.
  */
-public class ApprovalStateExecutionData extends StateExecutionData {
-  private User approvedBy;
+public class ApprovalStateExecutionData extends StateExecutionData implements NotifyResponseData {
+  private EmbeddedUser approvedBy;
   private Long approvedOn;
   private String comments;
+  private String approvalId;
 
   /**
    * Gets approved by.
    *
    * @return the approved by
    */
-  public User getApprovedBy() {
+  public EmbeddedUser getApprovedBy() {
     return approvedBy;
   }
 
@@ -26,7 +33,7 @@ public class ApprovalStateExecutionData extends StateExecutionData {
    *
    * @param approvedBy the approved by
    */
-  public void setApprovedBy(User approvedBy) {
+  public void setApprovedBy(EmbeddedUser approvedBy) {
     this.approvedBy = approvedBy;
   }
 
@@ -67,10 +74,39 @@ public class ApprovalStateExecutionData extends StateExecutionData {
   }
 
   /**
+   * Gets Approval id
+   * @return
+   */
+  public String getApprovalId() {
+    return approvalId;
+  }
+
+  /**
+   * setApprovalId
+   * @param approvalId
+   */
+  public void setApprovalId(String approvalId) {
+    this.approvalId = approvalId;
+  }
+
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(
+        executionDetails, "approvalId", anExecutionDataValue().withValue(approvalId).withDisplayName("").build());
+    return executionDetails;
+  }
+
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    return super.getExecutionDetails();
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
-    private User approvedBy;
+    private EmbeddedUser approvedBy;
     private Long approvedOn;
     private String comments;
     private String stateName;
@@ -78,6 +114,7 @@ public class ApprovalStateExecutionData extends StateExecutionData {
     private Long endTs;
     private ExecutionStatus status;
     private String errorMsg;
+    private String approvalId;
 
     private Builder() {}
 
@@ -96,7 +133,7 @@ public class ApprovalStateExecutionData extends StateExecutionData {
      * @param approvedBy the approved by
      * @return the builder
      */
-    public Builder withApprovedBy(User approvedBy) {
+    public Builder withApprovedBy(EmbeddedUser approvedBy) {
       this.approvedBy = approvedBy;
       return this;
     }
@@ -179,6 +216,14 @@ public class ApprovalStateExecutionData extends StateExecutionData {
     }
 
     /**
+     * With approvalId
+     */
+    public Builder withApprovalId(String approvalId) {
+      this.approvalId = approvalId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -192,7 +237,8 @@ public class ApprovalStateExecutionData extends StateExecutionData {
           .withStartTs(startTs)
           .withEndTs(endTs)
           .withStatus(status)
-          .withErrorMsg(errorMsg);
+          .withErrorMsg(errorMsg)
+          .withApprovalId(approvalId);
     }
 
     /**
@@ -210,6 +256,7 @@ public class ApprovalStateExecutionData extends StateExecutionData {
       approvalStateExecutionData.setEndTs(endTs);
       approvalStateExecutionData.setStatus(status);
       approvalStateExecutionData.setErrorMsg(errorMsg);
+      approvalStateExecutionData.setApprovalId(approvalId);
       return approvalStateExecutionData;
     }
   }

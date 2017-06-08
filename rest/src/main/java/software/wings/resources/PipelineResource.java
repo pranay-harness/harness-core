@@ -7,6 +7,7 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -188,6 +189,24 @@ public class PipelineResource {
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     return new RestResponse<>(pipelineService.execute(appId, pipelineId, executionArgs));
+  }
+
+  /**
+   * Trigger execution rest response.
+   *
+   * @param appId         the app id
+   * @param pipelineExecutionId    the pipeline execution id
+   * @param approvalDetails the Approval User details
+   * @return the rest response
+   */
+  @PUT
+  @Path("executions/{pipelineExecutionId}/approve")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(value = ResourceType.CD)
+  public RestResponse approveExecution(@QueryParam("appId") String appId,
+      @PathParam("pipelineExecutionId") String pipelineExecutionId, ApprovalDetails approvalDetails) {
+    return new RestResponse<>(pipelineService.approveExecution(appId, pipelineExecutionId, approvalDetails));
   }
 
   /**
