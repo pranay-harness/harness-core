@@ -518,8 +518,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     MetricSummary generatedMetrics = metricRestResponse.getResource();
     Assert.assertEquals(
         RiskLevel.LOW, generatedMetrics.getBtMetricsMap().get(btName).getMetricsMap().get(METRIC_NAME).getRisk());
-    Assert.assertEquals("200.0",
-        generatedMetrics.getBtMetricsMap().get(btName).getMetricsMap().get(METRIC_NAME).getOldData().getDisplayValue());
+    Assert.assertEquals(200,
+        generatedMetrics.getBtMetricsMap().get(btName).getMetricsMap().get(METRIC_NAME).getOldData().getValue(), 0.05);
 
     // delete
     Query<AppdynamicsMetricDataRecord> query = wingsPersistence.createQuery(AppdynamicsMetricDataRecord.class);

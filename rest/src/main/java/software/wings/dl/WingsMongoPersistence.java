@@ -509,11 +509,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
           && (userRequestInfo.getAllowedAppIds() == null || userRequestInfo.getAllowedAppIds().isEmpty())) {
         return false;
       } else if (userRequestInfo.getAppId() == null && !userRequestInfo.getAllowedAppIds().isEmpty()) {
-        pageRequest.getFilters().add(
+        pageRequest.addFilter(
             aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray()).build());
       } else {
-        pageRequest.getFilters().add(
-            aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAppId()).build());
+        pageRequest.addFilter(aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAppId()).build());
       }
     } else if (userRequestInfo.isEnvIdFilterRequired()) {
       // TODO:
