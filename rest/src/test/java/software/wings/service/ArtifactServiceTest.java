@@ -81,7 +81,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateArtifactWhenValid() {
-    assertThat(artifactService.create(builder.but().build())).isNotNull();
+    assertThat(artifactService.create(builder.but().build()))
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
   }
 
   /**
