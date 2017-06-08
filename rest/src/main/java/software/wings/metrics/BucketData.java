@@ -4,6 +4,8 @@ import com.google.common.math.Stats;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.annotations.Serialized;
+
 import java.util.List;
 
 /**
@@ -60,7 +62,7 @@ public class BucketData {
   public static class DataSummary {
     private int nodeCount;
     private List<String> nodeList;
-    private Stats stats;
+    @Serialized private Stats stats;
     private double value;
     private boolean missingData;
 
