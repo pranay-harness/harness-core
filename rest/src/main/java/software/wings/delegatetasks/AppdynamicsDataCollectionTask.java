@@ -126,6 +126,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
           metricsData.addAll(delegateService.getTierBTMetricData(
               appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES));
         }
+        for (int i = metricsData.size() - 1; i >= 0; i--) {
+          if (metricsData.get(i).getMetricName().equals("METRIC DATA NOT FOUND")) {
+            metricsData.remove(i);
+          }
+        }
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
         logger.debug("Result: " + metricsData);
         metricStoreService.save(dataCollectionInfo.getAppDynamicsConfig().getAccountId(), dataCollectionInfo.getAppId(),
