@@ -97,6 +97,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("Artifact Stream", artifactStream);
 
+    artifact.setArtifactSourceName(artifactStream.getSourceName());
     artifact.setServiceIds(Arrays.asList(artifactStream.getServiceId()));
     Status status = getArtifactStatus(artifactStream);
     artifact.setStatus(status);

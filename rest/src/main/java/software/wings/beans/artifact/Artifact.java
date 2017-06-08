@@ -12,7 +12,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
-import software.wings.utils.validation.Create;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +27,8 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact extends Base {
   @Indexed private String artifactStreamId;
+
+  private String artifactSourceName;
 
   private Map<String, String> metadata = Maps.newHashMap();
 
@@ -169,6 +170,14 @@ public class Artifact extends Base {
     this.artifactStreamId = artifactStreamId;
   }
 
+  public String getArtifactSourceName() {
+    return artifactSourceName;
+  }
+
+  public void setArtifactSourceName(String artifactSourceName) {
+    this.artifactSourceName = artifactSourceName;
+  }
+
   /**
    * Gets service ids.
    *
@@ -268,6 +277,7 @@ public class Artifact extends Base {
    */
   public static final class Builder {
     private String artifactStreamId;
+    private String artifactSourceName;
     private Map<String, String> metadata = Maps.newHashMap();
     private String displayName;
     private String revision;
@@ -300,6 +310,11 @@ public class Artifact extends Base {
      */
     public Builder withArtifactStreamId(String artifactStreamId) {
       this.artifactStreamId = artifactStreamId;
+      return this;
+    }
+
+    public Builder withArtifactSourceName(String artifactSourceName) {
+      this.artifactSourceName = artifactSourceName;
       return this;
     }
 
@@ -443,6 +458,7 @@ public class Artifact extends Base {
     public Builder but() {
       return anArtifact()
           .withArtifactStreamId(artifactStreamId)
+          .withArtifactSourceName(artifactSourceName)
           .withMetadata(metadata)
           .withDisplayName(displayName)
           .withRevision(revision)
@@ -465,6 +481,7 @@ public class Artifact extends Base {
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setArtifactStreamId(artifactStreamId);
+      artifact.setArtifactSourceName(artifactSourceName);
       artifact.setMetadata(metadata);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
