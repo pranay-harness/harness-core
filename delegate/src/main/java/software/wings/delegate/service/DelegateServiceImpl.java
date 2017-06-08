@@ -57,6 +57,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -112,12 +113,15 @@ public class DelegateServiceImpl implements DelegateService {
 
       URI uri = new URI(delegateConfiguration.getManagerUrl());
 
+      long start = System.currentTimeMillis();
       String delegateId = registerDelegate(accountId, builder);
+      logger.info("Delegate registered in {} ms", (System.currentTimeMillis() - start));
 
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
       Client client = ClientFactory.getDefault().newClient();
+      ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
 
       // Stream the request body
       request =
@@ -147,25 +151,29 @@ public class DelegateServiceImpl implements DelegateService {
               new Function<String>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(String message) {
-                  if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
-                    try {
-                      DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-                      if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
-                        abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
-                      } else {
-                        dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                  logger.info("Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+                  fixedThreadPool.execute(() -> {
+                    if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
+                      try {
+                        DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
+                        if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
+                          abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
+                        } else {
+                          dispatchDelegateTask(delegateTaskEvent, delegateId, accountId);
+                        }
+                      } catch (Exception e) {
+                        System.out.println(message);
+                        logger.error("Exception while decoding task: ", e);
                       }
-                    } catch (Exception e) {
-                      System.out.println(message);
-                      logger.error("Exception while decoding task: ", e);
                     }
-                  }
+                  });
                 }
               })
           .on(Event.ERROR,
               new Function<Exception>() { // Do not change this wasync doesn't like lambda's
                 @Override
                 public void on(Exception e) {
+                  logger.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
                   if (e instanceof SSLException) {
                     logger.info("Reopening connection to manager.");
                     try {
@@ -188,18 +196,26 @@ public class DelegateServiceImpl implements DelegateService {
                   }
                 }
               })
-          .on(Event.REOPENED, new Function<Object>() { // Do not change this wasync doesn't like lambda's
+          .on(Event.REOPENED,
+              new Function<Object>() { // Do not change this wasync doesn't like lambda's
+                @Override
+                public void on(Object o) {
+                  logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
+                  try {
+                    socket.fire(builder.but()
+                                    .withLastHeartBeat(System.currentTimeMillis())
+                                    .withStatus(Status.ENABLED)
+                                    .withConnected(true)
+                                    .build());
+                  } catch (IOException e) {
+                    e.printStackTrace();
+                  }
+                }
+              })
+          .on(Event.CLOSE, new Function<Object>() { // Do not change this wasync doesn't like lambda's
             @Override
             public void on(Object o) {
-              try {
-                socket.fire(builder.but()
-                                .withLastHeartBeat(System.currentTimeMillis())
-                                .withStatus(Status.ENABLED)
-                                .withConnected(true)
-                                .build());
-              } catch (IOException e) {
-                e.printStackTrace();
-              }
+              logger.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
             }
           });
 
@@ -324,7 +340,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent, String delegateId, String accountId) {
     logger.info("DelegateTaskEvent received - {}", delegateTaskEvent);
-    Response<DelegateTask> acquireResponse = null;
+    if (currentlyExecutingTasks.contains(delegateTaskEvent.getDelegateTaskId())) {
+      logger.info("Task [DelegateTaskEvent: {}] already acquired. Don't acquire again", delegateTaskEvent);
+      return;
+    }
 
     try {
       DelegateTask delegateTask =
@@ -369,7 +388,7 @@ public class DelegateServiceImpl implements DelegateService {
                         logger.error(
                             "Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
                       }
-                      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
+                      currentlyExecutingTasks.putIfAbsent(delegateTask.getUuid(), delegateTask1);
                     }
                     return taskAcquired;
                   } catch (IOException e) {
@@ -379,6 +398,7 @@ public class DelegateServiceImpl implements DelegateService {
                 });
         injector.injectMembers(delegateRunnableTask);
         currentlyExecutingFutures.putIfAbsent(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
+        logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
       } else {
         logger.info("DelegateTask already executing - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
             delegateTaskEvent.getAccountId());

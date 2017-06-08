@@ -904,13 +904,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .getServices()
             .get(0);
 
-    logger.info("Waiting for for pending tasks to finish. {}/{} running ...", service.getRunningCount(),
-        service.getDesiredCount());
+    logger.info(
+        "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
 
     executionLogCallback.saveExecutionLog(String.format("Waiting for for pending tasks to finish. %s/%s running ...",
                                               service.getRunningCount(), service.getDesiredCount()),
         LogLevel.INFO);
-    return service.getDesiredCount() == service.getRunningCount();
+    return service.getDesiredCount().equals(service.getRunningCount());
   }
 
   @Override

@@ -136,6 +136,7 @@ public class WingsRule implements MethodRule {
     initializeLogging();
 
     MongoClient mongoClient;
+    String dbName = "wings";
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
       int port = Network.getFreeServerPort();
       IMongodConfig mongodConfig = new MongodConfigBuilder()
@@ -149,6 +150,7 @@ public class WingsRule implements MethodRule {
       try {
         MongoClientURI clientUri =
             new MongoClientURI(System.getProperty("mongoUri", "mongodb://localhost:27017/wings"));
+        dbName = clientUri.getDatabase();
         mongoClient = new MongoClient(clientUri);
       } catch (NumberFormatException ex) {
         port = 27017;
@@ -163,8 +165,8 @@ public class WingsRule implements MethodRule {
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, "wings");
-    DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, "wings", "locks");
+    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
+    DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, dbName, "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     distributedLockSvc =
         new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());

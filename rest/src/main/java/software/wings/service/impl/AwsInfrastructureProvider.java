@@ -76,6 +76,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -149,7 +150,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                               .map(instance
                                   -> anAwsHost()
                                          .withAppId(Base.GLOBAL_APP_ID)
-                                         .withHostName(instance.getPrivateDnsName())
+                                         .withHostName(instance.getPublicDnsName())
                                          .withInstance(instance)
                                          .build())
                               .collect(toList());
@@ -230,7 +231,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
     for (Instance instance : readyInstances) {
       int retryCount = RETRY_COUNTER;
-      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName());
+      String hostname = awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName());
       while (!awsHelperService.canConnectToHost(hostname, 22, SLEEP_INTERVAL)) {
         if (retryCount-- <= 0) {
           logger.error("Could not verify connection to newly provisioned instances [{}] ", instancesIds);
@@ -254,7 +255,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .flatMap(reservation -> reservation.getInstances().stream())
         .map(instance
             -> anAwsHost()
-                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
+                   .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPublicDnsName()))
                    .withInstance(instance)
                    .build())
         .collect(toList());
@@ -281,6 +282,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   private void waitForAllInstancesToBeReady(AmazonEC2Client amazonEC2Client, List<String> instancesIds) {
+    Misc.quietSleep(1, TimeUnit.SECONDS);
     int retryCount = RETRY_COUNTER;
     while (!allInstanceInReadyState(amazonEC2Client, instancesIds)) {
       if (retryCount-- <= 0) {

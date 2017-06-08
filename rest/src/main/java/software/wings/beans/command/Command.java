@@ -60,7 +60,7 @@ public class Command extends Base implements CommandUnit {
 
   @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
-  private CommandType commandType = CommandType.OTHER;
+  @SchemaIgnore private CommandType commandType = CommandType.OTHER;
 
   public Command() {
     this.commandUnitType = CommandUnitType.COMMAND;
@@ -234,6 +234,7 @@ public class Command extends Base implements CommandUnit {
     this.artifactType = artifactType;
   }
 
+  @SchemaIgnore
   public CommandType getCommandType() {
     return commandType;
   }

@@ -7,8 +7,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
@@ -31,15 +29,13 @@ public class Validator {
   /**
    * Checks whether 2 values are equal or not.
    *
-   * @param appId value1
-   * @param uuid  value2
+   * @param value1 value1
+   * @param value2  value2
    */
-  public static void equalCheck(Object appId, Object uuid) {
-    if (!Objects.equals(appId, uuid)) {
-      Map<String, Object> map = new HashMap<>();
-      map.put("appId", appId);
-      map.put("uuid", uuid);
-      throw new WingsException(map, ErrorCode.INVALID_ARGUMENT);
+  public static void equalCheck(Object value1, Object value2) {
+    if (!Objects.equals(value1, value2)) {
+      throw new WingsException(
+          ErrorCode.INVALID_REQUEST, "message", "Not equal -  value1: " + value1 + ", value2: " + value2);
     }
   }
 

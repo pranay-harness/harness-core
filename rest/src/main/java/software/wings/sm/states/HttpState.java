@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.api.HttpStateExecutionData.Builder.aHttpStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
@@ -44,6 +45,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -211,6 +213,12 @@ public class HttpState extends State {
   @SchemaIgnore
   public void setSocketTimeoutMillis(int socketTimeoutMillis) {
     this.socketTimeoutMillis = socketTimeoutMillis;
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    return asList(url, body, header, assertion);
   }
 
   /**

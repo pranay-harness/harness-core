@@ -1,6 +1,6 @@
 package software.wings.collect;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static software.wings.beans.Event.Builder.anEvent;
 
 import org.slf4j.Logger;
@@ -48,36 +48,33 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
-    Artifact artifact = artifactService.get(appId, artifactId);
 
-    if (isNotEmpty(responseData.getData())) {
-      artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
+    if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
+      logger.error("Artifact file collection failed for artifactId: [{}], appId: [{}]", artifactId, appId);
+      artifactService.updateStatus(artifactId, appId, Status.FAILED);
     } else {
-      // TODO : error handling
-      // throw new FileNotFoundException("unable to collect artifact ");
+      Artifact artifact = artifactService.get(appId, artifactId);
+      logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
+      artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
+
+      ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+
+      if (artifactStream.isAutoApproveForProduction()) {
+        artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.APPROVED);
+      }
+      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
+      notificationService.sendNotificationAsync(
+          ApprovalNotification.Builder.anApprovalNotification()
+              .withAppId(artifact.getAppId())
+              .withStage(artifactStream.isAutoApproveForProduction() ? ApprovalStage.APPROVED : ApprovalStage.PENDING)
+              .withEntityId(artifact.getUuid())
+              .withEntityType(EntityType.ARTIFACT)
+              .withEntityName(artifact.getDisplayName())
+              .withArtifactStreamId(artifact.getArtifactStreamId())
+              .build());
     }
-
-    logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
-    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
-
-    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-
-    if (artifactStream.isAutoApproveForProduction()) {
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.APPROVED);
-    }
-    artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(artifact);
-    eventEmitter.send(Channel.ARTIFACTS,
-        anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
-
-    notificationService.sendNotificationAsync(
-        ApprovalNotification.Builder.anApprovalNotification()
-            .withAppId(artifact.getAppId())
-            .withStage(artifactStream.isAutoApproveForProduction() ? ApprovalStage.APPROVED : ApprovalStage.PENDING)
-            .withEntityId(artifact.getUuid())
-            .withEntityType(EntityType.ARTIFACT)
-            .withEntityName(artifact.getDisplayName())
-            .withArtifactStreamId(artifact.getArtifactStreamId())
-            .build());
+    eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifactId).withAppId(appId).build());
   }
 
   @Override

@@ -128,7 +128,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private void addCronForAutoArtifactCollection(ArtifactStream artifactStream) {
     JobDetail job = JobBuilder.newJob(ArtifactCollectionJob.class)
-                        .withIdentity(ARTIFACT_STREAM_CRON_GROUP, artifactStream.getUuid())
+                        .withIdentity(artifactStream.getUuid(), ARTIFACT_STREAM_CRON_GROUP)
                         .usingJobData("artifactStreamId", artifactStream.getUuid())
                         .usingJobData("appId", artifactStream.getAppId())
                         .build();
@@ -247,7 +247,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     // Use ArtifactStream uuid as job group name and workflowId as job name
 
     JobDetail job = JobBuilder.newJob(ArtifactStreamActionJob.class)
-                        .withIdentity(streamId, artifactStreamAction.getWorkflowId())
+                        .withIdentity(artifactStreamAction.getWorkflowId(), streamId)
                         .usingJobData("artifactStreamId", streamId)
                         .usingJobData("appId", appId)
                         .usingJobData("workflowId", artifactStreamAction.getWorkflowId())

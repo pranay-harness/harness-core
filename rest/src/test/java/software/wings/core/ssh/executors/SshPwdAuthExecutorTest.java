@@ -38,6 +38,7 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.rules.SshRule;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -144,6 +145,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for invalid credential.
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldThrowExceptionForInvalidCredential() {
     executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
     Assertions.assertThatThrownBy(() -> executor.executeCommandString("ls"))
@@ -179,6 +181,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for connection timeout.
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldThrowExceptionForConnectionTimeout() {
     executor.init(configBuilder.but().withSshConnectionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))

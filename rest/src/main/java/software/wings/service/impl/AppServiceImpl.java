@@ -144,7 +144,7 @@ public class AppServiceImpl implements AppService {
 
   void addCronForStateMachineExecutionCleanup(Application application) {
     JobDetail job = JobBuilder.newJob(StateMachineExecutionCleanupJob.class)
-                        .withIdentity(SM_CLEANUP_CRON_GROUP, application.getUuid())
+                        .withIdentity(application.getUuid(), SM_CLEANUP_CRON_GROUP)
                         .usingJobData("appId", application.getUuid())
                         .build();
 

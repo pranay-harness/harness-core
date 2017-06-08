@@ -26,7 +26,10 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
    */
   @Override
   public Response toResponse(WingsException ex) {
-    logger.error("Exception occurred", ex);
+    if (ex.getResponseMessageList().stream().noneMatch(
+            responseMessage -> ErrorCode.EXPIRED_TOKEN.equals(responseMessage.getCode()))) {
+      logger.error("Exception occurred", ex);
+    }
     return Response.status(resolveHttpStatus(ex.getResponseMessageList()))
         .entity(aRestResponse()
                     .withResponseMessages(ex.getResponseMessageList()

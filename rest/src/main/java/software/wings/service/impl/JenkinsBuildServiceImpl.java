@@ -103,7 +103,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(
       String appId, ArtifactStreamAttributes artifactStreamAttributes, JenkinsConfig jenkinsConfig) {
-    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS);
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     Jenkins jenkins =
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());

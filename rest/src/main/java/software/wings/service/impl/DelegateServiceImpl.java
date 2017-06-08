@@ -31,6 +31,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -62,8 +63,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.cache.Caching;
 import javax.inject.Inject;
 
@@ -229,6 +232,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends NotifyResponseData> T executeTask(DelegateTask task, long timeOut) throws InterruptedException {
+    ensureDelegateAvailableToExecuteTask(task);
     String taskId = UUIDGenerator.getUuid();
     task.setQueueName(taskId);
     task.setUuid(taskId);
@@ -238,9 +242,34 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Broadcast new task: {}", taskId);
     T responseData = topic.poll(timeOut, TimeUnit.MILLISECONDS);
     if (responseData == null) {
+      logger.error("Task [{}] timed out. remove it from cache", task.toString());
+      Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, "name", "Harness Bot");
     }
     return responseData;
+  }
+
+  private void ensureDelegateAvailableToExecuteTask(DelegateTask task) {
+    List<Key<Delegate>> availableDelegates = wingsPersistence.createQuery(Delegate.class)
+                                                 .field("accountId")
+                                                 .equal(task.getAccountId())
+                                                 .field("connected")
+                                                 .equal(true)
+                                                 .field("status")
+                                                 .equal(Status.ENABLED)
+                                                 .field("supportedTaskTypes")
+                                                 .contains(task.getTaskType().name())
+                                                 .field("lastHeartBeat")
+                                                 .greaterThanOrEq(System.currentTimeMillis() - 2 * 60 * 1000)
+                                                 .asKeyList(); // TODO:: make it more reliable. take out time factor
+
+    logger.info("{} availableDelegates [{}] available to execute the task", availableDelegates.size(),
+        availableDelegates.stream()
+            .map(delegateKey -> delegateKey.getId().toString())
+            .collect(Collectors.joining(", ")));
+    if (availableDelegates.size() == 0) {
+      throw new WingsException(ErrorCode.UNAVAILABLE_DELEGATES);
+    }
   }
 
   @Override
@@ -309,6 +338,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
+    logger.info("Delegate [{}], response received for task [{}]", response.getTask().getDelegateId(),
+        response.getTask().getUuid());
     if (isNotBlank(response.getTask().getWaitId())) {
       DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
           aPageRequest()
@@ -326,7 +357,9 @@ public class DelegateServiceImpl implements DelegateService {
       String topicName = response.getTask().getQueueName();
       // do the haze
       IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
-      topic.offer(response.getResponse());
+      boolean queued = topic.offer(response.getResponse());
+      logger.info(
+          "Sync call response added to queue [name: {}, object: {}] with status [{}]", topicName, topic, queued);
     }
   }
 

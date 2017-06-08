@@ -188,6 +188,7 @@ public class PhaseStep {
     }
 
     Node originNode = null;
+
     if (stepsInParallel && steps.size() > 1) {
       Node forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName(name + "-FORK").build();
       graphBuilder.addNodes(forkNode);

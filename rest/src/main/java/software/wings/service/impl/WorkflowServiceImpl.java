@@ -13,7 +13,6 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -32,6 +31,7 @@ import static software.wings.sm.StateType.values;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -41,6 +41,7 @@ import software.wings.api.DeploymentType;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
@@ -659,7 +660,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
       WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
       basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
-    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.CANARY)) {
+    } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
           (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
       boolean serviceRepeat = false;
@@ -1060,9 +1061,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
     return (infrastructureMapping instanceof PhysicalInfrastructureMapping
-               && ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId() != null)
-        || (infrastructureMapping instanceof PhysicalInfrastructureMapping
-               && ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId() != null);
+               && StringUtils.isNotBlank(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId()))
+        || (infrastructureMapping instanceof AwsInfrastructureMapping
+               && StringUtils.isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
   }
 
   private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {

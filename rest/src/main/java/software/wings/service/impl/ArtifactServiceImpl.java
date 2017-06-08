@@ -2,6 +2,10 @@ package software.wings.service.impl;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.QUEUED;
+import static software.wings.beans.artifact.Artifact.Status.READY;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
@@ -18,7 +22,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
@@ -100,16 +103,17 @@ public class ArtifactServiceImpl implements ArtifactService {
     String key = wingsPersistence.save(artifact);
 
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);
-    if (status.equals(Status.QUEUED)) {
+    if (status.equals(QUEUED)) {
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
 
     return savedArtifact;
   }
 
-  public Status getArtifactStatus(ArtifactStream artifactStream) {
-    return ArtifactStreamType.DOCKER.name().equals(artifactStream.getArtifactStreamType()) ? Status.READY
-                                                                                           : Status.QUEUED;
+  private Status getArtifactStatus(ArtifactStream artifactStream) {
+    return DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
+        : QUEUED;
   }
 
   /* (non-Javadoc)
@@ -158,7 +162,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public File download(String appId, String artifactId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
-    if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())) {
+    if (artifact == null || artifact.getStatus() != READY || isEmpty(artifact.getArtifactFiles())) {
       return null;
     }
 
@@ -220,7 +224,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .equal(artifactStreamId)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(Arrays.asList(Status.RUNNING, Status.REJECTED, Status.WAITING, Status.READY, Status.APPROVED))
+        .hasAnyOf(Arrays.asList(Status.RUNNING, Status.REJECTED, Status.WAITING, READY, APPROVED))
         .get();
   }
 
