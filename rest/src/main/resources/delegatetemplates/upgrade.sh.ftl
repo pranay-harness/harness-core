@@ -37,5 +37,7 @@ then
 fi
 
 export HOSTNAME
+export CAPSULE_CACHE_DIR="$DIR/.cache"
+rm -rf "$CAPSULE_CACHE_DIR"
 echo "Bot upgrading to version $REMOTE_DELEGATE_VERSION"
 $JRE_BINARY -Ddelegatesourcedir="$DIR" -jar delegate.jar config-delegate.yml upgrade

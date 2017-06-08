@@ -153,9 +153,9 @@ public class MetricCalculatorTest {
     assertEquals(180000, output.getEndTimeMillis());
     assertEquals(2, output.getBtMetricsMap().size());
     BTMetrics todolistMetrics = output.getBtMetricsMap().get("todolist");
-    assertEquals(2, todolistMetrics.getMetricsMap().size());
+    assertEquals(3, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
-    assertEquals(2, todolistMetrics.getBtRiskSummary().size());
+    assertEquals(3, todolistMetrics.getBtRiskSummary().size());
     BucketData todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
     System.out.println(todolistCallData);
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
@@ -180,9 +180,9 @@ public class MetricCalculatorTest {
     output = MetricCalculator.calculateMetrics(metricDefinitions, data, Arrays.asList("node3", "node4"));
     assertEquals(2, output.getBtMetricsMap().size());
     todolistMetrics = output.getBtMetricsMap().get("todolist");
-    assertEquals(2, todolistMetrics.getMetricsMap().size());
+    assertEquals(3, todolistMetrics.getMetricsMap().size());
     assertEquals(RiskLevel.MEDIUM, todolistMetrics.getBtRisk());
-    assertEquals(2, todolistMetrics.getBtRiskSummary().size());
+    assertEquals(3, todolistMetrics.getBtRiskSummary().size());
     todolistCallData = todolistMetrics.getMetricsMap().get("Calls per Minute");
     assertEquals(RiskLevel.MEDIUM, todolistCallData.getRisk());
     assertEquals(2, todolistCallData.getOldData().getNodeCount());
@@ -207,10 +207,11 @@ public class MetricCalculatorTest {
     BucketData bucketData = MetricCalculator.parse(CALLS_METRIC_DEFINITION, records);
     // newRecords sum = 38, oldRecords sum = 30, so medium risk
     assertEquals(RiskLevel.MEDIUM, bucketData.getRisk());
+    assertEquals(MetricType.COUNT, bucketData.getMetricType());
     assertEquals(2, bucketData.getOldData().getNodeCount());
     assertEquals(2, bucketData.getNewData().getNodeCount());
-    assertEquals("30.0", bucketData.getOldData().getDisplayValue());
-    assertEquals("38.0", bucketData.getNewData().getDisplayValue());
+    assertEquals(30d, bucketData.getOldData().getValue(), 0.05);
+    assertEquals(38d, bucketData.getNewData().getValue(), 0.05);
   }
 
   @Test
@@ -222,7 +223,7 @@ public class MetricCalculatorTest {
     assertEquals(4, summary.getNodeCount());
     assertThat(summary.getNodeList().toArray(), arrayContainingInAnyOrder("node1", "node2", "node3", "node4"));
     assertEquals(68, summary.getStats().sum(), 0.05);
-    assertEquals("68.0", summary.getDisplayValue());
+    assertEquals(68, summary.getValue(), 0.05);
     assertEquals(false, summary.isMissingData());
 
     // with some missing data
@@ -231,7 +232,7 @@ public class MetricCalculatorTest {
     summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS_WITH_MISSING_3);
     assertEquals(4, summary.getNodeCount());
     assertEquals(61, summary.getStats().sum(), 0.05);
-    assertEquals("61.0", summary.getDisplayValue());
+    assertEquals(61, summary.getValue(), 0.05);
     assertEquals(true, summary.isMissingData());
 
     // with a gap in the times of the records
@@ -241,7 +242,7 @@ public class MetricCalculatorTest {
     assertEquals(1, summary.getNodeCount());
     assertEquals("node1", summary.getNodeList().get(0));
     assertEquals(29, summary.getStats().sum(), 0.05);
-    assertEquals("29.0", summary.getDisplayValue());
+    assertEquals(29, summary.getValue(), 0.05);
     assertEquals(true, summary.isMissingData());
 
     // with time metric type
@@ -249,7 +250,7 @@ public class MetricCalculatorTest {
     summary = MetricCalculator.parsePartial(CALLS_METRIC_DEFINITION, CALL_RECORDS);
     assertEquals(4, summary.getNodeCount());
     assertEquals(8.5, summary.getStats().mean(), 0.05);
-    assertEquals("8.5", summary.getDisplayValue());
+    assertEquals(8.5, summary.getValue(), 0.05);
     assertEquals(false, summary.isMissingData());
   }
 

@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
+import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
+
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.Service;
@@ -8,12 +11,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -28,6 +34,8 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   private String commandName;
 
   @Inject @Transient private transient AwsClusterService awsClusterService;
+
+  @Inject @Transient private transient EcsContainerService ecsContainerService;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -46,6 +54,24 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
       }
     }
     return Optional.empty();
+  }
+
+  @Override
+  protected void cleanup(SettingAttribute settingAttribute, String region, String clusterName, String serviceName) {
+    int revision = getRevisionFromServiceName(serviceName);
+    if (revision > ContainerServiceDeploy.KEEP_N_REVISIONS) {
+      int minRevisionToKeep = revision - ContainerServiceDeploy.KEEP_N_REVISIONS;
+      String serviceNamePrefix = getServiceNamePrefixFromServiceName(serviceName);
+      List<Service> services = ecsContainerService.getServices(region, settingAttribute, clusterName);
+      for (Service service :
+          services.stream()
+              .filter(s -> s.getServiceName().startsWith(serviceNamePrefix) && s.getDesiredCount() == 0)
+              .collect(Collectors.toList())) {
+        if (getRevisionFromServiceName(service.getServiceName()) < minRevisionToKeep) {
+          ecsContainerService.deleteService(region, settingAttribute, clusterName, service.getServiceName());
+        }
+      }
+    }
   }
 
   @Override

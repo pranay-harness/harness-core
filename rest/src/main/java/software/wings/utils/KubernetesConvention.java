@@ -20,6 +20,10 @@ public class KubernetesConvention {
     return normalize(appName + DOT + serviceName + DOT + envName + DOT);
   }
 
+  public static String getReplicationControllerNamePrefixFromControllerName(String controllerName) {
+    return controllerName.substring(0, controllerName.lastIndexOf(DOT) + DOT.length());
+  }
+
   public static String getKubernetesServiceName(String appName, String serviceName, String envName) {
     return normalize(appName + DASH + serviceName + DASH + envName);
   }

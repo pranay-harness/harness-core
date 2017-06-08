@@ -181,6 +181,8 @@ public class AppDynamicsState extends State {
     Application app = workflowStandardParams.getApp();
     MetricSummary finalMetrics =
         appdynamicsService.generateMetrics(context.getStateExecutionInstanceId(), app.getAccountId(), app.getAppId());
+    // TODO: add check for null finalMetrics and throw exception if no data was generated
+    finalMetrics.setStateExecutionInstanceId(context.getStateExecutionInstanceId());
     String id = wingsPersistence.save(finalMetrics);
     return anExecutionResponse()
         .withExecutionStatus(ExecutionStatus.SUCCESS)

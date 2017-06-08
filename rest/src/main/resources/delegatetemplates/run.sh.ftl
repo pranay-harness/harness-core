@@ -43,6 +43,8 @@ then
   echo "Bot already running"
 else
   export HOSTNAME
+  export CAPSULE_CACHE_DIR="$DIR/.cache"
+  rm -rf "$CAPSULE_CACHE_DIR"
   nohup $JRE_BINARY -Ddelegatesourcedir="$DIR" -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml >nohup.out 2>&1 &
   echo "Bot started"
 fi

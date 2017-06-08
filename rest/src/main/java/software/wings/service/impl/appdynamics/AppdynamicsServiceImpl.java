@@ -162,7 +162,8 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                                  .addFilter("btName", Operator.IN, btList.toArray())
                                                  //        .addFilter("startTime", Operator.GT, startTime - 1)
                                                  //        .addFilter("startTime", Operator.LT, endTimeInMillis)
-                                                 .addOrder("startTime", OrderType.ASC);
+                                                 .addOrder("startTime", OrderType.ASC)
+                                                 .withLimit(PageRequest.UNLIMITED);
     PageResponse<AppdynamicsMetricDataRecord> amdrResponse =
         wingsPersistence.query(AppdynamicsMetricDataRecord.class, amdrRequestBuilder.build());
     ArrayListMultimap<String, AppdynamicsMetricDataRecord> dataMap = ArrayListMultimap.create();
@@ -174,7 +175,8 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     requestBuilder = aPageRequest()
                          .addFilter("accountId", Operator.EQ, accountId)
                          //        .addFilter("appdynamicsAppId", Operator.EQ, appdynamicsAppId)
-                         .addFilter("metricId", Operator.IN, metricIds);
+                         .addFilter("metricId", Operator.IN, metricIds)
+                         .withLimit(PageRequest.UNLIMITED);
     PageResponse<MetricDefinition> metricDefinitions =
         wingsPersistence.query(MetricDefinition.class, requestBuilder.build());
     return MetricCalculator.calculateMetrics(metricDefinitions.getResponse(), dataMap, newNodeNames);

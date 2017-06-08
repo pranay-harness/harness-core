@@ -40,6 +40,7 @@ import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
+import software.wings.rules.RepeatRule.Repeat;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
@@ -223,6 +224,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 2, successes = 1)
   public void shouldSignalForDelegateUpgradeWhenUpdateIsPresent() throws Exception {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     Delegate delegate = delegateService.checkForUpgrade(ACCOUNT_ID, DELEGATE_ID, "0.0.0", "https://localhost:9090");

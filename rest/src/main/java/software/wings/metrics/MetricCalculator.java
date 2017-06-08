@@ -30,6 +30,9 @@ public class MetricCalculator {
    */
   public static MetricSummary calculateMetrics(List<MetricDefinition> metricDefinitions,
       ArrayListMultimap<String, AppdynamicsMetricDataRecord> data, List<String> newNodeNames) {
+    if (data == null || data.keys() == null || data.values() == null || data.size() == 0) {
+      return null;
+    }
     Map<String, MetricSummary.BTMetrics> btMetricDataMap = new HashMap<>();
     // create a map of metric ID to metric definition
     Map<String, MetricDefinition> metricDefinitionMap = new HashMap<>();
@@ -81,13 +84,45 @@ public class MetricCalculator {
         metricDataMap.put(metricDefinition.getMetricName(), bucketData);
       }
 
+      // create total calls metric if doesn't exist
+      if (!metricDataMap.containsKey("Total Calls") && metricDataMap.containsKey("Calls per Minute")) {
+        BucketData bucketData = metricDataMap.get("Calls per Minute");
+        BucketData callsBucket = new BucketData();
+        callsBucket.setRisk(bucketData.getRisk());
+        callsBucket.setMetricType(MetricType.COUNT);
+        if (bucketData.getOldData() != null) {
+          DataSummary oldDataSummary = bucketData.getOldData();
+          callsBucket.setOldData(new BucketData.DataSummary(oldDataSummary.getNodeCount(), oldDataSummary.getNodeList(),
+              oldDataSummary.getStats(), oldDataSummary.getValue(), oldDataSummary.isMissingData()));
+          callsBucket.getOldData().setValue(callsBucket.getOldData().getStats().sum()
+              * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1));
+        }
+        if (bucketData.getNewData() != null) {
+          DataSummary newDataSummary = bucketData.getOldData();
+          callsBucket.setNewData(new BucketData.DataSummary(newDataSummary.getNodeCount(), newDataSummary.getNodeList(),
+              newDataSummary.getStats(), newDataSummary.getValue(), newDataSummary.isMissingData()));
+          callsBucket.getNewData().setValue(callsBucket.getNewData().getStats().sum()
+              * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1));
+        }
+        metricDataMap.put("Total Calls", callsBucket);
+      }
       MetricSummary.BTMetrics btMetrics = calculateOverallBTRisk(metricDataMap);
       btMetricDataMap.put(btName, btMetrics);
     }
     endTimeMillis += TimeUnit.MINUTES.toMillis(1);
+
+    RiskLevel risk = RiskLevel.LOW;
+    for (String bt : btMetricDataMap.keySet()) {
+      MetricSummary.BTMetrics btMetrics = btMetricDataMap.get(bt);
+      if (btMetrics.getBtRisk().compareTo(risk) < 0) {
+        risk = btMetrics.getBtRisk();
+      }
+    }
+
     MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
                                       .withAccountId(accountId)
                                       .withBtMetricsMap(btMetricDataMap)
+                                      .withRiskLevel(risk)
                                       .withStartTimeMillis(startTimeMillis)
                                       .withEndTimeMillis(endTimeMillis)
                                       .build();
@@ -168,8 +203,12 @@ public class MetricCalculator {
         }
       }
     }
-    BucketData bucketData =
-        BucketData.Builder.aBucketData().withRisk(risk).withOldData(oldSummary).withNewData(newSummary).build();
+    BucketData bucketData = BucketData.Builder.aBucketData()
+                                .withRisk(risk)
+                                .withMetricType(metricDefinition.getMetricType())
+                                .withOldData(oldSummary)
+                                .withNewData(newSummary)
+                                .build();
     return bucketData;
   }
 
@@ -222,15 +261,15 @@ public class MetricCalculator {
       missingData = true;
     }
 
-    String displayValue = "";
+    double value = 0;
     if (metricDefinition.getMetricType() == MetricType.COUNT) {
-      displayValue = String.valueOf(stats.sum());
+      value = stats.sum();
     } else if (metricDefinition.getMetricType() == MetricType.PERCENTAGE) {
-      displayValue = String.valueOf(stats.mean());
+      value = stats.mean();
     } else if (metricDefinition.getMetricType() == MetricType.TIME) {
-      displayValue = String.valueOf(stats.mean());
+      value = stats.mean();
     }
-    return new BucketData().new DataSummary(nodeCount, new ArrayList<>(nodeSet), stats, displayValue, missingData);
+    return new BucketData.DataSummary(nodeCount, new ArrayList<>(nodeSet), stats, value, missingData);
   }
 
   public static MetricSummary.BTMetrics calculateOverallBTRisk(Map<String, BucketData> metricBucketDataMap) {
@@ -249,9 +288,9 @@ public class MetricCalculator {
         s.append(risk.name()).append(": ");
         s.append(metric);
         s.append(" (old value: ")
-            .append(bucketData.getOldData() == null ? "<null>" : bucketData.getOldData().getDisplayValue());
+            .append(bucketData.getOldData() == null ? "<null>" : bucketData.getOldData().getValue());
         s.append(", new value: ")
-            .append(bucketData.getNewData() == null ? "<null>" : bucketData.getNewData().getDisplayValue());
+            .append(bucketData.getNewData() == null ? "<null>" : bucketData.getNewData().getValue());
         s.append(")");
         messages.add(s.toString());
       }
