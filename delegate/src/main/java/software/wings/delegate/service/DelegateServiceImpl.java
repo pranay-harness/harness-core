@@ -388,7 +388,7 @@ public class DelegateServiceImpl implements DelegateService {
                         logger.error(
                             "Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
                       }
-                      currentlyExecutingTasks.putIfAbsent(delegateTask.getUuid(), delegateTask1);
+                      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
                     }
                     return taskAcquired;
                   } catch (IOException e) {
