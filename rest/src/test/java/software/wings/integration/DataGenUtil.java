@@ -119,6 +119,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
+  @Ignore
   public void populateData() throws IOException {
     createLicenseAndDefaultUser();
     createGlobalSettings();
