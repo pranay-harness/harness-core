@@ -54,7 +54,7 @@ public class DelegateQueueTask implements Runnable {
               .field("status")
               .equal(Status.QUEUED)
               .field("lastUpdatedAt")
-              .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2));
+              .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5));
 
       wingsPersistence.update(
           releaseLongQueuedTasks, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
@@ -64,7 +64,7 @@ public class DelegateQueueTask implements Runnable {
               .field("status")
               .equal(DelegateTask.Status.STARTED)
               .field("lastUpdatedAt")
-              .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2));
+              .lessThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5));
 
       DelegateTask delegateTask = null;
       do {
@@ -74,7 +74,7 @@ public class DelegateQueueTask implements Runnable {
         if (delegateTask != null) {
           waitNotifyEngine.notify(delegateTask.getWaitId(),
               anErrorNotifyResponseData()
-                  .withErrorMessage("Delegate " + delegateTask.getDelegateId() + " timeout out.")
+                  .withErrorMessage("Delegate timeout. Delegate ID: " + delegateTask.getDelegateId())
                   .build());
         }
       } while (delegateTask != null);
