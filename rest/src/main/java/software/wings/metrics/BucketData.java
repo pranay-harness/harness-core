@@ -11,6 +11,7 @@ import java.util.List;
  */
 public class BucketData {
   private RiskLevel risk;
+  private MetricType metricType;
   @Embedded private DataSummary oldData;
   @Embedded private DataSummary newData;
 
@@ -20,6 +21,14 @@ public class BucketData {
 
   public void setRisk(RiskLevel risk) {
     this.risk = risk;
+  }
+
+  public MetricType getMetricType() {
+    return metricType;
+  }
+
+  public void setMetricType(MetricType metricType) {
+    this.metricType = metricType;
   }
 
   public DataSummary getOldData() {
@@ -42,6 +51,7 @@ public class BucketData {
   public String toString() {
     StringBuilder s = new StringBuilder();
     s.append("Risk: ").append(risk.name()).append("\n");
+    s.append("Metric Type: ").append(metricType.name()).append("\n");
     s.append("OldData: ").append(oldData).append("\n");
     s.append("NewData: ").append(newData).append("\n");
     return s.toString();
@@ -51,17 +61,17 @@ public class BucketData {
     private int nodeCount;
     private List<String> nodeList;
     private Stats stats;
-    private String displayValue;
+    private double value;
     private boolean missingData;
 
     // needed for Jackson
     public DataSummary() {}
 
-    public DataSummary(int nodeCount, List<String> nodeList, Stats stats, String displayValue, boolean missingData) {
+    public DataSummary(int nodeCount, List<String> nodeList, Stats stats, double value, boolean missingData) {
       this.nodeCount = nodeCount;
       this.nodeList = nodeList;
       this.stats = stats;
-      this.displayValue = displayValue;
+      this.value = value;
       this.missingData = missingData;
     }
 
@@ -90,12 +100,12 @@ public class BucketData {
       this.stats = stats;
     }
 
-    public String getDisplayValue() {
-      return displayValue;
+    public double getValue() {
+      return value;
     }
 
-    public void setDisplayValue(String displayValue) {
-      this.displayValue = displayValue;
+    public void setValue(double value) {
+      this.value = value;
     }
 
     public boolean isMissingData() {
@@ -109,13 +119,14 @@ public class BucketData {
     @Override
     public String toString() {
       return "DataSummary{"
-          + "nodeCount=" + nodeCount + ", nodeList=" + nodeList + ", stats=" + stats + ", displayValue='" + displayValue
-          + '\'' + ", missingData=" + missingData + '}';
+          + "nodeCount=" + nodeCount + ", nodeList=" + nodeList + ", stats=" + stats + ", value='" + value + '\''
+          + ", missingData=" + missingData + '}';
     }
   }
 
   public static final class Builder {
     private RiskLevel risk;
+    private MetricType metricType;
     private DataSummary oldData;
     private DataSummary newData;
 
@@ -130,6 +141,11 @@ public class BucketData {
       return this;
     }
 
+    public Builder withMetricType(MetricType metricType) {
+      this.metricType = metricType;
+      return this;
+    }
+
     public Builder withOldData(DataSummary oldData) {
       this.oldData = oldData;
       return this;
@@ -141,12 +157,13 @@ public class BucketData {
     }
 
     public Builder but() {
-      return aBucketData().withRisk(risk).withOldData(oldData).withNewData(newData);
+      return aBucketData().withRisk(risk).withMetricType(metricType).withOldData(oldData).withNewData(newData);
     }
 
     public BucketData build() {
       BucketData bucketData = new BucketData();
       bucketData.setRisk(risk);
+      bucketData.setMetricType(metricType);
       bucketData.setOldData(oldData);
       bucketData.setNewData(newData);
       return bucketData;
