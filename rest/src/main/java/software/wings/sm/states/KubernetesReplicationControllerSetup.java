@@ -211,16 +211,12 @@ public class KubernetesReplicationControllerSetup extends State {
     if (replicationControllers == null) {
       return null;
     }
-    List<ReplicationController> replicationControllerList =
-        replicationControllers.getItems()
-            .stream()
-            .filter(controller
-                -> controller.getMetadata().getName().startsWith(controllerNamePrefix)
-                    && controller.getSpec().getReplicas() > 0)
-            .collect(Collectors.toList());
 
     ReplicationController lastReplicationController = null;
-    for (ReplicationController controller : replicationControllerList) {
+    for (ReplicationController controller : replicationControllers.getItems()
+                                                .stream()
+                                                .filter(c -> c.getMetadata().getName().startsWith(controllerNamePrefix))
+                                                .collect(Collectors.toList())) {
       if (lastReplicationController == null
           || controller.getMetadata().getCreationTimestamp().compareTo(
                  lastReplicationController.getMetadata().getCreationTimestamp())
