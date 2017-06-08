@@ -172,6 +172,16 @@ public class PipelineServiceImpl implements PipelineService {
     if (allStatesFinishedExecution) { // do not change pipeExecution status from Running until all state finish
       pipelineExecution.setStatus(executionDetails.getStatus());
       pipelineExecution.setEndTs(executionDetails.getEndTs());
+    } else {
+      boolean anyStatePaused = stateExecutionInstanceMap.values().stream().anyMatch(stateExecutionInstance
+          -> stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSED)
+              || stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSING)
+              || stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR));
+      if (anyStatePaused) {
+        pipelineExecution.setStatus(ExecutionStatus.PAUSED);
+      } else {
+        pipelineExecution.setStatus(ExecutionStatus.RUNNING);
+      }
     }
 
     try {
