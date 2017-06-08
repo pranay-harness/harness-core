@@ -338,6 +338,9 @@ public class StateMachineExecutor {
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
         status = ExecutionStatus.ERROR;
       } else {
+        if (status != ExecutionStatus.PAUSED) {
+          status = ExecutionStatus.RUNNING;
+        }
         NotifyCallback callback =
             new StateMachineResumeCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid());
         waitNotifyEngine.waitForAll(callback,
@@ -345,13 +348,15 @@ public class StateMachineExecutor {
       }
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          ExecutionStatus.RUNNING, null, executionResponse.getContextElements(), executionResponse.getNotifyElements(),
+          status, null, executionResponse.getContextElements(), executionResponse.getNotifyElements(),
           executionResponse.getDelegateTaskId());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
       invokeAdvisors(context, currentState);
-      handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
+      if (status == ExecutionStatus.RUNNING) {
+        handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
+      }
 
     } else {
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
@@ -759,9 +764,10 @@ public class StateMachineExecutor {
       Misc.quietSleep(500);
       stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     }
-    if (stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING) {
-      WingsException ex = new WingsException(
-          "stateExecutionInstance: " + stateExecutionInstance.getUuid() + " status is no longer in RUNNING state");
+    if (stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING
+        && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
+      WingsException ex = new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid()
+          + " status is no longer in RUNNING/PAUSED state");
       logger.error(ex.getMessage(), ex);
       throw ex;
     }
