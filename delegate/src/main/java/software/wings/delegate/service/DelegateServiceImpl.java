@@ -388,7 +388,7 @@ public class DelegateServiceImpl implements DelegateService {
                         logger.error(
                             "Delegate task {} already in executing tasks for this delegate.", delegateTask.getUuid());
                       }
-                      currentlyExecutingTasks.put(delegateTask.getUuid(), delegateTask1);
+                      currentlyExecutingTasks.putIfAbsent(delegateTask.getUuid(), delegateTask1);
                     }
                     return taskAcquired;
                   } catch (IOException e) {
@@ -398,6 +398,7 @@ public class DelegateServiceImpl implements DelegateService {
                 });
         injector.injectMembers(delegateRunnableTask);
         currentlyExecutingFutures.putIfAbsent(delegateTask.getUuid(), executorService.submit(delegateRunnableTask));
+        logger.info("Task [{}] submitted for execution", delegateTask.getUuid());
       } else {
         logger.info("DelegateTask already executing - uuid: {}, accountId: {}", delegateTaskEvent.getDelegateTaskId(),
             delegateTaskEvent.getAccountId());

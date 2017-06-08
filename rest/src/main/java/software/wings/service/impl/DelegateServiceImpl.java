@@ -338,6 +338,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
+    logger.info("Delegate [{}], response received for task [{}]", response.getTask().getDelegateId(),
+        response.getTask().getUuid());
     if (isNotBlank(response.getTask().getWaitId())) {
       DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
           aPageRequest()
@@ -355,7 +357,9 @@ public class DelegateServiceImpl implements DelegateService {
       String topicName = response.getTask().getQueueName();
       // do the haze
       IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
-      topic.offer(response.getResponse());
+      boolean queued = topic.offer(response.getResponse());
+      logger.info(
+          "Sync call response added to queue [name: {}, object: {}] with status [{}]", topicName, topic, queued);
     }
   }
 
