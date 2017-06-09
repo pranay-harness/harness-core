@@ -94,7 +94,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     assertThat(hosts)
         .hasSize(2)
         .hasOnlyElementsOfType(AwsHost.class)
-        .extracting(Host::getHostName)
+        .extracting(Host::getPublicDns)
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
     verify(awsHelperService).getAmazonEc2Client(Regions.US_EAST_1.getName(), ACCESS_KEY, SECRET_KEY);
   }

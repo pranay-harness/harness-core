@@ -144,16 +144,18 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(
         new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", Arrays.asList("running"))));
 
-    List<Host> awsHosts = describeInstancesResult.getReservations()
-                              .stream()
-                              .flatMap(reservation -> reservation.getInstances().stream())
-                              .map(instance
-                                  -> anAwsHost()
-                                         .withAppId(Base.GLOBAL_APP_ID)
-                                         .withHostName(instance.getPublicDnsName())
-                                         .withInstance(instance)
-                                         .build())
-                              .collect(toList());
+    List<Host> awsHosts =
+        describeInstancesResult.getReservations()
+            .stream()
+            .flatMap(reservation -> reservation.getInstances().stream())
+            .map(instance
+                -> anAwsHost()
+                       .withAppId(Base.GLOBAL_APP_ID)
+                       .withHostName(awsHelperService.getHostnameFromDnsName(instance.getPrivateDnsName()))
+                       .withPublicDns(instance.getPublicDnsName())
+                       .withInstance(instance)
+                       .build())
+            .collect(toList());
     return aPageResponse().withResponse(awsHosts).build();
   }
 

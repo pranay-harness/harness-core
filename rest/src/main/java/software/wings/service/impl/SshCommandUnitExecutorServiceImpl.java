@@ -71,7 +71,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     logService.save(context.getAccountId(),
         aLog()
             .withAppId(context.getAppId())
-            .withHostName(host.getHostName())
+            .withHostName(host.getPublicDns())
             .withActivityId(activityId)
             .withLogLevel(INFO)
             .withCommandUnitName(commandUnit.getName())
@@ -82,7 +82,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     SshSessionConfig sshSessionConfig =
-        SshHelperUtil.getSshSessionConfig(host.getHostName(), commandUnit.getName(), context);
+        SshHelperUtil.getSshSessionConfig(host.getPublicDns(), commandUnit.getName(), context);
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
     executor.init(sshSessionConfig);
 
@@ -101,7 +101,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           aLog()
               .withAppId(context.getAppId())
               .withActivityId(activityId)
-              .withHostName(host.getHostName())
+              .withHostName(host.getPublicDns())
               .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
               .withLogLine("Command execution timed out")
               .withCommandUnitName(commandUnit.getName())
@@ -123,7 +123,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             aLog()
                 .withAppId(context.getAppId())
                 .withActivityId(activityId)
-                .withHostName(host.getHostName())
+                .withHostName(host.getPublicDns())
                 .withCommandUnitName(commandUnit.getName())
                 .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine(errorMessage)
@@ -135,7 +135,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             aLog()
                 .withAppId(context.getAppId())
                 .withActivityId(activityId)
-                .withHostName(host.getHostName())
+                .withHostName(host.getPublicDns())
                 .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
                 .withLogLine("Unknown Error " + e.getCause().getMessage())
                 .withCommandUnitName(commandUnit.getName())
@@ -150,7 +150,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           aLog()
               .withAppId(context.getAppId())
               .withActivityId(activityId)
-              .withHostName(host.getHostName())
+              .withHostName(host.getPublicDns())
               .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
               .withLogLine("Command execution failed")
               .withCommandUnitName(commandUnit.getName())
@@ -163,7 +163,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         aLog()
             .withAppId(context.getAppId())
             .withActivityId(activityId)
-            .withHostName(host.getHostName())
+            .withHostName(host.getPublicDns())
             .withLogLevel(SUCCESS.equals(commandExecutionStatus) ? INFO : ERROR)
             .withLogLine("Command execution finished with status " + commandExecutionStatus)
             .withCommandUnitName(commandUnit.getName())

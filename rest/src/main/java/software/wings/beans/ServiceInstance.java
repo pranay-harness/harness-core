@@ -34,6 +34,7 @@ public class ServiceInstance extends Base {
 
   private String hostId;
   @Indexed private String hostName;
+  @Indexed private String publicDns;
   @Indexed private String infraMappingId;
   private String infraMappingType;
 
@@ -376,6 +377,14 @@ public class ServiceInstance extends Base {
     this.hostName = hostName;
   }
 
+  public String getPublicDns() {
+    return publicDns;
+  }
+
+  public void setPublicDns(String publicDns) {
+    this.publicDns = publicDns;
+  }
+
   /**
    * Getter for property 'serviceId'.
    *
@@ -534,6 +543,7 @@ public class ServiceInstance extends Base {
     private String serviceName;
     private String hostId;
     private String hostName;
+    private String publicDns;
     private String infraMappingId;
     private String infraMappingType;
     private String uuid;
@@ -609,6 +619,7 @@ public class ServiceInstance extends Base {
     public Builder withHost(Host host) {
       this.hostId = host.getUuid();
       this.hostName = host.getHostName();
+      this.publicDns = host.getPublicDns();
       // this.tagName = host.getConfigTagId() != null ? host.getConfigTagId().getName() : null;
       return this;
     }
@@ -668,6 +679,17 @@ public class ServiceInstance extends Base {
      */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With publicDns name builder.
+     *
+     * @param publicDns the host name
+     * @return the builder
+     */
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
       return this;
     }
 
@@ -936,7 +958,8 @@ public class ServiceInstance extends Base {
           .withLastActivityCreatedAt(lastActivityCreatedAt)
           .withCommandName(commandName)
           .withCommandType(commandType)
-          .withLastDeployedOn(lastDeployedOn);
+          .withLastDeployedOn(lastDeployedOn)
+          .withPublicDns(publicDns);
     }
 
     /**
@@ -953,6 +976,7 @@ public class ServiceInstance extends Base {
       serviceInstance.setServiceName(serviceName);
       serviceInstance.setHostId(hostId);
       serviceInstance.setHostName(hostName);
+      serviceInstance.setPublicDns(publicDns);
       serviceInstance.setInfraMappingId(infraMappingId);
       serviceInstance.setInfraMappingType(infraMappingType);
       serviceInstance.setUuid(uuid);

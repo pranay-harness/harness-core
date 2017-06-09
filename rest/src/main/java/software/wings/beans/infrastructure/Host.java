@@ -28,6 +28,7 @@ public class Host extends Base {
   private String infraMappingId;
   private String computeProviderId;
   @NotEmpty private String hostName;
+  private String publicDns;
   @NotNull private String hostConnAttr;
   private String bastionConnAttr;
 
@@ -101,6 +102,17 @@ public class Host extends Base {
    */
   public void setHostName(String hostName) {
     this.hostName = hostName;
+  }
+
+  public String getPublicDns() {
+    if (publicDns == null) {
+      return hostName;
+    }
+    return publicDns;
+  }
+
+  public void setPublicDns(String publicDns) {
+    this.publicDns = publicDns;
   }
 
   /**
@@ -191,6 +203,7 @@ public class Host extends Base {
         .add("infraMappingId", infraMappingId)
         .add("computeProviderId", computeProviderId)
         .add("hostName", hostName)
+        .add("publicDns", publicDns)
         .add("hostConnAttr", hostConnAttr)
         .add("bastionConnAttr", bastionConnAttr)
         .toString();
@@ -205,6 +218,7 @@ public class Host extends Base {
     private String infraMappingId;
     private String computeProviderId;
     private String hostName;
+    private String publicDns;
     private String hostConnAttr;
     private String bastionConnAttr;
     private String uuid;
@@ -277,6 +291,17 @@ public class Host extends Base {
      */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With publicDns name builder.
+     *
+     * @param publicDns the host name
+     * @return the builder
+     */
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
       return this;
     }
 
@@ -387,7 +412,8 @@ public class Host extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withPublicDns(publicDns);
     }
 
     /**
@@ -402,6 +428,7 @@ public class Host extends Base {
       host.setInfraMappingId(infraMappingId);
       host.setComputeProviderId(computeProviderId);
       host.setHostName(hostName);
+      host.setPublicDns(publicDns);
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
       host.setUuid(uuid);

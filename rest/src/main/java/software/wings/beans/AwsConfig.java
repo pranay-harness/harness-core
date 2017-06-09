@@ -14,7 +14,7 @@ import software.wings.settings.SettingValue;
 public class AwsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
   @Attributes(title = "Secret Key", required = true) @NotEmpty private char[] secretKey;
-  @SchemaIgnore @NotEmpty private String accountId;
+  @SchemaIgnore @NotEmpty private String accountId; // internal
 
   /**
    * Instantiates a new Aws config.
