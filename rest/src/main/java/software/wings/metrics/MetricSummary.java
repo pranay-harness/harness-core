@@ -20,6 +20,7 @@ public class MetricSummary extends Base {
   @Indexed private String stateExecutionInstanceId;
   @Embedded private Map<String, BTMetrics> btMetricsMap;
   private RiskLevel riskLevel;
+  private List<String> riskMessages;
   private long startTimeMillis;
   private long endTimeMillis;
 
@@ -53,6 +54,14 @@ public class MetricSummary extends Base {
 
   public void setRiskLevel(RiskLevel risk) {
     this.riskLevel = risk;
+  }
+
+  public List<String> getRiskMessages() {
+    return riskMessages;
+  }
+
+  public void setRiskMessages(List<String> messages) {
+    this.riskMessages = messages;
   }
 
   public long getStartTimeMillis() {
@@ -136,6 +145,7 @@ public class MetricSummary extends Base {
     private String stateExecutionInstanceId;
     private Map<String, BTMetrics> btMetricsMap;
     private RiskLevel risk;
+    private List<String> riskMessages;
     private long startTimeMillis;
     private long endTimeMillis;
 
@@ -165,6 +175,11 @@ public class MetricSummary extends Base {
       return this;
     }
 
+    public Builder withRiskMessages(List<String> riskMessages) {
+      this.riskMessages = riskMessages;
+      return this;
+    }
+
     public Builder withStartTimeMillis(long startTimeMillis) {
       this.startTimeMillis = startTimeMillis;
       return this;
@@ -181,6 +196,7 @@ public class MetricSummary extends Base {
           .withStateExecutionInstanceId(stateExecutionInstanceId)
           .withBtMetricsMap(btMetricsMap)
           .withRiskLevel(risk)
+          .withRiskMessages(riskMessages)
           .withStartTimeMillis(startTimeMillis)
           .withEndTimeMillis(endTimeMillis);
     }
@@ -191,6 +207,7 @@ public class MetricSummary extends Base {
       metricSummary.setStateExecutionInstanceId(stateExecutionInstanceId);
       metricSummary.setBtMetricsMap(btMetricsMap);
       metricSummary.setRiskLevel(risk);
+      metricSummary.setRiskMessages(riskMessages);
       metricSummary.setStartTimeMillis(startTimeMillis);
       metricSummary.setEndTimeMillis(endTimeMillis);
       return metricSummary;
