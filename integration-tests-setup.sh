@@ -53,7 +53,7 @@ echo 'wait for delegate to start'
 cd rest
 mvn test -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister
 foundRegisteredDelegate=$?
-if [[ $datagen_status -ne 0 ]] ; then
+if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
   exit $foundRegisteredDelegate
 fi
