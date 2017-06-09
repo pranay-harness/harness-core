@@ -147,7 +147,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, asList(), ORCHESTRATION_STENCILS, PIPELINE_STENCILS, COMMON),
+  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, asList(), PIPELINE_STENCILS, COMMON),
 
   /**
    * The Load balancer.
