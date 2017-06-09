@@ -48,4 +48,4 @@ cd ../
 
 #wait for delegate to start
 echo 'sleep for delegate to start'
-sleep 30
+sleep 300
