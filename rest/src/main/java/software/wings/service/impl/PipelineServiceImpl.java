@@ -441,7 +441,8 @@ public class PipelineServiceImpl implements PipelineService {
                      .map(StateExecutionInstance::getStateExecutionMap)
                      .flatMap(stringStateExecutionDataMap
                          -> stringStateExecutionDataMap.values().stream().filter(stateExecutionData
-                             -> ((ApprovalStateExecutionData) stateExecutionData).getApprovalId().equals(approvalId)
+                             -> stateExecutionData instanceof ApprovalStateExecutionData
+                                 && ((ApprovalStateExecutionData) stateExecutionData).getApprovalId().equals(approvalId)
                                  && stateExecutionData.getStatus().equals(PAUSED)))
                      .count();
     if (count == 0) {
