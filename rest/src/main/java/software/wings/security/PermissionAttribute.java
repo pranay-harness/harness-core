@@ -150,7 +150,10 @@ public class PermissionAttribute {
     SETTING(ACCOUNT), /**
                        * App stack resource type.
                        */
-    APP_STACK(ACCOUNT),
+    APP_STACK(ACCOUNT), /**
+                         * Notificaion Group.
+                         */
+    NOTIFICATION_GROUP(ACCOUNT),
 
     /**
      * Delegate resource type.
