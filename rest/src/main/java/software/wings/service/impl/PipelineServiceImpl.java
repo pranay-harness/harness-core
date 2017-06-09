@@ -5,10 +5,16 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
@@ -18,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
 import de.danielbechler.util.Collections;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +32,6 @@ import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
@@ -33,13 +39,9 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
-import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -172,6 +174,16 @@ public class PipelineServiceImpl implements PipelineService {
     if (allStatesFinishedExecution) { // do not change pipeExecution status from Running until all state finish
       pipelineExecution.setStatus(executionDetails.getStatus());
       pipelineExecution.setEndTs(executionDetails.getEndTs());
+    } else {
+      boolean anyStatePaused = stateExecutionInstanceMap.values().stream().anyMatch(stateExecutionInstance
+          -> stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSED)
+              || stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSING)
+              || stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR));
+      if (anyStatePaused) {
+        pipelineExecution.setStatus(ExecutionStatus.PAUSED);
+      } else {
+        pipelineExecution.setStatus(ExecutionStatus.RUNNING);
+      }
     }
 
     try {
@@ -186,9 +198,9 @@ public class PipelineServiceImpl implements PipelineService {
   private void updatePipelineEstimates(PipelineExecution pipelineExecution) {
     if (pipelineExecution.getStatus().isFinalStatus()) {
       PageRequest pageRequest = aPageRequest()
-                                    .addFilter("appId", Operator.EQ, pipelineExecution.getAppId())
-                                    .addFilter("pipelineId", Operator.EQ, pipelineExecution.getPipelineId())
-                                    .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                    .addFilter("appId", EQ, pipelineExecution.getAppId())
+                                    .addFilter("pipelineId", EQ, pipelineExecution.getPipelineId())
+                                    .addFilter("status", EQ, SUCCESS)
                                     .addOrder("endTs", OrderType.DESC)
                                     .withLimit("5")
                                     .build();
@@ -225,9 +237,9 @@ public class PipelineServiceImpl implements PipelineService {
       PipelineExecution pipelineExecution) {
     PageRequest<StateExecutionInstance> req =
         aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", Operator.EQ, pipelineExecution.getAppId())
-            .addFilter("executionUuid", Operator.EQ, pipelineExecution.getWorkflowExecutionId())
+            .withLimit(UNLIMITED)
+            .addFilter("appId", EQ, pipelineExecution.getAppId())
+            .addFilter("executionUuid", EQ, pipelineExecution.getWorkflowExecutionId())
             .build();
     List<StateExecutionInstance> stateExecutionInstances =
         wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
@@ -329,11 +341,11 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void validatePipeline(Pipeline pipeline) {
     if (Collections.isEmpty(pipeline.getPipelineStages())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "At least one pipeline stage required");
+      throw new WingsException(INVALID_ARGUMENT, "args", "At least one pipeline stage required");
     }
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       if (pipelineStage.getPipelineStageElements() == null || pipelineStage.getPipelineStageElements().size() == 0) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Invalid pipeline stage");
+        throw new WingsException(INVALID_ARGUMENT, "args", "Invalid pipeline stage");
       }
 
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
@@ -341,7 +353,7 @@ public class PipelineServiceImpl implements PipelineService {
             && (isNullOrEmpty((String) stageElement.getProperties().get("envId"))
                    || isNullOrEmpty((String) stageElement.getProperties().get("workflowId")))) {
           throw new WingsException(
-              ErrorCode.INVALID_ARGUMENT, "args", "Workflow or Environment can not be null for Environment state");
+              INVALID_ARGUMENT, "args", "Workflow or Environment can not be null for Environment state");
         }
       }
     }
@@ -373,7 +385,7 @@ public class PipelineServiceImpl implements PipelineService {
                                               .withPipelineId(pipelineId)
                                               .withPipeline(pipeline)
                                               .withWorkflowExecutionId(workflowExecution.getUuid())
-                                              .withWorkflowType(WorkflowType.PIPELINE)
+                                              .withWorkflowType(PIPELINE)
                                               .withStatus(workflowExecution.getStatus())
                                               .withStartTs(System.currentTimeMillis())
                                               .withArtifactId(artifact.getUuid())
@@ -386,6 +398,13 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public boolean approveExecution(String appId, String pipelineExecutionId, ApprovalDetails approvalDetails) {
+    Validator.notNullCheck("ApprovalDetails", approvalDetails);
+    String approvalId = approvalDetails.getApprovalId();
+    if (!isPipelineWaitingApproval(appId, pipelineExecutionId, approvalId)) {
+      throw new WingsException(INVALID_ARGUMENT, "args",
+          "No Pipeline execution [" + pipelineExecutionId
+              + "] waiting for approval id: " + approvalDetails.getApprovalId());
+    }
     if (Objects.isNull(approvalDetails.getApprovedBy())) {
       Validator.notNullCheck("appId", appId);
       Application application = appService.get(appId);
@@ -398,7 +417,37 @@ public class PipelineServiceImpl implements PipelineService {
                                                    .withApprovedBy(approvalDetails.getApprovedBy())
                                                    .withComments(approvalDetails.getComments())
                                                    .build();
+    logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", pipelineExecutionId,
+        approvalDetails.getApprovalId());
     waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
+    return true;
+  }
+
+  private boolean isPipelineWaitingApproval(String appId, String executionUuid, String approvalId) {
+    PageRequest<StateExecutionInstance> req = aPageRequest()
+                                                  .withLimit(UNLIMITED)
+                                                  .addFilter("appId", EQ, appId)
+                                                  .addFilter("executionUuid", EQ, executionUuid)
+                                                  .addFilter("stateType", EQ, APPROVAL)
+                                                  .build();
+    List<StateExecutionInstance> stateExecutionInstances =
+        wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
+    if (CollectionUtils.isEmpty(stateExecutionInstances)) {
+      throw new WingsException(
+          INVALID_ARGUMENT, "args", "Pipeline execution [" + executionUuid + "] does not exist for approval");
+    }
+
+    long count = stateExecutionInstances.stream()
+                     .map(StateExecutionInstance::getStateExecutionMap)
+                     .flatMap(stringStateExecutionDataMap
+                         -> stringStateExecutionDataMap.values().stream().filter(stateExecutionData
+                             -> stateExecutionData instanceof ApprovalStateExecutionData
+                                 && ((ApprovalStateExecutionData) stateExecutionData).getApprovalId().equals(approvalId)
+                                 && stateExecutionData.getStatus().equals(PAUSED)))
+                     .count();
+    if (count == 0) {
+      return false;
+    }
     return true;
   }
 

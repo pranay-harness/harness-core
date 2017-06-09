@@ -1,11 +1,11 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.DelegateTask.Context.Builder.aContext;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
 
-import software.wings.beans.DelegateTask.Context;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -97,7 +97,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   @Override
   public BuildService getBuildService(SettingAttribute settingAttribute, String appId) {
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
-    return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), context);
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
+    return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
   }
 }

@@ -98,7 +98,7 @@ public class MetricCalculator {
               * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1));
         }
         if (bucketData.getNewData() != null) {
-          DataSummary newDataSummary = bucketData.getOldData();
+          DataSummary newDataSummary = bucketData.getNewData();
           callsBucket.setNewData(new BucketData.DataSummary(newDataSummary.getNodeCount(), newDataSummary.getNodeList(),
               newDataSummary.getStats(), newDataSummary.getValue(), newDataSummary.isMissingData()));
           callsBucket.getNewData().setValue(callsBucket.getNewData().getStats().sum()
@@ -119,10 +119,19 @@ public class MetricCalculator {
       }
     }
 
+    List<String> riskMessages = new ArrayList<>();
+    for (String bt : btMetricDataMap.keySet()) {
+      MetricSummary.BTMetrics btMetrics = btMetricDataMap.get(bt);
+      if (btMetrics.getBtRisk().equals(risk)) {
+        riskMessages.add(bt);
+      }
+    }
+
     MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
                                       .withAccountId(accountId)
                                       .withBtMetricsMap(btMetricDataMap)
                                       .withRiskLevel(risk)
+                                      .withRiskMessages(riskMessages)
                                       .withStartTimeMillis(startTimeMillis)
                                       .withEndTimeMillis(endTimeMillis)
                                       .build();

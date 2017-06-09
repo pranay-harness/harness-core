@@ -1012,7 +1012,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 2, successes = 1)
+  @Repeat(times = 3, successes = 1)
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
@@ -1168,7 +1168,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       assertThat(exception.getParams().values().iterator().next())
           .isInstanceOf(String.class)
           .asString()
-          .startsWith("no workflowExecution for executionUuid");
+          .startsWith("No WorkflowExecution for executionUuid");
       assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
     }
   }

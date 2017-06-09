@@ -17,6 +17,7 @@ import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.ErrorCode;
@@ -74,7 +75,11 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       }
       resource.suspend();
     } else if (req.getMethod().equalsIgnoreCase("POST")) {
-      delegateService.register(JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class));
+      Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
+      if (delegate.getAppId() == null) {
+        delegate.setAppId(Base.GLOBAL_APP_ID);
+      }
+      delegateService.register(delegate);
     }
   }
 

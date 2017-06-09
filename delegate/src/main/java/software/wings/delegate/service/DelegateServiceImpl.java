@@ -153,6 +153,7 @@ public class DelegateServiceImpl implements DelegateService {
                 public void on(String message) {
                   logger.info("Event:{}, message:[{}]", Event.MESSAGE.name(), message);
                   fixedThreadPool.execute(() -> {
+                    logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
                     if (!StringUtils.equals(message, "X")) { // Ignore heartbeats
                       try {
                         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
@@ -167,6 +168,7 @@ public class DelegateServiceImpl implements DelegateService {
                       }
                     }
                   });
+                  logger.info("Submitted: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
                 }
               })
           .on(Event.ERROR,
@@ -366,6 +368,7 @@ public class DelegateServiceImpl implements DelegateService {
                                            .withResponse(notifyResponseData)
                                            .build())
                                    .execute();
+                    logger.info("Task [{}] response sent to manager", finalDelegateTask.getUuid());
                   } catch (IOException e) {
                     logger.error("Unable to send response to manager ", e);
                   } finally {

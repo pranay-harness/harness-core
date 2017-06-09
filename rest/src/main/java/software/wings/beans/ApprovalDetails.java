@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Objects;
 
@@ -10,7 +11,7 @@ import java.util.Objects;
  * Created by sgurubelli on 6/7/17.
  */
 public class ApprovalDetails {
-  private String approvalId;
+  @NotEmpty private String approvalId;
   private EmbeddedUser approvedBy;
   private String comments;
 

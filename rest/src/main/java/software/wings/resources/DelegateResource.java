@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -109,6 +110,9 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> register(@QueryParam("accountId") @NotEmpty String accountId, Delegate delegate) {
     delegate.setAccountId(accountId);
+    if (delegate.getAppId() == null) {
+      delegate.setAppId(Base.GLOBAL_APP_ID);
+    }
     long startTime = System.currentTimeMillis();
     Delegate register = delegateService.register(delegate);
     logger.info("Delegate registration took {} in ms", (System.currentTimeMillis() - startTime));

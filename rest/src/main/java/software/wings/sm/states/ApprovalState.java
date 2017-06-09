@@ -7,6 +7,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -75,7 +76,7 @@ public class ApprovalState extends State {
   @SchemaIgnore
   @Override
   public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
+    return Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
   }
 
   /**

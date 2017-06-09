@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -13,6 +14,7 @@ import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 12/5/16.
@@ -20,17 +22,36 @@ import java.util.Objects;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
-  public static final int SYNC_CALL_TIMEOUT_INTERVAL = 25000;
+  /**
+   * The constant DEFAULT_SYNC_CALL_TIMEOUT.
+   */
+  public static final int DEFAULT_SYNC_CALL_TIMEOUT = 25 * 1000; // 25 seconds
+  /**
+   * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
+   */
+  public static final int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
-  private TaskType taskType;
+  @NotNull private TaskType taskType;
   private Object[] parameters;
   private String tag;
-  private String accountId;
+  @NotEmpty private String accountId;
   private String waitId;
   @AlsoLoad("topicName") private String queueName;
   private Status status = Status.QUEUED;
   private String delegateId;
+  private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
+  private boolean async = true;
+
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
+
+  /**
+   * Is timed out boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isTimedOut() {
+    return getLastUpdatedAt() + timeout <= System.currentTimeMillis();
+  }
 
   /**
    * Getter for property 'taskType'.
@@ -214,18 +235,67 @@ public class DelegateTask extends Base {
         .toString();
   }
 
+  /**
+   * Gets delegate runnable task.
+   *
+   * @return the delegate runnable task
+   */
   public DelegateRunnableTask getDelegateRunnableTask() {
     return delegateRunnableTask;
   }
 
+  /**
+   * Sets delegate runnable task.
+   *
+   * @param delegateRunnableTask the delegate runnable task
+   */
   public void setDelegateRunnableTask(DelegateRunnableTask delegateRunnableTask) {
     this.delegateRunnableTask = delegateRunnableTask;
   }
 
-  public static class Context {
+  /**
+   * Gets timeout.
+   *
+   * @return the timeout
+   */
+  public long getTimeout() {
+    return timeout;
+  }
+
+  /**
+   * Sets timeout.
+   *
+   * @param timeout the timeout
+   */
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+  }
+
+  /**
+   * Is async boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isAsync() {
+    return async;
+  }
+
+  /**
+   * Sets async.
+   *
+   * @param async the async
+   */
+  public void setAsync(boolean async) {
+    this.async = async;
+  }
+
+  /**
+   * The type Context.
+   */
+  public static class SyncTaskContext {
     private String accountId;
     private String appId;
-    private long timeOut = SYNC_CALL_TIMEOUT_INTERVAL;
+    private long timeOut = DEFAULT_SYNC_CALL_TIMEOUT;
 
     /**
      * Getter for property 'accountId'.
@@ -263,48 +333,94 @@ public class DelegateTask extends Base {
       this.appId = appId;
     }
 
+    /**
+     * Gets time out.
+     *
+     * @return the time out
+     */
     public long getTimeOut() {
       return timeOut;
     }
 
+    /**
+     * Sets time out.
+     *
+     * @param timeOut the time out
+     */
     public void setTimeOut(long timeOut) {
       this.timeOut = timeOut;
     }
 
+    /**
+     * The type Builder.
+     */
     public static final class Builder {
       private String accountId;
       private String appId;
 
       private Builder() {}
 
+      /**
+       * A context builder.
+       *
+       * @return the builder
+       */
       public static Builder aContext() {
         return new Builder();
       }
 
+      /**
+       * With account id builder.
+       *
+       * @param accountId the account id
+       * @return the builder
+       */
       public Builder withAccountId(String accountId) {
         this.accountId = accountId;
         return this;
       }
 
+      /**
+       * With app id builder.
+       *
+       * @param appId the app id
+       * @return the builder
+       */
       public Builder withAppId(String appId) {
         this.appId = appId;
         return this;
       }
 
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return aContext().withAccountId(accountId).withAppId(appId);
       }
 
-      public Context build() {
-        Context context = new Context();
-        context.setAccountId(accountId);
-        context.setAppId(appId);
-        return context;
+      /**
+       * Build context.
+       *
+       * @return the context
+       */
+      public SyncTaskContext build() {
+        SyncTaskContext syncTaskContext = new SyncTaskContext();
+        syncTaskContext.setAccountId(accountId);
+        syncTaskContext.setAppId(appId);
+        return syncTaskContext;
       }
     }
   }
 
+  /**
+   * The type Converter.
+   */
   public static class Converter extends TypeConverter {
+    /**
+     * Instantiates a new Converter.
+     */
     public Converter() {
       super(Object[].class);
     }
@@ -320,8 +436,31 @@ public class DelegateTask extends Base {
     }
   }
 
-  public enum Status { QUEUED, STARTED, FINISHED, ERROR, ABORTED }
+  /**
+   * The enum Status.
+   */
+  public enum Status {
+    /**
+     * Queued status.
+     */
+    QUEUED, /**
+             * Started status.
+             */
+    STARTED, /**
+              * Finished status.
+              */
+    FINISHED, /**
+               * Error status.
+               */
+    ERROR, /**
+            * Aborted status.
+            */
+    ABORTED
+  }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private TaskType taskType;
     private Object[] parameters;
@@ -331,8 +470,11 @@ public class DelegateTask extends Base {
     private String queueName;
     private Status status = Status.QUEUED;
     private String delegateId;
+    private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
     private String uuid;
+    private boolean async = true;
     private String appId;
+    private transient DelegateRunnableTask delegateRunnableTask;
     private EmbeddedUser createdBy;
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
@@ -340,80 +482,207 @@ public class DelegateTask extends Base {
 
     private Builder() {}
 
+    /**
+     * A delegate task builder.
+     *
+     * @return the builder
+     */
     public static Builder aDelegateTask() {
       return new Builder();
     }
 
+    /**
+     * With task type builder.
+     *
+     * @param taskType the task type
+     * @return the builder
+     */
     public Builder withTaskType(TaskType taskType) {
       this.taskType = taskType;
       return this;
     }
 
+    /**
+     * With parameters builder.
+     *
+     * @param parameters the parameters
+     * @return the builder
+     */
     public Builder withParameters(Object[] parameters) {
       this.parameters = parameters;
       return this;
     }
 
+    /**
+     * With tag builder.
+     *
+     * @param tag the tag
+     * @return the builder
+     */
     public Builder withTag(String tag) {
       this.tag = tag;
       return this;
     }
 
+    /**
+     * With account id builder.
+     *
+     * @param accountId the account id
+     * @return the builder
+     */
     public Builder withAccountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
+    /**
+     * With wait id builder.
+     *
+     * @param waitId the wait id
+     * @return the builder
+     */
     public Builder withWaitId(String waitId) {
       this.waitId = waitId;
       return this;
     }
 
+    /**
+     * With queue name builder.
+     *
+     * @param queueName the queue name
+     * @return the builder
+     */
     public Builder withQueueName(String queueName) {
       this.queueName = queueName;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With delegate id builder.
+     *
+     * @param delegateId the delegate id
+     * @return the builder
+     */
     public Builder withDelegateId(String delegateId) {
       this.delegateId = delegateId;
       return this;
     }
 
+    /**
+     * With timeout builder.
+     *
+     * @param timeout the timeout
+     * @return the builder
+     */
+    public Builder withTimeout(long timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With async builder.
+     *
+     * @param async the async
+     * @return the builder
+     */
+    public Builder withAsync(boolean async) {
+      this.async = async;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With delegate runnable task builder.
+     *
+     * @param delegateRunnableTask the delegate runnable task
+     * @return the builder
+     */
+    public Builder withDelegateRunnableTask(DelegateRunnableTask delegateRunnableTask) {
+      this.delegateRunnableTask = delegateRunnableTask;
+      return this;
+    }
+
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aDelegateTask()
           .withTaskType(taskType)
@@ -424,14 +693,22 @@ public class DelegateTask extends Base {
           .withQueueName(queueName)
           .withStatus(status)
           .withDelegateId(delegateId)
+          .withTimeout(timeout)
           .withUuid(uuid)
+          .withAsync(async)
           .withAppId(appId)
+          .withDelegateRunnableTask(delegateRunnableTask)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
+    /**
+     * Build delegate task.
+     *
+     * @return the delegate task
+     */
     public DelegateTask build() {
       DelegateTask delegateTask = new DelegateTask();
       delegateTask.setTaskType(taskType);
@@ -442,8 +719,11 @@ public class DelegateTask extends Base {
       delegateTask.setQueueName(queueName);
       delegateTask.setStatus(status);
       delegateTask.setDelegateId(delegateId);
+      delegateTask.setTimeout(timeout);
       delegateTask.setUuid(uuid);
+      delegateTask.setAsync(async);
       delegateTask.setAppId(appId);
+      delegateTask.setDelegateRunnableTask(delegateRunnableTask);
       delegateTask.setCreatedBy(createdBy);
       delegateTask.setCreatedAt(createdAt);
       delegateTask.setLastUpdatedBy(lastUpdatedBy);

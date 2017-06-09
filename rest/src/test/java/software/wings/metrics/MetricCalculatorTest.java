@@ -166,6 +166,8 @@ public class MetricCalculatorTest {
     BucketData loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get("Average Response Time (ms)");
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
+    assertEquals(1, output.getRiskMessages().size());
+    assertEquals("todolist", output.getRiskMessages().get(0));
 
     ObjectMapper mapper = new ObjectMapper();
     try {
@@ -192,6 +194,8 @@ public class MetricCalculatorTest {
     loginArtData = output.getBtMetricsMap().get("login").getMetricsMap().get("Average Response Time (ms)");
     assertEquals(RiskLevel.LOW, loginArtData.getRisk());
     assertEquals(2, loginArtData.getOldData().getNodeCount());
+    assertEquals(1, output.getRiskMessages().size());
+    assertEquals("todolist", output.getRiskMessages().get(0));
   }
 
   @Test

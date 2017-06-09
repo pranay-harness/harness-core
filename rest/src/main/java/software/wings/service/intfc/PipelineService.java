@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
@@ -110,5 +111,7 @@ public interface PipelineService {
    * @param approvalDetails
    * @return
    */
-  boolean approveExecution(String appId, String pipelineExecutionId, ApprovalDetails approvalDetails);
+  @ValidationGroups(Update.class)
+  boolean approveExecution(
+      @NotEmpty String appId, @NotEmpty String pipelineExecutionId, @Valid ApprovalDetails approvalDetails);
 }

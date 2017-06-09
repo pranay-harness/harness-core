@@ -64,16 +64,17 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.cache.Caching;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
  */
 @Singleton
+@ValidateOnExecution
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
 
@@ -84,7 +85,6 @@ public class DelegateServiceImpl implements DelegateService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private ExecutorService executorService;
   @Inject private AccountService accountService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
@@ -231,7 +231,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public <T extends NotifyResponseData> T executeTask(DelegateTask task, long timeOut) throws InterruptedException {
+  public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
     ensureDelegateAvailableToExecuteTask(task);
     String taskId = UUIDGenerator.getUuid();
     task.setQueueName(taskId);
@@ -240,7 +240,7 @@ public class DelegateServiceImpl implements DelegateService {
     CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     logger.info("Broadcast new task: {}", taskId);
-    T responseData = topic.poll(timeOut, TimeUnit.MILLISECONDS);
+    T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
     if (responseData == null) {
       logger.error("Task [{}] timed out. remove it from cache", task.toString());
       Caching.getCache("delegateSyncCache", String.class, DelegateTask.class).remove(taskId);

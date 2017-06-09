@@ -47,5 +47,14 @@ echo $! > delegate.pid
 cd ../
 
 #wait for delegate to start
-echo 'sleep for delegate to start'
-sleep 30
+echo 'wait for delegate to start'
+
+#run data gen to load test data
+cd rest
+mvn test -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister
+foundRegisteredDelegate=$?
+if [[ $foundRegisteredDelegate -ne 0 ]] ; then
+  echo 'Delegate registration failed';
+  exit $foundRegisteredDelegate
+fi
+cd ../
