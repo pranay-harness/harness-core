@@ -401,7 +401,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setExecutionArgs(executionArgs);
 
     WorkflowStandardParams stdParams;
-    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY) {
+    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()
+            == OrchestrationWorkflowType.MULTI_SERVICE) {
       stdParams = new CanaryWorkflowStandardParams();
     } else {
       stdParams = new WorkflowStandardParams();

@@ -98,7 +98,7 @@ public class MetricCalculator {
               * (TimeUnit.MILLISECONDS.toMinutes(endTimeMillis - startTimeMillis) + 1));
         }
         if (bucketData.getNewData() != null) {
-          DataSummary newDataSummary = bucketData.getOldData();
+          DataSummary newDataSummary = bucketData.getNewData();
           callsBucket.setNewData(new BucketData.DataSummary(newDataSummary.getNodeCount(), newDataSummary.getNodeList(),
               newDataSummary.getStats(), newDataSummary.getValue(), newDataSummary.isMissingData()));
           callsBucket.getNewData().setValue(callsBucket.getNewData().getStats().sum()
