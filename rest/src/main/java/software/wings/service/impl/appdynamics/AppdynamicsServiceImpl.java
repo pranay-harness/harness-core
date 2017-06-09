@@ -160,7 +160,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                                  .addFilter("appdAppId", Operator.EQ, appdynamicsAppId)
                                                  .addFilter("tierId", Operator.EQ, tierId)
                                                  .addFilter("btName", Operator.IN, btList.toArray())
-                                                 //        .addFilter("startTime", Operator.GT, startTime - 1)
+                                                 .addFilter("startTime", Operator.GT, startTime - 1)
                                                  //        .addFilter("startTime", Operator.LT, endTimeInMillis)
                                                  .addOrder("startTime", OrderType.ASC)
                                                  .withLimit(PageRequest.UNLIMITED);
