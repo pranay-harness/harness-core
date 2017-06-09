@@ -119,10 +119,19 @@ public class MetricCalculator {
       }
     }
 
+    List<String> riskMessages = new ArrayList<>();
+    for (String bt : btMetricDataMap.keySet()) {
+      MetricSummary.BTMetrics btMetrics = btMetricDataMap.get(bt);
+      if (btMetrics.getBtRisk().equals(risk)) {
+        riskMessages.add(bt);
+      }
+    }
+
     MetricSummary metricSummary = MetricSummary.Builder.aMetricSummary()
                                       .withAccountId(accountId)
                                       .withBtMetricsMap(btMetricDataMap)
                                       .withRiskLevel(risk)
+                                      .withRiskMessages(riskMessages)
                                       .withStartTimeMillis(startTimeMillis)
                                       .withEndTimeMillis(endTimeMillis)
                                       .build();
