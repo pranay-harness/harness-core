@@ -131,6 +131,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (accountId == null) {
+      if (appId == null) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "appId not specified");
+      }
       throw new WingsException(ErrorCode.INVALID_REQUEST, "message", "accountId not specified");
     }
 

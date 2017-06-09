@@ -772,7 +772,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.get(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
       throw new WingsException(
-          ErrorCode.INVALID_ARGUMENT, "args", "no workflowExecution for executionUuid:" + executionUuid);
+          ErrorCode.INVALID_ARGUMENT, "args", "No WorkflowExecution for executionUuid:" + executionUuid);
     }
 
     return executionInterruptManager.registerExecutionInterrupt(executionInterrupt);

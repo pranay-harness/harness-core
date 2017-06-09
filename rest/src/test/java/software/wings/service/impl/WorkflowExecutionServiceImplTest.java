@@ -1168,7 +1168,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
       assertThat(exception.getParams().values().iterator().next())
           .isInstanceOf(String.class)
           .asString()
-          .startsWith("no workflowExecution for executionUuid");
+          .startsWith("No WorkflowExecution for executionUuid");
       assertThat(exception).hasMessage(ErrorCode.INVALID_ARGUMENT.getCode());
     }
   }
