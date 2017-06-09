@@ -2,7 +2,7 @@ package software.wings.delegatetasks;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import software.wings.beans.DelegateTask.Context;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 
@@ -14,11 +14,11 @@ import java.lang.reflect.Method;
  */
 public class DelegateInvocationHandler implements InvocationHandler {
   private DelegateService delegateService;
-  private Context context;
+  private SyncTaskContext syncTaskContext;
 
-  public DelegateInvocationHandler(Context context, DelegateService delegateService) {
+  public DelegateInvocationHandler(SyncTaskContext syncTaskContext, DelegateService delegateService) {
     this.delegateService = delegateService;
-    this.context = context;
+    this.syncTaskContext = syncTaskContext;
   }
 
   @Override
@@ -28,13 +28,15 @@ public class DelegateInvocationHandler implements InvocationHandler {
     delegateArguments[0] = proxy.getClass().getInterfaces()[0].getName();
     delegateArguments[1] = method.getName();
     System.arraycopy(args, 0, delegateArguments, 2, args.length);
-    RemoteMethodReturnValueData returnValueData = delegateService.executeTask(aDelegateTask()
-                                                                                  .withTaskType(taskType)
-                                                                                  .withParameters(delegateArguments)
-                                                                                  .withAccountId(context.getAccountId())
-                                                                                  .withAppId(context.getAppId())
-                                                                                  .build(),
-        context.getTimeOut());
+    RemoteMethodReturnValueData returnValueData =
+        delegateService.executeTask(aDelegateTask()
+                                        .withTaskType(taskType)
+                                        .withParameters(delegateArguments)
+                                        .withAccountId(syncTaskContext.getAccountId())
+                                        .withAppId(syncTaskContext.getAppId())
+                                        .withAsync(false)
+                                        .withTimeout(syncTaskContext.getTimeOut())
+                                        .build());
     if (returnValueData.getException() != null) {
       throw returnValueData.getException();
     } else {

@@ -32,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTask;
@@ -59,6 +60,7 @@ import javax.inject.Inject;
  */
 public class DelegateServiceTest extends WingsBaseTest {
   private static final Delegate.Builder BUILDER = aDelegate()
+                                                      .withAppId(Base.GLOBAL_APP_ID)
                                                       .withAccountId(ACCOUNT_ID)
                                                       .withIp("127.0.0.1")
                                                       .withHostName("localhost")

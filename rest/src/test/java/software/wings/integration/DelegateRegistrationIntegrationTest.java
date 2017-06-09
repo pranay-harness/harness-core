@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class DelegateRegistrationIntegrationTest extends BaseIntegrationTest {
   @Test
   public void shouldWaitForADelegateToRegister() {
-    await().with().pollInterval(Duration.ONE_SECOND).timeout(1, TimeUnit.MINUTES).until(() -> {
+    await().with().pollInterval(Duration.ONE_SECOND).timeout(5, TimeUnit.MINUTES).until(() -> {
       List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).asList();
       boolean connected = delegates.stream().anyMatch(Delegate::isConnected);
       logger.info("isDelegateConnected = {}", connected);

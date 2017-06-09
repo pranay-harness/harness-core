@@ -1,6 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
-import static software.wings.beans.DelegateTask.Context.Builder.aContext;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -8,7 +8,7 @@ import com.google.common.collect.ArrayListMultimap;
 import software.wings.api.AppDynamicsExecutionData;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateTask.Context;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -18,24 +18,19 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.metrics.BucketData;
 import software.wings.metrics.MetricCalculator;
 import software.wings.metrics.MetricDefinition;
 import software.wings.metrics.MetricSummary;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
@@ -59,24 +54,27 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Override
   public List<AppdynamicsApplication> getApplications(final String settingId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getAllApplications((AppDynamicsConfig) settingAttribute.getValue());
   }
 
   @Override
   public List<AppdynamicsTier> getTiers(String settingId, int appdynamicsAppId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTiers((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
   }
 
   @Override
   public List<AppdynamicsNode> getNodes(String settingId, int appdynamicsAppId, int tierId) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getNodes((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId);
   }
 
@@ -84,9 +82,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public List<AppdynamicsBusinessTransaction> getBusinessTransactions(String settingId, long appdynamicsAppId)
       throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
 
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getBusinessTransactions((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId);
   }
 
@@ -94,9 +93,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public List<AppdynamicsMetric> getTierBTMetrics(String settingId, long appdynamicsAppId, long tierId)
       throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    context.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTierBTMetrics((AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId);
   }
 
@@ -104,9 +104,10 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   public List<AppdynamicsMetricData> getTierBTMetricData(
       String settingId, int appdynamicsAppId, int tierId, String btName, int durantionInMinutes) throws IOException {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
-    Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    context.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+    SyncTaskContext syncTaskContext =
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+    syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTierBTMetricData(
             (AppDynamicsConfig) settingAttribute.getValue(), appdynamicsAppId, tierId, btName, durantionInMinutes);
   }
@@ -114,8 +115,9 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Override
   public void validateConfig(final SettingAttribute settingAttribute) {
     try {
-      Context context = aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-      delegateProxyFactory.get(AppdynamicsDelegateService.class, context)
+      SyncTaskContext syncTaskContext =
+          aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .validateConfig((AppDynamicsConfig) settingAttribute.getValue());
     } catch (Exception e) {
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, "reason", e.getMessage());
