@@ -31,7 +31,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
       putNotNull(executionDetails, "hosts",
           anExecutionDataValue()
               .withDisplayName("Hosts")
-              .withValue(serviceInstanceList.stream().map(ServiceInstance::getHostName).collect(Collectors.toList()))
+              .withValue(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
               .build());
     }
     return executionDetails;
@@ -44,7 +44,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
       putNotNull(executionDetails, "hosts",
           anExecutionDataValue()
               .withDisplayName("Hosts")
-              .withValue(serviceInstanceList.stream().map(ServiceInstance::getHostName).collect(Collectors.toList()))
+              .withValue(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
               .build());
     }
     return executionDetails;

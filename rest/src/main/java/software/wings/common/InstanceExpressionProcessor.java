@@ -106,7 +106,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     element.setHostElement(HostExpressionProcessor.convertToHostElement(host));
     element.setServiceTemplateElement(
         ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(serviceTemplate, service));
-    element.setDisplayName(host.getHostName() + ":" + serviceTemplate.getName());
+    element.setDisplayName(host.getPublicDns());
     return element;
   }
 

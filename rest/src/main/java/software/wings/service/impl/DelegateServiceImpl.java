@@ -224,7 +224,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
-    logger.debug("Queueing task: {}", task.getUuid());
+    logger.debug("Queueing task uuid: {}, type: {}", task.getUuid(), task.getTaskType());
     wingsPersistence.save(task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     return task.getUuid();

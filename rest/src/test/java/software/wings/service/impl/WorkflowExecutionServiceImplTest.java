@@ -252,7 +252,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .hasSize(2)
         .extracting("name")
-        .contains("host1:TEMPLATE_NAME", "host2:TEMPLATE_NAME");
+        .contains("host1", "host2");
     assertThat(workflowExecution2.getExecutionNode().getGroup().getElements())
         .extracting("type")
         .contains("ELEMENT", "ELEMENT");
@@ -387,7 +387,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .hasSize(2)
         .extracting("name")
-        .contains("host1:TEMPLATE_NAME", "host2:TEMPLATE_NAME");
+        .contains("host1", "host2");
     assertThat(workflowExecution2.getExecutionNode().getGroup().getElements())
         .extracting("type")
         .contains("ELEMENT", "ELEMENT");
