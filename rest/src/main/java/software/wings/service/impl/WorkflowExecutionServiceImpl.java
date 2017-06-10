@@ -564,10 +564,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void triggerAppdynamicsDataCollectionIfNecessary(
       final StateMachine stateMachine, WorkflowExecution workflowExecution) {
+    logger.info("Request to triggerAppdynamicsDataCollectionIfNecessary");
     final List<AppdynamicsDataCollectionInfo> dataCollectionInfos = new ArrayList<>();
     addAppTierToBeCollected(stateMachine, dataCollectionInfos);
 
     if (dataCollectionInfos.isEmpty()) {
+      logger.info("dataCollectionInfos is empty");
       return;
     }
 
