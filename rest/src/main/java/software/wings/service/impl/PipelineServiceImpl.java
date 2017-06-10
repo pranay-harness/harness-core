@@ -14,6 +14,8 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.PAUSED_ON_ERROR;
+import static software.wings.sm.ExecutionStatus.PAUSING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -176,13 +178,24 @@ public class PipelineServiceImpl implements PipelineService {
       pipelineExecution.setEndTs(executionDetails.getEndTs());
     } else {
       boolean anyStatePaused = stateExecutionInstanceMap.values().stream().anyMatch(stateExecutionInstance
-          -> stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSED)
-              || stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSING)
-              || stateExecutionInstance.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR));
+          -> stateExecutionInstance.getStatus().equals(PAUSED) || stateExecutionInstance.getStatus().equals(PAUSING)
+              || stateExecutionInstance.getStatus().equals(PAUSED_ON_ERROR));
       if (anyStatePaused) {
-        pipelineExecution.setStatus(ExecutionStatus.PAUSED);
+        pipelineExecution.setStatus(PAUSED);
       } else {
-        pipelineExecution.setStatus(ExecutionStatus.RUNNING);
+        // Verify if any workflow execution is in Paused state
+        anyStatePaused =
+            pipelineExecution.getPipelineStageExecutions()
+                .stream()
+                .flatMap(executions -> executions.getWorkflowExecutions().stream())
+                .anyMatch(workflowExecution
+                    -> workflowExecution.getStatus().equals(PAUSED) || workflowExecution.getStatus().equals(PAUSING)
+                        || workflowExecution.getStatus().equals(PAUSED_ON_ERROR));
+        if (anyStatePaused) {
+          pipelineExecution.setStatus(PAUSED);
+        } else {
+          pipelineExecution.setStatus(ExecutionStatus.RUNNING);
+        }
       }
     }
 
