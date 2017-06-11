@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
@@ -160,7 +159,7 @@ public class AppContainerServiceImpl implements AppContainerService {
 
   @Override
   public File download(String accountId, String appContainerId) {
-    AppContainer appContainer = get(GLOBAL_APP_ID, appContainerId);
+    AppContainer appContainer = get(accountId, appContainerId);
     File file = new File(Files.createTempDir(), appContainer.getFileName());
     fileService.download(appContainer.getFileUuid(), file, PLATFORMS);
     return file;
