@@ -1,1 +1,1 @@
-Ignore everything under notebooks. This is work in progress.
+Ignore everything under notebooks. This is a work in progress.
