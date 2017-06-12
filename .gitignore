@@ -16,3 +16,5 @@ access.log
 access*gz
 */delegate*.log
 */upgrade.sh
+python/**/*.pyc
+python/**/*-checkpoint.ipynb
