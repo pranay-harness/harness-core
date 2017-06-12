@@ -200,13 +200,13 @@ public class PipelineResource {
    * @return the rest response
    */
   @PUT
-  @Path("executions/{pipelineExecutionId}/approve")
+  @Path("executions/{pipelineExecutionId}/approval")
   @Timed
   @ExceptionMetered
   @AuthRule(value = ResourceType.CD)
-  public RestResponse approveExecution(@QueryParam("appId") String appId,
+  public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @PathParam("pipelineExecutionId") String pipelineExecutionId, ApprovalDetails approvalDetails) {
-    return new RestResponse<>(pipelineService.approveExecution(appId, pipelineExecutionId, approvalDetails));
+    return new RestResponse<>(pipelineService.approveOrRejectExecution(appId, pipelineExecutionId, approvalDetails));
   }
 
   /**
