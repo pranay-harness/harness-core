@@ -50,7 +50,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
@@ -121,7 +121,7 @@ public class SecureResourceTest {
   private static AuthRuleFilter authRuleFilter =
       new AuthRuleFilter(auditService, auditHelper, authService, appService, userService);
 
-  @Mock Cache<String, User> cache;
+  Cache<String, User> cache = Mockito.mock(Cache.class);
 
   /**
    * The constant resources.
