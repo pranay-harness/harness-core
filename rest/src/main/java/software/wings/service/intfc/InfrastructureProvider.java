@@ -32,9 +32,9 @@ public interface InfrastructureProvider {
    *
    * @param appId          the app id
    * @param infraMappingId the infra mapping id
-   * @param hostName       the host name
+   * @param publicDns       the public dns
    */
-  void deleteHost(String appId, String infraMappingId, String hostName);
+  void deleteHost(String appId, String infraMappingId, String publicDns);
 
   /**
    * Update host conn attrs.

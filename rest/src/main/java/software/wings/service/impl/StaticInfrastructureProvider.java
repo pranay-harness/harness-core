@@ -43,7 +43,7 @@ public class StaticInfrastructureProvider implements InfrastructureProvider {
 
   @Override
   public void deleteHost(String appId, String infraMappingId, String hostName) {
-    hostService.deleteByHostName(appId, infraMappingId, hostName);
+    hostService.deleteByPublicDns(appId, infraMappingId, hostName);
   }
 
   @Override

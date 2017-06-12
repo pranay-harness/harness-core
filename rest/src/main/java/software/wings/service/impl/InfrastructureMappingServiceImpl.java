@@ -507,28 +507,28 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                         .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
                                         .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
                                         .build();
-    List<String> existingHostNames =
+    List<String> existingPublicDnsNames =
         hostService.list(pageRequest).getResponse().stream().map(Host::getPublicDns).collect(Collectors.toList());
 
     ListIterator<Host> hostListIterator = hosts.listIterator();
 
     while (hostListIterator.hasNext()) {
       Host host = hostListIterator.next();
-      if (existingHostNames.contains(host.getPublicDns())) {
+      if (existingPublicDnsNames.contains(host.getPublicDns())) {
         hostListIterator.remove();
-        existingHostNames.remove(host.getPublicDns());
+        existingPublicDnsNames.remove(host.getPublicDns());
       }
     }
-    updateHostsAndServiceInstances(infrastructureMapping, hosts, existingHostNames);
+    updateHostsAndServiceInstances(infrastructureMapping, hosts, existingPublicDnsNames);
   }
 
   private void updateHostsAndServiceInstances(
-      InfrastructureMapping infraMapping, List<Host> activeHosts, List<String> deletedHostNames) {
+      InfrastructureMapping infraMapping, List<Host> activeHosts, List<String> deletedPublicDnsNames) {
     InfrastructureProvider awsInfrastructureProvider =
         getInfrastructureProviderByComputeProviderType(infraMapping.getComputeProviderType());
 
-    deletedHostNames.forEach(deletedHostName -> {
-      awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), deletedHostName);
+    deletedPublicDnsNames.forEach(publicDns -> {
+      awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), publicDns);
     });
 
     List<Host> savedHosts = activeHosts.stream()
@@ -544,7 +544,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
-    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, deletedHostNames);
+    serviceInstanceService.updateInstanceMappings(serviceTemplate, infraMapping, savedHosts, deletedPublicDnsNames);
   }
 
   private List<ServiceInstance> selectServiceInstancesByInfraMapping(
