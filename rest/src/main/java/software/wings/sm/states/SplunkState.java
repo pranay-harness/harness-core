@@ -162,8 +162,8 @@ public class SplunkState extends HttpState {
             .get(0);
     SplunkConfig splunkConfig = (SplunkConfig) splunkSettingAttribute.getValue();
     return "Authorization: Basic "
-        + Base64.encodeBase64URLSafeString(
-              (splunkConfig.getUsername() + ":" + splunkConfig.getPassword()).getBytes(StandardCharsets.UTF_8));
+        + Base64.encodeBase64URLSafeString((splunkConfig.getUsername() + ":" + new String(splunkConfig.getPassword()))
+                                               .getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
