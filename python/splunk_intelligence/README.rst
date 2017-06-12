@@ -7,11 +7,11 @@ To setup the python development environment
 3.  Run : make clean
 4.  Run : make init
 5.  To start the Jupyter notebook run : make jupyter
-    a.  This should open the notebook in your browse.
-    b.  Navigate to src/notebooks
-    c.  Click on SplunkAnomaly.ipynb
-    d.  Run notebook. If charts don't show up, copy the notebook content and create a new notebook and run it.
-        There is a know issue with Jupyter notebook where saved notebooks don't show the charts when run again
+        1.  This should open the notebook in your browse.
+        2.  Navigate to src/notebooks
+        3.  Click on SplunkAnomaly.ipynb
+        4.  Run notebook. If charts don't show up, copy the notebook content and create a new notebook and run it.
+            There is a know issue with Jupyter notebook where saved notebooks don't show the charts when run again
 
 Notes:
 Everything under notebooks is for internal use and not for production. Treat this as work in progress.
