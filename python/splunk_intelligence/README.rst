@@ -4,9 +4,9 @@ To setup the python development environment
     On macs, by default, python 2.7 is installed here. In the future this can be made configurable through an environment
     variable.
 2.  Go to wings/python/splunk_intelligence/
-2.  Run : make clean
-3.  Run : make init
-4.  To start the Jupyter notebook run : make jupyter
+3.  Run : make clean
+4.  Run : make init
+5.  To start the Jupyter notebook run : make jupyter
     a.  This should open the notebook in your browse.
     b.  Navigate to src/notebooks
     c.  Click on SplunkAnomaly.ipynb
