@@ -45,6 +45,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
   public AppdynamicsDataCollectionTaskResult run(Object[] parameters) {
     final List<AppdynamicsDataCollectionInfo> dataCollectionInfoList =
         (List<AppdynamicsDataCollectionInfo>) parameters[0];
+    logger.info("metric collection - dataCollectionInfoList: {}" + dataCollectionInfoList);
     final int maxCollectionTime = getMaxCollectionTime(dataCollectionInfoList);
     final ScheduledExecutorService collectionService = scheduleMetricDataCollection(dataCollectionInfoList);
     ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);

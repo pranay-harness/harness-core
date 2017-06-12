@@ -21,6 +21,7 @@ public class HostElement implements ContextElement {
   private String uuid;
   private String hostName;
   private String instanceId;
+  private String publicDns;
 
   @Override
   public String getName() {
@@ -43,6 +44,14 @@ public class HostElement implements ContextElement {
    */
   public void setHostName(String hostName) {
     this.hostName = hostName;
+  }
+
+  public String getPublicDns() {
+    return publicDns;
+  }
+
+  public void setPublicDns(String publicDns) {
+    this.publicDns = publicDns;
   }
 
   public String getUuid() {
@@ -103,6 +112,7 @@ public class HostElement implements ContextElement {
   public static final class Builder {
     private String uuid;
     private String hostName;
+    private String publicDns;
     private String instanceId;
 
     private Builder() {}
@@ -139,6 +149,17 @@ public class HostElement implements ContextElement {
     }
 
     /**
+     * With publicDns name builder.
+     *
+     * @param publicDns the host name
+     * @return the builder
+     */
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
+      return this;
+    }
+
+    /**
      * With instance id builder.
      *
      * @param instanceId the instance id
@@ -155,7 +176,7 @@ public class HostElement implements ContextElement {
      * @return the builder
      */
     public Builder but() {
-      return aHostElement().withUuid(uuid).withHostName(hostName).withInstanceId(instanceId);
+      return aHostElement().withUuid(uuid).withHostName(hostName).withPublicDns(publicDns).withInstanceId(instanceId);
     }
 
     /**
@@ -167,6 +188,7 @@ public class HostElement implements ContextElement {
       HostElement hostElement = new HostElement();
       hostElement.setUuid(uuid);
       hostElement.setHostName(hostName);
+      hostElement.setPublicDns(publicDns);
       hostElement.setInstanceId(instanceId);
       return hostElement;
     }

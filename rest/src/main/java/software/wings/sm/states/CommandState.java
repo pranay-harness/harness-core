@@ -213,6 +213,7 @@ public class CommandState extends State {
           .withTemplateName(instanceElement.getServiceTemplateElement().getName())
           .withHostId(host.getUuid())
           .withHostName(host.getHostName())
+          .withPublicDns(host.getPublicDns())
           .withAppId(appId);
 
       String actualCommand = commandName;
@@ -254,6 +255,7 @@ public class CommandState extends State {
               .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
               .withCommandType(command.getCommandUnitType().name())
               .withHostName(host.getHostName())
+              .withPublicDns(host.getPublicDns())
               .withCommandUnits(getFlattenCommandUnits(appId, envId, service, command))
               .withServiceVariables(context.getServiceVariables());
 

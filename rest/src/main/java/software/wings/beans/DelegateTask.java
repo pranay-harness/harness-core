@@ -225,7 +225,6 @@ public class DelegateTask extends Base {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("taskType", taskType)
-        .add("parameters", parameters)
         .add("tag", tag)
         .add("accountId", accountId)
         .add("waitId", waitId)

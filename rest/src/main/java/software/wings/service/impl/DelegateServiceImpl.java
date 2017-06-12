@@ -225,7 +225,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
-    logger.debug("Queueing task: {}", task.getUuid());
+    logger.info("Queueing task uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(), task.getAccountId(),
+        task.getTaskType(), task.isAsync());
     wingsPersistence.save(task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     return task.getUuid();
@@ -240,7 +241,8 @@ public class DelegateServiceImpl implements DelegateService {
     IQueue<T> topic = hazelcastInstance.getQueue(taskId);
     cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-    logger.info("Broadcast new task: {}", taskId);
+    logger.info("Broadcast new task: uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(), task.getAccountId(),
+        task.getTaskType(), task.isAsync());
     T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
     if (responseData == null) {
       logger.error("Task [{}] timed out. remove it from cache", task.toString());

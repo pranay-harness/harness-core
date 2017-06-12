@@ -59,6 +59,7 @@ public class ApprovalState extends State {
 
     executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
     executionData.setComments(approvalNotifyResponse.getComments());
+    executionData.setApprovedOn(System.currentTimeMillis());
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(ExecutionStatus.SUCCESS)

@@ -24,6 +24,7 @@ import java.util.Map;
 public class CommandStateExecutionData extends StateExecutionData {
   private String appId;
   private String hostName;
+  private String publicDns;
   private String hostId;
   private String commandName;
   private String serviceName;
@@ -62,6 +63,14 @@ public class CommandStateExecutionData extends StateExecutionData {
    */
   public void setHostName(String hostName) {
     this.hostName = hostName;
+  }
+
+  public String getPublicDns() {
+    return publicDns;
+  }
+
+  public void setPublicDns(String publicDns) {
+    this.publicDns = publicDns;
   }
 
   /**
@@ -401,6 +410,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String appId;
     private Long startTs;
     private String hostName;
+    private String publicDns;
     private Long endTs;
     private String hostId;
     private ExecutionStatus status;
@@ -474,6 +484,17 @@ public class CommandStateExecutionData extends StateExecutionData {
      */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With publicDns name builder.
+     *
+     * @param publicDns the host name
+     * @return the builder
+     */
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
       return this;
     }
 
@@ -713,7 +734,8 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withOldServiceRunningInstanceCount(oldServiceRunningInstanceCount)
           .withNewServicePreviousInstanceCount(newServicePreviousInstanceCount)
           .withOldServicePreviousInstanceCount(oldServicePreviousInstanceCount)
-          .withClusterName(clusterName);
+          .withClusterName(clusterName)
+          .withPublicDns(publicDns);
     }
 
     /**
@@ -727,6 +749,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setAppId(appId);
       commandStateExecutionData.setStartTs(startTs);
       commandStateExecutionData.setHostName(hostName);
+      commandStateExecutionData.setPublicDns(publicDns);
       commandStateExecutionData.setEndTs(endTs);
       commandStateExecutionData.setHostId(hostId);
       commandStateExecutionData.setStatus(status);

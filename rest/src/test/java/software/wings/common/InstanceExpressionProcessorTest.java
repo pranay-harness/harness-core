@@ -464,7 +464,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     assertThat(elements.size()).isEqualTo(1);
     assertThat(elements.get(0)).isNotNull();
     assertThat(elements.get(0).getUuid()).isEqualTo(instance1.getUuid());
-    assertThat(elements.get(0).getDisplayName()).isEqualTo(instance1.getHostName() + ":" + serviceTemplate.getName());
+    assertThat(elements.get(0).getDisplayName()).isEqualTo(instance1.getPublicDns());
   }
 
   /**

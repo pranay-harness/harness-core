@@ -36,6 +36,7 @@ public class Activity extends Base {
   private String serviceTemplateId;
   private String serviceTemplateName;
   private String hostName;
+  private String publicDns;
   private String serviceInstanceId;
   @NotEmpty private String workflowExecutionId;
   @NotEmpty private String workflowExecutionName;
@@ -211,6 +212,14 @@ public class Activity extends Base {
    */
   public void setHostName(String hostName) {
     this.hostName = hostName;
+  }
+
+  public String getPublicDns() {
+    return publicDns;
+  }
+
+  public void setPublicDns(String publicDns) {
+    this.publicDns = publicDns;
   }
 
   /**
@@ -642,6 +651,7 @@ public class Activity extends Base {
     private String serviceTemplateId;
     private String serviceTemplateName;
     private String hostName;
+    private String publicDns;
     private String serviceInstanceId;
     private String uuid;
     private String workflowExecutionId;
@@ -834,6 +844,17 @@ public class Activity extends Base {
      */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With publicDns name builder.
+     *
+     * @param publicDns the host name
+     * @return the builder
+     */
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
       return this;
     }
 
@@ -1074,7 +1095,8 @@ public class Activity extends Base {
           .withIsPipeline(isPipeline)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
-          .withStatus(status);
+          .withStatus(status)
+          .withPublicDns(publicDns);
     }
 
     /**
@@ -1099,6 +1121,7 @@ public class Activity extends Base {
       activity.setServiceTemplateId(serviceTemplateId);
       activity.setServiceTemplateName(serviceTemplateName);
       activity.setHostName(hostName);
+      activity.setPublicDns(publicDns);
       activity.setServiceInstanceId(serviceInstanceId);
       activity.setUuid(uuid);
       activity.setWorkflowExecutionId(workflowExecutionId);

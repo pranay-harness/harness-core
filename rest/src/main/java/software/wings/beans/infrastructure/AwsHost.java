@@ -37,6 +37,7 @@ public class AwsHost extends Host {
     private String infraMappingId;
     private String computeProviderId;
     private String hostName;
+    private String publicDns;
     private String hostConnAttr;
     private String bastionConnAttr;
     private String uuid;
@@ -120,6 +121,17 @@ public class AwsHost extends Host {
      */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With publicDns name builder.
+     *
+     * @param publicDns the host name
+     * @return the builder
+     */
+    public Builder withPublicDns(String publicDns) {
+      this.publicDns = publicDns;
       return this;
     }
 
@@ -231,7 +243,8 @@ public class AwsHost extends Host {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withPublicDns(publicDns);
     }
 
     /**
@@ -247,6 +260,7 @@ public class AwsHost extends Host {
       awsHost.setInfraMappingId(infraMappingId);
       awsHost.setComputeProviderId(computeProviderId);
       awsHost.setHostName(hostName);
+      awsHost.setPublicDns(publicDns);
       awsHost.setHostConnAttr(hostConnAttr);
       awsHost.setBastionConnAttr(bastionConnAttr);
       awsHost.setUuid(uuid);

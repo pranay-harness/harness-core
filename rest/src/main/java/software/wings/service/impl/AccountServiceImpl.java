@@ -213,14 +213,15 @@ public class AccountServiceImpl implements AccountService {
                                       .withChecksumType(systemCatalog.getChecksumType())
                                       .withFamily(systemCatalog.getFamily())
                                       .withStackRootDirectory(systemCatalog.getStackRootDirectory())
+                                      .withFileName(systemCatalog.getFileName())
                                       .withFileUuid(systemCatalog.getFileUuid())
                                       .withFileType(systemCatalog.getFileType())
                                       .withSize(systemCatalog.getSize())
                                       .withName(systemCatalog.getName())
                                       .withSystemCreated(true)
                                       .withDescription(systemCatalog.getNotes())
-                                      .withVersion(systemCatalog.getVersion())
                                       .withHardened(systemCatalog.isHardened())
+                                      .withVersion(systemCatalog.getVersion())
                                       .build();
       try {
         appContainerService.save(appContainer);

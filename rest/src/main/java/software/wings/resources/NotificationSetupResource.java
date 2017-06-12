@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.ResourceType.NOTIFICATION_GROUP;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -9,7 +11,6 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.NotificationSetupService;
 
@@ -30,7 +31,7 @@ import javax.ws.rs.QueryParam;
 @Api("/notification-setup")
 @Path("/notification-setup")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@AuthRule(NOTIFICATION_GROUP)
 public class NotificationSetupResource {
   private NotificationSetupService notificationSetupService;
 
@@ -57,6 +58,11 @@ public class NotificationSetupResource {
   @ExceptionMetered
   public RestResponse<PageResponse<NotificationGroup>> listNotificationGroups(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<NotificationGroup> pageRequest) {
+    if (pageRequest.getFilters() == null
+        || pageRequest.getFilters().stream().noneMatch(
+               searchFilter -> searchFilter.getFieldName().equals("accountId"))) {
+      pageRequest.addFilter("accountId", accountId, EQ);
+    }
     return new RestResponse<>(notificationSetupService.listNotificationGroups(pageRequest));
   }
 

@@ -503,30 +503,31 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                            .listHosts(awsInfrastructureMapping.getRegion(), computeProviderSetting, new PageRequest<>())
                            .getResponse();
     PageRequest<Host> pageRequest = aPageRequest()
+                                        .withLimit(PageRequest.UNLIMITED)
                                         .addFilter("appId", Operator.EQ, infrastructureMapping.getAppId())
                                         .addFilter("infraMappingId", Operator.EQ, infrastructureMapping.getUuid())
                                         .build();
     List<String> existingHostNames =
-        hostService.list(pageRequest).getResponse().stream().map(Host::getHostName).collect(Collectors.toList());
+        hostService.list(pageRequest).getResponse().stream().map(Host::getPublicDns).collect(Collectors.toList());
 
     ListIterator<Host> hostListIterator = hosts.listIterator();
 
     while (hostListIterator.hasNext()) {
       Host host = hostListIterator.next();
-      if (existingHostNames.contains(host.getHostName())) {
+      if (existingHostNames.contains(host.getPublicDns())) {
         hostListIterator.remove();
-        existingHostNames.remove(host.getHostName());
+        existingHostNames.remove(host.getPublicDns());
       }
     }
     updateHostsAndServiceInstances(infrastructureMapping, hosts, existingHostNames);
   }
 
   private void updateHostsAndServiceInstances(
-      InfrastructureMapping infraMapping, List<Host> newHosts, List<String> deletedHostNames) {
+      InfrastructureMapping infraMapping, List<Host> activeHosts, List<String> deletedHostNames) {
     InfrastructureProvider awsInfrastructureProvider =
         getInfrastructureProviderByComputeProviderType(infraMapping.getComputeProviderType());
 
-    List<Host> savedHosts = newHosts.stream()
+    List<Host> savedHosts = activeHosts.stream()
                                 .map(host -> {
                                   host.setAppId(infraMapping.getAppId());
                                   host.setEnvId(infraMapping.getEnvId());
@@ -561,7 +562,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (specificHosts) {
       List<String> hostNames = (List<String>) selectionParams.get("hostNames");
-      requestBuilder.addFilter("hostName", Operator.IN, hostNames.toArray());
+      requestBuilder.addFilter("publicDns", Operator.IN, hostNames.toArray());
     } else {
       requestBuilder.withLimit(instanceCount);
     }
@@ -597,7 +598,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               new PageRequest<>())
           .getResponse()
           .stream()
-          .map(Host::getHostName)
+          .map(Host::getPublicDns)
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
