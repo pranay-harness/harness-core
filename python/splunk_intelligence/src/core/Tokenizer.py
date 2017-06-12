@@ -2,6 +2,8 @@ import re
 
 import nltk
 
+nltk.download('punkt')
+
 """
 Tokenize text to build feature vectors. Suports tokenizing based on NLTK.
 """
