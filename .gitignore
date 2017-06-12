@@ -18,3 +18,4 @@ access*gz
 */upgrade.sh
 python/**/*.pyc
 python/**/*-checkpoint.ipynb
+python/**/.pyenv
