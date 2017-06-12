@@ -527,6 +527,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureProvider awsInfrastructureProvider =
         getInfrastructureProviderByComputeProviderType(infraMapping.getComputeProviderType());
 
+    deletedHostNames.forEach(deletedHostName -> {
+      awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), deletedHostName);
+    });
+
     List<Host> savedHosts = activeHosts.stream()
                                 .map(host -> {
                                   host.setAppId(infraMapping.getAppId());
@@ -537,10 +541,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                   return awsInfrastructureProvider.saveHost(host);
                                 })
                                 .collect(Collectors.toList());
-
-    deletedHostNames.forEach(deletedHostName -> {
-      awsInfrastructureProvider.deleteHost(infraMapping.getAppId(), infraMapping.getUuid(), deletedHostName);
-    });
 
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infraMapping.getAppId(), infraMapping.getServiceTemplateId());

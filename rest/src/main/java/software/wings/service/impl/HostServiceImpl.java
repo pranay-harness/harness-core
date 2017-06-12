@@ -201,7 +201,7 @@ public class HostServiceImpl implements HostService {
                                 .equal(appId)
                                 .field("infraMappingId")
                                 .equal(infraMappingId)
-                                .field("hostName")
+                                .field("publicDns")
                                 .equal(hostName));
   }
 
