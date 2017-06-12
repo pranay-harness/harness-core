@@ -90,6 +90,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private EventEmitter eventEmitter;
   @Inject private HazelcastInstance hazelcastInstance;
   @Inject private BroadcasterFactory broadcasterFactory;
+  @Inject private CacheHelper cacheHelper;
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -237,7 +238,7 @@ public class DelegateServiceImpl implements DelegateService {
     task.setQueueName(taskId);
     task.setUuid(taskId);
     IQueue<T> topic = hazelcastInstance.getQueue(taskId);
-    CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, task);
+    cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).put(taskId, task);
     broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
     logger.info("Broadcast new task: {}", taskId);
     T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
@@ -280,7 +281,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId) {
     logger.debug("Acquiring delegate task {} for delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {
       // Async
       logger.debug("Delegate task from cache is null for task {}", taskId);
@@ -314,7 +315,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask startDelegateTask(String accountId, String delegateId, String taskId) {
     logger.debug("Starting task {} with delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
+    DelegateTask delegateTask = cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).get(taskId);
     if (delegateTask == null) {
       logger.debug("Delegate task from cache is null for task {}", taskId);
       Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)

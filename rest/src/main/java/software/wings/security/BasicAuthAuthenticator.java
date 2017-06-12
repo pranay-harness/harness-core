@@ -16,6 +16,7 @@ import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.UserService;
 
 import java.util.Optional;
 import javax.inject.Singleton;
@@ -27,7 +28,7 @@ import javax.inject.Singleton;
 public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, User> {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration configuration;
-  @Inject private GenericDbCache dbCache;
+  @Inject private UserService userService;
 
   /* (non-Javadoc)
    * @see io.dropwizard.auth.Authenticator#authenticate(java.lang.Object)
@@ -43,7 +44,7 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
     }
     if (checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
       AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-      dbCache.invalidate(User.class, user.getUuid());
+      userService.evictUserFromCache(user.getUuid());
 
       wingsPersistence.save(authToken);
       user.setToken(authToken.getUuid());

@@ -37,6 +37,8 @@ public class DelegateQueueTask implements Runnable {
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
+  @Inject private CacheHelper cacheHelper;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
@@ -100,7 +102,7 @@ public class DelegateQueueTask implements Runnable {
       });
 
       // Re-broadcast queued sync tasks not picked up by any Delegate
-      CacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).forEach(stringDelegateTaskEntry -> {
+      cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class).forEach(stringDelegateTaskEntry -> {
         DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
         if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
           logger.info("Broadcast queued sync task [{}, {}, {}]", syncDelegateTask.getUuid(),

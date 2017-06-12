@@ -76,6 +76,21 @@ public interface UserService {
   User get(@NotEmpty String userId);
 
   /**
+   * Gets user from cache or db.
+   *
+   * @param userId the user id
+   * @return the user from cache or db
+   */
+  User getUserFromCacheOrDB(String userId);
+
+  /**
+   * Evict user from cache.
+   *
+   * @param userId the user id
+   */
+  void evictUserFromCache(String userId);
+
+  /**
    * Revoke role.
    *
    * @param userId the user id
@@ -84,8 +99,19 @@ public interface UserService {
    */
   User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 
+  /**
+   * Verify registered or allowed.
+   *
+   * @param emailAddress the email address
+   */
   void verifyRegisteredOrAllowed(String emailAddress);
 
+  /**
+   * Resend verification email boolean.
+   *
+   * @param email the email
+   * @return the boolean
+   */
   boolean resendVerificationEmail(String email);
 
   /**
@@ -145,8 +171,22 @@ public interface UserService {
    */
   UserInvite deleteInvite(String accountId, String inviteId);
 
+  /**
+   * Gets user account role.
+   *
+   * @param userId    the user id
+   * @param accountId the account id
+   * @return the user account role
+   */
   AccountRole getUserAccountRole(String userId, String accountId);
 
+  /**
+   * Gets user application role.
+   *
+   * @param userId the user id
+   * @param appId  the app id
+   * @return the user application role
+   */
   ApplicationRole getUserApplicationRole(String userId, String appId);
 
   /**

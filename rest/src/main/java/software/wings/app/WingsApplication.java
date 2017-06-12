@@ -179,6 +179,25 @@ public class WingsApplication extends Application<MainConfiguration> {
           }
         });
 
+    Caching.getCachingProvider().getCacheManager().createCache("userCache", new Configuration<String, User>() {
+      public static final long serialVersionUID = 1l;
+
+      @Override
+      public Class<String> getKeyType() {
+        return String.class;
+      }
+
+      @Override
+      public Class<User> getValueType() {
+        return User.class;
+      }
+
+      @Override
+      public boolean isStoreByValue() {
+        return true;
+      }
+    });
+
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerResources(environment, injector);

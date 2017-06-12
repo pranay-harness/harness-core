@@ -2,9 +2,13 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DownloadTokenService;
@@ -16,19 +20,21 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 12/13/16.
  */
-@software.wings.rules.Cache
 public class DownloadTokenServiceTest extends WingsBaseTest {
-  private Cache<String, String> cache;
+  @Mock private Cache<String, String> cache;
 
-  @Inject private DownloadTokenService downloadTokenService;
+  @Mock private CacheHelper cacheHelper;
+
+  @Inject @InjectMocks private DownloadTokenService downloadTokenService;
 
   @Before
   public void setUp() {
-    cache = CacheHelper.getCache("downloadTokenCache", String.class, String.class);
+    when(cacheHelper.getCache("downloadTokenCache", String.class, String.class)).thenReturn(cache);
   }
 
   @Test
   public void shouldCreateToken() {
+    when(cache.get(anyString())).thenReturn("resource");
     String token = downloadTokenService.createDownloadToken("resource");
     assertThat(token).isNotEmpty();
     assertThat(cache.get(token)).isEqualTo("resource");
@@ -37,6 +43,7 @@ public class DownloadTokenServiceTest extends WingsBaseTest {
   @Test
   public void shouldValidateToken() {
     cache.put("token", "resource");
+    when(cache.get("token")).thenReturn("resource");
     downloadTokenService.validateDownloadToken("resource", "token");
   }
 

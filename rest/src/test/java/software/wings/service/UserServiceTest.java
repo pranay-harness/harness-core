@@ -78,7 +78,6 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
-import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -92,6 +91,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.CacheHelper;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -100,6 +100,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.cache.Cache;
 import javax.inject.Inject;
 
 /**
@@ -113,11 +114,29 @@ public class UserServiceTest extends WingsBaseTest {
    * The Update operations.
    */
   @Mock UpdateOperations<User> updateOperations;
+  /**
+   * The Query.
+   */
   @Mock Query<User> query;
+  /**
+   * The End.
+   */
   @Mock FieldEnd end;
+  /**
+   * The Verification query.
+   */
   @Mock Query<EmailVerificationToken> verificationQuery;
+  /**
+   * The Verification query end.
+   */
   @Mock FieldEnd verificationQueryEnd;
+  /**
+   * The User invite query.
+   */
   @Mock Query<UserInvite> userInviteQuery;
+  /**
+   * The User invite query end.
+   */
   @Mock FieldEnd userInviteQueryEnd;
   @Mock private EmailNotificationService emailDataNotificationService;
   @Mock private RoleService roleService;
@@ -125,7 +144,11 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private AppService appService;
   @Mock private AuthService authService;
-  @Mock private GenericDbCache dbCache;
+  @Mock private CacheHelper cacheHelper;
+  /**
+   * The Cache.
+   */
+  @Mock Cache<String, User> cache;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Inject @InjectMocks private UserService userService;
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
@@ -138,6 +161,8 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
+    when(cacheHelper.getUserCache()).thenReturn(cache);
+
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
@@ -192,7 +217,7 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
         .startsWith(PORTAL_URL + "#" + VERIFICATION_PATH);
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
   }
 
   /**
@@ -233,7 +258,7 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
         .contains(VERIFICATION_PATH + "/token123");
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
   }
 
   /**
@@ -258,7 +283,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.update(user);
     verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME, "roles", roles));
     verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
   }
 
   /**
@@ -284,7 +309,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(User.class, USER_ID)).thenReturn(true);
     userService.delete(USER_ID);
     verify(wingsPersistence).delete(User.class, USER_ID);
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
   }
 
   /**
@@ -353,7 +378,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(USER_ID);
     verify(updateOperations).add("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
+    ;
   }
 
   /**
@@ -370,9 +396,13 @@ public class UserServiceTest extends WingsBaseTest {
     verify(query).field(Mapper.ID_KEY);
     verify(end).equal(USER_ID);
     verify(updateOperations).removeAll("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
+    ;
   }
 
+  /**
+   * Should invite new user.
+   */
   @Test
   public void shouldInviteNewUser() {
     UserInvite userInvite = UserInviteBuilder.anUserInvite()
@@ -395,9 +425,13 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).save(userInvite);
     verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
-    verify(dbCache).invalidate(User.class, USER_ID);
+    verify(cache).remove(USER_ID);
+    ;
   }
 
+  /**
+   * Should invite existing user.
+   */
   @Test
   @Ignore
   public void shouldInviteExistingUser() {
@@ -423,6 +457,9 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
   }
 
+  /**
+   * Should complete invite.
+   */
   @Test
   public void shouldCompleteInvite() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -440,6 +477,9 @@ public class UserServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateFields(eq(User.class), eq(USER_ID), any(HashMap.class));
   }
 
+  /**
+   * Should get account role.
+   */
   @Test
   public void shouldGetAccountRole() {
     List<Role> roles =
@@ -461,6 +501,9 @@ public class UserServiceTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should get account for all aps admin role.
+   */
   @Test
   public void shouldGetAccountForAllApsAdminRole() {
     List<Role> roles = asList(aRole()
@@ -486,6 +529,9 @@ public class UserServiceTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should get application role.
+   */
   @Test
   public void shouldGetApplicationRole() {
     List<Role> roles =
@@ -507,6 +553,13 @@ public class UserServiceTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should send reset password email.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       the io exception
+   */
   @Test
   public void shouldSendResetPasswordEmail() throws EmailException, TemplateException, IOException {
     when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -524,6 +577,11 @@ public class UserServiceTest extends WingsBaseTest {
         .isGreaterThan((PORTAL_URL + "#/reset-password/").length());
   }
 
+  /**
+   * Should update password.
+   *
+   * @throws UnsupportedEncodingException the unsupported encoding exception
+   */
   @Test
   public void shouldUpdatePassword() throws UnsupportedEncodingException {
     when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());

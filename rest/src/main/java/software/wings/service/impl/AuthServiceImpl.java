@@ -42,9 +42,12 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.UserService;
+import software.wings.utils.CacheHelper;
 
 import java.text.ParseException;
 import java.util.List;
+import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 
@@ -53,23 +56,31 @@ import javax.inject.Inject;
  */
 @Singleton
 public class AuthServiceImpl implements AuthService {
-  private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
-  private GenericDbCache dbCache; // TODO:: replace with Hazelcast distributed cache
-
+  private GenericDbCache dbCache;
   private AccountService accountService;
   private WingsPersistence wingsPersistence;
+  private UserService userService;
+  private CacheHelper cacheHelper;
+
+  private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
   /**
    * Instantiates a new Auth service.
    *
    * @param dbCache          the db cache
-   * @param wingsPersistence
+   * @param accountService   the account service
+   * @param wingsPersistence the wings persistence
+   * @param userService      the user service
+   * @param cacheHelper      the cache helper
    */
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, WingsPersistence wingsPersistence) {
+  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, WingsPersistence wingsPersistence,
+      UserService userService, CacheHelper cacheHelper) {
     this.dbCache = dbCache;
     this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
+    this.userService = userService;
+    this.cacheHelper = cacheHelper;
   }
 
   @Override
@@ -81,13 +92,28 @@ public class AuthServiceImpl implements AuthService {
     } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
       throw new WingsException(EXPIRED_TOKEN);
     }
-    User user = dbCache.get(User.class, authToken.getUserId());
+    User user = getUserFromCacheOrDB(authToken);
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
     authToken.setUser(user);
 
     return authToken;
+  }
+
+  private User getUserFromCacheOrDB(AuthToken authToken) {
+    Cache<String, User> userCache = cacheHelper.getUserCache();
+    if (userCache == null) {
+      logger.warn("userCache is null. Fetch from DB");
+      return userService.get(authToken.getUserId());
+    } else {
+      User user = userCache.get(authToken.getUserId());
+      if (user == null) {
+        user = userService.get(authToken.getUserId());
+        userCache.put(user.getUuid(), user);
+      }
+      return user;
+    }
   }
 
   @Override

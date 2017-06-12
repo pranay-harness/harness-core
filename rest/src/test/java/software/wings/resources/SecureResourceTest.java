@@ -50,6 +50,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.mockito.Mock;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
@@ -74,11 +75,13 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.CacheHelper;
 import software.wings.utils.ResourceTestRule;
 
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
@@ -107,14 +110,18 @@ public class SecureResourceTest {
   private static GenericDbCache genericDbCache = mock(GenericDbCache.class);
   private static AccountService accountService = mock(AccountService.class);
   private static WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+  private static CacheHelper cacheHelper = mock(CacheHelper.class);
 
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
 
-  private static AuthService authService = new AuthServiceImpl(genericDbCache, accountService, wingsPersistence);
+  private static AuthService authService =
+      new AuthServiceImpl(genericDbCache, accountService, wingsPersistence, userService, cacheHelper);
 
   private static AuthRuleFilter authRuleFilter =
       new AuthRuleFilter(auditService, auditHelper, authService, appService, userService);
+
+  @Mock Cache<String, User> cache;
 
   /**
    * The constant resources.
@@ -214,8 +221,10 @@ public class SecureResourceTest {
    */
   @Before
   public void setUp() throws Exception {
+    when(cacheHelper.getUserCache()).thenReturn(cache);
+    when(cache.get(USER_ID)).thenReturn(user);
+
     when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, TOKEN_EXPIRY_IN_MILLIS));
-    when(genericDbCache.get(User.class, USER_ID)).thenReturn(user);
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(genericDbCache.get(Application.class, APP_ID))
