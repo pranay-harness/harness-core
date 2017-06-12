@@ -1,0 +1,11 @@
+nose
+sphinx
+splunk-sdk
+numpy
+pandas
+nltk
+scipy
+sklearn
+plotly
+ipython
+jupyter

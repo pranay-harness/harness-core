@@ -68,15 +68,15 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateInstanceMappings(
-      ServiceTemplate template, InfrastructureMapping infraMapping, List<Host> addedHosts, List<String> deletedHosts) {
+  public void updateInstanceMappings(ServiceTemplate template, InfrastructureMapping infraMapping,
+      List<Host> addedHosts, List<String> deletedPublicDnsNames) {
     Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
                                              .field("appId")
                                              .equal(template.getAppId())
                                              .field("serviceTemplate")
                                              .equal(template.getUuid())
-                                             .field("hostName")
-                                             .hasAnyOf(deletedHosts);
+                                             .field("publicDns")
+                                             .hasAnyOf(deletedPublicDnsNames);
     wingsPersistence.delete(deleteQuery);
 
     addedHosts.forEach(host -> {

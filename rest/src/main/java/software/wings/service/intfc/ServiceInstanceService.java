@@ -60,10 +60,10 @@ public interface ServiceInstanceService {
    * @param template     the template
    * @param infraMapping the infra mapping
    * @param addedHosts   the added hosts
-   * @param deletedHosts the deleted hosts
+   * @param deletedPublicDnsNames the deleted public dns names
    */
   void updateInstanceMappings(@NotNull ServiceTemplate template, InfrastructureMapping infraMapping,
-      List<Host> addedHosts, List<String> deletedHosts);
+      List<Host> addedHosts, List<String> deletedPublicDnsNames);
 
   /**
    * Delete by env.

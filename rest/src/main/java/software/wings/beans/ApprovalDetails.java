@@ -1,8 +1,5 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
-import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Objects;
@@ -14,6 +11,7 @@ public class ApprovalDetails {
   @NotEmpty private String approvalId;
   private EmbeddedUser approvedBy;
   private String comments;
+  private Action action;
 
   /**
    * Get ApprovalId
@@ -55,10 +53,50 @@ public class ApprovalDetails {
     this.comments = comments;
   }
 
+  /**
+   * Get Action.
+   * @return
+   */
+  public Action getAction() {
+    return action;
+  }
+
+  /**
+   * Set Action.
+   * @param action
+   */
+  public void setAction(Action action) {
+    this.action = action;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    ApprovalDetails that = (ApprovalDetails) o;
+    return Objects.equals(approvalId, that.approvalId) && Objects.equals(approvedBy, that.approvedBy)
+        && Objects.equals(comments, that.comments) && action == that.action;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(approvalId, approvedBy, comments, action);
+  }
+
+  public enum Action {
+    /**
+     * Approve action
+     */
+    APPROVE, /** Reject Action */
+    REJECT
+  }
   public static final class Builder {
     private String approvalId;
     private EmbeddedUser approvedBy;
     private String comments;
+    private Action action;
 
     private Builder() {}
 
@@ -80,8 +118,17 @@ public class ApprovalDetails {
       this.comments = comments;
       return this;
     }
+
+    public Builder withAction(Action action) {
+      this.action = action;
+      return this;
+    }
     public Builder but() {
-      return anApprovalDetails().withAnApprovalId(approvalId).withApprovedBy(approvedBy).withComments(comments);
+      return anApprovalDetails()
+          .withAnApprovalId(approvalId)
+          .withApprovedBy(approvedBy)
+          .withComments(comments)
+          .withAction(action);
     }
 
     public ApprovalDetails build() {
@@ -89,6 +136,7 @@ public class ApprovalDetails {
       approvalDetails.setApprovalId(approvalId);
       approvalDetails.setApprovedBy(approvedBy);
       approvalDetails.setComments(comments);
+      approvalDetails.setAction(action);
       return approvalDetails;
     }
   }

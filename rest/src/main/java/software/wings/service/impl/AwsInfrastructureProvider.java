@@ -160,8 +160,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
   }
 
   @Override
-  public void deleteHost(String appId, String infraMappingId, String hostName) {
-    hostService.deleteByHostName(appId, infraMappingId, hostName);
+  public void deleteHost(String appId, String infraMappingId, String publicDns) {
+    hostService.deleteByPublicDns(appId, infraMappingId, publicDns);
   }
 
   @Override

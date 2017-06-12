@@ -112,6 +112,6 @@ public interface PipelineService {
    * @return
    */
   @ValidationGroups(Update.class)
-  boolean approveExecution(
+  boolean approveOrRejectExecution(
       @NotEmpty String appId, @NotEmpty String pipelineExecutionId, @Valid ApprovalDetails approvalDetails);
 }
