@@ -7,5 +7,5 @@ nltk
 scipy
 sklearn
 plotly
-ipython
+ipython==5.0
 jupyter
