@@ -55,13 +55,11 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.common.Constants;
-import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -73,9 +71,9 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
-import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
 
 import java.io.IOException;
@@ -88,6 +86,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -110,7 +109,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private AppService appService;
-  @Inject private GenericDbCache dbCache;
+  @Inject private CacheHelper cacheHelper;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -504,7 +503,7 @@ public class UserServiceImpl implements UserService {
 
   private User save(User user) {
     user = wingsPersistence.saveAndGet(User.class, user);
-    dbCache.invalidate(User.class, user.getUuid());
+    evictUserFromCache(user.getUuid());
     return user;
   }
 
@@ -527,7 +526,7 @@ public class UserServiceImpl implements UserService {
       builder.put("roles", user.getRoles());
     }
     wingsPersistence.updateFields(User.class, user.getUuid(), builder.build());
-    dbCache.invalidate(User.class, user.getUuid());
+    evictUserFromCache(user.getUuid());
     return wingsPersistence.get(User.class, user.getAppId(), user.getUuid());
   }
 
@@ -545,7 +544,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public void delete(String userId) {
     if (wingsPersistence.delete(User.class, userId)) {
-      dbCache.invalidate(User.class, userId);
+      evictUserFromCache(userId);
     }
   }
 
@@ -561,6 +560,24 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
+  @Override
+  public User getUserFromCacheOrDB(String userId) {
+    Cache<String, User> userCache = cacheHelper.getUserCache();
+    User user = userCache.get(userId);
+
+    if (user == null) {
+      logger.info("User [{}] not found in Cache. Load it from DB", userId);
+      user = get(userId);
+      userCache.put(user.getUuid(), user);
+    }
+    return user;
+  }
+
+  @Override
+  public void evictUserFromCache(String userId) {
+    cacheHelper.getUserCache().remove(userId);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#addRole(java.lang.String, java.lang.String)
    */
@@ -572,7 +589,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
-    dbCache.invalidate(User.class, userId);
+    evictUserFromCache(userId);
     return wingsPersistence.get(User.class, userId);
   }
 
@@ -587,7 +604,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).removeAll("roles", role);
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
-    dbCache.invalidate(User.class, userId);
+    evictUserFromCache(userId);
     return wingsPersistence.get(User.class, userId);
   }
 

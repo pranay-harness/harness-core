@@ -67,7 +67,7 @@ public class StaticInfrastructureProviderTest extends WingsBaseTest {
   @Test
   public void shouldDeleteHost() {
     infrastructureProvider.deleteHost(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
-    verify(hostService).deleteByHostName(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
+    verify(hostService).deleteByPublicDns(APP_ID, INFRA_MAPPING_ID, HOST_NAME);
   }
 
   @Test

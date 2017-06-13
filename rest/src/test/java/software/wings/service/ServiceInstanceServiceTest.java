@@ -254,7 +254,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field("serviceTemplate");
     verify(end).equal(TEMPLATE_ID);
-    verify(query).field("hostName");
+    verify(query).field("publicDns");
     verify(end).hasAnyOf(asList("DELETED_HOST_NAME"));
     verify(wingsPersistence)
         .save(aServiceInstance()

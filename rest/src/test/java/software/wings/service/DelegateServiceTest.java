@@ -48,6 +48,7 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.File;
@@ -75,6 +76,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfiguration;
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private Broadcaster broadcaster;
+  @Mock private CacheHelper cacheHelper;
+  @Mock private javax.cache.Cache<String, DelegateTask> cache;
 
   @InjectMocks @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
@@ -84,6 +87,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getDelegateMetadataUrl())
         .thenReturn("http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt");
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
+    when(cacheHelper.getCache("delegateSyncCache", String.class, DelegateTask.class)).thenReturn(cache);
   }
 
   @Test

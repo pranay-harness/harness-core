@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
+import static software.wings.beans.ApprovalDetails.Action.*;
 import static software.wings.beans.EmbeddedUser.Builder.anEmbeddedUser;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
@@ -410,7 +411,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public boolean approveExecution(String appId, String pipelineExecutionId, ApprovalDetails approvalDetails) {
+  public boolean approveOrRejectExecution(String appId, String pipelineExecutionId, ApprovalDetails approvalDetails) {
     Validator.notNullCheck("ApprovalDetails", approvalDetails);
     String approvalId = approvalDetails.getApprovalId();
     if (!isPipelineWaitingApproval(appId, pipelineExecutionId, approvalId)) {
@@ -426,12 +427,24 @@ public class PipelineServiceImpl implements PipelineService {
                                         .withName(application.getCreatedBy().getName())
                                         .build());
     }
-    ApprovalStateExecutionData executionData = anApprovalStateExecutionData()
-                                                   .withApprovedBy(approvalDetails.getApprovedBy())
-                                                   .withComments(approvalDetails.getComments())
-                                                   .build();
-    logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", pipelineExecutionId,
-        approvalDetails.getApprovalId());
+    ApprovalStateExecutionData executionData = null;
+    if (approvalDetails.getAction() == null || approvalDetails.getAction().equals(APPROVE)) {
+      logger.debug("Notifying to approve the pipeline execution {} for approval id {} ", pipelineExecutionId,
+          approvalDetails.getApprovalId());
+      executionData = anApprovalStateExecutionData()
+                          .withStatus(ExecutionStatus.SUCCESS)
+                          .withApprovedBy(approvalDetails.getApprovedBy())
+                          .withComments(approvalDetails.getComments())
+                          .build();
+    } else if (approvalDetails.getAction().equals(REJECT)) {
+      logger.debug("Notifying to reject the pipeline execution {} for approval id {} ", pipelineExecutionId,
+          approvalDetails.getApprovalId());
+      executionData = anApprovalStateExecutionData()
+                          .withStatus(ExecutionStatus.ABORTED)
+                          .withApprovedBy(approvalDetails.getApprovedBy())
+                          .withComments(approvalDetails.getComments())
+                          .build();
+    }
     waitNotifyEngine.notify(approvalDetails.getApprovalId(), executionData);
     return true;
   }

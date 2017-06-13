@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
@@ -17,9 +18,11 @@ import javax.cache.Cache;
  */
 @Singleton
 public class DownloadTokenServiceImpl implements DownloadTokenService {
+  @Inject private CacheHelper cacheHelper;
+
   @Override
   public String createDownloadToken(String resource) {
-    Cache<String, String> cache = CacheHelper.getCache("downloadTokenCache", String.class, String.class);
+    Cache<String, String> cache = cacheHelper.getCache("downloadTokenCache", String.class, String.class);
     String token = UUIDGenerator.getUuid();
     cache.put(token, resource);
     return token;
@@ -27,7 +30,7 @@ public class DownloadTokenServiceImpl implements DownloadTokenService {
 
   @Override
   public void validateDownloadToken(String resource, String token) {
-    Cache<String, String> cache = CacheHelper.getCache("downloadTokenCache", String.class, String.class);
+    Cache<String, String> cache = cacheHelper.getCache("downloadTokenCache", String.class, String.class);
     String cachedResource = cache.get(token);
     if (!equalsIgnoreCase(cachedResource, resource)) {
       throw new WingsException(ErrorCode.INVALID_TOKEN);

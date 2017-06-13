@@ -1,4 +1,5 @@
 package software.wings.service;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
@@ -48,15 +49,18 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.utils.CacheHelper;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.cache.Cache;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
+
 /**
  * Created by anubhaw on 8/31/16.
  */
@@ -66,12 +70,16 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
 
   @Mock private GenericDbCache cache;
+  @Mock private static CacheHelper cacheHelper;
+  @Mock private Cache<String, User> userCache;
+
   @Mock private AccountService accountService;
 
   @Inject @InjectMocks private AuthService authService;
   private Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
+
   /**
    * Sets up.
    *
@@ -79,8 +87,10 @@ public class AuthServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
+    when(cacheHelper.getUserCache()).thenReturn(userCache);
+    when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
+
     when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(USER_ID, 86400000L));
-    when(cache.get(User.class, USER_ID)).thenReturn(User.Builder.anUser().withUuid(USER_ID).build());
     when(cache.get(AuthToken.class, EXPIRED_TOKEN)).thenReturn(new AuthToken(USER_ID, 0L));
     when(cache.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withAppId(APP_ID).build());
     when(cache.get(Environment.class, ENV_ID))

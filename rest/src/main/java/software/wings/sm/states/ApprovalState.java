@@ -6,6 +6,8 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -24,6 +26,8 @@ import java.util.Map;
  * @author Rishi
  */
 public class ApprovalState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(ApprovalState.class);
+
   @Attributes(required = true, title = "Group Name") private String groupName;
 
   /**
@@ -56,13 +60,13 @@ public class ApprovalState extends State {
         (ApprovalStateExecutionData) response.values().iterator().next();
 
     ApprovalStateExecutionData executionData = (ApprovalStateExecutionData) context.getStateExecutionData();
-
     executionData.setApprovedBy(approvalNotifyResponse.getApprovedBy());
     executionData.setComments(approvalNotifyResponse.getComments());
     executionData.setApprovedOn(System.currentTimeMillis());
+
     return anExecutionResponse()
         .withStateExecutionData(executionData)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withExecutionStatus(approvalNotifyResponse.getStatus())
         .build();
   }
 

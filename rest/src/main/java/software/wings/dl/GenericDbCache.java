@@ -9,17 +9,19 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 3/18/16.
  */
+@Singleton
 public class GenericDbCache {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   private LoadingCache<String, Object> cache =
       CacheBuilder.newBuilder()
           .maximumSize(10000)
-          .expireAfterAccess(30, TimeUnit.MINUTES)
+          .expireAfterAccess(5, TimeUnit.MINUTES)
           .build(new CacheLoader<String, Object>() {
             @Override
             public Object load(String key) throws Exception {
