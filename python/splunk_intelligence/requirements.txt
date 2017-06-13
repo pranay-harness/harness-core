@@ -7,5 +7,5 @@ nltk
 scipy
 sklearn
 plotly
-ipython==5.0
-jupyter
+ipython==5.0; sys_platform == 'darwin'
+jupyter; sys_platform == 'darwin'
