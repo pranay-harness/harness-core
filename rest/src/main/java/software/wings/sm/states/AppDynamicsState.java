@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static software.wings.api.AppdynamicsAnalysisResponse.Builder.anAppdynamicsAnalysisResponse;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
@@ -12,13 +13,23 @@ import software.wings.api.AppdynamicsAnalysisResponse;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InfraNodeRequest;
 import software.wings.api.InstanceElement;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
+import software.wings.collect.AppdynamicsDataCollectionInfo;
+import software.wings.collect.AppdynamicsMetricDataCallback;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.BucketData;
 import software.wings.metrics.MetricSummary;
 import software.wings.service.impl.AppDynamicsSettingProvider;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
@@ -70,6 +81,12 @@ public class AppDynamicsState extends State {
   @Inject @Transient private AppdynamicsService appdynamicsService;
 
   @Inject @Transient private WingsPersistence wingsPersistence;
+
+  @Inject @Transient private SettingsService settingsService;
+
+  @Inject @Transient private AppService appService;
+
+  @Inject @Transient private DelegateService delegateService;
 
   /**
    * Create a new Http State with given name.
@@ -144,6 +161,7 @@ public class AppDynamicsState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    triggerAppdynamicsDataCollection(context);
     final List<String> canaryNewHostNames = getCanaryNewHostNames(context);
     final List<String> btNames = getBtNames();
     final AppDynamicsExecutionData executionData =
@@ -169,7 +187,7 @@ public class AppDynamicsState extends State {
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
         .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .withErrorMessage("Verification succeeded")
+        .withErrorMessage("Verification running")
         .withStateExecutionData(executionData)
         .build();
   }
@@ -188,6 +206,27 @@ public class AppDynamicsState extends State {
         .withExecutionStatus(ExecutionStatus.SUCCESS)
         .withStateExecutionData(executionResponse.getAppDynamicsExecutionData())
         .build();
+  }
+
+  private void triggerAppdynamicsDataCollection(final ExecutionContext context) {
+    final SettingAttribute settingAttribute = settingsService.get(appDynamicsConfigId);
+    if (settingAttribute == null) {
+      throw new WingsException("No appdynamics setting with id: " + appDynamicsConfigId + " found");
+    }
+
+    final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    final AppdynamicsDataCollectionInfo dataCollectionInfo = new AppdynamicsDataCollectionInfo(
+        appDynamicsConfig, Long.parseLong(applicationId), Long.parseLong(tierId), Integer.parseInt(timeDuration));
+    String waitId = UUIDGenerator.getUuid();
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)
+                                    .withAccountId(appService.get(context.getAppId()).getAccountId())
+                                    .withAppId(context.getAppId())
+                                    .withWaitId(waitId)
+                                    .withParameters(new Object[] {dataCollectionInfo})
+                                    .build();
+    waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(context.getAppId()), waitId);
+    delegateService.queueTask(delegateTask);
   }
 
   private List<String> getCanaryNewHostNames(ExecutionContext context) {

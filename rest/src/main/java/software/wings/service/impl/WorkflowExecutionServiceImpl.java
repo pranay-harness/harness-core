@@ -10,7 +10,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -31,11 +30,9 @@ import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -48,18 +45,13 @@ import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.beans.TaskType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.collect.AppdynamicsDataCollectionInfo;
-import software.wings.collect.AppdynamicsMetricDataCallback;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -67,11 +59,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
@@ -84,7 +74,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -94,17 +83,14 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -136,9 +122,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private GraphRenderer graphRenderer;
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private DelegateService delegateService;
-  @Inject private SettingsService settingsService;
 
   /**
    * {@inheritDoc}
@@ -539,7 +522,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
     stateExecutionInstance.setContextElements(elements);
-    triggerAppdynamicsDataCollectionIfNecessary(stateMachine, workflowExecution);
     stateMachineExecutor.execute(stateMachine, stateExecutionInstance);
 
     // TODO: findAndModify
@@ -560,60 +542,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);
     notifyWorkflowExecution(workflowExecution);
     return workflowExecution;
-  }
-
-  private void triggerAppdynamicsDataCollectionIfNecessary(
-      final StateMachine stateMachine, WorkflowExecution workflowExecution) {
-    logger.info("Request to triggerAppdynamicsDataCollectionIfNecessary");
-    final List<AppdynamicsDataCollectionInfo> dataCollectionInfos = new ArrayList<>();
-    addAppTierToBeCollected(stateMachine, dataCollectionInfos);
-
-    if (dataCollectionInfos.isEmpty()) {
-      logger.info("dataCollectionInfos is empty");
-      return;
-    }
-
-    String waitId = UUIDGenerator.getUuid();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA)
-                                    .withAccountId(appService.get(workflowExecution.getAppId()).getAccountId())
-                                    .withAppId(workflowExecution.getAppId())
-                                    .withWaitId(waitId)
-                                    .withParameters(new Object[] {dataCollectionInfos})
-                                    .build();
-    waitNotifyEngine.waitForAll(new AppdynamicsMetricDataCallback(workflowExecution.getAppId()), waitId);
-    delegateService.queueTask(delegateTask);
-  }
-
-  private void addAppTierToBeCollected(
-      StateMachine stateMachine, List<AppdynamicsDataCollectionInfo> dataCollectionInfos) {
-    if (stateMachine == null) {
-      return;
-    }
-    for (State state : stateMachine.getStates()) {
-      if (state instanceof AppDynamicsState) {
-        final AppDynamicsState appDynamicsState = (AppDynamicsState) state;
-        final String appdynamicsId = appDynamicsState.getAppDynamicsConfigId();
-        final SettingAttribute settingAttribute = settingsService.get(appdynamicsId);
-        if (settingAttribute == null) {
-          throw new WingsException("No appdynamics setting with id: " + appdynamicsId + " found");
-        }
-
-        final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-        dataCollectionInfos.add(new AppdynamicsDataCollectionInfo(appDynamicsConfig,
-            Long.parseLong(appDynamicsState.getApplicationId()), Long.parseLong(appDynamicsState.getTierId()),
-            Integer.parseInt(appDynamicsState.getTimeDuration())
-                + AppDynamicsState.EXTRA_DATA_COLLECTION_TIME_MINUTES));
-      }
-    }
-
-    if (stateMachine.getChildStateMachines() == null) {
-      return;
-    }
-
-    for (Entry<String, StateMachine> childEntry : stateMachine.getChildStateMachines().entrySet()) {
-      addAppTierToBeCollected(childEntry.getValue(), dataCollectionInfos);
-    }
   }
 
   /**

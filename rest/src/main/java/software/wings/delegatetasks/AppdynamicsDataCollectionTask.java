@@ -43,15 +43,13 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
 
   @Override
   public AppdynamicsDataCollectionTaskResult run(Object[] parameters) {
-    final List<AppdynamicsDataCollectionInfo> dataCollectionInfoList =
-        (List<AppdynamicsDataCollectionInfo>) parameters[0];
-    logger.info("metric collection - dataCollectionInfoList: {}" + dataCollectionInfoList);
-    final int maxCollectionTime = getMaxCollectionTime(dataCollectionInfoList);
-    final ScheduledExecutorService collectionService = scheduleMetricDataCollection(dataCollectionInfoList);
+    final AppdynamicsDataCollectionInfo dataCollectionInfo = (AppdynamicsDataCollectionInfo) parameters[0];
+    logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    final ScheduledExecutorService collectionService = scheduleMetricDataCollection(dataCollectionInfo);
     ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
     scheduledExecutorService.schedule(() -> {
       try {
-        logger.info("metric collection finished for " + dataCollectionInfoList);
+        logger.info("metric collection finished for " + dataCollectionInfo);
         collectionService.shutdown();
         collectionService.awaitTermination(1, TimeUnit.MINUTES);
       } catch (InterruptedException e) {
@@ -62,8 +60,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
       synchronized (lockObject) {
         lockObject.notifyAll();
       }
-    }, maxCollectionTime + 1, TimeUnit.MINUTES);
-    logger.info("going to collect appdynamics data for " + dataCollectionInfoList);
+    }, dataCollectionInfo.getCollectionTime() + 1, TimeUnit.MINUTES);
+    logger.info("going to collect appdynamics data for " + dataCollectionInfo);
 
     synchronized (lockObject) {
       while (!completed.get()) {
@@ -77,25 +75,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateRunnableTask<
     return aAppdynamicsDataCollectionTaskResult().withStatus(AppdynamicsDataCollectionTaskStatus.SUCCESS).build();
   }
 
-  private int getMaxCollectionTime(List<AppdynamicsDataCollectionInfo> dataCollectionInfoList) {
-    int maxCollectionTime = 0;
-    for (AppdynamicsDataCollectionInfo dataCollectionInfo : dataCollectionInfoList) {
-      if (maxCollectionTime < dataCollectionInfo.getCollectionTime()) {
-        maxCollectionTime = dataCollectionInfo.getCollectionTime();
-      }
-    }
-
-    return maxCollectionTime;
-  }
-
-  private ScheduledExecutorService scheduleMetricDataCollection(
-      List<AppdynamicsDataCollectionInfo> dataCollectionInfoList) {
-    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(dataCollectionInfoList.size());
-    for (AppdynamicsDataCollectionInfo dataCollectionInfo : dataCollectionInfoList) {
-      scheduledExecutorService.scheduleAtFixedRate(
-          new AppdynamicsMetricCollector(appdynamicsDelegateService, dataCollectionInfo, metricStoreService), 0, 1,
-          TimeUnit.MINUTES);
-    }
+  private ScheduledExecutorService scheduleMetricDataCollection(AppdynamicsDataCollectionInfo dataCollectionInfo) {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    scheduledExecutorService.scheduleAtFixedRate(
+        new AppdynamicsMetricCollector(appdynamicsDelegateService, dataCollectionInfo, metricStoreService), 0, 1,
+        TimeUnit.MINUTES);
     return scheduledExecutorService;
   }
 
