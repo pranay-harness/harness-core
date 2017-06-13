@@ -170,13 +170,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       res.forEach(this ::refreshSummaries);
     }
 
-    if (!includeGraph) {
-      return res;
-    }
     for (WorkflowExecution workflowExecution : res) {
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         // populateGraph(workflowExecution, null, null, null, false);
-        populateNodeHierarchy(workflowExecution);
+        populateNodeHierarchy(workflowExecution, includeGraph);
       }
     }
     return res;
@@ -238,7 +235,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return workflowExecution;
   }
 
-  private void populateNodeHierarchy(WorkflowExecution workflowExecution) {
+  private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph) {
     List<StateExecutionInstance> allInstances = queryAllInstances(workflowExecution);
     if (allInstances == null || allInstances.isEmpty()) {
       return;
@@ -262,9 +259,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution.setStatus(ExecutionStatus.PAUSING);
       }
     }
-
-    workflowExecution.setExecutionNode(
-        graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
+    if (includeGraph) {
+      workflowExecution.setExecutionNode(
+          graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
+    }
+  }
+  private void populateNodeHierarchy(WorkflowExecution workflowExecution) {
+    populateNodeHierarchy(workflowExecution, true);
   }
 
   private List<StateExecutionInstance> queryAllInstances(WorkflowExecution workflowExecution) {
