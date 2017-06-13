@@ -235,8 +235,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type) {
     PageRequest<SettingAttribute> pageRequest = aPageRequest()
-                                                    .addFilter("appId", Operator.EQ, GLOBAL_APP_ID)
-                                                    .addFilter("envId", Operator.EQ, GLOBAL_ENV_ID)
+                                                    .addFilter("appId", Operator.EQ, appId)
+                                                    .addFilter("envId", Operator.EQ, envId)
                                                     .addFilter("value.type", Operator.EQ, type)
                                                     .build();
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
